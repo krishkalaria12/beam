@@ -1,3 +1,9 @@
+mod app_commands;
+pub mod applications;
+pub mod config;
+pub mod error;
+pub mod utils;
+
 use tauri::Manager;
 
 fn toggle_launcher(app: &tauri::AppHandle) {
@@ -15,7 +21,7 @@ fn toggle_launcher(app: &tauri::AppHandle) {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let mut builder = tauri::Builder::default();
+    let mut builder = tauri::Builder::default().invoke_handler(app_commands::get_handler());
 
     #[cfg(desktop)]
     {
