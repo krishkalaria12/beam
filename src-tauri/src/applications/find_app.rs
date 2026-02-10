@@ -38,28 +38,23 @@ fn get_allowed_icon_directories() -> Vec<PathBuf> {
     .collect()
 }
 
-fn is_home_local_icon_path(path: &Path) -> bool {
-    let home_local = canonicalize_path(&expand_home("~/.local"));
-
-    path.starts_with(home_local)
-        && path
-            .components()
-            .any(|component| component.as_os_str() == OsStr::new("icons"))
-}
-
-fn is_icon_path_allowed(path: &Path, allowed_icon_directories: &[PathBuf]) -> bool {
-    let normalized_path = canonicalize_path(path);
-
-    allowed_icon_directories
-        .iter()
-        .any(|allowed| normalized_path.starts_with(allowed))
-        || is_home_local_icon_path(&normalized_path)
-}
-
-fn to_allowed_icon_path(path: PathBuf, allowed_icon_directories: &[PathBuf]) -> Option<String> {
+fn to_allowed_icon_path(
+    path: PathBuf,
+    allowed_icon_directories: &[PathBuf],
+    home_local_directory: &Path,
+) -> Option<String> {
     let normalized_path = canonicalize_path(&path);
 
-    if is_icon_path_allowed(&normalized_path, allowed_icon_directories) {
+    let is_within_allowed_icons_directory = allowed_icon_directories
+        .iter()
+        .any(|allowed| normalized_path.starts_with(allowed));
+
+    let is_within_home_local_icons_directory = normalized_path.starts_with(home_local_directory)
+        && normalized_path
+            .components()
+            .any(|component| component.as_os_str() == OsStr::new("icons"));
+
+    if is_within_allowed_icons_directory || is_within_home_local_icons_directory {
         Some(normalized_path.to_string_lossy().into_owned())
     } else {
         None
@@ -70,6 +65,7 @@ fn resolve_icon_path(
     icon: Option<&IconString>,
     desktop_file_path: &Path,
     allowed_icon_directories: &[PathBuf],
+    home_local_directory: &Path,
 ) -> String {
     let Some(icon) = icon else {
         return String::new();
@@ -81,7 +77,9 @@ fn resolve_icon_path(
     }
 
     if let Some(path) = icon.get_icon_path() {
-        if let Some(path) = to_allowed_icon_path(path, allowed_icon_directories) {
+        if let Some(path) =
+            to_allowed_icon_path(path, allowed_icon_directories, home_local_directory)
+        {
             return path;
         }
     }
@@ -89,7 +87,9 @@ fn resolve_icon_path(
     if let Some(local_path) = raw_icon.strip_prefix("file://") {
         let local_path = PathBuf::from(local_path);
         if local_path.exists() {
-            if let Some(path) = to_allowed_icon_path(local_path, allowed_icon_directories) {
+            if let Some(path) =
+                to_allowed_icon_path(local_path, allowed_icon_directories, home_local_directory)
+            {
                 return path;
             }
         }
@@ -97,7 +97,11 @@ fn resolve_icon_path(
 
     let absolute_path = PathBuf::from(raw_icon);
     if absolute_path.is_absolute() && absolute_path.exists() {
-        if let Some(path) = to_allowed_icon_path(absolute_path, allowed_icon_directories) {
+        if let Some(path) = to_allowed_icon_path(
+            absolute_path,
+            allowed_icon_directories,
+            home_local_directory,
+        ) {
             return path;
         }
     }
@@ -105,7 +109,11 @@ fn resolve_icon_path(
     if let Some(parent_dir) = desktop_file_path.parent() {
         let relative_path = parent_dir.join(raw_icon);
         if relative_path.exists() {
-            if let Some(path) = to_allowed_icon_path(relative_path, allowed_icon_directories) {
+            if let Some(path) = to_allowed_icon_path(
+                relative_path,
+                allowed_icon_directories,
+                home_local_directory,
+            ) {
                 return path;
             }
         }
@@ -118,7 +126,9 @@ fn resolve_icon_path(
             .with_cache()
             .find()
         {
-            if let Some(path) = to_allowed_icon_path(path, allowed_icon_directories) {
+            if let Some(path) =
+                to_allowed_icon_path(path, allowed_icon_directories, home_local_directory)
+            {
                 return path;
             }
         }
@@ -201,6 +211,7 @@ pub fn get_applications() -> Result<Vec<AppEntry>> {
     let files =
         iterate_through_dir().map_err(|e| Error::CollectingDesktopFilesError(e.to_string()))?;
     let allowed_icon_directories = get_allowed_icon_directories();
+    let home_local_directory = canonicalize_path(&expand_home("~/.local"));
 
     let mut applications: Vec<AppEntry> = Vec::new();
 
@@ -228,7 +239,12 @@ pub fn get_applications() -> Result<Vec<AppEntry>> {
             }
 
             let description = get_application_description(&entry);
-            let icon = resolve_icon_path(entry.icon.as_ref(), &path, &allowed_icon_directories);
+            let icon = resolve_icon_path(
+                entry.icon.as_ref(),
+                &path,
+                &allowed_icon_directories,
+                &home_local_directory,
+            );
             let exec_clean = clean_exec_path(app.exec.as_deref());
 
             applications.push(AppEntry {

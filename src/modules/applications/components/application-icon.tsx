@@ -1,6 +1,6 @@
 import { convertFileSrc, isTauri } from "@tauri-apps/api/core";
 import { AppWindow } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -16,48 +16,34 @@ function getImageSource(iconPath: string) {
     return null;
   }
 
-  if (normalizedPath.startsWith("http://") || normalizedPath.startsWith("https://")) {
-    return normalizedPath;
-  }
-
   if (normalizedPath.startsWith("asset:") || normalizedPath.startsWith("tauri://")) {
     return normalizedPath;
   }
 
-  if (normalizedPath.startsWith("file://")) {
-    if (!isTauri()) {
-      return null;
-    }
-
-    const localPath = normalizedPath.replace("file://", "");
-
-    try {
-      return convertFileSrc(localPath, "asset");
-    } catch {
-      return null;
-    }
+  if (normalizedPath.startsWith("http://") || normalizedPath.startsWith("https://")) {
+    return normalizedPath;
   }
 
   if (!isTauri()) {
     return null;
   }
 
+  const localPath = normalizedPath.startsWith("file://")
+    ? normalizedPath.slice("file://".length)
+    : normalizedPath;
+
   try {
-    return convertFileSrc(normalizedPath, "asset");
+    return convertFileSrc(localPath, "asset");
   } catch {
     return null;
   }
 }
 
 export default function ApplicationIcon({ iconPath, className }: ApplicationIconProps) {
-  const [hasError, setHasError] = useState(false);
-  const imageSource = useMemo(() => getImageSource(iconPath), [iconPath]);
+  const imageSource = getImageSource(iconPath);
+  const [failedSource, setFailedSource] = useState<string | null>(null);
 
-  useEffect(() => {
-    setHasError(false);
-  }, [iconPath]);
-
-  if (!imageSource || hasError) {
+  if (!imageSource || failedSource === imageSource) {
     return <AppWindow className={cn("size-4 text-zinc-300", className)} />;
   }
 
@@ -67,7 +53,7 @@ export default function ApplicationIcon({ iconPath, className }: ApplicationIcon
       alt="application icon"
       loading="lazy"
       className={cn("size-4 rounded-sm object-cover", className)}
-      onError={() => setHasError(true)}
+      onError={() => setFailedSource(imageSource)}
     />
   );
 }
