@@ -25,7 +25,17 @@ function getImageSource(iconPath: string) {
   }
 
   if (normalizedPath.startsWith("file://")) {
-    return normalizedPath;
+    if (!isTauri()) {
+      return null;
+    }
+
+    const localPath = normalizedPath.replace("file://", "");
+
+    try {
+      return convertFileSrc(localPath, "asset");
+    } catch {
+      return null;
+    }
   }
 
   if (!isTauri()) {

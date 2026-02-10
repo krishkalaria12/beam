@@ -1,5 +1,6 @@
 use freedesktop_file_parser::{parse, DesktopEntry, EntryType, IconString};
 use serde::Serialize;
+use std::ffi::OsStr;
 use std::fs;
 use std::path::{Path, PathBuf};
 use tauri::command;
@@ -18,7 +19,58 @@ pub struct AppEntry {
     icon: String,
 }
 
-fn resolve_icon_path(icon: Option<&IconString>, desktop_file_path: &Path) -> String {
+fn canonicalize_path(path: &Path) -> PathBuf {
+    path.canonicalize().unwrap_or_else(|_| path.to_path_buf())
+}
+
+fn get_allowed_icon_directories() -> Vec<PathBuf> {
+    vec![
+        expand_home("~/.local/share/icons"),
+        expand_home("~/.icons"),
+        PathBuf::from("/usr/share/icons"),
+        PathBuf::from("/usr/local/share/icons"),
+        PathBuf::from("/usr/share/pixmaps"),
+        PathBuf::from("/var/lib/flatpak/exports/share/icons"),
+        PathBuf::from("/var/lib/snapd/desktop/icons"),
+    ]
+    .into_iter()
+    .map(|path| canonicalize_path(&path))
+    .collect()
+}
+
+fn is_home_local_icon_path(path: &Path) -> bool {
+    let home_local = canonicalize_path(&expand_home("~/.local"));
+
+    path.starts_with(home_local)
+        && path
+            .components()
+            .any(|component| component.as_os_str() == OsStr::new("icons"))
+}
+
+fn is_icon_path_allowed(path: &Path, allowed_icon_directories: &[PathBuf]) -> bool {
+    let normalized_path = canonicalize_path(path);
+
+    allowed_icon_directories
+        .iter()
+        .any(|allowed| normalized_path.starts_with(allowed))
+        || is_home_local_icon_path(&normalized_path)
+}
+
+fn to_allowed_icon_path(path: PathBuf, allowed_icon_directories: &[PathBuf]) -> Option<String> {
+    let normalized_path = canonicalize_path(&path);
+
+    if is_icon_path_allowed(&normalized_path, allowed_icon_directories) {
+        Some(normalized_path.to_string_lossy().into_owned())
+    } else {
+        None
+    }
+}
+
+fn resolve_icon_path(
+    icon: Option<&IconString>,
+    desktop_file_path: &Path,
+    allowed_icon_directories: &[PathBuf],
+) -> String {
     let Some(icon) = icon else {
         return String::new();
     };
@@ -29,25 +81,33 @@ fn resolve_icon_path(icon: Option<&IconString>, desktop_file_path: &Path) -> Str
     }
 
     if let Some(path) = icon.get_icon_path() {
-        return path.to_string_lossy().into_owned();
+        if let Some(path) = to_allowed_icon_path(path, allowed_icon_directories) {
+            return path;
+        }
     }
 
     if let Some(local_path) = raw_icon.strip_prefix("file://") {
         let local_path = PathBuf::from(local_path);
         if local_path.exists() {
-            return local_path.to_string_lossy().into_owned();
+            if let Some(path) = to_allowed_icon_path(local_path, allowed_icon_directories) {
+                return path;
+            }
         }
     }
 
     let absolute_path = PathBuf::from(raw_icon);
     if absolute_path.is_absolute() && absolute_path.exists() {
-        return absolute_path.to_string_lossy().into_owned();
+        if let Some(path) = to_allowed_icon_path(absolute_path, allowed_icon_directories) {
+            return path;
+        }
     }
 
     if let Some(parent_dir) = desktop_file_path.parent() {
         let relative_path = parent_dir.join(raw_icon);
         if relative_path.exists() {
-            return relative_path.to_string_lossy().into_owned();
+            if let Some(path) = to_allowed_icon_path(relative_path, allowed_icon_directories) {
+                return path;
+            }
         }
     }
 
@@ -58,7 +118,9 @@ fn resolve_icon_path(icon: Option<&IconString>, desktop_file_path: &Path) -> Str
             .with_cache()
             .find()
         {
-            return path.to_string_lossy().into_owned();
+            if let Some(path) = to_allowed_icon_path(path, allowed_icon_directories) {
+                return path;
+            }
         }
     }
 
@@ -138,6 +200,7 @@ fn iterate_through_dir() -> Result<Vec<PathBuf>> {
 pub fn get_applications() -> Result<Vec<AppEntry>> {
     let files =
         iterate_through_dir().map_err(|e| Error::CollectingDesktopFilesError(e.to_string()))?;
+    let allowed_icon_directories = get_allowed_icon_directories();
 
     let mut applications: Vec<AppEntry> = Vec::new();
 
@@ -165,7 +228,7 @@ pub fn get_applications() -> Result<Vec<AppEntry>> {
             }
 
             let description = get_application_description(&entry);
-            let icon = resolve_icon_path(entry.icon.as_ref(), &path);
+            let icon = resolve_icon_path(entry.icon.as_ref(), &path, &allowed_icon_directories);
             let exec_clean = clean_exec_path(app.exec.as_deref());
 
             applications.push(AppEntry {
