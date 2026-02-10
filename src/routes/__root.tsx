@@ -1,5 +1,4 @@
 import { HeadContent, Outlet, createRootRouteWithContext } from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 
 import "../index.css";
 
@@ -31,7 +30,6 @@ function RootComponent() {
     <>
       <HeadContent />
       <Outlet />
-      <TanStackRouterDevtools position="bottom-left" />
     </>
   );
 }
