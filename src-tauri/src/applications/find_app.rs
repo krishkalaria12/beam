@@ -1,7 +1,7 @@
-use freedesktop_file_parser::{parse, EntryType};
+use freedesktop_file_parser::{parse, DesktopEntry, EntryType, IconString};
 use serde::Serialize;
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use tauri::command;
 use walkdir::{DirEntry, WalkDir};
 
@@ -13,13 +13,88 @@ use crate::{
 #[derive(Debug, Serialize)]
 pub struct AppEntry {
     name: String,
+    description: String,
     exec_path: String,
     icon: String,
 }
 
+fn resolve_icon_path(icon: Option<&IconString>, desktop_file_path: &Path) -> String {
+    let Some(icon) = icon else {
+        return String::new();
+    };
+
+    let raw_icon = icon.content.trim();
+    if raw_icon.is_empty() {
+        return String::new();
+    }
+
+    if let Some(path) = icon.get_icon_path() {
+        return path.to_string_lossy().into_owned();
+    }
+
+    if let Some(local_path) = raw_icon.strip_prefix("file://") {
+        let local_path = PathBuf::from(local_path);
+        if local_path.exists() {
+            return local_path.to_string_lossy().into_owned();
+        }
+    }
+
+    let absolute_path = PathBuf::from(raw_icon);
+    if absolute_path.is_absolute() && absolute_path.exists() {
+        return absolute_path.to_string_lossy().into_owned();
+    }
+
+    if let Some(parent_dir) = desktop_file_path.parent() {
+        let relative_path = parent_dir.join(raw_icon);
+        if relative_path.exists() {
+            return relative_path.to_string_lossy().into_owned();
+        }
+    }
+
+    for size in [24, 32, 48, 64, 96, 128] {
+        if let Some(path) = freedesktop_icons::lookup(raw_icon)
+            .with_size(size)
+            .with_scale(1)
+            .with_cache()
+            .find()
+        {
+            return path.to_string_lossy().into_owned();
+        }
+    }
+
+    String::new()
+}
+
+fn get_application_description(entry: &DesktopEntry) -> String {
+    let description = entry
+        .comment
+        .as_ref()
+        .map(|comment| comment.default.trim().to_string())
+        .filter(|description| !description.is_empty())
+        .or_else(|| {
+            entry
+                .generic_name
+                .as_ref()
+                .map(|generic_name| generic_name.default.trim().to_string())
+                .filter(|generic_name| !generic_name.is_empty())
+        });
+
+    description.unwrap_or_else(|| "launch application".to_string())
+}
+
+fn clean_exec_path(exec: Option<&str>) -> String {
+    exec.unwrap_or("")
+        .split_whitespace()
+        .filter(|token| !token.starts_with('%') || token.len() != 2)
+        .collect::<Vec<_>>()
+        .join(" ")
+        .trim()
+        .to_string()
+}
+
 fn is_desktop_file(entry: &DirEntry) -> bool {
-    if entry.file_type().is_dir() {
-        return true;
+    if !entry.file_type().is_file() {
+        return false;
     }
 
     entry
@@ -29,12 +104,28 @@ fn is_desktop_file(entry: &DirEntry) -> bool {
         .unwrap_or(false)
 }
 
+fn expand_home(path: &str) -> PathBuf {
+    if let Some(rest) = path.strip_prefix("~/") {
+        if let Ok(home) = std::env::var("HOME") {
+            return PathBuf::from(home).join(rest);
+        }
+    }
+
+    PathBuf::from(path)
+}
+
 fn iterate_through_dir() -> Result<Vec<PathBuf>> {
     let directories = &config().DIRECTORIES_APPLICATION;
     let mut files: Vec<PathBuf> = Vec::new();
 
     for dir in directories {
-        let walker = WalkDir::new(dir).into_iter();
+        let resolved_dir = expand_home(dir);
+
+        if !resolved_dir.exists() {
+            continue;
+        }
+
+        let walker = WalkDir::new(resolved_dir).into_iter();
 
         for entry in walker.filter_map(|e| e.ok()).filter(|e| is_desktop_file(e)) {
             files.push(entry.path().to_path_buf());
@@ -56,33 +147,32 @@ pub fn get_applications() -> Result<Vec<AppEntry>> {
             Err(_) => continue,
         };
 
-        let desktop_file = parse(&content).map_err(|e| Error::ParsingDesktopFileError(e))?;
+        let desktop_file = match parse(&content) {
+            Ok(parsed) => parsed,
+            Err(_) => continue,
+        };
 
         let entry = desktop_file.entry;
 
+        if entry.hidden.unwrap_or(false) || entry.no_display.unwrap_or(false) {
+            continue;
+        }
+
         if let EntryType::Application(app) = &entry.entry_type {
-            let icon = entry
-                .icon
-                .as_ref()
-                .and_then(|i| i.get_icon_path())
-                .unwrap_or_default();
+            let name = entry.name.default.trim().to_string();
+            if name.is_empty() {
+                continue;
+            }
 
-            let name = entry.name.default;
-
-            let exec_clean = app
-                .exec
-                .as_ref()
-                .map(|s| s.as_str())
-                .unwrap_or("")
-                .split_whitespace()
-                .filter(|s| !s.starts_with('%') || s.len() != 2)
-                .collect::<Vec<_>>()
-                .join(" ");
+            let description = get_application_description(&entry);
+            let icon = resolve_icon_path(entry.icon.as_ref(), &path);
+            let exec_clean = clean_exec_path(app.exec.as_deref());
 
             applications.push(AppEntry {
                 name,
+                description,
                 exec_path: exec_clean,
-                icon: icon.to_string_lossy().into_owned(),
+                icon,
             });
         }
     }

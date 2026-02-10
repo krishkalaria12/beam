@@ -2,15 +2,11 @@ import { Search } from "lucide-react";
 
 import {
   Command,
-  CommandEmpty,
-  CommandGroup,
   CommandInput,
-  CommandItem,
   CommandList,
   CommandSeparator,
-  CommandShortcut,
 } from "@/components/ui/command";
-import { launcherItems } from "@/lib/launcher-items";
+import ApplicationsCommandGroup from "@/modules/applications/components/applications-command-group";
 
 export default function LauncherCommand() {
   return (
@@ -21,21 +17,7 @@ export default function LauncherCommand() {
       />
 
       <CommandList className="flex-1 max-h-none overflow-y-auto px-1 pb-1">
-        <CommandEmpty>no results found.</CommandEmpty>
-        <CommandGroup heading="results">
-          {launcherItems.map((item) => (
-            <CommandItem key={item.id} value={item.title} className="rounded-md px-3 py-3.5">
-              <item.icon className="size-4 text-zinc-300" />
-              <div className="min-w-0">
-                <p className="truncate text-[1.08rem] leading-tight text-zinc-100">{item.title}</p>
-                <p className="truncate text-base leading-tight text-zinc-400">{item.subtitle}</p>
-              </div>
-              <CommandShortcut className="normal-case tracking-normal text-zinc-400">
-                {item.type}
-              </CommandShortcut>
-            </CommandItem>
-          ))}
-        </CommandGroup>
+        <ApplicationsCommandGroup />
       </CommandList>
 
       <CommandSeparator className="bg-zinc-700/80" />
