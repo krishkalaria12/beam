@@ -2,6 +2,7 @@ mod app_commands;
 pub mod applications;
 pub mod config;
 pub mod error;
+pub mod search;
 pub mod utils;
 
 use tauri::Manager;

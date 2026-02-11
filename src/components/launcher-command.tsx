@@ -7,6 +7,7 @@ import {
   CommandSeparator,
 } from "@/components/ui/command";
 import ApplicationsCommandGroup from "@/modules/applications/components/applications-command-group";
+import SearchCommandGroup from "@/modules/search/components/search-command-group";
 
 export default function LauncherCommand() {
   return (
@@ -17,6 +18,7 @@ export default function LauncherCommand() {
       />
 
       <CommandList className="flex-1 max-h-none overflow-y-auto px-1 pb-1">
+        <SearchCommandGroup />
         <ApplicationsCommandGroup />
       </CommandList>
 
