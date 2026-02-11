@@ -1,6 +1,6 @@
 import { convertFileSrc, isTauri } from "@tauri-apps/api/core";
 import { AppWindow } from "lucide-react";
-import { useState } from "react";
+import { memo, useState } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -9,22 +9,32 @@ type ApplicationIconProps = {
   className?: string;
 };
 
+const iconSourceCache = new Map<string, string | null>();
+
 function getImageSource(iconPath: string) {
   const normalizedPath = iconPath.trim();
 
+  if (iconSourceCache.has(normalizedPath)) {
+    return iconSourceCache.get(normalizedPath) ?? null;
+  }
+
   if (!normalizedPath) {
+    iconSourceCache.set(normalizedPath, null);
     return null;
   }
 
   if (normalizedPath.startsWith("asset:") || normalizedPath.startsWith("tauri://")) {
+    iconSourceCache.set(normalizedPath, normalizedPath);
     return normalizedPath;
   }
 
   if (normalizedPath.startsWith("http://") || normalizedPath.startsWith("https://")) {
+    iconSourceCache.set(normalizedPath, normalizedPath);
     return normalizedPath;
   }
 
   if (!isTauri()) {
+    iconSourceCache.set(normalizedPath, null);
     return null;
   }
 
@@ -33,13 +43,16 @@ function getImageSource(iconPath: string) {
     : normalizedPath;
 
   try {
-    return convertFileSrc(localPath, "asset");
+    const source = convertFileSrc(localPath, "asset");
+    iconSourceCache.set(normalizedPath, source);
+    return source;
   } catch {
+    iconSourceCache.set(normalizedPath, null);
     return null;
   }
 }
 
-export default function ApplicationIcon({ iconPath, className }: ApplicationIconProps) {
+const ApplicationIcon = memo(function ApplicationIcon({ iconPath, className }: ApplicationIconProps) {
   const imageSource = getImageSource(iconPath);
   const [failedSource, setFailedSource] = useState<string | null>(null);
 
@@ -56,4 +69,6 @@ export default function ApplicationIcon({ iconPath, className }: ApplicationIcon
       onError={() => setFailedSource(imageSource)}
     />
   );
-}
+});
+
+export default ApplicationIcon;

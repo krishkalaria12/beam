@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 
 import { openApplication } from "../api/open-application";
 
@@ -30,6 +30,7 @@ export function useOpenApplication() {
 
   const mutation = useMutation({
     mutationFn: openApplication,
+    retry: 0,
     onMutate: (execPath) => {
       setLaunchingExecPath(execPath);
       setLaunchError(null);
@@ -47,13 +48,13 @@ export function useOpenApplication() {
     },
   });
 
-  const launchApplication = (execPath: string) => {
+  const launchApplication = useCallback((execPath: string) => {
     if (mutation.isPending && launchingExecPath === execPath) {
       return;
     }
 
     mutation.mutate(execPath);
-  };
+  }, [launchingExecPath, mutation.isPending, mutation.mutate]);
 
   return {
     launchApplication,

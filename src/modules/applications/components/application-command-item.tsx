@@ -1,4 +1,5 @@
 import { CommandItem, CommandShortcut } from "@/components/ui/command";
+import { memo } from "react";
 
 import { type Application } from "../api/get-applications";
 import ApplicationIcon from "./application-icon";
@@ -10,7 +11,7 @@ type ApplicationCommandItemProps = {
   onOpen: (execPath: string) => void;
 };
 
-export default function ApplicationCommandItem({
+const ApplicationCommandItem = memo(function ApplicationCommandItem({
   application,
   isLaunching,
   launchErrorMessage,
@@ -49,4 +50,6 @@ export default function ApplicationCommandItem({
       </CommandShortcut>
     </CommandItem>
   );
-}
+});
+
+export default ApplicationCommandItem;

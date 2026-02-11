@@ -25,23 +25,31 @@ function isTauriRuntime() {
 
 function normalizeApplications(applications: Application[]) {
   const dedupe = new Set<string>();
+  const normalized: Application[] = [];
 
-  return applications
-    .filter((application) => application.name.length > 0)
-    .map((application) => ({
+  for (const application of applications) {
+    if (application.name.length === 0) {
+      continue;
+    }
+
+    const description =
+      application.description.length > 0 ? application.description : "launch application";
+
+    const normalizedApplication = {
       ...application,
-      description:
-        application.description.length > 0 ? application.description : "launch application",
-    }))
-    .filter((application) => {
-      const key = `${application.name.toLowerCase()}::${application.exec_path.toLowerCase()}`;
-      if (dedupe.has(key)) {
-        return false;
-      }
+      description,
+    };
 
-      dedupe.add(key);
-      return true;
-    })
+    const key = `${normalizedApplication.name.toLowerCase()}::${normalizedApplication.exec_path.toLowerCase()}`;
+    if (dedupe.has(key)) {
+      continue;
+    }
+
+    dedupe.add(key);
+    normalized.push(normalizedApplication);
+  }
+
+  return normalized
     .sort((first, second) => first.name.localeCompare(second.name))
     .slice(0, MAX_APPLICATIONS);
 }
