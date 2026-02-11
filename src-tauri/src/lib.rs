@@ -21,7 +21,9 @@ fn toggle_launcher(app: &tauri::AppHandle) {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let mut builder = tauri::Builder::default().invoke_handler(app_commands::get_handler());
+    let mut builder = tauri::Builder::default()
+        .plugin(tauri_plugin_store::Builder::new().build())
+        .invoke_handler(app_commands::get_handler());
 
     #[cfg(desktop)]
     {

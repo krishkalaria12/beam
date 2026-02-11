@@ -1,12 +1,12 @@
 use std::process::{Command, Stdio};
 
 use shell_words::split;
-use tauri::{command, AppHandle};
+use tauri::{command, Window};
 
 use crate::applications::error::{Error, Result};
 
 #[command]
-pub fn open_application(app: AppHandle, exec_path: String) -> Result<()> {
+pub fn open_application(window: Window, exec_path: String) -> Result<()> {
     let normalized_exec_path = exec_path.trim();
     if normalized_exec_path.is_empty() {
         return Err(Error::LaunchingApplicationError(
@@ -32,8 +32,10 @@ pub fn open_application(app: AppHandle, exec_path: String) -> Result<()> {
         .spawn()
         .map_err(|e| Error::LaunchingApplicationError(e.to_string()))?;
 
-    // close the launcher
-    app.exit(0);
+    // Hide the window
+    window
+        .hide()
+        .map_err(|e| Error::HidingWindowApplicationError(e.to_string()))?;
 
     Ok(())
 }

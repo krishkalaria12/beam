@@ -23,6 +23,13 @@ pub fn config() -> &'static Config {
 pub struct Config {
     // -- Web
     pub DIRECTORIES_APPLICATION: Vec<String>,
+    pub DIRECTORIES_ICON: Vec<String>,
+    pub SERVICE_NAME: &'static str,
+    pub STORE_NAME: &'static str,
+    pub LAST_UPDATED_APPLICATIONS_TIMESTAMP: &'static str,
+    pub TIMESTAMP_VALUE_DIFF: usize,
+    pub APPLICATIONS_VALUE: &'static str,
+    pub APPLICATIONS_CACHE_UPDATED_EVENT: &'static str,
 }
 
 impl Config {
@@ -32,6 +39,21 @@ impl Config {
                 "~/.local/share/applications/".to_string(),
                 "/usr/share/applications/".to_string(),
             ],
+            DIRECTORIES_ICON: vec![
+                "~/.local/share/icons".to_string(),
+                "~/.icons".to_string(),
+                "/usr/share/icons".to_string(),
+                "/usr/local/share/icons".to_string(),
+                "/usr/share/pixmaps".to_string(),
+                "/var/lib/flatpak/exports/share/icons".to_string(),
+                "/var/lib/snapd/desktop/icons".to_string(),
+            ],
+            SERVICE_NAME: "beam",
+            STORE_NAME: "settings.json",
+            APPLICATIONS_VALUE: "applications_cache",
+            LAST_UPDATED_APPLICATIONS_TIMESTAMP: "last_updated_application_timestamp",
+            TIMESTAMP_VALUE_DIFF: 2,
+            APPLICATIONS_CACHE_UPDATED_EVENT: "applications-cache-updated",
         })
     }
 }

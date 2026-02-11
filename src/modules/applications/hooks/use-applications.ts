@@ -1,7 +1,36 @@
-import { useQuery } from "@tanstack/react-query";
+import { isTauri } from "@tauri-apps/api/core";
+import { listen, type UnlistenFn } from "@tauri-apps/api/event";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { getApplications } from "../api/get-applications";
 
+const APPLICATIONS_CACHE_UPDATED_EVENT = "applications-cache-updated";
+
 export function useApplications() {
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (!isTauri()) {
+      return;
+    }
+
+    let unlisten: UnlistenFn | null = null;
+
+    listen(APPLICATIONS_CACHE_UPDATED_EVENT, () => {
+      queryClient.invalidateQueries({ queryKey: ["applications"] });
+    })
+      .then((cleanup) => {
+        unlisten = cleanup;
+      })
+      .catch(() => {
+        unlisten = null;
+      });
+
+    return () => {
+      unlisten?.();
+    };
+  }, [queryClient]);
+
   return useQuery({
     queryKey: ["applications"],
     queryFn: getApplications,
