@@ -233,18 +233,22 @@ pub fn get_applications() -> Result<Vec<AppEntry>> {
         }
 
         if let EntryType::Application(app) = &entry.entry_type {
-            let name = entry.name.default.trim().to_string();
-            if name.is_empty() {
-                continue;
-            }
-
-            let description = get_application_description(&entry);
             let icon = resolve_icon_path(
                 entry.icon.as_ref(),
                 &path,
                 &allowed_icon_directories,
                 &home_local_directory,
             );
+            if icon.is_empty() {
+                continue;
+            }
+
+            let name = entry.name.default.trim().to_string();
+            if name.is_empty() {
+                continue;
+            }
+
+            let description = get_application_description(&entry);
             let exec_clean = clean_exec_path(app.exec.as_deref());
 
             applications.push(AppEntry {

@@ -27,6 +27,7 @@ parking_lot = "0.12.5"
 freedesktop-file-parser = "0.3.1"
 walkdir = "2.5.0"
 freedesktop-icons = "0.4.0"
+shell-words = "1.1.0"
 
 [target.'cfg(any(target_os = "macos", windows, target_os = "linux"))'.dependencies]
 tauri-plugin-single-instance = "2.4.0"

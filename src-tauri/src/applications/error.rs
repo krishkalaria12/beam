@@ -8,6 +8,7 @@ pub enum Error {
     CollectingDesktopFilesError(String),
     ParsingDesktopFileError(ParseError),
     ParsingIconError(String),
+    LaunchingApplicationError(String),
 }
 
 impl Serialize for Error {
@@ -32,6 +33,7 @@ impl core::fmt::Display for Error {
             Self::CollectingDesktopFilesError(e) => write!(fmt, "{e}"),
             Self::ParsingDesktopFileError(e) => write!(fmt, "{e}"),
             Self::ParsingIconError(e) => write!(fmt, "{e}"),
+            Self::LaunchingApplicationError(e) => write!(fmt, "{e}"),
         }
     }
 }

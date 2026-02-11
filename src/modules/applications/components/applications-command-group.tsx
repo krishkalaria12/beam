@@ -3,11 +3,13 @@ import { AlertTriangle, AppWindow, Loader2 } from "lucide-react";
 import { CommandGroup } from "@/components/ui/command";
 
 import { useApplications } from "../hooks/use-applications";
+import { useOpenApplication } from "../hooks/use-open-application";
 import ApplicationCommandItem from "./application-command-item";
 import ApplicationsStateItem from "./applications-state-item";
 
 export default function ApplicationsCommandGroup() {
   const { data, isLoading, isError, error, isFetching } = useApplications();
+  const { launchApplication, launchingExecPath, launchError } = useOpenApplication();
   const applications = data ?? [];
   const errorMessage =
     error instanceof Error && error.message.trim().length > 0
@@ -48,6 +50,11 @@ export default function ApplicationsCommandGroup() {
           <ApplicationCommandItem
             key={`${application.name}-${application.exec_path}`}
             application={application}
+            isLaunching={launchingExecPath === application.exec_path}
+            launchErrorMessage={
+              launchError?.execPath === application.exec_path ? launchError.message : null
+            }
+            onOpen={launchApplication}
           />
         ))}
     </CommandGroup>
