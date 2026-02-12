@@ -1,7 +1,7 @@
 import { CommandItem, CommandShortcut } from "@/components/ui/command";
 import { memo } from "react";
 
-import { type Application } from "../api/get-applications";
+import { type Application } from "../api/search-applications";
 import ApplicationIcon from "./application-icon";
 
 type ApplicationCommandItemProps = {

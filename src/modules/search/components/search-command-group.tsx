@@ -18,13 +18,13 @@ const searchProviders: SearchProvider[] = [
   {
     id: "google",
     title: "search with google",
-    subtitle: "open google results in browser",
+    subtitle: "search using google in your default browser",
     icon: googleIcon,
   },
   {
     id: "duckduckgo",
     title: "search with duckduckgo",
-    subtitle: "open duckduckgo results in browser",
+    subtitle: "search using duckduckgo in your default browser",
     icon: duckduckgoIcon,
   },
 ];
@@ -35,23 +35,27 @@ export default function SearchCommandGroup() {
 
   const { runSearch, searchingSite, searchError } = useSearchWithBrowser();
 
-  if (!query) {
-    return null;
-  }
-
   return (
     <CommandGroup heading="web search">
       {searchProviders.map((provider) => {
         const isSearching = searchingSite === provider.id;
         const errorMessage = searchError?.site === provider.id ? searchError.message : null;
+        const isDisabled = isSearching;
+        const subtitle = provider.subtitle;
 
         return (
           <CommandItem
             key={provider.id}
-            value={`${provider.title} ${query}`}
+            value={query ? `${provider.title} ${query}` : provider.title}
             className="rounded-md px-3 py-3"
-            disabled={isSearching}
-            onSelect={() => runSearch(provider.id, query)}
+            disabled={isDisabled}
+            onSelect={() => {
+              if (isDisabled || query.length === 0) {
+                return;
+              }
+
+              runSearch(provider.id, query);
+            }}
           >
             <img
               src={provider.icon}
@@ -66,7 +70,7 @@ export default function SearchCommandGroup() {
                   errorMessage ? "text-amber-400" : "text-zinc-400"
                 }`}
               >
-                {errorMessage ?? `${provider.subtitle}: ${query}`}
+                {errorMessage ?? subtitle}
               </p>
             </div>
             <CommandShortcut className="normal-case tracking-normal text-zinc-400">
