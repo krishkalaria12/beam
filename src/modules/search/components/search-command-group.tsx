@@ -10,7 +10,6 @@ import { useSearchWithBrowser } from "../hooks/use-search-with-browser";
 type SearchProvider = {
   id: SearchSite;
   title: string;
-  subtitle: string;
   icon: string;
 };
 
@@ -18,13 +17,11 @@ const searchProviders: SearchProvider[] = [
   {
     id: "google",
     title: "search with google",
-    subtitle: "search using google in your default browser",
     icon: googleIcon,
   },
   {
     id: "duckduckgo",
     title: "search with duckduckgo",
-    subtitle: "search using duckduckgo in your default browser",
     icon: duckduckgoIcon,
   },
 ];
@@ -41,13 +38,12 @@ export default function SearchCommandGroup() {
         const isSearching = searchingSite === provider.id;
         const errorMessage = searchError?.site === provider.id ? searchError.message : null;
         const isDisabled = isSearching;
-        const subtitle = provider.subtitle;
 
         return (
           <CommandItem
             key={provider.id}
             value={query ? `${provider.title} ${query}` : provider.title}
-            className="rounded-md px-3 py-3"
+            className="rounded-md px-3 py-2.5"
             disabled={isDisabled}
             onSelect={() => {
               if (isDisabled || query.length === 0) {
@@ -65,13 +61,7 @@ export default function SearchCommandGroup() {
             />
             <div className="min-w-0">
               <p className="truncate text-[1.08rem] leading-tight text-zinc-100">{provider.title}</p>
-              <p
-                className={`truncate text-base leading-tight ${
-                  errorMessage ? "text-amber-400" : "text-zinc-400"
-                }`}
-              >
-                {errorMessage ?? subtitle}
-              </p>
+              {errorMessage && <p className="truncate text-sm leading-tight text-amber-400">{errorMessage}</p>}
             </div>
             <CommandShortcut className="normal-case tracking-normal text-zinc-400">
               {isSearching ? "opening" : "web"}

@@ -1,4 +1,4 @@
-import { AlertTriangle, AppWindow, Loader2 } from "lucide-react";
+import { AlertTriangle, Loader2 } from "lucide-react";
 import { useCommandState } from "cmdk";
 
 import { CommandGroup } from "@/components/ui/command";
@@ -12,15 +12,15 @@ export default function ApplicationsCommandGroup() {
   const searchInput = useCommandState((state) => state.search);
   const query = searchInput.trim();
 
-  const { data, isLoading, isError, error, isFetching } = useApplicationSearch(query);
+  const { data, isLoading, isError, isFetching } = useApplicationSearch(query);
   const { launchApplication, launchingExecPath, launchError } = useOpenApplication();
   const applications = data ?? [];
-  const errorMessage =
-    error instanceof Error && error.message.trim().length > 0
-      ? error.message
-      : "unexpected backend error";
 
   if (!query) {
+    return null;
+  }
+
+  if (!isLoading && !isError && applications.length === 0) {
     return null;
   }
 
@@ -31,7 +31,6 @@ export default function ApplicationsCommandGroup() {
           icon={Loader2}
           iconClassName="size-4 animate-spin text-zinc-400"
           title="searching applications"
-          description="matching apps with fuzzy search"
         />
       )}
 
@@ -40,15 +39,6 @@ export default function ApplicationsCommandGroup() {
           icon={AlertTriangle}
           iconClassName="size-4 text-amber-400"
           title="could not load applications"
-          description={errorMessage}
-        />
-      )}
-
-      {!isLoading && !isError && applications.length === 0 && (
-        <ApplicationsStateItem
-          icon={AppWindow}
-          title="no applications found"
-          description="try a different name or keyword"
         />
       )}
 

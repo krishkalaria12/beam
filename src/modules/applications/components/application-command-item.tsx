@@ -1,5 +1,4 @@
 import { CommandItem, CommandShortcut } from "@/components/ui/command";
-import { memo } from "react";
 
 import { type Application } from "../api/search-applications";
 import ApplicationIcon from "./application-icon";
@@ -11,7 +10,7 @@ type ApplicationCommandItemProps = {
   onOpen: (execPath: string) => void;
 };
 
-const ApplicationCommandItem = memo(function ApplicationCommandItem({
+export default function ApplicationCommandItem({
   application,
   isLaunching,
   launchErrorMessage,
@@ -19,12 +18,11 @@ const ApplicationCommandItem = memo(function ApplicationCommandItem({
 }: ApplicationCommandItemProps) {
   const execPath = application.exec_path.trim();
   const isLaunchable = execPath.length > 0;
-  const subtitle = launchErrorMessage ?? application.description;
 
   return (
     <CommandItem
-      value={`${application.name} ${application.description}`}
-      className="rounded-md px-3 py-3"
+      value={application.name}
+      className="rounded-md px-3 py-2.5"
       disabled={!isLaunchable || isLaunching}
       onSelect={() => {
         if (!isLaunchable || isLaunching) {
@@ -37,19 +35,13 @@ const ApplicationCommandItem = memo(function ApplicationCommandItem({
       <ApplicationIcon iconPath={application.icon} />
       <div className="min-w-0">
         <p className="truncate text-[1.08rem] leading-tight text-zinc-100">{application.name}</p>
-        <p
-          className={`truncate text-base leading-tight ${
-            launchErrorMessage ? "text-amber-400" : "text-zinc-400"
-          }`}
-        >
-          {subtitle}
-        </p>
+        {launchErrorMessage && (
+          <p className="truncate text-sm leading-tight text-amber-400">{launchErrorMessage}</p>
+        )}
       </div>
       <CommandShortcut className="normal-case tracking-normal text-zinc-400">
         {isLaunching ? "launching" : isLaunchable ? "application" : "unavailable"}
       </CommandShortcut>
     </CommandItem>
   );
-});
-
-export default ApplicationCommandItem;
+}

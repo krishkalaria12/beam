@@ -1,6 +1,6 @@
 import { convertFileSrc, isTauri } from "@tauri-apps/api/core";
 import { AppWindow } from "lucide-react";
-import { memo, useState } from "react";
+import { useState } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -52,7 +52,7 @@ function getImageSource(iconPath: string) {
   }
 }
 
-const ApplicationIcon = memo(function ApplicationIcon({ iconPath, className }: ApplicationIconProps) {
+export default function ApplicationIcon({ iconPath, className }: ApplicationIconProps) {
   const imageSource = getImageSource(iconPath);
   const [failedSource, setFailedSource] = useState<string | null>(null);
 
@@ -69,6 +69,4 @@ const ApplicationIcon = memo(function ApplicationIcon({ iconPath, className }: A
       onError={() => setFailedSource(imageSource)}
     />
   );
-});
-
-export default ApplicationIcon;
+}
