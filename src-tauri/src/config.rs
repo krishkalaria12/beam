@@ -21,15 +21,25 @@ pub fn config() -> &'static Config {
 
 #[allow(non_snake_case)]
 pub struct Config {
-    // -- Web
+    // -- Store
     pub DIRECTORIES_APPLICATION: Vec<String>,
     pub DIRECTORIES_ICON: Vec<String>,
     pub SERVICE_NAME: &'static str,
     pub STORE_NAME: &'static str,
+
+    // -- Applications
     pub LAST_UPDATED_APPLICATIONS_TIMESTAMP: &'static str,
     pub TIMESTAMP_VALUE_DIFF: usize,
     pub APPLICATIONS_VALUE: &'static str,
     pub APPLICATIONS_CACHE_UPDATED_EVENT: &'static str,
+
+    // -- Calculator
+    pub CALCULATOR_CURRENCY_URL: &'static str,
+    pub CALCULATOR_COIN_URL: &'static str,
+    pub CALCULATOR_CITY_TIME_URL: &'static str,
+    pub CALCULATOR_HTTP_TIMEOUT_SECS: u64,
+    pub CALCULATOR_REQUEST_WAIT_TIMEOUT_SECS: u64,
+    pub CALCULATOR_REQUEST_POLL_INTERVAL_MS: u64,
 }
 
 impl Config {
@@ -54,6 +64,13 @@ impl Config {
             LAST_UPDATED_APPLICATIONS_TIMESTAMP: "last_updated_application_timestamp",
             TIMESTAMP_VALUE_DIFF: 2,
             APPLICATIONS_CACHE_UPDATED_EVENT: "applications-cache-updated",
+
+            CALCULATOR_CURRENCY_URL: "https://www.floatrates.com/daily/usd.json",
+            CALCULATOR_COIN_URL: "https://api.coincap.io/v2/assets",
+            CALCULATOR_CITY_TIME_URL: "https://erhanbaris.github.io/jsons/cities.json",
+            CALCULATOR_HTTP_TIMEOUT_SECS: 10,
+            CALCULATOR_REQUEST_WAIT_TIMEOUT_SECS: 8,
+            CALCULATOR_REQUEST_POLL_INTERVAL_MS: 20,
         })
     }
 }
