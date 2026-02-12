@@ -1,12 +1,33 @@
-fn is_word_char(ch: char) -> bool {
+pub fn is_word_char(ch: char) -> bool {
     ch.is_alphanumeric()
 }
 
-fn collapse_spaces(text: &str) -> String {
+pub fn collapse_spaces(text: &str) -> String {
     text.split_whitespace().collect::<Vec<_>>().join(" ")
 }
 
-fn replace_phrase_with_boundaries(input: &str, phrase: &str, replacement: &str) -> String {
+pub fn normalize_alias_text(text: &str) -> String {
+    let mut lowered = String::new();
+    for ch in text.chars() {
+        lowered.extend(ch.to_lowercase());
+    }
+
+    let mut normalized = String::new();
+    let mut last_was_space = true;
+    for ch in lowered.chars() {
+        if ch.is_alphanumeric() {
+            normalized.push(ch);
+            last_was_space = false;
+        } else if !last_was_space {
+            normalized.push(' ');
+            last_was_space = true;
+        }
+    }
+
+    normalized.trim().to_string()
+}
+
+pub fn replace_phrase_with_boundaries(input: &str, phrase: &str, replacement: &str) -> String {
     if phrase.is_empty() || phrase == replacement {
         return input.to_string();
     }
@@ -40,32 +61,4 @@ fn replace_phrase_with_boundaries(input: &str, phrase: &str, replacement: &str) 
 
     output.push_str(&input[index..]);
     output
-}
-
-pub fn normalize_command_expression(expression: &str) -> String {
-    let lowered = expression.to_lowercase();
-    let normalized_spaces = collapse_spaces(&lowered);
-    let mut normalized = normalized_spaces.replace(" into ", " to ");
-
-    let generic_currency_aliases = [
-        ("dollars", "usd"),
-        ("dollar", "usd"),
-        ("rupees", "inr"),
-        ("rupee", "inr"),
-        ("euros", "eur"),
-        ("euro", "eur"),
-        ("pounds", "gbp"),
-        ("pound", "gbp"),
-        ("yen", "jpy"),
-    ];
-
-    for (alias, code) in generic_currency_aliases {
-        normalized = replace_phrase_with_boundaries(&normalized, alias, code);
-    }
-
-    if normalized.contains(" in ") && normalized.chars().any(|ch| ch.is_ascii_digit()) {
-        normalized.replace(" in ", " to ")
-    } else {
-        normalized
-    }
 }

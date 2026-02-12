@@ -1,98 +1,19 @@
-use std::collections::{BTreeMap, HashMap};
-
 use chrono_tz::Tz;
-use serde::Deserialize;
-use serde_json::from_str;
 
 use crate::calculator::calculation::Calculation;
 use crate::calculator::error::Result;
 use crate::calculator::plugin::PluginManager;
-use crate::calculator::query_normalizer::normalize_command_expression;
 use crate::calculator::query_validator::classify_query;
 use crate::calculator::settings::Settings;
 use crate::calculator::timezone::{update_current_timezone, TIMEZONE_LIST, UTC_TIMEZONE};
 use crate::calculator::types::{CalculationOutput, CalculatorCommandResponse, CalculatorStatus};
-use crate::config::config;
-use crate::http::Request;
-
-fn is_word_char(ch: char) -> bool {
-    ch.is_alphanumeric()
-}
-
-fn collapse_spaces(text: &str) -> String {
-    text.split_whitespace().collect::<Vec<_>>().join(" ")
-}
-
-fn normalize_alias_text(text: &str) -> String {
-    let mut lowered = String::new();
-    for ch in text.chars() {
-        lowered.extend(ch.to_lowercase());
-    }
-
-    let mut normalized = String::new();
-    let mut last_was_space = true;
-    for ch in lowered.chars() {
-        if ch.is_alphanumeric() {
-            normalized.push(ch);
-            last_was_space = false;
-        } else if !last_was_space {
-            normalized.push(' ');
-            last_was_space = true;
-        }
-    }
-
-    normalized.trim().to_string()
-}
-
-fn replace_phrase_with_boundaries(input: &str, phrase: &str, replacement: &str) -> String {
-    if phrase.is_empty() || phrase == replacement {
-        return input.to_string();
-    }
-
-    let mut output = String::new();
-    let mut index = 0;
-
-    while let Some(found_at) = input[index..].find(phrase) {
-        let start = index + found_at;
-        let end = start + phrase.len();
-
-        let prev = input[..start].chars().next_back();
-        let next = input[end..].chars().next();
-        let has_valid_boundary = !prev.is_some_and(is_word_char) && !next.is_some_and(is_word_char);
-
-        if has_valid_boundary {
-            output.push_str(&input[index..start]);
-            output.push_str(replacement);
-            index = end;
-        } else {
-            let step = input[start..]
-                .chars()
-                .next()
-                .map(char::len_utf8)
-                .unwrap_or(1);
-            let next_index = start + step;
-            output.push_str(&input[index..next_index]);
-            index = next_index;
-        }
-    }
-
-    output.push_str(&input[index..]);
-    output
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Deserialize)]
-struct Currency {
-    pub rate: f64,
-
-    #[serde(default)]
-    pub name: String,
-}
+use crate::currency::normalizer::normalize_conversion_query;
+use crate::currency::runtime::CurrencyRuntime;
 
 struct CalculatorEngine {
     calculation: Calculation,
-    fetch_currencies: Option<Request>,
     plugins: PluginManager,
-    currency_alias_rules: Vec<(String, String)>,
+    currency_runtime: CurrencyRuntime,
     settings: Settings,
 }
 
@@ -125,9 +46,8 @@ impl Default for CalculatorEngine {
 
         Self {
             calculation,
-            fetch_currencies: None,
             plugins: PluginManager::default(),
-            currency_alias_rules: Vec::new(),
+            currency_runtime: CurrencyRuntime::default(),
             settings,
         }
     }
@@ -138,81 +58,10 @@ impl CalculatorEngine {
         Self::default()
     }
 
-    fn register_alias(aliases: &mut HashMap<String, String>, alias: &str, code: &str) {
-        let cleaned = collapse_spaces(alias.trim());
-        if cleaned.is_empty() {
-            return;
-        }
-
-        aliases.entry(cleaned).or_insert_with(|| code.to_string());
-    }
-
-    fn register_alias_variants(aliases: &mut HashMap<String, String>, alias: &str, code: &str) {
-        let lowered = collapse_spaces(&alias.to_lowercase());
-        Self::register_alias(aliases, &lowered, code);
-
-        let normalized = normalize_alias_text(alias);
-        Self::register_alias(aliases, &normalized, code);
-
-        let compact = normalized.replace(' ', "");
-        if compact.len() >= 3 && compact.len() <= 8 {
-            Self::register_alias(aliases, &compact, code);
-        }
-    }
-
-    fn rebuild_currency_aliases(&mut self, rates: &BTreeMap<String, Currency>) {
-        let mut aliases = HashMap::<String, String>::new();
-
-        for (code, currency) in rates {
-            let code = code.to_lowercase();
-            if !self
-                .calculation
-                .smartcalc
-                .update_currency(&code, currency.rate)
-            {
-                continue;
-            }
-
-            Self::register_alias_variants(&mut aliases, &code, &code);
-            Self::register_alias_variants(&mut aliases, &currency.name, &code);
-
-            if currency.name.ends_with(" Dollar") {
-                Self::register_alias_variants(&mut aliases, &format!("{}s", currency.name), &code);
-            }
-            if currency.name.ends_with(" Rupee") {
-                Self::register_alias_variants(&mut aliases, &format!("{}s", currency.name), &code);
-            }
-        }
-
-        let mut rules = aliases
-            .into_iter()
-            .filter(|(alias, code)| alias != code)
-            .collect::<Vec<_>>();
-        rules.sort_by(|left, right| {
-            right
-                .0
-                .len()
-                .cmp(&left.0.len())
-                .then_with(|| left.0.cmp(&right.0))
-        });
-
-        self.currency_alias_rules = rules;
-    }
-
-    fn normalize_currency_expression(&self, expression: &str) -> String {
-        let mut normalized = expression.to_lowercase();
-
-        for (alias, code) in &self.currency_alias_rules {
-            normalized = replace_phrase_with_boundaries(&normalized, alias, code);
-        }
-
-        normalized
-    }
-
     fn setup(&mut self) -> Result<()> {
         update_current_timezone(&self.settings.timezone);
         self.calculation.configure(&self.settings)?;
-        self.fetch_currencies = Some(Request::get(config().CALCULATOR_CURRENCY_URL));
+        self.currency_runtime.start_refresh();
 
         self.plugins.build(
             &mut self.calculation.smartcalc,
@@ -224,28 +73,13 @@ impl CalculatorEngine {
 
     fn process(&mut self) -> Result<()> {
         self.plugins.process()?;
-
-        let response = self
-            .fetch_currencies
-            .as_ref()
-            .and_then(|request| request.get_data().cloned());
-
-        let Some(response) = response else {
-            return Ok(());
-        };
-
-        self.fetch_currencies = None;
-
-        let body = response.map_err(crate::calculator::error::Error::from)?;
-        let parsed = from_str::<BTreeMap<String, Currency>>(&body)
-            .map_err(|error| crate::calculator::error::Error::JsonParseError(error.to_string()))?;
-        self.rebuild_currency_aliases(&parsed);
-
+        self.currency_runtime
+            .process(&mut self.calculation.smartcalc)?;
         Ok(())
     }
 
     fn evaluate_expression(&mut self, expression: &str) -> Vec<CalculationOutput> {
-        self.calculation.code = self.normalize_currency_expression(expression);
+        self.calculation.code = self.currency_runtime.normalize_expression(expression);
         self.calculation.calculate();
 
         self.calculation
@@ -265,7 +99,7 @@ impl CalculatorEngine {
     }
 
     fn ongoing_request(&self) -> bool {
-        self.plugins.ongoing_request() || self.fetch_currencies.is_some()
+        self.plugins.ongoing_request() || self.currency_runtime.has_pending_request()
     }
 }
 
@@ -284,7 +118,7 @@ impl CalculatorService {
     }
 
     pub fn calculate_expression(&mut self, query: &str) -> Result<CalculatorCommandResponse> {
-        let normalized_query = normalize_command_expression(query.trim());
+        let normalized_query = normalize_conversion_query(query.trim());
         let classification = classify_query(&normalized_query);
 
         if classification != CalculatorStatus::Valid {

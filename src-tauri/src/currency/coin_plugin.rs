@@ -10,15 +10,11 @@ use smartcalc::SmartCalc;
 use smartcalc::SmartCalcConfig;
 use smartcalc::TokenType;
 
-use super::error::{Error as PluginError, Result as PluginResult};
-use super::PluginTrait;
 use crate::calculator::error::Result as CalculatorResult;
+use crate::calculator::plugin::error::{Error as PluginError, Result as PluginResult};
+use crate::calculator::plugin::{get_number, get_text, PluginTrait, RequestManager};
 use crate::config::config;
 use crate::http::Request;
-
-use super::get_number;
-use super::get_text;
-use super::RequestManager;
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -75,12 +71,14 @@ impl PluginTrait for CoinPlugin {
         *self.coins.borrow_mut() = parsed.data;
         Ok(())
     }
+
     fn get_rules(&self) -> Vec<String> {
         vec![
             "{NUMBER:count} {TEXT:coin}".to_string(),
             "{TEXT:coin}".to_string(),
         ]
     }
+
     fn upcast(self: Rc<Self>) -> Rc<dyn RuleTrait> {
         self
     }
@@ -89,7 +87,7 @@ impl PluginTrait for CoinPlugin {
         let mut coin = Self::default();
         coin.requests = requests;
         coin.requests
-            .add(&coin.name(), Request::get(config().CALCULATOR_COIN_URL));
+            .add(&coin.name(), Request::get(config().CURRENCY_COIN_URL));
         Ok(Rc::new(coin))
     }
 }

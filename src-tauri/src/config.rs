@@ -35,7 +35,7 @@ pub struct Config {
 
     // -- Calculator
     pub CALCULATOR_CURRENCY_URL: &'static str,
-    pub CALCULATOR_COIN_URL: &'static str,
+    pub CURRENCY_COIN_URL: &'static str,
     pub CALCULATOR_CITY_TIME_URL: &'static str,
     pub CALCULATOR_HTTP_TIMEOUT_SECS: u64,
     pub CALCULATOR_REQUEST_WAIT_TIMEOUT_SECS: u64,
@@ -66,7 +66,7 @@ impl Config {
             APPLICATIONS_CACHE_UPDATED_EVENT: "applications-cache-updated",
 
             CALCULATOR_CURRENCY_URL: "https://www.floatrates.com/daily/usd.json",
-            CALCULATOR_COIN_URL: "https://api.coincap.io/v2/assets",
+            CURRENCY_COIN_URL: "https://api.coincap.io/v2/assets",
             CALCULATOR_CITY_TIME_URL: "https://erhanbaris.github.io/jsons/cities.json",
             CALCULATOR_HTTP_TIMEOUT_SECS: 10,
             CALCULATOR_REQUEST_WAIT_TIMEOUT_SECS: 8,

@@ -2,6 +2,7 @@ mod app_commands;
 pub mod applications;
 pub mod calculator;
 pub mod config;
+pub mod currency;
 pub mod error;
 pub mod fuzzy_search;
 pub mod http;

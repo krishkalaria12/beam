@@ -1,7 +1,6 @@
 pub mod calculation;
 pub mod error;
 pub mod plugin;
-mod query_normalizer;
 mod query_validator;
 pub mod service;
 pub mod settings;

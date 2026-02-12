@@ -1,5 +1,4 @@
 pub mod city_time;
-pub mod coin;
 pub mod error;
 
 use std::cell::RefCell;
@@ -13,6 +12,7 @@ use smartcalc::{SmartCalcAstType, TokenType};
 use crate::calculator::error::Error as CalculatorError;
 use crate::calculator::error::Result as CalculatorResult;
 use crate::calculator::plugin::error::Result as PluginResult;
+use crate::currency::coin_plugin::CoinPlugin;
 use crate::http::Request;
 
 pub fn get_number(field_name: &str, fields: &BTreeMap<String, TokenType>) -> Option<f64> {
@@ -118,7 +118,7 @@ impl PluginManager {
         smartcalc: &mut SmartCalc,
         enabled_plugins: &mut HashMap<String, bool>,
     ) -> CalculatorResult<()> {
-        self.add_plugin::<coin::CoinPlugin>(smartcalc, enabled_plugins)?;
+        self.add_plugin::<CoinPlugin>(smartcalc, enabled_plugins)?;
         self.add_plugin::<city_time::CityTimePlugin>(smartcalc, enabled_plugins)?;
 
         for plugin in self.plugins.iter() {
