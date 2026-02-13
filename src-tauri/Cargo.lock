@@ -87,7 +87,6 @@ dependencies = [
  "log",
  "nucleo",
  "once_cell",
- "parking_lot",
  "poll-promise",
  "reqwest",
  "serde",

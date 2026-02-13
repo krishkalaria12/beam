@@ -1,22 +1,14 @@
-use parking_lot::{const_mutex, Mutex};
+use std::sync::LazyLock;
 
 use crate::error::Result;
 
+static CONFIG: LazyLock<Config> = LazyLock::new(|| {
+    Config::load_the_config()
+        .unwrap_or_else(|ex| panic!("FATAL - WHILE LOADING CONF - Cause: {ex:?}"))
+});
+
 pub fn config() -> &'static Config {
-    static INSTANCE: Mutex<Option<&'static Config>> = const_mutex(None);
-
-    let mut instance = INSTANCE.lock();
-    if let Some(config) = *instance {
-        return config;
-    }
-
-    let config =
-        Box::leak(Box::new(Config::load_the_config().unwrap_or_else(|ex| {
-            panic!("FATAL - WHILE LOADING CONF - Cause: {ex:?}")
-        })));
-
-    *instance = Some(config);
-    config
+    &CONFIG
 }
 
 #[allow(non_snake_case)]
