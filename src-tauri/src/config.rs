@@ -32,6 +32,16 @@ pub struct Config {
     pub CALCULATOR_HTTP_TIMEOUT_SECS: u64,
     pub CALCULATOR_REQUEST_WAIT_TIMEOUT_SECS: u64,
     pub CALCULATOR_REQUEST_POLL_INTERVAL_MS: u64,
+
+    // -- Keyring
+    pub KEYRING_NAME: &'static str,
+
+    // -- Clipboard
+    pub CLIPBOARD_HISTORY_VALUE: &'static str,
+    pub CLIPBOARD_STORE_NAME: &'static str,
+    pub CLIPBOARD_POLL_INTERVAL_MS: u64,
+    pub CLIPBOARD_MAX_HISTORY_ENTRIES: usize,
+    pub CLIPBOARD_MAX_ENTRY_BYTES: usize,
 }
 
 impl Config {
@@ -63,6 +73,14 @@ impl Config {
             CALCULATOR_HTTP_TIMEOUT_SECS: 10,
             CALCULATOR_REQUEST_WAIT_TIMEOUT_SECS: 8,
             CALCULATOR_REQUEST_POLL_INTERVAL_MS: 20,
+
+            KEYRING_NAME: "secret-key",
+
+            CLIPBOARD_HISTORY_VALUE: "clipboard_history",
+            CLIPBOARD_STORE_NAME: "clipboard_history.json",
+            CLIPBOARD_POLL_INTERVAL_MS: 350,
+            CLIPBOARD_MAX_HISTORY_ENTRIES: 100,
+            CLIPBOARD_MAX_ENTRY_BYTES: 1_000_000,
         })
     }
 }

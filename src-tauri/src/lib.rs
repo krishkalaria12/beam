@@ -1,6 +1,7 @@
 mod app_commands;
 pub mod applications;
 pub mod calculator;
+pub mod clipboard;
 pub mod config;
 pub mod currency;
 pub mod error;
@@ -55,6 +56,9 @@ pub fn run() {
                         .build(),
                 )?;
             }
+
+            clipboard::start_clipboard_listener(app.handle().clone());
+
             Ok(())
         })
         .run(tauri::generate_context!())
