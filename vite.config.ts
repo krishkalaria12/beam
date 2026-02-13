@@ -9,10 +9,10 @@ export default defineConfig({
     tailwindcss(),
     tanstackRouter({}),
     react({
-    babel: {
-      plugins: ['babel-plugin-react-compiler'],
-    },
-  })],
+      babel: {
+        plugins: ['babel-plugin-react-compiler'],
+      },
+    })],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
@@ -20,5 +20,34 @@ export default defineConfig({
   },
   server: {
     port: 3001,
+  },
+  build: {
+    target: "esnext",
+    minify: "esbuild",
+    rollupOptions: {
+      output: {
+        manualChunks: (id) => {
+          if (!id.includes("node_modules")) {
+            return;
+          }
+          if (id.includes("emojibase")) {
+            return "emoji-data";
+          }
+          if (id.includes("zod")) {
+            return "zod-vendor";
+          }
+          if (id.includes("@tanstack")) {
+            return "tanstack-vendor";
+          }
+          if (id.includes("lucide-react") || id.includes("cmdk") || id.includes("@base-ui") || id.includes("shadcn") || id.includes("sonner") || id.includes("class-variance") || id.includes("tailwind-merge") || id.includes("clsx")) {
+            return "ui-vendor";
+          }
+          if (id.includes("react-dom") || id.includes("react/") || id.includes("scheduler")) {
+            return "react-vendor";
+          }
+          return "vendors";
+        },
+      },
+    },
   },
 });

@@ -1,12 +1,22 @@
 import { Search } from "lucide-react";
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 
 import { Command, CommandInput, CommandList, CommandSeparator } from "@/components/ui/command";
-import ApplicationsCommandGroup from "@/modules/applications/components/applications-command-group";
-import CalculatorCommandGroup from "@/modules/calculator/components/calculator-command-group";
-import ClipboardCommandGroup from "@/modules/clipboard/components/clipboard-command-group";
-import EmojiCommandGroup from "@/modules/emoji/components/emoji-command-group";
-import SearchCommandGroup from "@/modules/search/components/search-command-group";
+import Loader from "./loader";
+
+const ApplicationsCommandGroup = lazy(() => import("@/modules/applications/components/applications-command-group"));
+const CalculatorCommandGroup = lazy(() => import("@/modules/calculator/components/calculator-command-group"));
+const ClipboardCommandGroup = lazy(() => import("@/modules/clipboard/components/clipboard-command-group"));
+const EmojiCommandGroup = lazy(() => import("@/modules/emoji/components/emoji-command-group"));
+const SearchCommandGroup = lazy(() => import("@/modules/search/components/search-command-group"));
+
+function ModuleLoader() {
+  return (
+    <div className="flex items-center justify-center py-8">
+      <Loader />
+    </div>
+  );
+}
 
 export default function LauncherCommand() {
   const [commandSearch, setCommandSearch] = useState("");
@@ -37,8 +47,49 @@ export default function LauncherCommand() {
       >
         {activePanel === "commands" && (
           <>
+            <Suspense fallback={<ModuleLoader />}>
+              <ClipboardCommandGroup
+                isOpen={false}
+                onOpen={() => {
+                  setActivePanel("clipboard");
+                  setCommandSearch("");
+                }}
+                onBack={() => {
+                  setActivePanel("commands");
+                  setCommandSearch("");
+                }}
+              />
+            </Suspense>
+            <Suspense fallback={<ModuleLoader />}>
+              <EmojiCommandGroup
+                isOpen={false}
+                onOpen={() => {
+                  setActivePanel("emoji");
+                  setCommandSearch("");
+                }}
+                onBack={() => {
+                  setActivePanel("commands");
+                  setCommandSearch("");
+                }}
+              />
+            </Suspense>
+
+            <Suspense fallback={<ModuleLoader />}>
+              <CalculatorCommandGroup />
+            </Suspense>
+            <Suspense fallback={<ModuleLoader />}>
+              <ApplicationsCommandGroup />
+            </Suspense>
+            <Suspense fallback={<ModuleLoader />}>
+              <SearchCommandGroup />
+            </Suspense>
+          </>
+        )}
+
+        {isClipboardPanelOpen && (
+          <Suspense fallback={<ModuleLoader />}>
             <ClipboardCommandGroup
-              isOpen={false}
+              isOpen
               onOpen={() => {
                 setActivePanel("clipboard");
                 setCommandSearch("");
@@ -48,8 +99,13 @@ export default function LauncherCommand() {
                 setCommandSearch("");
               }}
             />
+          </Suspense>
+        )}
+
+        {isEmojiPanelOpen && (
+          <Suspense fallback={<ModuleLoader />}>
             <EmojiCommandGroup
-              isOpen={false}
+              isOpen
               onOpen={() => {
                 setActivePanel("emoji");
                 setCommandSearch("");
@@ -59,39 +115,7 @@ export default function LauncherCommand() {
                 setCommandSearch("");
               }}
             />
-
-            <CalculatorCommandGroup />
-            <ApplicationsCommandGroup />
-            <SearchCommandGroup />
-          </>
-        )}
-
-        {isClipboardPanelOpen && (
-          <ClipboardCommandGroup
-            isOpen
-            onOpen={() => {
-              setActivePanel("clipboard");
-              setCommandSearch("");
-            }}
-            onBack={() => {
-              setActivePanel("commands");
-              setCommandSearch("");
-            }}
-          />
-        )}
-
-        {isEmojiPanelOpen && (
-          <EmojiCommandGroup
-            isOpen
-            onOpen={() => {
-              setActivePanel("emoji");
-              setCommandSearch("");
-            }}
-            onBack={() => {
-              setActivePanel("commands");
-              setCommandSearch("");
-            }}
-          />
+          </Suspense>
         )}
       </CommandList>
 
