@@ -33,7 +33,7 @@ export default function SearchCommandGroup() {
   const { runSearch, searchingSite, searchError } = useSearchWithBrowser();
 
   return (
-    <CommandGroup heading="web search">
+    <CommandGroup>
       {searchProviders.map((provider) => {
         const isSearching = searchingSite === provider.id;
         const errorMessage = searchError?.site === provider.id ? searchError.message : null;

@@ -1,4 +1,5 @@
 import { Search } from "lucide-react";
+import { useState } from "react";
 
 import {
   Command,
@@ -8,12 +9,18 @@ import {
 } from "@/components/ui/command";
 import ApplicationsCommandGroup from "@/modules/applications/components/applications-command-group";
 import CalculatorCommandGroup from "@/modules/calculator/components/calculator-command-group";
+import ClipboardCommandGroup from "@/modules/clipboard/components/clipboard-command-group";
 import SearchCommandGroup from "@/modules/search/components/search-command-group";
 
 export default function LauncherCommand() {
+  const [commandSearch, setCommandSearch] = useState("");
+  const [showClipboardHistory, setShowClipboardHistory] = useState(false);
+
   return (
     <Command
       shouldFilter={false}
+      value={commandSearch}
+      onValueChange={setCommandSearch}
       className="h-full w-full overflow-hidden rounded-none border border-zinc-700/90 bg-zinc-900 text-zinc-100 shadow-none [&_[data-slot=command-input-wrapper]]:border-zinc-700/80 [&_[data-slot=command-group]_[cmdk-group-heading]]:text-zinc-400 [&_[data-slot=command-item][data-selected=true]]:bg-zinc-800/90"
     >
       <CommandInput
@@ -22,9 +29,25 @@ export default function LauncherCommand() {
       />
 
       <CommandList className="flex-1 max-h-none overflow-y-auto px-1 pb-1">
-        <CalculatorCommandGroup />
-        <ApplicationsCommandGroup />
-        <SearchCommandGroup />
+        <ClipboardCommandGroup
+          isOpen={showClipboardHistory}
+          onOpen={() => {
+            setShowClipboardHistory(true);
+            setCommandSearch("");
+          }}
+          onBack={() => {
+            setShowClipboardHistory(false);
+            setCommandSearch("");
+          }}
+        />
+
+        {!showClipboardHistory && (
+          <>
+            <CalculatorCommandGroup />
+            <ApplicationsCommandGroup />
+            <SearchCommandGroup />
+          </>
+        )}
       </CommandList>
 
       <CommandSeparator className="bg-zinc-700/80" />

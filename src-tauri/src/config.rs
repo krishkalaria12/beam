@@ -42,6 +42,9 @@ pub struct Config {
     pub CLIPBOARD_POLL_INTERVAL_MS: u64,
     pub CLIPBOARD_MAX_HISTORY_ENTRIES: usize,
     pub CLIPBOARD_MAX_ENTRY_BYTES: usize,
+    pub CLIPBOARD_ENCRYPTION_PREFIX: &'static str,
+    pub CLIPBOARD_ENCRYPTION_NONCE_BYTES: usize,
+    pub CLIPBOARD_ENCRYPTION_PASSWORD_LENGTH: usize,
 }
 
 impl Config {
@@ -81,6 +84,9 @@ impl Config {
             CLIPBOARD_POLL_INTERVAL_MS: 350,
             CLIPBOARD_MAX_HISTORY_ENTRIES: 100,
             CLIPBOARD_MAX_ENTRY_BYTES: 1_000_000,
+            CLIPBOARD_ENCRYPTION_PREFIX: "beam:aesgcm:v1:",
+            CLIPBOARD_ENCRYPTION_NONCE_BYTES: 12,
+            CLIPBOARD_ENCRYPTION_PASSWORD_LENGTH: 64,
         })
     }
 }
