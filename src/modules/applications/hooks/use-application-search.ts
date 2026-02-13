@@ -1,7 +1,7 @@
 import { isTauri } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import debounce from "debounce";
+import debounce from "@/lib/debounce";
 import { useEffect, useState } from "react";
 
 import { searchApplications } from "../api/search-applications";

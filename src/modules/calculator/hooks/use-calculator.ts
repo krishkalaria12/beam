@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import debounce from "debounce";
+import debounce from "@/lib/debounce";
 import { useEffect, useState } from "react";
 
 import { calculateExpression } from "../api/calculate-expression";
