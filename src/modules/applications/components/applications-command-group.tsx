@@ -29,7 +29,7 @@ export default function ApplicationsCommandGroup() {
       {isLoading && (
         <ApplicationsStateItem
           icon={Loader2}
-          iconClassName="size-4 animate-spin text-zinc-400"
+          iconClassName="size-4 animate-spin text-muted-foreground"
           title="searching applications"
         />
       )}
@@ -37,7 +37,7 @@ export default function ApplicationsCommandGroup() {
       {isError && (
         <ApplicationsStateItem
           icon={AlertTriangle}
-          iconClassName="size-4 text-amber-400"
+          iconClassName="size-4 text-destructive"
           title="could not load applications"
         />
       )}

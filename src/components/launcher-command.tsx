@@ -9,6 +9,7 @@ const CalculatorCommandGroup = lazy(() => import("@/modules/calculator/component
 const ClipboardCommandGroup = lazy(() => import("@/modules/clipboard/components/clipboard-command-group"));
 const EmojiCommandGroup = lazy(() => import("@/modules/emoji/components/emoji-command-group"));
 const SearchCommandGroup = lazy(() => import("@/modules/search/components/search-command-group"));
+const SettingsCommandGroup = lazy(() => import("@/modules/settings/components/settings-command-group"));
 
 function ModuleLoader() {
   return (
@@ -20,21 +21,22 @@ function ModuleLoader() {
 
 export default function LauncherCommand() {
   const [commandSearch, setCommandSearch] = useState("");
-  const [activePanel, setActivePanel] = useState<"commands" | "clipboard" | "emoji">("commands");
+  const [activePanel, setActivePanel] = useState<"commands" | "clipboard" | "emoji" | "settings">("commands");
   const isClipboardPanelOpen = activePanel === "clipboard";
   const isEmojiPanelOpen = activePanel === "emoji";
+  const isSettingsPanelOpen = activePanel === "settings";
 
   return (
     <Command
       shouldFilter={false}
       value={commandSearch}
       onValueChange={setCommandSearch}
-      className="h-full w-full overflow-hidden rounded-none border border-zinc-700/90 bg-zinc-900 text-zinc-100 shadow-none **:data-[slot=command-input-wrapper]:border-zinc-700/80 [&_[data-slot=command-group]_[cmdk-group-heading]]:text-zinc-400 [&_[data-slot=command-item][data-selected=true]]:bg-zinc-800/90"
+      className="h-full w-full overflow-hidden rounded-none border-border/40 bg-background text-foreground shadow-none backdrop-blur-[32px] **:data-[slot=command-input-wrapper]:border-border/50 [&_[data-slot=command-group]_[cmdk-group-heading]]:text-muted-foreground [&_[data-slot=command-item][data-selected=true]]:bg-foreground/10"
     >
       {!isEmojiPanelOpen && (
         <CommandInput
           placeholder="search beam..."
-          className="text-lg placeholder:text-zinc-500 disabled:cursor-default disabled:opacity-70"
+          className="text-lg placeholder:text-muted-foreground/50 disabled:cursor-default disabled:opacity-70"
         />
       )}
 
@@ -47,6 +49,19 @@ export default function LauncherCommand() {
       >
         {activePanel === "commands" && (
           <>
+            <Suspense fallback={<ModuleLoader />}>
+              <SettingsCommandGroup
+                isOpen={false}
+                onOpen={() => {
+                  setActivePanel("settings");
+                  setCommandSearch("");
+                }}
+                onBack={() => {
+                  setActivePanel("commands");
+                  setCommandSearch("");
+                }}
+              />
+            </Suspense>
             <Suspense fallback={<ModuleLoader />}>
               <ClipboardCommandGroup
                 isOpen={false}
@@ -117,20 +132,36 @@ export default function LauncherCommand() {
             />
           </Suspense>
         )}
+
+        {isSettingsPanelOpen && (
+          <Suspense fallback={<ModuleLoader />}>
+            <SettingsCommandGroup
+              isOpen
+              onOpen={() => {
+                setActivePanel("settings");
+                setCommandSearch("");
+              }}
+              onBack={() => {
+                setActivePanel("commands");
+                setCommandSearch("");
+              }}
+            />
+          </Suspense>
+        )}
       </CommandList>
 
       {!isEmojiPanelOpen && (
         <>
-          <CommandSeparator className="bg-zinc-700/80" />
-          <div className="flex items-center justify-between px-4 py-1.5 text-xs text-zinc-400">
+          <CommandSeparator className="bg-border/80" />
+          <div className="flex items-center justify-between px-4 py-1.5 text-xs text-muted-foreground">
             <span className="inline-flex items-center gap-2">
               <Search className="size-3.5" /> beam
             </span>
             <span className="inline-flex items-center gap-2">
-              <kbd className="rounded-sm border border-zinc-600 bg-zinc-800 px-1.5 py-0.5 text-[11px] text-zinc-300">
+              <kbd className="rounded-sm border border-border bg-muted px-1.5 py-0.5 text-[11px] text-foreground/80">
                 enter
               </kbd>
-              <kbd className="rounded-sm border border-zinc-600 bg-zinc-800 px-1.5 py-0.5 text-[11px] text-zinc-300">
+              <kbd className="rounded-sm border border-border bg-muted px-1.5 py-0.5 text-[11px] text-foreground/80">
                 esc
               </kbd>
             </span>

@@ -10,7 +10,7 @@ export function EmojiCard({ emoji, onClick }: EmojiCardProps) {
     <button
       type="button"
       onClick={() => onClick(emoji)}
-      className="flex aspect-square items-center justify-center rounded-xl border border-zinc-700/50 bg-zinc-800 text-[1.75rem] transition-all hover:border-zinc-600 hover:bg-zinc-700 active:scale-95"
+      className="flex aspect-square items-center justify-center rounded-xl border border-border/50 bg-accent text-[1.75rem] transition-all hover:border-border hover:bg-muted active:scale-95"
       title={emoji.label}
     >
       {emoji.emoji}

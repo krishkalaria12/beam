@@ -60,10 +60,10 @@ export default function SearchCommandGroup() {
               className="size-4 rounded-sm object-cover"
             />
             <div className="min-w-0">
-              <p className="truncate text-[1.08rem] leading-tight text-zinc-100">{provider.title}</p>
-              {errorMessage && <p className="truncate text-sm leading-tight text-amber-400">{errorMessage}</p>}
+              <p className="truncate text-[1.08rem] leading-tight text-foreground">{provider.title}</p>
+              {errorMessage && <p className="truncate text-sm leading-tight text-destructive">{errorMessage}</p>}
             </div>
-            <CommandShortcut className="normal-case tracking-normal text-zinc-400">
+            <CommandShortcut className="normal-case tracking-normal text-muted-foreground">
               {isSearching ? "opening" : "web"}
             </CommandShortcut>
           </CommandItem>

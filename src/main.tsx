@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 
 import Loader from "./components/loader";
 import { QueryProvider } from "./providers/query-provider";
+import { ThemeProvider } from "./components/theme-provider";
 import { routeTree } from "./routeTree.gen";
 
 const router = createRouter({
@@ -28,7 +29,9 @@ if (!rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement);
   root.render(
     <QueryProvider>
-      <RouterProvider router={router} />
+      <ThemeProvider defaultTheme="default">
+        <RouterProvider router={router} />
+      </ThemeProvider>
     </QueryProvider>,
   );
 }

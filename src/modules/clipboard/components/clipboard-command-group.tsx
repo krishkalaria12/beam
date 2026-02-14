@@ -75,9 +75,9 @@ export default function ClipboardCommandGroup({ isOpen, onOpen, onBack }: Clipbo
         <CommandItem value="open clipboard history" className="rounded-md px-3 py-2.5" onSelect={onOpen}>
           <img src={clipboardIcon} alt="clipboard icon" loading="lazy" className="size-4 rounded-sm object-cover" />
           <div className="min-w-0">
-            <p className="truncate text-[1.08rem] leading-tight text-zinc-100">clipboard history</p>
+            <p className="truncate text-[1.08rem] leading-tight text-foreground">clipboard history</p>
           </div>
-          <CommandShortcut className="normal-case tracking-normal text-zinc-400">open</CommandShortcut>
+          <CommandShortcut className="normal-case tracking-normal text-muted-foreground">open</CommandShortcut>
         </CommandItem>
       </CommandGroup>
     );
@@ -98,36 +98,36 @@ export default function ClipboardCommandGroup({ isOpen, onOpen, onBack }: Clipbo
   return (
     <CommandGroup>
       <CommandItem value="back to commands" className="rounded-md px-3 py-2.5" onSelect={onBack}>
-        <ArrowLeft className="size-4 text-zinc-300" />
+        <ArrowLeft className="size-4 text-foreground/80" />
         <div className="min-w-0">
-          <p className="truncate text-[1.08rem] leading-tight text-zinc-100">back to commands</p>
+          <p className="truncate text-[1.08rem] leading-tight text-foreground">back to commands</p>
         </div>
-        <CommandShortcut className="normal-case tracking-normal text-zinc-400">back</CommandShortcut>
+        <CommandShortcut className="normal-case tracking-normal text-muted-foreground">back</CommandShortcut>
       </CommandItem>
 
       {isLoading && (
         <CommandItem disabled className="px-3 py-3 opacity-80">
-          <Loader2 className="size-4 animate-spin text-zinc-400" />
+          <Loader2 className="size-4 animate-spin text-muted-foreground" />
           <div className="min-w-0">
-            <p className="truncate text-[1.04rem] leading-tight text-zinc-200">loading clipboard history</p>
+            <p className="truncate text-[1.04rem] leading-tight text-foreground/80">loading clipboard history</p>
           </div>
         </CommandItem>
       )}
 
       {isError && (
         <CommandItem disabled className="px-3 py-3 opacity-80">
-          <AlertTriangle className="size-4 text-amber-400" />
+          <AlertTriangle className="size-4 text-destructive" />
           <div className="min-w-0">
-            <p className="truncate text-[1.04rem] leading-tight text-zinc-200">could not load clipboard history</p>
+            <p className="truncate text-[1.04rem] leading-tight text-foreground/80">could not load clipboard history</p>
           </div>
         </CommandItem>
       )}
 
       {!isLoading && !isError && copyError && (
         <CommandItem disabled className="px-3 py-3 opacity-80">
-          <AlertTriangle className="size-4 text-amber-400" />
+          <AlertTriangle className="size-4 text-destructive" />
           <div className="min-w-0">
-            <p className="truncate text-[1.04rem] leading-tight text-zinc-200">{copyError}</p>
+            <p className="truncate text-[1.04rem] leading-tight text-foreground/80">{copyError}</p>
           </div>
         </CommandItem>
       )}
@@ -136,7 +136,7 @@ export default function ClipboardCommandGroup({ isOpen, onOpen, onBack }: Clipbo
         <CommandItem disabled className="px-3 py-3 opacity-80">
           <img src={clipboardIcon} alt="clipboard icon" loading="lazy" className="size-4 rounded-sm object-cover opacity-80" />
           <div className="min-w-0">
-            <p className="truncate text-[1.04rem] leading-tight text-zinc-200">no clipboard entries found</p>
+            <p className="truncate text-[1.04rem] leading-tight text-foreground/80">no clipboard entries found</p>
           </div>
         </CommandItem>
       )}
@@ -169,20 +169,20 @@ export default function ClipboardCommandGroup({ isOpen, onOpen, onBack }: Clipbo
                   src={entry}
                   alt="clipboard image preview"
                   loading="lazy"
-                  className="size-10 rounded-md border border-zinc-700/80 object-cover"
+                  className="size-10 rounded-md border border-border/80 object-cover"
                 />
               ) : (
-                <Copy className="size-4 text-zinc-300" />
+                <Copy className="size-4 text-foreground/80" />
               )}
 
               <div className="min-w-0">
-                <p className="truncate text-[1.02rem] leading-tight text-zinc-100">{preview}</p>
-                <p className="truncate text-sm leading-tight text-zinc-400">
+                <p className="truncate text-[1.02rem] leading-tight text-foreground">{preview}</p>
+                <p className="truncate text-sm leading-tight text-muted-foreground">
                   {isImage ? "click to copy image data" : "click to copy text"}
                 </p>
               </div>
 
-              <CommandShortcut className="normal-case tracking-normal text-zinc-400">
+              <CommandShortcut className="normal-case tracking-normal text-muted-foreground">
                 {isCopied ? <Check className="size-4 text-emerald-400" /> : isImage ? <ImageIcon className="size-4" /> : "copy"}
               </CommandShortcut>
             </CommandItem>

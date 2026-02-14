@@ -34,7 +34,7 @@ export function EmojiGrid({
 
   if (emojis.length === 0) {
     return (
-      <div className="flex h-32 items-center justify-center text-sm text-zinc-500">
+      <div className="flex h-32 items-center justify-center text-sm text-muted-foreground">
         {emptyMessage}
       </div>
     );
@@ -45,11 +45,11 @@ export function EmojiGrid({
       {groupedEmojis.map(({ group, emojis: groupEmojis }) => (
         <div key={group}>
           <div className="mb-2 flex items-center gap-3">
-            <div className="h-px flex-1 bg-zinc-700" />
-            <h3 className="shrink-0 text-xs font-semibold uppercase tracking-wider text-zinc-400">
+            <div className="h-px flex-1 bg-border" />
+            <h3 className="shrink-0 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               {CATEGORY_LABELS[group]}
             </h3>
-            <div className="h-px flex-1 bg-zinc-700" />
+            <div className="h-px flex-1 bg-border" />
           </div>
           <div className="grid grid-cols-8 gap-2 content-start">
             {groupEmojis.map((emoji, idx) => (

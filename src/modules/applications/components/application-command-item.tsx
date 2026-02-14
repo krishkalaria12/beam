@@ -34,12 +34,12 @@ export default function ApplicationCommandItem({
     >
       <ApplicationIcon iconPath={application.icon} />
       <div className="min-w-0">
-        <p className="truncate text-[1.08rem] leading-tight text-zinc-100">{application.name}</p>
+        <p className="truncate text-[1.08rem] leading-tight text-foreground">{application.name}</p>
         {launchErrorMessage && (
-          <p className="truncate text-sm leading-tight text-amber-400">{launchErrorMessage}</p>
+          <p className="truncate text-sm leading-tight text-destructive">{launchErrorMessage}</p>
         )}
       </div>
-      <CommandShortcut className="normal-case tracking-normal text-zinc-400">
+      <CommandShortcut className="normal-case tracking-normal text-muted-foreground">
         {isLaunching ? "launching" : isLaunchable ? "application" : "unavailable"}
       </CommandShortcut>
     </CommandItem>

@@ -76,22 +76,22 @@ export default function CalculatorCommandGroup() {
       <CommandItem
         value={`calculator ${displayQuery}`}
         disabled
-        className="rounded-xl border border-zinc-700/80 bg-zinc-800/40 p-0 data-[disabled=true]:opacity-100"
+        className="rounded-xl border border-border bg-accent/40 p-0 data-[disabled=true]:opacity-100"
       >
-        <div className="w-full overflow-hidden rounded-xl bg-gradient-to-r from-zinc-800/90 via-zinc-800/70 to-zinc-900/80">
+        <div className="w-full overflow-hidden rounded-xl bg-gradient-to-r from-accent/90 via-accent/70 to-background/80">
           <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 py-4 md:px-5">
             <div className="min-w-0 space-y-1.5">
-              <p className="truncate font-mono text-xl text-zinc-100 md:text-3xl">{displayQuery}</p>
-              <p className="inline-flex rounded-md bg-black/25 px-2 py-0.5 text-xs capitalize text-zinc-200/90">
+              <p className="truncate font-mono text-xl text-foreground md:text-3xl">{displayQuery}</p>
+              <p className="inline-flex rounded-md bg-black/25 px-2 py-0.5 text-xs capitalize text-foreground/90">
                 {getCalculationKind(displayQuery)}
               </p>
             </div>
 
-            <ArrowRight className="size-5 text-zinc-200/80 md:size-6" />
+            <ArrowRight className="size-5 text-foreground/80 md:size-6" />
 
             <div className="min-w-0 text-right">
               <p
-                className={`truncate font-semibold text-xl text-zinc-100 transition-opacity duration-120 md:text-4xl ${
+                className={`truncate font-semibold text-xl text-foreground transition-opacity duration-120 md:text-4xl ${
                   isFetching ? "opacity-80" : "opacity-100"
                 }`}
               >

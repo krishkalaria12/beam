@@ -145,13 +145,13 @@ export default function EmojiCommandGroup({ isOpen, onOpen, onBack }: EmojiComma
             src={emojiIcon}
             alt="emoji icon"
             loading="lazy"
-            className="size-7 rounded-md border border-zinc-700/80"
+            className="size-7 rounded-md border border-border/80"
           />
           <div className="min-w-0">
-            <p className="truncate text-[1.08rem] leading-tight text-zinc-100">emoji picker</p>
-            <p className="truncate text-sm leading-tight text-zinc-400">find and copy emoji</p>
+            <p className="truncate text-[1.08rem] leading-tight text-foreground">emoji picker</p>
+            <p className="truncate text-sm leading-tight text-muted-foreground">find and copy emoji</p>
           </div>
-          <CommandShortcut className="normal-case tracking-normal text-zinc-400">
+          <CommandShortcut className="normal-case tracking-normal text-muted-foreground">
             open
           </CommandShortcut>
         </CommandItem>

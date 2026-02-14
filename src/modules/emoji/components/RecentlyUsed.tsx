@@ -11,7 +11,7 @@ export function RecentlyUsed({ emojis, onEmojiClick }: RecentlyUsedProps) {
 
   return (
     <div>
-      <div className="mb-2 flex items-center gap-1.5 text-xs font-medium text-zinc-500">
+      <div className="mb-2 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
         <Clock className="size-3.5" />
         Recently Used
       </div>
@@ -21,7 +21,7 @@ export function RecentlyUsed({ emojis, onEmojiClick }: RecentlyUsedProps) {
             key={`recent-${emoji.hexcode}-${idx}`}
             type="button"
             onClick={() => onEmojiClick(emoji)}
-            className="flex aspect-square items-center justify-center rounded-xl border border-zinc-700/50 bg-zinc-800 text-[1.75rem] transition-all hover:border-zinc-600 hover:bg-zinc-700 active:scale-95"
+            className="flex aspect-square items-center justify-center rounded-xl border border-border/50 bg-accent text-[1.75rem] transition-all hover:border-border hover:bg-muted active:scale-95"
             title={emoji.label}
           >
             {emoji.emoji}

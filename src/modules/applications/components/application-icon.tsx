@@ -57,7 +57,7 @@ export default function ApplicationIcon({ iconPath, className }: ApplicationIcon
   const [failedSource, setFailedSource] = useState<string | null>(null);
 
   if (!imageSource || failedSource === imageSource) {
-    return <AppWindow className={cn("size-4 text-zinc-300", className)} />;
+    return <AppWindow className={cn("size-4 text-muted-foreground", className)} />;
   }
 
   return (

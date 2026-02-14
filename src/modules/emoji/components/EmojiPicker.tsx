@@ -42,7 +42,7 @@ export function EmojiPicker({
 
       <div
         ref={scrollContainerRef}
-        className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-zinc-900 p-3"
+        className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-background p-3"
       >
         <div className="space-y-4">
           <RecentlyUsed emojis={recentEmojis} onEmojiClick={onEmojiClick} />
