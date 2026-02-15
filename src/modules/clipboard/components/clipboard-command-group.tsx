@@ -72,12 +72,10 @@ export default function ClipboardCommandGroup({ isOpen, onOpen, onBack }: Clipbo
 
     return (
       <CommandGroup>
-        <CommandItem value="open clipboard history" className="rounded-md px-3 py-2.5" onSelect={onOpen}>
-          <img src={clipboardIcon} alt="clipboard icon" loading="lazy" className="size-4 rounded-sm object-cover" />
-          <div className="min-w-0">
-            <p className="truncate text-[1.08rem] leading-tight text-foreground">clipboard history</p>
-          </div>
-          <CommandShortcut className="normal-case tracking-normal text-muted-foreground">open</CommandShortcut>
+        <CommandItem value="open clipboard history" onSelect={onOpen}>
+          <img src={clipboardIcon} alt="clipboard" className="size-6 rounded-sm object-cover" />
+          <p className="truncate text-foreground capitalize">clipboard history</p>
+          <CommandShortcut>open</CommandShortcut>
         </CommandItem>
       </CommandGroup>
     );
@@ -97,12 +95,15 @@ export default function ClipboardCommandGroup({ isOpen, onOpen, onBack }: Clipbo
 
   return (
     <CommandGroup>
-      <CommandItem value="back to commands" className="rounded-md px-3 py-2.5" onSelect={onBack}>
-        <ArrowLeft className="size-4 text-foreground/80" />
-        <div className="min-w-0">
-          <p className="truncate text-[1.08rem] leading-tight text-foreground">back to commands</p>
+      <CommandItem 
+        value="back to commands" 
+        className="rounded-xl px-4 py-3 mb-2 opacity-60 hover:opacity-100 transition-all" 
+        onSelect={onBack}
+      >
+        <div className="flex items-center gap-3">
+          <ArrowLeft className="size-4" />
+          <span className="font-mono text-xs uppercase tracking-widest">Back to Beam</span>
         </div>
-        <CommandShortcut className="normal-case tracking-normal text-muted-foreground">back</CommandShortcut>
       </CommandItem>
 
       {isLoading && (
@@ -152,7 +153,7 @@ export default function ClipboardCommandGroup({ isOpen, onOpen, onBack }: Clipbo
             <CommandItem
               key={`${index}-${preview}`}
               value={`clipboard-entry-${index}`}
-              className="rounded-md px-3 py-2.5"
+              className="group rounded-xl px-4 py-3"
               onSelect={() => {
                 copyClipboardEntry(entry)
                   .then(() => {
@@ -165,25 +166,30 @@ export default function ClipboardCommandGroup({ isOpen, onOpen, onBack }: Clipbo
               }}
             >
               {isImage ? (
-                <img
-                  src={entry}
-                  alt="clipboard image preview"
-                  loading="lazy"
-                  className="size-10 rounded-md border border-border/80 object-cover"
-                />
+                <div className="relative size-12 overflow-hidden rounded-lg border border-border/50 shadow-sm">
+                  <img
+                    src={entry}
+                    alt="clipboard image preview"
+                    loading="lazy"
+                    className="h-full w-full object-cover transition-transform group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-black/5" />
+                </div>
               ) : (
-                <Copy className="size-4 text-foreground/80" />
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted/30 text-muted-foreground/60 transition-colors group-data-selected:bg-primary/10 group-data-selected:text-primary">
+                  <Copy className="size-6" />
+                </div>
               )}
 
-              <div className="min-w-0">
-                <p className="truncate text-[1.02rem] leading-tight text-foreground">{preview}</p>
-                <p className="truncate text-sm leading-tight text-muted-foreground">
-                  {isImage ? "click to copy image data" : "click to copy text"}
+              <div className="flex flex-col ml-1 min-w-0">
+                <p className="truncate text-[1rem] font-medium leading-tight text-foreground tracking-tight">{preview}</p>
+                <p className="truncate text-xs text-muted-foreground/50 mt-1">
+                  {isImage ? `Copied ${getImageFormat(entry)} image` : "Click to copy text"}
                 </p>
               </div>
 
-              <CommandShortcut className="normal-case tracking-normal text-muted-foreground">
-                {isCopied ? <Check className="size-4 text-emerald-400" /> : isImage ? <ImageIcon className="size-4" /> : "copy"}
+              <CommandShortcut className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground/40 group-data-selected:text-foreground/50">
+                {isCopied ? <Check className="size-4 text-emerald-500 animate-in zoom-in" /> : isImage ? <ImageIcon className="size-4 opacity-30" /> : "copy"}
               </CommandShortcut>
             </CommandItem>
           );

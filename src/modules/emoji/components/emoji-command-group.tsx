@@ -140,20 +140,10 @@ export default function EmojiCommandGroup({ isOpen, onOpen, onBack }: EmojiComma
 
     return (
       <CommandGroup>
-        <CommandItem value="open emoji picker" className="rounded-md px-3 py-2.5" onSelect={onOpen}>
-          <img
-            src={emojiIcon}
-            alt="emoji icon"
-            loading="lazy"
-            className="size-7 rounded-md border border-border/80"
-          />
-          <div className="min-w-0">
-            <p className="truncate text-[1.08rem] leading-tight text-foreground">emoji picker</p>
-            <p className="truncate text-sm leading-tight text-muted-foreground">find and copy emoji</p>
-          </div>
-          <CommandShortcut className="normal-case tracking-normal text-muted-foreground">
-            open
-          </CommandShortcut>
+        <CommandItem value="open emoji picker" onSelect={onOpen}>
+          <img src={emojiIcon} alt="emoji" className="size-6 rounded-sm object-cover" />
+          <p className="truncate text-foreground capitalize">emoji picker</p>
+          <CommandShortcut>open</CommandShortcut>
         </CommandItem>
       </CommandGroup>
     );

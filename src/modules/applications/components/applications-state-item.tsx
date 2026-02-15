@@ -14,11 +14,9 @@ export default function ApplicationsStateItem({
   iconClassName,
 }: ApplicationsStateItemProps) {
   return (
-    <CommandItem disabled className="px-3 py-3 opacity-80">
-      <Icon className={iconClassName ?? "size-4 text-muted-foreground"} />
-      <div className="min-w-0">
-        <p className="truncate text-[1.04rem] leading-tight text-foreground/90">{title}</p>
-      </div>
+    <CommandItem disabled className="opacity-60">
+      <Icon className={iconClassName ?? "size-4 text-muted-foreground/60"} />
+      <p className="truncate text-foreground/80">{title}</p>
     </CommandItem>
   );
 }

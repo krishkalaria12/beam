@@ -27,6 +27,9 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: (id) => {
+          if (id.includes("src/modules/settings")) {
+            return "settings-module";
+          }
           if (!id.includes("node_modules")) {
             return;
           }

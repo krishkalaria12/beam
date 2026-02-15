@@ -25,20 +25,20 @@ export default function ApplicationsCommandGroup() {
   }
 
   return (
-    <CommandGroup heading={isFetching && !isLoading ? "applications (updating)" : "applications"}>
+    <CommandGroup>
       {isLoading && (
         <ApplicationsStateItem
           icon={Loader2}
-          iconClassName="size-4 animate-spin text-muted-foreground"
-          title="searching applications"
+          iconClassName="size-4 animate-spin text-muted-foreground/40"
+          title="Searching Applications..."
         />
       )}
 
       {isError && (
         <ApplicationsStateItem
           icon={AlertTriangle}
-          iconClassName="size-4 text-destructive"
-          title="could not load applications"
+          iconClassName="size-4 text-destructive/60"
+          title="Could not load applications"
         />
       )}
 

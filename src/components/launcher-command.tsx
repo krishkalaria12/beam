@@ -1,8 +1,9 @@
-import { Search } from "lucide-react";
+import { Search, Command as CommandIcon, Keyboard } from "lucide-react";
 import { lazy, Suspense, useState } from "react";
 
 import { Command, CommandInput, CommandList, CommandSeparator } from "@/components/ui/command";
 import Loader from "./loader";
+import { cn } from "@/lib/utils";
 
 const ApplicationsCommandGroup = lazy(() => import("@/modules/applications/components/applications-command-group"));
 const CalculatorCommandGroup = lazy(() => import("@/modules/calculator/components/calculator-command-group"));
@@ -13,7 +14,7 @@ const SettingsCommandGroup = lazy(() => import("@/modules/settings/components/se
 
 function ModuleLoader() {
   return (
-    <div className="flex items-center justify-center py-8">
+    <div className="flex items-center justify-center py-4">
       <Loader />
     </div>
   );
@@ -27,44 +28,86 @@ export default function LauncherCommand() {
   const isSettingsPanelOpen = activePanel === "settings";
 
   return (
-    <Command
-      shouldFilter={false}
-      value={commandSearch}
-      onValueChange={setCommandSearch}
-      className="h-full w-full overflow-hidden rounded-none border-border/40 bg-background text-foreground shadow-none backdrop-blur-[32px] **:data-[slot=command-input-wrapper]:border-border/50 [&_[data-slot=command-group]_[cmdk-group-heading]]:text-muted-foreground [&_[data-slot=command-item][data-selected=true]]:bg-foreground/10"
-    >
-      {!isEmojiPanelOpen && (
-        <CommandInput
-          placeholder="search beam..."
-          className="text-lg placeholder:text-muted-foreground/50 disabled:cursor-default disabled:opacity-70"
-        />
-      )}
-
-      <CommandList
-        className={
-          isEmojiPanelOpen
-            ? "flex flex-1 min-h-0 flex-col h-full"
-            : "flex-1 max-h-none overflow-y-auto px-1 pb-1"
-        }
+    <div className="relative h-full w-full bg-background">
+      <Command
+        shouldFilter={false}
+        value={commandSearch}
+        onValueChange={setCommandSearch}
+        className="h-full w-full overflow-hidden bg-transparent"
       >
-        {activePanel === "commands" && (
-          <>
-            <Suspense fallback={<ModuleLoader />}>
-              <SettingsCommandGroup
-                isOpen={false}
-                onOpen={() => {
-                  setActivePanel("settings");
-                  setCommandSearch("");
-                }}
-                onBack={() => {
-                  setActivePanel("commands");
-                  setCommandSearch("");
-                }}
-              />
-            </Suspense>
+        {!isEmojiPanelOpen && (
+          <CommandInput
+            placeholder="Search Beam..."
+            className="border-none"
+          />
+        )}
+
+        <CommandList
+          className={cn(
+            "flex-1 px-1 transition-all duration-300",
+            isEmojiPanelOpen ? "min-h-0 flex flex-col h-full" : "max-h-none overflow-y-auto"
+          )}
+        >
+          {activePanel === "commands" && (
+            <div className="py-1">
+              <Suspense fallback={<ModuleLoader />}>
+                <SettingsCommandGroup
+                  isOpen={false}
+                  onOpen={() => {
+                    setActivePanel("settings");
+                    setCommandSearch("");
+                  }}
+                  onBack={() => {
+                    setActivePanel("commands");
+                    setCommandSearch("");
+                  }}
+                />
+              </Suspense>
+              <Suspense fallback={<ModuleLoader />}>
+                <ClipboardCommandGroup
+                  isOpen={false}
+                  onOpen={() => {
+                    setActivePanel("clipboard");
+                    setCommandSearch("");
+                  }}
+                  onBack={() => {
+                    setActivePanel("commands");
+                    setCommandSearch("");
+                  }}
+                />
+              </Suspense>
+              <Suspense fallback={<ModuleLoader />}>
+                <EmojiCommandGroup
+                  isOpen={false}
+                  onOpen={() => {
+                    setActivePanel("emoji");
+                    setCommandSearch("");
+                  }}
+                  onBack={() => {
+                    setActivePanel("commands");
+                    setCommandSearch("");
+                  }}
+                />
+              </Suspense>
+
+              <CommandSeparator className="my-1 opacity-50" />
+
+              <Suspense fallback={<ModuleLoader />}>
+                <CalculatorCommandGroup />
+              </Suspense>
+              <Suspense fallback={<ModuleLoader />}>
+                <ApplicationsCommandGroup />
+              </Suspense>
+              <Suspense fallback={<ModuleLoader />}>
+                <SearchCommandGroup />
+              </Suspense>
+            </div>
+          )}
+
+          {isClipboardPanelOpen && (
             <Suspense fallback={<ModuleLoader />}>
               <ClipboardCommandGroup
-                isOpen={false}
+                isOpen
                 onOpen={() => {
                   setActivePanel("clipboard");
                   setCommandSearch("");
@@ -75,9 +118,12 @@ export default function LauncherCommand() {
                 }}
               />
             </Suspense>
+          )}
+
+          {isEmojiPanelOpen && (
             <Suspense fallback={<ModuleLoader />}>
               <EmojiCommandGroup
-                isOpen={false}
+                isOpen
                 onOpen={() => {
                   setActivePanel("emoji");
                   setCommandSearch("");
@@ -88,86 +134,45 @@ export default function LauncherCommand() {
                 }}
               />
             </Suspense>
+          )}
 
+          {isSettingsPanelOpen && (
             <Suspense fallback={<ModuleLoader />}>
-              <CalculatorCommandGroup />
+              <SettingsCommandGroup
+                isOpen
+                onOpen={() => {
+                  setActivePanel("settings");
+                  setCommandSearch("");
+                }}
+                onBack={() => {
+                  setActivePanel("commands");
+                  setCommandSearch("");
+                }}
+              />
             </Suspense>
-            <Suspense fallback={<ModuleLoader />}>
-              <ApplicationsCommandGroup />
-            </Suspense>
-            <Suspense fallback={<ModuleLoader />}>
-              <SearchCommandGroup />
-            </Suspense>
-          </>
-        )}
+          )}
+        </CommandList>
 
-        {isClipboardPanelOpen && (
-          <Suspense fallback={<ModuleLoader />}>
-            <ClipboardCommandGroup
-              isOpen
-              onOpen={() => {
-                setActivePanel("clipboard");
-                setCommandSearch("");
-              }}
-              onBack={() => {
-                setActivePanel("commands");
-                setCommandSearch("");
-              }}
-            />
-          </Suspense>
-        )}
-
-        {isEmojiPanelOpen && (
-          <Suspense fallback={<ModuleLoader />}>
-            <EmojiCommandGroup
-              isOpen
-              onOpen={() => {
-                setActivePanel("emoji");
-                setCommandSearch("");
-              }}
-              onBack={() => {
-                setActivePanel("commands");
-                setCommandSearch("");
-              }}
-            />
-          </Suspense>
-        )}
-
-        {isSettingsPanelOpen && (
-          <Suspense fallback={<ModuleLoader />}>
-            <SettingsCommandGroup
-              isOpen
-              onOpen={() => {
-                setActivePanel("settings");
-                setCommandSearch("");
-              }}
-              onBack={() => {
-                setActivePanel("commands");
-                setCommandSearch("");
-              }}
-            />
-          </Suspense>
-        )}
-      </CommandList>
-
-      {!isEmojiPanelOpen && (
-        <>
-          <CommandSeparator className="bg-border/80" />
-          <div className="flex items-center justify-between px-4 py-1.5 text-xs text-muted-foreground">
-            <span className="inline-flex items-center gap-2">
-              <Search className="size-3.5" /> beam
-            </span>
-            <span className="inline-flex items-center gap-2">
-              <kbd className="rounded-sm border border-border bg-muted px-1.5 py-0.5 text-[11px] text-foreground/80">
-                enter
-              </kbd>
-              <kbd className="rounded-sm border border-border bg-muted px-1.5 py-0.5 text-[11px] text-foreground/80">
-                esc
-              </kbd>
-            </span>
+        {!isEmojiPanelOpen && (
+          <div className="flex h-9 items-center justify-between border-t border-border/40 px-4 text-[10px] font-medium uppercase tracking-widest text-muted-foreground/60">
+            <div className="flex items-center gap-2">
+              <Search className="size-3" />
+              <span>Beam</span>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1">
+                <kbd className="rounded border border-border/60 bg-muted/30 px-1 py-0.5 font-mono text-[9px] text-foreground/70">ENTER</kbd>
+                <span>Open</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <kbd className="rounded border border-border/60 bg-muted/30 px-1 py-0.5 font-mono text-[9px] text-foreground/70">ESC</kbd>
+                <span>Back</span>
+              </div>
+            </div>
           </div>
-        </>
-      )}
-    </Command>
+        )}
+      </Command>
+    </div>
   );
 }

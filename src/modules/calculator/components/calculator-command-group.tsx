@@ -76,23 +76,23 @@ export default function CalculatorCommandGroup() {
       <CommandItem
         value={`calculator ${displayQuery}`}
         disabled
-        className="rounded-xl border border-border bg-accent/40 p-0 data-[disabled=true]:opacity-100"
+        className="rounded-lg border border-border/40 bg-muted/20 p-0 data-[disabled=true]:opacity-100 shadow-sm overflow-hidden"
       >
-        <div className="w-full overflow-hidden rounded-xl bg-gradient-to-r from-accent/90 via-accent/70 to-background/80">
-          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 py-4 md:px-5">
-            <div className="min-w-0 space-y-1.5">
-              <p className="truncate font-mono text-xl text-foreground md:text-3xl">{displayQuery}</p>
-              <p className="inline-flex rounded-md bg-black/25 px-2 py-0.5 text-xs capitalize text-foreground/90">
+        <div className="w-full">
+          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 py-3">
+            <div className="min-w-0 space-y-1">
+              <p className="truncate font-mono text-xl font-bold tracking-tight text-foreground/80">{displayQuery}</p>
+              <p className="inline-flex rounded bg-foreground/5 border border-foreground/5 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-widest text-muted-foreground/60">
                 {getCalculationKind(displayQuery)}
               </p>
             </div>
 
-            <ArrowRight className="size-5 text-foreground/80 md:size-6" />
+            <ArrowRight className="size-6 text-muted-foreground/30" />
 
             <div className="min-w-0 text-right">
               <p
-                className={`truncate font-semibold text-xl text-foreground transition-opacity duration-120 md:text-4xl ${
-                  isFetching ? "opacity-80" : "opacity-100"
+                className={`truncate font-mono font-bold text-2xl tracking-tighter text-foreground transition-all duration-300 ${
+                  isFetching ? "opacity-40" : "opacity-100"
                 }`}
               >
                 {displayValue}

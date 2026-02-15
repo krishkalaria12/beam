@@ -2,6 +2,7 @@ import { useCommandState } from "cmdk";
 import { useState } from "react";
 import { Settings } from "lucide-react";
 
+import settingsIcon from "@/assets/icons/settings.png";
 import { CommandGroup, CommandItem, CommandShortcut } from "@/components/ui/command";
 import type { SettingsView } from "../constants";
 import { SettingsMenu } from "./SettingsMenu";
@@ -38,22 +39,14 @@ export default function SettingsCommandGroup({ isOpen, onOpen, onBack }: Setting
       <CommandGroup>
         <CommandItem 
           value="open settings" 
-          className="group rounded-xl px-4 py-3 transition-all hover:bg-accent/50" 
           onSelect={() => {
             setView("main");
             onOpen();
           }}
         >
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 text-blue-500 ring-1 ring-blue-500/20 transition-all group-data-selected:from-blue-500 group-data-selected:to-purple-500 group-data-selected:text-white group-data-selected:ring-0 group-data-selected:shadow-lg group-data-selected:shadow-blue-500/20">
-            <Settings className="size-5" />
-          </div>
-          <div className="flex flex-col ml-4">
-            <p className="text-[1rem] font-medium leading-tight text-foreground tracking-tight">Settings</p>
-            <p className="text-xs text-muted-foreground/70 mt-0.5">Customize your Beam experience</p>
-          </div>
-          <CommandShortcut className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground/40 group-data-selected:text-foreground/50">
-            open
-          </CommandShortcut>
+          <img src={settingsIcon} alt="settings" className="size-6 rounded-sm object-cover" />
+          <p className="truncate text-foreground capitalize">settings</p>
+          <CommandShortcut>open</CommandShortcut>
         </CommandItem>
       </CommandGroup>
     );

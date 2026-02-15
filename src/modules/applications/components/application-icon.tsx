@@ -57,7 +57,7 @@ export default function ApplicationIcon({ iconPath, className }: ApplicationIcon
   const [failedSource, setFailedSource] = useState<string | null>(null);
 
   if (!imageSource || failedSource === imageSource) {
-    return <AppWindow className={cn("size-4 text-muted-foreground", className)} />;
+    return <AppWindow className={cn("size-6 text-muted-foreground/50", className)} />;
   }
 
   return (
@@ -65,7 +65,7 @@ export default function ApplicationIcon({ iconPath, className }: ApplicationIcon
       src={imageSource}
       alt="application icon"
       loading="lazy"
-      className={cn("size-4 rounded-sm object-cover", className)}
+      className={cn("size-6 rounded-sm object-cover", className)}
       onError={() => setFailedSource(imageSource)}
     />
   );

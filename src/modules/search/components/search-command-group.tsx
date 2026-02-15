@@ -43,7 +43,6 @@ export default function SearchCommandGroup() {
           <CommandItem
             key={provider.id}
             value={query ? `${provider.title} ${query}` : provider.title}
-            className="rounded-md px-3 py-2.5"
             disabled={isDisabled}
             onSelect={() => {
               if (isDisabled || query.length === 0) {
@@ -57,13 +56,10 @@ export default function SearchCommandGroup() {
               src={provider.icon}
               alt={`${provider.id} icon`}
               loading="lazy"
-              className="size-4 rounded-sm object-cover"
+              className="size-6 rounded-sm object-cover"
             />
-            <div className="min-w-0">
-              <p className="truncate text-[1.08rem] leading-tight text-foreground">{provider.title}</p>
-              {errorMessage && <p className="truncate text-sm leading-tight text-destructive">{errorMessage}</p>}
-            </div>
-            <CommandShortcut className="normal-case tracking-normal text-muted-foreground">
+            <p className="truncate text-foreground capitalize">{provider.title}</p>
+            <CommandShortcut>
               {isSearching ? "opening" : "web"}
             </CommandShortcut>
           </CommandItem>

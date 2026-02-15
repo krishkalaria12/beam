@@ -12,59 +12,43 @@ export function SettingsMenu({ setView, onBack }: SettingsMenuProps) {
     <CommandGroup>
       <CommandItem 
         value="back to commands" 
-        className="rounded-md px-3 py-2.5 mb-2 opacity-60 hover:opacity-100 transition-opacity" 
+        className="mb-1 opacity-60 hover:opacity-100 transition-opacity" 
         onSelect={onBack}
       >
-        <div className="flex items-center gap-3">
-          <div className="flex h-5 w-5 items-center justify-center rounded-sm border border-border/50 bg-muted/30">
-            <kbd className="text-[10px] font-medium leading-none">esc</kbd>
-          </div>
-          <span className="font-mono text-xs uppercase tracking-widest">Back to Beam</span>
+        <div className="flex items-center gap-2">
+          <kbd className="text-[10px] font-medium leading-none border border-border/50 bg-muted/30 px-1 py-0.5 rounded-sm">esc</kbd>
+          <span className="font-mono text-[10px] uppercase tracking-widest">Back</span>
         </div>
       </CommandItem>
 
-      <div className="px-2 pb-2 pt-1">
-        <p className="px-2 mb-3 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">
+      <div className="px-1 pb-1">
+        <p className="px-2 mb-2 font-mono text-[9px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">
           Preferences
         </p>
         
-        <div className="space-y-1">
+        <div className="space-y-0.5">
           <CommandItem
             value="appearance mode"
             onSelect={() => setView("appearance")}
-            className="group flex items-center justify-between rounded-lg px-3 py-3 transition-all hover:bg-accent/50"
+            className="flex items-center justify-between"
           >
-            <div className="flex items-center gap-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/5 text-primary ring-1 ring-primary/10 transition-colors group-data-selected:bg-primary group-data-selected:text-primary-foreground group-data-selected:ring-0">
-                <Moon className="size-5" />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-[0.95rem] font-medium tracking-tight">Appearance Mode</span>
-                <span className="text-xs text-muted-foreground/70">Toggle between light and dark</span>
-              </div>
+            <div className="flex items-center gap-3">
+              <Moon className="size-6 text-muted-foreground/60" />
+              <span className="text-sm font-medium">Appearance Mode</span>
             </div>
-            <div className="flex items-center gap-2">
-              <ChevronRight className="size-4 text-muted-foreground/30 transition-transform group-data-selected:translate-x-0.5 group-data-selected:text-foreground/50" />
-            </div>
+            <ChevronRight className="size-4 text-muted-foreground/30" />
           </CommandItem>
 
           <CommandItem
             value="theme selection"
             onSelect={() => setView("themes")}
-            className="group flex items-center justify-between rounded-lg px-3 py-3 transition-all hover:bg-accent/50"
+            className="flex items-center justify-between"
           >
-            <div className="flex items-center gap-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500/5 text-orange-500 ring-1 ring-orange-500/10 transition-colors group-data-selected:bg-orange-500 group-data-selected:text-white group-data-selected:ring-0">
-                <Palette className="size-5" />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-[0.95rem] font-medium tracking-tight">Theme Selection</span>
-                <span className="text-xs text-muted-foreground/70">Customize colors and accents</span>
-              </div>
+            <div className="flex items-center gap-3">
+              <Palette className="size-6 text-muted-foreground/60" />
+              <span className="text-sm font-medium">Theme Selection</span>
             </div>
-            <div className="flex items-center gap-2">
-              <ChevronRight className="size-4 text-muted-foreground/30 transition-transform group-data-selected:translate-x-0.5 group-data-selected:text-foreground/50" />
-            </div>
+            <ChevronRight className="size-4 text-muted-foreground/30" />
           </CommandItem>
         </div>
       </div>
