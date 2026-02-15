@@ -1,0 +1,1 @@
+export const CALCULATOR_AUTO_SAVE_DEBOUNCE_MS = 800;

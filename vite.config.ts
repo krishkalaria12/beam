@@ -10,9 +10,10 @@ export default defineConfig({
     tanstackRouter({}),
     react({
       babel: {
-        plugins: ['babel-plugin-react-compiler'],
+        plugins: ["babel-plugin-react-compiler"],
       },
-    })],
+    }),
+  ],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
@@ -27,9 +28,6 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: (id) => {
-          if (id.includes("src/modules/settings")) {
-            return "settings-module";
-          }
           if (!id.includes("node_modules")) {
             return;
           }
@@ -42,7 +40,16 @@ export default defineConfig({
           if (id.includes("@tanstack")) {
             return "tanstack-vendor";
           }
-          if (id.includes("lucide-react") || id.includes("cmdk") || id.includes("@base-ui") || id.includes("shadcn") || id.includes("sonner") || id.includes("class-variance") || id.includes("tailwind-merge") || id.includes("clsx")) {
+          if (
+            id.includes("lucide-react") ||
+            id.includes("cmdk") ||
+            id.includes("@base-ui") ||
+            id.includes("shadcn") ||
+            id.includes("sonner") ||
+            id.includes("class-variance") ||
+            id.includes("tailwind-merge") ||
+            id.includes("clsx")
+          ) {
             return "ui-vendor";
           }
           if (id.includes("react-dom") || id.includes("react/") || id.includes("scheduler")) {

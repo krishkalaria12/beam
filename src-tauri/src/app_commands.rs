@@ -9,6 +9,8 @@ pub fn get_handler() -> impl Fn(Invoke) -> bool {
         applications::open_app::open_application,
         search::search_with_browser,
         calculator::calculate_expression,
+        calculator::get_calculator_history,
+        calculator::save_calculator_history,
         clipboard::get_clipboard_history
     ]
 }

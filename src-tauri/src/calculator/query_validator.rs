@@ -65,11 +65,17 @@ pub fn classify_query(query: &str) -> CalculatorStatus {
 
     if let Some(delimiter) = conversion_delimiter {
         if let Some((from, to)) = lowered.split_once(delimiter) {
-            return if has_currency_like_term(from) && has_currency_like_term(to) {
-                CalculatorStatus::Valid
-            } else {
-                CalculatorStatus::Incomplete
-            };
+            if has_currency_like_term(from) && has_currency_like_term(to) {
+                return CalculatorStatus::Valid;
+            }
+
+            // Fallback for unit conversions (e.g., "1km to m")
+            // If the left side has a number and the right side is not empty, assume it's a valid conversion query
+            if from.chars().any(|c| c.is_ascii_digit()) && !to.trim().is_empty() {
+                return CalculatorStatus::Valid;
+            }
+
+            return CalculatorStatus::Incomplete;
         }
 
         return CalculatorStatus::Incomplete;

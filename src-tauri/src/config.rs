@@ -32,6 +32,9 @@ pub struct Config {
     pub CALCULATOR_HTTP_TIMEOUT_SECS: u64,
     pub CALCULATOR_REQUEST_WAIT_TIMEOUT_SECS: u64,
     pub CALCULATOR_REQUEST_POLL_INTERVAL_MS: u64,
+    pub CALCULATOR_HISTORY_VALUE: &'static str,
+    pub CALCULATOR_STORE_NAME: &'static str,
+    pub CALCULATOR_MAX_HISTORY_ENTRIES: usize,
 
     // -- Keyring
     pub KEYRING_NAME: &'static str,
@@ -76,6 +79,9 @@ impl Config {
             CALCULATOR_HTTP_TIMEOUT_SECS: 10,
             CALCULATOR_REQUEST_WAIT_TIMEOUT_SECS: 8,
             CALCULATOR_REQUEST_POLL_INTERVAL_MS: 20,
+            CALCULATOR_HISTORY_VALUE: "calculator_history",
+            CALCULATOR_STORE_NAME: "calculator_history.json",
+            CALCULATOR_MAX_HISTORY_ENTRIES: 50,
 
             KEYRING_NAME: "secret-key",
 

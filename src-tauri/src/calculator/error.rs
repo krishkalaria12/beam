@@ -15,6 +15,9 @@ pub enum Error {
     PluginError(crate::calculator::plugin::error::Error),
     ConfigurationError(String),
     RequestTimeoutError(String),
+    StoreOpeningError(String),
+    StoreSaveError(String),
+    SerializationError(String),
 }
 
 impl Serialize for Error {
@@ -75,6 +78,9 @@ impl core::fmt::Display for Error {
             Self::PluginError(e) => write!(fmt, "{e}"),
             Self::ConfigurationError(e) => write!(fmt, "configuration error: {e}"),
             Self::RequestTimeoutError(e) => write!(fmt, "request timeout: {e}"),
+            Self::StoreOpeningError(e) => write!(fmt, "failed to open store: {e}"),
+            Self::StoreSaveError(e) => write!(fmt, "failed to save store: {e}"),
+            Self::SerializationError(e) => write!(fmt, "serialization error: {e}"),
         }
     }
 }

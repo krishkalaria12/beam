@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 
 import ApplicationsCommandGroup from "@/modules/applications/components/applications-command-group";
 import CalculatorCommandGroup from "@/modules/calculator/components/calculator-command-group";
+import CalculatorHistoryCommandGroup from "@/modules/calculator-history/components/calculator-history-command-group";
 import ClipboardCommandGroup from "@/modules/clipboard/components/clipboard-command-group";
 import EmojiCommandGroup from "@/modules/emoji/components/emoji-command-group";
 import SearchCommandGroup from "@/modules/search/components/search-command-group";
@@ -13,10 +14,11 @@ import SettingsCommandGroup from "@/modules/settings/components/settings-command
 
 export default function LauncherCommand() {
   const [commandSearch, setCommandSearch] = useState("");
-  const [activePanel, setActivePanel] = useState<"commands" | "clipboard" | "emoji" | "settings">("commands");
+  const [activePanel, setActivePanel] = useState<"commands" | "clipboard" | "emoji" | "settings" | "calculator-history">("commands");
   const isClipboardPanelOpen = activePanel === "clipboard";
   const isEmojiPanelOpen = activePanel === "emoji";
   const isSettingsPanelOpen = activePanel === "settings";
+  const isCalculatorHistoryPanelOpen = activePanel === "calculator-history";
 
   return (
     <div className="relative h-full w-full bg-background">
@@ -63,6 +65,17 @@ export default function LauncherCommand() {
                   setCommandSearch("");
                 }}
               />
+              <CalculatorHistoryCommandGroup
+                isOpen={false}
+                onOpen={() => {
+                  setActivePanel("calculator-history");
+                  setCommandSearch("");
+                }}
+                onBack={() => {
+                  setActivePanel("commands");
+                  setCommandSearch("");
+                }}
+              />
               <EmojiCommandGroup
                 isOpen={false}
                 onOpen={() => {
@@ -88,6 +101,20 @@ export default function LauncherCommand() {
               isOpen
               onOpen={() => {
                 setActivePanel("clipboard");
+                setCommandSearch("");
+              }}
+              onBack={() => {
+                setActivePanel("commands");
+                setCommandSearch("");
+              }}
+            />
+          )}
+
+          {isCalculatorHistoryPanelOpen && (
+            <CalculatorHistoryCommandGroup
+              isOpen
+              onOpen={() => {
+                setActivePanel("calculator-history");
                 setCommandSearch("");
               }}
               onBack={() => {
