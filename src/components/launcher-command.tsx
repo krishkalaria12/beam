@@ -1,24 +1,15 @@
-import { Search, Command as CommandIcon, Keyboard } from "lucide-react";
-import { lazy, Suspense, useState } from "react";
+import { Search } from "lucide-react";
+import { useState } from "react";
 
 import { Command, CommandInput, CommandList, CommandSeparator } from "@/components/ui/command";
-import Loader from "./loader";
 import { cn } from "@/lib/utils";
 
-const ApplicationsCommandGroup = lazy(() => import("@/modules/applications/components/applications-command-group"));
-const CalculatorCommandGroup = lazy(() => import("@/modules/calculator/components/calculator-command-group"));
-const ClipboardCommandGroup = lazy(() => import("@/modules/clipboard/components/clipboard-command-group"));
-const EmojiCommandGroup = lazy(() => import("@/modules/emoji/components/emoji-command-group"));
-const SearchCommandGroup = lazy(() => import("@/modules/search/components/search-command-group"));
-const SettingsCommandGroup = lazy(() => import("@/modules/settings/components/settings-command-group"));
-
-function ModuleLoader() {
-  return (
-    <div className="flex items-center justify-center py-4">
-      <Loader />
-    </div>
-  );
-}
+import ApplicationsCommandGroup from "@/modules/applications/components/applications-command-group";
+import CalculatorCommandGroup from "@/modules/calculator/components/calculator-command-group";
+import ClipboardCommandGroup from "@/modules/clipboard/components/clipboard-command-group";
+import EmojiCommandGroup from "@/modules/emoji/components/emoji-command-group";
+import SearchCommandGroup from "@/modules/search/components/search-command-group";
+import SettingsCommandGroup from "@/modules/settings/components/settings-command-group";
 
 export default function LauncherCommand() {
   const [commandSearch, setCommandSearch] = useState("");
@@ -50,96 +41,8 @@ export default function LauncherCommand() {
         >
           {activePanel === "commands" && (
             <div className="py-1">
-              <Suspense fallback={<ModuleLoader />}>
-                <SettingsCommandGroup
-                  isOpen={false}
-                  onOpen={() => {
-                    setActivePanel("settings");
-                    setCommandSearch("");
-                  }}
-                  onBack={() => {
-                    setActivePanel("commands");
-                    setCommandSearch("");
-                  }}
-                />
-              </Suspense>
-              <Suspense fallback={<ModuleLoader />}>
-                <ClipboardCommandGroup
-                  isOpen={false}
-                  onOpen={() => {
-                    setActivePanel("clipboard");
-                    setCommandSearch("");
-                  }}
-                  onBack={() => {
-                    setActivePanel("commands");
-                    setCommandSearch("");
-                  }}
-                />
-              </Suspense>
-              <Suspense fallback={<ModuleLoader />}>
-                <EmojiCommandGroup
-                  isOpen={false}
-                  onOpen={() => {
-                    setActivePanel("emoji");
-                    setCommandSearch("");
-                  }}
-                  onBack={() => {
-                    setActivePanel("commands");
-                    setCommandSearch("");
-                  }}
-                />
-              </Suspense>
-
-              <CommandSeparator className="my-1 opacity-50" />
-
-              <Suspense fallback={<ModuleLoader />}>
-                <CalculatorCommandGroup />
-              </Suspense>
-              <Suspense fallback={<ModuleLoader />}>
-                <ApplicationsCommandGroup />
-              </Suspense>
-              <Suspense fallback={<ModuleLoader />}>
-                <SearchCommandGroup />
-              </Suspense>
-            </div>
-          )}
-
-          {isClipboardPanelOpen && (
-            <Suspense fallback={<ModuleLoader />}>
-              <ClipboardCommandGroup
-                isOpen
-                onOpen={() => {
-                  setActivePanel("clipboard");
-                  setCommandSearch("");
-                }}
-                onBack={() => {
-                  setActivePanel("commands");
-                  setCommandSearch("");
-                }}
-              />
-            </Suspense>
-          )}
-
-          {isEmojiPanelOpen && (
-            <Suspense fallback={<ModuleLoader />}>
-              <EmojiCommandGroup
-                isOpen
-                onOpen={() => {
-                  setActivePanel("emoji");
-                  setCommandSearch("");
-                }}
-                onBack={() => {
-                  setActivePanel("commands");
-                  setCommandSearch("");
-                }}
-              />
-            </Suspense>
-          )}
-
-          {isSettingsPanelOpen && (
-            <Suspense fallback={<ModuleLoader />}>
               <SettingsCommandGroup
-                isOpen
+                isOpen={false}
                 onOpen={() => {
                   setActivePanel("settings");
                   setCommandSearch("");
@@ -149,7 +52,77 @@ export default function LauncherCommand() {
                   setCommandSearch("");
                 }}
               />
-            </Suspense>
+              <ClipboardCommandGroup
+                isOpen={false}
+                onOpen={() => {
+                  setActivePanel("clipboard");
+                  setCommandSearch("");
+                }}
+                onBack={() => {
+                  setActivePanel("commands");
+                  setCommandSearch("");
+                }}
+              />
+              <EmojiCommandGroup
+                isOpen={false}
+                onOpen={() => {
+                  setActivePanel("emoji");
+                  setCommandSearch("");
+                }}
+                onBack={() => {
+                  setActivePanel("commands");
+                  setCommandSearch("");
+                }}
+              />
+
+              <CommandSeparator className="my-1 opacity-50" />
+
+              <CalculatorCommandGroup />
+              <ApplicationsCommandGroup />
+              <SearchCommandGroup />
+            </div>
+          )}
+
+          {isClipboardPanelOpen && (
+            <ClipboardCommandGroup
+              isOpen
+              onOpen={() => {
+                setActivePanel("clipboard");
+                setCommandSearch("");
+              }}
+              onBack={() => {
+                setActivePanel("commands");
+                setCommandSearch("");
+              }}
+            />
+          )}
+
+          {isEmojiPanelOpen && (
+            <EmojiCommandGroup
+              isOpen
+              onOpen={() => {
+                setActivePanel("emoji");
+                setCommandSearch("");
+              }}
+              onBack={() => {
+                setActivePanel("commands");
+                setCommandSearch("");
+              }}
+            />
+          )}
+
+          {isSettingsPanelOpen && (
+            <SettingsCommandGroup
+              isOpen
+              onOpen={() => {
+                setActivePanel("settings");
+                setCommandSearch("");
+              }}
+              onBack={() => {
+                setActivePanel("commands");
+                setCommandSearch("");
+              }}
+            />
           )}
         </CommandList>
 

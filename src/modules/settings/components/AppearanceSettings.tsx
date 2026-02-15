@@ -21,7 +21,8 @@ export function AppearanceSettings({ onBack }: AppearanceSettingsProps) {
         setTheme(`${currentThemeBase}-dark` as any);
       }
     } else {
-      if (currentThemeBase === "default") {
+      // If switching to light mode and current theme is glass or default, set to default light theme
+      if (currentThemeBase === "glass" || currentThemeBase === "default") {
         setTheme("default");
       } else {
         setTheme(currentThemeBase as any);
