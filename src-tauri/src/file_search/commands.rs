@@ -91,27 +91,37 @@ pub fn search_files(
 // Opens a file with the system's default application
 #[tauri::command]
 pub async fn open_file(file_path: String) -> Result<()> {
+    // Normalize the path - expand tilde to home directory
+    let normalized_path = if file_path.starts_with("~/") {
+        dirs::home_dir()
+            .map(|home| home.join(&file_path[2..]))
+            .map(|p| p.to_string_lossy().to_string())
+            .unwrap_or(file_path)
+    } else {
+        file_path
+    };
+
     // Validate file path
-    let path = PathBuf::from(&file_path);
+    let path = PathBuf::from(&normalized_path);
 
     // Check if path is absolute
     if !path.is_absolute() {
         return Err(Error::InvalidFilePath(format!(
             "Path must be absolute: {}",
-            file_path
+            normalized_path
         )));
     }
 
     // Check if file exists
     if !path.exists() {
-        return Err(Error::FileNotFound(file_path));
+        return Err(Error::FileNotFound(normalized_path));
     }
 
     // Check if it's a file (not a directory)
     if !path.is_file() {
         return Err(Error::InvalidFilePath(format!(
             "Path is not a file: {}",
-            file_path
+            normalized_path
         )));
     }
 
