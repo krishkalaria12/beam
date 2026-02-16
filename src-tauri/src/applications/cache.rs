@@ -1,4 +1,4 @@
-use chrono::Utc;
+use jiff::Timestamp;
 use serde_json::from_value;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
@@ -25,7 +25,7 @@ fn should_use_cached_applications(store: &Store<Wry>) -> bool {
         return false;
     };
 
-    let now = Utc::now().timestamp();
+    let now = Timestamp::now().as_second();
     let diff_seconds = (config().TIMESTAMP_VALUE_DIFF as i64) * 86400;
 
     (now - stored_time) <= diff_seconds
@@ -39,7 +39,7 @@ fn read_cached_applications(store: &Store<Wry>) -> Option<Vec<AppEntry>> {
 fn write_applications_cache(store: Arc<Store<Wry>>, applications: &[AppEntry]) -> Result<()> {
     let app_json =
         serde_json::to_value(applications).map_err(|e| Error::SerializationError(e.to_string()))?;
-    let current_time = serde_json::to_value(Utc::now().timestamp())
+    let current_time = serde_json::to_value(Timestamp::now().as_second())
         .map_err(|e| Error::SerializationError(e.to_string()))?;
 
     store.set(config().APPLICATIONS_VALUE, app_json);

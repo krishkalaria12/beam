@@ -1,5 +1,3 @@
-use chrono_tz::Tz;
-
 use crate::calculator::calculation::Calculation;
 use crate::calculator::error::Result;
 use crate::calculator::plugin::PluginManager;
@@ -20,18 +18,9 @@ struct CalculatorEngine {
 impl Default for CalculatorEngine {
     fn default() -> Self {
         let timezone = match localzone::get_local_zone() {
-            Some(tz) => match tz.parse::<Tz>() {
-                Ok(tz) => {
-                    let search_timezone = tz.to_string();
-                    match TIMEZONE_LIST
-                        .iter()
-                        .find(|timezone| timezone.name == search_timezone)
-                    {
-                        Some(timezone) => timezone.clone(),
-                        None => UTC_TIMEZONE.clone(),
-                    }
-                }
-                Err(_) => UTC_TIMEZONE.clone(),
+            Some(tz) => match TIMEZONE_LIST.iter().find(|timezone| timezone.name == tz) {
+                Some(timezone) => timezone.clone(),
+                None => UTC_TIMEZONE.clone(),
             },
             None => UTC_TIMEZONE.clone(),
         };

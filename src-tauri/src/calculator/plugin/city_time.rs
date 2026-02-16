@@ -2,7 +2,8 @@ use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::rc::Rc;
 
-use chrono::Utc;
+use chrono::TimeZone;
+use jiff::Timestamp;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
 use serde_json::from_str;
@@ -101,8 +102,15 @@ impl RuleTrait for CityTimePlugin {
             .iter()
             .find(|timezone| timezone.name == city_timezone)?;
 
+        let now = Timestamp::now().as_second();
+        let naive = chrono::Utc
+            .timestamp_opt(now, 0)
+            .single()
+            .map(|dt| dt.naive_utc())
+            .unwrap_or_else(|| chrono::DateTime::UNIX_EPOCH.naive_utc());
+
         Some(TokenType::Time(
-            Utc::now().naive_utc(),
+            naive,
             TimeOffset {
                 name: get_current_timezone().name,
                 offset: (timezone.offset * 60.0) as i32,

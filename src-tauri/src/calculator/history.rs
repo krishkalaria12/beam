@@ -1,4 +1,4 @@
-use chrono::Utc;
+use jiff::Timestamp;
 use serde::{Deserialize, Serialize};
 use serde_json::from_value;
 use tauri::AppHandle;
@@ -33,13 +33,18 @@ pub fn get_history(app: &AppHandle) -> Result<Vec<CalculatorHistoryEntry>> {
     }
 }
 
-pub fn save_to_history(app: &AppHandle, query: String, result: String, session_id: String) -> Result<()> {
+pub fn save_to_history(
+    app: &AppHandle,
+    query: String,
+    result: String,
+    session_id: String,
+) -> Result<()> {
     let mut history = get_history(app)?;
 
     let new_entry = CalculatorHistoryEntry {
         query,
         result,
-        timestamp: Utc::now().timestamp(),
+        timestamp: Timestamp::now().as_second(),
         session_id: Some(session_id.clone()),
     };
 
@@ -63,7 +68,7 @@ pub fn save_to_history(app: &AppHandle, query: String, result: String, session_i
     }
 
     // Remove duplicates (same query and result) if any exist further down the list
-    
+
     // Keep the first occurrence (which is our new/updated entry) and remove subsequent duplicates
     let mut seen = false;
     history.retain(|entry| {
@@ -85,13 +90,13 @@ pub fn save_to_history(app: &AppHandle, query: String, result: String, session_i
         .store(config().CALCULATOR_STORE_NAME)
         .map_err(|e| Error::StoreOpeningError(e.to_string()))?;
 
-    let json_value = serde_json::to_value(&history)
-        .map_err(|e| Error::SerializationError(e.to_string()))?;
+    let json_value =
+        serde_json::to_value(&history).map_err(|e| Error::SerializationError(e.to_string()))?;
 
     store.set(config().CALCULATOR_HISTORY_VALUE, json_value);
     store
         .save()
         .map_err(|e| Error::StoreSaveError(e.to_string()))?;
-    
+
     Ok(())
 }
