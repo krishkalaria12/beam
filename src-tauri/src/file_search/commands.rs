@@ -115,59 +115,7 @@ pub async fn open_file(file_path: String) -> Result<()> {
         )));
     }
 
-    // Open the file with the default application
-    #[cfg(target_os = "macos")]
-    {
-        std::process::Command::new("open")
-            .arg(&file_path)
-            .spawn()
-            .map_err(|e| Error::FileOpenFailed {
-                path: file_path.clone(),
-                reason: e.to_string(),
-            })?;
-    }
-
-    #[cfg(target_os = "linux")]
-    {
-        // Try xdg-open first, then fallback to other methods
-        let result = std::process::Command::new("xdg-open")
-            .arg(&file_path)
-            .spawn();
-
-        if result.is_err() {
-            // Fallback to kde-open5 for KDE
-            let result = std::process::Command::new("kde-open5")
-                .arg(&file_path)
-                .spawn();
-
-            if result.is_err() {
-                // Fallback to gnome-open for GNOME
-                let result = std::process::Command::new("gnome-open")
-                    .arg(&file_path)
-                    .spawn();
-
-                if result.is_err() {
-                    return Err(Error::FileOpenFailed {
-                        path: file_path,
-                        reason:
-                            "No suitable file opener found (tried xdg-open, kde-open5, gnome-open)"
-                                .to_string(),
-                    });
-                }
-            }
-        }
-    }
-
-    #[cfg(target_os = "windows")]
-    {
-        std::process::Command::new("cmd")
-            .args(&["/C", "start", "", &file_path])
-            .spawn()
-            .map_err(|e| Error::FileOpenFailed {
-                path: file_path.clone(),
-                reason: e.to_string(),
-            })?;
-    }
+    open::that(&path).map_err(|e| Error::InvalidFilePath(e.to_string()))?;
 
     Ok(())
 }
