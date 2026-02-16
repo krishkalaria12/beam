@@ -9,16 +9,19 @@ import CalculatorCommandGroup from "@/modules/calculator/components/calculator-c
 import CalculatorHistoryCommandGroup from "@/modules/calculator-history/components/calculator-history-command-group";
 import ClipboardCommandGroup from "@/modules/clipboard/components/clipboard-command-group";
 import EmojiCommandGroup from "@/modules/emoji/components/emoji-command-group";
+import FileSearchCommandGroup from "@/modules/file-search/components/file-search-command-group";
 import SearchCommandGroup from "@/modules/search/components/search-command-group";
 import SettingsCommandGroup from "@/modules/settings/components/settings-command-group";
 
 export default function LauncherCommand() {
   const [commandSearch, setCommandSearch] = useState("");
-  const [activePanel, setActivePanel] = useState<"commands" | "clipboard" | "emoji" | "settings" | "calculator-history">("commands");
+  const [fileSearchQuery, setFileSearchQuery] = useState("");
+  const [activePanel, setActivePanel] = useState<"commands" | "clipboard" | "emoji" | "settings" | "calculator-history" | "file-search">("commands");
   const isClipboardPanelOpen = activePanel === "clipboard";
   const isEmojiPanelOpen = activePanel === "emoji";
   const isSettingsPanelOpen = activePanel === "settings";
   const isCalculatorHistoryPanelOpen = activePanel === "calculator-history";
+  const isFileSearchPanelOpen = activePanel === "file-search";
 
   return (
     <div className="relative h-full w-full bg-background">
@@ -28,13 +31,35 @@ export default function LauncherCommand() {
         onValueChange={setCommandSearch}
         className="h-full w-full overflow-hidden bg-transparent"
       >
-        {!isEmojiPanelOpen && (
+        {!isEmojiPanelOpen && !isFileSearchPanelOpen && (
           <CommandInput
             placeholder="Search Beam..."
             className="border-none"
           />
         )}
 
+        {/* If File Search is open, it takes over the view entirely, so we handle it outside the standard list flow if needed, 
+            but FileSearchCommandGroup returns absolute positioned div when open, so it can live inside or outside. 
+            However, CommandList has padding/overflow. Let's see how others work. 
+            Others like Settings reuse the list. FileSearch has a custom UI.
+            
+            Strategy: When open, render it directly.
+        */}
+        
+        {isFileSearchPanelOpen ? (
+           <FileSearchCommandGroup
+              isOpen
+              query={fileSearchQuery}
+              onOpen={(capturedQuery) => {
+                setFileSearchQuery(capturedQuery);
+                setActivePanel("file-search");
+              }}
+              onBack={() => {
+                setActivePanel("commands");
+                setCommandSearch("");
+              }}
+            />
+        ) : (
         <CommandList
           className={cn(
             "flex-1 px-1 transition-all duration-300",
@@ -92,6 +117,14 @@ export default function LauncherCommand() {
 
               <CalculatorCommandGroup />
               <ApplicationsCommandGroup />
+              <FileSearchCommandGroup 
+                isOpen={false}
+                onOpen={(capturedQuery) => {
+                    setFileSearchQuery(capturedQuery);
+                    setActivePanel("file-search");
+                }}
+                onBack={() => {}} // Not used when closed
+              />
               <SearchCommandGroup />
             </div>
           )}
@@ -152,8 +185,9 @@ export default function LauncherCommand() {
             />
           )}
         </CommandList>
+        )}
 
-        {!isEmojiPanelOpen && (
+        {!isEmojiPanelOpen && !isFileSearchPanelOpen && (
           <div className="flex h-9 items-center justify-between border-t border-border/40 px-4 text-[10px] font-medium uppercase tracking-widest text-muted-foreground/60">
             <div className="flex items-center gap-2">
               <Search className="size-3" />

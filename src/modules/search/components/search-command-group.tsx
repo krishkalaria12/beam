@@ -29,6 +29,7 @@ const searchProviders: SearchProvider[] = [
 export default function SearchCommandGroup() {
   const searchInput = useCommandState((state) => state.search);
   const query = searchInput.trim();
+  const hasQuery = query.length > 0;
 
   const { runSearch, searchingSite, searchError } = useSearchWithBrowser();
 
@@ -37,7 +38,7 @@ export default function SearchCommandGroup() {
       {searchProviders.map((provider) => {
         const isSearching = searchingSite === provider.id;
         const errorMessage = searchError?.site === provider.id ? searchError.message : null;
-        const isDisabled = isSearching;
+        const isDisabled = isSearching || !hasQuery;
 
         return (
           <CommandItem
@@ -45,7 +46,7 @@ export default function SearchCommandGroup() {
             value={query ? `${provider.title} ${query}` : provider.title}
             disabled={isDisabled}
             onSelect={() => {
-              if (isDisabled || query.length === 0) {
+              if (isDisabled || !hasQuery) {
                 return;
               }
 
