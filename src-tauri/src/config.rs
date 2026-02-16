@@ -14,8 +14,6 @@ pub fn config() -> &'static Config {
 #[allow(non_snake_case)]
 pub struct Config {
     // -- Store
-    pub DIRECTORIES_APPLICATION: Vec<String>,
-    pub DIRECTORIES_ICON: Vec<String>,
     pub SERVICE_NAME: &'static str,
     pub STORE_NAME: &'static str,
 
@@ -48,29 +46,22 @@ pub struct Config {
     pub CLIPBOARD_ENCRYPTION_PREFIX: &'static str,
     pub CLIPBOARD_ENCRYPTION_NONCE_BYTES: usize,
     pub CLIPBOARD_ENCRYPTION_PASSWORD_LENGTH: usize,
+
+    // -- File
+    pub FILE_DIRECTORIES_APPLICATION: Vec<String>,
+    pub FILE_DIRECTORIES_ICON: Vec<String>,
+    pub FILE_IGNORED_FOLDERS: Vec<&'static str>,
+    pub FILE_WATCHER_DEBOUNCE_SEC: usize,
 }
 
 impl Config {
     fn load_the_config() -> Result<Config> {
         Ok(Config {
-            DIRECTORIES_APPLICATION: vec![
-                "~/.local/share/applications/".to_string(),
-                "/usr/share/applications/".to_string(),
-            ],
-            DIRECTORIES_ICON: vec![
-                "~/.local/share/icons".to_string(),
-                "~/.icons".to_string(),
-                "/usr/share/icons".to_string(),
-                "/usr/local/share/icons".to_string(),
-                "/usr/share/pixmaps".to_string(),
-                "/var/lib/flatpak/exports/share/icons".to_string(),
-                "/var/lib/snapd/desktop/icons".to_string(),
-            ],
             SERVICE_NAME: "beam",
             STORE_NAME: "settings.json",
             APPLICATIONS_VALUE: "applications_cache",
             LAST_UPDATED_APPLICATIONS_TIMESTAMP: "last_updated_application_timestamp",
-            TIMESTAMP_VALUE_DIFF: 2,
+            TIMESTAMP_VALUE_DIFF: 1,
             APPLICATIONS_CACHE_UPDATED_EVENT: "applications-cache-updated",
 
             CALCULATOR_CURRENCY_URL: "https://www.floatrates.com/daily/usd.json",
@@ -93,6 +84,46 @@ impl Config {
             CLIPBOARD_ENCRYPTION_PREFIX: "beam:aesgcm:v1:",
             CLIPBOARD_ENCRYPTION_NONCE_BYTES: 12,
             CLIPBOARD_ENCRYPTION_PASSWORD_LENGTH: 64,
+
+            FILE_DIRECTORIES_APPLICATION: vec![
+                "~/.local/share/applications/".to_string(),
+                "/usr/share/applications/".to_string(),
+            ],
+            FILE_DIRECTORIES_ICON: vec![
+                "~/.local/share/icons".to_string(),
+                "~/.icons".to_string(),
+                "/usr/share/icons".to_string(),
+                "/usr/local/share/icons".to_string(),
+                "/usr/share/pixmaps".to_string(),
+                "/var/lib/flatpak/exports/share/icons".to_string(),
+                "/var/lib/snapd/desktop/icons".to_string(),
+            ],
+            FILE_IGNORED_FOLDERS: vec![
+                "node_modules",
+                "target",
+                "dist",
+                "build",
+                "vendor",
+                ".git",
+                "__pycache__",
+                ".venv",
+                "env",
+                ".pytest_cache",
+                ".gradle",
+                ".idea",
+                ".vs",
+                "Debug",
+                "Release",
+                ".next",
+                ".nuxt",
+                ".sass-cache",
+                "$RECYCLE.BIN",
+                "System Volume Information",
+                ".cache",
+                ".cargo",
+                ".rustup",
+            ],
+            FILE_WATCHER_DEBOUNCE_SEC: 1,
         })
     }
 }

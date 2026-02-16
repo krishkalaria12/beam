@@ -62,7 +62,7 @@ fn expand_home(path: &str) -> PathBuf {
 }
 
 fn iterate_through_application_directories() -> Result<Vec<PathBuf>> {
-    let directories = &config().DIRECTORIES_APPLICATION;
+    let directories = &config().FILE_DIRECTORIES_APPLICATION;
     let mut files = Vec::new();
 
     for directory in directories {

@@ -17,7 +17,7 @@ use crate::{
 static APPLICATIONS_REFRESH_IN_PROGRESS: AtomicBool = AtomicBool::new(false);
 
 fn should_use_cached_applications(store: &Store<Wry>) -> bool {
-    let Some(timestamp) = store.get(&config().LAST_UPDATED_APPLICATIONS_TIMESTAMP) else {
+    let Some(timestamp) = store.get(config().LAST_UPDATED_APPLICATIONS_TIMESTAMP) else {
         return false;
     };
 
@@ -51,7 +51,7 @@ fn write_applications_cache(store: Arc<Store<Wry>>, applications: &[AppEntry]) -
     Ok(())
 }
 
-fn refresh_applications_cache_in_background(app: AppHandle) {
+fn refresh_applications_cache_in_background(app: AppHandle<Wry>) {
     if APPLICATIONS_REFRESH_IN_PROGRESS
         .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
         .is_err()
@@ -79,7 +79,7 @@ fn refresh_applications_cache_in_background(app: AppHandle) {
     });
 }
 
-pub fn get_applications_with_cache(app: AppHandle) -> Result<Vec<AppEntry>> {
+pub fn get_applications_with_cache(app: AppHandle<Wry>) -> Result<Vec<AppEntry>> {
     let store = app
         .store(&config().STORE_NAME)
         .map_err(|e| Error::StoreOpeningError(e.to_string()))?;

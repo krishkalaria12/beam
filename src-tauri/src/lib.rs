@@ -5,10 +5,12 @@ pub mod clipboard;
 pub mod config;
 pub mod currency;
 pub mod error;
+pub mod file_search;
 pub mod fuzzy_search;
 pub mod http;
 pub mod search;
 pub mod utils;
+pub mod state;
 
 use tauri::Manager;
 
@@ -28,6 +30,7 @@ fn toggle_launcher(app: &tauri::AppHandle) {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let mut builder = tauri::Builder::default()
+        .manage(state::AppState::new())
         .plugin(tauri_plugin_store::Builder::new().build())
         .invoke_handler(app_commands::get_handler());
 
@@ -58,6 +61,9 @@ pub fn run() {
             }
 
             clipboard::start_clipboard_listener(app.handle().clone());
+
+            // Initialize File Search Backend via State
+            state::init(app.handle());
 
             Ok(())
         })

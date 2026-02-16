@@ -1,5 +1,5 @@
-use freedesktop_file_parser::IconString;
 use std::collections::HashMap;
+use freedesktop_file_parser::IconString;
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 
@@ -51,7 +51,7 @@ pub struct IconResolver {
 impl IconResolver {
     pub fn new() -> Self {
         let allowed_icon_directories = config()
-            .DIRECTORIES_ICON
+            .FILE_DIRECTORIES_ICON
             .iter()
             .map(|path| canonicalize_path(&expand_home(path)))
             .collect();
