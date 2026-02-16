@@ -1,4 +1,6 @@
+pub mod commands;
 pub mod indexer;
+pub mod search;
 pub mod types;
 
 use dashmap::DashMap;

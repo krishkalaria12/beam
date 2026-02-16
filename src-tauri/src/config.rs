@@ -52,6 +52,10 @@ pub struct Config {
     pub FILE_DIRECTORIES_ICON: Vec<String>,
     pub FILE_IGNORED_FOLDERS: Vec<&'static str>,
     pub FILE_WATCHER_DEBOUNCE_SEC: usize,
+
+    // -- File Search
+    pub FILE_SEARCH_DEFAULT_RESULTS_PER_PAGE: usize,
+    pub FILE_SEARCH_MAX_RESULTS_PER_PAGE: usize,
 }
 
 impl Config {
@@ -124,6 +128,9 @@ impl Config {
                 ".rustup",
             ],
             FILE_WATCHER_DEBOUNCE_SEC: 1,
+
+            FILE_SEARCH_DEFAULT_RESULTS_PER_PAGE: 20,
+            FILE_SEARCH_MAX_RESULTS_PER_PAGE: 100,
         })
     }
 }

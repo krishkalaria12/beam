@@ -52,6 +52,61 @@ pub struct SearchResult {
     pub score: u16,
 }
 
+// Pagination Metadata (Sent to Frontend)
+#[derive(Debug, Clone, Serialize)]
+pub struct PaginatedSearchMetadata {
+    // Total number of matching results
+    pub total_results: usize,
+
+    // Current page number (1-indexed)
+    pub page: usize,
+
+    // Number of results per page
+    pub per_page: usize,
+
+    // Total number of pages
+    pub total_pages: usize,
+
+    // Whether there's a next page
+    pub has_next_page: bool,
+
+    // Whether there's a previous page
+    pub has_previous_page: bool,
+}
+
+// Complete Search Response with Pagination (Sent to Frontend)
+#[derive(Debug, Clone, Serialize)]
+pub struct PaginatedSearchResponse {
+    // The search results for the current page
+    pub results: Vec<SearchResult>,
+
+    // Pagination metadata
+    pub metadata: PaginatedSearchMetadata,
+}
+
+// Search Request Parameters (Received from Frontend)
+#[derive(Debug, Clone, Deserialize)]
+pub struct SearchRequest {
+    // The search query string
+    pub query: String,
+
+    // Page number (1-indexed, defaults to 1)
+    #[serde(default = "default_page")]
+    pub page: usize,
+
+    // Number of results per page (defaults to 20, max 100)
+    #[serde(default = "default_per_page")]
+    pub per_page: usize,
+}
+
+fn default_page() -> usize {
+    1
+}
+
+fn default_per_page() -> usize {
+    20
+}
+
 // Event Commands For Watcher
 #[derive(Debug, Clone)]
 pub enum IndexUpdate {

@@ -452,6 +452,7 @@ dependencies = [
  "parking_lot",
  "poll-promise",
  "rand 0.9.2",
+ "rayon",
  "reqwest",
  "rkyv",
  "serde",
