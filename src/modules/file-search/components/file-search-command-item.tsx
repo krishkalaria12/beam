@@ -4,11 +4,12 @@ import { useCommandState } from "cmdk";
 
 interface FileSearchCommandItemProps {
   onSelect: (query: string) => void;
+  queryOverride?: string;
 }
 
-export function FileSearchCommandItem({ onSelect }: FileSearchCommandItemProps) {
+export function FileSearchCommandItem({ onSelect, queryOverride }: FileSearchCommandItemProps) {
   const searchInput = useCommandState((state) => state.search);
-  const query = searchInput.trim();
+  const query = (queryOverride ?? searchInput).trim();
   const hasQuery = query.length > 0;
 
   return (

@@ -3,7 +3,7 @@ pub mod favicon;
 pub mod helper;
 
 use serde::{Deserialize, Serialize};
-use tauri::{command, AppHandle};
+use tauri::{command, AppHandle, Window};
 use url::Url;
 
 use crate::quicklinks::{
@@ -179,6 +179,33 @@ pub fn update_quicklink(app: AppHandle, keyword: String, new_quicklink: Quicklin
     quick_links[position] = new_quicklink;
 
     save_all_quicklinks_to_store(&app, &quick_links)?;
+
+    Ok(())
+}
+
+#[command]
+pub fn execute_quicklink(app: AppHandle, window: Window, keyword: String, query: String) -> Result<()> {
+    let keyword = keyword.trim();
+
+    if keyword.is_empty() {
+        return Err(Error::KeywordIsEmptyError(
+            "keyword to execute is required".to_string(),
+        ));
+    }
+
+    let quick_links = get_quicklinks_from_store(&app)?;
+    let quicklink = quick_links
+        .iter()
+        .find(|ql| ql.keyword.eq_ignore_ascii_case(keyword))
+        .ok_or_else(|| Error::KeywordNotFoundError(format!("keyword '{}' not found", keyword)))?;
+
+    let encoded_query: String = url::form_urlencoded::byte_serialize(query.trim().as_bytes()).collect();
+    let url = quicklink.url.replace("{query}", &encoded_query);
+
+    webbrowser::open(&url).map_err(|e| Error::OpenBrowserError(e.to_string()))?;
+    window
+        .hide()
+        .map_err(|e| Error::HideWindowError(e.to_string()))?;
 
     Ok(())
 }

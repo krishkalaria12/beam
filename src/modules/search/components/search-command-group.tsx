@@ -26,18 +26,21 @@ const searchProviders: SearchProvider[] = [
   },
 ];
 
-export default function SearchCommandGroup() {
+interface SearchCommandGroupProps {
+  queryOverride?: string;
+}
+
+export default function SearchCommandGroup({ queryOverride }: SearchCommandGroupProps) {
   const searchInput = useCommandState((state) => state.search);
-  const query = searchInput.trim();
+  const query = (queryOverride ?? searchInput).trim();
   const hasQuery = query.length > 0;
 
-  const { runSearch, searchingSite, searchError } = useSearchWithBrowser();
+  const { runSearch, searchingSite } = useSearchWithBrowser();
 
   return (
     <CommandGroup>
       {searchProviders.map((provider) => {
         const isSearching = searchingSite === provider.id;
-        const errorMessage = searchError?.site === provider.id ? searchError.message : null;
         const isDisabled = isSearching || !hasQuery;
 
         return (

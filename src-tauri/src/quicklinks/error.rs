@@ -14,6 +14,8 @@ pub enum Error {
     KeywordNotFoundError(String),
     FaviconFetchError(String),
     FaviconNotFoundError(String),
+    OpenBrowserError(String),
+    HideWindowError(String),
 }
 
 impl Serialize for Error {
@@ -45,6 +47,8 @@ impl core::fmt::Display for Error {
             Self::KeywordNotFoundError(e) => write!(fmt, "keyword not found: {e}"),
             Self::FaviconFetchError(e) => write!(fmt, "favicon fetch failed: {e}"),
             Self::FaviconNotFoundError(e) => write!(fmt, "favicon not found: {e}"),
+            Self::OpenBrowserError(e) => write!(fmt, "failed to open browser: {e}"),
+            Self::HideWindowError(e) => write!(fmt, "failed to hide window: {e}"),
         }
     }
 }
