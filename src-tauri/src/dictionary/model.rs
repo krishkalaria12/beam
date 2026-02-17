@@ -1,18 +1,24 @@
 use serde::{Deserialize, Serialize};
 
-/// Simplified dictionary response containing only meaning, synonyms, and antonyms
+/// Dictionary response with detailed definitions
 #[derive(Debug, Serialize, Clone)]
 pub struct DictionaryResponse {
     pub word: String,
-    pub meanings: Vec<Meaning>,
-    pub synonyms: Vec<String>,
-    pub antonyms: Vec<String>,
+    pub entries: Vec<Entry>,
 }
 
 #[derive(Debug, Serialize, Clone)]
-pub struct Meaning {
+pub struct Entry {
     pub part_of_speech: String,
-    pub definitions: Vec<String>,
+    pub senses: Vec<Sense>,
+}
+
+#[derive(Debug, Serialize, Clone)]
+pub struct Sense {
+    pub definition: String,
+    pub synonyms: Vec<String>,
+    pub antonyms: Vec<String>,
+    pub examples: Vec<String>,
 }
 
 // API Response structs for deserialization
@@ -40,4 +46,6 @@ pub struct ApiSense {
     pub synonyms: Vec<String>,
     #[serde(default)]
     pub antonyms: Vec<String>,
+    #[serde(default)]
+    pub examples: Vec<String>,
 }
