@@ -48,17 +48,18 @@ pub fn search_files(
     }
 
     let index = &state.index;
+    let pinned = index.pin();
 
     // Check if index is initialized
-    if index.is_empty() {
+    if pinned.is_empty() {
         return Err(Error::IndexNotInitialized);
     }
 
-    // Build file index from DashMap
+    // Build file index from ConcurrentMap
     let file_index = FileIndex {
-        entries: index
+        entries: pinned
             .iter()
-            .map(|entry| (entry.key().clone(), entry.value().clone()))
+            .map(|(key, value)| (key.clone(), value.clone()))
             .collect(),
         built_at: 0,
     };
@@ -134,9 +135,10 @@ pub async fn open_file(file_path: String) -> Result<()> {
 #[tauri::command]
 pub fn get_file_info(file_path: String, state: State<AppState>) -> Result<FileEntry> {
     let index = &state.index;
+    let pinned = index.pin();
 
-    index
+    pinned
         .get(&file_path)
-        .map(|entry| entry.value().clone())
+        .map(|entry| entry.clone())
         .ok_or_else(|| Error::FileNotFound(file_path))
 }

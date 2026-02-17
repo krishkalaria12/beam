@@ -1,16 +1,16 @@
-use dashmap::DashMap;
+use papaya::HashMap;
 use std::sync::Arc;
 use tauri::{AppHandle, Manager};
 use crate::file_search::{self, types::FileEntry};
 
 pub struct AppState {
-    pub index: Arc<DashMap<String, FileEntry>>,
+    pub index: Arc<HashMap<String, FileEntry>>,
 }
 
 impl AppState {
     pub fn new() -> Self {
         Self {
-            index: Arc::new(DashMap::new()),
+            index: Arc::new(HashMap::new()),
         }
     }
 }

@@ -3,14 +3,14 @@ pub mod indexer;
 pub mod search;
 pub mod types;
 
-use dashmap::DashMap;
+use papaya::HashMap as ConcurrentMap;
 use std::collections::HashMap;
 use std::sync::Arc;
 
 use indexer::{builder, cache, watcher};
 use types::{FileEntry, IndexUpdate};
 
-pub async fn initialize_backend(index: Arc<DashMap<String, FileEntry>>) {
+pub async fn initialize_backend(index: Arc<ConcurrentMap<String, FileEntry>>) {
     // A. Create the Channel for the Watcher
     let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<IndexUpdate>();
 
@@ -34,9 +34,10 @@ pub async fn initialize_backend(index: Arc<DashMap<String, FileEntry>>) {
 
     match maybe_index {
         Some(idx) => {
-            // Populate DashMap from loaded HashMap
+            // Populate ConcurrentMap from loaded HashMap
+            let pinned = index.pin();
             for (path, entry) in idx.entries {
-                index.insert(path, entry);
+                pinned.insert(path, entry);
             }
         }
         None => {
@@ -51,9 +52,10 @@ pub async fn initialize_backend(index: Arc<DashMap<String, FileEntry>>) {
                         log::error!("Failed to save cache: {}", e);
                     }
 
-                    // Populate DashMap
+                    // Populate ConcurrentMap
+                    let pinned = index.pin();
                     for (path, entry) in map {
-                        index.insert(path, entry);
+                        pinned.insert(path, entry);
                     }
                 }
                 Err(e) => {
@@ -75,12 +77,13 @@ pub async fn initialize_backend(index: Arc<DashMap<String, FileEntry>>) {
 
     // E. Event Loop (Listen for updates forever)
     while let Some(update) = rx.recv().await {
+        let pinned = index.pin();
         match update {
             IndexUpdate::Update(entry) | IndexUpdate::Create(entry) => {
-                index.insert(entry.path.clone(), entry);
+                pinned.insert(entry.path.clone(), entry);
             }
             IndexUpdate::Delete(path_str) => {
-                index.remove(&path_str);
+                pinned.remove(&path_str);
             }
             IndexUpdate::ReloadAll => {
                 log::warn!("ReloadAll event received but not implemented yet");
