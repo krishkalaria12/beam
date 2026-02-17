@@ -176,41 +176,44 @@ export default function LauncherCommand() {
 
               <CommandSeparator className="my-1 opacity-50" />
 
-              <CalculatorCommandGroup />
-              <ApplicationsCommandGroup />
-              <FileSearchCommandGroup 
-                isOpen={false}
-                onOpen={(capturedQuery) => {
-                    setFileSearchQuery(capturedQuery);
-                    setActivePanel("file-search");
-                }}
-                onBack={() => {}} // Not used when closed
-              />
-              <DictionaryCommandGroup
-                isOpen={false}
-                onOpen={(capturedQuery) => {
-                    setDictionaryQuery(capturedQuery);
-                    setActivePanel("dictionary");
-                }}
-                onBack={() => {}} // Not used when closed
-              />
-              <QuicklinksCommandGroup
-                isOpen={false}
-                view={quicklinksView}
-                setView={setQuicklinksView}
-                onOpen={() => {
-                    setActivePanel("quicklinks");
-                }}
-                onBack={() => {}} // Not used when closed
-              />
-              {isQuicklinkTrigger && (
+              {isQuicklinkTrigger ? (
                 <QuicklinkPreview 
                   quicklinks={quicklinks} 
                   search={commandSearch} 
                   onExecute={handleQuicklinkExecute}
                 />
+              ) : (
+                <>
+                  <CalculatorCommandGroup />
+                  <ApplicationsCommandGroup />
+                  <FileSearchCommandGroup 
+                    isOpen={false}
+                    onOpen={(capturedQuery) => {
+                        setFileSearchQuery(capturedQuery);
+                        setActivePanel("file-search");
+                    }}
+                    onBack={() => {}} // Not used when closed
+                  />
+                  <DictionaryCommandGroup
+                    isOpen={false}
+                    onOpen={(capturedQuery) => {
+                        setDictionaryQuery(capturedQuery);
+                        setActivePanel("dictionary");
+                    }}
+                    onBack={() => {}} // Not used when closed
+                  />
+                  <QuicklinksCommandGroup
+                    isOpen={false}
+                    view={quicklinksView}
+                    setView={setQuicklinksView}
+                    onOpen={() => {
+                        setActivePanel("quicklinks");
+                    }}
+                    onBack={() => {}} // Not used when closed
+                  />
+                  <SearchCommandGroup />
+                </>
               )}
-              <SearchCommandGroup />
             </div>
           )}
 

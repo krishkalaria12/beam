@@ -2,16 +2,14 @@ use std::path::PathBuf;
 use tauri::State;
 
 use crate::config::config;
+use crate::file_search::search::error::{Error, Result};
 use crate::file_search::search::search;
 use crate::file_search::types::FileIndex;
-use crate::{
-    file_search::{
-        search::error::{Error, Result},
-        search::SearchOptions,
-        types::{FileEntry, PaginatedSearchMetadata, PaginatedSearchResponse, SearchRequest},
-    },
-    state::AppState,
+use crate::file_search::{
+    search::SearchOptions,
+    types::{FileEntry, PaginatedSearchMetadata, PaginatedSearchResponse, SearchRequest},
 };
+use crate::state::AppState;
 
 // Searches for files in the index with pagination support
 #[tauri::command]

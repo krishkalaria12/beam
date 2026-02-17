@@ -1,14 +1,14 @@
 //! Unified error handling for Beam
 //!
 //! This module provides:
-//! - `AppError`: A unified error type for cross-module error handling
-//! - `Result<T>`: Type alias for `anyhow::Result<T>` (recommended for most code)
-//! - `DomainResult<T>`: Type alias for module-specific errors
+//! - `SerializableError`: A serializable wrapper for anyhow errors
+//! - `Context` extension trait: For adding context to errors
+//! - Helper macros: `bail!`, `ensure!`
 //!
 //! # Usage Guidelines
 //!
-//! - **Tauri Commands**: Use `Result<T>` (anyhow::Result) for ergonomic error propagation
-//! - **Domain Functions**: Use `DomainResult<T>` when you need specific error matching
+//! - **Tauri Commands**: Use domain-specific `Result<T, DomainError>` with `.map_err()` conversion
+//! - **Internal Functions**: Use `anyhow::Result<T>` for ergonomic error propagation
 //! - **Library Code**: Use `thiserror::Error` for structured errors that implement `std::error::Error`
 
 use serde::Serialize;
@@ -83,17 +83,9 @@ impl From<&str> for SerializableError {
     }
 }
 
-/// Converts a `Result<T>` (anyhow result) into a `Result<T, SerializableError>`
+/// Extension trait for anyhow::Result to convert to SerializableError
 ///
 /// Use this in Tauri commands that need to return serializable errors to the frontend.
-///
-/// # Example
-/// ```ignore
-/// #[tauri::command]
-/// async fn my_command() -> Result<String, SerializableError> {
-///     fallible_operation().await.map_err_serializable()
-/// }
-/// ```
 pub trait MapErrSerializable<T> {
     fn map_err_serializable(self) -> std::result::Result<T, SerializableError>;
 }
@@ -104,67 +96,18 @@ impl<T> MapErrSerializable<T> for anyhow::Result<T> {
     }
 }
 
-/// Extension trait for adding context to results
+/// Helper macro to ensure a condition is true, otherwise return an error
 ///
-/// Provides fluent API for adding context to errors
-pub trait ResultExt<T> {
-    /// Add context to the error if the result is an Err
-    fn with_context<F, C>(self, f: F) -> anyhow::Result<T>
-    where
-        F: FnOnce() -> C,
-        C: std::fmt::Display + Send + Sync + 'static;
-
-    /// Add a static context message to the error
-    fn context<C>(self, context: C) -> anyhow::Result<T>
-    where
-        C: std::fmt::Display + Send + Sync + 'static;
-}
-
-impl<T, E> ResultExt<T> for std::result::Result<T, E>
-where
-    E: std::error::Error + Send + Sync + 'static,
-{
-    fn with_context<F, C>(self, f: F) -> anyhow::Result<T>
-    where
-        F: FnOnce() -> C,
-        C: std::fmt::Display + Send + Sync + 'static,
-    {
-        self.map_err(|e| anyhow::Error::new(e)).with_context(f)
-    }
-
-    fn context<C>(self, context: C) -> anyhow::Result<T>
-    where
-        C: std::fmt::Display + Send + Sync + 'static,
-    {
-        self.map_err(|e| anyhow::Error::new(e)).context(context)
-    }
-}
-
-/// Macro to create domain-specific errors with thiserror
-///
-/// This macro generates a standard error enum with:
-/// - #[derive(Debug, thiserror::Error)]
-/// - Display implementations via #[error("...")]
-/// - From implementations via #[from]
-/// - Serialize support for Tauri
+/// # Example
+/// ```ignore
+/// ensure!(!path.is_empty(), "Path cannot be empty");
+/// ensure!(value > 0, "Value must be positive, got {}", value);
+/// ```
 #[macro_export]
-macro_rules! define_domain_error {
-    (
-        $(#[$meta:meta])*
-        $vis:vis enum $name:ident {
-            $($variant:ident $({$($field:ident: $ftype:ty),* $(,)?})? => $fmt:literal $(, from($from_ty:ty))?),*
-            $(,)?
-        }
-    ) => {
-        $(#[$meta])*
-        #[derive(Debug, thiserror::Error)]
-        $vis enum $name {
-            $(
-                #[error($fmt)]
-                $variant $({
-                    $($field: $ftype),*
-                })? $(#[from] $from_ty)?,
-            )*
+macro_rules! ensure {
+    ($cond:expr, $fmt:literal $(, $arg:expr)*) => {
+        if !$cond {
+            return Err(anyhow::anyhow!($fmt $(, $arg)*));
         }
     };
 }
@@ -185,16 +128,6 @@ macro_rules! app_bail {
     };
 }
 
-/// Ensure a condition is true, otherwise return an error
-#[macro_export]
-macro_rules! app_ensure {
-    ($cond:expr, $fmt:literal $(, $arg:expr)*) => {
-        if !$cond {
-            return Err(anyhow::anyhow!($fmt $(, $arg)*));
-        }
-    };
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -211,5 +144,16 @@ mod tests {
         let serialized: std::result::Result<i32, SerializableError> = result.map_err_serializable();
         assert!(serialized.is_err());
         assert_eq!(serialized.unwrap_err().to_string(), "test");
+    }
+
+    #[test]
+    fn test_ensure_macro() {
+        fn test_fn(value: i32) -> anyhow::Result<i32> {
+            ensure!(value > 0, "Value must be positive, got {}", value);
+            Ok(value * 2)
+        }
+
+        assert!(test_fn(5).is_ok());
+        assert!(test_fn(-1).is_err());
     }
 }
