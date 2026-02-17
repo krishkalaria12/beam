@@ -4,13 +4,14 @@ pub mod calculator;
 pub mod clipboard;
 pub mod config;
 pub mod currency;
+pub mod dictionary;
 pub mod error;
 pub mod file_search;
 pub mod fuzzy_search;
 pub mod http;
 pub mod search;
-pub mod utils;
 pub mod state;
+pub mod utils;
 
 use tauri::Manager;
 

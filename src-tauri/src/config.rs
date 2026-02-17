@@ -56,6 +56,9 @@ pub struct Config {
     // -- File Search
     pub FILE_SEARCH_DEFAULT_RESULTS_PER_PAGE: usize,
     pub FILE_SEARCH_MAX_RESULTS_PER_PAGE: usize,
+
+    // -- Dictionary
+    pub DICTIONARY_API_URL: &'static str,
 }
 
 impl Config {
@@ -131,6 +134,8 @@ impl Config {
 
             FILE_SEARCH_DEFAULT_RESULTS_PER_PAGE: 20,
             FILE_SEARCH_MAX_RESULTS_PER_PAGE: 100,
+
+            DICTIONARY_API_URL: "https://freedictionaryapi.com/api/v1/entries",
         })
     }
 }
