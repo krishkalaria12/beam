@@ -9,6 +9,7 @@ pub mod error;
 pub mod file_search;
 pub mod fuzzy_search;
 pub mod http;
+pub mod quicklinks;
 pub mod search;
 pub mod state;
 pub mod utils;

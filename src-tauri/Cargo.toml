@@ -68,6 +68,8 @@ base64 = "0.22.1"
 # HTTP & Networking
 reqwest = { version = "0.13.2", default-features = false, features = ["rustls", "json"] }
 poll-promise = "0.3.0"
+url = "2.5.8"
+favicon-picker = "1.1.0"
 
 # Utilities
 log = "0.4"

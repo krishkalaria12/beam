@@ -1,4 +1,4 @@
-use crate::{applications, calculator, clipboard, dictionary, file_search, search};
+use crate::{applications, calculator, clipboard, dictionary, file_search, quicklinks, search};
 
 use tauri::ipc::Invoke;
 
@@ -16,5 +16,10 @@ pub fn get_handler() -> impl Fn(Invoke) -> bool {
         file_search::commands::open_file,
         file_search::commands::get_file_info,
         dictionary::commands::get_definition,
+        quicklinks::create_quicklink,
+        quicklinks::delete_quicklink,
+        quicklinks::get_quicklinks,
+        quicklinks::update_quicklink,
+        quicklinks::favicon::get_favicon_for_url,
     ]
 }

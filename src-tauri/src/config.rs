@@ -59,6 +59,10 @@ pub struct Config {
 
     // -- Dictionary
     pub DICTIONARY_API_URL: &'static str,
+
+    // -- Quicklinks
+    pub QUICKLINK_STORE_NAME: &'static str,
+    pub QUICKLINK_VALUE_NAME: &'static str,
 }
 
 impl Config {
@@ -136,6 +140,9 @@ impl Config {
             FILE_SEARCH_MAX_RESULTS_PER_PAGE: 100,
 
             DICTIONARY_API_URL: "https://freedictionaryapi.com/api/v1/entries",
+
+            QUICKLINK_STORE_NAME: "quicklinks.json",
+            QUICKLINK_VALUE_NAME: "quick_links",
         })
     }
 }
