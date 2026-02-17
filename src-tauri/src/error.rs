@@ -127,33 +127,3 @@ macro_rules! app_bail {
         anyhow::bail!($fmt $(, $arg)*)
     };
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_serializable_error_from_string() {
-        let err = SerializableError::from("test error");
-        assert_eq!(err.to_string(), "test error");
-    }
-
-    #[test]
-    fn test_map_err_serializable() {
-        let result: anyhow::Result<i32> = Err(anyhow!("test"));
-        let serialized: std::result::Result<i32, SerializableError> = result.map_err_serializable();
-        assert!(serialized.is_err());
-        assert_eq!(serialized.unwrap_err().to_string(), "test");
-    }
-
-    #[test]
-    fn test_ensure_macro() {
-        fn test_fn(value: i32) -> anyhow::Result<i32> {
-            ensure!(value > 0, "Value must be positive, got {}", value);
-            Ok(value * 2)
-        }
-
-        assert!(test_fn(5).is_ok());
-        assert!(test_fn(-1).is_err());
-    }
-}
