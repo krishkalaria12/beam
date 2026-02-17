@@ -11,6 +11,10 @@ import ClipboardCommandGroup from "@/modules/clipboard/components/clipboard-comm
 import DictionaryCommandGroup from "@/modules/dictionary/components/dictionary-command-group";
 import EmojiCommandGroup from "@/modules/emoji/components/emoji-command-group";
 import FileSearchCommandGroup from "@/modules/file-search/components/file-search-command-group";
+import { useQuicklinks } from "@/modules/quicklinks/hooks/use-quicklinks";
+import QuicklinksCommandGroup from "@/modules/quicklinks/components/quicklinks-command-group";
+import { findQuicklinkByKeyword, executeQuicklink } from "@/modules/quicklinks/api/quicklinks";
+import { QuicklinkPreview } from "@/modules/quicklinks/components/quicklink-preview";
 import SearchCommandGroup from "@/modules/search/components/search-command-group";
 import SettingsCommandGroup from "@/modules/settings/components/settings-command-group";
 
@@ -18,13 +22,46 @@ export default function LauncherCommand() {
   const [commandSearch, setCommandSearch] = useState("");
   const [fileSearchQuery, setFileSearchQuery] = useState("");
   const [dictionaryQuery, setDictionaryQuery] = useState("");
-  const [activePanel, setActivePanel] = useState<"commands" | "clipboard" | "emoji" | "settings" | "calculator-history" | "file-search" | "dictionary">("commands");
+  const [activePanel, setActivePanel] = useState<"commands" | "clipboard" | "emoji" | "settings" | "calculator-history" | "file-search" | "dictionary" | "quicklinks">("commands");
   const isClipboardPanelOpen = activePanel === "clipboard";
   const isEmojiPanelOpen = activePanel === "emoji";
   const isSettingsPanelOpen = activePanel === "settings";
   const isCalculatorHistoryPanelOpen = activePanel === "calculator-history";
   const isFileSearchPanelOpen = activePanel === "file-search";
-  const isDictionaryPanelOpen = activePanel === "dictionary";
+  const [isDictionaryPanelOpen, setDictionaryPanelOpen] = useState(false);
+  const isQuicklinksPanelOpen = activePanel === "quicklinks";
+  const [quicklinksView, setQuicklinksView] = useState<"create" | "manage">("manage");
+
+  const { data: quicklinks = [] } = useQuicklinks();
+
+  const handleQuicklinkExecute = async () => {
+    if (!commandSearch.startsWith("!")) return;
+    
+    const parts = commandSearch.slice(1).split(" ", 2);
+    const keyword = parts[0];
+    const query = parts.slice(1).join(" ") || "";
+    
+    if (!keyword) return;
+    
+    const quicklink = findQuicklinkByKeyword(quicklinks, keyword);
+    if (quicklink) {
+      try {
+        await executeQuicklink(keyword, query);
+        setCommandSearch("");
+      } catch (error) {
+        console.error("Failed to execute quicklink:", error);
+      }
+    }
+  };
+
+  const isQuicklinkTrigger = commandSearch.startsWith("!") && commandSearch.length > 1;
+
+  const handleKeyDown = async (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && isQuicklinkTrigger) {
+      e.preventDefault();
+      await handleQuicklinkExecute();
+    }
+  };
 
   return (
     <div className="relative h-full w-full bg-background">
@@ -32,9 +69,10 @@ export default function LauncherCommand() {
         shouldFilter={false}
         value={commandSearch}
         onValueChange={setCommandSearch}
+        onKeyDown={handleKeyDown}
         className="h-full w-full overflow-hidden bg-transparent"
       >
-        {!isEmojiPanelOpen && !isFileSearchPanelOpen && !isDictionaryPanelOpen && (
+        {!isEmojiPanelOpen && !isFileSearchPanelOpen && !isDictionaryPanelOpen && !isQuicklinksPanelOpen && (
           <CommandInput
             placeholder="Search Beam..."
             className="border-none"
@@ -63,6 +101,19 @@ export default function LauncherCommand() {
               onOpen={(capturedQuery) => {
                 setDictionaryQuery(capturedQuery);
                 setActivePanel("dictionary");
+              }}
+              onBack={() => {
+                setActivePanel("commands");
+                setCommandSearch("");
+              }}
+            />
+        ) : isQuicklinksPanelOpen ? (
+           <QuicklinksCommandGroup
+              isOpen
+              view={quicklinksView}
+              setView={setQuicklinksView}
+              onOpen={() => {
+                setActivePanel("quicklinks");
               }}
               onBack={() => {
                 setActivePanel("commands");
@@ -143,6 +194,22 @@ export default function LauncherCommand() {
                 }}
                 onBack={() => {}} // Not used when closed
               />
+              <QuicklinksCommandGroup
+                isOpen={false}
+                view={quicklinksView}
+                setView={setQuicklinksView}
+                onOpen={() => {
+                    setActivePanel("quicklinks");
+                }}
+                onBack={() => {}} // Not used when closed
+              />
+              {isQuicklinkTrigger && (
+                <QuicklinkPreview 
+                  quicklinks={quicklinks} 
+                  search={commandSearch} 
+                  onExecute={handleQuicklinkExecute}
+                />
+              )}
               <SearchCommandGroup />
             </div>
           )}
@@ -202,10 +269,26 @@ export default function LauncherCommand() {
               }}
             />
           )}
+
+          {isQuicklinksPanelOpen && (
+            <QuicklinksCommandGroup
+              isOpen
+              view={quicklinksView}
+              setView={setQuicklinksView}
+              onOpen={() => {
+                setActivePanel("quicklinks");
+                setCommandSearch("");
+              }}
+              onBack={() => {
+                setActivePanel("commands");
+                setCommandSearch("");
+              }}
+            />
+          )}
         </CommandList>
         )}
 
-        {!isEmojiPanelOpen && !isFileSearchPanelOpen && !isDictionaryPanelOpen && (
+        {!isEmojiPanelOpen && !isFileSearchPanelOpen && !isDictionaryPanelOpen && !isQuicklinksPanelOpen && (
           <div className="flex h-9 items-center justify-between border-t border-border/40 px-4 text-[10px] font-medium uppercase tracking-widest text-muted-foreground/60">
             <div className="flex items-center gap-2">
               <Search className="size-3" />

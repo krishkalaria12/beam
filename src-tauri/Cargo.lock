@@ -429,6 +429,7 @@ name = "beam"
 version = "1.0.0"
 dependencies = [
  "aes-gcm",
+ "anyhow",
  "arboard",
  "base64 0.22.1",
  "bytecheck",
@@ -468,6 +469,7 @@ dependencies = [
  "tauri-plugin-log",
  "tauri-plugin-single-instance",
  "tauri-plugin-store",
+ "thiserror 2.0.18",
  "tokio",
  "url",
  "walkdir",

@@ -1,9 +1,11 @@
 use serde::Serialize;
+use thiserror::Error;
 
-pub type Result<T> = core::result::Result<T, Error>;
+pub type Result<T> = std::result::Result<T, Error>;
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum Error {
+    #[error("Invalid fuzzy query")]
     InvalidQuery,
 }
 
@@ -12,24 +14,6 @@ impl Serialize for Error {
     where
         S: serde::Serializer,
     {
-        serializer.serialize_str(self.to_string().as_ref())
+        serializer.serialize_str(&self.to_string())
     }
 }
-
-// region:    --- Froms
-
-crate::impl_froms! {}
-
-// endregion: --- Froms
-
-// region:    --- Error Boilerplate
-impl core::fmt::Display for Error {
-    fn fmt(&self, fmt: &mut core::fmt::Formatter) -> core::result::Result<(), core::fmt::Error> {
-        match self {
-            Self::InvalidQuery => write!(fmt, "invalid fuzzy query"),
-        }
-    }
-}
-
-impl std::error::Error for Error {}
-// endregion: --- Error Boilerplate

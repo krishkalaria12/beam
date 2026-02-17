@@ -1,24 +1,35 @@
 use serde::Serialize;
+use thiserror::Error;
 
-pub type Result<T> = core::result::Result<T, Error>;
+pub type Result<T> = std::result::Result<T, Error>;
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum Error {
-    // Lock/Concurrency Errors
+    #[error("Lock poisoned: {0}")]
     LockPoisoned(String),
 
-    // Input Validation Errors
+    #[error("Search query cannot be empty")]
     EmptyQuery,
+
+    #[error("Invalid page number {provided}: {reason}")]
     InvalidPageNumber { provided: usize, reason: String },
+
+    #[error("Invalid per_page value {provided}. Maximum allowed: {max}")]
     InvalidPerPage { provided: usize, max: usize },
 
-    // Search Operation Errors
+    #[error("Search index not initialized")]
     IndexNotInitialized,
+
+    #[error("Search operation failed: {0}")]
     SearchFailed(String),
 
-    // File Operation Errors
+    #[error("File not found: {0}")]
     FileNotFound(String),
+
+    #[error("Failed to open file '{path}': {reason}")]
     FileOpenFailed { path: String, reason: String },
+
+    #[error("Invalid file path: {0}")]
     InvalidFilePath(String),
 }
 
@@ -27,41 +38,6 @@ impl Serialize for Error {
     where
         S: serde::Serializer,
     {
-        serializer.serialize_str(self.to_string().as_ref())
+        serializer.serialize_str(&self.to_string())
     }
 }
-
-// region:    --- Froms
-
-crate::impl_froms! {}
-
-// endregion: --- Froms
-
-// region:    --- Error Boilerplate
-impl core::fmt::Display for Error {
-    fn fmt(&self, fmt: &mut core::fmt::Formatter) -> core::result::Result<(), core::fmt::Error> {
-        match self {
-            Self::LockPoisoned(e) => write!(fmt, "Lock poisoned: {e}"),
-            Self::EmptyQuery => write!(fmt, "Search query cannot be empty"),
-            Self::InvalidPageNumber { provided, reason } => {
-                write!(fmt, "Invalid page number {provided}: {reason}")
-            }
-            Self::InvalidPerPage { provided, max } => {
-                write!(
-                    fmt,
-                    "Invalid per_page value {provided}. Maximum allowed: {max}"
-                )
-            }
-            Self::IndexNotInitialized => write!(fmt, "Search index not initialized"),
-            Self::SearchFailed(e) => write!(fmt, "Search operation failed: {e}"),
-            Self::FileNotFound(path) => write!(fmt, "File not found: {path}"),
-            Self::FileOpenFailed { path, reason } => {
-                write!(fmt, "Failed to open file '{path}': {reason}")
-            }
-            Self::InvalidFilePath(path) => write!(fmt, "Invalid file path: {path}"),
-        }
-    }
-}
-
-impl std::error::Error for Error {}
-// endregion: --- Error Boilerplate

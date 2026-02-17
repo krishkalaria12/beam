@@ -1,22 +1,42 @@
 use serde::Serialize;
+use thiserror::Error;
 
-pub type Result<T> = core::result::Result<T, Error>;
+pub type Result<T> = std::result::Result<T, Error>;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Error)]
 pub enum Error {
+    #[error("HTTP request failed: {0}")]
     HttpRequestError(String),
+
+    #[error("HTTP request failed with status {status} ({status_text}) for {url}")]
     HttpResponseStatusError {
         url: String,
         status: u16,
         status_text: String,
     },
+
+    #[error("HTTP response decode failed: {0}")]
     HttpResponseDecodeError(String),
+
+    #[error("JSON parse failed: {0}")]
     JsonParseError(String),
-    PluginError(crate::calculator::plugin::error::Error),
+
+    #[error("{0}")]
+    PluginError(#[from] crate::calculator::plugin::error::Error),
+
+    #[error("Configuration error: {0}")]
     ConfigurationError(String),
+
+    #[error("Request timeout: {0}")]
     RequestTimeoutError(String),
+
+    #[error("Failed to open store: {0}")]
     StoreOpeningError(String),
+
+    #[error("Failed to save store: {0}")]
     StoreSaveError(String),
+
+    #[error("Serialization error: {0}")]
     SerializationError(String),
 }
 
@@ -25,13 +45,9 @@ impl Serialize for Error {
     where
         S: serde::Serializer,
     {
-        serializer.serialize_str(self.to_string().as_ref())
+        serializer.serialize_str(&self.to_string())
     }
 }
-
-// region:    --- Froms
-
-crate::impl_froms! { PluginError(crate::calculator::plugin::error::Error), }
 
 impl From<crate::http::error::Error> for Error {
     fn from(value: crate::http::error::Error) -> Self {
@@ -55,35 +71,3 @@ impl From<crate::http::error::Error> for Error {
         }
     }
 }
-
-// endregion: --- Froms
-
-// region:    --- Error Boilerplate
-impl core::fmt::Display for Error {
-    fn fmt(&self, fmt: &mut core::fmt::Formatter) -> core::result::Result<(), core::fmt::Error> {
-        match self {
-            Self::HttpRequestError(e) => write!(fmt, "http request failed: {e}"),
-            Self::HttpResponseStatusError {
-                url,
-                status,
-                status_text,
-            } => {
-                write!(
-                    fmt,
-                    "http request failed with status {status} ({status_text}) for {url}"
-                )
-            }
-            Self::HttpResponseDecodeError(e) => write!(fmt, "http response decode failed: {e}"),
-            Self::JsonParseError(e) => write!(fmt, "json parse failed: {e}"),
-            Self::PluginError(e) => write!(fmt, "{e}"),
-            Self::ConfigurationError(e) => write!(fmt, "configuration error: {e}"),
-            Self::RequestTimeoutError(e) => write!(fmt, "request timeout: {e}"),
-            Self::StoreOpeningError(e) => write!(fmt, "failed to open store: {e}"),
-            Self::StoreSaveError(e) => write!(fmt, "failed to save store: {e}"),
-            Self::SerializationError(e) => write!(fmt, "serialization error: {e}"),
-        }
-    }
-}
-
-impl std::error::Error for Error {}
-// endregion: --- Error Boilerplate

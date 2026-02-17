@@ -1,11 +1,17 @@
 use serde::Serialize;
+use thiserror::Error;
 
-pub type Result<T> = core::result::Result<T, Error>;
+pub type Result<T> = std::result::Result<T, Error>;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Error)]
 pub enum Error {
+    #[error("Plugin initialization failed for {plugin}: {reason}")]
     PluginInitializationError { plugin: String, reason: String },
+
+    #[error("Plugin HTTP handling failed for {plugin}: {reason}")]
     PluginHttpResultError { plugin: String, reason: String },
+
+    #[error("Plugin JSON parse failed for {plugin}: {reason}")]
     PluginJsonParseError { plugin: String, reason: String },
 }
 
@@ -14,32 +20,6 @@ impl Serialize for Error {
     where
         S: serde::Serializer,
     {
-        serializer.serialize_str(self.to_string().as_ref())
+        serializer.serialize_str(&self.to_string())
     }
 }
-
-// region:    --- Froms
-
-crate::impl_froms! {}
-
-// endregion: --- Froms
-
-// region:    --- Error Boilerplate
-impl core::fmt::Display for Error {
-    fn fmt(&self, fmt: &mut core::fmt::Formatter) -> core::result::Result<(), core::fmt::Error> {
-        match self {
-            Self::PluginInitializationError { plugin, reason } => {
-                write!(fmt, "plugin initialization failed for {plugin}: {reason}")
-            }
-            Self::PluginHttpResultError { plugin, reason } => {
-                write!(fmt, "plugin http handling failed for {plugin}: {reason}")
-            }
-            Self::PluginJsonParseError { plugin, reason } => {
-                write!(fmt, "plugin json parse failed for {plugin}: {reason}")
-            }
-        }
-    }
-}
-
-impl std::error::Error for Error {}
-// endregion: --- Error Boilerplate

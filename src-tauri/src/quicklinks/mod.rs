@@ -5,6 +5,7 @@ pub mod helper;
 use serde::{Deserialize, Serialize};
 use tauri::{command, AppHandle};
 use url::Url;
+use webbrowser;
 
 use crate::quicklinks::{
     error::{Error, Result},
@@ -179,6 +180,33 @@ pub fn update_quicklink(app: AppHandle, keyword: String, new_quicklink: Quicklin
     quick_links[position] = new_quicklink;
 
     save_all_quicklinks_to_store(&app, &quick_links)?;
+
+    Ok(())
+}
+
+#[command]
+pub fn execute_quicklink(app: AppHandle, keyword: String, query: String) -> Result<()> {
+    let keyword = keyword.trim();
+    let query = query.trim();
+
+    if keyword.is_empty() {
+        return Err(Error::KeywordIsEmptyError(
+            "keyword is required".to_string(),
+        ));
+    }
+
+    let quick_links = get_quicklinks_from_store(&app)?;
+
+    let quicklink = quick_links
+        .iter()
+        .find(|ql| ql.keyword.to_lowercase() == keyword.to_lowercase())
+        .ok_or_else(|| Error::KeywordNotFoundError(format!("keyword '{}' not found", keyword)))?;
+
+    let url = quicklink.url.replace("{query}", query);
+    
+    if webbrowser::open(&url).is_err() {
+        return Err(Error::URLParsingError(format!("failed to open URL: {}", url)));
+    }
 
     Ok(())
 }

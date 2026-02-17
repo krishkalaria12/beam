@@ -1,18 +1,38 @@
 use serde::Serialize;
+use thiserror::Error;
 
-pub type Result<T> = core::result::Result<T, Error>;
+pub type Result<T> = std::result::Result<T, Error>;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Error)]
 pub enum Error {
+    #[error("Name is empty: {0}")]
     NameIsEmptyError(String),
+
+    #[error("Keyword is empty: {0}")]
     KeywordIsEmptyError(String),
+
+    #[error("URL parsing error: {0}")]
     URLParsingError(String),
+
+    #[error("Store opening failed: {0}")]
     StoreOpeningError(String),
+
+    #[error("Serialization failed: {0}")]
     SerializationError(String),
+
+    #[error("Store save failed: {0}")]
     StoreSaveError(String),
+
+    #[error("Duplicate entry: {0}")]
     DuplicationError(String),
+
+    #[error("Keyword not found: {0}")]
     KeywordNotFoundError(String),
+
+    #[error("Favicon fetch failed: {0}")]
     FaviconFetchError(String),
+
+    #[error("Favicon not found: {0}")]
     FaviconNotFoundError(String),
 }
 
@@ -21,33 +41,6 @@ impl Serialize for Error {
     where
         S: serde::Serializer,
     {
-        serializer.serialize_str(self.to_string().as_ref())
+        serializer.serialize_str(&self.to_string())
     }
 }
-
-// region:    --- Froms
-
-crate::impl_froms! {}
-
-// endregion: --- Froms
-
-// region:    --- Error Boilerplate
-impl core::fmt::Display for Error {
-    fn fmt(&self, fmt: &mut core::fmt::Formatter) -> core::result::Result<(), core::fmt::Error> {
-        match self {
-            Self::NameIsEmptyError(e) => write!(fmt, "name is empty: {e}"),
-            Self::KeywordIsEmptyError(e) => write!(fmt, "keyword is empty: {e}"),
-            Self::URLParsingError(e) => write!(fmt, "url parsing error: {e}"),
-            Self::SerializationError(e) => write!(fmt, "serialization failed: {e}"),
-            Self::StoreOpeningError(e) => write!(fmt, "store opening failed: {e}"),
-            Self::StoreSaveError(e) => write!(fmt, "store save failed: {e}"),
-            Self::DuplicationError(e) => write!(fmt, "duplicate entry: {e}"),
-            Self::KeywordNotFoundError(e) => write!(fmt, "keyword not found: {e}"),
-            Self::FaviconFetchError(e) => write!(fmt, "favicon fetch failed: {e}"),
-            Self::FaviconNotFoundError(e) => write!(fmt, "favicon not found: {e}"),
-        }
-    }
-}
-
-impl std::error::Error for Error {}
-// endregion: --- Error Boilerplate

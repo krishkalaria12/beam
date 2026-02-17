@@ -1,26 +1,50 @@
 use serde::Serialize;
+use thiserror::Error;
 
-pub type Result<T> = core::result::Result<T, Error>;
+pub type Result<T> = std::result::Result<T, Error>;
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum Error {
+    #[error("Failed to create cache folder: {0}")]
     ErrorCreatingCacheFolder(String),
+
+    #[error("Failed to find cache folder: {0}")]
     ErrorFindingCacheFolder(String),
+
+    #[error("Failed to get cache directory: {0}")]
     ErrorGettingCacheDir(String),
+
+    #[error("Failed to create cache file: {0}")]
     ErrorCreatingCacheFile(String),
+
+    #[error("Failed to open cache file: {0}")]
     ErrorOpeningCacheFile(String),
+
+    #[error("Failed to read cache file: {0}")]
     ErrorReadingCacheFile(String),
+
+    #[error("Failed to write into cache file: {0}")]
     ErrorWritingCacheIntoFile(String),
+
+    #[error("Failed to flush cache file: {0}")]
     ErrorFlushingCacheFile(String),
+
+    #[error("Cache validation failed: {0}")]
     ErrorValidatingCache(String),
+
+    #[error("Failed to deserialize cache: {0}")]
     ErrorDeserializingCache(String),
 
-    // Builder Errors
+    #[error("Failed to find home directory: {0}")]
     ErrorFindingHomeDir(String),
+
+    #[error("Background task failed: {0}")]
     ErrorJoiningTask(String),
+
+    #[error("Error while walking files: {0}")]
     ErrorWalkingFiles(String),
 
-    // Watcher Errors
+    #[error("Error while watching files: {0}")]
     WatcherError(String),
 }
 
@@ -29,41 +53,6 @@ impl Serialize for Error {
     where
         S: serde::Serializer,
     {
-        serializer.serialize_str(self.to_string().as_ref())
+        serializer.serialize_str(&self.to_string())
     }
 }
-
-// region:    --- Froms
-
-crate::impl_froms! {}
-
-// endregion: --- Froms
-
-// region:    --- Error Boilerplate
-impl core::fmt::Display for Error {
-    fn fmt(&self, fmt: &mut core::fmt::Formatter) -> core::result::Result<(), core::fmt::Error> {
-        match self {
-            Self::ErrorCreatingCacheFolder(e) => write!(fmt, "Failed to create cache folder: {e}"),
-            Self::ErrorFindingCacheFolder(e) => write!(fmt, "Failed to find cache folder: {e}"),
-            Self::ErrorGettingCacheDir(e) => write!(fmt, "Failed to get cache directory: {e}"),
-            Self::ErrorCreatingCacheFile(e) => write!(fmt, "Failed to create cache file: {e}"),
-            Self::ErrorOpeningCacheFile(e) => write!(fmt, "Failed to open cache file: {e}"),
-            Self::ErrorReadingCacheFile(e) => write!(fmt, "Failed to read cache file: {e}"),
-            Self::ErrorWritingCacheIntoFile(e) => {
-                write!(fmt, "Failed to write into cache file: {e}")
-            }
-            Self::ErrorFlushingCacheFile(e) => write!(fmt, "Failed to flush cache file: {e}"),
-            Self::ErrorValidatingCache(e) => write!(fmt, "Cache validation failed: {e}"),
-            Self::ErrorDeserializingCache(e) => write!(fmt, "Failed to deserialize cache: {e}"),
-
-            Self::ErrorFindingHomeDir(e) => write!(fmt, "Failed to find home directory: {e}"),
-            Self::ErrorJoiningTask(e) => write!(fmt, "Background task failed: {e}"),
-            Self::ErrorWalkingFiles(e) => write!(fmt, "Error while walking files: {e}"),
-
-            Self::WatcherError(e) => write!(fmt, "Error while watching files: {e}"),
-        }
-    }
-}
-
-impl std::error::Error for Error {}
-// endregion: --- Error Boilerplate
