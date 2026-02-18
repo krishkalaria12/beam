@@ -1,10 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "@tanstack/react-form";
-import { ArrowLeft, Loader2, Link2, Trash2, Plus, Pencil, Command } from "lucide-react";
+import { ArrowLeft, Loader2, Link2, Trash2, Plus, Pencil, Command, Folder, File, FolderOpen } from "lucide-react";
 import { z } from "zod";
 
+import fileQuicklinkIcon from "@/assets/icons/file-icon-quicklink.png";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import {
@@ -14,12 +21,24 @@ import {
   useQuicklinks,
   useUpdateQuicklink,
 } from "../hooks/use-quicklinks";
+import {
+  isFileQuicklinkTarget,
+  isWebQuicklinkTarget,
+  pickQuicklinkFilePath,
+  pickQuicklinkFolderPath,
+} from "../api/quicklinks";
 import type { Quicklink } from "../types";
 
 const quicklinkSchema = z.object({
   name: z.string().min(1, "Name is required"),
   keyword: z.string().min(1, "Keyword is required").regex(/^[a-zA-Z0-9_]+$/, "Only letters, numbers, and underscores allowed"),
-  url: z.string().min(1, "URL is required").includes("{query}", "URL must contain {query} placeholder"),
+  url: z
+    .string()
+    .min(1, "Link or file path is required")
+    .refine(
+      (value) => !isWebQuicklinkTarget(value) || value.includes("{query}"),
+      "Web URL must contain {query} placeholder"
+    ),
   icon: z.string(),
 });
 
@@ -91,10 +110,12 @@ function QuicklinkCreateForm({ onBack, onSuccess, initialData, editKeyword }: Qu
   const updateMutation = useUpdateQuicklink();
   const getFaviconMutation = useGetFavicon();
   const [fetchedIcon, setFetchedIcon] = useState(initialData?.icon ?? "");
+  const [isFileTarget, setIsFileTarget] = useState(isFileQuicklinkTarget(initialData?.url ?? ""));
   const [isFetchingIcon, setIsFetchingIcon] = useState(false);
   const fetchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mutationError = isEditMode ? updateMutation.error : createMutation.error;
   const isSubmitting = isEditMode ? updateMutation.isPending : createMutation.isPending;
+  const previewIcon = isFileTarget ? fileQuicklinkIcon : fetchedIcon;
 
   const form = useForm({
     defaultValues: {
@@ -109,7 +130,7 @@ function QuicklinkCreateForm({ onBack, onSuccess, initialData, editKeyword }: Qu
     onSubmit: async ({ value }) => {
       const payload = {
         ...value,
-        icon: fetchedIcon,
+        icon: isFileTarget ? "" : fetchedIcon,
       };
 
       try {
@@ -137,11 +158,19 @@ function QuicklinkCreateForm({ onBack, onSuccess, initialData, editKeyword }: Qu
     };
   }, []);
 
-  const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
+  const syncTargetState = (value: string) => {
+    const isFileTargetValue = isFileQuicklinkTarget(value);
+    setIsFileTarget(isFileTargetValue);
     
     if (fetchTimerRef.current) {
       clearTimeout(fetchTimerRef.current);
+    }
+
+    if (!value.trim() || isFileTargetValue) {
+      setIsFetchingIcon(false);
+      setFetchedIcon("");
+      form.setFieldValue("icon", "");
+      return;
     }
 
     fetchTimerRef.current = setTimeout(async () => {
@@ -161,6 +190,36 @@ function QuicklinkCreateForm({ onBack, onSuccess, initialData, editKeyword }: Qu
         }
       }
     }, 1000);
+  };
+
+  const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    syncTargetState(e.target.value);
+  };
+
+  const handlePickFile = async () => {
+    try {
+      const selectedPath = await pickQuicklinkFilePath();
+      if (!selectedPath) {
+        return;
+      }
+      form.setFieldValue("url", selectedPath);
+      syncTargetState(selectedPath);
+    } catch {
+      // Picker cancellation and runtime errors are intentionally ignored here.
+    }
+  };
+
+  const handlePickFolder = async () => {
+    try {
+      const selectedPath = await pickQuicklinkFolderPath();
+      if (!selectedPath) {
+        return;
+      }
+      form.setFieldValue("url", selectedPath);
+      syncTargetState(selectedPath);
+    } catch {
+      // Picker cancellation and runtime errors are intentionally ignored here.
+    }
   };
 
   return (
@@ -187,16 +246,16 @@ function QuicklinkCreateForm({ onBack, onSuccess, initialData, editKeyword }: Qu
           className="mx-auto max-w-2xl space-y-8"
         >
           {/* Icon Display (Auto-produced) */}
-          {(isFetchingIcon || fetchedIcon) && (
+          {(isFetchingIcon || previewIcon) && (
             <div className="flex justify-center mb-8">
               <div className="relative flex size-24 items-center justify-center rounded-2xl border border-border bg-muted/30 shadow-sm transition-all">
                 {isFetchingIcon ? (
                   <Loader2 className="size-8 animate-spin text-muted-foreground" />
                 ) : (
-                  <img src={fetchedIcon} alt="Icon" className="size-16 rounded-xl object-contain" />
+                  <img src={previewIcon} alt="Icon" className="size-16 rounded-xl object-contain" />
                 )}
                  <div className="absolute -bottom-2 rounded-full bg-background border px-2 py-0.5 text-[10px] font-medium text-muted-foreground shadow-sm">
-                    {isFetchingIcon ? "Fetching..." : "Auto-detected"}
+                    {isFetchingIcon ? "Fetching..." : isFileTarget ? "File Path" : "Auto-detected"}
                  </div>
               </div>
             </div>
@@ -268,18 +327,45 @@ function QuicklinkCreateForm({ onBack, onSuccess, initialData, editKeyword }: Qu
             name="url"
             children={(field) => (
               <div className="grid grid-cols-[100px_1fr] gap-6">
-                <Label htmlFor="url" className="text-right text-foreground font-medium pt-2.5">Link</Label>
+                <Label htmlFor="url" className="text-right text-foreground font-medium pt-2.5">Target</Label>
                 <div className="space-y-2">
-                  <Input
-                    id="url"
-                    placeholder="https://google.com/search?q={query}"
-                    value={field.state.value}
-                    onChange={(e) => {
-                      field.handleChange(e.target.value);
-                      handleUrlChange(e);
-                    }}
-                    className={cn("h-10 font-mono text-xs", field.state.meta.errors.length > 0 && "border-red-500")}
-                  />
+                  <div className="relative">
+                    <Input
+                      id="url"
+                      placeholder="https://google.com/search?q={query} or /home/user/file.txt"
+                      value={field.state.value}
+                      onChange={(e) => {
+                        field.handleChange(e.target.value);
+                        handleUrlChange(e);
+                      }}
+                      className={cn("h-10 pr-10 font-mono text-xs", field.state.meta.errors.length > 0 && "border-red-500")}
+                    />
+                    <DropdownMenu>
+                      <DropdownMenuTrigger
+                        render={
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="absolute right-1 top-1/2 size-8 -translate-y-1/2 rounded-none text-muted-foreground hover:text-foreground"
+                            aria-label="Pick file system target"
+                          />
+                        }
+                      >
+                        <Folder className="size-4" />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={handlePickFile}>
+                          <File className="size-4" />
+                          Pick File
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={handlePickFolder}>
+                          <FolderOpen className="size-4" />
+                          Pick Folder
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                   {field.state.meta.errors.length > 0 && (
                     <p className="text-xs text-red-500">
                       {(() => {
@@ -291,8 +377,8 @@ function QuicklinkCreateForm({ onBack, onSuccess, initialData, editKeyword }: Qu
                     </p>
                   )}
                   <p className="text-xs text-muted-foreground/80 leading-relaxed">
-                    Include an argument by inserting <strong className="text-primary font-semibold">{"{query}"}</strong> in the URL. 
-                    Beam replaces this placeholder with your typed quicklink query.
+                    Web links must include <strong className="text-primary font-semibold">{"{query}"}</strong>. 
+                    Local file paths can be added directly and open with your system default app.
                   </p>
                 </div>
               </div>
@@ -411,6 +497,8 @@ function QuicklinksManageView({ onBack, onCreate, onEdit }: QuicklinksManageView
                 <div className="flex items-center gap-3">
                   {ql.icon ? (
                     <img src={ql.icon} alt="" className="size-8 rounded object-cover" />
+                  ) : isFileQuicklinkTarget(ql.url) ? (
+                    <img src={fileQuicklinkIcon} alt="" className="size-8 rounded object-cover" />
                   ) : (
                     <div className="flex size-8 items-center justify-center rounded bg-muted">
                       <Link2 className="size-4 text-muted-foreground" />

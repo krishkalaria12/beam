@@ -1,7 +1,8 @@
 import { CommandGroup, CommandItem, CommandShortcut } from "@/components/ui/command";
 import { Link2 } from "lucide-react";
+import fileQuicklinkIcon from "@/assets/icons/file-icon-quicklink.png";
 import type { Quicklink } from "@/modules/quicklinks/types";
-import { findQuicklinkByKeyword } from "@/modules/quicklinks/api/quicklinks";
+import { findQuicklinkByKeyword, isFileQuicklinkTarget } from "@/modules/quicklinks/api/quicklinks";
 
 interface QuicklinkPreviewProps {
   quicklinks: Quicklink[];
@@ -39,6 +40,8 @@ export function QuicklinkPreview({
             >
               {ql.icon ? (
                 <img src={ql.icon} alt="" className="mr-2 size-4 rounded object-cover" />
+              ) : isFileQuicklinkTarget(ql.url) ? (
+                <img src={fileQuicklinkIcon} alt="" className="mr-2 size-4 rounded object-cover" />
               ) : (
                 <Link2 className="mr-2 size-4" />
               )}
@@ -74,6 +77,8 @@ export function QuicklinkPreview({
       >
         {quicklink.icon ? (
           <img src={quicklink.icon} alt="" className="mr-2 size-4 rounded object-cover" />
+        ) : isFileQuicklinkTarget(quicklink.url) ? (
+          <img src={fileQuicklinkIcon} alt="" className="mr-2 size-4 rounded object-cover" />
         ) : (
           <Link2 className="mr-2 size-4" />
         )}
