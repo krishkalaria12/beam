@@ -17,6 +17,7 @@ import { findQuicklinkByKeyword, executeQuicklink } from "@/modules/quicklinks/a
 import { QuicklinkPreview } from "@/modules/quicklinks/components/quicklink-preview";
 import SearchCommandGroup from "@/modules/search/components/search-command-group";
 import SettingsCommandGroup from "@/modules/settings/components/settings-command-group";
+import SystemActionsCommandGroup from "@/modules/system-actions/components/system-actions-command-group";
 
 export default function LauncherCommand() {
   const [commandSearch, setCommandSearch] = useState("");
@@ -35,9 +36,11 @@ export default function LauncherCommand() {
   const { data: quicklinks = [] } = useQuicklinks();
   const trimmedCommandSearch = commandSearch.trim();
   const isQuicklinkTrigger = trimmedCommandSearch.startsWith("!");
+  const isSystemTrigger = trimmedCommandSearch.startsWith("$");
   const quicklinkParts = trimmedCommandSearch.slice(1).split(/\s+/).filter(Boolean);
   const quicklinkKeyword = quicklinkParts[0] ?? "";
   const quicklinkQuery = quicklinkParts.slice(1).join(" ");
+  const systemQuery = trimmedCommandSearch.slice(1).trim();
   const matchedQuicklink = quicklinkKeyword
     ? findQuicklinkByKeyword(quicklinks, quicklinkKeyword)
     : undefined;
@@ -69,109 +72,116 @@ export default function LauncherCommand() {
 
   let commandListContent;
   if (activePanel === "commands") {
-    if (isQuicklinkTrigger) {
-        commandListContent = (
-            <div className="py-1">
-                <QuicklinkPreview 
-                  quicklinks={quicklinks} 
-                  keyword={quicklinkKeyword}
-                  query={quicklinkQuery}
-                  onExecute={handleQuicklinkExecute}
-                  onFill={setCommandSearch}
-                />
-                <CommandSeparator className="my-1 opacity-50" />
-                <FileSearchCommandGroup 
-                  isOpen={false}
-                  queryOverride={quicklinkQuery}
-                  onOpen={(capturedQuery) => {
-                      setFileSearchQuery(capturedQuery);
-                      setActivePanel("file-search");
-                  }}
-                  onBack={() => {}} // Not used when closed
-                />
-                <SearchCommandGroup queryOverride={quicklinkQuery} />
-            </div>
-        );
+    if (isSystemTrigger) {
+      commandListContent = (
+        <div className="py-1">
+          <SystemActionsCommandGroup queryOverride={systemQuery} showAllWhenEmpty />
+        </div>
+      );
+    } else if (isQuicklinkTrigger) {
+      commandListContent = (
+        <div className="py-1">
+          <QuicklinkPreview
+            quicklinks={quicklinks}
+            keyword={quicklinkKeyword}
+            query={quicklinkQuery}
+            onExecute={handleQuicklinkExecute}
+            onFill={setCommandSearch}
+          />
+          <CommandSeparator className="my-1 opacity-50" />
+          <FileSearchCommandGroup
+            isOpen={false}
+            queryOverride={quicklinkQuery}
+            onOpen={(capturedQuery) => {
+              setFileSearchQuery(capturedQuery);
+              setActivePanel("file-search");
+            }}
+            onBack={() => {}} // Not used when closed
+          />
+          <SearchCommandGroup queryOverride={quicklinkQuery} />
+        </div>
+      );
     } else {
-        commandListContent = (
-            <div className="py-1">
-              <SettingsCommandGroup
-                isOpen={false}
-                onOpen={() => {
-                  setActivePanel("settings");
-                  setCommandSearch("");
-                }}
-                onBack={() => {
-                  setActivePanel("commands");
-                  setCommandSearch("");
-                }}
-              />
-              <ClipboardCommandGroup
-                isOpen={false}
-                onOpen={() => {
-                  setActivePanel("clipboard");
-                  setCommandSearch("");
-                }}
-                onBack={() => {
-                  setActivePanel("commands");
-                  setCommandSearch("");
-                }}
-              />
-              <CalculatorHistoryCommandGroup
-                isOpen={false}
-                onOpen={() => {
-                  setActivePanel("calculator-history");
-                  setCommandSearch("");
-                }}
-                onBack={() => {
-                  setActivePanel("commands");
-                  setCommandSearch("");
-                }}
-              />
-              <EmojiCommandGroup
-                isOpen={false}
-                onOpen={() => {
-                  setActivePanel("emoji");
-                  setCommandSearch("");
-                }}
-                onBack={() => {
-                  setActivePanel("commands");
-                  setCommandSearch("");
-                }}
-              />
+      commandListContent = (
+        <div className="py-1">
+          <SettingsCommandGroup
+            isOpen={false}
+            onOpen={() => {
+              setActivePanel("settings");
+              setCommandSearch("");
+            }}
+            onBack={() => {
+              setActivePanel("commands");
+              setCommandSearch("");
+            }}
+          />
+          <ClipboardCommandGroup
+            isOpen={false}
+            onOpen={() => {
+              setActivePanel("clipboard");
+              setCommandSearch("");
+            }}
+            onBack={() => {
+              setActivePanel("commands");
+              setCommandSearch("");
+            }}
+          />
+          <CalculatorHistoryCommandGroup
+            isOpen={false}
+            onOpen={() => {
+              setActivePanel("calculator-history");
+              setCommandSearch("");
+            }}
+            onBack={() => {
+              setActivePanel("commands");
+              setCommandSearch("");
+            }}
+          />
+          <EmojiCommandGroup
+            isOpen={false}
+            onOpen={() => {
+              setActivePanel("emoji");
+              setCommandSearch("");
+            }}
+            onBack={() => {
+              setActivePanel("commands");
+              setCommandSearch("");
+            }}
+          />
 
-              <CommandSeparator className="my-1 opacity-50" />
+          <CommandSeparator className="my-1 opacity-50" />
 
-              <CalculatorCommandGroup />
-              <ApplicationsCommandGroup />
-              <FileSearchCommandGroup 
-                isOpen={false}
-                onOpen={(capturedQuery) => {
-                    setFileSearchQuery(capturedQuery);
-                    setActivePanel("file-search");
-                }}
-                onBack={() => {}} // Not used when closed
-              />
-              <DictionaryCommandGroup
-                isOpen={false}
-                onOpen={(capturedQuery) => {
-                    setDictionaryQuery(capturedQuery);
-                    setActivePanel("dictionary");
-                }}
-                onBack={() => {}} // Not used when closed
-              />
-              <QuicklinksCommandGroup
-                isOpen={false}
-                view={quicklinksView}
-                setView={setQuicklinksView}
-                onOpen={() => {
-                    setActivePanel("quicklinks");
-                }}
-                onBack={() => {}} // Not used when closed
-              />
-              <SearchCommandGroup />
-            </div>
-        );
+          <CalculatorCommandGroup />
+          <ApplicationsCommandGroup />
+          <SystemActionsCommandGroup />
+          <FileSearchCommandGroup
+            isOpen={false}
+            onOpen={(capturedQuery) => {
+              setFileSearchQuery(capturedQuery);
+              setActivePanel("file-search");
+            }}
+            onBack={() => {}} // Not used when closed
+          />
+          <DictionaryCommandGroup
+            isOpen={false}
+            onOpen={(capturedQuery) => {
+              setDictionaryQuery(capturedQuery);
+              setActivePanel("dictionary");
+            }}
+            onBack={() => {}} // Not used when closed
+          />
+          <QuicklinksCommandGroup
+            isOpen={false}
+            view={quicklinksView}
+            setView={setQuicklinksView}
+            onOpen={() => {
+              setActivePanel("quicklinks");
+            }}
+            onBack={() => {}} // Not used when closed
+          />
+          <SearchCommandGroup />
+        </div>
+      );
     }
   }
 
@@ -192,109 +202,109 @@ export default function LauncherCommand() {
         )}
 
         {/* If File Search or Dictionary is open, it takes over the view entirely */}
-        
+
         {isFileSearchPanelOpen ? (
-           <FileSearchCommandGroup
-              isOpen
-              query={fileSearchQuery}
-              onOpen={(capturedQuery) => {
-                setFileSearchQuery(capturedQuery);
-                setActivePanel("file-search");
-              }}
-              onBack={() => {
-                setActivePanel("commands");
-                setCommandSearch("");
-              }}
-            />
+          <FileSearchCommandGroup
+            isOpen
+            query={fileSearchQuery}
+            onOpen={(capturedQuery) => {
+              setFileSearchQuery(capturedQuery);
+              setActivePanel("file-search");
+            }}
+            onBack={() => {
+              setActivePanel("commands");
+              setCommandSearch("");
+            }}
+          />
         ) : isDictionaryPanelOpen ? (
-           <DictionaryCommandGroup
-              isOpen
-              query={dictionaryQuery}
-              onOpen={(capturedQuery) => {
-                setDictionaryQuery(capturedQuery);
-                setActivePanel("dictionary");
-              }}
-              onBack={() => {
-                setActivePanel("commands");
-                setCommandSearch("");
-              }}
-            />
+          <DictionaryCommandGroup
+            isOpen
+            query={dictionaryQuery}
+            onOpen={(capturedQuery) => {
+              setDictionaryQuery(capturedQuery);
+              setActivePanel("dictionary");
+            }}
+            onBack={() => {
+              setActivePanel("commands");
+              setCommandSearch("");
+            }}
+          />
         ) : isQuicklinksPanelOpen ? (
-           <QuicklinksCommandGroup
-              isOpen
-              view={quicklinksView}
-              setView={setQuicklinksView}
-              onOpen={() => {
-                setActivePanel("quicklinks");
-              }}
-              onBack={() => {
-                setActivePanel("commands");
-                setCommandSearch("");
-              }}
-            />
+          <QuicklinksCommandGroup
+            isOpen
+            view={quicklinksView}
+            setView={setQuicklinksView}
+            onOpen={() => {
+              setActivePanel("quicklinks");
+            }}
+            onBack={() => {
+              setActivePanel("commands");
+              setCommandSearch("");
+            }}
+          />
         ) : isClipboardPanelOpen ? (
-            <ClipboardCommandGroup
-              isOpen
-              onOpen={() => {
-                setActivePanel("clipboard");
-                setCommandSearch("");
-              }}
-              onBack={() => {
-                setActivePanel("commands");
-                setCommandSearch("");
-              }}
-            />
+          <ClipboardCommandGroup
+            isOpen
+            onOpen={() => {
+              setActivePanel("clipboard");
+              setCommandSearch("");
+            }}
+            onBack={() => {
+              setActivePanel("commands");
+              setCommandSearch("");
+            }}
+          />
         ) : (
-        <CommandList
-          className={cn(
-            "flex-1 px-1 transition-all duration-300",
-            isEmojiPanelOpen ? "min-h-0 flex flex-col h-full" : "max-h-none overflow-y-auto"
-          )}
-        >
-          {commandListContent}
+          <CommandList
+            className={cn(
+              "flex-1 px-1 transition-all duration-300",
+              isEmojiPanelOpen ? "min-h-0 flex flex-col h-full" : "max-h-none overflow-y-auto",
+            )}
+          >
+            {commandListContent}
 
-          {isCalculatorHistoryPanelOpen && (
-            <CalculatorHistoryCommandGroup
-              isOpen
-              onOpen={() => {
-                setActivePanel("calculator-history");
-                setCommandSearch("");
-              }}
-              onBack={() => {
-                setActivePanel("commands");
-                setCommandSearch("");
-              }}
-            />
-          )}
+            {isCalculatorHistoryPanelOpen && (
+              <CalculatorHistoryCommandGroup
+                isOpen
+                onOpen={() => {
+                  setActivePanel("calculator-history");
+                  setCommandSearch("");
+                }}
+                onBack={() => {
+                  setActivePanel("commands");
+                  setCommandSearch("");
+                }}
+              />
+            )}
 
-          {isEmojiPanelOpen && (
-            <EmojiCommandGroup
-              isOpen
-              onOpen={() => {
-                setActivePanel("emoji");
-                setCommandSearch("");
-              }}
-              onBack={() => {
-                setActivePanel("commands");
-                setCommandSearch("");
-              }}
-            />
-          )}
+            {isEmojiPanelOpen && (
+              <EmojiCommandGroup
+                isOpen
+                onOpen={() => {
+                  setActivePanel("emoji");
+                  setCommandSearch("");
+                }}
+                onBack={() => {
+                  setActivePanel("commands");
+                  setCommandSearch("");
+                }}
+              />
+            )}
 
-          {isSettingsPanelOpen && (
-            <SettingsCommandGroup
-              isOpen
-              onOpen={() => {
-                setActivePanel("settings");
-                setCommandSearch("");
-              }}
-              onBack={() => {
-                setActivePanel("commands");
-                setCommandSearch("");
-              }}
-            />
-          )}
-        </CommandList>
+            {isSettingsPanelOpen && (
+              <SettingsCommandGroup
+                isOpen
+                onOpen={() => {
+                  setActivePanel("settings");
+                  setCommandSearch("");
+                }}
+                onBack={() => {
+                  setActivePanel("commands");
+                  setCommandSearch("");
+                }}
+              />
+            )}
+          </CommandList>
         )}
 
         {!isEmojiPanelOpen && !isFileSearchPanelOpen && !isDictionaryPanelOpen && !isQuicklinksPanelOpen && !isClipboardPanelOpen && (
@@ -303,7 +313,7 @@ export default function LauncherCommand() {
               <Search className="size-3" />
               <span>Beam</span>
             </div>
-            
+
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-1">
                 <kbd className="rounded border border-border/60 bg-muted/30 px-1 py-0.5 font-mono text-[9px] text-foreground/70">ENTER</kbd>
