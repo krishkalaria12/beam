@@ -12,6 +12,8 @@ pub fn get_handler() -> impl Fn(Invoke) -> bool {
         calculator::get_calculator_history,
         calculator::save_calculator_history,
         clipboard::get_clipboard_history,
+        clipboard::get_clipboard_history_entries,
+        clipboard::search_clipboard_history,
         file_search::commands::search_files,
         file_search::commands::open_file,
         file_search::commands::get_file_info,

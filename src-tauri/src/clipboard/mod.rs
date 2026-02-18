@@ -11,7 +11,8 @@ use crate::{
     clipboard::{
         convert_image::get_image_as_base64,
         error::Result,
-        history::{get_history, save_to_history},
+        history::{get_history, get_history_values, save_to_history, ClipboardHistoryEntry},
+        search::search_history,
     },
     config::config,
 };
@@ -20,12 +21,26 @@ pub mod convert_image;
 pub mod error;
 pub mod history;
 pub mod password;
+pub mod search;
 
 static CLIPBOARD_LISTENER_RUNNING: AtomicBool = AtomicBool::new(false);
 
 #[command]
 pub fn get_clipboard_history(app: AppHandle) -> Result<Vec<String>> {
+    get_history_values(&app)
+}
+
+#[command]
+pub fn get_clipboard_history_entries(app: AppHandle) -> Result<Vec<ClipboardHistoryEntry>> {
     get_history(&app)
+}
+
+#[command]
+pub fn search_clipboard_history(
+    app: AppHandle,
+    query: String,
+) -> Result<Vec<ClipboardHistoryEntry>> {
+    search_history(&app, &query)
 }
 
 pub fn start_clipboard_listener(app: AppHandle) {

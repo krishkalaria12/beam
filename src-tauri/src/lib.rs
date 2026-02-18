@@ -35,6 +35,7 @@ pub fn run() {
         .manage(state::AppState::new())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_clipboard::init())
         .invoke_handler(app_commands::get_handler());
 
     #[cfg(desktop)]

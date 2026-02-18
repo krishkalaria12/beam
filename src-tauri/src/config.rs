@@ -46,6 +46,10 @@ pub struct Config {
     pub CLIPBOARD_ENCRYPTION_PREFIX: &'static str,
     pub CLIPBOARD_ENCRYPTION_NONCE_BYTES: usize,
     pub CLIPBOARD_ENCRYPTION_PASSWORD_LENGTH: usize,
+    pub CLIPBOARD_SEARCH_MAX_RESULTS: usize,
+    pub CLIPBOARD_SEARCH_MAX_ENTRY_CHARS: usize,
+    pub CLIPBOARD_SEARCH_VALUE_WEIGHT: u32,
+    pub CLIPBOARD_SEARCH_CONTENT_TYPE_WEIGHT: u32,
 
     // -- File
     pub FILE_DIRECTORIES_APPLICATION: Vec<String>,
@@ -95,6 +99,10 @@ impl Config {
             CLIPBOARD_ENCRYPTION_PREFIX: "beam:aesgcm:v1:",
             CLIPBOARD_ENCRYPTION_NONCE_BYTES: 12,
             CLIPBOARD_ENCRYPTION_PASSWORD_LENGTH: 64,
+            CLIPBOARD_SEARCH_MAX_RESULTS: 75,
+            CLIPBOARD_SEARCH_MAX_ENTRY_CHARS: 4096,
+            CLIPBOARD_SEARCH_VALUE_WEIGHT: 5,
+            CLIPBOARD_SEARCH_CONTENT_TYPE_WEIGHT: 2,
 
             FILE_DIRECTORIES_APPLICATION: vec![
                 "~/.local/share/applications/".to_string(),

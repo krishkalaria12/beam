@@ -82,6 +82,7 @@ log = "0.4"
 image = "0.25.6"
 open = "5.3.3"
 whichlang = "0.1.0"
+tauri-plugin-clipboard = "2.1.11"
 
 # Platform-Specific Dependencies
 [target.'cfg(any(target_os = "macos", windows, target_os = "linux"))'.dependencies]

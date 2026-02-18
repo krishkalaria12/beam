@@ -127,28 +127,32 @@ fn decrypt_text_with_password(value: &str, password: &str) -> Result<String> {
     String::from_utf8(decrypted_bytes).map_err(|e| Error::DecryptingClipboardValue(e.to_string()))
 }
 
-pub fn encrypt_values(values: &[String]) -> Result<Vec<String>> {
+pub fn encrypt_value(value: &str) -> Result<String> {
     let password = get_password_for_encrypt()?;
-    values
-        .iter()
-        .map(|value| encrypt_text_with_password(value, &password))
-        .collect()
+    encrypt_text_with_password(value, &password)
+}
+
+pub fn decrypt_value(value: &str) -> Result<String> {
+    let password = get_password_for_encrypt()?;
+
+    match decrypt_text_with_password(value, &password) {
+        Ok(decrypted_value) => Ok(decrypted_value),
+        Err(_) => {
+            if !value.starts_with(config().CLIPBOARD_ENCRYPTION_PREFIX) {
+                return Ok(value.to_string());
+            }
+
+            Err(Error::DecryptingClipboardValue(
+                "failed to decrypt encrypted clipboard value".to_string(),
+            ))
+        }
+    }
+}
+
+pub fn encrypt_values(values: &[String]) -> Result<Vec<String>> {
+    values.iter().map(|value| encrypt_value(value)).collect()
 }
 
 pub fn decrypt_values(values: &[String]) -> Result<Vec<String>> {
-    let password = get_password_for_encrypt()?;
-    let mut decrypted_values = Vec::with_capacity(values.len());
-
-    for value in values {
-        match decrypt_text_with_password(value, &password) {
-            Ok(decrypted_value) => decrypted_values.push(decrypted_value),
-            Err(_) => {
-                if !value.starts_with(config().CLIPBOARD_ENCRYPTION_PREFIX) {
-                    decrypted_values.push(value.clone());
-                }
-            }
-        }
-    }
-
-    Ok(decrypted_values)
+    values.iter().map(|value| decrypt_value(value)).collect()
 }

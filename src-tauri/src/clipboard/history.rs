@@ -1,27 +1,53 @@
-use serde_json::from_value;
+use chrono::{SecondsFormat, Utc};
+use serde::{Deserialize, Serialize};
+use serde_json::{from_value, Value};
 use std::collections::HashSet;
 use tauri::{AppHandle, Wry};
 use tauri_plugin_store::{Store, StoreExt};
+use url::Url;
 
 use crate::{
     clipboard::error::{Error, Result},
-    clipboard::password::{decrypt_values, encrypt_values},
+    clipboard::password::{decrypt_value, encrypt_value},
     config::config,
 };
 
-pub fn get_from_history(store: &Store<Wry>) -> Option<Vec<String>> {
-    let json_value = store.get(&config().CLIPBOARD_HISTORY_VALUE)?;
-    from_value::<Vec<String>>(json_value).ok()
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum ClipboardContentType {
+    #[default]
+    Text,
+    Link,
+    Image,
 }
 
-pub fn get_history(app: &AppHandle) -> Result<Vec<String>> {
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ClipboardHistoryEntry {
+    pub value: String,
+    pub copied_at: String,
+    pub content_type: ClipboardContentType,
+    pub character_count: usize,
+    pub word_count: usize,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+struct StoredClipboardHistoryEntry {
+    value: String,
+    #[serde(default)]
+    copied_at: Option<String>,
+}
+
+pub fn get_history(app: &AppHandle) -> Result<Vec<ClipboardHistoryEntry>> {
     let store = app
         .store(&config().CLIPBOARD_STORE_NAME)
         .map_err(|e| Error::StoreOpeningError(e.to_string()))?;
 
-    let history = get_decrypted_history(&store)?;
+    get_decrypted_history(&store)
+}
 
-    Ok(history)
+pub fn get_history_values(app: &AppHandle) -> Result<Vec<String>> {
+    let history = get_history(app)?;
+    Ok(history.into_iter().map(|entry| entry.value).collect())
 }
 
 pub fn save_to_history(app: &AppHandle, copy_value: String) -> Result<()> {
@@ -30,12 +56,12 @@ pub fn save_to_history(app: &AppHandle, copy_value: String) -> Result<()> {
         .map_err(|e| Error::StoreOpeningError(e.to_string()))?;
 
     let mut history = get_decrypted_history(&store)?;
-    history.retain(|entry| entry != &copy_value);
-    history.insert(0, copy_value);
+    history.retain(|entry| entry.value != copy_value);
+    history.insert(0, build_entry(copy_value));
     dedupe_keep_order(&mut history);
     history.truncate(config().CLIPBOARD_MAX_HISTORY_ENTRIES);
 
-    let encrypted_history = encrypt_values(&history)?;
+    let encrypted_history = encrypt_history_entries(&history)?;
 
     let app_json = serde_json::to_value(encrypted_history)
         .map_err(|e| Error::SerializationError(e.to_string()))?;
@@ -48,16 +74,151 @@ pub fn save_to_history(app: &AppHandle, copy_value: String) -> Result<()> {
     Ok(())
 }
 
-fn get_decrypted_history(store: &Store<Wry>) -> Result<Vec<String>> {
-    let encrypted_history = get_from_history(store).unwrap_or_default();
-    let mut history = decrypt_values(&encrypted_history)?;
+fn get_from_history(store: &Store<Wry>) -> Option<Value> {
+    store.get(&config().CLIPBOARD_HISTORY_VALUE)
+}
+
+fn get_decrypted_history(store: &Store<Wry>) -> Result<Vec<ClipboardHistoryEntry>> {
+    let stored_history = get_stored_history(store);
+    let mut history = Vec::with_capacity(stored_history.len());
+
+    for stored_entry in stored_history {
+        let value = match decrypt_value(&stored_entry.value) {
+            Ok(value) => value,
+            Err(_) => continue,
+        };
+        let value = value.trim().to_string();
+
+        if value.is_empty() {
+            continue;
+        }
+
+        if value.len() > config().CLIPBOARD_MAX_ENTRY_BYTES {
+            continue;
+        }
+
+        let copied_at = normalize_copied_at(stored_entry.copied_at);
+
+        history.push(build_entry_with_timestamp(value, copied_at));
+    }
+
     dedupe_keep_order(&mut history);
     history.truncate(config().CLIPBOARD_MAX_HISTORY_ENTRIES);
 
     Ok(history)
 }
 
-fn dedupe_keep_order(values: &mut Vec<String>) {
+fn get_stored_history(store: &Store<Wry>) -> Vec<StoredClipboardHistoryEntry> {
+    let Some(json_value) = get_from_history(store) else {
+        return Vec::new();
+    };
+
+    if let Ok(history) = from_value::<Vec<StoredClipboardHistoryEntry>>(json_value.clone()) {
+        return history;
+    }
+
+    if let Ok(history_values) = from_value::<Vec<String>>(json_value) {
+        return history_values
+            .into_iter()
+            .map(|value| StoredClipboardHistoryEntry {
+                value,
+                copied_at: None,
+            })
+            .collect();
+    }
+
+    Vec::new()
+}
+
+fn encrypt_history_entries(
+    history: &[ClipboardHistoryEntry],
+) -> Result<Vec<ClipboardHistoryEntry>> {
+    history
+        .iter()
+        .map(|entry| {
+            let mut encrypted_entry = entry.clone();
+            encrypted_entry.value = encrypt_value(&entry.value)?;
+            Ok(encrypted_entry)
+        })
+        .collect()
+}
+
+fn dedupe_keep_order(values: &mut Vec<ClipboardHistoryEntry>) {
     let mut seen = HashSet::new();
-    values.retain(|value| seen.insert(value.clone()));
+    values.retain(|entry| seen.insert(entry.value.clone()));
+}
+
+fn build_entry(value: String) -> ClipboardHistoryEntry {
+    build_entry_with_timestamp(value, now_rfc3339())
+}
+
+fn build_entry_with_timestamp(value: String, copied_at: String) -> ClipboardHistoryEntry {
+    let content_type = detect_content_type(&value);
+    let (character_count, word_count) = count_words_and_characters(&value, &content_type);
+
+    ClipboardHistoryEntry {
+        value,
+        copied_at,
+        content_type,
+        character_count,
+        word_count,
+    }
+}
+
+fn detect_content_type(value: &str) -> ClipboardContentType {
+    if value.starts_with("data:image/") {
+        return ClipboardContentType::Image;
+    }
+
+    if looks_like_link(value) {
+        return ClipboardContentType::Link;
+    }
+
+    ClipboardContentType::Text
+}
+
+fn looks_like_link(value: &str) -> bool {
+    if value.contains(char::is_whitespace) {
+        return false;
+    }
+
+    if let Ok(url) = Url::parse(value) {
+        return matches!(url.scheme(), "http" | "https" | "ftp" | "mailto");
+    }
+
+    if value.starts_with("www.") {
+        return Url::parse(&format!("https://{value}")).is_ok();
+    }
+
+    false
+}
+
+fn count_words_and_characters(value: &str, content_type: &ClipboardContentType) -> (usize, usize) {
+    if matches!(content_type, ClipboardContentType::Image) {
+        return (0, 0);
+    }
+
+    let character_count = value.chars().count();
+    let word_count = value.split_whitespace().count();
+
+    (character_count, word_count)
+}
+
+fn normalize_copied_at(copied_at: Option<String>) -> String {
+    copied_at
+        .and_then(normalized_optional_text)
+        .unwrap_or_else(now_rfc3339)
+}
+
+fn normalized_optional_text(value: String) -> Option<String> {
+    let trimmed = value.trim();
+    if trimmed.is_empty() {
+        return None;
+    }
+
+    Some(trimmed.to_string())
+}
+
+fn now_rfc3339() -> String {
+    Utc::now().to_rfc3339_opts(SecondsFormat::Millis, true)
 }
