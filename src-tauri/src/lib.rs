@@ -12,6 +12,7 @@ pub mod http;
 pub mod quicklinks;
 pub mod search;
 pub mod state;
+pub mod system_actions;
 pub mod utils;
 
 use tauri::Manager;
