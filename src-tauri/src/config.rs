@@ -67,6 +67,9 @@ pub struct Config {
     // -- Quicklinks
     pub QUICKLINK_STORE_NAME: &'static str,
     pub QUICKLINK_VALUE_NAME: &'static str,
+
+    // -- Settings
+    pub UI_LAYOUT_MODE_VALUE: &'static str,
 }
 
 impl Config {
@@ -151,6 +154,8 @@ impl Config {
 
             QUICKLINK_STORE_NAME: "quicklinks.json",
             QUICKLINK_VALUE_NAME: "quick_links",
+
+            UI_LAYOUT_MODE_VALUE: "ui_layout_mode",
         })
     }
 }
