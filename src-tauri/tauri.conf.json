@@ -16,7 +16,7 @@
         "width": 960,
         "height": 520,
         "visible": false,
-        "resizable": false,
+        "resizable": true,
         "fullscreen": false,
         "decorations": false,
         "transparent": true,

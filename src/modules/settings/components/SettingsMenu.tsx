@@ -1,4 +1,4 @@
-import { ChevronRight, Moon, Palette } from "lucide-react";
+import { ChevronRight, Minimize2, Moon, Palette } from "lucide-react";
 import { CommandGroup, CommandItem, CommandShortcut } from "@/components/ui/command";
 import type { SettingsView } from "../constants";
 
@@ -47,6 +47,18 @@ export function SettingsMenu({ setView, onBack }: SettingsMenuProps) {
             <div className="flex items-center gap-3">
               <Palette className="size-6 text-muted-foreground/60" />
               <span className="text-sm font-medium">Theme Selection</span>
+            </div>
+            <ChevronRight className="size-4 text-muted-foreground/30" />
+          </CommandItem>
+
+          <CommandItem
+            value="ui density expand compress"
+            onSelect={() => setView("layout")}
+            className="flex items-center justify-between"
+          >
+            <div className="flex items-center gap-3">
+              <Minimize2 className="size-6 text-muted-foreground/60" />
+              <span className="text-sm font-medium">UI Density</span>
             </div>
             <ChevronRight className="size-4 text-muted-foreground/30" />
           </CommandItem>

@@ -9,13 +9,17 @@ pub mod error;
 pub mod file_search;
 pub mod fuzzy_search;
 pub mod http;
+pub mod launcher_window;
 pub mod quicklinks;
 pub mod search;
+pub mod settings;
 pub mod state;
 pub mod system_actions;
 pub mod utils;
 
 use tauri::Manager;
+
+use crate::settings::UiLayoutMode;
 
 fn toggle_launcher(app: &tauri::AppHandle) {
     if let Some(main_window) = app.get_webview_window("main") {
@@ -66,6 +70,11 @@ pub fn run() {
             }
 
             clipboard::start_clipboard_listener(app.handle().clone());
+
+            if let Ok(layout_mode) = settings::get_ui_layout_mode(app.handle().clone()) {
+                let compact = matches!(layout_mode, UiLayoutMode::Compressed);
+                let _ = launcher_window::set_launcher_compact_mode(app.handle().clone(), compact, None);
+            }
 
             // Initialize File Search Backend via State
             state::init(app.handle());

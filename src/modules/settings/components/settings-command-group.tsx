@@ -8,6 +8,7 @@ import type { SettingsView } from "../constants";
 import { SettingsMenu } from "./SettingsMenu";
 import { AppearanceSettings } from "./AppearanceSettings";
 import { ThemeSettings } from "./ThemeSettings";
+import { LayoutSettings } from "./LayoutSettings";
 
 type SettingsCommandGroupProps = {
   isOpen: boolean;
@@ -57,6 +58,7 @@ export default function SettingsCommandGroup({ isOpen, onOpen, onBack }: Setting
       {view === "main" && <SettingsMenu setView={setView} onBack={handleBack} />}
       {view === "appearance" && <AppearanceSettings onBack={handleBack} />}
       {view === "themes" && <ThemeSettings onBack={handleBack} />}
+      {view === "layout" && <LayoutSettings onBack={handleBack} />}
     </>
   );
 }
