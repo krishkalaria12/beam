@@ -1,4 +1,5 @@
-import { ChevronRight, Minimize2, Moon, Palette } from "lucide-react";
+import { ArrowLeft, Minimize2, Moon, Palette } from "lucide-react";
+
 import { CommandGroup, CommandItem, CommandShortcut } from "@/components/ui/command";
 import type { SettingsView } from "../constants";
 
@@ -10,60 +11,42 @@ interface SettingsMenuProps {
 export function SettingsMenu({ setView, onBack }: SettingsMenuProps) {
   return (
     <CommandGroup>
-      <CommandItem 
-        value="back to commands" 
-        className="mb-1 opacity-60 hover:opacity-100 transition-opacity" 
+      <CommandItem
+        value="back to commands"
+        className="opacity-70"
         onSelect={onBack}
       >
-        <div className="flex items-center gap-2">
-          <kbd className="text-[10px] font-medium leading-none border border-border/50 bg-muted/30 px-1 py-0.5 rounded-sm">esc</kbd>
-          <span className="font-mono text-[10px] uppercase tracking-widest">Back</span>
-        </div>
+        <ArrowLeft className="size-5 text-muted-foreground/70" />
+        <p className="truncate text-foreground capitalize">back to commands</p>
+        <CommandShortcut>back</CommandShortcut>
       </CommandItem>
 
-      <div className="px-1 pb-1">
-        <p className="px-2 mb-2 font-mono text-[9px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">
-          Preferences
-        </p>
-        
-        <div className="space-y-0.5">
-          <CommandItem
-            value="appearance mode"
-            onSelect={() => setView("appearance")}
-            className="flex items-center justify-between"
-          >
-            <div className="flex items-center gap-3">
-              <Moon className="size-6 text-muted-foreground/60" />
-              <span className="text-sm font-medium">Appearance Mode</span>
-            </div>
-            <ChevronRight className="size-4 text-muted-foreground/30" />
-          </CommandItem>
+      <CommandItem
+        value="appearance mode dark light"
+        onSelect={() => setView("appearance")}
+      >
+        <Moon className="size-5 text-muted-foreground/70" />
+        <p className="truncate text-foreground capitalize">appearance mode</p>
+        <CommandShortcut>theme</CommandShortcut>
+      </CommandItem>
 
-          <CommandItem
-            value="theme selection"
-            onSelect={() => setView("themes")}
-            className="flex items-center justify-between"
-          >
-            <div className="flex items-center gap-3">
-              <Palette className="size-6 text-muted-foreground/60" />
-              <span className="text-sm font-medium">Theme Selection</span>
-            </div>
-            <ChevronRight className="size-4 text-muted-foreground/30" />
-          </CommandItem>
+      <CommandItem
+        value="theme selection palette colors"
+        onSelect={() => setView("themes")}
+      >
+        <Palette className="size-5 text-muted-foreground/70" />
+        <p className="truncate text-foreground capitalize">theme selection</p>
+        <CommandShortcut>theme</CommandShortcut>
+      </CommandItem>
 
-          <CommandItem
-            value="ui density expand compress"
-            onSelect={() => setView("layout")}
-            className="flex items-center justify-between"
-          >
-            <div className="flex items-center gap-3">
-              <Minimize2 className="size-6 text-muted-foreground/60" />
-              <span className="text-sm font-medium">UI Density</span>
-            </div>
-            <ChevronRight className="size-4 text-muted-foreground/30" />
-          </CommandItem>
-        </div>
-      </div>
+      <CommandItem
+        value="ui density expand compress size"
+        onSelect={() => setView("layout")}
+      >
+        <Minimize2 className="size-5 text-muted-foreground/70" />
+        <p className="truncate text-foreground capitalize">ui density</p>
+        <CommandShortcut>size</CommandShortcut>
+      </CommandItem>
     </CommandGroup>
   );
 }
