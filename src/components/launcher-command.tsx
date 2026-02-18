@@ -182,7 +182,7 @@ export default function LauncherCommand() {
         onKeyDown={handleKeyDown}
         className="h-full w-full overflow-hidden bg-transparent"
       >
-        {!isEmojiPanelOpen && !isFileSearchPanelOpen && !isDictionaryPanelOpen && !isQuicklinksPanelOpen && (
+        {!isEmojiPanelOpen && !isFileSearchPanelOpen && !isDictionaryPanelOpen && !isQuicklinksPanelOpen && !isClipboardPanelOpen && (
           <CommandInput
             value={commandSearch}
             onValueChange={setCommandSearch}
@@ -232,16 +232,7 @@ export default function LauncherCommand() {
                 setCommandSearch("");
               }}
             />
-        ) : (
-        <CommandList
-          className={cn(
-            "flex-1 px-1 transition-all duration-300",
-            isEmojiPanelOpen ? "min-h-0 flex flex-col h-full" : "max-h-none overflow-y-auto"
-          )}
-        >
-          {commandListContent}
-
-          {isClipboardPanelOpen && (
+        ) : isClipboardPanelOpen ? (
             <ClipboardCommandGroup
               isOpen
               onOpen={() => {
@@ -253,7 +244,14 @@ export default function LauncherCommand() {
                 setCommandSearch("");
               }}
             />
+        ) : (
+        <CommandList
+          className={cn(
+            "flex-1 px-1 transition-all duration-300",
+            isEmojiPanelOpen ? "min-h-0 flex flex-col h-full" : "max-h-none overflow-y-auto"
           )}
+        >
+          {commandListContent}
 
           {isCalculatorHistoryPanelOpen && (
             <CalculatorHistoryCommandGroup
@@ -299,7 +297,7 @@ export default function LauncherCommand() {
         </CommandList>
         )}
 
-        {!isEmojiPanelOpen && !isFileSearchPanelOpen && !isDictionaryPanelOpen && !isQuicklinksPanelOpen && (
+        {!isEmojiPanelOpen && !isFileSearchPanelOpen && !isDictionaryPanelOpen && !isQuicklinksPanelOpen && !isClipboardPanelOpen && (
           <div className="flex h-9 items-center justify-between border-t border-border/40 px-4 text-[10px] font-medium uppercase tracking-widest text-muted-foreground/60">
             <div className="flex items-center gap-2">
               <Search className="size-3" />

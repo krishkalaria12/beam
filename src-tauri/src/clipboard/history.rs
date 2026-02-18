@@ -1,6 +1,6 @@
 use chrono::{SecondsFormat, Utc};
 use serde::{Deserialize, Serialize};
-use serde_json::{from_value, Value};
+use serde_json::{json, Value};
 use std::collections::HashSet;
 use tauri::{AppHandle, Wry};
 use tauri_plugin_store::{Store, StoreExt};
@@ -55,16 +55,32 @@ pub fn save_to_history(app: &AppHandle, copy_value: String) -> Result<()> {
         .store(&config().CLIPBOARD_STORE_NAME)
         .map_err(|e| Error::StoreOpeningError(e.to_string()))?;
 
-    let mut history = get_decrypted_history(&store)?;
+    let (mut history, mut undecryptable_history) =
+        get_decrypted_history_with_undecryptable(&store)?;
     history.retain(|entry| entry.value != copy_value);
     history.insert(0, build_entry(copy_value));
     dedupe_keep_order(&mut history);
     history.truncate(config().CLIPBOARD_MAX_HISTORY_ENTRIES);
 
     let encrypted_history = encrypt_history_entries(&history)?;
+    let remaining_slots = config()
+        .CLIPBOARD_MAX_HISTORY_ENTRIES
+        .saturating_sub(encrypted_history.len());
+    undecryptable_history.truncate(remaining_slots);
 
-    let app_json = serde_json::to_value(encrypted_history)
-        .map_err(|e| Error::SerializationError(e.to_string()))?;
+    let mut serialized_history =
+        Vec::with_capacity(encrypted_history.len() + undecryptable_history.len());
+    for entry in encrypted_history {
+        let json_entry =
+            serde_json::to_value(entry).map_err(|e| Error::SerializationError(e.to_string()))?;
+        serialized_history.push(json_entry);
+    }
+
+    for entry in undecryptable_history {
+        serialized_history.push(stored_history_entry_to_value(entry));
+    }
+
+    let app_json = Value::Array(serialized_history);
 
     store.set(config().CLIPBOARD_HISTORY_VALUE, app_json);
     store
@@ -79,13 +95,24 @@ fn get_from_history(store: &Store<Wry>) -> Option<Value> {
 }
 
 fn get_decrypted_history(store: &Store<Wry>) -> Result<Vec<ClipboardHistoryEntry>> {
+    let (history, _) = get_decrypted_history_with_undecryptable(store)?;
+    Ok(history)
+}
+
+fn get_decrypted_history_with_undecryptable(
+    store: &Store<Wry>,
+) -> Result<(Vec<ClipboardHistoryEntry>, Vec<StoredClipboardHistoryEntry>)> {
     let stored_history = get_stored_history(store);
     let mut history = Vec::with_capacity(stored_history.len());
+    let mut undecryptable_history = Vec::new();
 
     for stored_entry in stored_history {
         let value = match decrypt_value(&stored_entry.value) {
             Ok(value) => value,
-            Err(_) => continue,
+            Err(_) => {
+                undecryptable_history.push(stored_entry);
+                continue;
+            }
         };
         let value = value.trim().to_string();
 
@@ -105,7 +132,7 @@ fn get_decrypted_history(store: &Store<Wry>) -> Result<Vec<ClipboardHistoryEntry
     dedupe_keep_order(&mut history);
     history.truncate(config().CLIPBOARD_MAX_HISTORY_ENTRIES);
 
-    Ok(history)
+    Ok((history, undecryptable_history))
 }
 
 fn get_stored_history(store: &Store<Wry>) -> Vec<StoredClipboardHistoryEntry> {
@@ -113,21 +140,41 @@ fn get_stored_history(store: &Store<Wry>) -> Vec<StoredClipboardHistoryEntry> {
         return Vec::new();
     };
 
-    if let Ok(history) = from_value::<Vec<StoredClipboardHistoryEntry>>(json_value.clone()) {
-        return history;
-    }
-
-    if let Ok(history_values) = from_value::<Vec<String>>(json_value) {
-        return history_values
+    match json_value {
+        Value::Array(entries) => entries
             .into_iter()
-            .map(|value| StoredClipboardHistoryEntry {
-                value,
-                copied_at: None,
-            })
-            .collect();
+            .filter_map(parse_stored_history_entry)
+            .collect(),
+        _ => Vec::new(),
     }
+}
 
-    Vec::new()
+fn parse_stored_history_entry(value: Value) -> Option<StoredClipboardHistoryEntry> {
+    match value {
+        Value::String(raw_value) => Some(StoredClipboardHistoryEntry {
+            value: raw_value,
+            copied_at: None,
+        }),
+        Value::Object(object) => {
+            let value = object.get("value")?.as_str()?.to_string();
+            let copied_at = object
+                .get("copied_at")
+                .and_then(|copied_at| copied_at.as_str().map(ToString::to_string));
+
+            Some(StoredClipboardHistoryEntry { value, copied_at })
+        }
+        _ => None,
+    }
+}
+
+fn stored_history_entry_to_value(entry: StoredClipboardHistoryEntry) -> Value {
+    match entry.copied_at {
+        Some(copied_at) => json!({
+            "value": entry.value,
+            "copied_at": copied_at,
+        }),
+        None => Value::String(entry.value),
+    }
 }
 
 fn encrypt_history_entries(
