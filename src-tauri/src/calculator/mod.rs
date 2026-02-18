@@ -32,6 +32,11 @@ pub fn get_calculator_history(app: AppHandle) -> Result<Vec<CalculatorHistoryEnt
 }
 
 #[command]
-pub fn save_calculator_history(app: AppHandle, query: String, result: String, session_id: String) -> Result<()> {
+pub fn save_calculator_history(
+    app: AppHandle,
+    query: String,
+    result: String,
+    session_id: String,
+) -> Result<()> {
     save_to_history(&app, query, result, session_id)
 }

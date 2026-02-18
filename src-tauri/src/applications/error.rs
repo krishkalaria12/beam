@@ -1,17 +1,33 @@
 use freedesktop_file_parser::ParseError;
 use serde::Serialize;
+use thiserror::Error;
 
-pub type Result<T> = core::result::Result<T, Error>;
+pub type Result<T> = std::result::Result<T, Error>;
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum Error {
+    #[error("{0}")]
     CollectingDesktopFilesError(String),
-    ParsingDesktopFileError(ParseError),
+
+    #[error("{0}")]
+    ParsingDesktopFileError(#[from] ParseError),
+
+    #[error("{0}")]
     ParsingIconError(String),
+
+    #[error("{0}")]
     LaunchingApplicationError(String),
+
+    #[error("{0}")]
     HidingWindowApplicationError(String),
+
+    #[error("{0}")]
     StoreOpeningError(String),
+
+    #[error("{0}")]
     SerializationError(String),
+
+    #[error("{0}")]
     StoreSaveError(String),
 }
 
@@ -20,31 +36,6 @@ impl Serialize for Error {
     where
         S: serde::Serializer,
     {
-        serializer.serialize_str(self.to_string().as_ref())
+        serializer.serialize_str(&self.to_string())
     }
 }
-
-// region:    --- Froms
-
-crate::impl_froms! {}
-
-// endregion: --- Froms
-
-// region:    --- Error Boilerplate
-impl core::fmt::Display for Error {
-    fn fmt(&self, fmt: &mut core::fmt::Formatter) -> core::result::Result<(), core::fmt::Error> {
-        match self {
-            Self::CollectingDesktopFilesError(e) => write!(fmt, "{e}"),
-            Self::ParsingDesktopFileError(e) => write!(fmt, "{e}"),
-            Self::ParsingIconError(e) => write!(fmt, "{e}"),
-            Self::LaunchingApplicationError(e) => write!(fmt, "{e}"),
-            Self::HidingWindowApplicationError(e) => write!(fmt, "{e}"),
-            Self::StoreOpeningError(e) => write!(fmt, "{e}"),
-            Self::SerializationError(e) => write!(fmt, "{e}"),
-            Self::StoreSaveError(e) => write!(fmt, "{e}"),
-        }
-    }
-}
-
-impl std::error::Error for Error {}
-// endregion: --- Error Boilerplate

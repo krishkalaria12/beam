@@ -1,11 +1,17 @@
 use serde::Serialize;
+use thiserror::Error;
 
-pub type Result<T> = core::result::Result<T, Error>;
+pub type Result<T> = std::result::Result<T, Error>;
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum Error {
+    #[error("Request failed: {0}")]
     RequestError(String),
+
+    #[error("Failed to parse response: {0}")]
     ParseError(String),
+
+    #[error("Word not found")]
     NotFound,
 }
 
@@ -14,20 +20,6 @@ impl Serialize for Error {
     where
         S: serde::Serializer,
     {
-        serializer.serialize_str(self.to_string().as_ref())
+        serializer.serialize_str(&self.to_string())
     }
 }
-
-// region:    --- Error Boilerplate
-impl core::fmt::Display for Error {
-    fn fmt(&self, fmt: &mut core::fmt::Formatter) -> core::result::Result<(), core::fmt::Error> {
-        match self {
-            Self::RequestError(e) => write!(fmt, "Request failed: {e}"),
-            Self::ParseError(e) => write!(fmt, "Failed to parse response: {e}"),
-            Self::NotFound => write!(fmt, "Word not found"),
-        }
-    }
-}
-
-impl std::error::Error for Error {}
-// endregion: --- Error Boilerplate

@@ -21,6 +21,7 @@ pub fn get_handler() -> impl Fn(Invoke) -> bool {
         quicklinks::execute_quicklink,
         quicklinks::get_quicklinks,
         quicklinks::update_quicklink,
+        quicklinks::execute_quicklink,
         quicklinks::favicon::get_favicon_for_url,
     ]
 }

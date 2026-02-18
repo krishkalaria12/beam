@@ -1,18 +1,38 @@
 use serde::Serialize;
+use thiserror::Error;
 
-pub type Result<T> = core::result::Result<T, Error>;
+pub type Result<T> = std::result::Result<T, Error>;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Error)]
 pub enum Error {
+    #[error("{0}")]
     NewEntryKeyringError(String),
+
+    #[error("{0}")]
     GettingPasswordKeyring(String),
+
+    #[error("{0}")]
     SettingPasswordKeyring(String),
+
+    #[error("{0}")]
     StoreOpeningError(String),
+
+    #[error("{0}")]
     SerializationError(String),
+
+    #[error("{0}")]
     StoreSaveError(String),
+
+    #[error("{0}")]
     ClipboardEntry(String),
+
+    #[error("{0}")]
     EncryptionCipherInitError(String),
+
+    #[error("{0}")]
     EncryptingClipboardValue(String),
+
+    #[error("{0}")]
     DecryptingClipboardValue(String),
 }
 
@@ -21,33 +41,6 @@ impl Serialize for Error {
     where
         S: serde::Serializer,
     {
-        serializer.serialize_str(self.to_string().as_ref())
+        serializer.serialize_str(&self.to_string())
     }
 }
-
-// region:    --- Froms
-
-crate::impl_froms! {}
-
-// endregion: --- Froms
-
-// region:    --- Error Boilerplate
-impl core::fmt::Display for Error {
-    fn fmt(&self, fmt: &mut core::fmt::Formatter) -> core::result::Result<(), core::fmt::Error> {
-        match self {
-            Self::NewEntryKeyringError(e) => write!(fmt, "{e}"),
-            Self::GettingPasswordKeyring(e) => write!(fmt, "{e}"),
-            Self::SettingPasswordKeyring(e) => write!(fmt, "{e}"),
-            Self::StoreOpeningError(e) => write!(fmt, "{e}"),
-            Self::SerializationError(e) => write!(fmt, "{e}"),
-            Self::StoreSaveError(e) => write!(fmt, "{e}"),
-            Self::ClipboardEntry(e) => write!(fmt, "{e}"),
-            Self::EncryptionCipherInitError(e) => write!(fmt, "{e}"),
-            Self::EncryptingClipboardValue(e) => write!(fmt, "{e}"),
-            Self::DecryptingClipboardValue(e) => write!(fmt, "{e}"),
-        }
-    }
-}
-
-impl std::error::Error for Error {}
-// endregion: --- Error Boilerplate

@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use tauri::{command, AppHandle, Window};
 use url::Url;
+use webbrowser;
 
 use crate::quicklinks::{
     error::{Error, Result},
