@@ -14,7 +14,9 @@ pub enum Error {
     KeywordNotFoundError(String),
     FaviconFetchError(String),
     FaviconNotFoundError(String),
+    PathValidationError(String),
     OpenBrowserError(String),
+    OpenTargetError(String),
     HideWindowError(String),
 }
 
@@ -47,7 +49,9 @@ impl core::fmt::Display for Error {
             Self::KeywordNotFoundError(e) => write!(fmt, "keyword not found: {e}"),
             Self::FaviconFetchError(e) => write!(fmt, "favicon fetch failed: {e}"),
             Self::FaviconNotFoundError(e) => write!(fmt, "favicon not found: {e}"),
+            Self::PathValidationError(e) => write!(fmt, "path validation failed: {e}"),
             Self::OpenBrowserError(e) => write!(fmt, "failed to open browser: {e}"),
+            Self::OpenTargetError(e) => write!(fmt, "failed to open target: {e}"),
             Self::HideWindowError(e) => write!(fmt, "failed to hide window: {e}"),
         }
     }
