@@ -1,19 +1,44 @@
-import { useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "@tanstack/react-form";
-import { ArrowLeft, Loader2, Link2, Trash2, Plus, Globe, Command } from "lucide-react";
+import { ArrowLeft, Loader2, Link2, Trash2, Plus, Pencil, Command, Folder, File, FolderOpen } from "lucide-react";
 import { z } from "zod";
 
+import fileQuicklinkIcon from "@/assets/icons/file-icon-quicklink.png";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import { useCreateQuicklink, useDeleteQuicklink, useGetFavicon, useQuicklinks } from "../hooks/use-quicklinks";
+import {
+  useCreateQuicklink,
+  useDeleteQuicklink,
+  useGetFavicon,
+  useQuicklinks,
+  useUpdateQuicklink,
+} from "../hooks/use-quicklinks";
+import {
+  isFileQuicklinkTarget,
+  isWebQuicklinkTarget,
+  pickQuicklinkFilePath,
+  pickQuicklinkFolderPath,
+} from "../api/quicklinks";
 import type { Quicklink } from "../types";
 
 const quicklinkSchema = z.object({
   name: z.string().min(1, "Name is required"),
   keyword: z.string().min(1, "Keyword is required").regex(/^[a-zA-Z0-9_]+$/, "Only letters, numbers, and underscores allowed"),
-  url: z.string().min(1, "URL is required").includes("{query}", "URL must contain {query} placeholder"),
+  url: z
+    .string()
+    .min(1, "Link or file path is required")
+    .refine(
+      (value) => !isWebQuicklinkTarget(value) || value.includes("{query}"),
+      "Web URL must contain {query} placeholder"
+    ),
   icon: z.string(),
 });
 
@@ -24,16 +49,52 @@ type QuicklinksViewProps = {
 };
 
 export function QuicklinksView({ view, setView, onBack }: QuicklinksViewProps) {
+  const [editingQuicklink, setEditingQuicklink] = useState<Quicklink | null>(null);
+  const [returnToManage, setReturnToManage] = useState(false);
+
   if (view === "create") {
     return (
       <QuicklinkCreateForm 
-        onBack={onBack}
-        onSuccess={onBack} 
+        onBack={() => {
+          if (editingQuicklink || returnToManage) {
+            setEditingQuicklink(null);
+            setReturnToManage(false);
+            setView("manage");
+            return;
+          }
+          onBack();
+        }}
+        onSuccess={() => {
+          if (editingQuicklink || returnToManage) {
+            setEditingQuicklink(null);
+            setReturnToManage(false);
+            setView("manage");
+            return;
+          }
+
+          onBack();
+        }}
+        initialData={editingQuicklink ?? undefined}
+        editKeyword={editingQuicklink?.keyword}
       />
     );
   }
 
-  return <QuicklinksManageView onBack={onBack} onCreate={() => setView("create")} />;
+  return (
+    <QuicklinksManageView
+      onBack={onBack}
+      onCreate={() => {
+        setEditingQuicklink(null);
+        setReturnToManage(true);
+        setView("create");
+      }}
+      onEdit={(quicklink) => {
+        setEditingQuicklink(quicklink);
+        setReturnToManage(true);
+        setView("create");
+      }}
+    />
+  );
 }
 
 type QuicklinkCreateFormProps = {
@@ -44,11 +105,17 @@ type QuicklinkCreateFormProps = {
 };
 
 function QuicklinkCreateForm({ onBack, onSuccess, initialData, editKeyword }: QuicklinkCreateFormProps) {
+  const isEditMode = Boolean(editKeyword);
   const createMutation = useCreateQuicklink();
+  const updateMutation = useUpdateQuicklink();
   const getFaviconMutation = useGetFavicon();
   const [fetchedIcon, setFetchedIcon] = useState(initialData?.icon ?? "");
+  const [isFileTarget, setIsFileTarget] = useState(isFileQuicklinkTarget(initialData?.url ?? ""));
   const [isFetchingIcon, setIsFetchingIcon] = useState(false);
-  const fetchTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const fetchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mutationError = isEditMode ? updateMutation.error : createMutation.error;
+  const isSubmitting = isEditMode ? updateMutation.isPending : createMutation.isPending;
+  const previewIcon = isFileTarget ? fileQuicklinkIcon : fetchedIcon;
 
   const form = useForm({
     defaultValues: {
@@ -61,23 +128,49 @@ function QuicklinkCreateForm({ onBack, onSuccess, initialData, editKeyword }: Qu
       onChange: quicklinkSchema,
     },
     onSubmit: async ({ value }) => {
+      const payload = {
+        ...value,
+        icon: isFileTarget ? "" : fetchedIcon,
+      };
+
       try {
-        await createMutation.mutateAsync({
-          ...value,
-          icon: fetchedIcon,
-        });
+        if (editKeyword) {
+          await updateMutation.mutateAsync({
+            keyword: editKeyword,
+            data: payload,
+          });
+        } else {
+          await createMutation.mutateAsync(payload);
+        }
+
         onSuccess();
-      } catch (error) {
-        // Error is handled by the form
+      } catch {
+        // Mutation state handles user-facing errors.
       }
     },
   });
 
-  const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
+  useEffect(() => {
+    return () => {
+      if (fetchTimerRef.current) {
+        clearTimeout(fetchTimerRef.current);
+      }
+    };
+  }, []);
+
+  const syncTargetState = (value: string) => {
+    const isFileTargetValue = isFileQuicklinkTarget(value);
+    setIsFileTarget(isFileTargetValue);
     
     if (fetchTimerRef.current) {
       clearTimeout(fetchTimerRef.current);
+    }
+
+    if (!value.trim() || isFileTargetValue) {
+      setIsFetchingIcon(false);
+      setFetchedIcon("");
+      form.setFieldValue("icon", "");
+      return;
     }
 
     fetchTimerRef.current = setTimeout(async () => {
@@ -99,6 +192,36 @@ function QuicklinkCreateForm({ onBack, onSuccess, initialData, editKeyword }: Qu
     }, 1000);
   };
 
+  const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    syncTargetState(e.target.value);
+  };
+
+  const handlePickFile = async () => {
+    try {
+      const selectedPath = await pickQuicklinkFilePath();
+      if (!selectedPath) {
+        return;
+      }
+      form.setFieldValue("url", selectedPath);
+      syncTargetState(selectedPath);
+    } catch {
+      // Picker cancellation and runtime errors are intentionally ignored here.
+    }
+  };
+
+  const handlePickFolder = async () => {
+    try {
+      const selectedPath = await pickQuicklinkFolderPath();
+      if (!selectedPath) {
+        return;
+      }
+      form.setFieldValue("url", selectedPath);
+      syncTargetState(selectedPath);
+    } catch {
+      // Picker cancellation and runtime errors are intentionally ignored here.
+    }
+  };
+
   return (
     <div className="flex h-full flex-col bg-background">
       {/* Header */}
@@ -107,7 +230,7 @@ function QuicklinkCreateForm({ onBack, onSuccess, initialData, editKeyword }: Qu
           <ArrowLeft className="size-4" />
         </Button>
         <span className="text-xs font-medium text-muted-foreground uppercase tracking-widest">
-           {editKeyword ? "Edit Quicklink" : "Create Quicklink"}
+           {isEditMode ? "Edit Quicklink" : "Create Quicklink"}
         </span>
         <div className="w-8" />
       </div>
@@ -123,16 +246,16 @@ function QuicklinkCreateForm({ onBack, onSuccess, initialData, editKeyword }: Qu
           className="mx-auto max-w-2xl space-y-8"
         >
           {/* Icon Display (Auto-produced) */}
-          {(isFetchingIcon || fetchedIcon) && (
+          {(isFetchingIcon || previewIcon) && (
             <div className="flex justify-center mb-8">
               <div className="relative flex size-24 items-center justify-center rounded-2xl border border-border bg-muted/30 shadow-sm transition-all">
                 {isFetchingIcon ? (
                   <Loader2 className="size-8 animate-spin text-muted-foreground" />
                 ) : (
-                  <img src={fetchedIcon} alt="Icon" className="size-16 rounded-xl object-contain" />
+                  <img src={previewIcon} alt="Icon" className="size-16 rounded-xl object-contain" />
                 )}
                  <div className="absolute -bottom-2 rounded-full bg-background border px-2 py-0.5 text-[10px] font-medium text-muted-foreground shadow-sm">
-                    {isFetchingIcon ? "Fetching..." : "Auto-detected"}
+                    {isFetchingIcon ? "Fetching..." : isFileTarget ? "File Path" : "Auto-detected"}
                  </div>
               </div>
             </div>
@@ -204,18 +327,45 @@ function QuicklinkCreateForm({ onBack, onSuccess, initialData, editKeyword }: Qu
             name="url"
             children={(field) => (
               <div className="grid grid-cols-[100px_1fr] gap-6">
-                <Label htmlFor="url" className="text-right text-foreground font-medium pt-2.5">Link</Label>
+                <Label htmlFor="url" className="text-right text-foreground font-medium pt-2.5">Target</Label>
                 <div className="space-y-2">
-                  <Input
-                    id="url"
-                    placeholder="https://google.com/search?q={query}"
-                    value={field.state.value}
-                    onChange={(e) => {
-                      field.handleChange(e.target.value);
-                      handleUrlChange(e);
-                    }}
-                    className={cn("h-10 font-mono text-xs", field.state.meta.errors.length > 0 && "border-red-500")}
-                  />
+                  <div className="relative">
+                    <Input
+                      id="url"
+                      placeholder="https://google.com/search?q={query} or /home/user/file.txt"
+                      value={field.state.value}
+                      onChange={(e) => {
+                        field.handleChange(e.target.value);
+                        handleUrlChange(e);
+                      }}
+                      className={cn("h-10 pr-10 font-mono text-xs", field.state.meta.errors.length > 0 && "border-red-500")}
+                    />
+                    <DropdownMenu>
+                      <DropdownMenuTrigger
+                        render={
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="absolute right-1 top-1/2 size-8 -translate-y-1/2 rounded-none text-muted-foreground hover:text-foreground"
+                            aria-label="Pick file system target"
+                          />
+                        }
+                      >
+                        <Folder className="size-4" />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={handlePickFile}>
+                          <File className="size-4" />
+                          Pick File
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={handlePickFolder}>
+                          <FolderOpen className="size-4" />
+                          Pick Folder
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                   {field.state.meta.errors.length > 0 && (
                     <p className="text-xs text-red-500">
                       {(() => {
@@ -227,17 +377,17 @@ function QuicklinkCreateForm({ onBack, onSuccess, initialData, editKeyword }: Qu
                     </p>
                   )}
                   <p className="text-xs text-muted-foreground/80 leading-relaxed">
-                    Include an argument by inserting <strong className="text-primary font-semibold">{"{query}"}</strong> in the URL. 
-                    The word "query" can be changed to anything and will be used as the placeholder text.
+                    Web links must include <strong className="text-primary font-semibold">{"{query}"}</strong>. 
+                    Local file paths can be added directly and open with your system default app.
                   </p>
                 </div>
               </div>
             )}
           />
 
-           {createMutation.error && (
+           {mutationError && (
             <div className="rounded-md bg-red-500/10 p-3 text-sm text-red-500 text-center font-medium">
-              {createMutation.error.message}
+              {mutationError.message}
             </div>
           )}
 
@@ -248,7 +398,7 @@ function QuicklinkCreateForm({ onBack, onSuccess, initialData, editKeyword }: Qu
       <div className="flex items-center justify-between border-t border-border/40 bg-muted/20 p-4 px-6">
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
            <Command className="size-3" />
-           <span>Create Quicklink</span>
+           <span>{isEditMode ? "Update Quicklink" : "Create Quicklink"}</span>
         </div>
         <div className="flex items-center gap-2">
             <Button
@@ -259,10 +409,10 @@ function QuicklinkCreateForm({ onBack, onSuccess, initialData, editKeyword }: Qu
             </Button>
             <Button
               onClick={() => form.handleSubmit()}
-              disabled={createMutation.isPending}
+              disabled={isSubmitting}
             >
-              {createMutation.isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
-              {editKeyword ? "Update Quicklink" : "Create Quicklink"}
+              {isSubmitting && <Loader2 className="mr-2 size-4 animate-spin" />}
+              {isEditMode ? "Update Quicklink" : "Create Quicklink"}
               <div className="ml-2 flex gap-0.5">
                   <span className="rounded bg-primary-foreground/20 px-1 py-0.5 font-mono text-[10px] text-primary-foreground">⌘</span>
                   <span className="rounded bg-primary-foreground/20 px-1 py-0.5 font-mono text-[10px] text-primary-foreground">↵</span>
@@ -277,17 +427,22 @@ function QuicklinkCreateForm({ onBack, onSuccess, initialData, editKeyword }: Qu
 type QuicklinksManageViewProps = {
   onBack: () => void;
   onCreate: () => void;
+  onEdit: (quicklink: Quicklink) => void;
 };
 
-function QuicklinksManageView({ onBack, onCreate }: QuicklinksManageViewProps) {
+function QuicklinksManageView({ onBack, onCreate, onEdit }: QuicklinksManageViewProps) {
   const { data: quicklinks, isLoading, error } = useQuicklinks();
   const deleteMutation = useDeleteQuicklink();
+  const [deletingKeyword, setDeletingKeyword] = useState<string | null>(null);
 
   const handleDelete = async (keyword: string) => {
+    setDeletingKeyword(keyword);
     try {
       await deleteMutation.mutateAsync(keyword);
     } catch {
       // Error is handled by the mutation
+    } finally {
+      setDeletingKeyword(null);
     }
   };
 
@@ -342,6 +497,8 @@ function QuicklinksManageView({ onBack, onCreate }: QuicklinksManageViewProps) {
                 <div className="flex items-center gap-3">
                   {ql.icon ? (
                     <img src={ql.icon} alt="" className="size-8 rounded object-cover" />
+                  ) : isFileQuicklinkTarget(ql.url) ? (
+                    <img src={fileQuicklinkIcon} alt="" className="size-8 rounded object-cover" />
                   ) : (
                     <div className="flex size-8 items-center justify-center rounded bg-muted">
                       <Link2 className="size-4 text-muted-foreground" />
@@ -352,17 +509,38 @@ function QuicklinksManageView({ onBack, onCreate }: QuicklinksManageViewProps) {
                     <p className="text-xs text-muted-foreground">!{ql.keyword}</p>
                   </div>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleDelete(ql.keyword)}
-                  disabled={deleteMutation.isPending}
-                  className="text-muted-foreground hover:text-red-500"
-                >
-                  <Trash2 className="size-4" />
-                </Button>
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onEdit(ql)}
+                    disabled={deleteMutation.isPending}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    <Pencil className="size-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleDelete(ql.keyword)}
+                    disabled={deleteMutation.isPending}
+                    className="text-muted-foreground hover:text-red-500"
+                  >
+                    {deletingKeyword === ql.keyword ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="size-4" />
+                    )}
+                  </Button>
+                </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {deleteMutation.error && (
+          <div className="mt-3 rounded-md bg-red-500/10 p-3 text-sm text-red-500">
+            {deleteMutation.error.message}
           </div>
         )}
       </div>

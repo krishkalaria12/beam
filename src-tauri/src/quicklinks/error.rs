@@ -34,6 +34,18 @@ pub enum Error {
 
     #[error("Favicon not found: {0}")]
     FaviconNotFoundError(String),
+
+    #[error("Path validation failed: {0}")]
+    PathValidationError(String),
+
+    #[error("Failed to open browser: {0}")]
+    OpenBrowserError(String),
+
+    #[error("Failed to open target: {0}")]
+    OpenTargetError(String),
+
+    #[error("Failed to hide window: {0}")]
+    HideWindowError(String),
 }
 
 impl Serialize for Error {

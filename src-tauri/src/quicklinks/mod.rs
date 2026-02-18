@@ -3,7 +3,8 @@ pub mod favicon;
 pub mod helper;
 
 use serde::{Deserialize, Serialize};
-use tauri::{command, AppHandle};
+use std::path::PathBuf;
+use tauri::{command, AppHandle, Window};
 use url::Url;
 use webbrowser;
 
@@ -23,6 +24,49 @@ pub struct Quicklink {
     pub icon: String,
 }
 
+fn is_web_target(target: &str) -> bool {
+    let lower = target.trim().to_ascii_lowercase();
+    lower.starts_with("http://") || lower.starts_with("https://")
+}
+
+fn resolve_local_target_path(raw_target: &str) -> Result<PathBuf> {
+    let trimmed = raw_target.trim();
+
+    if trimmed.is_empty() {
+        return Err(Error::PathValidationError(
+            "quicklink file path is required".to_string(),
+        ));
+    }
+
+    if trimmed.starts_with("file://") {
+        let parsed = Url::parse(trimmed).map_err(|e| {
+            Error::PathValidationError(format!("file URL '{}' is not valid: {}", trimmed, e))
+        })?;
+
+        return parsed.to_file_path().map_err(|_| {
+            Error::PathValidationError(format!(
+                "file URL '{}' could not be converted to a local path",
+                trimmed
+            ))
+        });
+    }
+
+    if trimmed == "~" {
+        return dirs::home_dir().ok_or_else(|| {
+            Error::PathValidationError("could not resolve '~' home directory".to_string())
+        });
+    }
+
+    if let Some(stripped) = trimmed.strip_prefix("~/") {
+        let home = dirs::home_dir().ok_or_else(|| {
+            Error::PathValidationError("could not resolve '~' home directory".to_string())
+        })?;
+        return Ok(home.join(stripped));
+    }
+
+    Ok(PathBuf::from(trimmed))
+}
+
 impl Quicklink {
     pub fn is_valid(&self) -> Result<()> {
         if self.name.trim().is_empty() {
@@ -37,34 +81,49 @@ impl Quicklink {
             ));
         }
 
-        if !self.url.contains("{query}") {
-            return Err(Error::URLParsingError(format!(
-                "url '{}' must contain '{{query}}' placeholder",
-                self.url
-            )));
+        let target = self.url.trim();
+        if target.is_empty() {
+            return Err(Error::URLParsingError("quicklink target is required".to_string()));
         }
 
-        // Validate URL using the url crate
-        let url_str = self.url.replace("{query}", "test");
-        match Url::parse(&url_str) {
-            Ok(url) => {
-                if url.scheme() != "http" && url.scheme() != "https" {
-                    return Err(Error::URLParsingError(format!(
-                        "url '{}' must use http or https scheme",
-                        self.url
-                    )));
+        if is_web_target(target) {
+            if !target.contains("{query}") {
+                return Err(Error::URLParsingError(format!(
+                    "url '{}' must contain '{{query}}' placeholder",
+                    self.url
+                )));
+            }
+
+            // Validate URL using the url crate
+            let url_str = target.replace("{query}", "test");
+            match Url::parse(&url_str) {
+                Ok(url) => {
+                    if url.scheme() != "http" && url.scheme() != "https" {
+                        return Err(Error::URLParsingError(format!(
+                            "url '{}' must use http or https scheme",
+                            self.url
+                        )));
+                    }
+                    if url.host().is_none() {
+                        return Err(Error::URLParsingError(format!(
+                            "url '{}' must have a valid host",
+                            self.url
+                        )));
+                    }
                 }
-                if url.host().is_none() {
+                Err(e) => {
                     return Err(Error::URLParsingError(format!(
-                        "url '{}' must have a valid host",
-                        self.url
+                        "url '{}' is not valid: {}",
+                        self.url, e
                     )));
                 }
             }
-            Err(e) => {
-                return Err(Error::URLParsingError(format!(
-                    "url '{}' is not valid: {}",
-                    self.url, e
+        } else {
+            let path = resolve_local_target_path(target)?;
+            if !path.exists() {
+                return Err(Error::PathValidationError(format!(
+                    "path '{}' does not exist",
+                    path.display()
                 )));
             }
         }
@@ -185,28 +244,34 @@ pub fn update_quicklink(app: AppHandle, keyword: String, new_quicklink: Quicklin
 }
 
 #[command]
-pub fn execute_quicklink(app: AppHandle, keyword: String, query: String) -> Result<()> {
+pub fn execute_quicklink(app: AppHandle, window: Window, keyword: String, query: String) -> Result<()> {
     let keyword = keyword.trim();
-    let query = query.trim();
 
     if keyword.is_empty() {
         return Err(Error::KeywordIsEmptyError(
-            "keyword is required".to_string(),
+            "keyword to execute is required".to_string(),
         ));
     }
 
     let quick_links = get_quicklinks_from_store(&app)?;
-
     let quicklink = quick_links
         .iter()
-        .find(|ql| ql.keyword.to_lowercase() == keyword.to_lowercase())
+        .find(|ql| ql.keyword.eq_ignore_ascii_case(keyword))
         .ok_or_else(|| Error::KeywordNotFoundError(format!("keyword '{}' not found", keyword)))?;
 
-    let url = quicklink.url.replace("{query}", query);
-    
-    if webbrowser::open(&url).is_err() {
-        return Err(Error::URLParsingError(format!("failed to open URL: {}", url)));
+    if is_web_target(&quicklink.url) {
+        let encoded_query: String =
+            url::form_urlencoded::byte_serialize(query.trim().as_bytes()).collect();
+        let url = quicklink.url.replace("{query}", &encoded_query);
+        webbrowser::open(&url).map_err(|e| Error::OpenBrowserError(e.to_string()))?;
+    } else {
+        let path = resolve_local_target_path(&quicklink.url)?;
+        open::that(path).map_err(|e| Error::OpenTargetError(e.to_string()))?;
     }
+
+    window
+        .hide()
+        .map_err(|e| Error::HideWindowError(e.to_string()))?;
 
     Ok(())
 }

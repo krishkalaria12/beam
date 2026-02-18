@@ -1,6 +1,6 @@
-import { Link2, Plus } from "lucide-react";
-
-import { CommandGroup, CommandItem } from "@/components/ui/command";
+import { CommandGroup, CommandItem, CommandShortcut } from "@/components/ui/command";
+import createQuicklinkIcon from "@/assets/icons/create-quicklink.jpeg";
+import listQuicklinksIcon from "@/assets/icons/list-quicklink.png";
 
 interface QuicklinksCommandItemProps {
   onAdd: () => void;
@@ -11,12 +11,24 @@ export function QuicklinksCommandItem({ onAdd, onManage }: QuicklinksCommandItem
   return (
     <CommandGroup>
       <CommandItem value="add quicklink" onSelect={onAdd}>
-        <Plus className="mr-2 size-4" />
+        <img
+          src={createQuicklinkIcon}
+          alt="create quicklink icon"
+          loading="lazy"
+          className="size-6 rounded-sm object-cover"
+        />
         <span>Add Quicklink</span>
+        <CommandShortcut>quicklink</CommandShortcut>
       </CommandItem>
       <CommandItem value="manage quicklinks" onSelect={onManage}>
-        <Link2 className="mr-2 size-4" />
+        <img
+          src={listQuicklinksIcon}
+          alt="manage quicklinks icon"
+          loading="lazy"
+          className="size-6 rounded-sm object-cover"
+        />
         <span>Manage Quicklinks</span>
+        <CommandShortcut>quicklink</CommandShortcut>
       </CommandItem>
     </CommandGroup>
   );

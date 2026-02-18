@@ -34,6 +34,7 @@ pub fn run() {
     let mut builder = tauri::Builder::default()
         .manage(state::AppState::new())
         .plugin(tauri_plugin_store::Builder::new().build())
+        .plugin(tauri_plugin_dialog::init())
         .invoke_handler(app_commands::get_handler());
 
     #[cfg(desktop)]

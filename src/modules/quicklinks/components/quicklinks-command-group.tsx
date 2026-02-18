@@ -1,5 +1,3 @@
-import { useState } from "react";
-
 import { QuicklinksCommandItem } from "./quicklinks-command-item";
 import { QuicklinksView } from "./quicklinks-view";
 

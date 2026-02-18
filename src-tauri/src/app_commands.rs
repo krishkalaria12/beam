@@ -18,6 +18,7 @@ pub fn get_handler() -> impl Fn(Invoke) -> bool {
         dictionary::commands::get_definition,
         quicklinks::create_quicklink,
         quicklinks::delete_quicklink,
+        quicklinks::execute_quicklink,
         quicklinks::get_quicklinks,
         quicklinks::update_quicklink,
         quicklinks::execute_quicklink,

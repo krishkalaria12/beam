@@ -7,9 +7,16 @@ interface FileSearchCommandGroupProps {
   onOpen: (query: string) => void;
   onBack: () => void;
   query?: string;
+  queryOverride?: string;
 }
 
-export default function FileSearchCommandGroup({ isOpen, onOpen, onBack, query }: FileSearchCommandGroupProps) {
+export default function FileSearchCommandGroup({
+  isOpen,
+  onOpen,
+  onBack,
+  query,
+  queryOverride,
+}: FileSearchCommandGroupProps) {
   // If the panel is open, we render the full view which takes over the command list content
   if (isOpen) {
     const trimmedQuery = query?.trim() ?? "";
@@ -27,7 +34,7 @@ export default function FileSearchCommandGroup({ isOpen, onOpen, onBack, query }
   // The FileSearchCommandItem will read the query from cmdk's state
   return (
       <CommandGroup>
-        <FileSearchCommandItem onSelect={onOpen} />
+        <FileSearchCommandItem onSelect={onOpen} queryOverride={queryOverride} />
       </CommandGroup>
   );
 }
