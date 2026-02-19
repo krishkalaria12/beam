@@ -22,15 +22,14 @@ import createQuicklinkIcon from "@/assets/icons/create-quicklink.jpeg";
 import listQuicklinksIcon from "@/assets/icons/list-quicklink.png";
 import systemIcon from "@/assets/icons/system.png";
 import { CommandGroup, CommandItem, CommandShortcut } from "@/components/ui/command";
-import type { CommandDescriptor } from "@/command-registry/types";
 import type { RankedCommand } from "@/command-registry/ranker";
-import type { CommandMode } from "@/command-registry/types";
+import type { CommandDescriptor, CommandMode } from "@/command-registry/types";
 
 type RegistryCommandGroupProps = {
   commands: readonly RankedCommand[];
   query: string;
   mode: CommandMode;
-  onSelect: (command: CommandDescriptor) => void;
+  onSelect: (commandId: string) => void;
 };
 
 function CommandIcon({ command }: { command: CommandDescriptor }) {
@@ -182,7 +181,7 @@ export default function RegistryCommandGroup({
               if (isDisabled) {
                 return;
               }
-              onSelect(command);
+              onSelect(command.id);
             }}
           >
             <CommandIcon command={command} />

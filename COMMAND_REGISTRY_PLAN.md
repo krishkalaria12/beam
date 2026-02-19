@@ -37,11 +37,11 @@ Use this checklist to implement the command registry end-to-end in phases.
 - [x] Non-empty query shows matched commands.
 
 ## Phase 5: Central Dispatcher and Execution
-- [ ] Implement `dispatchCommand(commandId, ctx)` as the only execution gateway.
-- [ ] Route by action type (`OPEN_PANEL`, `INVOKE_TAURI`, `OPEN_APP`, `OPEN_FILE`, `OPEN_URL`, `CUSTOM`).
-- [ ] Add allowlist validation for backend command invocation.
-- [ ] Return structured `DispatchResult` with typed error codes.
-- [ ] Remove direct UI callbacks that bypass dispatcher.
+- [x] Implement `dispatchCommand(commandId, ctx)` as the only execution gateway.
+- [x] Route by action type (`OPEN_PANEL`, `INVOKE_TAURI`, `OPEN_APP`, `OPEN_FILE`, `OPEN_URL`, `CUSTOM`).
+- [x] Add allowlist validation for backend command invocation.
+- [x] Return structured `DispatchResult` with typed error codes.
+- [x] Remove direct UI callbacks that bypass dispatcher.
 
 ## Phase 6: Backend Authority and Safety
 - [ ] Ensure privileged operations remain backend-owned (system, translation/network, file-sensitive actions).

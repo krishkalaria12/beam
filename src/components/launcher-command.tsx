@@ -6,10 +6,10 @@ import { Command, CommandInput, CommandList, CommandSeparator } from "@/componen
 import { cn } from "@/lib/utils";
 import RegistryCommandGroup from "@/command-registry/components/registry-command-group";
 import { buildCommandContext } from "@/command-registry/context";
+import { dispatchCommand } from "@/command-registry/dispatcher";
 import { rankCommands } from "@/command-registry/ranker";
 import { staticCommandRegistry } from "@/command-registry/registry";
 import { resolveStaticCommandCandidates } from "@/command-registry/static-candidates";
-import type { CommandDescriptor } from "@/command-registry/types";
 
 import ApplicationsCommandGroup from "@/modules/applications/components/applications-command-group";
 import CalculatorCommandGroup from "@/modules/calculator/components/calculator-command-group";
@@ -22,13 +22,10 @@ import { useQuicklinks } from "@/modules/quicklinks/hooks/use-quicklinks";
 import QuicklinksCommandGroup from "@/modules/quicklinks/components/quicklinks-command-group";
 import { findQuicklinkByKeyword, executeQuicklink } from "@/modules/quicklinks/api/quicklinks";
 import { QuicklinkPreview } from "@/modules/quicklinks/components/quicklink-preview";
-import { searchWithBrowser } from "@/modules/search/api/search-with-browser";
 import SettingsCommandGroup from "@/modules/settings/components/settings-command-group";
 import { setLauncherCompactMode } from "@/modules/settings/api/set-launcher-compact-mode";
 import { useUiLayout } from "@/modules/settings/hooks/use-ui-layout";
 import SpeedTestCommandGroup from "@/modules/speed-test/components/speed-test-command-group";
-import { executeSystemAction } from "@/modules/system-actions/api/execute-system-action";
-import type { SystemAction } from "@/modules/system-actions/types";
 import TranslationCommandGroup from "@/modules/translation/components/translation-command-group";
 
 export default function LauncherCommand() {
@@ -97,91 +94,23 @@ export default function LauncherCommand() {
     }
   };
 
-  const handleRegistryCommandSelect = async (command: CommandDescriptor) => {
-    const action = command.action;
-    if (!action) {
-      return;
-    }
+  const handleRegistryCommandSelect = async (commandId: string) => {
+    const result = await dispatchCommand(commandId, {
+      query: commandContext.query,
+      mode: commandContext.mode,
+      registry: staticCommandRegistry,
+      runtime: {
+        setActivePanel,
+        setCommandSearch,
+        setQuicklinksView,
+        setFileSearchQuery,
+        setDictionaryQuery,
+        setTranslationQuery,
+      },
+    });
 
-    const payload =
-      action.payload && typeof action.payload === "object"
-        ? action.payload
-        : {};
-
-    if (action.type === "OPEN_PANEL") {
-      const panel = payload.panel;
-      if (typeof panel !== "string") {
-        return;
-      }
-
-      if (panel === "quicklinks") {
-        const view = payload.view;
-        if (view === "create" || view === "manage") {
-          setQuicklinksView(view);
-        }
-      }
-
-      if (panel === "file-search") {
-        setFileSearchQuery(commandContext.query);
-        setActivePanel("file-search");
-        return;
-      }
-
-      if (panel === "dictionary") {
-        setDictionaryQuery(commandContext.query);
-        setActivePanel("dictionary");
-        return;
-      }
-
-      if (panel === "translation") {
-        setTranslationQuery(commandContext.query);
-        setActivePanel("translation");
-        return;
-      }
-
-      if (
-        panel === "commands" ||
-        panel === "clipboard" ||
-        panel === "emoji" ||
-        panel === "settings" ||
-        panel === "calculator-history" ||
-        panel === "quicklinks" ||
-        panel === "speed-test"
-      ) {
-        setActivePanel(panel);
-        setCommandSearch("");
-      }
-
-      return;
-    }
-
-    if (action.type === "INVOKE_TAURI") {
-      const commandName = payload.command;
-      const args = payload.args && typeof payload.args === "object"
-        ? payload.args as Record<string, unknown>
-        : {};
-
-      if (commandName === "execute_system_action") {
-        const systemAction = args.action;
-        if (typeof systemAction === "string") {
-          await executeSystemAction(systemAction as SystemAction);
-        }
-        return;
-      }
-
-      if (commandName === "search_with_browser") {
-        const site = args.site;
-        if (
-          typeof site === "string" &&
-          (site === "google" || site === "duckduckgo") &&
-          commandContext.query.length > 0
-        ) {
-          await searchWithBrowser({
-            site,
-            query: commandContext.query,
-          });
-        }
-      }
+    if (!result.ok) {
+      console.error(`[dispatcher:${result.code}] ${result.message}`);
     }
   };
 
@@ -217,8 +146,8 @@ export default function LauncherCommand() {
           commands={rankedRegistryCommands}
           query={commandContext.query}
           mode={commandContext.mode}
-          onSelect={(command) => {
-            void handleRegistryCommandSelect(command);
+          onSelect={(commandId) => {
+            void handleRegistryCommandSelect(commandId);
           }}
         />
 
