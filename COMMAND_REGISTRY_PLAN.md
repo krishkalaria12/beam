@@ -62,9 +62,9 @@ Use this checklist to implement the command registry end-to-end in phases.
 - [x] Verify behavior parity with current launcher for all existing command families.
 
 ## Phase 9: Extension and Custom Command Path
-- [ ] Define adapter from extension metadata to `CommandDescriptor`.
-- [ ] Implement sandboxed `CUSTOM` action execution path.
-- [ ] Enforce runtime and scope validation before extension command dispatch.
+- [x] Define adapter from extension metadata to `CommandDescriptor`.
+- [x] Implement sandboxed `CUSTOM` action execution path.
+- [x] Enforce runtime and scope validation before extension command dispatch.
 
 ## Phase 10: Cleanup, Performance, and Release
 - [ ] Remove obsolete per-feature listing logic from launcher command code.

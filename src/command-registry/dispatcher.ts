@@ -72,10 +72,7 @@ export interface DispatchRuntime {
   setDictionaryQuery: (query: string) => void;
   setTranslationQuery: (query: string) => void;
   openUrl?: (url: string) => void | Promise<void>;
-  customActionHandler?: (
-    command: CommandDescriptor,
-    context: DispatchContext,
-  ) => Promise<DispatchResult>;
+  customActionHandler?: (request: CustomActionRequest) => Promise<DispatchResult>;
 }
 
 export interface DispatchContext {
@@ -84,6 +81,23 @@ export interface DispatchContext {
   isDesktopRuntime: boolean;
   registry: StaticCommandRegistry;
   runtime: DispatchRuntime;
+}
+
+export interface CustomActionSandboxPolicy {
+  allowOpenUrl: boolean;
+  allowReadQuery: boolean;
+}
+
+export interface CustomActionRequest {
+  command: CommandDescriptor;
+  extensionId: string;
+  extensionCommandId: string;
+  payload: Record<string, unknown>;
+  mode: CommandMode;
+  isDesktopRuntime: boolean;
+  query: string | null;
+  policy: CustomActionSandboxPolicy;
+  openUrl: (url: string) => Promise<DispatchResult>;
 }
 
 function ok(payload?: Record<string, unknown>): DispatchResult {
@@ -135,6 +149,37 @@ function getRecordField(
   }
 
   return value as Record<string, unknown>;
+}
+
+function getBooleanField(
+  payload: Record<string, unknown>,
+  key: string,
+  fallback = false,
+): boolean {
+  const value = payload[key];
+  if (typeof value === "boolean") {
+    return value;
+  }
+
+  return fallback;
+}
+
+function getModeListField(
+  payload: Record<string, unknown>,
+  key: string,
+): CommandMode[] {
+  const value = payload[key];
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .filter((entry): entry is CommandMode =>
+      entry === "normal" ||
+      entry === "compressed" ||
+      entry === "quicklink-trigger" ||
+      entry === "system-trigger")
+    .map((entry) => entry);
 }
 
 export function mapDispatchBackendError(
@@ -399,8 +444,90 @@ async function dispatchCustomAction(
     );
   }
 
+  const payload = toPayloadRecord(command.action?.payload);
+  const extensionId = getStringField(payload, "extensionId");
+  const extensionCommandId = getStringField(payload, "extensionCommandId");
+  const requiresDesktopRuntime = getBooleanField(
+    payload,
+    "requiresDesktopRuntime",
+    false,
+  );
+  const allowedModes = getModeListField(payload, "allowedModes");
+  const sandboxPayload = getRecordField(payload, "sandbox");
+  const policy: CustomActionSandboxPolicy = {
+    allowOpenUrl: getBooleanField(sandboxPayload, "allowOpenUrl", false),
+    allowReadQuery: getBooleanField(sandboxPayload, "allowReadQuery", true),
+  };
+
+  if (!extensionId || !extensionCommandId) {
+    return error(
+      "INVALID_INPUT",
+      "Custom command action is missing extension identifiers.",
+    );
+  }
+
+  if (requiresDesktopRuntime && !context.isDesktopRuntime) {
+    return mapDesktopUnavailable(command.id);
+  }
+
+  if (allowedModes.length > 0 && !allowedModes.includes(context.mode)) {
+    return error(
+      "UNSUPPORTED_SCOPE",
+      `Extension command "${command.id}" is not available in mode "${context.mode}".`,
+    );
+  }
+
+  const openUrl = async (url: string): Promise<DispatchResult> => {
+    if (!policy.allowOpenUrl) {
+      return error(
+        "UNSUPPORTED_ACTION",
+        `Extension command "${command.id}" is not allowed to open URLs.`,
+      );
+    }
+
+    if (typeof url !== "string" || url.trim().length === 0) {
+      return error("INVALID_INPUT", "Custom action URL is missing.");
+    }
+
+    let parsed: URL;
+    try {
+      parsed = new URL(url);
+    } catch {
+      return error("INVALID_INPUT", "Custom action URL is invalid.");
+    }
+
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      return error(
+        "UNSUPPORTED_ACTION",
+        "Custom action URL protocol is not allowed.",
+      );
+    }
+
+    try {
+      if (context.runtime.openUrl) {
+        await context.runtime.openUrl(parsed.toString());
+      } else {
+        window.open(parsed.toString(), "_blank", "noopener,noreferrer");
+      }
+      return ok({ url: parsed.toString() });
+    } catch (err) {
+      const mapped = mapDispatchBackendError(err, "Could not open URL.");
+      return backendError("BACKEND_FAILURE", mapped);
+    }
+  };
+
   try {
-    return await context.runtime.customActionHandler(command, context);
+    return await context.runtime.customActionHandler({
+      command,
+      extensionId,
+      extensionCommandId,
+      payload,
+      mode: context.mode,
+      isDesktopRuntime: context.isDesktopRuntime,
+      query: policy.allowReadQuery ? context.query : null,
+      policy,
+      openUrl,
+    });
   } catch (err) {
     const mapped = mapDispatchBackendError(err, "Custom action failed.");
     return backendError("BACKEND_FAILURE", mapped);
