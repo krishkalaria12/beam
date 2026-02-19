@@ -1,8 +1,15 @@
 import { Search } from "lucide-react";
-import { useEffect, useState } from "react";
+import { isTauri } from "@tauri-apps/api/core";
+import { useEffect, useMemo, useState } from "react";
 
 import { Command, CommandInput, CommandList, CommandSeparator } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
+import RegistryCommandGroup from "@/command-registry/components/registry-command-group";
+import { buildCommandContext } from "@/command-registry/context";
+import { rankCommands } from "@/command-registry/ranker";
+import { staticCommandRegistry } from "@/command-registry/registry";
+import { resolveStaticCommandCandidates } from "@/command-registry/static-candidates";
+import type { CommandDescriptor } from "@/command-registry/types";
 
 import ApplicationsCommandGroup from "@/modules/applications/components/applications-command-group";
 import CalculatorCommandGroup from "@/modules/calculator/components/calculator-command-group";
@@ -15,12 +22,13 @@ import { useQuicklinks } from "@/modules/quicklinks/hooks/use-quicklinks";
 import QuicklinksCommandGroup from "@/modules/quicklinks/components/quicklinks-command-group";
 import { findQuicklinkByKeyword, executeQuicklink } from "@/modules/quicklinks/api/quicklinks";
 import { QuicklinkPreview } from "@/modules/quicklinks/components/quicklink-preview";
-import SearchCommandGroup from "@/modules/search/components/search-command-group";
+import { searchWithBrowser } from "@/modules/search/api/search-with-browser";
 import SettingsCommandGroup from "@/modules/settings/components/settings-command-group";
 import { setLauncherCompactMode } from "@/modules/settings/api/set-launcher-compact-mode";
 import { useUiLayout } from "@/modules/settings/hooks/use-ui-layout";
 import SpeedTestCommandGroup from "@/modules/speed-test/components/speed-test-command-group";
-import SystemActionsCommandGroup from "@/modules/system-actions/components/system-actions-command-group";
+import { executeSystemAction } from "@/modules/system-actions/api/execute-system-action";
+import type { SystemAction } from "@/modules/system-actions/types";
 import TranslationCommandGroup from "@/modules/translation/components/translation-command-group";
 
 export default function LauncherCommand() {
@@ -48,10 +56,32 @@ export default function LauncherCommand() {
   const quicklinkParts = trimmedCommandSearch.slice(1).split(/\s+/).filter(Boolean);
   const quicklinkKeyword = quicklinkParts[0] ?? "";
   const quicklinkQuery = quicklinkParts.slice(1).join(" ");
-  const systemQuery = trimmedCommandSearch.slice(1).trim();
   const matchedQuicklink = quicklinkKeyword
     ? findQuicklinkByKeyword(quicklinks, quicklinkKeyword)
     : undefined;
+
+  const commandContext = useMemo(
+    () =>
+      buildCommandContext({
+        search: commandSearch,
+        isCompressed,
+        activePanel,
+        isDesktopRuntime: isTauri(),
+      }),
+    [commandSearch, isCompressed, activePanel],
+  );
+
+  const rankedRegistryCommands = useMemo(() => {
+    const staticCandidates = resolveStaticCommandCandidates(
+      staticCommandRegistry,
+      commandContext,
+    );
+
+    return rankCommands({
+      commands: staticCandidates,
+      context: commandContext,
+    });
+  }, [commandContext]);
 
   const handleQuicklinkExecute = async (keyword: string = quicklinkKeyword, query: string = quicklinkQuery) => {
     const quicklink = findQuicklinkByKeyword(quicklinks, keyword);
@@ -64,6 +94,94 @@ export default function LauncherCommand() {
       setCommandSearch("");
     } catch (error) {
       console.error("Failed to execute quicklink:", error);
+    }
+  };
+
+  const handleRegistryCommandSelect = async (command: CommandDescriptor) => {
+    const action = command.action;
+    if (!action) {
+      return;
+    }
+
+    const payload =
+      action.payload && typeof action.payload === "object"
+        ? action.payload
+        : {};
+
+    if (action.type === "OPEN_PANEL") {
+      const panel = payload.panel;
+      if (typeof panel !== "string") {
+        return;
+      }
+
+      if (panel === "quicklinks") {
+        const view = payload.view;
+        if (view === "create" || view === "manage") {
+          setQuicklinksView(view);
+        }
+      }
+
+      if (panel === "file-search") {
+        setFileSearchQuery(commandContext.query);
+        setActivePanel("file-search");
+        return;
+      }
+
+      if (panel === "dictionary") {
+        setDictionaryQuery(commandContext.query);
+        setActivePanel("dictionary");
+        return;
+      }
+
+      if (panel === "translation") {
+        setTranslationQuery(commandContext.query);
+        setActivePanel("translation");
+        return;
+      }
+
+      if (
+        panel === "commands" ||
+        panel === "clipboard" ||
+        panel === "emoji" ||
+        panel === "settings" ||
+        panel === "calculator-history" ||
+        panel === "quicklinks" ||
+        panel === "speed-test"
+      ) {
+        setActivePanel(panel);
+        setCommandSearch("");
+      }
+
+      return;
+    }
+
+    if (action.type === "INVOKE_TAURI") {
+      const commandName = payload.command;
+      const args = payload.args && typeof payload.args === "object"
+        ? payload.args as Record<string, unknown>
+        : {};
+
+      if (commandName === "execute_system_action") {
+        const systemAction = args.action;
+        if (typeof systemAction === "string") {
+          await executeSystemAction(systemAction as SystemAction);
+        }
+        return;
+      }
+
+      if (commandName === "search_with_browser") {
+        const site = args.site;
+        if (
+          typeof site === "string" &&
+          (site === "google" || site === "duckduckgo") &&
+          commandContext.query.length > 0
+        ) {
+          await searchWithBrowser({
+            site,
+            query: commandContext.query,
+          });
+        }
+      }
     }
   };
 
@@ -80,212 +198,39 @@ export default function LauncherCommand() {
 
   let commandListContent;
   if (activePanel === "commands") {
-    if (isSystemTrigger) {
-      commandListContent = (
-        <div className="py-1">
-          <SystemActionsCommandGroup queryOverride={systemQuery} showAllWhenEmpty />
-        </div>
-      );
-    } else if (isCompressed) {
-      commandListContent = trimmedCommandSearch.length === 0 ? null : (
-        <div className="py-1">
-          <SettingsCommandGroup
-            isOpen={false}
-            onOpen={() => {
-              setActivePanel("settings");
-              setCommandSearch("");
-            }}
-            onBack={() => {
-              setActivePanel("commands");
-              setCommandSearch("");
-            }}
-          />
-          <CalculatorCommandGroup />
-          <ApplicationsCommandGroup />
-          <SystemActionsCommandGroup />
-          <SpeedTestCommandGroup
-            isOpen={false}
-            onOpen={() => {
-              setActivePanel("speed-test");
-              setCommandSearch("");
-            }}
-            onBack={() => {}} // Not used when closed
-          />
-          <FileSearchCommandGroup
-            isOpen={false}
-            onOpen={(capturedQuery) => {
-              setFileSearchQuery(capturedQuery);
-              setActivePanel("file-search");
-            }}
-            onBack={() => {}} // Not used when closed
-          />
-          <DictionaryCommandGroup
-            isOpen={false}
-            onOpen={(capturedQuery) => {
-              setDictionaryQuery(capturedQuery);
-              setActivePanel("dictionary");
-            }}
-            onBack={() => {}} // Not used when closed
-          />
-          <TranslationCommandGroup
-            isOpen={false}
-            onOpen={(capturedQuery) => {
-              setTranslationQuery(capturedQuery);
-              setActivePanel("translation");
-            }}
-            onBack={() => {}} // Not used when closed
-          />
-          <QuicklinksCommandGroup
-            isOpen={false}
-            view={quicklinksView}
-            setView={setQuicklinksView}
-            onOpen={() => {
-              setActivePanel("quicklinks");
-            }}
-            onBack={() => {}} // Not used when closed
-          />
-          <SearchCommandGroup />
-        </div>
-      );
-    } else if (isQuicklinkTrigger) {
-      commandListContent = (
-        <div className="py-1">
-          <QuicklinkPreview
-            quicklinks={quicklinks}
-            keyword={quicklinkKeyword}
-            query={quicklinkQuery}
-            onExecute={handleQuicklinkExecute}
-            onFill={setCommandSearch}
-          />
-          <CommandSeparator className="my-1 opacity-50" />
-          <FileSearchCommandGroup
-            isOpen={false}
-            queryOverride={quicklinkQuery}
-            onOpen={(capturedQuery) => {
-              setFileSearchQuery(capturedQuery);
-              setActivePanel("file-search");
-            }}
-            onBack={() => {}} // Not used when closed
-          />
-          <SpeedTestCommandGroup
-            isOpen={false}
-            queryOverride={quicklinkQuery}
-            onOpen={() => {
-              setActivePanel("speed-test");
-              setCommandSearch("");
-            }}
-            onBack={() => {}} // Not used when closed
-          />
-          <TranslationCommandGroup
-            isOpen={false}
-            queryOverride={quicklinkQuery}
-            onOpen={(capturedQuery) => {
-              setTranslationQuery(capturedQuery);
-              setActivePanel("translation");
-            }}
-            onBack={() => {}} // Not used when closed
-          />
-          <SearchCommandGroup queryOverride={quicklinkQuery} />
-        </div>
-      );
-    } else {
-        commandListContent = (
-            <div className="py-1">
-              <SettingsCommandGroup
-                isOpen={false}
-                onOpen={() => {
-                  setActivePanel("settings");
-                  setCommandSearch("");
-                }}
-                onBack={() => {
-                  setActivePanel("commands");
-                  setCommandSearch("");
-                }}
-              />
-              <ClipboardCommandGroup
-                isOpen={false}
-                onOpen={() => {
-                  setActivePanel("clipboard");
-                  setCommandSearch("");
-                }}
-                onBack={() => {
-                  setActivePanel("commands");
-                  setCommandSearch("");
-                }}
-              />
-              <CalculatorHistoryCommandGroup
-                isOpen={false}
-                onOpen={() => {
-                  setActivePanel("calculator-history");
-                  setCommandSearch("");
-                }}
-                onBack={() => {
-                  setActivePanel("commands");
-                  setCommandSearch("");
-                }}
-              />
-              <EmojiCommandGroup
-                isOpen={false}
-                onOpen={() => {
-                  setActivePanel("emoji");
-                  setCommandSearch("");
-                }}
-                onBack={() => {
-                  setActivePanel("commands");
-                  setCommandSearch("");
-                }}
-              />
+    commandListContent = (
+      <div className="py-1">
+        {isQuicklinkTrigger ? (
+          <>
+            <QuicklinkPreview
+              quicklinks={quicklinks}
+              keyword={quicklinkKeyword}
+              query={quicklinkQuery}
+              onExecute={handleQuicklinkExecute}
+              onFill={setCommandSearch}
+            />
+            <CommandSeparator className="my-1 opacity-50" />
+          </>
+        ) : null}
 
-              <CommandSeparator className="my-1 opacity-50" />
+        <RegistryCommandGroup
+          commands={rankedRegistryCommands}
+          query={commandContext.query}
+          mode={commandContext.mode}
+          onSelect={(command) => {
+            void handleRegistryCommandSelect(command);
+          }}
+        />
 
-              <CalculatorCommandGroup />
-              <ApplicationsCommandGroup />
-              <SystemActionsCommandGroup />
-              <SpeedTestCommandGroup
-                isOpen={false}
-                onOpen={() => {
-                  setActivePanel("speed-test");
-                  setCommandSearch("");
-                }}
-                onBack={() => {}} // Not used when closed
-              />
-              <FileSearchCommandGroup 
-                isOpen={false}
-                onOpen={(capturedQuery) => {
-                    setFileSearchQuery(capturedQuery);
-                    setActivePanel("file-search");
-                }}
-                onBack={() => {}} // Not used when closed
-              />
-              <DictionaryCommandGroup
-                isOpen={false}
-                onOpen={(capturedQuery) => {
-                    setDictionaryQuery(capturedQuery);
-                    setActivePanel("dictionary");
-                }}
-                onBack={() => {}} // Not used when closed
-              />
-              <TranslationCommandGroup
-                isOpen={false}
-                onOpen={(capturedQuery) => {
-                    setTranslationQuery(capturedQuery);
-                    setActivePanel("translation");
-                }}
-                onBack={() => {}} // Not used when closed
-              />
-              <QuicklinksCommandGroup
-                isOpen={false}
-                view={quicklinksView}
-                setView={setQuicklinksView}
-                onOpen={() => {
-                    setActivePanel("quicklinks");
-                }}
-                onBack={() => {}} // Not used when closed
-              />
-              <SearchCommandGroup />
-            </div>
-        );
-    }
+        {!isSystemTrigger && !isQuicklinkTrigger && trimmedCommandSearch.length > 0 ? (
+          <>
+            <CommandSeparator className="my-1 opacity-50" />
+            <CalculatorCommandGroup />
+            <ApplicationsCommandGroup />
+          </>
+        ) : null}
+      </div>
+    );
   }
 
   const shouldCollapseToInputOnly =

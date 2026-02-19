@@ -23,6 +23,7 @@ const SYSTEM_ACTION_DESCRIPTORS: CommandDescriptor[] = [
     icon: "system",
     kind: "backend-action",
     scope: SCOPE_NORMAL_COMPRESSED_SYSTEM,
+    requiresQuery: true,
     action: {
       type: "INVOKE_TAURI",
       payload: {
@@ -39,6 +40,7 @@ const SYSTEM_ACTION_DESCRIPTORS: CommandDescriptor[] = [
     icon: "system",
     kind: "backend-action",
     scope: SCOPE_NORMAL_COMPRESSED_SYSTEM,
+    requiresQuery: true,
     action: {
       type: "INVOKE_TAURI",
       payload: {
@@ -55,6 +57,7 @@ const SYSTEM_ACTION_DESCRIPTORS: CommandDescriptor[] = [
     icon: "system",
     kind: "backend-action",
     scope: SCOPE_NORMAL_COMPRESSED_SYSTEM,
+    requiresQuery: true,
     action: {
       type: "INVOKE_TAURI",
       payload: {
@@ -71,6 +74,7 @@ const SYSTEM_ACTION_DESCRIPTORS: CommandDescriptor[] = [
     icon: "system",
     kind: "backend-action",
     scope: SCOPE_NORMAL_COMPRESSED_SYSTEM,
+    requiresQuery: true,
     action: {
       type: "INVOKE_TAURI",
       payload: {
@@ -87,6 +91,7 @@ const SYSTEM_ACTION_DESCRIPTORS: CommandDescriptor[] = [
     icon: "system",
     kind: "backend-action",
     scope: SCOPE_NORMAL_COMPRESSED_SYSTEM,
+    requiresQuery: true,
     action: {
       type: "INVOKE_TAURI",
       payload: {
@@ -272,6 +277,7 @@ export const STATIC_COMMANDS: CommandDescriptor[] = [
     icon: "appearance",
     kind: "panel",
     scope: SCOPE_ALL,
+    hidden: true,
     action: {
       type: "OPEN_PANEL",
       payload: { panel: "settings", view: "appearance" },
@@ -285,6 +291,7 @@ export const STATIC_COMMANDS: CommandDescriptor[] = [
     icon: "theme",
     kind: "panel",
     scope: SCOPE_ALL,
+    hidden: true,
     action: {
       type: "OPEN_PANEL",
       payload: { panel: "settings", view: "themes" },
@@ -298,6 +305,7 @@ export const STATIC_COMMANDS: CommandDescriptor[] = [
     icon: "layout",
     kind: "panel",
     scope: SCOPE_ALL,
+    hidden: true,
     action: {
       type: "OPEN_PANEL",
       payload: { panel: "settings", view: "layout" },
@@ -311,6 +319,7 @@ export const STATIC_COMMANDS: CommandDescriptor[] = [
     icon: "back",
     kind: "panel",
     scope: SCOPE_ALL,
+    hidden: true,
     action: {
       type: "OPEN_PANEL",
       payload: { panel: "commands" },
@@ -324,6 +333,7 @@ export const STATIC_COMMANDS: CommandDescriptor[] = [
     icon: "back",
     kind: "panel",
     scope: SCOPE_ALL,
+    hidden: true,
     action: {
       type: "OPEN_PANEL",
       payload: { panel: "settings", view: "main" },
@@ -331,4 +341,3 @@ export const STATIC_COMMANDS: CommandDescriptor[] = [
   },
   ...SYSTEM_ACTION_DESCRIPTORS,
 ];
-

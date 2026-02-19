@@ -35,12 +35,15 @@ export function resolveStaticCommandCandidates(
     .filter((command) => !command.hidden)
     .filter((command) => isScopeMatch(command.scope, context.mode))
     .filter((command) => {
-      if (!command.requiresQuery) {
-        return true;
+      if (
+        command.id.startsWith("system.") &&
+        context.mode !== "system-trigger" &&
+        context.query.length === 0
+      ) {
+        return false;
       }
 
-      return context.query.length > 0;
+      return true;
     })
     .filter((command) => matchesPanelState(command, context));
 }
-

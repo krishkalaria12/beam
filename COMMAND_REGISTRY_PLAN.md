@@ -29,12 +29,12 @@ Use this checklist to implement the command registry end-to-end in phases.
 - [x] Add ranking configuration knobs (weights) in one place.
 
 ## Phase 4: Unified Rendering Layer
-- [ ] Replace per-feature item rendering branches with one normalized command item renderer.
-- [ ] Map descriptor metadata to item UI (title/subtitle/icon/endText/state).
-- [ ] Ensure panel-style and action-style items render consistently.
-- [ ] Verify compressed mode behavior:
-- [ ] Empty query shows input-only window behavior.
-- [ ] Non-empty query shows matched commands.
+- [x] Replace per-feature item rendering branches with one normalized command item renderer.
+- [x] Map descriptor metadata to item UI (title/subtitle/icon/endText/state).
+- [x] Ensure panel-style and action-style items render consistently.
+- [x] Verify compressed mode behavior:
+- [x] Empty query shows input-only window behavior.
+- [x] Non-empty query shows matched commands.
 
 ## Phase 5: Central Dispatcher and Execution
 - [ ] Implement `dispatchCommand(commandId, ctx)` as the only execution gateway.
