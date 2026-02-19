@@ -5,6 +5,7 @@ export * from "@/command-registry/static-registry";
 export * from "@/command-registry/static-commands";
 export * from "@/command-registry/static-candidates";
 export * from "@/command-registry/extension-adapter";
+export * from "@/command-registry/default-providers";
 export * from "@/command-registry/command-preferences";
 export * from "@/command-registry/use-command-preferences";
 export * from "@/command-registry/providers";

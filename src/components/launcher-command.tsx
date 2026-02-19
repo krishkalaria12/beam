@@ -1,24 +1,32 @@
 import { Search } from "lucide-react";
 import { isTauri } from "@tauri-apps/api/core";
 import { useEffect, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { Command, CommandInput, CommandList, CommandSeparator } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import RegistryCommandGroup from "@/command-registry/components/registry-command-group";
 import { buildCommandContext } from "@/command-registry/context";
+import {
+  CALCULATOR_COPY_COMMAND_ID,
+  CALCULATOR_RESULT_COMMAND_ID,
+  createDefaultCommandProviders,
+  INTERNAL_EXTENSION_ID,
+} from "@/command-registry/default-providers";
 import { dispatchCommand } from "@/command-registry/dispatcher";
-import { rankCommands } from "@/command-registry/ranker";
+import { createCommandProviderOrchestrator } from "@/command-registry/providers";
+import type { RankedCommand } from "@/command-registry/ranker";
+import { resolveRankedCommandCandidates } from "@/command-registry/ranked-candidates";
 import { staticCommandRegistry } from "@/command-registry/registry";
-import { resolveStaticCommandCandidates } from "@/command-registry/static-candidates";
 import { useCommandPreferences } from "@/command-registry/use-command-preferences";
 
-import ApplicationsCommandGroup from "@/modules/applications/components/applications-command-group";
-import CalculatorCommandGroup from "@/modules/calculator/components/calculator-command-group";
 import CalculatorHistoryCommandGroup from "@/modules/calculator-history/components/calculator-history-command-group";
+import { saveCalculatorHistory } from "@/modules/calculator-history/api/save-calculator-history";
 import ClipboardCommandGroup from "@/modules/clipboard/components/clipboard-command-group";
 import DictionaryCommandGroup from "@/modules/dictionary/components/dictionary-command-group";
 import EmojiCommandGroup from "@/modules/emoji/components/emoji-command-group";
 import FileSearchCommandGroup from "@/modules/file-search/components/file-search-command-group";
+import { CALCULATOR_AUTO_SAVE_DEBOUNCE_MS } from "@/modules/calculator/constants";
 import { useQuicklinks } from "@/modules/quicklinks/hooks/use-quicklinks";
 import QuicklinksCommandGroup from "@/modules/quicklinks/components/quicklinks-command-group";
 import { findQuicklinkByKeyword, executeQuicklink } from "@/modules/quicklinks/api/quicklinks";
@@ -30,10 +38,13 @@ import SpeedTestCommandGroup from "@/modules/speed-test/components/speed-test-co
 import TranslationCommandGroup from "@/modules/translation/components/translation-command-group";
 
 export default function LauncherCommand() {
+  const queryClient = useQueryClient();
   const [commandSearch, setCommandSearch] = useState("");
   const [fileSearchQuery, setFileSearchQuery] = useState("");
   const [dictionaryQuery, setDictionaryQuery] = useState("");
   const [translationQuery, setTranslationQuery] = useState("");
+  const [calculatorSessionId, setCalculatorSessionId] = useState(() => crypto.randomUUID());
+  const [rankedRegistryCommands, setRankedRegistryCommands] = useState<RankedCommand[]>([]);
   const [activePanel, setActivePanel] = useState<"commands" | "clipboard" | "emoji" | "settings" | "calculator-history" | "file-search" | "dictionary" | "quicklinks" | "speed-test" | "translation">("commands");
   const isClipboardPanelOpen = activePanel === "clipboard";
   const isEmojiPanelOpen = activePanel === "emoji";
@@ -51,13 +62,19 @@ export default function LauncherCommand() {
   const { rankingSignals, hiddenCommandIds, markUsed } = useCommandPreferences();
   const trimmedCommandSearch = commandSearch.trim();
   const isQuicklinkTrigger = trimmedCommandSearch.startsWith("!");
-  const isSystemTrigger = trimmedCommandSearch.startsWith("$");
   const quicklinkParts = trimmedCommandSearch.slice(1).split(/\s+/).filter(Boolean);
   const quicklinkKeyword = quicklinkParts[0] ?? "";
   const quicklinkQuery = quicklinkParts.slice(1).join(" ");
   const matchedQuicklink = quicklinkKeyword
     ? findQuicklinkByKeyword(quicklinks, quicklinkKeyword)
     : undefined;
+  const providerOrchestrator = useMemo(
+    () =>
+      createCommandProviderOrchestrator({
+        providers: createDefaultCommandProviders(),
+      }),
+    [],
+  );
 
   const commandContext = useMemo(
     () =>
@@ -70,18 +87,99 @@ export default function LauncherCommand() {
     [commandSearch, isCompressed, activePanel],
   );
 
-  const rankedRegistryCommands = useMemo(() => {
-    const staticCandidates = resolveStaticCommandCandidates(
-      staticCommandRegistry,
-      commandContext,
-    ).filter((command) => !hiddenCommandIds.has(command.id));
+  useEffect(() => {
+    let cancelled = false;
 
-    return rankCommands({
-      commands: staticCandidates,
+    void resolveRankedCommandCandidates({
       context: commandContext,
+      registry: staticCommandRegistry,
+      providers: providerOrchestrator,
       signals: rankingSignals,
-    });
-  }, [commandContext, hiddenCommandIds, rankingSignals]);
+    })
+      .then((result) => {
+        if (cancelled) {
+          return;
+        }
+
+        if (result.providerErrors.length > 0) {
+          for (const providerError of result.providerErrors) {
+            console.error(`[provider:${providerError.providerId}] ${providerError.message}`);
+          }
+        }
+
+        setRankedRegistryCommands(
+          result.rankedCommands.filter((entry) => !hiddenCommandIds.has(entry.command.id)),
+        );
+      })
+      .catch((error) => {
+        if (cancelled) {
+          return;
+        }
+        console.error("Failed to resolve registry commands:", error);
+        setRankedRegistryCommands([]);
+      });
+
+    return () => {
+      cancelled = true;
+      providerOrchestrator.cancel();
+    };
+  }, [
+    commandContext,
+    hiddenCommandIds,
+    providerOrchestrator,
+    rankingSignals,
+  ]);
+
+  useEffect(() => {
+    if (trimmedCommandSearch.length === 0) {
+      setCalculatorSessionId(crypto.randomUUID());
+    }
+  }, [trimmedCommandSearch]);
+
+  const calculatorPreview = useMemo(() => {
+    const calculatorCommand = rankedRegistryCommands.find(
+      (entry) => entry.command.id === CALCULATOR_RESULT_COMMAND_ID,
+    )?.command;
+
+    const payload = calculatorCommand?.action?.payload;
+    const query = typeof payload?.calculatorQuery === "string"
+      ? payload.calculatorQuery.trim()
+      : "";
+    const result = typeof payload?.calculatorResult === "string"
+      ? payload.calculatorResult.trim()
+      : "";
+
+    if (!query || !result) {
+      return null;
+    }
+
+    return { query, result };
+  }, [rankedRegistryCommands]);
+
+  useEffect(() => {
+    if (!calculatorPreview) {
+      return;
+    }
+
+    const timerId = window.setTimeout(() => {
+      void saveCalculatorHistory(
+        calculatorPreview.query,
+        calculatorPreview.result,
+        calculatorSessionId,
+      ).then(() => {
+        queryClient.invalidateQueries({ queryKey: ["calculator", "history"] });
+      });
+    }, CALCULATOR_AUTO_SAVE_DEBOUNCE_MS);
+
+    return () => {
+      window.clearTimeout(timerId);
+    };
+  }, [
+    calculatorPreview?.query,
+    calculatorPreview?.result,
+    calculatorSessionId,
+    queryClient,
+  ]);
 
   const handleQuicklinkExecute = async (keyword: string = quicklinkKeyword, query: string = quicklinkQuery) => {
     const quicklink = findQuicklinkByKeyword(quicklinks, keyword);
@@ -110,6 +208,51 @@ export default function LauncherCommand() {
         setFileSearchQuery,
         setDictionaryQuery,
         setTranslationQuery,
+        customActionHandler: async (request) => {
+          if (
+            request.extensionId !== INTERNAL_EXTENSION_ID ||
+            request.extensionCommandId !== CALCULATOR_COPY_COMMAND_ID
+          ) {
+            return {
+              ok: false,
+              code: "UNSUPPORTED_ACTION",
+              message: "Unsupported custom command action.",
+            };
+          }
+
+          const calculatorQuery = typeof request.payload.calculatorQuery === "string"
+            ? request.payload.calculatorQuery.trim()
+            : "";
+          const calculatorResult = typeof request.payload.calculatorResult === "string"
+            ? request.payload.calculatorResult.trim()
+            : "";
+
+          if (!calculatorQuery || !calculatorResult) {
+            return {
+              ok: false,
+              code: "INVALID_INPUT",
+              message: "Calculator command payload is missing query or result.",
+            };
+          }
+
+          try {
+            await navigator.clipboard.writeText(calculatorResult);
+            await saveCalculatorHistory(
+              calculatorQuery,
+              calculatorResult,
+              calculatorSessionId,
+            );
+            queryClient.invalidateQueries({ queryKey: ["calculator", "history"] });
+            return { ok: true, payload: { copied: calculatorResult } };
+          } catch (error) {
+            console.error("Failed to execute calculator custom command:", error);
+            return {
+              ok: false,
+              code: "BACKEND_FAILURE",
+              message: "Could not copy calculator result.",
+            };
+          }
+        },
       },
     });
 
@@ -157,14 +300,6 @@ export default function LauncherCommand() {
             void handleRegistryCommandSelect(commandId);
           }}
         />
-
-        {!isSystemTrigger && !isQuicklinkTrigger && trimmedCommandSearch.length > 0 ? (
-          <>
-            <CommandSeparator className="my-1 opacity-50" />
-            <CalculatorCommandGroup />
-            <ApplicationsCommandGroup />
-          </>
-        ) : null}
       </div>
     );
   }

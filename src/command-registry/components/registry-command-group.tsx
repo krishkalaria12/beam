@@ -34,6 +34,12 @@ type RegistryCommandGroupProps = {
 
 function CommandIcon({ command }: { command: CommandDescriptor }) {
   const iconClassName = "size-6 rounded-sm object-cover";
+  if (command.icon?.startsWith("app-icon:")) {
+    const src = command.icon.slice("app-icon:".length).trim();
+    if (src.length > 0) {
+      return <img src={src} alt="" className={iconClassName} loading="lazy" />;
+    }
+  }
 
   if (command.icon === "settings") {
     return <img src={settingsIcon} alt="" className={iconClassName} loading="lazy" />;

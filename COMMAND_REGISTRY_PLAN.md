@@ -67,7 +67,7 @@ Use this checklist to implement the command registry end-to-end in phases.
 - [x] Enforce runtime and scope validation before extension command dispatch.
 
 ## Phase 10: Cleanup, Performance, and Release
-- [ ] Remove obsolete per-feature listing logic from launcher command code.
+- [x] Remove obsolete per-feature listing logic from launcher command code.
 - [ ] Add profiling and confirm slow providers do not block fast providers.
 - [ ] Verify deterministic ranking under repeated identical inputs.
 - [ ] Finalize observability (errors, provider timing, dispatch failures).
