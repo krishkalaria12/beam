@@ -21,12 +21,14 @@ import { setLauncherCompactMode } from "@/modules/settings/api/set-launcher-comp
 import { useUiLayout } from "@/modules/settings/hooks/use-ui-layout";
 import SpeedTestCommandGroup from "@/modules/speed-test/components/speed-test-command-group";
 import SystemActionsCommandGroup from "@/modules/system-actions/components/system-actions-command-group";
+import TranslationCommandGroup from "@/modules/translation/components/translation-command-group";
 
 export default function LauncherCommand() {
   const [commandSearch, setCommandSearch] = useState("");
   const [fileSearchQuery, setFileSearchQuery] = useState("");
   const [dictionaryQuery, setDictionaryQuery] = useState("");
-  const [activePanel, setActivePanel] = useState<"commands" | "clipboard" | "emoji" | "settings" | "calculator-history" | "file-search" | "dictionary" | "quicklinks" | "speed-test">("commands");
+  const [translationQuery, setTranslationQuery] = useState("");
+  const [activePanel, setActivePanel] = useState<"commands" | "clipboard" | "emoji" | "settings" | "calculator-history" | "file-search" | "dictionary" | "quicklinks" | "speed-test" | "translation">("commands");
   const isClipboardPanelOpen = activePanel === "clipboard";
   const isEmojiPanelOpen = activePanel === "emoji";
   const isSettingsPanelOpen = activePanel === "settings";
@@ -35,6 +37,7 @@ export default function LauncherCommand() {
   const isDictionaryPanelOpen = activePanel === "dictionary";
   const isQuicklinksPanelOpen = activePanel === "quicklinks";
   const isSpeedTestPanelOpen = activePanel === "speed-test";
+  const isTranslationPanelOpen = activePanel === "translation";
   const [quicklinksView, setQuicklinksView] = useState<"create" | "manage">("manage");
 
   const { data: quicklinks = [] } = useQuicklinks();
@@ -124,6 +127,14 @@ export default function LauncherCommand() {
             }}
             onBack={() => {}} // Not used when closed
           />
+          <TranslationCommandGroup
+            isOpen={false}
+            onOpen={(capturedQuery) => {
+              setTranslationQuery(capturedQuery);
+              setActivePanel("translation");
+            }}
+            onBack={() => {}} // Not used when closed
+          />
           <QuicklinksCommandGroup
             isOpen={false}
             view={quicklinksView}
@@ -162,6 +173,15 @@ export default function LauncherCommand() {
             onOpen={() => {
               setActivePanel("speed-test");
               setCommandSearch("");
+            }}
+            onBack={() => {}} // Not used when closed
+          />
+          <TranslationCommandGroup
+            isOpen={false}
+            queryOverride={quicklinkQuery}
+            onOpen={(capturedQuery) => {
+              setTranslationQuery(capturedQuery);
+              setActivePanel("translation");
             }}
             onBack={() => {}} // Not used when closed
           />
@@ -245,6 +265,14 @@ export default function LauncherCommand() {
                 }}
                 onBack={() => {}} // Not used when closed
               />
+              <TranslationCommandGroup
+                isOpen={false}
+                onOpen={(capturedQuery) => {
+                    setTranslationQuery(capturedQuery);
+                    setActivePanel("translation");
+                }}
+                onBack={() => {}} // Not used when closed
+              />
               <QuicklinksCommandGroup
                 isOpen={false}
                 view={quicklinksView}
@@ -272,6 +300,7 @@ export default function LauncherCommand() {
     !isDictionaryPanelOpen &&
     !isQuicklinksPanelOpen &&
     !isSpeedTestPanelOpen &&
+    !isTranslationPanelOpen &&
     !isClipboardPanelOpen;
 
   useEffect(() => {
@@ -306,7 +335,7 @@ export default function LauncherCommand() {
         onKeyDown={handleKeyDown}
         className="h-full w-full overflow-hidden bg-transparent"
       >
-        {!isEmojiPanelOpen && !isFileSearchPanelOpen && !isDictionaryPanelOpen && !isQuicklinksPanelOpen && !isSpeedTestPanelOpen && !isClipboardPanelOpen && (
+        {!isEmojiPanelOpen && !isFileSearchPanelOpen && !isDictionaryPanelOpen && !isQuicklinksPanelOpen && !isSpeedTestPanelOpen && !isTranslationPanelOpen && !isClipboardPanelOpen && (
           <CommandInput
             value={commandSearch}
             onValueChange={setCommandSearch}
@@ -337,6 +366,19 @@ export default function LauncherCommand() {
               onOpen={(capturedQuery) => {
                 setDictionaryQuery(capturedQuery);
                 setActivePanel("dictionary");
+              }}
+              onBack={() => {
+                setActivePanel("commands");
+                setCommandSearch("");
+              }}
+            />
+        ) : isTranslationPanelOpen ? (
+           <TranslationCommandGroup
+              isOpen
+              query={translationQuery}
+              onOpen={(capturedQuery) => {
+                setTranslationQuery(capturedQuery);
+                setActivePanel("translation");
               }}
               onBack={() => {
                 setActivePanel("commands");
