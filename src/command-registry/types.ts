@@ -58,10 +58,40 @@ export type CommandPanel =
   | "translation";
 
 export interface CommandContext {
+  rawQuery: string;
   query: string;
+  quicklinkKeyword: string;
   mode: CommandMode;
   activePanel: CommandPanel;
   isDesktopRuntime: boolean;
+}
+
+export interface BuildCommandContextInput {
+  search: string;
+  isCompressed: boolean;
+  activePanel: CommandPanel;
+  isDesktopRuntime: boolean;
+}
+
+export interface ProviderResolveInput {
+  context: CommandContext;
+  signal: AbortSignal;
+}
+
+export interface CommandProvider {
+  id: string;
+  scope?: readonly CommandMode[];
+  provide(input: ProviderResolveInput): Promise<readonly CommandDescriptor[]>;
+}
+
+export interface CommandProviderError {
+  providerId: string;
+  message: string;
+}
+
+export interface CommandProviderResolution {
+  commands: CommandDescriptor[];
+  errors: CommandProviderError[];
 }
 
 export interface CommandValidationError {

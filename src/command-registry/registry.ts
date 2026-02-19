@@ -1,6 +1,6 @@
 import { STATIC_COMMANDS } from "@/command-registry/static-commands";
 import {
-  createStaticCommandRegistry as createStaticCommandRegistryStore,
+  createStaticCommandRegistryStore,
   type StaticCommandRegistry,
 } from "@/command-registry/static-registry";
 

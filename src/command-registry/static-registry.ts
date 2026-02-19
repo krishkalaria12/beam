@@ -55,7 +55,7 @@ function createCommandRegistryValidationError(
   return error;
 }
 
-export function createStaticCommandRegistry(
+export function createStaticCommandRegistryStore(
   initialCommands: CommandDescriptor[] = [],
 ): StaticCommandRegistry {
   const byId = new Map<string, CommandDescriptor>();

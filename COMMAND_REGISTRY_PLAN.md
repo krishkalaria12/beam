@@ -16,11 +16,11 @@ Use this checklist to implement the command registry end-to-end in phases.
 - [x] Add descriptor validation (required fields, duplicate IDs, invalid scope/kind).
 
 ## Phase 2: Context Resolution Pipeline
-- [ ] Implement `CommandContext` builder from launcher state.
-- [ ] Implement candidate resolution from static registry + scope filters.
-- [ ] Implement dynamic provider interface returning normalized `CommandDescriptor` items.
-- [ ] Add provider orchestration with debounce + cancellation.
-- [ ] Ensure provider failures degrade gracefully (no launcher crash).
+- [x] Implement `CommandContext` builder from launcher state.
+- [x] Implement candidate resolution from static registry + scope filters.
+- [x] Implement dynamic provider interface returning normalized `CommandDescriptor` items.
+- [x] Add provider orchestration with debounce + cancellation.
+- [x] Ensure provider failures degrade gracefully (no launcher crash).
 
 ## Phase 3: Match, Score, and Rank
 - [ ] Implement matching logic for title + keywords + aliases.
