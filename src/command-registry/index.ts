@@ -11,6 +11,7 @@ export * from "@/command-registry/use-command-preferences";
 export * from "@/command-registry/providers";
 export * from "@/command-registry/candidates";
 export * from "@/command-registry/dispatcher";
+export * from "@/command-registry/telemetry";
 export * from "@/command-registry/ranking-config";
 export * from "@/command-registry/matcher";
 export * from "@/command-registry/ranker";

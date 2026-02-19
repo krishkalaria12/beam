@@ -89,9 +89,24 @@ export interface CommandProviderError {
   message: string;
 }
 
+export type CommandProviderStatus =
+  | "success"
+  | "error"
+  | "aborted"
+  | "skipped";
+
+export interface CommandProviderTelemetry {
+  providerId: string;
+  status: CommandProviderStatus;
+  durationMs: number;
+  commandCount: number;
+  errorCount: number;
+}
+
 export interface CommandProviderResolution {
   commands: CommandDescriptor[];
   errors: CommandProviderError[];
+  telemetry?: CommandProviderTelemetry[];
 }
 
 export interface CommandValidationError {

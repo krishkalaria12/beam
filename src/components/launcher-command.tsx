@@ -16,8 +16,11 @@ import {
 import { dispatchCommand } from "@/command-registry/dispatcher";
 import { createCommandProviderOrchestrator } from "@/command-registry/providers";
 import type { RankedCommand } from "@/command-registry/ranker";
-import { resolveRankedCommandCandidates } from "@/command-registry/ranked-candidates";
+import { rankCommands } from "@/command-registry/ranker";
 import { staticCommandRegistry } from "@/command-registry/registry";
+import { resolveStaticCommandCandidates } from "@/command-registry/static-candidates";
+import { logDispatchFailure, logProviderResolution } from "@/command-registry/telemetry";
+import type { CommandProviderResolution } from "@/command-registry/types";
 import { useCommandPreferences } from "@/command-registry/use-command-preferences";
 
 import CalculatorHistoryCommandGroup from "@/modules/calculator-history/components/calculator-history-command-group";
@@ -89,27 +92,51 @@ export default function LauncherCommand() {
 
   useEffect(() => {
     let cancelled = false;
+    const staticCandidates = resolveStaticCommandCandidates(
+      staticCommandRegistry,
+      commandContext,
+    );
 
-    void resolveRankedCommandCandidates({
-      context: commandContext,
-      registry: staticCommandRegistry,
-      providers: providerOrchestrator,
-      signals: rankingSignals,
-    })
+    const applyRankedCommands = (dynamicResolution: CommandProviderResolution) => {
+      if (cancelled) {
+        return;
+      }
+
+      const dynamicCommands = dynamicResolution.commands.filter((command) =>
+        command.scope.includes("all") || command.scope.includes(commandContext.mode),
+      );
+      const visibleCommands = [...staticCandidates, ...dynamicCommands].filter(
+        (command) => !hiddenCommandIds.has(command.id),
+      );
+      const ranked = rankCommands({
+        commands: visibleCommands,
+        context: commandContext,
+        signals: rankingSignals,
+      });
+      setRankedRegistryCommands(ranked);
+    };
+
+    applyRankedCommands({
+      commands: [],
+      errors: [],
+      telemetry: [],
+    });
+
+    void providerOrchestrator
+      .resolveIncremental(commandContext, (partialResolution) => {
+        applyRankedCommands(partialResolution);
+      })
       .then((result) => {
         if (cancelled) {
           return;
         }
 
-        if (result.providerErrors.length > 0) {
-          for (const providerError of result.providerErrors) {
-            console.error(`[provider:${providerError.providerId}] ${providerError.message}`);
-          }
-        }
-
-        setRankedRegistryCommands(
-          result.rankedCommands.filter((entry) => !hiddenCommandIds.has(entry.command.id)),
-        );
+        applyRankedCommands(result);
+        logProviderResolution(result, {
+          mode: commandContext.mode,
+          activePanel: commandContext.activePanel,
+          query: commandContext.query,
+        });
       })
       .catch((error) => {
         if (cancelled) {
@@ -257,7 +284,11 @@ export default function LauncherCommand() {
     });
 
     if (!result.ok) {
-      console.error(`[dispatcher:${result.code}] ${result.message}`);
+      logDispatchFailure(commandId, result, {
+        mode: commandContext.mode,
+        activePanel: commandContext.activePanel,
+        query: commandContext.query,
+      });
       return;
     }
 

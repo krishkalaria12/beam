@@ -3,6 +3,7 @@ import type {
   CommandDescriptor,
   CommandProvider,
   CommandProviderError,
+  CommandProviderTelemetry,
   CommandProviderResolution,
 } from "@/command-registry/types";
 import debounce from "@/lib/debounce";
@@ -10,6 +11,10 @@ import { validateCommandDescriptors } from "@/command-registry/validation";
 
 export interface CommandProviderOrchestrator {
   resolve(context: CommandContext): Promise<CommandProviderResolution>;
+  resolveIncremental(
+    context: CommandContext,
+    onProgress?: (result: CommandProviderResolution) => void,
+  ): Promise<CommandProviderResolution>;
   cancel(): void;
   setProviders(providers: readonly CommandProvider[]): void;
 }
@@ -24,6 +29,25 @@ function toProviderError(providerId: string, message: string): CommandProviderEr
     providerId,
     message,
   };
+}
+
+function toEmptyResolution(): CommandProviderResolution {
+  return {
+    commands: [],
+    errors: [],
+    telemetry: [],
+  };
+}
+
+function nowMs(): number {
+  if (
+    typeof globalThis.performance !== "undefined" &&
+    typeof globalThis.performance.now === "function"
+  ) {
+    return globalThis.performance.now();
+  }
+
+  return Date.now();
 }
 
 function shouldRunProvider(provider: CommandProvider, context: CommandContext): boolean {
@@ -46,40 +70,108 @@ function isAbortError(error: unknown): boolean {
   return false;
 }
 
+interface ProviderResolutionOutcome {
+  commands: CommandDescriptor[];
+  errors: CommandProviderError[];
+  telemetry: CommandProviderTelemetry;
+}
+
+function createTelemetry(params: {
+  providerId: string;
+  status: CommandProviderTelemetry["status"];
+  startedAt: number;
+  commandCount: number;
+  errorCount: number;
+}): CommandProviderTelemetry {
+  return {
+    providerId: params.providerId,
+    status: params.status,
+    durationMs: Math.max(0, nowMs() - params.startedAt),
+    commandCount: params.commandCount,
+    errorCount: params.errorCount,
+  };
+}
+
 async function resolveProvider(
   provider: CommandProvider,
   context: CommandContext,
   signal: AbortSignal,
-): Promise<CommandProviderResolution> {
+): Promise<ProviderResolutionOutcome> {
+  const startedAt = nowMs();
   if (!shouldRunProvider(provider, context)) {
-    return { commands: [], errors: [] };
+    return {
+      commands: [],
+      errors: [],
+      telemetry: createTelemetry({
+        providerId: provider.id,
+        status: "skipped",
+        startedAt,
+        commandCount: 0,
+        errorCount: 0,
+      }),
+    };
   }
 
   try {
     const provided = await provider.provide({ context, signal });
     if (signal.aborted) {
-      return { commands: [], errors: [] };
+      return {
+        commands: [],
+        errors: [],
+        telemetry: createTelemetry({
+          providerId: provider.id,
+          status: "aborted",
+          startedAt,
+          commandCount: 0,
+          errorCount: 0,
+        }),
+      };
     }
 
     const descriptors = [...provided] as CommandDescriptor[];
     const validationErrors = validateCommandDescriptors(descriptors);
 
     if (validationErrors.length > 0) {
+      const errors = validationErrors.map((entry) =>
+        toProviderError(provider.id, entry.message),
+      );
       return {
         commands: [],
-        errors: validationErrors.map((entry) =>
-          toProviderError(provider.id, entry.message),
-        ),
+        errors,
+        telemetry: createTelemetry({
+          providerId: provider.id,
+          status: "error",
+          startedAt,
+          commandCount: 0,
+          errorCount: errors.length,
+        }),
       };
     }
 
     return {
       commands: descriptors,
       errors: [],
+      telemetry: createTelemetry({
+        providerId: provider.id,
+        status: "success",
+        startedAt,
+        commandCount: descriptors.length,
+        errorCount: 0,
+      }),
     };
   } catch (error) {
     if (isAbortError(error)) {
-      return { commands: [], errors: [] };
+      return {
+        commands: [],
+        errors: [],
+        telemetry: createTelemetry({
+          providerId: provider.id,
+          status: "aborted",
+          startedAt,
+          commandCount: 0,
+          errorCount: 0,
+        }),
+      };
     }
 
     const message =
@@ -87,9 +179,17 @@ async function resolveProvider(
         ? error.message
         : "Provider failed to resolve commands.";
 
+    const errors = [toProviderError(provider.id, message)];
     return {
       commands: [],
-      errors: [toProviderError(provider.id, message)],
+      errors,
+      telemetry: createTelemetry({
+        providerId: provider.id,
+        status: "error",
+        startedAt,
+        commandCount: 0,
+        errorCount: errors.length,
+      }),
     };
   }
 }
@@ -119,18 +219,43 @@ export function createCommandProviderOrchestrator(
     context: CommandContext,
     targetRunId: number,
     resolvePromise: (result: CommandProviderResolution) => void,
+    onProgress?: (result: CommandProviderResolution) => void,
   ) => {
     if (runId !== targetRunId) {
-      resolvePendingIfCurrent(resolvePromise, { commands: [], errors: [] });
+      resolvePendingIfCurrent(resolvePromise, toEmptyResolution());
       return;
     }
 
     const controller = new AbortController();
     currentController = controller;
+    const aggregatedCommands: CommandDescriptor[] = [];
+    const aggregatedErrors: CommandProviderError[] = [];
+    const aggregatedTelemetry: CommandProviderTelemetry[] = [];
 
-    const results = await Promise.all(
+    const emitProgress = () => {
+      if (!onProgress) {
+        return;
+      }
+
+      onProgress({
+        commands: [...aggregatedCommands],
+        errors: [...aggregatedErrors],
+        telemetry: [...aggregatedTelemetry],
+      });
+    };
+
+    await Promise.all(
       providers.map((provider) =>
-        resolveProvider(provider, context, controller.signal),
+        resolveProvider(provider, context, controller.signal).then((result) => {
+          if (runId !== targetRunId || controller.signal.aborted) {
+            return;
+          }
+
+          aggregatedCommands.push(...result.commands);
+          aggregatedErrors.push(...result.errors);
+          aggregatedTelemetry.push(result.telemetry);
+          emitProgress();
+        }),
       ),
     );
 
@@ -139,13 +264,15 @@ export function createCommandProviderOrchestrator(
     }
 
     if (runId !== targetRunId || controller.signal.aborted) {
-      resolvePendingIfCurrent(resolvePromise, { commands: [], errors: [] });
+      resolvePendingIfCurrent(resolvePromise, toEmptyResolution());
       return;
     }
 
-    const commands = results.flatMap((result) => result.commands);
-    const errors = results.flatMap((result) => result.errors);
-    resolvePendingIfCurrent(resolvePromise, { commands, errors });
+    resolvePendingIfCurrent(resolvePromise, {
+      commands: aggregatedCommands,
+      errors: aggregatedErrors,
+      telemetry: aggregatedTelemetry,
+    });
   };
 
   const scheduleResolution = debounce(
@@ -153,8 +280,9 @@ export function createCommandProviderOrchestrator(
       context: CommandContext,
       targetRunId: number,
       resolvePromise: (result: CommandProviderResolution) => void,
+      onProgress?: (result: CommandProviderResolution) => void,
     ) => {
-      void runResolution(context, targetRunId, resolvePromise);
+      void runResolution(context, targetRunId, resolvePromise, onProgress);
     },
     debounceMs,
   );
@@ -169,7 +297,7 @@ export function createCommandProviderOrchestrator(
     }
 
     if (pendingResolve) {
-      pendingResolve({ commands: [], errors: [] });
+      pendingResolve(toEmptyResolution());
       pendingResolve = null;
     }
   };
@@ -178,17 +306,24 @@ export function createCommandProviderOrchestrator(
     providers = [...nextProviders];
   };
 
-  const resolve = (context: CommandContext): Promise<CommandProviderResolution> =>
+  const resolveIncremental = (
+    context: CommandContext,
+    onProgress?: (result: CommandProviderResolution) => void,
+  ): Promise<CommandProviderResolution> =>
     new Promise((resolvePromise) => {
       const targetRunId = runId + 1;
       cancel();
       runId = targetRunId;
       pendingResolve = resolvePromise;
-      scheduleResolution(context, targetRunId, resolvePromise);
+      scheduleResolution(context, targetRunId, resolvePromise, onProgress);
     });
+
+  const resolve = (context: CommandContext): Promise<CommandProviderResolution> =>
+    resolveIncremental(context);
 
   return {
     resolve,
+    resolveIncremental,
     cancel,
     setProviders,
   };

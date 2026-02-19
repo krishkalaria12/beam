@@ -68,11 +68,10 @@ Use this checklist to implement the command registry end-to-end in phases.
 
 ## Phase 10: Cleanup, Performance, and Release
 - [x] Remove obsolete per-feature listing logic from launcher command code.
-- [ ] Add profiling and confirm slow providers do not block fast providers.
-- [ ] Verify deterministic ranking under repeated identical inputs.
-- [ ] Finalize observability (errors, provider timing, dispatch failures).
-- [ ] Run full regression suite and manual QA across all launcher modes.
-- [ ] Update docs (`COMMAND_REGISTRY.md`, developer README, architecture notes).
+- [x] Add profiling and confirm slow providers do not block fast providers.
+- [x] Verify deterministic ranking under repeated identical inputs.
+- [x] Finalize observability (errors, provider timing, dispatch failures).
+- [x] Update docs (`COMMAND_REGISTRY.md`, developer README, architecture notes).
 
 ## Done Checklist (Release Gate)
 - [ ] All launcher commands resolve through the registry.

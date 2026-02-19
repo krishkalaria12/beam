@@ -127,9 +127,10 @@ Dynamic providers return descriptors in the same shape.
 
 ## 2. Input Change
 - Build `CommandContext` from launcher state
-- Query registry for candidate commands
+- Query static registry for candidate commands immediately
 - Apply scope/mode filters
 - Run provider lookups for dynamic results
+- Merge provider snapshots incrementally so fast providers render before slow providers finish
 
 ## 3. Match + Score
 - Keyword/title match
@@ -189,6 +190,28 @@ No command executes directly from raw UI callback without passing dispatcher val
 
 ---
 
+## Dynamic Provider Orchestration
+
+Dynamic command providers run through a debounced orchestrator with cancellation, incremental updates, and timing telemetry.
+
+```ts
+resolveIncremental(
+  context: CommandContext,
+  onProgress?: (result: CommandProviderResolution) => void,
+): Promise<CommandProviderResolution>
+```
+
+`CommandProviderResolution` includes:
+- `commands`: merged dynamic descriptors
+- `errors`: provider-level failures
+- `telemetry`: per-provider timing/status metadata (`success`, `error`, `aborted`, `skipped`)
+
+This makes the launcher responsive under mixed provider latency:
+- fast provider results appear without waiting for slow providers
+- slow providers are still measured and logged for profiling
+
+---
+
 ## Backend Authority
 
 Privileged actions stay backend-owned:
@@ -244,7 +267,7 @@ This keeps native + extension commands unified in search, ranking, hotkeys, and 
 
 - Command-level typed errors (`UNSUPPORTED_SCOPE`, `INVALID_INPUT`, `BACKEND_FAILURE`, etc.)
 - User-facing message stays concise
-- Logs keep technical detail
+- Logs keep technical detail (provider timing/errors and dispatcher failure context)
 - Registry never crashes UI on provider failure; provider errors degrade gracefully
 
 ---
