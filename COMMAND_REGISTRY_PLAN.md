@@ -10,10 +10,10 @@ Use this checklist to implement the command registry end-to-end in phases.
 - [x] Write migration notes to avoid behavior regressions during refactor.
 
 ## Phase 1: Core Types and Static Registry
-- [ ] Add `CommandScope`, `CommandKind`, `CommandDescriptor`, and context types in a central module.
-- [ ] Implement static registry store for command descriptors.
-- [ ] Register all static commands with stable IDs and metadata.
-- [ ] Add descriptor validation (required fields, duplicate IDs, invalid scope/kind).
+- [x] Add `CommandScope`, `CommandKind`, `CommandDescriptor`, and context types in a central module.
+- [x] Implement static registry store for command descriptors.
+- [x] Register all static commands with stable IDs and metadata.
+- [x] Add descriptor validation (required fields, duplicate IDs, invalid scope/kind).
 
 ## Phase 2: Context Resolution Pipeline
 - [ ] Implement `CommandContext` builder from launcher state.
