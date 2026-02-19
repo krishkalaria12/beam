@@ -1,17 +1,12 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { isTauri } from "@tauri-apps/api/core";
-import { Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
-import RegistryCommandGroup from "@/command-registry/components/registry-command-group";
 import { buildCommandContext } from "@/command-registry/context";
 import {
-  CALCULATOR_COPY_COMMAND_ID,
   CALCULATOR_RESULT_COMMAND_ID,
   createDefaultCommandProviders,
   createQuicklinkExecuteCommandDescriptor,
-  INTERNAL_EXTENSION_ID,
-  QUICKLINK_EXECUTE_COMMAND_ID,
   toQuicklinkExecuteCommandId,
 } from "@/command-registry/default-providers";
 import { dispatchCommand } from "@/command-registry/dispatcher";
@@ -24,29 +19,25 @@ import { createStaticCommandRegistryStore } from "@/command-registry/static-regi
 import { logDispatchFailure, logProviderResolution } from "@/command-registry/telemetry";
 import type { CommandDescriptor, CommandProviderResolution } from "@/command-registry/types";
 import { useCommandPreferences } from "@/command-registry/use-command-preferences";
-import { Command, CommandInput, CommandList, CommandSeparator } from "@/components/ui/command";
+import { Command, CommandInput, CommandList } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 
 import { saveCalculatorHistory } from "@/modules/calculator-history/api/save-calculator-history";
-import CalculatorHistoryCommandGroup from "@/modules/calculator-history/components/calculator-history-command-group";
 import { CALCULATOR_AUTO_SAVE_DEBOUNCE_MS } from "@/modules/calculator/constants";
-import ClipboardCommandGroup from "@/modules/clipboard/components/clipboard-command-group";
-import DictionaryCommandGroup from "@/modules/dictionary/components/dictionary-command-group";
-import EmojiCommandGroup from "@/modules/emoji/components/emoji-command-group";
-import FileSearchCommandGroup from "@/modules/file-search/components/file-search-command-group";
-import { executeQuicklink, findQuicklinkByKeyword } from "@/modules/quicklinks/api/quicklinks";
-import { QuicklinkPreview } from "@/modules/quicklinks/components/quicklink-preview";
-import QuicklinksCommandGroup from "@/modules/quicklinks/components/quicklinks-command-group";
+import { LauncherCommandModeContent } from "@/modules/launcher/components/launcher-command-mode-content";
+import { LauncherFooter } from "@/modules/launcher/components/launcher-footer";
+import { LauncherSecondaryPanel } from "@/modules/launcher/components/launcher-secondary-panel";
+import { LauncherTakeoverPanel } from "@/modules/launcher/components/launcher-takeover-panel";
+import { createCustomActionHandler } from "@/modules/launcher/lib/create-custom-action-handler";
+import { findQuicklinkByKeyword } from "@/modules/quicklinks/api/quicklinks";
 import { useQuicklinks } from "@/modules/quicklinks/hooks/use-quicklinks";
 import { setLauncherCompactMode } from "@/modules/settings/api/set-launcher-compact-mode";
-import SettingsCommandGroup from "@/modules/settings/components/settings-command-group";
 import { useUiLayout } from "@/modules/settings/hooks/use-ui-layout";
-import SpeedTestCommandGroup from "@/modules/speed-test/components/speed-test-command-group";
-import TranslationCommandGroup from "@/modules/translation/components/translation-command-group";
 import {
   isLauncherCommandListExpandedPanel,
   isLauncherFooterHidden,
   isLauncherInputHidden,
+  isLauncherTakeoverPanel,
   useLauncherUiStore,
 } from "@/store/use-launcher-ui-store";
 
@@ -205,6 +196,18 @@ export default function LauncherCommand() {
     };
   }, [calculatorPreview?.query, calculatorPreview?.result, calculatorSessionId, queryClient]);
 
+  const customActionHandler = useMemo(
+    () =>
+      createCustomActionHandler({
+        calculatorSessionId,
+        setCommandSearch,
+        onCalculatorHistoryChanged: () => {
+          void queryClient.invalidateQueries({ queryKey: ["calculator", "history"] });
+        },
+      }),
+    [calculatorSessionId, queryClient, setCommandSearch],
+  );
+
   const handleRegistryCommandSelect = async (
     commandId: string,
     fallbackCommand?: CommandDescriptor,
@@ -230,82 +233,7 @@ export default function LauncherCommand() {
         setFileSearchQuery,
         setDictionaryQuery,
         setTranslationQuery,
-        customActionHandler: async (request) => {
-          if (request.extensionId !== INTERNAL_EXTENSION_ID) {
-            return {
-              ok: false,
-              code: "UNSUPPORTED_ACTION",
-              message: "Unsupported custom command action.",
-            };
-          }
-
-          if (request.extensionCommandId === CALCULATOR_COPY_COMMAND_ID) {
-            const calculatorQuery =
-              typeof request.payload.calculatorQuery === "string"
-                ? request.payload.calculatorQuery.trim()
-                : "";
-            const calculatorResult =
-              typeof request.payload.calculatorResult === "string"
-                ? request.payload.calculatorResult.trim()
-                : "";
-
-            if (!calculatorQuery || !calculatorResult) {
-              return {
-                ok: false,
-                code: "INVALID_INPUT",
-                message: "Calculator command payload is missing query or result.",
-              };
-            }
-
-            try {
-              await navigator.clipboard.writeText(calculatorResult);
-              await saveCalculatorHistory(calculatorQuery, calculatorResult, calculatorSessionId);
-              queryClient.invalidateQueries({ queryKey: ["calculator", "history"] });
-              return { ok: true, payload: { copied: calculatorResult } };
-            } catch (error) {
-              console.error("Failed to execute calculator custom command:", error);
-              return {
-                ok: false,
-                code: "BACKEND_FAILURE",
-                message: "Could not copy calculator result.",
-              };
-            }
-          }
-
-          if (request.extensionCommandId === QUICKLINK_EXECUTE_COMMAND_ID) {
-            const quicklinkKeywordFromPayload =
-              typeof request.payload.quicklinkKeyword === "string"
-                ? request.payload.quicklinkKeyword.trim()
-                : "";
-            const executionQuery = request.query?.trim() ?? "";
-            if (!quicklinkKeywordFromPayload) {
-              return {
-                ok: false,
-                code: "INVALID_INPUT",
-                message: "Quicklink command payload is missing keyword.",
-              };
-            }
-
-            try {
-              await executeQuicklink(quicklinkKeywordFromPayload, executionQuery);
-              setCommandSearch("");
-              return { ok: true, payload: { keyword: quicklinkKeywordFromPayload } };
-            } catch (error) {
-              console.error("Failed to execute quicklink custom command:", error);
-              return {
-                ok: false,
-                code: "BACKEND_FAILURE",
-                message: "Could not execute quicklink.",
-              };
-            }
-          }
-
-          return {
-            ok: false,
-            code: "UNSUPPORTED_ACTION",
-            message: "Unsupported custom command action.",
-          };
-        },
+        customActionHandler,
       },
     });
 
@@ -353,38 +281,10 @@ export default function LauncherCommand() {
     }
   };
 
-  let commandListContent;
-  if (activePanel === "commands") {
-    commandListContent = (
-      <div className="py-1">
-        {isQuicklinkTrigger ? (
-          <>
-            <QuicklinkPreview
-              quicklinks={quicklinks}
-              keyword={quicklinkKeyword}
-              query={quicklinkQuery}
-              onExecute={handleQuicklinkExecute}
-              onFill={setCommandSearch}
-            />
-            <CommandSeparator className="my-1 opacity-50" />
-          </>
-        ) : null}
-
-        <RegistryCommandGroup
-          commands={rankedRegistryCommands}
-          query={commandContext.query}
-          mode={commandContext.mode}
-          onSelect={(commandId) => {
-            void handleRegistryCommandSelect(commandId);
-          }}
-        />
-      </div>
-    );
-  }
-
   const shouldCollapseToInputOnly =
     activePanel === "commands" && isCompressed && trimmedCommandSearch.length === 0;
   const isInputHidden = isLauncherInputHidden(activePanel);
+  const hasTakeoverPanel = isLauncherTakeoverPanel(activePanel);
   const isCommandListExpandedPanel = isLauncherCommandListExpandedPanel(activePanel);
 
   const shouldShowFooter = !shouldCollapseToInputOnly && !isLauncherFooterHidden(activePanel);
@@ -414,94 +314,6 @@ export default function LauncherCommand() {
     };
   }, [shouldCollapseToInputOnly]);
 
-  const takeoverPanelContent = useMemo(() => {
-    if (activePanel === "file-search") {
-      return (
-        <FileSearchCommandGroup
-          isOpen
-          query={fileSearchQuery}
-          onOpen={(capturedQuery) => {
-            openFileSearch(capturedQuery);
-          }}
-          onBack={backToCommands}
-        />
-      );
-    }
-    if (activePanel === "dictionary") {
-      return (
-        <DictionaryCommandGroup
-          isOpen
-          query={dictionaryQuery}
-          onOpen={(capturedQuery) => {
-            openDictionary(capturedQuery);
-          }}
-          onBack={backToCommands}
-        />
-      );
-    }
-    if (activePanel === "translation") {
-      return (
-        <TranslationCommandGroup
-          isOpen
-          query={translationQuery}
-          onOpen={(capturedQuery) => {
-            openTranslation(capturedQuery);
-          }}
-          onBack={backToCommands}
-        />
-      );
-    }
-    if (activePanel === "quicklinks") {
-      return (
-        <QuicklinksCommandGroup
-          isOpen
-          view={quicklinksView}
-          setView={setQuicklinksView}
-          onOpen={() => {
-            openPanel("quicklinks");
-          }}
-          onBack={backToCommands}
-        />
-      );
-    }
-    if (activePanel === "speed-test") {
-      return (
-        <SpeedTestCommandGroup
-          isOpen
-          onOpen={() => {
-            openPanel("speed-test", true);
-          }}
-          onBack={backToCommands}
-        />
-      );
-    }
-    if (activePanel === "clipboard") {
-      return (
-        <ClipboardCommandGroup
-          isOpen
-          onOpen={() => {
-            openPanel("clipboard", true);
-          }}
-          onBack={backToCommands}
-        />
-      );
-    }
-
-    return null;
-  }, [
-    activePanel,
-    backToCommands,
-    dictionaryQuery,
-    fileSearchQuery,
-    openDictionary,
-    openFileSearch,
-    openPanel,
-    openTranslation,
-    quicklinksView,
-    setQuicklinksView,
-    translationQuery,
-  ]);
-
   return (
     <div className="relative h-full w-full bg-background">
       <Command
@@ -520,9 +332,31 @@ export default function LauncherCommand() {
 
         {/* If File Search or Dictionary is open, it takes over the view entirely */}
 
-        {takeoverPanelContent ? (
-          takeoverPanelContent
-        ) : shouldCollapseToInputOnly ? null : (
+        {hasTakeoverPanel && (
+          <LauncherTakeoverPanel
+            activePanel={activePanel}
+            fileSearchQuery={fileSearchQuery}
+            dictionaryQuery={dictionaryQuery}
+            translationQuery={translationQuery}
+            quicklinksView={quicklinksView}
+            setQuicklinksView={setQuicklinksView}
+            openFileSearch={openFileSearch}
+            openDictionary={openDictionary}
+            openTranslation={openTranslation}
+            openQuicklinks={() => {
+              openPanel("quicklinks");
+            }}
+            openSpeedTest={() => {
+              openPanel("speed-test", true);
+            }}
+            openClipboard={() => {
+              openPanel("clipboard", true);
+            }}
+            backToCommands={backToCommands}
+          />
+        )}
+
+        {hasTakeoverPanel || shouldCollapseToInputOnly ? null : (
           <CommandList
             className={cn(
               "flex-1 px-1 transition-all duration-300",
@@ -531,63 +365,41 @@ export default function LauncherCommand() {
                 : "max-h-none overflow-y-auto",
             )}
           >
-            {commandListContent}
-
-            {activePanel === "calculator-history" && (
-              <CalculatorHistoryCommandGroup
-                isOpen
-                onOpen={() => {
-                  openPanel("calculator-history", true);
+            {activePanel === "commands" ? (
+              <LauncherCommandModeContent
+                isQuicklinkTrigger={isQuicklinkTrigger}
+                quicklinks={quicklinks}
+                quicklinkKeyword={quicklinkKeyword}
+                quicklinkQuery={quicklinkQuery}
+                rankedRegistryCommands={rankedRegistryCommands}
+                commandContext={commandContext}
+                onQuicklinkExecute={(keyword, query) => {
+                  void handleQuicklinkExecute(keyword, query);
                 }}
-                onBack={backToCommands}
-              />
-            )}
-
-            {activePanel === "emoji" && (
-              <EmojiCommandGroup
-                isOpen
-                onOpen={() => {
-                  openPanel("emoji", true);
+                onQuicklinkFill={setCommandSearch}
+                onRegistryCommandSelect={(commandId) => {
+                  void handleRegistryCommandSelect(commandId);
                 }}
-                onBack={backToCommands}
               />
-            )}
+            ) : null}
 
-            {activePanel === "settings" && (
-              <SettingsCommandGroup
-                isOpen
-                onOpen={() => {
-                  openPanel("settings", true);
-                }}
-                onBack={backToCommands}
-              />
-            )}
+            <LauncherSecondaryPanel
+              activePanel={activePanel}
+              onOpenCalculatorHistory={() => {
+                openPanel("calculator-history", true);
+              }}
+              onOpenEmoji={() => {
+                openPanel("emoji", true);
+              }}
+              onOpenSettings={() => {
+                openPanel("settings", true);
+              }}
+              onBack={backToCommands}
+            />
           </CommandList>
         )}
 
-        {shouldShowFooter && (
-          <div className="flex h-9 items-center justify-between border-t border-border/40 px-4 text-[10px] font-medium uppercase tracking-widest text-muted-foreground/60">
-            <div className="flex items-center gap-2">
-              <Search className="size-3" />
-              <span>Beam</span>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1">
-                <kbd className="rounded border border-border/60 bg-muted/30 px-1 py-0.5 font-mono text-[9px] text-foreground/70">
-                  ENTER
-                </kbd>
-                <span>Open</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <kbd className="rounded border border-border/60 bg-muted/30 px-1 py-0.5 font-mono text-[9px] text-foreground/70">
-                  ESC
-                </kbd>
-                <span>Back</span>
-              </div>
-            </div>
-          </div>
-        )}
+        {shouldShowFooter && <LauncherFooter />}
       </Command>
     </div>
   );

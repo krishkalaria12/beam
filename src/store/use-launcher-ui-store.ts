@@ -91,6 +91,10 @@ export function isLauncherFooterHidden(panel: CommandPanel): boolean {
   return FOOTER_HIDDEN_PANELS.has(panel);
 }
 
+export function isLauncherTakeoverPanel(panel: CommandPanel): boolean {
+  return TAKEOVER_PANELS.has(panel);
+}
+
 export function isLauncherCommandListExpandedPanel(panel: CommandPanel): boolean {
   return panel === "emoji";
 }
