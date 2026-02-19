@@ -10,6 +10,7 @@ import { dispatchCommand } from "@/command-registry/dispatcher";
 import { rankCommands } from "@/command-registry/ranker";
 import { staticCommandRegistry } from "@/command-registry/registry";
 import { resolveStaticCommandCandidates } from "@/command-registry/static-candidates";
+import { useCommandPreferences } from "@/command-registry/use-command-preferences";
 
 import ApplicationsCommandGroup from "@/modules/applications/components/applications-command-group";
 import CalculatorCommandGroup from "@/modules/calculator/components/calculator-command-group";
@@ -47,6 +48,7 @@ export default function LauncherCommand() {
 
   const { data: quicklinks = [] } = useQuicklinks();
   const { isCompressed } = useUiLayout();
+  const { rankingSignals, hiddenCommandIds, markUsed } = useCommandPreferences();
   const trimmedCommandSearch = commandSearch.trim();
   const isQuicklinkTrigger = trimmedCommandSearch.startsWith("!");
   const isSystemTrigger = trimmedCommandSearch.startsWith("$");
@@ -72,13 +74,14 @@ export default function LauncherCommand() {
     const staticCandidates = resolveStaticCommandCandidates(
       staticCommandRegistry,
       commandContext,
-    );
+    ).filter((command) => !hiddenCommandIds.has(command.id));
 
     return rankCommands({
       commands: staticCandidates,
       context: commandContext,
+      signals: rankingSignals,
     });
-  }, [commandContext]);
+  }, [commandContext, hiddenCommandIds, rankingSignals]);
 
   const handleQuicklinkExecute = async (keyword: string = quicklinkKeyword, query: string = quicklinkQuery) => {
     const quicklink = findQuicklinkByKeyword(quicklinks, keyword);
@@ -112,7 +115,10 @@ export default function LauncherCommand() {
 
     if (!result.ok) {
       console.error(`[dispatcher:${result.code}] ${result.message}`);
+      return;
     }
+
+    markUsed(commandId);
   };
 
   const handleKeyDown = async (e: React.KeyboardEvent) => {

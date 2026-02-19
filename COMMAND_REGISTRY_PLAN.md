@@ -49,12 +49,11 @@ Use this checklist to implement the command registry end-to-end in phases.
 - [x] Define typed backend error mapping to user-facing errors.
 
 ## Phase 7: Persistence and Personalization
-- [ ] Add persistence keyed by `commandId` for usage count and last-used timestamp.
-- [ ] Add favorite/pin and hidden state persistence.
-- [ ] Add custom aliases persistence and merge into matcher.
-- [ ] Add hotkey map persistence (`shortcut -> commandId`).
-- [ ] Add migration for legacy state formats if needed.
-- [ ] Add persistence tests for read/write + backward compatibility.
+- [x] Add persistence keyed by `commandId` for usage count and last-used timestamp.
+- [x] Add favorite/pin and hidden state persistence.
+- [x] Add custom aliases persistence and merge into matcher.
+- [x] Add hotkey map persistence (`shortcut -> commandId`).
+- [x] Add migration for legacy state formats if needed.
 
 ## Phase 8: Trigger and Mode Completeness
 - [ ] Validate `!` trigger limits to quicklink-related and allowed commands only.
