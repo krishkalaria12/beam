@@ -1,17 +1,15 @@
-import { Search } from "lucide-react";
-import { isTauri } from "@tauri-apps/api/core";
-import { useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { isTauri } from "@tauri-apps/api/core";
+import { Search } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 
-import { Command, CommandInput, CommandList, CommandSeparator } from "@/components/ui/command";
-import { cn } from "@/lib/utils";
 import RegistryCommandGroup from "@/command-registry/components/registry-command-group";
 import { buildCommandContext } from "@/command-registry/context";
 import {
   CALCULATOR_COPY_COMMAND_ID,
   CALCULATOR_RESULT_COMMAND_ID,
-  createQuicklinkExecuteCommandDescriptor,
   createDefaultCommandProviders,
+  createQuicklinkExecuteCommandDescriptor,
   INTERNAL_EXTENSION_ID,
   QUICKLINK_EXECUTE_COMMAND_ID,
   toQuicklinkExecuteCommandId,
@@ -21,48 +19,58 @@ import { createCommandProviderOrchestrator } from "@/command-registry/providers"
 import type { RankedCommand } from "@/command-registry/ranker";
 import { rankCommands } from "@/command-registry/ranker";
 import { staticCommandRegistry } from "@/command-registry/registry";
-import { createStaticCommandRegistryStore } from "@/command-registry/static-registry";
 import { resolveStaticCommandCandidates } from "@/command-registry/static-candidates";
+import { createStaticCommandRegistryStore } from "@/command-registry/static-registry";
 import { logDispatchFailure, logProviderResolution } from "@/command-registry/telemetry";
 import type { CommandDescriptor, CommandProviderResolution } from "@/command-registry/types";
 import { useCommandPreferences } from "@/command-registry/use-command-preferences";
+import { Command, CommandInput, CommandList, CommandSeparator } from "@/components/ui/command";
+import { cn } from "@/lib/utils";
 
-import CalculatorHistoryCommandGroup from "@/modules/calculator-history/components/calculator-history-command-group";
 import { saveCalculatorHistory } from "@/modules/calculator-history/api/save-calculator-history";
+import CalculatorHistoryCommandGroup from "@/modules/calculator-history/components/calculator-history-command-group";
+import { CALCULATOR_AUTO_SAVE_DEBOUNCE_MS } from "@/modules/calculator/constants";
 import ClipboardCommandGroup from "@/modules/clipboard/components/clipboard-command-group";
 import DictionaryCommandGroup from "@/modules/dictionary/components/dictionary-command-group";
 import EmojiCommandGroup from "@/modules/emoji/components/emoji-command-group";
 import FileSearchCommandGroup from "@/modules/file-search/components/file-search-command-group";
-import { CALCULATOR_AUTO_SAVE_DEBOUNCE_MS } from "@/modules/calculator/constants";
-import { useQuicklinks } from "@/modules/quicklinks/hooks/use-quicklinks";
-import QuicklinksCommandGroup from "@/modules/quicklinks/components/quicklinks-command-group";
 import { executeQuicklink, findQuicklinkByKeyword } from "@/modules/quicklinks/api/quicklinks";
 import { QuicklinkPreview } from "@/modules/quicklinks/components/quicklink-preview";
-import SettingsCommandGroup from "@/modules/settings/components/settings-command-group";
+import QuicklinksCommandGroup from "@/modules/quicklinks/components/quicklinks-command-group";
+import { useQuicklinks } from "@/modules/quicklinks/hooks/use-quicklinks";
 import { setLauncherCompactMode } from "@/modules/settings/api/set-launcher-compact-mode";
+import SettingsCommandGroup from "@/modules/settings/components/settings-command-group";
 import { useUiLayout } from "@/modules/settings/hooks/use-ui-layout";
 import SpeedTestCommandGroup from "@/modules/speed-test/components/speed-test-command-group";
 import TranslationCommandGroup from "@/modules/translation/components/translation-command-group";
+import {
+  isLauncherCommandListExpandedPanel,
+  isLauncherFooterHidden,
+  isLauncherInputHidden,
+  useLauncherUiStore,
+} from "@/store/use-launcher-ui-store";
 
 export default function LauncherCommand() {
   const queryClient = useQueryClient();
-  const [commandSearch, setCommandSearch] = useState("");
-  const [fileSearchQuery, setFileSearchQuery] = useState("");
-  const [dictionaryQuery, setDictionaryQuery] = useState("");
-  const [translationQuery, setTranslationQuery] = useState("");
   const [calculatorSessionId, setCalculatorSessionId] = useState(() => crypto.randomUUID());
   const [rankedRegistryCommands, setRankedRegistryCommands] = useState<RankedCommand[]>([]);
-  const [activePanel, setActivePanel] = useState<"commands" | "clipboard" | "emoji" | "settings" | "calculator-history" | "file-search" | "dictionary" | "quicklinks" | "speed-test" | "translation">("commands");
-  const isClipboardPanelOpen = activePanel === "clipboard";
-  const isEmojiPanelOpen = activePanel === "emoji";
-  const isSettingsPanelOpen = activePanel === "settings";
-  const isCalculatorHistoryPanelOpen = activePanel === "calculator-history";
-  const isFileSearchPanelOpen = activePanel === "file-search";
-  const isDictionaryPanelOpen = activePanel === "dictionary";
-  const isQuicklinksPanelOpen = activePanel === "quicklinks";
-  const isSpeedTestPanelOpen = activePanel === "speed-test";
-  const isTranslationPanelOpen = activePanel === "translation";
-  const [quicklinksView, setQuicklinksView] = useState<"create" | "manage">("manage");
+  const commandSearch = useLauncherUiStore((state) => state.commandSearch);
+  const activePanel = useLauncherUiStore((state) => state.activePanel);
+  const fileSearchQuery = useLauncherUiStore((state) => state.fileSearchQuery);
+  const dictionaryQuery = useLauncherUiStore((state) => state.dictionaryQuery);
+  const translationQuery = useLauncherUiStore((state) => state.translationQuery);
+  const quicklinksView = useLauncherUiStore((state) => state.quicklinksView);
+  const setCommandSearch = useLauncherUiStore((state) => state.setCommandSearch);
+  const setActivePanel = useLauncherUiStore((state) => state.setActivePanel);
+  const setFileSearchQuery = useLauncherUiStore((state) => state.setFileSearchQuery);
+  const setDictionaryQuery = useLauncherUiStore((state) => state.setDictionaryQuery);
+  const setTranslationQuery = useLauncherUiStore((state) => state.setTranslationQuery);
+  const setQuicklinksView = useLauncherUiStore((state) => state.setQuicklinksView);
+  const openPanel = useLauncherUiStore((state) => state.openPanel);
+  const openFileSearch = useLauncherUiStore((state) => state.openFileSearch);
+  const openDictionary = useLauncherUiStore((state) => state.openDictionary);
+  const openTranslation = useLauncherUiStore((state) => state.openTranslation);
+  const backToCommands = useLauncherUiStore((state) => state.backToCommands);
 
   const { data: quicklinks = [] } = useQuicklinks();
   const { isCompressed } = useUiLayout();
@@ -96,18 +104,15 @@ export default function LauncherCommand() {
 
   useEffect(() => {
     let cancelled = false;
-    const staticCandidates = resolveStaticCommandCandidates(
-      staticCommandRegistry,
-      commandContext,
-    );
+    const staticCandidates = resolveStaticCommandCandidates(staticCommandRegistry, commandContext);
 
     const applyRankedCommands = (dynamicResolution: CommandProviderResolution) => {
       if (cancelled) {
         return;
       }
 
-      const dynamicCommands = dynamicResolution.commands.filter((command) =>
-        command.scope.includes("all") || command.scope.includes(commandContext.mode),
+      const dynamicCommands = dynamicResolution.commands.filter(
+        (command) => command.scope.includes("all") || command.scope.includes(commandContext.mode),
       );
       const visibleCommands = [...staticCandidates, ...dynamicCommands].filter(
         (command) => !hiddenCommandIds.has(command.id),
@@ -154,12 +159,7 @@ export default function LauncherCommand() {
       cancelled = true;
       providerOrchestrator.cancel();
     };
-  }, [
-    commandContext,
-    hiddenCommandIds,
-    providerOrchestrator,
-    rankingSignals,
-  ]);
+  }, [commandContext, hiddenCommandIds, providerOrchestrator, rankingSignals]);
 
   useEffect(() => {
     if (trimmedCommandSearch.length === 0) {
@@ -173,12 +173,10 @@ export default function LauncherCommand() {
     )?.command;
 
     const payload = calculatorCommand?.action?.payload;
-    const query = typeof payload?.calculatorQuery === "string"
-      ? payload.calculatorQuery.trim()
-      : "";
-    const result = typeof payload?.calculatorResult === "string"
-      ? payload.calculatorResult.trim()
-      : "";
+    const query =
+      typeof payload?.calculatorQuery === "string" ? payload.calculatorQuery.trim() : "";
+    const result =
+      typeof payload?.calculatorResult === "string" ? payload.calculatorResult.trim() : "";
 
     if (!query || !result) {
       return null;
@@ -205,12 +203,7 @@ export default function LauncherCommand() {
     return () => {
       window.clearTimeout(timerId);
     };
-  }, [
-    calculatorPreview?.query,
-    calculatorPreview?.result,
-    calculatorSessionId,
-    queryClient,
-  ]);
+  }, [calculatorPreview?.query, calculatorPreview?.result, calculatorSessionId, queryClient]);
 
   const handleRegistryCommandSelect = async (
     commandId: string,
@@ -222,8 +215,8 @@ export default function LauncherCommand() {
     const registry = staticCommandRegistry.has(commandId)
       ? staticCommandRegistry
       : selectedDynamicCommand
-      ? createStaticCommandRegistryStore([selectedDynamicCommand])
-      : staticCommandRegistry;
+        ? createStaticCommandRegistryStore([selectedDynamicCommand])
+        : staticCommandRegistry;
 
     const result = await dispatchCommand(commandId, {
       query: commandContext.query,
@@ -247,12 +240,14 @@ export default function LauncherCommand() {
           }
 
           if (request.extensionCommandId === CALCULATOR_COPY_COMMAND_ID) {
-            const calculatorQuery = typeof request.payload.calculatorQuery === "string"
-              ? request.payload.calculatorQuery.trim()
-              : "";
-            const calculatorResult = typeof request.payload.calculatorResult === "string"
-              ? request.payload.calculatorResult.trim()
-              : "";
+            const calculatorQuery =
+              typeof request.payload.calculatorQuery === "string"
+                ? request.payload.calculatorQuery.trim()
+                : "";
+            const calculatorResult =
+              typeof request.payload.calculatorResult === "string"
+                ? request.payload.calculatorResult.trim()
+                : "";
 
             if (!calculatorQuery || !calculatorResult) {
               return {
@@ -264,11 +259,7 @@ export default function LauncherCommand() {
 
             try {
               await navigator.clipboard.writeText(calculatorResult);
-              await saveCalculatorHistory(
-                calculatorQuery,
-                calculatorResult,
-                calculatorSessionId,
-              );
+              await saveCalculatorHistory(calculatorQuery, calculatorResult, calculatorSessionId);
               queryClient.invalidateQueries({ queryKey: ["calculator", "history"] });
               return { ok: true, payload: { copied: calculatorResult } };
             } catch (error) {
@@ -392,19 +383,11 @@ export default function LauncherCommand() {
   }
 
   const shouldCollapseToInputOnly =
-    activePanel === "commands" &&
-    isCompressed &&
-    trimmedCommandSearch.length === 0;
+    activePanel === "commands" && isCompressed && trimmedCommandSearch.length === 0;
+  const isInputHidden = isLauncherInputHidden(activePanel);
+  const isCommandListExpandedPanel = isLauncherCommandListExpandedPanel(activePanel);
 
-  const shouldShowFooter =
-    !shouldCollapseToInputOnly &&
-    !isEmojiPanelOpen &&
-    !isFileSearchPanelOpen &&
-    !isDictionaryPanelOpen &&
-    !isQuicklinksPanelOpen &&
-    !isSpeedTestPanelOpen &&
-    !isTranslationPanelOpen &&
-    !isClipboardPanelOpen;
+  const shouldShowFooter = !shouldCollapseToInputOnly && !isLauncherFooterHidden(activePanel);
 
   useEffect(() => {
     const syncWindowSize = async () => {
@@ -431,6 +414,94 @@ export default function LauncherCommand() {
     };
   }, [shouldCollapseToInputOnly]);
 
+  const takeoverPanelContent = useMemo(() => {
+    if (activePanel === "file-search") {
+      return (
+        <FileSearchCommandGroup
+          isOpen
+          query={fileSearchQuery}
+          onOpen={(capturedQuery) => {
+            openFileSearch(capturedQuery);
+          }}
+          onBack={backToCommands}
+        />
+      );
+    }
+    if (activePanel === "dictionary") {
+      return (
+        <DictionaryCommandGroup
+          isOpen
+          query={dictionaryQuery}
+          onOpen={(capturedQuery) => {
+            openDictionary(capturedQuery);
+          }}
+          onBack={backToCommands}
+        />
+      );
+    }
+    if (activePanel === "translation") {
+      return (
+        <TranslationCommandGroup
+          isOpen
+          query={translationQuery}
+          onOpen={(capturedQuery) => {
+            openTranslation(capturedQuery);
+          }}
+          onBack={backToCommands}
+        />
+      );
+    }
+    if (activePanel === "quicklinks") {
+      return (
+        <QuicklinksCommandGroup
+          isOpen
+          view={quicklinksView}
+          setView={setQuicklinksView}
+          onOpen={() => {
+            openPanel("quicklinks");
+          }}
+          onBack={backToCommands}
+        />
+      );
+    }
+    if (activePanel === "speed-test") {
+      return (
+        <SpeedTestCommandGroup
+          isOpen
+          onOpen={() => {
+            openPanel("speed-test", true);
+          }}
+          onBack={backToCommands}
+        />
+      );
+    }
+    if (activePanel === "clipboard") {
+      return (
+        <ClipboardCommandGroup
+          isOpen
+          onOpen={() => {
+            openPanel("clipboard", true);
+          }}
+          onBack={backToCommands}
+        />
+      );
+    }
+
+    return null;
+  }, [
+    activePanel,
+    backToCommands,
+    dictionaryQuery,
+    fileSearchQuery,
+    openDictionary,
+    openFileSearch,
+    openPanel,
+    openTranslation,
+    quicklinksView,
+    setQuicklinksView,
+    translationQuery,
+  ]);
+
   return (
     <div className="relative h-full w-full bg-background">
       <Command
@@ -438,7 +509,7 @@ export default function LauncherCommand() {
         onKeyDown={handleKeyDown}
         className="h-full w-full overflow-hidden bg-transparent"
       >
-        {!isEmojiPanelOpen && !isFileSearchPanelOpen && !isDictionaryPanelOpen && !isQuicklinksPanelOpen && !isSpeedTestPanelOpen && !isTranslationPanelOpen && !isClipboardPanelOpen && (
+        {!isInputHidden && (
           <CommandInput
             value={commandSearch}
             onValueChange={setCommandSearch}
@@ -448,134 +519,50 @@ export default function LauncherCommand() {
         )}
 
         {/* If File Search or Dictionary is open, it takes over the view entirely */}
-        
-        {isFileSearchPanelOpen ? (
-           <FileSearchCommandGroup
-              isOpen
-              query={fileSearchQuery}
-              onOpen={(capturedQuery) => {
-                setFileSearchQuery(capturedQuery);
-                setActivePanel("file-search");
-              }}
-              onBack={() => {
-                setActivePanel("commands");
-                setCommandSearch("");
-              }}
-            />
-        ) : isDictionaryPanelOpen ? (
-           <DictionaryCommandGroup
-              isOpen
-              query={dictionaryQuery}
-              onOpen={(capturedQuery) => {
-                setDictionaryQuery(capturedQuery);
-                setActivePanel("dictionary");
-              }}
-              onBack={() => {
-                setActivePanel("commands");
-                setCommandSearch("");
-              }}
-            />
-        ) : isTranslationPanelOpen ? (
-           <TranslationCommandGroup
-              isOpen
-              query={translationQuery}
-              onOpen={(capturedQuery) => {
-                setTranslationQuery(capturedQuery);
-                setActivePanel("translation");
-              }}
-              onBack={() => {
-                setActivePanel("commands");
-                setCommandSearch("");
-              }}
-            />
-        ) : isQuicklinksPanelOpen ? (
-           <QuicklinksCommandGroup
-              isOpen
-              view={quicklinksView}
-              setView={setQuicklinksView}
-              onOpen={() => {
-                setActivePanel("quicklinks");
-              }}
-              onBack={() => {
-                setActivePanel("commands");
-                setCommandSearch("");
-              }}
-            />
-        ) : isSpeedTestPanelOpen ? (
-           <SpeedTestCommandGroup
-              isOpen
-              onOpen={() => {
-                setActivePanel("speed-test");
-                setCommandSearch("");
-              }}
-              onBack={() => {
-                setActivePanel("commands");
-                setCommandSearch("");
-              }}
-            />
-        ) : isClipboardPanelOpen ? (
-            <ClipboardCommandGroup
-              isOpen
-              onOpen={() => {
-                setActivePanel("clipboard");
-                setCommandSearch("");
-              }}
-              onBack={() => {
-                setActivePanel("commands");
-                setCommandSearch("");
-              }}
-            />
+
+        {takeoverPanelContent ? (
+          takeoverPanelContent
         ) : shouldCollapseToInputOnly ? null : (
-        <CommandList
-          className={cn(
-            "flex-1 px-1 transition-all duration-300",
-            isEmojiPanelOpen ? "min-h-0 flex flex-col h-full" : "max-h-none overflow-y-auto"
-          )}
-        >
-          {commandListContent}
+          <CommandList
+            className={cn(
+              "flex-1 px-1 transition-all duration-300",
+              isCommandListExpandedPanel
+                ? "min-h-0 flex flex-col h-full"
+                : "max-h-none overflow-y-auto",
+            )}
+          >
+            {commandListContent}
 
-          {isCalculatorHistoryPanelOpen && (
-            <CalculatorHistoryCommandGroup
-              isOpen
-              onOpen={() => {
-                setActivePanel("calculator-history");
-                setCommandSearch("");
-              }}
-              onBack={() => {
-                setActivePanel("commands");
-                setCommandSearch("");
-              }}
-            />
-          )}
+            {activePanel === "calculator-history" && (
+              <CalculatorHistoryCommandGroup
+                isOpen
+                onOpen={() => {
+                  openPanel("calculator-history", true);
+                }}
+                onBack={backToCommands}
+              />
+            )}
 
-          {isEmojiPanelOpen && (
-            <EmojiCommandGroup
-              isOpen
-              onOpen={() => {
-                setActivePanel("emoji");
-                setCommandSearch("");
-              }}
-              onBack={() => {
-                setActivePanel("commands");
-                setCommandSearch("");
-              }}
-            />
-          )}
+            {activePanel === "emoji" && (
+              <EmojiCommandGroup
+                isOpen
+                onOpen={() => {
+                  openPanel("emoji", true);
+                }}
+                onBack={backToCommands}
+              />
+            )}
 
-          {isSettingsPanelOpen && (
-            <SettingsCommandGroup
-              isOpen
-              onOpen={() => {
-                setActivePanel("settings");
-                setCommandSearch("");
-              }}
-              onBack={() => {
-                setActivePanel("commands");
-                setCommandSearch("");
-              }}
-            />
-          )}
-        </CommandList>
+            {activePanel === "settings" && (
+              <SettingsCommandGroup
+                isOpen
+                onOpen={() => {
+                  openPanel("settings", true);
+                }}
+                onBack={backToCommands}
+              />
+            )}
+          </CommandList>
         )}
 
         {shouldShowFooter && (
@@ -584,14 +571,18 @@ export default function LauncherCommand() {
               <Search className="size-3" />
               <span>Beam</span>
             </div>
-            
+
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-1">
-                <kbd className="rounded border border-border/60 bg-muted/30 px-1 py-0.5 font-mono text-[9px] text-foreground/70">ENTER</kbd>
+                <kbd className="rounded border border-border/60 bg-muted/30 px-1 py-0.5 font-mono text-[9px] text-foreground/70">
+                  ENTER
+                </kbd>
                 <span>Open</span>
               </div>
               <div className="flex items-center gap-1">
-                <kbd className="rounded border border-border/60 bg-muted/30 px-1 py-0.5 font-mono text-[9px] text-foreground/70">ESC</kbd>
+                <kbd className="rounded border border-border/60 bg-muted/30 px-1 py-0.5 font-mono text-[9px] text-foreground/70">
+                  ESC
+                </kbd>
                 <span>Back</span>
               </div>
             </div>
