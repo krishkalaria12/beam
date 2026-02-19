@@ -98,6 +98,7 @@ export default function LauncherCommand() {
     const result = await dispatchCommand(commandId, {
       query: commandContext.query,
       mode: commandContext.mode,
+      isDesktopRuntime: commandContext.isDesktopRuntime,
       registry: staticCommandRegistry,
       runtime: {
         setActivePanel,

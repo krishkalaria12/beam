@@ -16,6 +16,14 @@ const TAURI_INVOKE_ALLOWLIST = new Set([
   "search_with_browser",
 ]);
 
+const SYSTEM_ACTION_ALLOWLIST: ReadonlySet<SystemAction> = new Set([
+  "shutdown",
+  "reboot",
+  "logout",
+  "sleep",
+  "hibernate",
+]);
+
 const VALID_PANELS: ReadonlySet<CommandPanel> = new Set([
   "commands",
   "clipboard",
@@ -36,11 +44,25 @@ export type DispatchErrorCode =
   | "INVALID_INPUT"
   | "INVALID_BACKEND_COMMAND"
   | "UNSUPPORTED_ACTION"
+  | "BACKEND_UNAVAILABLE"
   | "BACKEND_FAILURE";
+
+export type DispatchBackendErrorType =
+  | "runtime_unavailable"
+  | "invalid_input"
+  | "not_found"
+  | "permission_denied"
+  | "backend_failure";
+
+export interface DispatchBackendError {
+  type: DispatchBackendErrorType;
+  technicalMessage: string;
+  userMessage: string;
+}
 
 export type DispatchResult =
   | { ok: true; payload?: Record<string, unknown> }
-  | { ok: false; code: DispatchErrorCode; message: string };
+  | { ok: false; code: DispatchErrorCode; message: string; backend?: DispatchBackendError };
 
 export interface DispatchRuntime {
   setActivePanel: (panel: CommandPanel) => void;
@@ -59,6 +81,7 @@ export interface DispatchRuntime {
 export interface DispatchContext {
   query: string;
   mode: CommandMode;
+  isDesktopRuntime: boolean;
   registry: StaticCommandRegistry;
   runtime: DispatchRuntime;
 }
@@ -71,11 +94,11 @@ function error(code: DispatchErrorCode, message: string): DispatchResult {
   return { ok: false, code, message };
 }
 
-function toMessage(err: unknown, fallback: string): string {
-  if (err instanceof Error && err.message.trim().length > 0) {
-    return err.message;
-  }
-  return fallback;
+function backendError(
+  code: DispatchErrorCode,
+  backend: DispatchBackendError,
+): DispatchResult {
+  return { ok: false, code, message: backend.userMessage, backend };
 }
 
 function isScopeAllowed(command: CommandDescriptor, mode: CommandMode): boolean {
@@ -92,19 +115,116 @@ function toPayloadRecord(
   return payload as Record<string, unknown>;
 }
 
+function getStringField(payload: Record<string, unknown>, key: string): string | undefined {
+  const value = payload[key];
+  if (typeof value !== "string") {
+    return undefined;
+  }
+
+  const normalized = value.trim();
+  return normalized.length > 0 ? normalized : undefined;
+}
+
+function getRecordField(
+  payload: Record<string, unknown>,
+  key: string,
+): Record<string, unknown> {
+  const value = payload[key];
+  if (!value || typeof value !== "object") {
+    return {};
+  }
+
+  return value as Record<string, unknown>;
+}
+
+export function mapDispatchBackendError(
+  err: unknown,
+  fallback: string,
+): DispatchBackendError {
+  const technicalMessage =
+    err instanceof Error && err.message.trim().length > 0
+      ? err.message
+      : fallback;
+  const normalized = technicalMessage.toLowerCase();
+
+  if (
+    normalized.includes("desktop runtime is required") ||
+    normalized.includes("not running in tauri")
+  ) {
+    return {
+      type: "runtime_unavailable",
+      technicalMessage,
+      userMessage: "This command requires the desktop runtime.",
+    };
+  }
+
+  if (
+    normalized.includes("missing") ||
+    normalized.includes("invalid") ||
+    normalized.includes("required")
+  ) {
+    return {
+      type: "invalid_input",
+      technicalMessage,
+      userMessage: "This command received invalid input.",
+    };
+  }
+
+  if (normalized.includes("not found")) {
+    return {
+      type: "not_found",
+      technicalMessage,
+      userMessage: "Required resource was not found.",
+    };
+  }
+
+  if (
+    normalized.includes("permission") ||
+    normalized.includes("denied") ||
+    normalized.includes("forbidden")
+  ) {
+    return {
+      type: "permission_denied",
+      technicalMessage,
+      userMessage: "Permission denied while executing command.",
+    };
+  }
+
+  return {
+    type: "backend_failure",
+    technicalMessage,
+    userMessage: "Backend action failed.",
+  };
+}
+
+function mapDesktopUnavailable(commandId: string): DispatchResult {
+  return error(
+    "BACKEND_UNAVAILABLE",
+    `Command "${commandId}" requires desktop runtime.`,
+  );
+}
+
+function isPrivilegedAction(command: CommandDescriptor): boolean {
+  return (
+    command.action?.type === "INVOKE_TAURI" ||
+    command.action?.type === "OPEN_APP" ||
+    command.action?.type === "OPEN_FILE"
+  );
+}
+
 async function dispatchPanelAction(
   command: CommandDescriptor,
   context: DispatchContext,
 ): Promise<DispatchResult> {
   const payload = toPayloadRecord(command.action?.payload);
-  const panel = payload.panel;
+  const panel = getStringField(payload, "panel");
 
-  if (typeof panel !== "string" || !VALID_PANELS.has(panel as CommandPanel)) {
+  if (!panel || !VALID_PANELS.has(panel as CommandPanel)) {
     return error("INVALID_INPUT", "Panel action is missing a valid target panel.");
   }
 
   if (panel === "quicklinks") {
-    const view = payload.view;
+    const view = getStringField(payload, "view");
     if (view === "create" || view === "manage") {
       context.runtime.setQuicklinksView(view);
     }
@@ -138,10 +258,10 @@ async function dispatchInvokeAction(
   context: DispatchContext,
 ): Promise<DispatchResult> {
   const payload = toPayloadRecord(command.action?.payload);
-  const commandName = payload.command;
-  const args = toPayloadRecord(payload.args);
+  const commandName = getStringField(payload, "command");
+  const args = getRecordField(payload, "args");
 
-  if (typeof commandName !== "string" || commandName.trim().length === 0) {
+  if (!commandName) {
     return error("INVALID_INPUT", "Backend action is missing command name.");
   }
 
@@ -154,8 +274,8 @@ async function dispatchInvokeAction(
 
   try {
     if (commandName === "execute_system_action") {
-      const action = args.action;
-      if (typeof action !== "string") {
+      const action = getStringField(args, "action");
+      if (!action || !SYSTEM_ACTION_ALLOWLIST.has(action as SystemAction)) {
         return error("INVALID_INPUT", "System action command is missing action.");
       }
 
@@ -165,17 +285,18 @@ async function dispatchInvokeAction(
     }
 
     if (commandName === "search_with_browser") {
-      const site = args.site;
+      const site = getStringField(args, "site");
       if (site !== "google" && site !== "duckduckgo") {
         return error("INVALID_INPUT", "Search command is missing valid search site.");
       }
-      if (context.query.trim().length === 0) {
+      const normalizedQuery = context.query.trim();
+      if (normalizedQuery.length === 0) {
         return error("INVALID_INPUT", "Search command requires a non-empty query.");
       }
 
       await searchWithBrowser({
         site,
-        query: context.query,
+        query: normalizedQuery,
       });
       context.runtime.setCommandSearch("");
       return ok({ commandName, site });
@@ -186,7 +307,11 @@ async function dispatchInvokeAction(
       `Backend command "${commandName}" is not handled by dispatcher.`,
     );
   } catch (err) {
-    return error("BACKEND_FAILURE", toMessage(err, "Backend action failed."));
+    const mapped = mapDispatchBackendError(err, "Backend action failed.");
+    const code = mapped.type === "runtime_unavailable"
+      ? "BACKEND_UNAVAILABLE"
+      : "BACKEND_FAILURE";
+    return backendError(code, mapped);
   }
 }
 
@@ -195,9 +320,9 @@ async function dispatchOpenAppAction(
   context: DispatchContext,
 ): Promise<DispatchResult> {
   const payload = toPayloadRecord(command.action?.payload);
-  const execPath = payload.execPath;
+  const execPath = getStringField(payload, "execPath");
 
-  if (typeof execPath !== "string" || execPath.trim().length === 0) {
+  if (!execPath) {
     return error("INVALID_INPUT", "Open app action is missing execPath.");
   }
 
@@ -206,7 +331,11 @@ async function dispatchOpenAppAction(
     context.runtime.setCommandSearch("");
     return ok({ execPath });
   } catch (err) {
-    return error("BACKEND_FAILURE", toMessage(err, "Could not open application."));
+    const mapped = mapDispatchBackendError(err, "Could not open application.");
+    const code = mapped.type === "runtime_unavailable"
+      ? "BACKEND_UNAVAILABLE"
+      : "BACKEND_FAILURE";
+    return backendError(code, mapped);
   }
 }
 
@@ -215,9 +344,9 @@ async function dispatchOpenFileAction(
   context: DispatchContext,
 ): Promise<DispatchResult> {
   const payload = toPayloadRecord(command.action?.payload);
-  const filePath = payload.filePath;
+  const filePath = getStringField(payload, "filePath");
 
-  if (typeof filePath !== "string" || filePath.trim().length === 0) {
+  if (!filePath) {
     return error("INVALID_INPUT", "Open file action is missing filePath.");
   }
 
@@ -226,7 +355,11 @@ async function dispatchOpenFileAction(
     context.runtime.setCommandSearch("");
     return ok({ filePath });
   } catch (err) {
-    return error("BACKEND_FAILURE", toMessage(err, "Could not open file."));
+    const mapped = mapDispatchBackendError(err, "Could not open file.");
+    const code = mapped.type === "runtime_unavailable"
+      ? "BACKEND_UNAVAILABLE"
+      : "BACKEND_FAILURE";
+    return backendError(code, mapped);
   }
 }
 
@@ -235,9 +368,9 @@ async function dispatchOpenUrlAction(
   context: DispatchContext,
 ): Promise<DispatchResult> {
   const payload = toPayloadRecord(command.action?.payload);
-  const url = payload.url;
+  const url = getStringField(payload, "url");
 
-  if (typeof url !== "string" || url.trim().length === 0) {
+  if (!url) {
     return error("INVALID_INPUT", "Open URL action is missing url.");
   }
 
@@ -250,7 +383,8 @@ async function dispatchOpenUrlAction(
     context.runtime.setCommandSearch("");
     return ok({ url });
   } catch (err) {
-    return error("BACKEND_FAILURE", toMessage(err, "Could not open URL."));
+    const mapped = mapDispatchBackendError(err, "Could not open URL.");
+    return backendError("BACKEND_FAILURE", mapped);
   }
 }
 
@@ -268,7 +402,8 @@ async function dispatchCustomAction(
   try {
     return await context.runtime.customActionHandler(command, context);
   } catch (err) {
-    return error("BACKEND_FAILURE", toMessage(err, "Custom action failed."));
+    const mapped = mapDispatchBackendError(err, "Custom action failed.");
+    return backendError("BACKEND_FAILURE", mapped);
   }
 }
 
@@ -295,6 +430,10 @@ export async function dispatchCommand(
     );
   }
 
+  if (isPrivilegedAction(command) && !context.isDesktopRuntime) {
+    return mapDesktopUnavailable(commandId);
+  }
+
   if (command.action.type === "OPEN_PANEL") {
     return dispatchPanelAction(command, context);
   }
@@ -319,4 +458,3 @@ export async function dispatchCommand(
     `Action type "${command.action.type}" is not handled by dispatcher.`,
   );
 }
-

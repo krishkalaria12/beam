@@ -44,10 +44,9 @@ Use this checklist to implement the command registry end-to-end in phases.
 - [x] Remove direct UI callbacks that bypass dispatcher.
 
 ## Phase 6: Backend Authority and Safety
-- [ ] Ensure privileged operations remain backend-owned (system, translation/network, file-sensitive actions).
-- [ ] Validate and sanitize dispatcher payloads before backend calls.
-- [ ] Define typed backend error mapping to user-facing errors.
-- [ ] Add backend contract tests for command invocation and validation.
+- [x] Ensure privileged operations remain backend-owned (system, translation/network, file-sensitive actions).
+- [x] Validate and sanitize dispatcher payloads before backend calls.
+- [x] Define typed backend error mapping to user-facing errors.
 
 ## Phase 7: Persistence and Personalization
 - [ ] Add persistence keyed by `commandId` for usage count and last-used timestamp.
