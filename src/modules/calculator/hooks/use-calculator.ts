@@ -12,10 +12,6 @@ export function looksLikeCalculationQuery(query: string) {
     return false;
   }
 
-  if (/^[-+]?\d+(\.\d+)?$/.test(normalized)) {
-    return false;
-  }
-
   return CALCULATOR_QUERY_PATTERN.test(normalized);
 }
 
