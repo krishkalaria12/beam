@@ -10,17 +10,21 @@ import { buildCommandContext } from "@/command-registry/context";
 import {
   CALCULATOR_COPY_COMMAND_ID,
   CALCULATOR_RESULT_COMMAND_ID,
+  createQuicklinkExecuteCommandDescriptor,
   createDefaultCommandProviders,
   INTERNAL_EXTENSION_ID,
+  QUICKLINK_EXECUTE_COMMAND_ID,
+  toQuicklinkExecuteCommandId,
 } from "@/command-registry/default-providers";
 import { dispatchCommand } from "@/command-registry/dispatcher";
 import { createCommandProviderOrchestrator } from "@/command-registry/providers";
 import type { RankedCommand } from "@/command-registry/ranker";
 import { rankCommands } from "@/command-registry/ranker";
 import { staticCommandRegistry } from "@/command-registry/registry";
+import { createStaticCommandRegistryStore } from "@/command-registry/static-registry";
 import { resolveStaticCommandCandidates } from "@/command-registry/static-candidates";
 import { logDispatchFailure, logProviderResolution } from "@/command-registry/telemetry";
-import type { CommandProviderResolution } from "@/command-registry/types";
+import type { CommandDescriptor, CommandProviderResolution } from "@/command-registry/types";
 import { useCommandPreferences } from "@/command-registry/use-command-preferences";
 
 import CalculatorHistoryCommandGroup from "@/modules/calculator-history/components/calculator-history-command-group";
@@ -32,7 +36,7 @@ import FileSearchCommandGroup from "@/modules/file-search/components/file-search
 import { CALCULATOR_AUTO_SAVE_DEBOUNCE_MS } from "@/modules/calculator/constants";
 import { useQuicklinks } from "@/modules/quicklinks/hooks/use-quicklinks";
 import QuicklinksCommandGroup from "@/modules/quicklinks/components/quicklinks-command-group";
-import { findQuicklinkByKeyword, executeQuicklink } from "@/modules/quicklinks/api/quicklinks";
+import { executeQuicklink, findQuicklinkByKeyword } from "@/modules/quicklinks/api/quicklinks";
 import { QuicklinkPreview } from "@/modules/quicklinks/components/quicklink-preview";
 import SettingsCommandGroup from "@/modules/settings/components/settings-command-group";
 import { setLauncherCompactMode } from "@/modules/settings/api/set-launcher-compact-mode";
@@ -208,26 +212,24 @@ export default function LauncherCommand() {
     queryClient,
   ]);
 
-  const handleQuicklinkExecute = async (keyword: string = quicklinkKeyword, query: string = quicklinkQuery) => {
-    const quicklink = findQuicklinkByKeyword(quicklinks, keyword);
-    if (!quicklink) {
-      return;
-    }
+  const handleRegistryCommandSelect = async (
+    commandId: string,
+    fallbackCommand?: CommandDescriptor,
+  ) => {
+    const selectedDynamicCommand =
+      rankedRegistryCommands.find((entry) => entry.command.id === commandId)?.command ??
+      fallbackCommand;
+    const registry = staticCommandRegistry.has(commandId)
+      ? staticCommandRegistry
+      : selectedDynamicCommand
+      ? createStaticCommandRegistryStore([selectedDynamicCommand])
+      : staticCommandRegistry;
 
-    try {
-      await executeQuicklink(quicklink.keyword, query);
-      setCommandSearch("");
-    } catch (error) {
-      console.error("Failed to execute quicklink:", error);
-    }
-  };
-
-  const handleRegistryCommandSelect = async (commandId: string) => {
     const result = await dispatchCommand(commandId, {
       query: commandContext.query,
       mode: commandContext.mode,
       isDesktopRuntime: commandContext.isDesktopRuntime,
-      registry: staticCommandRegistry,
+      registry,
       runtime: {
         setActivePanel,
         setCommandSearch,
@@ -236,10 +238,7 @@ export default function LauncherCommand() {
         setDictionaryQuery,
         setTranslationQuery,
         customActionHandler: async (request) => {
-          if (
-            request.extensionId !== INTERNAL_EXTENSION_ID ||
-            request.extensionCommandId !== CALCULATOR_COPY_COMMAND_ID
-          ) {
+          if (request.extensionId !== INTERNAL_EXTENSION_ID) {
             return {
               ok: false,
               code: "UNSUPPORTED_ACTION",
@@ -247,38 +246,74 @@ export default function LauncherCommand() {
             };
           }
 
-          const calculatorQuery = typeof request.payload.calculatorQuery === "string"
-            ? request.payload.calculatorQuery.trim()
-            : "";
-          const calculatorResult = typeof request.payload.calculatorResult === "string"
-            ? request.payload.calculatorResult.trim()
-            : "";
+          if (request.extensionCommandId === CALCULATOR_COPY_COMMAND_ID) {
+            const calculatorQuery = typeof request.payload.calculatorQuery === "string"
+              ? request.payload.calculatorQuery.trim()
+              : "";
+            const calculatorResult = typeof request.payload.calculatorResult === "string"
+              ? request.payload.calculatorResult.trim()
+              : "";
 
-          if (!calculatorQuery || !calculatorResult) {
-            return {
-              ok: false,
-              code: "INVALID_INPUT",
-              message: "Calculator command payload is missing query or result.",
-            };
+            if (!calculatorQuery || !calculatorResult) {
+              return {
+                ok: false,
+                code: "INVALID_INPUT",
+                message: "Calculator command payload is missing query or result.",
+              };
+            }
+
+            try {
+              await navigator.clipboard.writeText(calculatorResult);
+              await saveCalculatorHistory(
+                calculatorQuery,
+                calculatorResult,
+                calculatorSessionId,
+              );
+              queryClient.invalidateQueries({ queryKey: ["calculator", "history"] });
+              return { ok: true, payload: { copied: calculatorResult } };
+            } catch (error) {
+              console.error("Failed to execute calculator custom command:", error);
+              return {
+                ok: false,
+                code: "BACKEND_FAILURE",
+                message: "Could not copy calculator result.",
+              };
+            }
           }
 
-          try {
-            await navigator.clipboard.writeText(calculatorResult);
-            await saveCalculatorHistory(
-              calculatorQuery,
-              calculatorResult,
-              calculatorSessionId,
-            );
-            queryClient.invalidateQueries({ queryKey: ["calculator", "history"] });
-            return { ok: true, payload: { copied: calculatorResult } };
-          } catch (error) {
-            console.error("Failed to execute calculator custom command:", error);
-            return {
-              ok: false,
-              code: "BACKEND_FAILURE",
-              message: "Could not copy calculator result.",
-            };
+          if (request.extensionCommandId === QUICKLINK_EXECUTE_COMMAND_ID) {
+            const quicklinkKeywordFromPayload =
+              typeof request.payload.quicklinkKeyword === "string"
+                ? request.payload.quicklinkKeyword.trim()
+                : "";
+            const executionQuery = request.query?.trim() ?? "";
+            if (!quicklinkKeywordFromPayload) {
+              return {
+                ok: false,
+                code: "INVALID_INPUT",
+                message: "Quicklink command payload is missing keyword.",
+              };
+            }
+
+            try {
+              await executeQuicklink(quicklinkKeywordFromPayload, executionQuery);
+              setCommandSearch("");
+              return { ok: true, payload: { keyword: quicklinkKeywordFromPayload } };
+            } catch (error) {
+              console.error("Failed to execute quicklink custom command:", error);
+              return {
+                ok: false,
+                code: "BACKEND_FAILURE",
+                message: "Could not execute quicklink.",
+              };
+            }
           }
+
+          return {
+            ok: false,
+            code: "UNSUPPORTED_ACTION",
+            message: "Unsupported custom command action.",
+          };
         },
       },
     });
@@ -293,6 +328,27 @@ export default function LauncherCommand() {
     }
 
     markUsed(commandId);
+  };
+
+  const handleQuicklinkExecute = async (
+    keyword: string = quicklinkKeyword,
+    query: string = quicklinkQuery,
+  ) => {
+    const quicklink = findQuicklinkByKeyword(quicklinks, keyword);
+    if (!quicklink) {
+      return;
+    }
+
+    const fallbackCommand = createQuicklinkExecuteCommandDescriptor({
+      keyword: quicklink.keyword,
+      query,
+      name: quicklink.name,
+    });
+
+    await handleRegistryCommandSelect(
+      toQuicklinkExecuteCommandId(quicklink.keyword),
+      fallbackCommand,
+    );
   };
 
   const handleKeyDown = async (e: React.KeyboardEvent) => {

@@ -74,9 +74,9 @@ Use this checklist to implement the command registry end-to-end in phases.
 - [x] Update docs (`COMMAND_REGISTRY.md`, developer README, architecture notes).
 
 ## Done Checklist (Release Gate)
-- [ ] All launcher commands resolve through the registry.
-- [ ] Every command has a stable `commandId`.
-- [ ] Dispatcher is the only execution path.
-- [ ] Existing behavior remains functionally intact.
-- [ ] Compressed and trigger modes match expected behavior.
-- [ ] Translation/system/speed/settings and other commands are consistently registered.
+- [x] All launcher commands resolve through the registry.
+- [x] Every command has a stable `commandId`.
+- [x] Dispatcher is the only execution path.
+- [x] Existing behavior remains functionally intact.
+- [x] Compressed and trigger modes match expected behavior.
+- [x] Translation/system/speed/settings and other commands are consistently registered.

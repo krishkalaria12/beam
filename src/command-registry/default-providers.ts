@@ -1,13 +1,19 @@
-import type { CommandProvider } from "@/command-registry/types";
+import type { CommandDescriptor, CommandProvider } from "@/command-registry/types";
 import { searchApplications } from "@/modules/applications/api/search-applications";
 import { calculateExpression } from "@/modules/calculator/api/calculate-expression";
+import {
+  findQuicklinkByKeyword,
+  getQuicklinks,
+} from "@/modules/quicklinks/api/quicklinks";
 
 const CALCULATOR_QUERY_PATTERN = /[\d()+\-*/%=]|(^|\s)(to|time|at)(\s|$)/i;
 const PROVIDER_SCOPE: ReadonlyArray<"normal" | "compressed"> = ["normal", "compressed"];
+const QUICKLINK_SCOPE: ReadonlyArray<"quicklink-trigger"> = ["quicklink-trigger"];
 
 export const INTERNAL_EXTENSION_ID = "beam.internal";
 export const CALCULATOR_COPY_COMMAND_ID = "calculator.copy-result";
 export const CALCULATOR_RESULT_COMMAND_ID = "calculator.result";
+export const QUICKLINK_EXECUTE_COMMAND_ID = "quicklinks.execute";
 
 function normalizeIdSegment(value: string): string {
   return value
@@ -42,6 +48,56 @@ function looksLikeCalculationQuery(query: string): boolean {
 function toApplicationCommandId(name: string, execPath: string): string {
   const nameSegment = normalizeIdSegment(name) || "app";
   return `applications.open.${nameSegment}::${hashText(execPath)}`;
+}
+
+export function toQuicklinkExecuteCommandId(keyword: string): string {
+  const normalizedKeyword = normalizeIdSegment(keyword);
+  if (!normalizedKeyword) {
+    return QUICKLINK_EXECUTE_COMMAND_ID;
+  }
+
+  return `${QUICKLINK_EXECUTE_COMMAND_ID}::${normalizedKeyword}`;
+}
+
+export function createQuicklinkExecuteCommandDescriptor(input: {
+  keyword: string;
+  query: string;
+  name?: string;
+}): CommandDescriptor {
+  const normalizedKeyword = input.keyword.trim();
+  const normalizedQuery = input.query.trim();
+  const name = input.name?.trim() || normalizedKeyword;
+
+  return {
+    id: toQuicklinkExecuteCommandId(normalizedKeyword),
+    title: `run !${normalizedKeyword}`,
+    subtitle: normalizedQuery.length > 0 ? `${name} -> ${normalizedQuery}` : name,
+    keywords: [
+      "quicklink",
+      "run quicklink",
+      `!${normalizedKeyword}`,
+      normalizedKeyword,
+      name,
+      normalizedQuery,
+    ].filter((entry) => entry.trim().length > 0),
+    endText: "quicklink",
+    icon: "quicklink-manage",
+    kind: "provider-item",
+    scope: QUICKLINK_SCOPE,
+    priority: 72,
+    action: {
+      type: "CUSTOM",
+      payload: {
+        extensionId: INTERNAL_EXTENSION_ID,
+        extensionCommandId: QUICKLINK_EXECUTE_COMMAND_ID,
+        quicklinkKeyword: normalizedKeyword,
+        sandbox: {
+          allowOpenUrl: false,
+          allowReadQuery: true,
+        },
+      },
+    },
+  };
 }
 
 function buildApplicationTitle(name: string, execPath: string): string {
@@ -161,8 +217,40 @@ export function createCalculatorCommandProvider(): CommandProvider {
   };
 }
 
+export function createQuicklinkCommandProvider(): CommandProvider {
+  return {
+    id: "quicklinks-provider",
+    scope: QUICKLINK_SCOPE,
+    async provide({ context, signal }) {
+      const keyword = context.quicklinkKeyword.trim();
+      if (!keyword || signal.aborted) {
+        return [];
+      }
+
+      const quicklinks = await getQuicklinks();
+      if (signal.aborted) {
+        return [];
+      }
+
+      const quicklink = findQuicklinkByKeyword(quicklinks, keyword);
+      if (!quicklink) {
+        return [];
+      }
+
+      return [
+        createQuicklinkExecuteCommandDescriptor({
+          keyword: quicklink.keyword,
+          query: context.query,
+          name: quicklink.name,
+        }),
+      ];
+    },
+  };
+}
+
 export function createDefaultCommandProviders(): CommandProvider[] {
   return [
+    createQuicklinkCommandProvider(),
     createCalculatorCommandProvider(),
     createApplicationsCommandProvider(),
   ];
