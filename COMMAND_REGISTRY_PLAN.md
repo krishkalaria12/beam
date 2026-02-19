@@ -56,10 +56,10 @@ Use this checklist to implement the command registry end-to-end in phases.
 - [x] Add migration for legacy state formats if needed.
 
 ## Phase 8: Trigger and Mode Completeness
-- [ ] Validate `!` trigger limits to quicklink-related and allowed commands only.
-- [ ] Validate `$` trigger limits to system commands only.
-- [ ] Validate panel-open state routes to panel-specific command descriptors/actions.
-- [ ] Verify behavior parity with current launcher for all existing command families.
+- [x] Validate `!` trigger limits to quicklink-related and allowed commands only.
+- [x] Validate `$` trigger limits to system commands only.
+- [x] Validate panel-open state routes to panel-specific command descriptors/actions.
+- [x] Verify behavior parity with current launcher for all existing command families.
 
 ## Phase 9: Extension and Custom Command Path
 - [ ] Define adapter from extension metadata to `CommandDescriptor`.
