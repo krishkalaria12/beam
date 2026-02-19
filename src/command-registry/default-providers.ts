@@ -38,10 +38,6 @@ function looksLikeCalculationQuery(query: string): boolean {
     return false;
   }
 
-  if (/^[-+]?\d+(\.\d+)?$/.test(normalized)) {
-    return false;
-  }
-
   return CALCULATOR_QUERY_PATTERN.test(normalized);
 }
 
@@ -173,11 +169,16 @@ export function createCalculatorCommandProvider(): CommandProvider {
         return [];
       }
 
-      const primaryOutput = result.outputs.find((entry) => !entry.is_error);
-      const outputValue = primaryOutput?.value?.trim() ?? "";
+      const successfulOutputs = result.outputs
+        .filter((entry) => !entry.is_error)
+        .map((entry) => entry.value.trim())
+        .filter((value) => value.length > 0);
+      const outputValue = successfulOutputs[0] ?? "";
       if (!outputValue) {
         return [];
       }
+      const secondaryOutput =
+        successfulOutputs.find((value) => value !== outputValue) ?? "";
 
       const expression = result.query.trim() || normalizedQuery;
       return [
@@ -191,6 +192,7 @@ export function createCalculatorCommandProvider(): CommandProvider {
             "result",
             expression,
             outputValue,
+            secondaryOutput,
           ],
           endText: "copy",
           icon: "calculator",
@@ -209,6 +211,7 @@ export function createCalculatorCommandProvider(): CommandProvider {
               },
               calculatorQuery: expression,
               calculatorResult: outputValue,
+              calculatorSecondaryResult: secondaryOutput,
             },
           },
         },
