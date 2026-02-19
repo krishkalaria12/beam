@@ -19,13 +19,14 @@ import SearchCommandGroup from "@/modules/search/components/search-command-group
 import SettingsCommandGroup from "@/modules/settings/components/settings-command-group";
 import { setLauncherCompactMode } from "@/modules/settings/api/set-launcher-compact-mode";
 import { useUiLayout } from "@/modules/settings/hooks/use-ui-layout";
+import SpeedTestCommandGroup from "@/modules/speed-test/components/speed-test-command-group";
 import SystemActionsCommandGroup from "@/modules/system-actions/components/system-actions-command-group";
 
 export default function LauncherCommand() {
   const [commandSearch, setCommandSearch] = useState("");
   const [fileSearchQuery, setFileSearchQuery] = useState("");
   const [dictionaryQuery, setDictionaryQuery] = useState("");
-  const [activePanel, setActivePanel] = useState<"commands" | "clipboard" | "emoji" | "settings" | "calculator-history" | "file-search" | "dictionary" | "quicklinks">("commands");
+  const [activePanel, setActivePanel] = useState<"commands" | "clipboard" | "emoji" | "settings" | "calculator-history" | "file-search" | "dictionary" | "quicklinks" | "speed-test">("commands");
   const isClipboardPanelOpen = activePanel === "clipboard";
   const isEmojiPanelOpen = activePanel === "emoji";
   const isSettingsPanelOpen = activePanel === "settings";
@@ -33,6 +34,7 @@ export default function LauncherCommand() {
   const isFileSearchPanelOpen = activePanel === "file-search";
   const isDictionaryPanelOpen = activePanel === "dictionary";
   const isQuicklinksPanelOpen = activePanel === "quicklinks";
+  const isSpeedTestPanelOpen = activePanel === "speed-test";
   const [quicklinksView, setQuicklinksView] = useState<"create" | "manage">("manage");
 
   const { data: quicklinks = [] } = useQuicklinks();
@@ -98,6 +100,14 @@ export default function LauncherCommand() {
           <CalculatorCommandGroup />
           <ApplicationsCommandGroup />
           <SystemActionsCommandGroup />
+          <SpeedTestCommandGroup
+            isOpen={false}
+            onOpen={() => {
+              setActivePanel("speed-test");
+              setCommandSearch("");
+            }}
+            onBack={() => {}} // Not used when closed
+          />
           <FileSearchCommandGroup
             isOpen={false}
             onOpen={(capturedQuery) => {
@@ -143,6 +153,15 @@ export default function LauncherCommand() {
             onOpen={(capturedQuery) => {
               setFileSearchQuery(capturedQuery);
               setActivePanel("file-search");
+            }}
+            onBack={() => {}} // Not used when closed
+          />
+          <SpeedTestCommandGroup
+            isOpen={false}
+            queryOverride={quicklinkQuery}
+            onOpen={() => {
+              setActivePanel("speed-test");
+              setCommandSearch("");
             }}
             onBack={() => {}} // Not used when closed
           />
@@ -202,6 +221,14 @@ export default function LauncherCommand() {
               <CalculatorCommandGroup />
               <ApplicationsCommandGroup />
               <SystemActionsCommandGroup />
+              <SpeedTestCommandGroup
+                isOpen={false}
+                onOpen={() => {
+                  setActivePanel("speed-test");
+                  setCommandSearch("");
+                }}
+                onBack={() => {}} // Not used when closed
+              />
               <FileSearchCommandGroup 
                 isOpen={false}
                 onOpen={(capturedQuery) => {
@@ -244,6 +271,7 @@ export default function LauncherCommand() {
     !isFileSearchPanelOpen &&
     !isDictionaryPanelOpen &&
     !isQuicklinksPanelOpen &&
+    !isSpeedTestPanelOpen &&
     !isClipboardPanelOpen;
 
   useEffect(() => {
@@ -278,7 +306,7 @@ export default function LauncherCommand() {
         onKeyDown={handleKeyDown}
         className="h-full w-full overflow-hidden bg-transparent"
       >
-        {!isEmojiPanelOpen && !isFileSearchPanelOpen && !isDictionaryPanelOpen && !isQuicklinksPanelOpen && !isClipboardPanelOpen && (
+        {!isEmojiPanelOpen && !isFileSearchPanelOpen && !isDictionaryPanelOpen && !isQuicklinksPanelOpen && !isSpeedTestPanelOpen && !isClipboardPanelOpen && (
           <CommandInput
             value={commandSearch}
             onValueChange={setCommandSearch}
@@ -322,6 +350,18 @@ export default function LauncherCommand() {
               setView={setQuicklinksView}
               onOpen={() => {
                 setActivePanel("quicklinks");
+              }}
+              onBack={() => {
+                setActivePanel("commands");
+                setCommandSearch("");
+              }}
+            />
+        ) : isSpeedTestPanelOpen ? (
+           <SpeedTestCommandGroup
+              isOpen
+              onOpen={() => {
+                setActivePanel("speed-test");
+                setCommandSearch("");
               }}
               onBack={() => {
                 setActivePanel("commands");
