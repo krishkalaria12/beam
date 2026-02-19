@@ -6,5 +6,8 @@ export * from "@/command-registry/static-commands";
 export * from "@/command-registry/static-candidates";
 export * from "@/command-registry/providers";
 export * from "@/command-registry/candidates";
+export * from "@/command-registry/ranking-config";
+export * from "@/command-registry/matcher";
+export * from "@/command-registry/ranker";
+export * from "@/command-registry/ranked-candidates";
 export * from "@/command-registry/registry";
-

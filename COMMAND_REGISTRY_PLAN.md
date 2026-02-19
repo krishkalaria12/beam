@@ -23,10 +23,10 @@ Use this checklist to implement the command registry end-to-end in phases.
 - [x] Ensure provider failures degrade gracefully (no launcher crash).
 
 ## Phase 3: Match, Score, and Rank
-- [ ] Implement matching logic for title + keywords + aliases.
-- [ ] Implement deterministic scoring (priority + scope relevance + usage/favorite boosts).
-- [ ] Ensure stable sort tie-breakers for same input/context.
-- [ ] Add ranking configuration knobs (weights) in one place.
+- [x] Implement matching logic for title + keywords + aliases.
+- [x] Implement deterministic scoring (priority + scope relevance + usage/favorite boosts).
+- [x] Ensure stable sort tie-breakers for same input/context.
+- [x] Add ranking configuration knobs (weights) in one place.
 
 ## Phase 4: Unified Rendering Layer
 - [ ] Replace per-feature item rendering branches with one normalized command item renderer.
