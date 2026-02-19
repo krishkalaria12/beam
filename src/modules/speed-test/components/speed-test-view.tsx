@@ -41,12 +41,27 @@ const EMPTY_METRICS: Metrics = {
   packetLoss: null,
 };
 
-function toFiniteNumber(value: number): number | null {
+function toFiniteNumber(value: number | null | undefined): number | null {
   if (!Number.isFinite(value)) {
     return null;
   }
 
-  return value;
+  return typeof value === "number" ? value : null;
+}
+
+function normalizeSpeedTestError(error: string): string {
+  const message = error.trim();
+  const lowered = message.toLowerCase();
+
+  if (
+    lowered.includes("turnserveruser") ||
+    lowered.includes("turn-creds") ||
+    lowered.includes("access-control-allow-origin")
+  ) {
+    return "Packet loss test is unavailable without TURN server credentials. Download, upload, latency, and jitter results are still valid.";
+  }
+
+  return message;
 }
 
 function toMetrics(summary: SpeedTestSummary): Metrics {
@@ -186,7 +201,9 @@ export function SpeedTestView({ onBack }: SpeedTestViewProps) {
         if (!mountedRef.current) {
           return;
         }
-        setErrorMessage(error || "Speed test failed.");
+        setErrorMessage(
+          normalizeSpeedTestError(error || "Speed test failed."),
+        );
         syncFromSpeedTest();
       };
 
@@ -395,7 +412,7 @@ export function SpeedTestView({ onBack }: SpeedTestViewProps) {
               {hasStarted ? "Restart Test" : "Start Test"}
             </Button>
 
-            {hasStarted && (
+            {hasStarted && !isFinished && (
               <Button
                 className="gap-2 font-mono text-[11px] uppercase tracking-wider"
                 disabled={isPreparing}
