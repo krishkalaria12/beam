@@ -15,6 +15,7 @@ pub mod search;
 pub mod settings;
 pub mod state;
 pub mod system_actions;
+pub mod translation;
 pub mod utils;
 
 use tauri::Manager;

@@ -64,6 +64,16 @@ pub struct Config {
     // -- Dictionary
     pub DICTIONARY_API_URL: &'static str,
 
+    // -- Translation
+    pub TRANSLATION_API_BASE_URL: &'static str,
+    pub TRANSLATION_LANGUAGES_ENDPOINT: &'static str,
+    pub TRANSLATION_TRANSLATE_ENDPOINT: &'static str,
+    pub TRANSLATION_DETECT_ENDPOINT: &'static str,
+    pub TRANSLATION_HTTP_TIMEOUT_SECS: u64,
+    pub TRANSLATION_AUTO_SOURCE_LANGUAGE: &'static str,
+    pub TRANSLATION_DEFAULT_FORMAT: &'static str,
+    pub TRANSLATION_MAX_LANGUAGE_CODE_LENGTH: usize,
+
     // -- Quicklinks
     pub QUICKLINK_STORE_NAME: &'static str,
     pub QUICKLINK_VALUE_NAME: &'static str,
@@ -151,6 +161,15 @@ impl Config {
             FILE_SEARCH_MAX_RESULTS_PER_PAGE: 100,
 
             DICTIONARY_API_URL: "https://freedictionaryapi.com/api/v1/entries",
+
+            TRANSLATION_API_BASE_URL: "https://translate.googleapis.com",
+            TRANSLATION_LANGUAGES_ENDPOINT: "/translate_a/l",
+            TRANSLATION_TRANSLATE_ENDPOINT: "/translate_a/single",
+            TRANSLATION_DETECT_ENDPOINT: "/translate_a/single",
+            TRANSLATION_HTTP_TIMEOUT_SECS: 12,
+            TRANSLATION_AUTO_SOURCE_LANGUAGE: "auto",
+            TRANSLATION_DEFAULT_FORMAT: "text",
+            TRANSLATION_MAX_LANGUAGE_CODE_LENGTH: 24,
 
             QUICKLINK_STORE_NAME: "quicklinks.json",
             QUICKLINK_VALUE_NAME: "quick_links",
