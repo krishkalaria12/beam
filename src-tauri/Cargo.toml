@@ -34,7 +34,6 @@ rayon = "1.10.0"
 # Serialization & Data
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-serde_derive = "1.0.228"
 rkyv = { version = "0.7.46", features = ["validation"] }
 bytecheck = "0.6.12"
 papaya = "0.2.3"
@@ -46,11 +45,9 @@ notify = { version = "6", features = ["crossbeam-channel"] }
 notify-debouncer-mini = "0.7.0"
 nucleo = "0.5.0"
 
-# Date, Time & Calculator
+# Date & Time
 jiff = "0.2.20"
-chrono = "0.4" # Required for smartcalc compatibility
-smartcalc = "1.0.8"
-localzone = "0.3.1"
+chrono = "0.4"
 
 # System & Desktop Integration
 dirs = "6.0.0"
@@ -70,7 +67,6 @@ base64 = "0.22.1"
 
 # HTTP & Networking
 reqwest = { version = "0.13.2", default-features = false, features = ["rustls", "json"] }
-poll-promise = "0.3.0"
 url = "2.5.8"
 favicon-picker = "1.1.0"
 

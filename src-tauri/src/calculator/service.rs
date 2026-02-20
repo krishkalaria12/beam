@@ -1,113 +1,23 @@
-use crate::calculator::calculation::Calculation;
-use crate::calculator::error::Result;
-use crate::calculator::plugin::PluginManager;
+use crate::calculator::error::{Error, Result};
 use crate::calculator::query_validator::classify_query;
-use crate::calculator::settings::Settings;
-use crate::calculator::timezone::{update_current_timezone, TIMEZONE_LIST, UTC_TIMEZONE};
+use crate::calculator::soulver;
 use crate::calculator::types::{CalculationOutput, CalculatorCommandResponse, CalculatorStatus};
-use crate::currency::normalizer::normalize_conversion_query;
-use crate::currency::runtime::CurrencyRuntime;
 
-struct CalculatorEngine {
-    calculation: Calculation,
-    plugins: PluginManager,
-    currency_runtime: CurrencyRuntime,
-    settings: Settings,
+fn normalize_query(query: &str) -> String {
+    let lowered = query.to_lowercase();
+    let collapsed = lowered.split_whitespace().collect::<Vec<_>>().join(" ");
+    collapsed.replace(" into ", " to ")
 }
 
-impl Default for CalculatorEngine {
-    fn default() -> Self {
-        let timezone = match localzone::get_local_zone() {
-            Some(tz) => match TIMEZONE_LIST.iter().find(|timezone| timezone.name == tz) {
-                Some(timezone) => timezone.clone(),
-                None => UTC_TIMEZONE.clone(),
-            },
-            None => UTC_TIMEZONE.clone(),
-        };
-
-        let mut settings = Settings::default();
-        settings.timezone = timezone;
-
-        let mut calculation = Calculation::new();
-        if let Err(error) = calculation.configure(&settings) {
-            log::warn!("{error}");
-        }
-
-        Self {
-            calculation,
-            plugins: PluginManager::default(),
-            currency_runtime: CurrencyRuntime::default(),
-            settings,
-        }
-    }
-}
-
-impl CalculatorEngine {
-    fn new() -> Self {
-        Self::default()
-    }
-
-    fn setup(&mut self) -> Result<()> {
-        update_current_timezone(&self.settings.timezone);
-        self.calculation.configure(&self.settings)?;
-        self.currency_runtime.start_refresh();
-
-        self.plugins.build(
-            &mut self.calculation.smartcalc,
-            &mut self.settings.enabled_plugins,
-        )?;
-
-        Ok(())
-    }
-
-    fn process(&mut self) -> Result<()> {
-        self.plugins.process()?;
-        self.currency_runtime
-            .process(&mut self.calculation.smartcalc)?;
-        Ok(())
-    }
-
-    fn evaluate_expression(&mut self, expression: &str) -> Vec<CalculationOutput> {
-        self.calculation.code = self.currency_runtime.normalize_expression(expression);
-        self.calculation.calculate();
-
-        self.calculation
-            .outputs
-            .iter()
-            .map(|line| match line {
-                Ok(value) => CalculationOutput {
-                    value: value.clone(),
-                    is_error: false,
-                },
-                Err(value) => CalculationOutput {
-                    value: value.clone(),
-                    is_error: true,
-                },
-            })
-            .collect()
-    }
-
-    fn ongoing_request(&self) -> bool {
-        self.plugins.ongoing_request() || self.currency_runtime.has_pending_request()
-    }
-}
-
-pub struct CalculatorService {
-    engine: CalculatorEngine,
-}
+pub struct CalculatorService;
 
 impl CalculatorService {
     pub fn new() -> Self {
-        let mut engine = CalculatorEngine::new();
-        if let Err(error) = engine.setup() {
-            log::warn!("failed to setup calculator service: {error}");
-        }
-
-        Self { engine }
+        Self
     }
 
     pub fn calculate_expression(&mut self, query: &str) -> Result<CalculatorCommandResponse> {
-        let normalized_query = normalize_conversion_query(query.trim());
+        let normalized_query = normalize_query(query.trim());
         let classification = classify_query(&normalized_query);
 
         if classification != CalculatorStatus::Valid {
@@ -117,26 +27,38 @@ impl CalculatorService {
             ));
         }
 
-        if let Err(error) = self.engine.process() {
-            log::warn!("calculator dependency processing failed: {error}");
+        let response =
+            soulver::evaluate_expression(&normalized_query).map_err(Error::SoulverError)?;
+
+        if let Some(error) = response.error {
+            return Ok(CalculatorCommandResponse {
+                query: normalized_query,
+                status: CalculatorStatus::Error,
+                outputs: vec![CalculationOutput {
+                    value: error,
+                    is_error: true,
+                }],
+                pending_requests: false,
+            });
         }
 
-        let outputs = self.engine.evaluate_expression(&normalized_query);
-        let has_valid_output = outputs
-            .iter()
-            .any(|output| !output.is_error && !output.value.trim().is_empty());
-
-        let status = if has_valid_output {
-            CalculatorStatus::Valid
-        } else {
-            CalculatorStatus::Error
-        };
+        let value = response.value.trim().to_string();
+        let empty_result = response.result_type.eq_ignore_ascii_case("none") || value.is_empty();
+        if empty_result || value == normalized_query {
+            return Ok(CalculatorCommandResponse::empty(
+                normalized_query,
+                CalculatorStatus::Incomplete,
+            ));
+        }
 
         Ok(CalculatorCommandResponse {
             query: normalized_query,
-            status,
-            outputs,
-            pending_requests: self.engine.ongoing_request(),
+            status: CalculatorStatus::Valid,
+            outputs: vec![CalculationOutput {
+                value,
+                is_error: false,
+            }],
+            pending_requests: false,
         })
     }
 }

@@ -3,17 +3,7 @@ import debounce from "@/lib/debounce";
 import { useEffect, useState } from "react";
 
 import { calculateExpression } from "../api/calculate-expression";
-
-const CALCULATOR_QUERY_PATTERN = /[\d()+\-*/%=]|(^|\s)(to|time|at)(\s|$)/i;
-
-export function looksLikeCalculationQuery(query: string) {
-  const normalized = query.trim();
-  if (!normalized) {
-    return false;
-  }
-
-  return CALCULATOR_QUERY_PATTERN.test(normalized);
-}
+import { looksLikeCalculationQuery } from "../lib/query-match";
 
 export function useCalculator(query: string) {
   const [debouncedQuery, setDebouncedQuery] = useState(query.trim());

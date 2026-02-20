@@ -1,5 +1,4 @@
 use super::types::CalculatorStatus;
-use crate::currency::term_matcher::has_currency_like_term;
 
 fn has_operator_with_numeric_operands(query: &str) -> bool {
     let chars = query.chars().collect::<Vec<_>>();
@@ -65,12 +64,6 @@ pub fn classify_query(query: &str) -> CalculatorStatus {
 
     if let Some(delimiter) = conversion_delimiter {
         if let Some((from, to)) = lowered.split_once(delimiter) {
-            if has_currency_like_term(from) && has_currency_like_term(to) {
-                return CalculatorStatus::Valid;
-            }
-
-            // Fallback for unit conversions (e.g., "1km to m")
-            // If the left side has a number and the right side is not empty, assume it's a valid conversion query
             if from.chars().any(|c| c.is_ascii_digit()) && !to.trim().is_empty() {
                 return CalculatorStatus::Valid;
             }

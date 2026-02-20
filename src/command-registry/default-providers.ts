@@ -1,12 +1,12 @@
 import type { CommandDescriptor, CommandProvider } from "@/command-registry/types";
 import { searchApplications } from "@/modules/applications/api/search-applications";
 import { calculateExpression } from "@/modules/calculator/api/calculate-expression";
+import { looksLikeCalculationQuery } from "@/modules/calculator/lib/query-match";
 import {
   findQuicklinkByKeyword,
   getQuicklinks,
 } from "@/modules/quicklinks/api/quicklinks";
 
-const CALCULATOR_QUERY_PATTERN = /[\d()+\-*/%=]|(^|\s)(to|time|at)(\s|$)/i;
 const PROVIDER_SCOPE: ReadonlyArray<"normal" | "compressed"> = ["normal", "compressed"];
 const QUICKLINK_SCOPE: ReadonlyArray<"quicklink-trigger"> = ["quicklink-trigger"];
 
@@ -30,15 +30,6 @@ function hashText(input: string): string {
     hash = Math.imul(hash, 16777619);
   }
   return (hash >>> 0).toString(16).padStart(8, "0");
-}
-
-function looksLikeCalculationQuery(query: string): boolean {
-  const normalized = query.trim();
-  if (!normalized) {
-    return false;
-  }
-
-  return CALCULATOR_QUERY_PATTERN.test(normalized);
 }
 
 function toApplicationCommandId(name: string, execPath: string): string {
@@ -177,8 +168,6 @@ export function createCalculatorCommandProvider(): CommandProvider {
       if (!outputValue) {
         return [];
       }
-      const secondaryOutput =
-        successfulOutputs.find((value) => value !== outputValue) ?? "";
 
       const expression = result.query.trim() || normalizedQuery;
       return [
@@ -192,7 +181,6 @@ export function createCalculatorCommandProvider(): CommandProvider {
             "result",
             expression,
             outputValue,
-            secondaryOutput,
           ],
           endText: "copy",
           icon: "calculator",
@@ -211,7 +199,6 @@ export function createCalculatorCommandProvider(): CommandProvider {
               },
               calculatorQuery: expression,
               calculatorResult: outputValue,
-              calculatorSecondaryResult: secondaryOutput,
             },
           },
         },

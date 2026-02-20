@@ -1,6 +1,7 @@
 import type { CommandDescriptor } from "@/command-registry/types";
 import type { CommandRankingConfig } from "@/command-registry/ranking-config";
 import { DEFAULT_COMMAND_RANKING_CONFIG } from "@/command-registry/ranking-config";
+import { looksLikeCalculationQuery } from "@/modules/calculator/lib/query-match";
 
 const CALCULATOR_CONTEXT_FALLBACK_COMMAND_IDS = new Set([
   "file_search.panel.open",
@@ -9,23 +10,12 @@ const CALCULATOR_CONTEXT_FALLBACK_COMMAND_IDS = new Set([
   "search.web.duckduckgo",
 ]);
 
-const CALCULATOR_QUERY_PATTERN = /[\d()+\-*/%=]|(^|\s)(to|time|at)(\s|$)/i;
-
 function normalize(value: string): string {
   return value.trim().toLowerCase();
 }
 
 function tokenize(query: string): string[] {
   return normalize(query).split(/\s+/).filter(Boolean);
-}
-
-function looksLikeCalculatorContext(query: string): boolean {
-  const normalized = query.trim();
-  if (!normalized) {
-    return false;
-  }
-
-  return CALCULATOR_QUERY_PATTERN.test(normalized);
 }
 
 type MatchTier = "none" | "contains" | "prefix" | "exact";
@@ -152,7 +142,7 @@ export function matchCommand(input: CommandMatchInput): CommandMatchResult {
     query.length > 0 &&
     Boolean(input.command.requiresQuery) &&
     CALCULATOR_CONTEXT_FALLBACK_COMMAND_IDS.has(input.command.id) &&
-    looksLikeCalculatorContext(query);
+    looksLikeCalculationQuery(query);
 
   if (!matched && !shouldForceCalculatorFallbackMatch) {
     return {

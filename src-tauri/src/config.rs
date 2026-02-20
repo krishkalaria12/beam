@@ -24,12 +24,7 @@ pub struct Config {
     pub APPLICATIONS_CACHE_UPDATED_EVENT: &'static str,
 
     // -- Calculator
-    pub CALCULATOR_CURRENCY_URL: &'static str,
-    pub CURRENCY_COIN_URL: &'static str,
-    pub CALCULATOR_CITY_TIME_URL: &'static str,
     pub CALCULATOR_HTTP_TIMEOUT_SECS: u64,
-    pub CALCULATOR_REQUEST_WAIT_TIMEOUT_SECS: u64,
-    pub CALCULATOR_REQUEST_POLL_INTERVAL_MS: u64,
     pub CALCULATOR_HISTORY_VALUE: &'static str,
     pub CALCULATOR_STORE_NAME: &'static str,
     pub CALCULATOR_MAX_HISTORY_ENTRIES: usize,
@@ -92,12 +87,7 @@ impl Config {
             TIMESTAMP_VALUE_DIFF: 1,
             APPLICATIONS_CACHE_UPDATED_EVENT: "applications-cache-updated",
 
-            CALCULATOR_CURRENCY_URL: "https://www.floatrates.com/daily/usd.json",
-            CURRENCY_COIN_URL: "https://api.coincap.io/v2/assets",
-            CALCULATOR_CITY_TIME_URL: "https://erhanbaris.github.io/jsons/cities.json",
             CALCULATOR_HTTP_TIMEOUT_SECS: 10,
-            CALCULATOR_REQUEST_WAIT_TIMEOUT_SECS: 8,
-            CALCULATOR_REQUEST_POLL_INTERVAL_MS: 20,
             CALCULATOR_HISTORY_VALUE: "calculator_history",
             CALCULATOR_STORE_NAME: "calculator_history.json",
             CALCULATOR_MAX_HISTORY_ENTRIES: 50,

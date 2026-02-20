@@ -3,7 +3,6 @@ pub mod applications;
 pub mod calculator;
 pub mod clipboard;
 pub mod config;
-pub mod currency;
 pub mod dictionary;
 pub mod error;
 pub mod file_search;
@@ -19,17 +18,47 @@ pub mod translation;
 pub mod utils;
 
 use tauri::Manager;
+use std::sync::{Mutex, OnceLock};
+use std::time::{Duration, Instant};
 
 use crate::settings::UiLayoutMode;
 
+static LAST_TOGGLE: OnceLock<Mutex<Option<Instant>>> = OnceLock::new();
+
+fn should_toggle_now() -> bool {
+    let now = Instant::now();
+    let min_interval = Duration::from_millis(250);
+    let lock = LAST_TOGGLE.get_or_init(|| Mutex::new(None));
+
+    if let Ok(mut last) = lock.lock() {
+        if let Some(previous) = *last {
+            if now.duration_since(previous) < min_interval {
+                return false;
+            }
+        }
+        *last = Some(now);
+        return true;
+    }
+
+    true
+}
+
 fn toggle_launcher(app: &tauri::AppHandle) {
+    if !should_toggle_now() {
+        return;
+    }
+
     if let Some(main_window) = app.get_webview_window("main") {
-        if main_window.is_visible().unwrap_or(false) {
+        let is_visible = main_window.is_visible().unwrap_or(false);
+        let is_focused = main_window.is_focused().unwrap_or(false);
+
+        // Only hide when the launcher is actively focused; otherwise treat toggle as "bring to front".
+        if is_visible && is_focused {
             let _ = main_window.hide();
         } else {
             let _ = main_window.unminimize();
-            let _ = main_window.center();
             let _ = main_window.show();
+            let _ = main_window.center();
             let _ = main_window.set_focus();
         }
     }
@@ -74,11 +103,16 @@ pub fn run() {
 
             if let Ok(layout_mode) = settings::get_ui_layout_mode(app.handle().clone()) {
                 let compact = matches!(layout_mode, UiLayoutMode::Compressed);
-                let _ = launcher_window::set_launcher_compact_mode(app.handle().clone(), compact, None);
+                let _ =
+                    launcher_window::set_launcher_compact_mode(app.handle().clone(), compact, None);
             }
 
             // Initialize File Search Backend via State
             state::init(app.handle());
+
+            if let Err(error) = calculator::initialize(&app.handle()) {
+                log::warn!("failed to initialize soulver calculator: {error}");
+            }
 
             Ok(())
         })
