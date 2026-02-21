@@ -2,6 +2,7 @@ import { RouterProvider, createRouter } from "@tanstack/react-router";
 import ReactDOM from "react-dom/client";
 
 import Loader from "./components/loader";
+import { Toaster } from "./components/ui/sonner";
 import { QueryProvider } from "./providers/query-provider";
 import { ThemeProvider } from "./components/theme-provider";
 import { routeTree } from "./routeTree.gen";
@@ -31,6 +32,7 @@ if (!rootElement.innerHTML) {
     <QueryProvider>
       <ThemeProvider defaultTheme="default">
         <RouterProvider router={router} />
+        <Toaster position="top-right" richColors />
       </ThemeProvider>
     </QueryProvider>,
   );

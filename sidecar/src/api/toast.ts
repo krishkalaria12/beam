@@ -3,6 +3,8 @@ import { writeOutput } from '../io';
 import { getNextInstanceId, toasts } from '../state';
 import { Toast as ToastEnum } from './types';
 
+let activeToastId: number | null = null;
+
 class ToastImpl implements api.Toast {
 	#id: number;
 	#style: api.Toast.Style;
@@ -63,6 +65,9 @@ class ToastImpl implements api.Toast {
 	async hide(): Promise<void> {
 		writeOutput({ type: 'HIDE_TOAST', payload: { id: this.#id } });
 		toasts.delete(this.#id);
+		if (activeToastId === this.#id) {
+			activeToastId = null;
+		}
 	}
 
 	async show(): Promise<void> {
@@ -122,6 +127,11 @@ export async function showToast(
 	}
 
 	const toast = new ToastImpl(options);
+	if (activeToastId !== null && activeToastId !== toast.id) {
+		writeOutput({ type: 'HIDE_TOAST', payload: { id: activeToastId } });
+		toasts.delete(activeToastId);
+	}
+	activeToastId = toast.id;
 	await toast.show();
 	return toast;
 }

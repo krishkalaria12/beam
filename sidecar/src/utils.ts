@@ -15,7 +15,8 @@ export function serializeProps(props: Record<string, unknown>): Record<string, u
 
 	for (const key in props) {
 		// part 1: we don't need to serialize children because they are handled by the reconciler
-		if (key === 'children') {
+		// refs can hold circular objects (current -> instance -> fiber -> ...), so they must never be serialized
+		if (key === 'children' || key === 'ref') {
 			continue;
 		}
 

@@ -14,22 +14,10 @@ pub async fn initialize_backend(index: Arc<ConcurrentMap<String, FileEntry>>) {
     // A. Create the Channel for the Watcher
     let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<IndexUpdate>();
 
-    // B. Try Load Cache or Build Fresh Index
-    log::info!("Init: Loading Cache...");
-
     let maybe_index = match cache::get_cache_file() {
-        Ok(Some(idx)) => {
-            log::info!("Cache loaded! {} files.", idx.entries.len());
-            Some(idx)
-        }
-        Ok(None) => {
-            log::info!("Cache missing. Building fresh index...");
-            None
-        }
-        Err(e) => {
-            log::error!("Cache error: {}. Building fresh index...", e);
-            None
-        }
+        Ok(Some(idx)) => Some(idx),
+        Ok(None) => None,
+        Err(e) => None,
     };
 
     match maybe_index {
@@ -66,7 +54,6 @@ pub async fn initialize_backend(index: Arc<ConcurrentMap<String, FileEntry>>) {
     };
 
     // D. Start the Watcher
-    log::info!("Init: Starting Watcher...");
     let _watcher = match watcher::start_watcher(tx.clone()) {
         Ok(w) => Some(w),
         Err(e) => {

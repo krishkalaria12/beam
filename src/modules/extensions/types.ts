@@ -15,27 +15,27 @@ export const preferenceDataSchema = z.object({
 export const preferenceSchema = z.object({
   name: z.string(),
   type: z.string(),
-  title: z.string().optional(),
-  description: z.string().optional(),
-  required: z.boolean().optional(),
-  default: z.unknown().optional(),
-  data: z.array(preferenceDataSchema).optional(),
-  label: z.string().optional(),
+  title: z.string().nullish(),
+  description: z.string().nullish(),
+  required: z.boolean().nullish(),
+  default: z.unknown().nullish(),
+  data: z.array(preferenceDataSchema).nullish(),
+  label: z.string().nullish(),
 });
 
 export const pluginInfoSchema = z.object({
   title: z.string(),
-  description: z.string().optional(),
+  description: z.string().nullish(),
   pluginTitle: z.string(),
   pluginName: z.string(),
   commandName: z.string(),
   pluginPath: z.string(),
-  icon: z.string().optional(),
-  preferences: z.array(preferenceSchema).optional(),
-  commandPreferences: z.array(preferenceSchema).optional(),
-  mode: z.string().optional(),
-  author: authorSchema.optional(),
-  owner: z.string().optional(),
+  icon: z.string().nullish(),
+  preferences: z.array(preferenceSchema).nullish(),
+  commandPreferences: z.array(preferenceSchema).nullish(),
+  mode: z.string().nullish(),
+  author: authorSchema.nullish(),
+  owner: z.string().nullish(),
 });
 
 export const pluginListSchema = z.array(pluginInfoSchema);

@@ -9,6 +9,7 @@ import QuicklinksCommandGroup from "@/modules/quicklinks/components/quicklinks-c
 import SpeedTestCommandGroup from "@/modules/speed-test/components/speed-test-command-group";
 import TranslationCommandGroup from "@/modules/translation/components/translation-command-group";
 import ExtensionsCommandGroup from "@/modules/extensions/components/extensions-command-group";
+import { ExtensionRunnerView } from "@/modules/extensions/components/extension-runner-view";
 import type { QuicklinksView } from "@/store/use-launcher-ui-store";
 
 const TAKEOVER_PANELS = [
@@ -19,6 +20,7 @@ const TAKEOVER_PANELS = [
   "speed-test",
   "clipboard",
   "extensions",
+  "extension-runner",
 ] as const;
 
 type TakeoverPanel = (typeof TAKEOVER_PANELS)[number];
@@ -99,6 +101,14 @@ const TAKEOVER_PANEL_RENDERERS: Record<TakeoverPanel, TakeoverPanelRenderer> = {
       onOpen={input.openExtensions}
       onBack={input.backToCommands}
     />
+  ),
+  "extension-runner": (input) => (
+    <div className="absolute inset-0 z-50 bg-background">
+      <ExtensionRunnerView
+        onBack={input.backToCommands}
+        onOpenExtensions={input.openExtensions}
+      />
+    </div>
   ),
 };
 

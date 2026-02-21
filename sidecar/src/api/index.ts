@@ -31,6 +31,8 @@ import * as OAuth from './oauth';
 import { AI } from './ai';
 import { Keyboard } from './keyboard';
 import { currentPluginName, currentPluginPreferences } from '../state';
+import { writeOutput } from '../io';
+import { sendRequest } from './rpc';
 
 const Image = {
 	Mask: {
@@ -41,6 +43,34 @@ const Image = {
 
 export const getRaycastApi = () => {
 	const LocalStorage = createLocalStorage();
+	const closeMainWindow = async () => {
+		writeOutput({ type: 'go-back-to-plugin-list', payload: {} });
+	};
+	const clearSearchBar = async () => {};
+	const confirmAlert = async (options?: {
+		title?: string;
+		message?: string;
+		primaryAction?: { title?: string };
+	}): Promise<boolean> => {
+		const result = await sendRequest<boolean>('confirm-alert', {
+			title: options?.title,
+			message: options?.message,
+			primaryActionTitle: options?.primaryAction?.title
+		});
+		return Boolean(result);
+	};
+	const launchCommand = async (options: {
+		name: string;
+		type?: string;
+		context?: Record<string, unknown>;
+	}): Promise<void> => {
+		await sendRequest('launch-command', {
+			name: options?.name,
+			type: options?.type,
+			context: options?.context,
+			extensionName: currentPluginName || environment.extensionName
+		});
+	};
 
 	return {
 		LocalStorage,
@@ -66,24 +96,28 @@ export const getRaycastApi = () => {
 		getApplications,
 		getDefaultApplication,
 		getFrontmostApplication,
-		getPreferenceValues: () => {
-			if (currentPluginName) {
-				return preferencesStore.getPreferenceValues(currentPluginName, currentPluginPreferences);
-			}
-			return {};
-		},
-		getSelectedFinderItems,
-		getSelectedText,
-		open,
-		showInFinder,
-		showToast,
-		showHUD,
-		trash,
-		useNavigation,
-		usePersistentState: <T>(
-			key: string,
-			initialValue: T
-		): [T, React.Dispatch<React.SetStateAction<T>>, boolean] => {
+			getPreferenceValues: () => {
+				if (currentPluginName) {
+					return preferencesStore.getPreferenceValues(currentPluginName, currentPluginPreferences);
+				}
+				return {};
+			},
+			getSelectedFinderItems,
+			getSelectedText,
+			closeMainWindow,
+			open,
+			showInFinder,
+			showToast,
+			showHUD,
+			trash,
+			confirmAlert,
+			launchCommand,
+			clearSearchBar,
+			useNavigation,
+			usePersistentState: <T>(
+				key: string,
+				initialValue: T
+			): [T, React.Dispatch<React.SetStateAction<T>>, boolean] => {
 			const [state, setState] = React.useState(initialValue);
 			return [state, setState, false];
 		},

@@ -20,7 +20,7 @@ pub mod utils;
 
 use std::sync::{Mutex, OnceLock};
 use std::time::{Duration, Instant};
-use tauri::Manager;
+use tauri::{Emitter, Manager};
 
 use crate::settings::UiLayoutMode;
 
@@ -65,6 +65,25 @@ fn toggle_launcher(app: &tauri::AppHandle) {
     }
 }
 
+fn extract_deep_link_arg(args: &[String]) -> Option<String> {
+    args.iter()
+        .find(|arg| {
+            arg.starts_with("raycast://")
+                || arg.starts_with("https://raycast.com/redirect")
+                || arg.starts_with("http://raycast.com/redirect")
+        })
+        .cloned()
+}
+
+fn emit_deep_link(app: &tauri::AppHandle, deep_link: String) {
+    if let Some(main_window) = app.get_webview_window("main") {
+        let _ = main_window.emit("deep-link", deep_link);
+        let _ = main_window.unminimize();
+        let _ = main_window.show();
+        let _ = main_window.set_focus();
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let mut builder = tauri::Builder::default()
@@ -72,11 +91,18 @@ pub fn run() {
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_clipboard::init())
+        .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_deep_link::init())
         .invoke_handler(app_commands::get_handler());
 
     #[cfg(desktop)]
     {
         builder = builder.plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
+            if let Some(deep_link) = extract_deep_link_arg(&args) {
+                emit_deep_link(app, deep_link);
+                return;
+            }
+
             if args.iter().any(|arg| arg == "--toggle") {
                 toggle_launcher(app);
             }
@@ -87,7 +113,11 @@ pub fn run() {
         .setup(|app| {
             #[cfg(desktop)]
             {
-                if std::env::args().any(|arg| arg == "--toggle") {
+                let startup_args: Vec<String> = std::env::args().collect();
+
+                if let Some(deep_link) = extract_deep_link_arg(&startup_args) {
+                    emit_deep_link(&app.handle(), deep_link);
+                } else if startup_args.iter().any(|arg| arg == "--toggle") {
                     toggle_launcher(&app.handle());
                 }
             }

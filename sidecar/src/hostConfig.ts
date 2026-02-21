@@ -16,8 +16,8 @@ import {
 	commitBuffer
 } from './state';
 import { writeLog, writeOutput } from './io';
-import { serializeProps, optimizeCommitBuffer, getComponentDisplayName } from './utils';
-import React, { type ReactNode } from 'react';
+import { serializeProps, optimizeCommitBuffer } from './utils';
+import React from 'react';
 
 const handleAccessory = (parent: ParentInstance, child: AnyInstance) => {
 	if (child.type === '_AccessorySlot') {
@@ -98,89 +98,16 @@ const removeChildFromParent = (parent: ParentInstance, child: AnyInstance) => {
 
 function processProps(props: Record<string, unknown>) {
 	const propsToSerialize: Record<string, unknown> = {};
-	const namedChildren: { [key: string]: number } = {};
 
 	for (const [key, value] of Object.entries(props)) {
-		if (key === 'children') continue;
+		if (key === 'children' || key === 'ref') continue;
 
-		if (React.isValidElement(value)) {
-			// This logic is now only relevant for createInstance
-			const result = createInstanceFromElement(value);
-			if (Array.isArray(result)) {
-				if (result.length > 0) {
-					throw new Error(`The prop '${key}' cannot be a React.Fragment or an array of elements.`);
-				}
-			} else {
-				namedChildren[key] = result.id;
-			}
-		} else {
-			propsToSerialize[key] = value;
-		}
-	}
-	return { propsToSerialize, namedChildren };
-}
-
-function createInstanceFromElement(element: React.ReactElement): FlareInstance | FlareInstance[] {
-	if (element.type === undefined || element.type === React.Fragment) {
-		const props = element.props as { children?: ReactNode };
-		const childElements = React.Children.toArray(props.children);
-		return childElements
-			.filter(React.isValidElement)
-			.flatMap((child) => createInstanceFromElement(child as React.ReactElement));
+		// Keep React elements opaque here; invoking function components from props can
+		// trigger hooks outside React render and break extension trees.
+		propsToSerialize[key] = value;
 	}
 
-	if (typeof element.type === 'function') {
-		const FunctionComponent = element.type as React.FunctionComponent;
-		const rendered = FunctionComponent(element.props);
-
-		if (rendered === null || rendered === undefined) return [];
-		if (Array.isArray(rendered)) {
-			return rendered.flatMap((child) =>
-				React.isValidElement(child) ? createInstanceFromElement(child) : []
-			);
-		}
-		if (React.isValidElement(rendered)) {
-			return createInstanceFromElement(rendered);
-		}
-		return [];
-	}
-
-	const componentType = getComponentDisplayName(element.type as ComponentType);
-	const id = getNextInstanceId();
-
-	const props = (element.props ?? {}) as Record<string, unknown>;
-	const children = ('children' in props ? props.children : []) as ReactNode;
-	const childElements = React.Children.toArray(children);
-	const childInstances = childElements
-		.filter(React.isValidElement)
-		.flatMap((child) => createInstanceFromElement(child as React.ReactElement));
-
-	const { propsToSerialize, namedChildren } = processProps(props);
-
-	const instance: FlareInstance = {
-		id,
-		type: componentType,
-		children: childInstances,
-		props: serializeProps(propsToSerialize),
-		_unserializedProps: props,
-		_internalFiber: (element as unknown as { _owner?: Fiber })._owner,
-		namedChildren
-	};
-
-	instances.set(id, instance);
-
-	addToCommitBuffer({
-		type: 'CREATE_INSTANCE',
-		payload: {
-			id,
-			type: componentType,
-			props: instance.props,
-			children: childInstances.map((c) => c.id),
-			namedChildren: instance.namedChildren
-		}
-	});
-
-	return instance;
+	return { propsToSerialize, namedChildren: {} };
 }
 
 export const hostConfig: HostConfig<
@@ -303,7 +230,7 @@ export const hostConfig: HostConfig<
 	commitUpdate(instance, type, oldProps, newProps) {
 		const propsToSerialize: Record<string, unknown> = {};
 		for (const key in newProps) {
-			if (key !== 'children' && !React.isValidElement(newProps[key])) {
+			if (key !== 'children' && key !== 'ref' && !React.isValidElement(newProps[key])) {
 				propsToSerialize[key] = newProps[key];
 			}
 		}

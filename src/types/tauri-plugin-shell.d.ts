@@ -13,6 +13,8 @@ declare module "@tauri-apps/plugin-shell" {
     on(event: "data", callback: (data: T) => void): void;
   }
 
+  export function open(path: string, openWith?: string): Promise<void>;
+
   export class Command {
     static sidecar(
       program: string,

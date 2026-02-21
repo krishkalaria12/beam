@@ -20,6 +20,7 @@
     "desktop:build": "tauri build"
   },
   "dependencies": {
+    "@flare/protocol": "workspace:*",
     "@base-ui/react": "^1.0.0",
     "@cloudflare/speedtest": "^1.7.0",
     "@hookform/resolvers": "^5.1.1",
@@ -36,6 +37,8 @@
     "emojibase-data": "^17.0.0",
     "lucide-react": "^0.563.0",
     "next-themes": "^0.4.6",
+    "msgpackr": "^1.11.4",
+    "pako": "^2.1.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "shadcn": "^3.6.2",

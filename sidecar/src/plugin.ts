@@ -11,6 +11,62 @@ import { config } from './config';
 import * as ReactJsxRuntime from 'react/jsx-runtime';
 import { aiContext, setCurrentPlugin } from './state';
 
+type CompatKey = string | number;
+
+const hasOwn = (value: object, key: string): boolean =>
+	Object.prototype.hasOwnProperty.call(value, key);
+
+const toCompatProps = (props: unknown): Record<string, unknown> | null => {
+	if (props == null) {
+		return null;
+	}
+	if (typeof props !== 'object') {
+		return null;
+	}
+	return props as Record<string, unknown>;
+};
+
+const createCompatElement = (type: unknown, props: unknown, ...rest: unknown[]): React.ReactElement => {
+	const normalizedProps = toCompatProps(props);
+
+	// Some extension bundles call _jsx(type, props, ...children), while others
+	// follow jsx-runtime and pass _jsx(type, props, key). Support both forms.
+	if (rest.length === 1) {
+		const [maybeKey] = rest;
+		const shouldTreatAsKey =
+			(typeof maybeKey === 'string' || typeof maybeKey === 'number') &&
+			(!normalizedProps || !hasOwn(normalizedProps, 'children'));
+
+		if (shouldTreatAsKey) {
+			return React.createElement(type as React.ElementType, {
+				...(normalizedProps ?? {}),
+				key: maybeKey as CompatKey
+			});
+		}
+	}
+
+	return React.createElement(
+		type as React.ElementType,
+		normalizedProps,
+		...(rest as React.ReactNode[])
+	);
+};
+
+const createCompatElementDev = (
+	type: unknown,
+	props: unknown,
+	key?: unknown
+): React.ReactElement => {
+	const normalizedProps = toCompatProps(props) ?? {};
+	if (key == null) {
+		return React.createElement(type as React.ElementType, normalizedProps);
+	}
+	return React.createElement(type as React.ElementType, {
+		...normalizedProps,
+		key: key as CompatKey
+	});
+};
+
 const createPluginRequire =
 	() =>
 	(moduleName: string): unknown => {
@@ -22,12 +78,19 @@ const createPluginRequire =
 			return getRaycastApi();
 		}
 
-		if (moduleName === 'react') {
-			return React;
+		if (moduleName === 'react/jsx-runtime') {
+			return {
+				...ReactJsxRuntime,
+				jsx: createCompatElement,
+				jsxs: createCompatElement
+			};
 		}
 
-		if (moduleName === 'react/jsx-runtime') {
-			return ReactJsxRuntime;
+		if (moduleName === 'react/jsx-dev-runtime') {
+			return {
+				...ReactJsxRuntime,
+				jsxDEV: createCompatElementDev
+			};
 		}
 
 		return require(moduleName);
@@ -99,6 +162,11 @@ export const runPlugin = (
 		'exports',
 		'React',
 		'console',
+		'_jsx',
+		'_jsxs',
+		'_Fragment',
+		'_jsxFragment',
+		'_jsxDEV',
 		scriptText
 	);
 
@@ -114,7 +182,18 @@ export const runPlugin = (
 		}
 	};
 
-	scriptFunction(createPluginRequire(), pluginModule, pluginModule.exports, React, mockConsole);
+	scriptFunction(
+		createPluginRequire(),
+		pluginModule,
+		pluginModule.exports,
+		React,
+		mockConsole,
+		createCompatElement,
+		createCompatElement,
+		React.Fragment,
+		ReactJsxRuntime.Fragment,
+		createCompatElementDev
+	);
 
 	const PluginRoot = pluginModule.exports.default;
 

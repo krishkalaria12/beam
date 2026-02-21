@@ -36,6 +36,7 @@ const VALID_PANELS: ReadonlySet<CommandPanel> = new Set([
   "speed-test",
   "translation",
   "extensions",
+  "extension-runner",
 ]);
 
 export type DispatchErrorCode =

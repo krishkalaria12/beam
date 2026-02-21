@@ -22,6 +22,9 @@ tauri = { version = "2.10.0", features = ["protocol-asset"] }
 tauri-plugin-log = "2"
 tauri-plugin-store = "2"
 tauri-plugin-dialog = "2.5.0"
+tauri-plugin-deep-link = "2"
+tauri-plugin-shell = "2"
+tauri-plugin-clipboard = "2.1.11"
 
 # Async Runtime & Concurrency
 tokio = "1.49.0"
@@ -81,7 +84,6 @@ log = "0.4"
 image = "0.25.6"
 open = "5.3.3"
 whichlang = "0.1.0"
-tauri-plugin-clipboard = "2.1.11"
 
 # Platform-Specific Dependencies
 [target.'cfg(any(target_os = "macos", windows, target_os = "linux"))'.dependencies]

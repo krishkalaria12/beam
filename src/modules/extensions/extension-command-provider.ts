@@ -59,7 +59,7 @@ function toExtensionId(plugin: PluginInfo): string {
 
 function isExecutableInBeam(plugin: PluginInfo): boolean {
   const normalizedMode = plugin.mode?.trim().toLowerCase();
-  return normalizedMode === "no-view";
+  return normalizedMode === "no-view" || normalizedMode === "view";
 }
 
 function matchPlugin(plugin: PluginInfo, query: string): boolean {

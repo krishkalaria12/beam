@@ -1,6 +1,8 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { isTauri } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 
 import { buildCommandContext } from "@/command-registry/context";
 import {
@@ -31,6 +33,8 @@ import { LauncherSecondaryPanel } from "@/modules/launcher/components/launcher-s
 import { LauncherTakeoverPanel } from "@/modules/launcher/components/launcher-takeover-panel";
 import { createCustomActionHandler } from "@/modules/launcher/lib/create-custom-action-handler";
 import { extensionSidecarService } from "@/modules/extensions/sidecar-service";
+import { ExtensionToastBridge } from "@/modules/extensions/components/extension-toast-bridge";
+import { useExtensionRuntimeStore } from "@/modules/extensions/runtime/store";
 import { findQuicklinkByKeyword } from "@/modules/quicklinks/api/quicklinks";
 import { useQuicklinks } from "@/modules/quicklinks/hooks/use-quicklinks";
 import { setLauncherCompactMode } from "@/modules/settings/api/set-launcher-compact-mode";
@@ -85,10 +89,52 @@ export default function LauncherCommand() {
   );
 
   useEffect(() => {
+    if (!isTauri()) {
+      return;
+    }
+
+    let disposed = false;
+    let unlisten: (() => void) | undefined;
+
+    void listen<string>("deep-link", (event) => {
+      extensionSidecarService.handleDeepLink(event.payload);
+    })
+      .then((cleanup) => {
+        if (disposed) {
+          cleanup();
+          return;
+        }
+        unlisten = cleanup;
+      })
+      .catch((error) => {
+        console.error("Failed to listen for deep links:", error);
+      });
+
     return () => {
-      extensionSidecarService.stop();
+      disposed = true;
+      unlisten?.();
     };
   }, []);
+
+  useEffect(() => {
+    const unsubscribe = extensionSidecarService.subscribe((event) => {
+      if (event.type === "go-back-to-plugin-list") {
+        useExtensionRuntimeStore.getState().resetRuntime();
+        backToCommands();
+        return;
+      }
+
+      if (event.type === "show-hud") {
+        toast.message(event.title);
+      }
+    });
+
+    return () => {
+      unsubscribe();
+      extensionSidecarService.stop();
+      useExtensionRuntimeStore.getState().resetRuntime();
+    };
+  }, [backToCommands]);
 
   const commandContext = useMemo(
     () =>
@@ -221,23 +267,36 @@ export default function LauncherCommand() {
             throw new Error("Extension command payload is missing pluginPath.");
           }
 
-          if (pluginMode !== "no-view") {
-            throw new Error(
-              `Extension command mode "${pluginMode}" is not supported yet in Beam.`,
-            );
+          useExtensionRuntimeStore.getState().resetForNewPlugin({
+            pluginPath,
+            pluginMode,
+            title: request.command.title,
+            subtitle: request.command.subtitle,
+          });
+
+          if (pluginMode === "view") {
+            openPanel("extension-runner", true);
           }
 
-          await extensionSidecarService.runPlugin({
-            pluginPath,
-            mode: pluginMode,
-            aiAccessStatus: false,
-          });
+          try {
+            await extensionSidecarService.runPlugin({
+              pluginPath,
+              mode: pluginMode,
+              aiAccessStatus: false,
+            });
+          } catch (error) {
+            useExtensionRuntimeStore.getState().resetRuntime();
+            if (pluginMode === "view") {
+              backToCommands();
+            }
+            throw error;
+          }
         },
         onCalculatorHistoryChanged: () => {
           void queryClient.invalidateQueries({ queryKey: ["calculator", "history"] });
         },
       }),
-    [calculatorSessionId, queryClient, setCommandSearch],
+    [backToCommands, calculatorSessionId, openPanel, queryClient, setCommandSearch],
   );
 
   const handleRegistryCommandSelect = async (
@@ -348,6 +407,7 @@ export default function LauncherCommand() {
 
   return (
     <div className="relative h-full w-full bg-background">
+      <ExtensionToastBridge />
       <Command
         shouldFilter={false}
         onKeyDown={handleKeyDown}

@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+SEARCH_DIR="$SCRIPT_DIR"
+SIDECAR_ENTRY=""
+
+while [[ "$SEARCH_DIR" != "/" ]]; do
+  CANDIDATE="$SEARCH_DIR/sidecar/dist/index.js"
+  if [[ -f "$CANDIDATE" ]]; then
+    SIDECAR_ENTRY="$CANDIDATE"
+    break
+  fi
+  SEARCH_DIR="$(dirname "$SEARCH_DIR")"
+done
+
+if [[ -z "$SIDECAR_ENTRY" ]]; then
+  echo "sidecar launcher: could not locate sidecar/dist/index.js from $SCRIPT_DIR" >&2
+  exit 1
+fi
+
+exec node "$SIDECAR_ENTRY" "$@"
