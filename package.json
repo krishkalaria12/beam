@@ -3,12 +3,18 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "workspaces": [
+    "packages/*",
+    "sidecar"
+  ],
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
     "serve": "vite preview",
     "start": "vite",
     "check-types": "tsc --noEmit",
+    "sidecar:build": "bun run --cwd sidecar build",
+    "sidecar:check": "bun run --cwd sidecar check",
     "tauri": "tauri",
     "desktop:dev": "tauri dev",
     "desktop:build": "tauri build"
@@ -22,6 +28,7 @@
     "@tanstack/react-query": "^5.90.20",
     "@tanstack/react-router": "^1.141.1",
     "@tauri-apps/api": "^2.10.1",
+    "@tauri-apps/plugin-shell": "^2.3.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
