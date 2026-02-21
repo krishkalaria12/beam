@@ -55,7 +55,8 @@ export type CommandPanel =
   | "dictionary"
   | "quicklinks"
   | "speed-test"
-  | "translation";
+  | "translation"
+  | "extensions";
 
 export interface CommandContext {
   rawQuery: string;

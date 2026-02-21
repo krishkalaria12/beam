@@ -10,6 +10,7 @@ import {
   toQuicklinkExecuteCommandId,
 } from "@/command-registry/default-providers";
 import { dispatchCommand } from "@/command-registry/dispatcher";
+import type { CustomActionRequest } from "@/command-registry/dispatcher";
 import { createCommandProviderOrchestrator } from "@/command-registry/providers";
 import type { RankedCommand } from "@/command-registry/ranker";
 import { rankCommands } from "@/command-registry/ranker";
@@ -29,6 +30,7 @@ import { LauncherFooter } from "@/modules/launcher/components/launcher-footer";
 import { LauncherSecondaryPanel } from "@/modules/launcher/components/launcher-secondary-panel";
 import { LauncherTakeoverPanel } from "@/modules/launcher/components/launcher-takeover-panel";
 import { createCustomActionHandler } from "@/modules/launcher/lib/create-custom-action-handler";
+import { extensionSidecarService } from "@/modules/extensions/sidecar-service";
 import { findQuicklinkByKeyword } from "@/modules/quicklinks/api/quicklinks";
 import { useQuicklinks } from "@/modules/quicklinks/hooks/use-quicklinks";
 import { setLauncherCompactMode } from "@/modules/settings/api/set-launcher-compact-mode";
@@ -81,6 +83,12 @@ export default function LauncherCommand() {
       }),
     [],
   );
+
+  useEffect(() => {
+    return () => {
+      extensionSidecarService.stop();
+    };
+  }, []);
 
   const commandContext = useMemo(
     () =>
@@ -201,6 +209,30 @@ export default function LauncherCommand() {
       createCustomActionHandler({
         calculatorSessionId,
         setCommandSearch,
+        runExtensionCommand: async (request: CustomActionRequest) => {
+          const pluginPath = typeof request.payload.pluginPath === "string"
+            ? request.payload.pluginPath.trim()
+            : "";
+          const pluginMode = request.payload.pluginMode === "no-view"
+            ? "no-view"
+            : "view";
+
+          if (!pluginPath) {
+            throw new Error("Extension command payload is missing pluginPath.");
+          }
+
+          if (pluginMode !== "no-view") {
+            throw new Error(
+              `Extension command mode "${pluginMode}" is not supported yet in Beam.`,
+            );
+          }
+
+          await extensionSidecarService.runPlugin({
+            pluginPath,
+            mode: pluginMode,
+            aiAccessStatus: false,
+          });
+        },
         onCalculatorHistoryChanged: () => {
           void queryClient.invalidateQueries({ queryKey: ["calculator", "history"] });
         },
@@ -351,6 +383,9 @@ export default function LauncherCommand() {
             }}
             openClipboard={() => {
               openPanel("clipboard", true);
+            }}
+            openExtensions={() => {
+              openPanel("extensions", true);
             }}
             backToCommands={backToCommands}
           />

@@ -105,6 +105,13 @@ function CommandIcon({ command }: { command: CommandDescriptor }) {
       </div>
     );
   }
+  if (command.icon === "extension") {
+    return (
+      <div className="flex size-6 items-center justify-center rounded-sm bg-primary/10 text-primary">
+        <Link2 className="size-4" />
+      </div>
+    );
+  }
   if (command.icon === "back") {
     return (
       <div className="flex size-6 items-center justify-center rounded-sm bg-muted text-muted-foreground">

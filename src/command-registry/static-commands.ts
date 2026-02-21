@@ -238,6 +238,28 @@ export const STATIC_COMMANDS: CommandDescriptor[] = [
     },
   },
   {
+    id: "extensions.panel.open",
+    title: "manage extensions",
+    subtitle: "Search, install, and uninstall extensions",
+    keywords: [
+      "extension",
+      "extensions",
+      "raycast",
+      "store",
+      "install extension",
+      "uninstall extension",
+      "ext",
+    ],
+    endText: "open",
+    icon: "extension",
+    kind: "panel",
+    scope: SCOPE_NORMAL_COMPRESSED,
+    action: {
+      type: "OPEN_PANEL",
+      payload: { panel: "extensions" },
+    },
+  },
+  {
     id: "search.web.google",
     title: "search google",
     subtitle: "Browser",
