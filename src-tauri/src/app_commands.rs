@@ -1,6 +1,6 @@
 use crate::{
-    applications, calculator, clipboard, dictionary, file_search, launcher_window, quicklinks,
-    search, settings, system_actions, translation,
+    applications, calculator, clipboard, dictionary, extensions, file_search, launcher_window,
+    quicklinks, search, settings, system_actions, translation,
 };
 
 use tauri::ipc::Invoke;
@@ -34,5 +34,8 @@ pub fn get_handler() -> impl Fn(Invoke) -> bool {
         launcher_window::set_launcher_compact_mode,
         settings::get_ui_layout_mode,
         settings::set_ui_layout_mode,
+        extensions::get_discovered_plugins,
+        extensions::install_extension,
+        extensions::uninstall_extension,
     ]
 }

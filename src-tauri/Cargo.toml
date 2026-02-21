@@ -67,6 +67,8 @@ base64 = "0.22.1"
 
 # HTTP & Networking
 reqwest = { version = "0.13.2", default-features = false, features = ["rustls", "json"] }
+bytes = "1.10.1"
+zip = "4.1.0"
 url = "2.5.8"
 favicon-picker = "1.1.0"
 

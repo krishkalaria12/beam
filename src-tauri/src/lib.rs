@@ -5,6 +5,7 @@ pub mod clipboard;
 pub mod config;
 pub mod dictionary;
 pub mod error;
+pub mod extensions;
 pub mod file_search;
 pub mod fuzzy_search;
 pub mod http;
@@ -17,9 +18,9 @@ pub mod system_actions;
 pub mod translation;
 pub mod utils;
 
-use tauri::Manager;
 use std::sync::{Mutex, OnceLock};
 use std::time::{Duration, Instant};
+use tauri::Manager;
 
 use crate::settings::UiLayoutMode;
 
