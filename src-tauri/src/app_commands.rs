@@ -44,5 +44,17 @@ pub fn get_handler() -> impl Fn(Invoke) -> bool {
         extensions::get_discovered_plugins,
         extensions::install_extension,
         extensions::uninstall_extension,
+        extensions::browser_extension::browser_extension_check_connection,
+        extensions::browser_extension::browser_extension_request,
+        extensions::oauth::oauth_set_tokens,
+        extensions::oauth::oauth_get_tokens,
+        extensions::oauth::oauth_remove_tokens,
+        extensions::ai::set_ai_api_key,
+        extensions::ai::is_ai_api_key_set,
+        extensions::ai::clear_ai_api_key,
+        extensions::ai::get_ai_settings,
+        extensions::ai::set_ai_settings,
+        extensions::ai::ai_can_access,
+        extensions::ai::ai_ask_stream,
     ]
 }

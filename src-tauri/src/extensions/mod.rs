@@ -1,12 +1,20 @@
+pub mod ai;
+pub mod browser_extension;
+pub mod error;
+pub mod oauth;
+
 use std::fs;
 use std::io::{self, Cursor, Read};
 use std::path::{Path, PathBuf};
 
 use bytes::Bytes;
+use error::{ExtensionError, Result};
 use serde::{Deserialize, Serialize};
 use tauri::Manager;
 use zip::result::ZipError;
 use zip::ZipArchive;
+
+use crate::config::config;
 
 #[derive(Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -29,10 +37,13 @@ trait IncompatibilityHeuristic {
 struct AppleScriptHeuristic;
 impl IncompatibilityHeuristic for AppleScriptHeuristic {
     fn check(&self, command_title: &str, file_content: &str) -> Option<HeuristicViolation> {
-        if file_content.contains("runAppleScript") {
+        if file_content.contains(config().EXTENSIONS_HEURISTIC_APPLESCRIPT_SYMBOL) {
             Some(HeuristicViolation {
                 command_name: command_title.to_string(),
-                reason: "Possible usage of AppleScript (runAppleScript)".to_string(),
+                reason: format!(
+                    "Possible usage of AppleScript ({})",
+                    config().EXTENSIONS_HEURISTIC_APPLESCRIPT_SYMBOL
+                ),
             })
         } else {
             None
@@ -43,8 +54,7 @@ impl IncompatibilityHeuristic for AppleScriptHeuristic {
 struct MacOSPathHeuristic;
 impl IncompatibilityHeuristic for MacOSPathHeuristic {
     fn check(&self, command_title: &str, file_content: &str) -> Option<HeuristicViolation> {
-        let macos_paths = ["/Applications/", "/Library/", "/Users/"];
-        for path in macos_paths {
+        for path in &config().EXTENSIONS_HEURISTIC_MACOS_PATHS {
             if file_content.contains(path) {
                 return Some(HeuristicViolation {
                     command_name: command_title.to_string(),
@@ -57,38 +67,34 @@ impl IncompatibilityHeuristic for MacOSPathHeuristic {
     }
 }
 
-fn get_extension_dir(app: &tauri::AppHandle, slug: &str) -> Result<PathBuf, String> {
+fn get_extension_dir(app: &tauri::AppHandle, slug: &str) -> Result<PathBuf> {
     let data_dir = app
         .path()
         .app_local_data_dir()
-        .map_err(|_| "Failed to get app local data dir".to_string())?;
+        .map_err(|_| ExtensionError::AppDataDirUnavailable)?;
 
-    Ok(data_dir.join("plugins").join(slug))
+    Ok(data_dir
+        .join(config().EXTENSIONS_PLUGINS_DIRECTORY)
+        .join(slug))
 }
 
 fn is_valid_extension_slug(slug: &str) -> bool {
     !slug.is_empty()
-        && slug.chars().all(|character| {
-            character.is_ascii_alphanumeric() || character == '-' || character == '_'
-        })
+        && slug
+            .chars()
+            .all(|character| character.is_ascii_alphanumeric() || character == '-' || character == '_')
 }
 
-async fn download_archive(url: &str) -> Result<Bytes, String> {
-    let response = reqwest::get(url)
-        .await
-        .map_err(|e| format!("Failed to download extension: {e}"))?;
-
+async fn download_archive(url: &str) -> Result<Bytes> {
+    let response = reqwest::get(url).await?;
     if !response.status().is_success() {
-        return Err(format!(
+        return Err(ExtensionError::Network(format!(
             "Failed to download extension: status code {}",
             response.status()
-        ));
+        )));
     }
 
-    response
-        .bytes()
-        .await
-        .map_err(|e| format!("Failed to read response bytes: {e}"))
+    response.bytes().await.map_err(ExtensionError::from)
 }
 
 fn find_common_prefix(file_names: &[PathBuf]) -> Option<PathBuf> {
@@ -114,26 +120,23 @@ fn find_common_prefix(file_names: &[PathBuf]) -> Option<PathBuf> {
 fn get_commands_from_package_json(
     archive: &mut ZipArchive<Cursor<Bytes>>,
     prefix: &Option<PathBuf>,
-) -> Result<Vec<(String, String)>, String> {
+) -> Result<Vec<(String, String)>> {
     let package_json_path = if let Some(path_prefix) = prefix {
-        path_prefix.join("package.json")
+        path_prefix.join(config().EXTENSIONS_PACKAGE_JSON_FILE)
     } else {
-        PathBuf::from("package.json")
+        PathBuf::from(config().EXTENSIONS_PACKAGE_JSON_FILE)
     };
 
     let mut package_file = match archive.by_name(&package_json_path.to_string_lossy()) {
         Ok(file) => file,
         Err(ZipError::FileNotFound) => return Ok(vec![]),
-        Err(err) => return Err(err.to_string()),
+        Err(error) => return Err(error.into()),
     };
 
     let mut package_content = String::new();
-    package_file
-        .read_to_string(&mut package_content)
-        .map_err(|e| e.to_string())?;
+    package_file.read_to_string(&mut package_content)?;
 
-    let package_json: serde_json::Value = serde_json::from_str(&package_content)
-        .map_err(|_| "Failed to parse package.json".to_string())?;
+    let package_json: serde_json::Value = serde_json::from_str(&package_content)?;
 
     let commands = match package_json
         .get("commands")
@@ -168,15 +171,14 @@ fn get_commands_from_package_json(
         .collect())
 }
 
-fn run_heuristic_checks(archive_data: &Bytes) -> Result<Vec<HeuristicViolation>, String> {
+fn run_heuristic_checks(archive_data: &Bytes) -> Result<Vec<HeuristicViolation>> {
     let heuristics: Vec<Box<dyn IncompatibilityHeuristic + Send + Sync>> =
         vec![Box::new(AppleScriptHeuristic), Box::new(MacOSPathHeuristic)];
     if heuristics.is_empty() {
         return Ok(vec![]);
     }
 
-    let mut archive =
-        ZipArchive::new(Cursor::new(archive_data.clone())).map_err(|e| e.to_string())?;
+    let mut archive = ZipArchive::new(Cursor::new(archive_data.clone()))?;
     let file_names: Vec<PathBuf> = archive.file_names().map(PathBuf::from).collect();
     let prefix = find_common_prefix(&file_names);
 
@@ -199,19 +201,18 @@ fn run_heuristic_checks(archive_data: &Bytes) -> Result<Vec<HeuristicViolation>,
     Ok(violations)
 }
 
-fn extract_archive(archive_data: &Bytes, target_dir: &Path) -> Result<(), String> {
+fn extract_archive(archive_data: &Bytes, target_dir: &Path) -> Result<()> {
     if target_dir.exists() {
-        fs::remove_dir_all(target_dir).map_err(|e| e.to_string())?;
+        fs::remove_dir_all(target_dir)?;
     }
-    fs::create_dir_all(target_dir).map_err(|e| e.to_string())?;
+    fs::create_dir_all(target_dir)?;
 
-    let mut archive =
-        ZipArchive::new(Cursor::new(archive_data.clone())).map_err(|e| e.to_string())?;
+    let mut archive = ZipArchive::new(Cursor::new(archive_data.clone()))?;
     let file_names: Vec<PathBuf> = archive.file_names().map(PathBuf::from).collect();
     let prefix_to_strip = find_common_prefix(&file_names);
 
     for index in 0..archive.len() {
-        let mut file = archive.by_index(index).map_err(|e| e.to_string())?;
+        let mut file = archive.by_index(index)?;
         let enclosed_path = match file.enclosed_name() {
             Some(path) => path.to_path_buf(),
             None => continue,
@@ -233,23 +234,22 @@ fn extract_archive(archive_data: &Bytes, target_dir: &Path) -> Result<(), String
         let outpath = target_dir.join(final_path_part);
 
         if file.name().ends_with('/') {
-            fs::create_dir_all(&outpath).map_err(|e| e.to_string())?;
+            fs::create_dir_all(&outpath)?;
         } else {
             if let Some(parent) = outpath.parent() {
                 if !parent.exists() {
-                    fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+                    fs::create_dir_all(parent)?;
                 }
             }
-            let mut outfile = fs::File::create(&outpath).map_err(|e| e.to_string())?;
-            io::copy(&mut file, &mut outfile).map_err(|e| e.to_string())?;
+            let mut outfile = fs::File::create(&outpath)?;
+            io::copy(&mut file, &mut outfile)?;
         }
 
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
             if let Some(mode) = file.unix_mode() {
-                fs::set_permissions(&outpath, fs::Permissions::from_mode(mode))
-                    .map_err(|e| e.to_string())?;
+                fs::set_permissions(&outpath, fs::Permissions::from_mode(mode))?;
             }
         }
     }
@@ -293,7 +293,6 @@ struct CommandInfo {
     title: Option<String>,
     description: Option<String>,
     icon: Option<String>,
-    subtitle: Option<String>,
     mode: Option<String>,
     preferences: Option<Vec<Preference>>,
 }
@@ -328,19 +327,17 @@ pub struct PluginInfo {
     pub owner: Option<String>,
 }
 
-pub fn discover_plugins(app: &tauri::AppHandle) -> Result<Vec<PluginInfo>, String> {
+pub fn discover_plugins(app: &tauri::AppHandle) -> Result<Vec<PluginInfo>> {
     let plugins_base_dir = get_extension_dir(app, "")?;
     let mut plugins = Vec::new();
 
     if !plugins_base_dir.exists() {
-        fs::create_dir_all(&plugins_base_dir)
-            .map_err(|e| format!("Failed to create plugins directory: {e}"))?;
+        fs::create_dir_all(&plugins_base_dir)?;
         return Ok(plugins);
     }
 
-    let plugin_dirs = fs::read_dir(plugins_base_dir)
-        .map_err(|e| e.to_string())?
-        .filter_map(Result::ok)
+    let plugin_dirs = fs::read_dir(plugins_base_dir)?
+        .filter_map(std::result::Result::ok)
         .filter(|entry| entry.path().is_dir());
 
     for plugin_dir_entry in plugin_dirs {
@@ -350,7 +347,7 @@ pub fn discover_plugins(app: &tauri::AppHandle) -> Result<Vec<PluginInfo>, Strin
             .and_then(|segment| segment.to_str())
             .unwrap_or_default()
             .to_string();
-        let package_json_path = plugin_dir.join("package.json");
+        let package_json_path = plugin_dir.join(config().EXTENSIONS_PACKAGE_JSON_FILE);
 
         if !package_json_path.exists() {
             eprintln!("Plugin {plugin_dir_name} has no package.json, skipping");
@@ -359,16 +356,16 @@ pub fn discover_plugins(app: &tauri::AppHandle) -> Result<Vec<PluginInfo>, Strin
 
         let package_json_content = match fs::read_to_string(&package_json_path) {
             Ok(content) => content,
-            Err(err) => {
-                eprintln!("Error reading package.json for plugin {plugin_dir_name}: {err}");
+            Err(error) => {
+                eprintln!("Error reading package.json for plugin {plugin_dir_name}: {error}");
                 continue;
             }
         };
 
         let package_json: PackageJson = match serde_json::from_str(&package_json_content) {
             Ok(parsed) => parsed,
-            Err(err) => {
-                eprintln!("Error parsing package.json for plugin {plugin_dir_name}: {err}");
+            Err(error) => {
+                eprintln!("Error parsing package.json for plugin {plugin_dir_name}: {error}");
                 continue;
             }
         };
@@ -417,7 +414,7 @@ pub fn discover_plugins(app: &tauri::AppHandle) -> Result<Vec<PluginInfo>, Strin
 }
 
 #[tauri::command]
-pub fn get_discovered_plugins(app: tauri::AppHandle) -> Result<Vec<PluginInfo>, String> {
+pub fn get_discovered_plugins(app: tauri::AppHandle) -> Result<Vec<PluginInfo>> {
     discover_plugins(&app)
 }
 
@@ -427,9 +424,9 @@ pub async fn install_extension(
     download_url: String,
     slug: String,
     force: bool,
-) -> Result<InstallResult, String> {
+) -> Result<InstallResult> {
     if !is_valid_extension_slug(&slug) {
-        return Err("Invalid extension slug".to_string());
+        return Err(ExtensionError::InvalidSlug(slug));
     }
 
     let extension_dir = get_extension_dir(&app, &slug)?;
@@ -447,9 +444,9 @@ pub async fn install_extension(
 }
 
 #[tauri::command]
-pub fn uninstall_extension(app: tauri::AppHandle, slug: String) -> Result<bool, String> {
+pub fn uninstall_extension(app: tauri::AppHandle, slug: String) -> Result<bool> {
     if !is_valid_extension_slug(&slug) {
-        return Err("Invalid extension slug".to_string());
+        return Err(ExtensionError::InvalidSlug(slug));
     }
 
     let extension_dir = get_extension_dir(&app, &slug)?;
@@ -457,6 +454,6 @@ pub fn uninstall_extension(app: tauri::AppHandle, slug: String) -> Result<bool, 
         return Ok(false);
     }
 
-    fs::remove_dir_all(extension_dir).map_err(|e| format!("Failed to uninstall extension: {e}"))?;
+    fs::remove_dir_all(extension_dir)?;
     Ok(true)
 }

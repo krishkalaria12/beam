@@ -9,7 +9,11 @@ export function RunnerNodeRenderer({ nodeId, state, renderContext }: RunnerNodeC
 
   const Component = runnerNodeComponentMap.get(node.type);
   if (!Component) {
-    return null;
+    return (
+      <div className="rounded border border-dashed border-border/60 px-2 py-1 text-[11px] text-muted-foreground">
+        Unsupported component: <span className="font-mono">{node.type}</span>
+      </div>
+    );
   }
 
   return <Component nodeId={nodeId} state={state} renderContext={renderContext} />;

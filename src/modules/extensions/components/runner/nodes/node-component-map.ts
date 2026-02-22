@@ -8,10 +8,13 @@ import { MetadataSeparatorNode } from "@/modules/extensions/components/runner/no
 import { MetadataTagListItemNode } from "@/modules/extensions/components/runner/nodes/detail/metadata-tag-list-item-node";
 import { MetadataTagListNode } from "@/modules/extensions/components/runner/nodes/detail/metadata-tag-list-node";
 import { FormCheckboxNode } from "@/modules/extensions/components/runner/nodes/form/form-checkbox-node";
+import { FormDatePickerNode } from "@/modules/extensions/components/runner/nodes/form/form-date-picker-node";
 import { FormDescriptionNode } from "@/modules/extensions/components/runner/nodes/form/form-description-node";
-import { FormDropdownNode } from "@/modules/extensions/components/runner/nodes/form/form-dropdown-node";
+import { FormFilePickerNode } from "@/modules/extensions/components/runner/nodes/form/form-file-picker-node";
 import { FormLinkAccessoryNode } from "@/modules/extensions/components/runner/nodes/form/form-link-accessory-node";
 import { FormPasswordFieldNode } from "@/modules/extensions/components/runner/nodes/form/form-password-field-node";
+import { FormRootNode } from "@/modules/extensions/components/runner/nodes/form/form-root-node";
+import { FormTagPickerNode } from "@/modules/extensions/components/runner/nodes/form/form-tag-picker-node";
 import { FormTextAreaNode } from "@/modules/extensions/components/runner/nodes/form/form-text-area-node";
 import { FormTextFieldNode } from "@/modules/extensions/components/runner/nodes/form/form-text-field-node";
 import { GridEmptyViewNode } from "@/modules/extensions/components/runner/nodes/grid/grid-empty-view-node";
@@ -20,6 +23,9 @@ import { GridSectionNode } from "@/modules/extensions/components/runner/nodes/gr
 import { ListEmptyViewNode } from "@/modules/extensions/components/runner/nodes/list/list-empty-view-node";
 import { ListItemNode } from "@/modules/extensions/components/runner/nodes/list/list-item-node";
 import { ListSectionNode } from "@/modules/extensions/components/runner/nodes/list/list-section-node";
+import { AccessoryDropdownNode } from "@/modules/extensions/components/runner/nodes/shared/accessory-dropdown-node";
+import { DropdownItemNode } from "@/modules/extensions/components/runner/nodes/shared/dropdown-item-node";
+import { DropdownSectionNode } from "@/modules/extensions/components/runner/nodes/shared/dropdown-section-node";
 import type { RunnerNodeComponentProps } from "@/modules/extensions/components/runner/nodes/types";
 
 export const runnerNodeComponentMap = new Map<string, ComponentType<RunnerNodeComponentProps>>([
@@ -46,15 +52,27 @@ export const runnerNodeComponentMap = new Map<string, ComponentType<RunnerNodeCo
   ["Grid.Item.Detail.Metadata.Separator", MetadataSeparatorNode],
   ["List.Item", ListItemNode],
   ["List.Section", ListSectionNode],
+  ["List.Dropdown", AccessoryDropdownNode],
+  ["List.Dropdown.Item", DropdownItemNode],
+  ["List.Dropdown.Section", DropdownSectionNode],
   ["List.EmptyView", ListEmptyViewNode],
   ["Grid.Item", GridItemNode],
   ["Grid.Section", GridSectionNode],
+  ["Grid.Dropdown", AccessoryDropdownNode],
+  ["Grid.Dropdown.Item", DropdownItemNode],
+  ["Grid.Dropdown.Section", DropdownSectionNode],
   ["Grid.EmptyView", GridEmptyViewNode],
+  ["Form", FormRootNode],
   ["Form.TextField", FormTextFieldNode],
   ["Form.PasswordField", FormPasswordFieldNode],
   ["Form.TextArea", FormTextAreaNode],
   ["Form.Checkbox", FormCheckboxNode],
-  ["Form.Dropdown", FormDropdownNode],
+  ["Form.DatePicker", FormDatePickerNode],
+  ["Form.Dropdown", AccessoryDropdownNode],
+  ["Form.Dropdown.Item", DropdownItemNode],
+  ["Form.Dropdown.Section", DropdownSectionNode],
+  ["Form.TagPicker", FormTagPickerNode],
+  ["Form.FilePicker", FormFilePickerNode],
   ["Form.Description", FormDescriptionNode],
   ["Form.LinkAccessory", FormLinkAccessoryNode],
 ]);

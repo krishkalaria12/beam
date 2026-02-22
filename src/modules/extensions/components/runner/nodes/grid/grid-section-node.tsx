@@ -8,13 +8,15 @@ export function GridSectionNode({ nodeId, state }: RunnerNodeComponentProps) {
   }
 
   const title = asString(node.props.title).trim();
+  const subtitle = asString(node.props.subtitle).trim() || undefined;
   if (!title) {
     return null;
   }
 
   return (
-    <div className="col-span-full pb-1 pt-2">
+    <div className="col-start-1 -col-end-1 -mb-1 flex items-baseline gap-2 pt-2.5">
       <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{title}</h3>
+      {subtitle ? <p className="truncate text-xs text-muted-foreground">{subtitle}</p> : null}
     </div>
   );
 }

@@ -1,35 +1,123 @@
 import { cn } from "@/lib/utils";
+import { RunnerIcon } from "@/modules/extensions/components/runner/nodes/shared/runner-icon";
 import { asString } from "@/modules/extensions/components/runner/utils";
 import type { RunnerNodeComponentProps } from "@/modules/extensions/components/runner/nodes/types";
 
-function readAccessoryLabel(accessory: unknown): string | null {
+interface AccessoryDescriptor {
+  key: string;
+  text?: string;
+  tooltip?: string;
+  icon?: unknown;
+  color?: string;
+}
+
+function formatRelativeDate(value: Date): string {
+  const now = Date.now();
+  const deltaSeconds = Math.round((now - value.getTime()) / 1000);
+  if (deltaSeconds < 60) return "now";
+  const minutes = Math.round(deltaSeconds / 60);
+  if (minutes < 60) return `${minutes}m`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `${hours}h`;
+  const days = Math.round(hours / 24);
+  if (days < 7) return `${days}d`;
+  const weeks = Math.round(days / 7);
+  if (weeks < 5) return `${weeks}w`;
+  const months = Math.round(days / 30.44);
+  if (months < 12) return `${months}mo`;
+  const years = Math.round(days / 365.25);
+  return `${years}y`;
+}
+
+function readAccessory(accessory: unknown, nodeId: number, index: number): AccessoryDescriptor | null {
   if (!accessory || typeof accessory !== "object") {
     return null;
   }
 
   const record = accessory as Record<string, unknown>;
-  if (typeof record.text === "string") {
-    return record.text.trim() || null;
+  const tooltip = asString(record.tooltip).trim() || undefined;
+  const icon = record.icon;
+
+  const text = record.text;
+  if (typeof text === "string" && text.trim().length > 0) {
+    return {
+      key: `${nodeId}:${index}:text`,
+      text: text.trim(),
+      tooltip,
+      icon,
+    };
+  }
+
+  if (text && typeof text === "object" && "value" in text) {
+    const value = asString((text as { value?: unknown }).value).trim();
+    if (value.length > 0) {
+      return {
+        key: `${nodeId}:${index}:text-value`,
+        text: value,
+        tooltip,
+        icon,
+        color: asString((text as { color?: unknown }).color).trim() || undefined,
+      };
+    }
   }
 
   const tag = record.tag;
   if (typeof tag === "string") {
-    return tag.trim() || null;
+    const value = tag.trim();
+    return value.length > 0
+      ? {
+        key: `${nodeId}:${index}:tag`,
+        text: value,
+        tooltip,
+        icon,
+      }
+      : null;
   }
 
   if (tag && typeof tag === "object" && "value" in tag) {
     const value = (tag as { value?: unknown }).value;
+    if (value instanceof Date) {
+      return {
+        key: `${nodeId}:${index}:tag-date`,
+        text: formatRelativeDate(value),
+        tooltip,
+        icon,
+        color: asString((tag as { color?: unknown }).color).trim() || undefined,
+      };
+    }
     if (typeof value === "string") {
-      return value.trim() || null;
+      const textValue = value.trim();
+      return textValue.length > 0
+        ? {
+          key: `${nodeId}:${index}:tag-value`,
+          text: textValue,
+          tooltip,
+          icon,
+          color: asString((tag as { color?: unknown }).color).trim() || undefined,
+        }
+        : null;
     }
   }
 
   const date = record.date;
   if (date instanceof Date) {
-    return date.toLocaleString();
+    return {
+      key: `${nodeId}:${index}:date`,
+      text: formatRelativeDate(date),
+      tooltip,
+      icon,
+    };
   }
   if (typeof date === "string") {
-    return date.trim() || null;
+    const textValue = date.trim();
+    return textValue.length > 0
+      ? {
+        key: `${nodeId}:${index}:date-text`,
+        text: textValue,
+        tooltip,
+        icon,
+      }
+      : null;
   }
 
   return null;
@@ -43,8 +131,11 @@ export function ListItemNode({ nodeId, state, renderContext }: RunnerNodeCompone
 
   const title = asString(node.props.title, "Untitled");
   const subtitle = asString(node.props.subtitle).trim() || undefined;
+  const icon = node.props.icon;
   const accessories = Array.isArray(node.props.accessories)
-    ? node.props.accessories.map(readAccessoryLabel).filter((entry): entry is string => Boolean(entry))
+    ? node.props.accessories
+      .map((entry, index) => readAccessory(entry, node.id, index))
+      .filter((entry): entry is AccessoryDescriptor => Boolean(entry))
     : [];
 
   const isSelected = Boolean(renderContext?.selected);
@@ -53,26 +144,36 @@ export function ListItemNode({ nodeId, state, renderContext }: RunnerNodeCompone
     <button
       type="button"
       className={cn(
-        "w-full rounded-md border px-3 py-2 text-left transition-colors",
-        isSelected
-          ? "border-primary/40 bg-primary/10"
-          : "border-transparent bg-card hover:border-border/70",
+        "flex h-12 w-full items-center gap-3 rounded-md border border-transparent px-2 text-left transition-colors",
+        isSelected ? "bg-accent" : "hover:bg-accent/50",
       )}
       onMouseEnter={renderContext?.onSelect}
       onClick={renderContext?.onSelect}
       onDoubleClick={renderContext?.onActivate}
     >
-      <p className="truncate text-sm font-medium">{title}</p>
-      {subtitle ? <p className="truncate text-xs text-muted-foreground">{subtitle}</p> : null}
+      {icon ? (
+        <RunnerIcon icon={icon} className="size-[22px] shrink-0" />
+      ) : (
+        <span className="size-[22px] shrink-0" />
+      )}
+
+      <div className="flex min-w-0 flex-1 items-baseline gap-3 overflow-hidden">
+        <p className="truncate text-sm font-medium">{title}</p>
+        {subtitle ? <p className="truncate text-xs text-muted-foreground">{subtitle}</p> : null}
+      </div>
+
       {accessories.length > 0 ? (
-        <div className="mt-1.5 flex flex-wrap gap-1.5">
+        <div className="ml-auto flex shrink-0 items-center gap-3">
           {accessories.map((entry) => (
-            <span
-              key={`${node.id}:${entry}`}
-              className="rounded-sm border border-border/70 bg-background/60 px-1.5 py-0.5 text-[10px] text-muted-foreground"
+            <div
+              key={entry.key}
+              className="flex items-center gap-1 text-xs text-muted-foreground"
+              title={entry.tooltip}
+              style={entry.color ? { color: entry.color } : undefined}
             >
-              {entry}
-            </span>
+              {entry.icon ? <RunnerIcon icon={entry.icon} className="size-3.5 shrink-0" /> : null}
+              {entry.text ? <span className="truncate">{entry.text}</span> : null}
+            </div>
           ))}
         </div>
       ) : null}

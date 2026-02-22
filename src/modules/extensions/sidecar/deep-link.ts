@@ -21,6 +21,28 @@ export type ParsedOauthDeepLinkResult =
   | OauthDeepLinkErrorResult
   | OauthDeepLinkIgnoredResult;
 
+export interface ExtensionsStoreDeepLinkResult {
+  handled: true;
+  kind: "extensions-store";
+  author?: string;
+  extensionSlug?: string;
+}
+
+export interface ExtensionsCommandDeepLinkResult {
+  handled: true;
+  kind: "extensions-command";
+  ownerOrAuthor: string;
+  extensionName: string;
+  commandName: string;
+}
+
+export type ParsedRaycastDeepLinkResult =
+  | OauthDeepLinkSuccessResult
+  | OauthDeepLinkErrorResult
+  | ExtensionsStoreDeepLinkResult
+  | ExtensionsCommandDeepLinkResult
+  | OauthDeepLinkIgnoredResult;
+
 export function parseOauthDeepLink(url: string): ParsedOauthDeepLinkResult {
   let urlObj: URL;
   try {
@@ -64,4 +86,66 @@ export function parseOauthDeepLink(url: string): ParsedOauthDeepLinkResult {
     state: state ?? undefined,
     error: description ? `${error}: ${description}` : error,
   };
+}
+
+export function parseRaycastDeepLink(url: string): ParsedRaycastDeepLinkResult {
+  const oauth = parseOauthDeepLink(url);
+  if (oauth.handled) {
+    return oauth;
+  }
+
+  let urlObj: URL;
+  try {
+    urlObj = new URL(url);
+  } catch {
+    return { handled: false };
+  }
+
+  const isRaycastScheme = urlObj.protocol === "raycast:";
+  const isRaycastDomain =
+    (urlObj.protocol === "https:" || urlObj.protocol === "http:") &&
+    urlObj.hostname === "raycast.com";
+
+  if (!isRaycastScheme && !isRaycastDomain) {
+    return { handled: false };
+  }
+
+  const routeHost = isRaycastScheme ? urlObj.host : urlObj.pathname.split("/").filter(Boolean)[0];
+  if (routeHost !== "extensions") {
+    return { handled: false };
+  }
+
+  const pathParts = (isRaycastScheme
+    ? urlObj.pathname.split("/")
+    : urlObj.pathname.replace(/^\/extensions/, "").split("/"))
+    .filter((segment) => segment.trim().length > 0)
+    .map((segment) => decodeURIComponent(segment.trim()));
+
+  if (pathParts.length === 0) {
+    return {
+      handled: true,
+      kind: "extensions-store",
+    };
+  }
+
+  if (pathParts.length === 2) {
+    return {
+      handled: true,
+      kind: "extensions-store",
+      author: pathParts[0],
+      extensionSlug: pathParts[1],
+    };
+  }
+
+  if (pathParts.length >= 3) {
+    return {
+      handled: true,
+      kind: "extensions-command",
+      ownerOrAuthor: pathParts[0],
+      extensionName: pathParts[1],
+      commandName: pathParts[2],
+    };
+  }
+
+  return { handled: false };
 }

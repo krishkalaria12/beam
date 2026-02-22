@@ -34,10 +34,15 @@ export function FormTextAreaNode({ nodeId, state }: RunnerNodeComponentProps) {
         }}
         onKeyDownCapture={stopFieldKeyPropagation}
         onKeyDown={stopFieldKeyPropagation}
+        onBlur={() => {
+          state.handleBlurFormField(field);
+        }}
         placeholder={field.placeholder}
-        readOnly={!field.hasOnChange}
+        aria-invalid={Boolean(field.error)}
         className="min-h-24"
       />
+      {field.error ? <p className="text-[11px] text-destructive">{field.error}</p> : null}
+      {field.info ? <p className="text-[11px] text-muted-foreground">{field.info}</p> : null}
     </div>
   );
 }

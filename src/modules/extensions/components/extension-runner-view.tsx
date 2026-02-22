@@ -1,6 +1,8 @@
-import { ArrowLeft, Loader2, Settings2 } from "lucide-react";
+import { ArrowLeft, Loader2, Search, Settings2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { RunnerNodeRenderer } from "@/modules/extensions/components/runner/nodes/node-renderer";
 import { RootNodeRenderer } from "@/modules/extensions/components/runner/nodes/root-node-renderer";
 import { useExtensionRunnerState } from "@/modules/extensions/components/runner/use-extension-runner-state";
 
@@ -11,6 +13,15 @@ interface ExtensionRunnerViewProps {
 
 export function ExtensionRunnerView({ onBack, onOpenExtensions }: ExtensionRunnerViewProps) {
   const state = useExtensionRunnerState({ onBack });
+  const showSearchInput = state.rootType === "List" || state.rootType === "Grid";
+  const searchBarAccessoryNodeId = state.rootNode?.namedChildren?.searchBarAccessory;
+  const searchPlaceholder =
+    typeof state.rootNode?.props.searchBarPlaceholder === "string"
+      ? state.rootNode.props.searchBarPlaceholder
+      : "Search...";
+  const canRenderSearchAccessory =
+    searchBarAccessoryNodeId !== undefined &&
+    (state.rootType === "List" || state.rootType === "Grid" || state.rootType === "Form");
 
   return (
     <div
@@ -22,7 +33,7 @@ export function ExtensionRunnerView({ onBack, onOpenExtensions }: ExtensionRunne
         <Button variant="ghost" size="icon" onClick={state.handleBack} className="size-8">
           <ArrowLeft className="size-4" />
         </Button>
-        <div className="min-w-0">
+        <div className="min-w-0 shrink-0">
           <p className="truncate text-sm font-medium">{state.runningSession?.title || "Extension"}</p>
           <p className="truncate text-xs text-muted-foreground">
             {state.runningSession?.subtitle ||
@@ -30,12 +41,30 @@ export function ExtensionRunnerView({ onBack, onOpenExtensions }: ExtensionRunne
               "Raycast-compatible command"}
           </p>
         </div>
+        {showSearchInput ? (
+          <div className="relative ml-auto w-full max-w-[360px]">
+            <Search className="pointer-events-none absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
+            <Input
+              value={state.searchText}
+              onChange={(event) => {
+                state.handleSearchInputChange(event.target.value);
+              }}
+              placeholder={searchPlaceholder}
+              className="h-9 pl-8"
+            />
+          </div>
+        ) : (
+          <div className="ml-auto" />
+        )}
+        {canRenderSearchAccessory ? (
+          <RunnerNodeRenderer nodeId={searchBarAccessoryNodeId!} state={state} />
+        ) : null}
         {onOpenExtensions ? (
           <Button
             variant="outline"
             size="sm"
             onClick={onOpenExtensions}
-            className="ml-auto h-8 gap-1.5"
+            className="h-8 shrink-0 gap-1.5"
           >
             <Settings2 className="size-3.5" />
             Setup

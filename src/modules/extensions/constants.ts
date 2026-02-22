@@ -59,6 +59,9 @@ export const EXTENSIONS_RUNNER_FORM_FIELD_TYPES = [
   "Form.TextArea",
   "Form.Dropdown",
   "Form.Checkbox",
+  "Form.DatePicker",
+  "Form.TagPicker",
+  "Form.FilePicker",
 ] as const;
 export const EXTENSIONS_RUNNER_FORM_FIELD_TYPE_SET = new Set<string>(
   EXTENSIONS_RUNNER_FORM_FIELD_TYPES,

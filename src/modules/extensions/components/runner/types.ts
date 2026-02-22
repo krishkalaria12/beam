@@ -1,10 +1,16 @@
-export type FormValue = string | boolean | number | null;
+export interface KeyboardShortcutDefinition {
+  key: string;
+  modifiers: Array<"cmd" | "ctrl" | "opt" | "shift">;
+}
+
+export type FormValue = string | boolean | number | null | string[];
 
 export interface FlattenedAction {
   nodeId: number;
   type: string;
   title: string;
   shortcut?: string;
+  shortcutDefinition?: KeyboardShortcutDefinition;
   style?: string;
   hasOnAction: boolean;
   hasOnSubmit: boolean;
@@ -22,6 +28,10 @@ export interface ListEntry {
   actionsNodeId?: number;
   detailNodeId?: number;
   hasOnAction: boolean;
+  gridColumns?: number;
+  gridAspectRatio?: string;
+  gridFit?: string;
+  gridInset?: string;
 }
 
 export interface FormField {
@@ -34,4 +44,7 @@ export interface FormField {
   defaultValue: FormValue;
   controlledValue?: FormValue;
   hasOnChange: boolean;
+  hasOnBlur: boolean;
+  error?: string;
+  info?: string;
 }

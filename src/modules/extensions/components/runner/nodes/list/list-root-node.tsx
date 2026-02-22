@@ -1,11 +1,8 @@
-import { Search } from "lucide-react";
-
-import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { RunnerActionBar } from "@/modules/extensions/components/runner/runner-action-bar";
 import { RunnerNodeRenderer } from "@/modules/extensions/components/runner/nodes/node-renderer";
 import type { RunnerNodeComponentProps } from "@/modules/extensions/components/runner/nodes/types";
-import { asBoolean, asString } from "@/modules/extensions/components/runner/utils";
+import { asBoolean } from "@/modules/extensions/components/runner/utils";
 
 interface ListRenderRow {
   type: "section" | "item";
@@ -59,20 +56,6 @@ export function ListRootNode({ nodeId, state }: RunnerNodeComponentProps) {
 
   return (
     <>
-      <div className="border-b border-border/50 p-3">
-        <div className="relative">
-          <Search className="pointer-events-none absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
-          <Input
-            value={state.searchText}
-            onChange={(event) => {
-              state.handleSearchInputChange(event.target.value);
-            }}
-            placeholder={asString(node.props.searchBarPlaceholder, "Search")}
-            className="pl-8"
-          />
-        </div>
-      </div>
-
       <div className="min-h-0 flex-1 overflow-hidden">
         <div className={cn("h-full", showDetail ? "grid grid-cols-[46%_54%]" : "")}>
           <div className="h-full overflow-y-auto p-2">

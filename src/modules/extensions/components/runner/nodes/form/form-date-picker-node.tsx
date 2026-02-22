@@ -8,9 +8,9 @@ function stopFieldKeyPropagation(event: KeyboardEvent<HTMLElement>): void {
   event.stopPropagation();
 }
 
-export function FormPasswordFieldNode({ nodeId, state }: RunnerNodeComponentProps) {
+export function FormDatePickerNode({ nodeId, state }: RunnerNodeComponentProps) {
   const node = state.uiTree.get(nodeId);
-  if (!node || node.type !== "Form.PasswordField") {
+  if (!node || node.type !== "Form.DatePicker") {
     return null;
   }
 
@@ -28,7 +28,7 @@ export function FormPasswordFieldNode({ nodeId, state }: RunnerNodeComponentProp
         ref={(element) => {
           state.registerFieldRef(nodeId, element);
         }}
-        type="password"
+        type="date"
         value={typeof value === "string" ? value : asString(value)}
         onChange={(event) => {
           state.handleSetFormValue(field, event.target.value);
@@ -38,7 +38,6 @@ export function FormPasswordFieldNode({ nodeId, state }: RunnerNodeComponentProp
         onBlur={() => {
           state.handleBlurFormField(field);
         }}
-        placeholder={field.placeholder}
         aria-invalid={Boolean(field.error)}
         className="h-9"
       />

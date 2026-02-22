@@ -11,7 +11,7 @@ import {
   parseConfirmAlertRequest,
   parseLaunchCommandRequest,
 } from "@/modules/extensions/sidecar/custom-message";
-import { parseOauthDeepLink } from "@/modules/extensions/sidecar/deep-link";
+import { parseRaycastDeepLink } from "@/modules/extensions/sidecar/deep-link";
 import {
   normalizeDiscoveredPluginRecord,
   type DiscoveredPluginRecord,
@@ -317,8 +317,12 @@ class ExtensionSidecarService {
   }
 
   handleDeepLink(url: string): boolean {
-    const parsed = parseOauthDeepLink(url);
+    const parsed = parseRaycastDeepLink(url);
     if (!parsed.handled) {
+      return false;
+    }
+
+    if (parsed.kind === "extensions-store" || parsed.kind === "extensions-command") {
       return false;
     }
 

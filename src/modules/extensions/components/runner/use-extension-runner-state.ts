@@ -11,17 +11,21 @@ import type {
   FlattenedAction,
   FormField,
   FormValue,
+  KeyboardShortcutDefinition,
   ListEntry,
 } from "@/modules/extensions/components/runner/types";
 import {
   asBoolean,
   asString,
-  collectActions,
-  collectFormFields,
-  collectGridEntries,
+} from "@/modules/extensions/components/runner/utils";
+import { filterEntriesByQuery } from "@/modules/extensions/components/runner/search";
+import { collectActions } from "@/modules/extensions/components/runner/nodes/actions/action-model";
+import { collectFormFields } from "@/modules/extensions/components/runner/nodes/form/form-model";
+import { collectGridEntries } from "@/modules/extensions/components/runner/nodes/grid/grid-model";
+import {
   collectListEntries,
   type ListModel,
-} from "@/modules/extensions/components/runner/utils";
+} from "@/modules/extensions/components/runner/nodes/list/list-model";
 
 interface UseExtensionRunnerStateInput {
   onBack: () => void;
@@ -49,12 +53,14 @@ export interface UseExtensionRunnerStateResult {
   handleRootKeyDown: (event: KeyboardEvent<HTMLDivElement>) => void;
   handleSearchInputChange: (value: string) => void;
   handleSetFormValue: (field: FormField, value: FormValue) => void;
+  handleBlurFormField: (field: FormField) => void;
   handleToastAction: (toastId: number, actionType: "primary" | "secondary") => void;
   handleToastHide: (toastId: number) => void;
   runPrimarySelectionAction: () => void;
   executeAction: (action: FlattenedAction) => Promise<void>;
   setSelectedIndex: (index: number) => void;
   registerFieldRef: (nodeId: number, element: HTMLElement | null) => void;
+  dispatchNodeEvent: (nodeId: number, handlerName: string, args?: unknown[]) => void;
 }
 
 function isEditableTarget(target: EventTarget | null): target is HTMLElement {
@@ -71,6 +77,35 @@ function isEditableTarget(target: EventTarget | null): target is HTMLElement {
   }
 
   return target.isContentEditable;
+}
+
+function isMacPlatform(): boolean {
+  if (typeof navigator === "undefined") {
+    return false;
+  }
+  return /mac/i.test(navigator.platform);
+}
+
+function keyMatchesShortcut(event: KeyboardEvent, shortcut: KeyboardShortcutDefinition): boolean {
+  if (event.key.toLowerCase() !== shortcut.key.toLowerCase()) {
+    return false;
+  }
+
+  const required = new Set(shortcut.modifiers);
+  const isMac = isMacPlatform();
+  const expectMeta = isMac ? required.has("cmd") : false;
+  const expectCtrl = isMac
+    ? required.has("ctrl")
+    : required.has("cmd") || required.has("ctrl");
+  const expectAlt = required.has("opt");
+  const expectShift = required.has("shift");
+
+  return (
+    event.metaKey === expectMeta &&
+    event.ctrlKey === expectCtrl &&
+    event.altKey === expectAlt &&
+    event.shiftKey === expectShift
+  );
 }
 
 export function useExtensionRunnerState({
@@ -124,22 +159,34 @@ export function useExtensionRunnerState({
   const currentEntries = useMemo(() => {
     if (rootType === "List") {
       const entries = listModel?.entries ?? [];
-      const filtering = asBoolean(rootNode?.props.filtering, true);
+      const filtering =
+        asBoolean(rootNode?.props.filtering) ||
+        (rootNode?.props.filtering !== false && !asBoolean(rootNode?.props.onSearchTextChange));
       const query = searchText.trim().toLowerCase();
       if (!filtering || query.length === 0) {
         return entries;
       }
-      return entries.filter((entry) => entry.keywords.includes(query));
+      return filterEntriesByQuery(entries, query);
     }
     if (rootType === "Grid") {
+      const filtering =
+        asBoolean(rootNode?.props.filtering) ||
+        (rootNode?.props.filtering !== false && !asBoolean(rootNode?.props.onSearchTextChange));
       const query = searchText.trim().toLowerCase();
-      if (query.length === 0) {
+      if (!filtering || query.length === 0) {
         return gridEntries;
       }
-      return gridEntries.filter((entry) => entry.keywords.includes(query));
+      return filterEntriesByQuery(gridEntries, query);
     }
     return [];
-  }, [rootType, listModel?.entries, gridEntries, rootNode?.props.filtering, searchText]);
+  }, [
+    rootType,
+    listModel?.entries,
+    gridEntries,
+    rootNode?.props.filtering,
+    rootNode?.props.onSearchTextChange,
+    searchText,
+  ]);
 
   const selectedEntry = currentEntries[selectedIndex];
   const selectedEntryActions = useMemo(
@@ -184,14 +231,47 @@ export function useExtensionRunnerState({
   }, [selectedIndex, currentEntries.length]);
 
   useEffect(() => {
+    if ((rootNode?.type !== "List" && rootNode?.type !== "Grid") || !rootNode) {
+      return;
+    }
+
+    const selectedItemId = asString(rootNode.props.selectedItemId).trim();
+    if (!selectedItemId) {
+      return;
+    }
+
+    const nextIndex = currentEntries.findIndex((entry) => entry.itemId === selectedItemId);
+    if (nextIndex >= 0 && nextIndex !== selectedIndex) {
+      setSelectedIndex(nextIndex);
+    }
+  }, [
+    currentEntries,
+    rootNode,
+    rootNode?.props.selectedItemId,
+    rootNode?.type,
+    selectedIndex,
+  ]);
+
+  useEffect(() => {
     if (!selectedEntry) {
       setSelectedNodeId(undefined);
+      if (
+        (rootNode?.type === "List" || rootNode?.type === "Grid") &&
+        asBoolean(rootNode.props.onSelectionChange)
+      ) {
+        extensionSidecarService.dispatchEvent(rootNode.id, "onSelectionChange", [null]);
+      }
       return;
     }
 
     setSelectedNodeId(selectedEntry.nodeId);
-    if (rootNode?.type === "List" && asBoolean(rootNode.props.onSelectionChange)) {
-      extensionSidecarService.dispatchEvent(rootNode.id, "onSelectionChange", [selectedEntry.itemId]);
+    if (
+      (rootNode?.type === "List" || rootNode?.type === "Grid") &&
+      asBoolean(rootNode.props.onSelectionChange)
+    ) {
+      extensionSidecarService.dispatchEvent(rootNode.id, "onSelectionChange", [
+        selectedEntry.itemId,
+      ]);
     }
   }, [
     selectedEntry?.nodeId,
@@ -345,6 +425,21 @@ export function useExtensionRunnerState({
     }
   }, []);
 
+  const handleBlurFormField = useCallback((field: FormField) => {
+    if (!field.hasOnBlur) {
+      return;
+    }
+
+    const currentValue = formValues[field.key];
+    extensionSidecarService.dispatchEvent(field.nodeId, "onBlur", [{
+      type: "blur",
+      target: {
+        id: field.key,
+        value: currentValue,
+      },
+    }]);
+  }, [formValues]);
+
   const handleToastAction = useCallback((toastId: number, actionType: "primary" | "secondary") => {
     extensionSidecarService.dispatchToastAction(toastId, actionType);
   }, []);
@@ -371,7 +466,53 @@ export function useExtensionRunnerState({
       return;
     }
 
-    if (rootType === "List" || rootType === "Grid") {
+    const availableActions = selectedEntryActions.length > 0
+      ? selectedEntryActions
+      : rootActions;
+
+    if (
+      event.key === "Enter" &&
+      !event.ctrlKey &&
+      !event.metaKey &&
+      !event.shiftKey &&
+      !event.altKey &&
+      availableActions[0] &&
+      !availableActions[0].shortcutDefinition
+    ) {
+      event.preventDefault();
+      event.stopPropagation();
+      void executeAction(availableActions[0]);
+      return;
+    }
+
+    if (
+      event.key === "Enter" &&
+      event.ctrlKey &&
+      !event.metaKey &&
+      !event.shiftKey &&
+      !event.altKey &&
+      availableActions[1] &&
+      !availableActions[1].shortcutDefinition
+    ) {
+      event.preventDefault();
+      event.stopPropagation();
+      void executeAction(availableActions[1]);
+      return;
+    }
+
+    for (const action of availableActions) {
+      if (!action.shortcutDefinition) {
+        continue;
+      }
+      if (keyMatchesShortcut(event, action.shortcutDefinition)) {
+        event.preventDefault();
+        event.stopPropagation();
+        void executeAction(action);
+        return;
+      }
+    }
+
+    if (rootType === "List") {
       if (event.key === "ArrowDown") {
         event.preventDefault();
         event.stopPropagation();
@@ -383,12 +524,186 @@ export function useExtensionRunnerState({
         setSelectedIndex((previous) => Math.max(previous - 1, 0));
       }
       if (event.key === "Enter") {
+        if (availableActions.length === 0) {
+          event.preventDefault();
+          event.stopPropagation();
+          runPrimarySelectionAction();
+        }
+      }
+      return;
+    }
+
+    if (rootType === "Grid") {
+      if (currentEntries.length === 0) {
+        return;
+      }
+
+      const sectionOrder: Array<number | "root"> = [];
+      const sectionIndexByKey = new Map<number | "root", number>();
+      const rowsBySection = new Map<number, number[]>();
+      const positionedEntries: Array<{
+        index: number;
+        sectionIndex: number;
+        rowIndex: number;
+        colIndex: number;
+      }> = [];
+
+      let lastSectionKey: number | "root" | null = null;
+      let rowIndex = 0;
+      let colIndex = 0;
+      let sectionColumns = 6;
+
+      currentEntries.forEach((entry, index) => {
+        const sectionKey = entry.sectionNodeId ?? "root";
+        if (sectionKey !== lastSectionKey) {
+          lastSectionKey = sectionKey;
+          rowIndex = 0;
+          colIndex = 0;
+          sectionColumns =
+            typeof entry.gridColumns === "number" &&
+              Number.isFinite(entry.gridColumns) &&
+              entry.gridColumns > 0
+              ? Math.max(1, Math.floor(entry.gridColumns))
+              : 6;
+
+          if (!sectionIndexByKey.has(sectionKey)) {
+            const nextSectionIndex = sectionOrder.length;
+            sectionIndexByKey.set(sectionKey, nextSectionIndex);
+            sectionOrder.push(sectionKey);
+          }
+        } else if (colIndex >= sectionColumns) {
+          rowIndex += 1;
+          colIndex = 0;
+        }
+
+        const sectionIndex = sectionIndexByKey.get(sectionKey)!;
+        positionedEntries.push({
+          index,
+          sectionIndex,
+          rowIndex,
+          colIndex,
+        });
+
+        const sectionRows = rowsBySection.get(sectionIndex) ?? [];
+        if (!sectionRows.includes(rowIndex)) {
+          sectionRows.push(rowIndex);
+          rowsBySection.set(sectionIndex, sectionRows);
+        }
+
+        colIndex += 1;
+      });
+
+      const selectedPosition = positionedEntries[selectedIndex] ?? positionedEntries[0];
+      if (!selectedPosition) {
+        return;
+      }
+
+      if (event.key === "ArrowRight") {
         event.preventDefault();
         event.stopPropagation();
-        runPrimarySelectionAction();
+        setSelectedIndex((previous) => Math.min(previous + 1, Math.max(0, currentEntries.length - 1)));
+      }
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        event.stopPropagation();
+        setSelectedIndex((previous) => Math.max(previous - 1, 0));
+      }
+      if (event.key === "ArrowDown") {
+        event.preventDefault();
+        event.stopPropagation();
+        const direction = 1;
+        let targetSection = selectedPosition.sectionIndex;
+        let targetRow = selectedPosition.rowIndex + direction;
+        let nextIndex = -1;
+
+        while (nextIndex < 0) {
+          const rowCandidates = positionedEntries.filter(
+            (entry) =>
+              entry.sectionIndex === targetSection &&
+              entry.rowIndex === targetRow,
+          );
+
+          if (rowCandidates.length > 0) {
+            const matchingColumn =
+              rowCandidates.find((entry) => entry.colIndex === selectedPosition.colIndex) ??
+              rowCandidates[rowCandidates.length - 1];
+            nextIndex = matchingColumn.index;
+            break;
+          }
+
+          targetSection += direction;
+          if (targetSection >= sectionOrder.length) {
+            break;
+          }
+
+          const rows = rowsBySection.get(targetSection);
+          if (!rows || rows.length === 0) {
+            break;
+          }
+          targetRow = Math.min(...rows);
+        }
+
+        if (nextIndex >= 0) {
+          setSelectedIndex(nextIndex);
+        }
+      }
+      if (event.key === "ArrowUp") {
+        event.preventDefault();
+        event.stopPropagation();
+        const direction = -1;
+        let targetSection = selectedPosition.sectionIndex;
+        let targetRow = selectedPosition.rowIndex + direction;
+        let nextIndex = -1;
+
+        while (nextIndex < 0) {
+          const rowCandidates = positionedEntries.filter(
+            (entry) =>
+              entry.sectionIndex === targetSection &&
+              entry.rowIndex === targetRow,
+          );
+
+          if (rowCandidates.length > 0) {
+            const matchingColumn =
+              rowCandidates.find((entry) => entry.colIndex === selectedPosition.colIndex) ??
+              rowCandidates[rowCandidates.length - 1];
+            nextIndex = matchingColumn.index;
+            break;
+          }
+
+          targetSection += direction;
+          if (targetSection < 0) {
+            break;
+          }
+
+          const rows = rowsBySection.get(targetSection);
+          if (!rows || rows.length === 0) {
+            break;
+          }
+          targetRow = Math.max(...rows);
+        }
+
+        if (nextIndex >= 0) {
+          setSelectedIndex(nextIndex);
+        }
+      }
+      if (event.key === "Enter") {
+        if (availableActions.length === 0) {
+          event.preventDefault();
+          event.stopPropagation();
+          runPrimarySelectionAction();
+        }
       }
     }
-  }, [currentEntries.length, handleBack, rootType, runPrimarySelectionAction]);
+  }, [
+    currentEntries,
+    executeAction,
+    handleBack,
+    rootActions,
+    rootType,
+    runPrimarySelectionAction,
+    selectedEntryActions,
+    selectedIndex,
+  ]);
 
   const registerFieldRef = useCallback((nodeId: number, element: HTMLElement | null) => {
     if (!element) {
@@ -397,6 +712,13 @@ export function useExtensionRunnerState({
     }
     fieldRefs.current.set(nodeId, element);
   }, []);
+
+  const dispatchNodeEvent = useCallback(
+    (nodeId: number, handlerName: string, args: unknown[] = []) => {
+      extensionSidecarService.dispatchEvent(nodeId, handlerName, args);
+    },
+    [],
+  );
 
   return {
     uiTree,
@@ -420,11 +742,13 @@ export function useExtensionRunnerState({
     handleRootKeyDown,
     handleSearchInputChange,
     handleSetFormValue,
+    handleBlurFormField,
     handleToastAction,
     handleToastHide,
     runPrimarySelectionAction,
     executeAction,
     setSelectedIndex,
     registerFieldRef,
+    dispatchNodeEvent,
   };
 }
