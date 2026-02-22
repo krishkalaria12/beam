@@ -16,7 +16,6 @@ function stripFileProtocol(input: string): string {
 
 export function resolveExtensionIconReference(
   icon: string | null | undefined,
-  pluginPath?: string | null,
 ): string | null {
   const normalizedIcon = icon?.trim() ?? "";
   if (!normalizedIcon) {
@@ -33,28 +32,7 @@ export function resolveExtensionIconReference(
     return normalizedIcon;
   }
 
-  const normalizedPluginPath = pluginPath?.trim() ?? "";
-  if (!normalizedPluginPath) {
-    return normalizedIcon;
-  }
-
-  const lastSeparatorIndex = Math.max(
-    normalizedPluginPath.lastIndexOf("/"),
-    normalizedPluginPath.lastIndexOf("\\"),
-  );
-
-  if (lastSeparatorIndex <= 0) {
-    return normalizedIcon;
-  }
-
-  const pluginDirectory = normalizedPluginPath.slice(0, lastSeparatorIndex);
-  const separator =
-    pluginDirectory.includes("\\") && !pluginDirectory.includes("/") ? "\\" : "/";
-  const iconPath = normalizedIcon
-    .replace(/^[.][\\/]/, "")
-    .replace(/^[\\/]+/, "");
-
-  return iconPath.length > 0 ? `${pluginDirectory}${separator}${iconPath}` : null;
+  return normalizedIcon;
 }
 
 export function resolveExtensionIconSource(

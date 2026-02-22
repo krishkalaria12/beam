@@ -88,7 +88,7 @@ function toCommandMetadata(plugin: PluginInfo): ExtensionCommandMetadata {
     plugin.pluginTitle.trim(),
     plugin.description?.trim() ?? "",
   ].filter((part) => part.length > 0);
-  const iconReference = resolveExtensionIconReference(plugin.icon, plugin.pluginPath);
+  const iconReference = resolveExtensionIconReference(plugin.icon);
 
   return {
     extensionId: toExtensionId(plugin),
