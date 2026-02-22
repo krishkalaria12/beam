@@ -33,7 +33,6 @@ public func initialize_soulver(resourcesPath: UnsafePointer<CChar>) {
     }
     
     globalCalculator = Calculator(customization: .standard)
-    print("✅ Soulver calculator initialized.")
 }
 
 @MainActor

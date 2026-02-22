@@ -25,6 +25,7 @@ export default defineConfig({
   build: {
     target: "esnext",
     minify: "esbuild",
+    chunkSizeWarningLimit: 850,
     rollupOptions: {
       output: {
         manualChunks: (id) => {
@@ -41,21 +42,26 @@ export default defineConfig({
             return "tanstack-vendor";
           }
           if (
+            id.includes("react/") ||
+            id.includes("react-dom") ||
+            id.includes("scheduler") ||
+            id.includes("use-sync-external-store") ||
+            id.includes("zustand") ||
             id.includes("lucide-react") ||
             id.includes("cmdk") ||
             id.includes("@base-ui") ||
-            id.includes("shadcn") ||
             id.includes("sonner") ||
-            id.includes("class-variance") ||
+            id.includes("class-variance-authority") ||
             id.includes("tailwind-merge") ||
-            id.includes("clsx")
+            id.includes("clsx") ||
+            id.includes("date-fns") ||
+            id.includes("next-themes")
           ) {
-            return "ui-vendor";
+            return "framework-vendor";
           }
-          if (id.includes("react-dom") || id.includes("react/") || id.includes("scheduler")) {
-            return "react-vendor";
-          }
-          return "vendors";
+          // Let Rollup auto-place remaining dependencies to avoid forced
+          // cross-chunk cycles from over-manualized vendor grouping.
+          return;
         },
       },
     },

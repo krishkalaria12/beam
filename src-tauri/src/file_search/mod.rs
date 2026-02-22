@@ -17,7 +17,7 @@ pub async fn initialize_backend(index: Arc<ConcurrentMap<String, FileEntry>>) {
     let maybe_index = match cache::get_cache_file() {
         Ok(Some(idx)) => Some(idx),
         Ok(None) => None,
-        Err(e) => None,
+        Err(_) => None,
     };
 
     match maybe_index {
