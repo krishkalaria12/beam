@@ -6,9 +6,19 @@ import { Command, open as shellOpen, type Child } from "@tauri-apps/plugin-shell
 import { SidecarMessageWithPluginsSchema, type Command as ProtocolCommand } from "@flare/protocol";
 import { Unpackr } from "msgpackr";
 import { inflate } from "pako";
+import {
+  parseConfirmAlertRequest,
+  parseLaunchCommandRequest,
+} from "@/modules/extensions/sidecar/custom-message";
+import { parseOauthDeepLink } from "@/modules/extensions/sidecar/deep-link";
+import {
+  normalizeDiscoveredPluginRecord,
+  type DiscoveredPluginRecord,
+  type ExtensionMode,
+} from "@/modules/extensions/sidecar/discovery";
+import { isProtocolCommandType } from "@/modules/extensions/sidecar/protocol";
+import { concatChunks, decodeTextPayload, toByteChunk } from "@/modules/extensions/sidecar/stream";
 import { useExtensionRuntimeStore } from "@/modules/extensions/runtime/store";
-
-type ExtensionMode = "view" | "no-view";
 
 interface RunPluginPayload {
   pluginPath: string;
@@ -21,16 +31,6 @@ interface SidecarEvent {
   payload: Record<string, unknown> | RunPluginPayload;
 }
 
-interface DiscoveredPluginRecord {
-  title: string;
-  description?: string;
-  pluginTitle: string;
-  pluginName: string;
-  commandName: string;
-  pluginPath: string;
-  mode: ExtensionMode;
-}
-
 export type ExtensionSidecarMessageEvent =
   | { type: "go-back-to-plugin-list" }
   | { type: "open"; target: string; application?: string }
@@ -40,95 +40,14 @@ export type ExtensionSidecarMessageEvent =
   | { type: "log"; payload: unknown };
 
 type SidecarEventListener = (event: ExtensionSidecarMessageEvent) => void;
-
-const PROTOCOL_COMMAND_TYPES = new Set<ProtocolCommand["type"]>([
-  "CREATE_INSTANCE",
-  "CREATE_TEXT_INSTANCE",
-  "APPEND_CHILD",
-  "INSERT_BEFORE",
-  "REMOVE_CHILD",
-  "UPDATE_PROPS",
-  "UPDATE_TEXT",
-  "REPLACE_CHILDREN",
-  "CLEAR_CONTAINER",
-  "SHOW_TOAST",
-  "UPDATE_TOAST",
-  "HIDE_TOAST",
-  "DEFINE_PROPS_TEMPLATE",
-  "APPLY_PROPS_TEMPLATE",
-]);
-
-function isProtocolCommandType(value: string): value is ProtocolCommand["type"] {
-  return PROTOCOL_COMMAND_TYPES.has(value as ProtocolCommand["type"]);
+interface PendingPreferenceRequest {
+  resolve: (values: Record<string, unknown>) => void;
+  reject: (error: Error) => void;
+  timeoutId: ReturnType<typeof setTimeout>;
 }
 
-function toByteChunk(data: unknown): Uint8Array<ArrayBufferLike> {
-  if (data instanceof Uint8Array) {
-    return data;
-  }
-  if (data instanceof ArrayBuffer) {
-    return new Uint8Array(data);
-  }
-  if (Array.isArray(data)) {
-    return Uint8Array.from(data);
-  }
-  if (typeof data === "string") {
-    return new TextEncoder().encode(data);
-  }
-  if (
-    data &&
-    typeof data === "object" &&
-    "data" in data &&
-    Array.isArray((data as { data?: unknown }).data)
-  ) {
-    return Uint8Array.from((data as { data: number[] }).data);
-  }
-  if (
-    data &&
-    typeof data === "object" &&
-    "buffer" in data &&
-    (data as { buffer?: unknown }).buffer instanceof ArrayBuffer
-  ) {
-    const view = data as { buffer: ArrayBuffer; byteOffset?: number; byteLength?: number };
-    const offset = view.byteOffset ?? 0;
-    const length = view.byteLength ?? view.buffer.byteLength;
-    return new Uint8Array(view.buffer, offset, length);
-  }
+const PREFERENCE_REQUEST_TIMEOUT_MS = 7_500;
 
-  return new Uint8Array(0);
-}
-
-function concatChunks(
-  left: Uint8Array<ArrayBufferLike>,
-  right: Uint8Array<ArrayBufferLike>,
-): Uint8Array<ArrayBufferLike> {
-  if (left.length === 0) {
-    return right;
-  }
-  if (right.length === 0) {
-    return left;
-  }
-
-  const merged = new Uint8Array(left.length + right.length) as Uint8Array<ArrayBufferLike>;
-  merged.set(left, 0);
-  merged.set(right, left.length);
-  return merged;
-}
-
-const textDecoder = new TextDecoder();
-
-function decodeTextPayload(data: unknown): string {
-  if (typeof data === "string") {
-    return data;
-  }
-
-  const chunk = toByteChunk(data);
-  if (chunk.length > 0) {
-    return textDecoder.decode(chunk).trim();
-  }
-
-  return String(data);
-}
 
 class ExtensionSidecarService {
   private child: Child | null = null;
@@ -139,10 +58,7 @@ class ExtensionSidecarService {
   private oauthTokenStore = new Map<string, Record<string, unknown>>();
   private aiEventUnlisteners: Array<() => void> = [];
   private pendingOauthStates = new Set<string>();
-  private pendingPreferenceResolvers = new Map<
-    string,
-    Array<(values: Record<string, unknown>) => void>
-  >();
+  private pendingPreferenceResolvers = new Map<string, PendingPreferenceRequest[]>();
 
   subscribe(listener: SidecarEventListener): () => void {
     this.listeners.add(listener);
@@ -179,9 +95,24 @@ class ExtensionSidecarService {
   async getPreferences(pluginName: string): Promise<Record<string, unknown>> {
     await this.start();
 
-    return await new Promise<Record<string, unknown>>((resolve) => {
+    return await new Promise<Record<string, unknown>>((resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        const pending = this.pendingPreferenceResolvers.get(pluginName) ?? [];
+        const remaining = pending.filter((entry) => entry.timeoutId !== timeoutId);
+        if (remaining.length > 0) {
+          this.pendingPreferenceResolvers.set(pluginName, remaining);
+        } else {
+          this.pendingPreferenceResolvers.delete(pluginName);
+        }
+        reject(new Error(`Timed out while loading preferences for "${pluginName}".`));
+      }, PREFERENCE_REQUEST_TIMEOUT_MS);
+      const pendingRequest: PendingPreferenceRequest = {
+        resolve,
+        reject,
+        timeoutId,
+      };
       const pending = this.pendingPreferenceResolvers.get(pluginName) ?? [];
-      this.pendingPreferenceResolvers.set(pluginName, [...pending, resolve]);
+      this.pendingPreferenceResolvers.set(pluginName, [...pending, pendingRequest]);
       this.requestPreferences(pluginName);
     });
   }
@@ -258,38 +189,6 @@ class ExtensionSidecarService {
     this.writeEvent({ action, payload });
   }
 
-  private normalizeDiscoveredPluginRecord(value: unknown): DiscoveredPluginRecord | null {
-    if (!value || typeof value !== "object") {
-      return null;
-    }
-
-    const record = value as Record<string, unknown>;
-    const pluginPathRaw = record.pluginPath ?? record.plugin_path;
-    const commandNameRaw = record.commandName ?? record.command_name;
-    const pluginNameRaw = record.pluginName ?? record.plugin_name;
-    const pluginTitleRaw = record.pluginTitle ?? record.plugin_title;
-    const titleRaw = record.title;
-    const modeRaw = typeof record.mode === "string" ? record.mode.trim().toLowerCase() : "view";
-
-    if (
-      typeof pluginPathRaw !== "string" ||
-      typeof commandNameRaw !== "string" ||
-      typeof pluginNameRaw !== "string"
-    ) {
-      return null;
-    }
-
-    return {
-      pluginPath: pluginPathRaw,
-      commandName: commandNameRaw,
-      pluginName: pluginNameRaw,
-      pluginTitle: typeof pluginTitleRaw === "string" ? pluginTitleRaw : pluginNameRaw,
-      title: typeof titleRaw === "string" ? titleRaw : commandNameRaw,
-      description: typeof record.description === "string" ? record.description : undefined,
-      mode: modeRaw === "no-view" ? "no-view" : "view",
-    };
-  }
-
   private handleConfirmAlert(payload: {
     requestId: string;
     title?: string;
@@ -332,7 +231,7 @@ class ExtensionSidecarService {
       }
 
       const discovered = discoveredRaw
-        .map((entry) => this.normalizeDiscoveredPluginRecord(entry))
+        .map((entry) => normalizeDiscoveredPluginRecord(entry))
         .filter((entry): entry is DiscoveredPluginRecord => entry !== null);
 
       const requestedCommand = payload.name.trim();
@@ -419,28 +318,8 @@ class ExtensionSidecarService {
   }
 
   handleDeepLink(url: string): boolean {
-    let urlObj: URL;
-    try {
-      urlObj = new URL(url);
-    } catch {
-      return false;
-    }
-
-    const isRaycastScheme = urlObj.protocol === "raycast:";
-    const isRaycastRedirect =
-      (urlObj.protocol === "https:" || urlObj.protocol === "http:") &&
-      urlObj.hostname === "raycast.com" &&
-      urlObj.pathname.startsWith("/redirect");
-
-    if (!isRaycastScheme && !isRaycastRedirect) {
-      return false;
-    }
-
-    const isOauthCallback =
-      urlObj.host === "oauth" ||
-      urlObj.pathname.startsWith("/redirect");
-
-    if (!isOauthCallback) {
+    const parsed = parseOauthDeepLink(url);
+    if (!parsed.handled) {
       return false;
     }
 
@@ -448,26 +327,21 @@ class ExtensionSidecarService {
       return false;
     }
 
-    const code = urlObj.searchParams.get("code");
-    const state = urlObj.searchParams.get("state");
-
-    if (state) {
-      this.pendingOauthStates.delete(state);
-    }
-
-    if (code && state) {
+    if (parsed.kind === "success") {
+      this.pendingOauthStates.delete(parsed.state);
       this.sendResponse("oauth-authorize-response", {
-        state,
-        code,
+        state: parsed.state,
+        code: parsed.code,
       });
       return true;
     }
 
-    const error = urlObj.searchParams.get("error") || "Unknown OAuth error";
-    const description = urlObj.searchParams.get("error_description");
+    if (parsed.state) {
+      this.pendingOauthStates.delete(parsed.state);
+    }
     this.sendResponse("oauth-authorize-response", {
-      state,
-      error: description ? `${error}: ${description}` : error,
+      state: parsed.state,
+      error: parsed.error,
     });
     return true;
   }
@@ -597,55 +471,16 @@ class ExtensionSidecarService {
   }
 
   private handleDecodedMessage(raw: unknown): void {
-    if (raw && typeof raw === "object" && "type" in raw) {
-      const custom = raw as { type?: unknown; payload?: unknown };
+    const confirmAlertRequest = parseConfirmAlertRequest(raw);
+    if (confirmAlertRequest) {
+      this.handleConfirmAlert(confirmAlertRequest);
+      return;
+    }
 
-      if (custom.type === "confirm-alert") {
-        const payload =
-          custom.payload && typeof custom.payload === "object"
-            ? (custom.payload as Record<string, unknown>)
-            : {};
-        const requestId = typeof payload.requestId === "string" ? payload.requestId : "";
-        if (!requestId) {
-          return;
-        }
-
-        this.handleConfirmAlert({
-          requestId,
-          title: typeof payload.title === "string" ? payload.title : undefined,
-          message: typeof payload.message === "string" ? payload.message : undefined,
-          primaryActionTitle:
-            typeof payload.primaryActionTitle === "string"
-              ? payload.primaryActionTitle
-              : undefined,
-        });
-        return;
-      }
-
-      if (custom.type === "launch-command") {
-        const payload =
-          custom.payload && typeof custom.payload === "object"
-            ? (custom.payload as Record<string, unknown>)
-            : {};
-        const requestId = typeof payload.requestId === "string" ? payload.requestId : "";
-        const name = typeof payload.name === "string" ? payload.name : "";
-        if (!requestId || !name) {
-          return;
-        }
-
-        void this.handleLaunchCommand({
-          requestId,
-          name,
-          type: typeof payload.type === "string" ? payload.type : undefined,
-          context:
-            payload.context && typeof payload.context === "object"
-              ? (payload.context as Record<string, unknown>)
-              : undefined,
-          extensionName:
-            typeof payload.extensionName === "string" ? payload.extensionName : undefined,
-        });
-        return;
-      }
+    const launchCommandRequest = parseLaunchCommandRequest(raw);
+    if (launchCommandRequest) {
+      void this.handleLaunchCommand(launchCommandRequest);
+      return;
     }
 
     if (
@@ -750,8 +585,9 @@ class ExtensionSidecarService {
           const pendingResolvers = this.pendingPreferenceResolvers.get(pluginName) ?? [];
           if (pendingResolvers.length > 0) {
             this.pendingPreferenceResolvers.delete(pluginName);
-            for (const resolve of pendingResolvers) {
-              resolve(message.payload.values);
+            for (const pending of pendingResolvers) {
+              clearTimeout(pending.timeoutId);
+              pending.resolve(message.payload.values);
             }
           }
         }
@@ -864,6 +700,13 @@ class ExtensionSidecarService {
       unlisten();
     }
     this.aiEventUnlisteners = [];
+    for (const [pluginName, pendingResolvers] of this.pendingPreferenceResolvers.entries()) {
+      for (const pending of pendingResolvers) {
+        clearTimeout(pending.timeoutId);
+        pending.reject(new Error(`Preferences request for "${pluginName}" was interrupted.`));
+      }
+    }
+    this.pendingPreferenceResolvers.clear();
   }
 
   private writeEvent(event: SidecarEvent): void {

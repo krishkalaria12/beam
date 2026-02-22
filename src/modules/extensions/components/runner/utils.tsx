@@ -22,6 +22,12 @@ const FORM_FIELD_TYPES = new Set([
   "Form.Checkbox",
 ]);
 
+export interface ListModel {
+  entries: ListEntry[];
+  emptyViewNodeId?: number;
+  rootActionsNodeId?: number;
+}
+
 export function asString(value: unknown, fallback = ""): string {
   return typeof value === "string" ? value : fallback;
 }
@@ -104,11 +110,7 @@ export function collectActions(
   return results;
 }
 
-export function collectListEntries(tree: Map<number, ExtensionUiNode>, root: ExtensionUiNode): {
-  entries: ListEntry[];
-  emptyViewNodeId?: number;
-  rootActionsNodeId?: number;
-} {
+export function collectListEntries(tree: Map<number, ExtensionUiNode>, root: ExtensionUiNode): ListModel {
   const entries: ListEntry[] = [];
   let emptyViewNodeId: number | undefined;
 
