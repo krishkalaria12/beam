@@ -7,15 +7,12 @@ use std::{
 use arboard::Clipboard;
 use tauri::{command, AppHandle};
 
-use crate::{
-    clipboard::{
-        convert_image::get_image_as_base64,
-        error::Result,
-        history::{get_history, get_history_values, save_to_history, ClipboardHistoryEntry},
-        search::search_history,
-    },
-    config::config,
-};
+use self::convert_image::get_image_as_base64;
+use self::error::Result;
+use self::history::{get_history, get_history_values, save_to_history, ClipboardHistoryEntry};
+use self::search::search_history;
+
+use crate::config::config;
 
 pub mod convert_image;
 pub mod error;

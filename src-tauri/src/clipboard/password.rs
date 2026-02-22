@@ -8,10 +8,9 @@ use once_cell::sync::OnceCell;
 use rand::{rng, Rng, RngCore};
 use sha2::{Digest, Sha256};
 
-use crate::{
-    clipboard::error::{Error, Result},
-    config::config,
-};
+use super::error::{Error, Result};
+
+use crate::config::config;
 
 static ENCRYPTION_PASSWORD_CACHE: OnceCell<String> = OnceCell::new();
 

@@ -2,10 +2,10 @@ use std::path::PathBuf;
 use tauri::State;
 
 use crate::config::config;
-use crate::file_search::search::error::{Error, Result};
-use crate::file_search::search::search;
-use crate::file_search::types::FileIndex;
-use crate::file_search::{
+use super::search::error::{Error, Result};
+use super::search::search;
+use super::types::FileIndex;
+use super::{
     search::SearchOptions,
     types::{FileEntry, PaginatedSearchMetadata, PaginatedSearchResponse, SearchRequest},
 };

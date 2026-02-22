@@ -1,7 +1,7 @@
 use crate::config::config;
-use crate::dictionary::error::{Error, Result};
-use crate::dictionary::language::detect_language_code;
-use crate::dictionary::model::{ApiResponse, DictionaryResponse, Entry, Sense};
+use super::error::{Error, Result};
+use super::language::detect_language_code;
+use super::model::{ApiResponse, DictionaryResponse, Entry, Sense};
 use crate::http::get_async;
 
 #[tauri::command]

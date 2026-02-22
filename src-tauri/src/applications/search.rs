@@ -1,9 +1,8 @@
 use tauri::{command, AppHandle};
 
-use crate::{
-    applications::{app_entry::AppEntry, cache::get_applications_with_cache, error::Result},
-    fuzzy_search::fuzzy_match_applications,
-};
+use super::{app_entry::AppEntry, cache::get_applications_with_cache, error::Result};
+
+use crate::fuzzy_search::fuzzy_match_applications;
 
 const MAX_SEARCH_RESULTS: usize = 50;
 

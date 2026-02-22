@@ -3,13 +3,10 @@ use nucleo::{Config, Matcher, Utf32Str};
 use rayon::prelude::*;
 use tauri::AppHandle;
 
-use crate::{
-    clipboard::{
-        error::Result,
-        history::{get_history, ClipboardContentType, ClipboardHistoryEntry},
-    },
-    config::config,
-};
+use super::error::Result;
+use super::history::{get_history, ClipboardContentType, ClipboardHistoryEntry};
+
+use crate::config::config;
 
 const MATCH_CONFIG: Config = Config::DEFAULT;
 

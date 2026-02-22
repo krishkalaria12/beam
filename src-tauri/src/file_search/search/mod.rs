@@ -4,8 +4,8 @@ use nucleo::pattern::{CaseMatching, Normalization, Pattern};
 use nucleo::{Config, Matcher, Utf32Str};
 use rayon::prelude::*;
 
+use super::types::{FileEntry, FileIndex, SearchResult};
 use crate::config::config;
-use crate::file_search::types::{FileEntry, FileIndex, SearchResult};
 use error::{Error, Result};
 
 const MATCH_CONFIG: Config = Config::DEFAULT;

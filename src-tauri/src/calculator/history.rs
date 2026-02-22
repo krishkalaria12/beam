@@ -4,10 +4,9 @@ use serde_json::from_value;
 use tauri::AppHandle;
 use tauri_plugin_store::StoreExt;
 
-use crate::{
-    calculator::error::{Error, Result},
-    config::config,
-};
+use super::error::{Error, Result};
+
+use crate::config::config;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct CalculatorHistoryEntry {

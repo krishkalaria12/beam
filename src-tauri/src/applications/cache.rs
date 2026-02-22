@@ -5,14 +5,13 @@ use std::sync::Arc;
 use tauri::{AppHandle, Emitter, Wry};
 use tauri_plugin_store::{Store, StoreExt};
 
-use crate::{
-    applications::{
-        app_entry::AppEntry,
-        collector::collect_applications,
-        error::{Error, Result},
-    },
-    config::config,
+use super::{
+    app_entry::AppEntry,
+    collector::collect_applications,
+    error::{Error, Result},
 };
+
+use crate::config::config;
 
 static APPLICATIONS_REFRESH_IN_PROGRESS: AtomicBool = AtomicBool::new(false);
 

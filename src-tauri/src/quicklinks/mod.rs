@@ -8,10 +8,8 @@ use tauri::{command, AppHandle, Window};
 use url::Url;
 use webbrowser;
 
-use crate::quicklinks::{
-    error::{Error, Result},
-    helper::{get_quicklinks_from_store, save_all_quicklinks_to_store, save_quicklinks_to_store},
-};
+use self::error::{Error, Result};
+use self::helper::{get_quicklinks_from_store, save_all_quicklinks_to_store, save_quicklinks_to_store};
 
 #[derive(Debug, Serialize, Deserialize, Clone, Default)]
 pub struct Quicklink {

@@ -7,10 +7,10 @@ pub mod types;
 
 use tauri::{command, AppHandle, Manager};
 
-use crate::calculator::error::{Error, Result};
-use crate::calculator::history::{get_history, save_to_history, CalculatorHistoryEntry};
-use crate::calculator::service::CalculatorService;
-use crate::calculator::types::CalculatorCommandResponse;
+use self::error::{Error, Result};
+use self::history::{get_history, save_to_history, CalculatorHistoryEntry};
+use self::service::CalculatorService;
+use self::types::CalculatorCommandResponse;
 
 use std::cell::RefCell;
 

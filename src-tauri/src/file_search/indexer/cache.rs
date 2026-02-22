@@ -1,16 +1,14 @@
 use jiff::Timestamp;
+use rkyv::Deserialize;
 use std::{
+    collections::HashMap,
     fs::{self, File},
     io::Read,
     path::PathBuf,
-    collections::HashMap,
 };
-use rkyv::Deserialize;
 
-use crate::file_search::{
-    indexer::error::{Error, Result},
-    types::{FileEntry, FileIndex},
-};
+use super::super::types::{FileEntry, FileIndex};
+use super::error::{Error, Result};
 
 pub fn save_files_to_cache(file_entries: HashMap<String, FileEntry>) -> Result<()> {
     let filename = get_cache_dir()?.join("output.bin");
@@ -37,15 +35,16 @@ pub fn get_cache_file() -> Result<Option<FileIndex>> {
 
     let mut file = File::open(&filename)
         .map_err(|e| Error::ErrorOpeningCacheFile(format!("{} (path: {:?})", e, filename)))?;
-    
+
     let mut buffer = Vec::new();
     file.read_to_end(&mut buffer)
         .map_err(|e| Error::ErrorReadingCacheFile(e.to_string()))?;
 
     let archived = rkyv::check_archived_root::<FileIndex>(&buffer)
         .map_err(|e| Error::ErrorValidatingCache(e.to_string()))?;
-        
-    let deserialized: FileIndex = archived.deserialize(&mut rkyv::Infallible)
+
+    let deserialized: FileIndex = archived
+        .deserialize(&mut rkyv::Infallible)
         .map_err(|e| Error::ErrorDeserializingCache(e.to_string()))?;
 
     Ok(Some(deserialized))

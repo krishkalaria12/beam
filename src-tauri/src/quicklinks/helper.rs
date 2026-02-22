@@ -2,13 +2,11 @@ use serde_json::from_value;
 use tauri::AppHandle;
 use tauri_plugin_store::StoreExt;
 
-use crate::{
-    config::config,
-    quicklinks::{
-        error::{Error, Result},
-        Quicklink,
-    },
+use super::{
+    error::{Error, Result},
+    Quicklink,
 };
+use crate::config::config;
 
 pub fn get_quicklinks_from_store(app: &AppHandle) -> Result<Vec<Quicklink>> {
     let store = app

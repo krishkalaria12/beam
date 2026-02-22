@@ -4,8 +4,8 @@ use url::Url;
 use crate::config::config;
 use crate::http;
 
-use crate::translation::error::{Error, Result};
-use crate::translation::model::{
+use super::error::{Error, Result};
+use super::model::{
     DetectedLanguage, GoogleLanguagesResponse, TranslateTextRequest, TranslateTextResponse,
     TranslationLanguage,
 };

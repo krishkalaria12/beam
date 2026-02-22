@@ -3,14 +3,13 @@ use std::fs;
 use std::path::PathBuf;
 use walkdir::{DirEntry, WalkDir};
 
-use crate::{
-    applications::{
-        app_entry::AppEntry,
-        error::{Error, Result},
-        icon_resolver::IconResolver,
-    },
-    config::config,
+use super::{
+    app_entry::AppEntry,
+    error::{Error, Result},
+    icon_resolver::IconResolver,
 };
+
+use crate::config::config;
 
 fn get_application_description(entry: &DesktopEntry) -> String {
     let description = entry

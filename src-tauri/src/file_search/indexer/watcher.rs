@@ -6,16 +6,12 @@ use notify_debouncer_mini::{
 use std::time::Duration;
 use tokio::sync::mpsc::UnboundedSender;
 
-use crate::{
-    config::config,
-    file_search::{
-        indexer::{
-            error::{Error, Result},
-            helper::{get_file_metadata, is_ignored_path},
-        },
-        types::IndexUpdate,
-    },
+use super::super::types::IndexUpdate;
+use super::{
+    error::{Error, Result},
+    helper::{get_file_metadata, is_ignored_path},
 };
+use crate::config::config;
 
 pub fn start_watcher(tx: UnboundedSender<IndexUpdate>) -> Result<Debouncer<RecommendedWatcher>> {
     let mut debouncer = new_debouncer(

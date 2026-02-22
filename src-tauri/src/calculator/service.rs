@@ -1,7 +1,7 @@
-use crate::calculator::error::{Error, Result};
-use crate::calculator::query_validator::classify_query;
-use crate::calculator::soulver;
-use crate::calculator::types::{CalculationOutput, CalculatorCommandResponse, CalculatorStatus};
+use super::error::{Error, Result};
+use super::query_validator::classify_query;
+use super::soulver;
+use super::types::{CalculationOutput, CalculatorCommandResponse, CalculatorStatus};
 
 fn normalize_query(query: &str) -> String {
     let lowered = query.to_lowercase();

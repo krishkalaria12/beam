@@ -3,7 +3,7 @@ use std::process::{Command, Stdio};
 use shell_words::split;
 use tauri::{command, Window};
 
-use crate::applications::error::{Error, Result};
+use super::error::{Error, Result};
 
 #[command]
 pub fn open_application(window: Window, exec_path: String) -> Result<()> {

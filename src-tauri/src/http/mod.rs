@@ -3,7 +3,7 @@ pub mod error;
 use std::time::Duration;
 
 use crate::config::config;
-use crate::http::error::{Error, Result};
+use self::error::{Error, Result};
 
 // Async HTTP GET request that returns the response body as a string
 pub async fn get_async(url: &str) -> Result<String> {

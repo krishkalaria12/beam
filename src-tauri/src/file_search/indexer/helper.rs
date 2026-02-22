@@ -3,7 +3,8 @@ use std::{path::Path, time::SystemTime};
 use jiff::Timestamp;
 use walkdir::DirEntry;
 
-use crate::{config::config, file_search::types::FileEntry};
+use super::super::types::FileEntry;
+use crate::config::config;
 
 pub fn get_file_time(std_time: SystemTime) -> u64 {
     Timestamp::try_from(std_time)

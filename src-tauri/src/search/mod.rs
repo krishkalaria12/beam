@@ -1,8 +1,8 @@
 use tauri::{command, Window};
 
-use crate::search::error::{Error, Result};
-
 pub mod error;
+
+use self::error::{Error, Result};
 
 #[command]
 pub fn search_with_browser(window: Window, site: String, query: String) -> Result<()> {

@@ -6,11 +6,10 @@ use tauri::{AppHandle, Wry};
 use tauri_plugin_store::{Store, StoreExt};
 use url::Url;
 
-use crate::{
-    clipboard::error::{Error, Result},
-    clipboard::password::{decrypt_value, encrypt_value},
-    config::config,
-};
+use super::error::{Error, Result};
+use super::password::{decrypt_value, encrypt_value};
+
+use crate::config::config;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, Default)]
 #[serde(rename_all = "snake_case")]

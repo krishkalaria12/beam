@@ -2,8 +2,8 @@ use ignore::{WalkBuilder, WalkState};
 use std::cmp::max;
 use tokio::sync::mpsc;
 
-use crate::file_search::indexer::error::{Error, Result};
-use crate::file_search::indexer::helper::{get_file_metadata, is_ignored_path};
+use super::error::{Error, Result};
+use super::helper::{get_file_metadata, is_ignored_path};
 use crate::file_search::types::FileEntry;
 
 pub async fn build_file_index() -> Result<Vec<FileEntry>> {

@@ -6,7 +6,7 @@ use reqwest::{
 use tauri::command;
 use url::Url;
 
-use crate::quicklinks::error::{Error, Result};
+use super::error::{Error, Result};
 
 #[command]
 pub async fn get_favicon_for_url(url: String) -> Result<String> {
