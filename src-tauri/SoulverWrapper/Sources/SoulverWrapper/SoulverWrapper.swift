@@ -20,7 +20,6 @@ private var globalCalculator: Calculator?
 @_cdecl("initialize_soulver")
 public func initialize_soulver(resourcesPath: UnsafePointer<CChar>) {
     guard globalCalculator == nil else {
-        print("Soulver Wrapper: Calculator already initialized.")
         return
     }
 

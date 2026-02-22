@@ -85,6 +85,127 @@ fn is_valid_extension_slug(slug: &str) -> bool {
             .all(|character| character.is_ascii_alphanumeric() || character == '-' || character == '_')
 }
 
+fn has_uri_scheme(value: &str) -> bool {
+    let mut chars = value.chars();
+    let Some(first) = chars.next() else {
+        return false;
+    };
+    if !first.is_ascii_alphabetic() {
+        return false;
+    }
+
+    let mut saw_colon = false;
+    for character in chars {
+        if character == ':' {
+            saw_colon = true;
+            break;
+        }
+        if !(character.is_ascii_alphanumeric() || character == '+' || character == '-' || character == '.')
+        {
+            return false;
+        }
+    }
+
+    saw_colon
+}
+
+fn normalized_icon_relative_path(icon: &str) -> Option<&str> {
+    let trimmed = icon.trim();
+    if trimmed.is_empty() {
+        return None;
+    }
+
+    let without_dot_prefix = trimmed
+        .strip_prefix("./")
+        .or_else(|| trimmed.strip_prefix(".\\"))
+        .unwrap_or(trimmed);
+    let without_slash_prefix = without_dot_prefix
+        .strip_prefix('/')
+        .or_else(|| without_dot_prefix.strip_prefix('\\'))
+        .unwrap_or(without_dot_prefix);
+
+    if without_slash_prefix.is_empty() {
+        None
+    } else {
+        Some(without_slash_prefix)
+    }
+}
+
+fn push_candidate_with_common_extensions(candidates: &mut Vec<PathBuf>, path: PathBuf) {
+    candidates.push(path.clone());
+    if path.extension().is_some() {
+        return;
+    }
+
+    for extension in ["png", "svg", "jpg", "jpeg", "webp", "ico"] {
+        candidates.push(path.with_extension(extension));
+    }
+}
+
+fn resolve_plugin_icon_reference(plugin_dir: &Path, icon: Option<&str>) -> Option<String> {
+    let raw_icon = icon?.trim();
+    if raw_icon.is_empty() {
+        return None;
+    }
+
+    if raw_icon.starts_with("http://")
+        || raw_icon.starts_with("https://")
+        || raw_icon.starts_with("asset:")
+        || raw_icon.starts_with("tauri://")
+        || raw_icon.starts_with("data:")
+    {
+        return Some(raw_icon.to_string());
+    }
+
+    if let Some(local_path) = raw_icon.strip_prefix("file://") {
+        let absolute = PathBuf::from(local_path);
+        return absolute
+            .is_file()
+            .then(|| absolute.to_string_lossy().into_owned());
+    }
+
+    if has_uri_scheme(raw_icon) {
+        return Some(raw_icon.to_string());
+    }
+
+    let absolute = PathBuf::from(raw_icon);
+    if absolute.is_absolute() {
+        return absolute
+            .is_file()
+            .then(|| absolute.to_string_lossy().into_owned());
+    }
+
+    let relative = normalized_icon_relative_path(raw_icon)?;
+    let mut candidates = Vec::new();
+    let relative_path = PathBuf::from(relative);
+
+    push_candidate_with_common_extensions(&mut candidates, plugin_dir.join(&relative_path));
+
+    if relative_path.components().count() == 1 {
+        for prefix in [
+            "assets",
+            "Assets",
+            "icons",
+            "Icons",
+            "images",
+            "img",
+            "media",
+            "dist/assets",
+            "build/assets",
+        ] {
+            push_candidate_with_common_extensions(
+                &mut candidates,
+                plugin_dir.join(prefix).join(&relative_path),
+            );
+        }
+    }
+
+    candidates
+        .into_iter()
+        .find(|candidate| candidate.is_file())
+        .map(|candidate| candidate.to_string_lossy().into_owned())
+}
+
 async fn download_archive(url: &str) -> Result<Bytes> {
     let response = reqwest::get(url).await?;
     if !response.status().is_success() {
@@ -374,6 +495,10 @@ pub fn discover_plugins(app: &tauri::AppHandle) -> Result<Vec<PluginInfo>> {
             for command in commands {
                 let command_file_path = plugin_dir.join(format!("{}.js", command.name));
                 if command_file_path.exists() {
+                    let resolved_icon = resolve_plugin_icon_reference(
+                        &plugin_dir,
+                        command.icon.as_deref().or(package_json.icon.as_deref()),
+                    );
                     plugins.push(PluginInfo {
                         title: command
                             .title
@@ -392,7 +517,7 @@ pub fn discover_plugins(app: &tauri::AppHandle) -> Result<Vec<PluginInfo>> {
                             .unwrap_or_else(|| plugin_dir_name.clone()),
                         command_name: command.name.clone(),
                         plugin_path: command_file_path.to_string_lossy().to_string(),
-                        icon: command.icon.or_else(|| package_json.icon.clone()),
+                        icon: resolved_icon,
                         preferences: package_json.preferences.clone(),
                         command_preferences: command.preferences,
                         mode: command.mode,

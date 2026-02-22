@@ -172,7 +172,7 @@ export function toInstalledExtensionSummary(plugins: PluginInfo[]): InstalledExt
     const key = `${owner.toLowerCase()}::${slug.toLowerCase()}`;
     const existing = grouped.get(key);
     const pluginName = plugin.pluginName.trim() || null;
-    const icon = resolveExtensionIconReference(plugin.icon, plugin.pluginPath);
+    const icon = resolveExtensionIconReference(plugin.icon);
     const preferences = collectPreferences(plugin);
     if (existing) {
       existing.commandCount += 1;
