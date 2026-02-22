@@ -9,7 +9,6 @@ import {
 } from "@/modules/extensions/runtime/store";
 import type {
   FlattenedAction,
-  FormDescriptionEntry,
   FormField,
   FormValue,
   ListEntry,
@@ -18,11 +17,9 @@ import {
   asBoolean,
   asString,
   collectActions,
-  collectFormDescriptions,
   collectFormFields,
   collectGridEntries,
   collectListEntries,
-  renderDetailNode,
   type ListModel,
 } from "@/modules/extensions/components/runner/utils";
 
@@ -30,7 +27,7 @@ interface UseExtensionRunnerStateInput {
   onBack: () => void;
 }
 
-interface UseExtensionRunnerStateResult {
+export interface UseExtensionRunnerStateResult {
   uiTree: Map<number, ExtensionUiNode>;
   rootNode: ExtensionUiNode | undefined;
   rootType: string;
@@ -38,7 +35,7 @@ interface UseExtensionRunnerStateResult {
   listModel: ListModel | null;
   gridEntries: ListEntry[];
   formFields: FormField[];
-  formDescriptions: FormDescriptionEntry[];
+  formFieldByNodeId: Map<number, FormField>;
   formValues: Record<string, FormValue>;
   searchText: string;
   selectedIndex: number;
@@ -46,7 +43,6 @@ interface UseExtensionRunnerStateResult {
   selectedEntry: ListEntry | undefined;
   selectedEntryActions: FlattenedAction[];
   rootActions: FlattenedAction[];
-  detailContent: ReturnType<typeof renderDetailNode>;
   activeToast: ExtensionToast | undefined;
   handleBack: () => void;
   handleRootKeyDownCapture: (event: KeyboardEvent<HTMLDivElement>) => void;
@@ -108,10 +104,6 @@ export function useExtensionRunnerState({
     () => (rootNode?.type === "Form" ? collectFormFields(uiTree, rootNode) : []),
     [uiTree, rootNode],
   );
-  const formDescriptions = useMemo(
-    () => (rootNode?.type === "Form" ? collectFormDescriptions(uiTree, rootNode) : []),
-    [uiTree, rootNode],
-  );
 
   const formFieldByNodeId = useMemo(() => {
     const map = new Map<number, FormField>();
@@ -163,8 +155,6 @@ export function useExtensionRunnerState({
     [uiTree, rootNode?.namedChildren?.actions, listModel?.rootActionsNodeId],
   );
 
-  const detailNodeId = selectedEntry?.detailNodeId ?? rootNode?.namedChildren?.metadata;
-  const detailContent = useMemo(() => renderDetailNode(uiTree, detailNodeId), [uiTree, detailNodeId]);
   const activeToast = useMemo(
     () =>
       toasts.reduce<ExtensionToast | undefined>(
@@ -416,7 +406,7 @@ export function useExtensionRunnerState({
     listModel,
     gridEntries,
     formFields,
-    formDescriptions,
+    formFieldByNodeId,
     formValues,
     searchText,
     selectedIndex,
@@ -424,7 +414,6 @@ export function useExtensionRunnerState({
     selectedEntry,
     selectedEntryActions,
     rootActions,
-    detailContent,
     activeToast,
     handleBack,
     handleRootKeyDownCapture,

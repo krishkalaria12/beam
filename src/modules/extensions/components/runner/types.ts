@@ -14,6 +14,7 @@ export interface FlattenedAction {
 export interface ListEntry {
   nodeId: number;
   sectionTitle?: string;
+  sectionNodeId?: number;
   title: string;
   subtitle?: string;
   keywords: string;
@@ -33,10 +34,4 @@ export interface FormField {
   defaultValue: FormValue;
   controlledValue?: FormValue;
   hasOnChange: boolean;
-}
-
-export interface FormDescriptionEntry {
-  nodeId: number;
-  title: string;
-  text?: string;
 }

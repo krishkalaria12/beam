@@ -1,5 +1,3 @@
-import type { ReactNode } from "react";
-
 import {
   EXTENSIONS_RUNNER_ACTION_CONTAINER_TYPE_SET,
   EXTENSIONS_RUNNER_FORM_FIELD_TYPE_SET,
@@ -7,7 +5,6 @@ import {
 import type { ExtensionUiNode } from "@/modules/extensions/runtime/store";
 import type {
   FlattenedAction,
-  FormDescriptionEntry,
   FormField,
   FormValue,
   ListEntry,
@@ -109,7 +106,10 @@ export function collectListEntries(tree: Map<number, ExtensionUiNode>, root: Ext
   const entries: ListEntry[] = [];
   let emptyViewNodeId: number | undefined;
 
-  const visitItemNode = (nodeId: number, sectionTitle?: string) => {
+  const visitItemNode = (
+    nodeId: number,
+    section?: { title?: string; nodeId?: number },
+  ) => {
     const node = tree.get(nodeId);
     if (!node || node.type !== "List.Item") {
       return;
@@ -127,7 +127,8 @@ export function collectListEntries(tree: Map<number, ExtensionUiNode>, root: Ext
 
     entries.push({
       nodeId: node.id,
-      sectionTitle,
+      sectionTitle: section?.title,
+      sectionNodeId: section?.nodeId,
       title,
       subtitle,
       keywords,
@@ -152,7 +153,10 @@ export function collectListEntries(tree: Map<number, ExtensionUiNode>, root: Ext
     if (child.type === "List.Section") {
       const sectionTitle = asString(child.props.title).trim() || undefined;
       for (const sectionChildId of child.children) {
-        visitItemNode(sectionChildId, sectionTitle);
+        visitItemNode(sectionChildId, {
+          title: sectionTitle,
+          nodeId: child.id,
+        });
       }
       continue;
     }
@@ -172,7 +176,10 @@ export function collectListEntries(tree: Map<number, ExtensionUiNode>, root: Ext
 export function collectGridEntries(tree: Map<number, ExtensionUiNode>, root: ExtensionUiNode): ListEntry[] {
   const entries: ListEntry[] = [];
 
-  const visitGridItem = (nodeId: number, sectionTitle?: string) => {
+  const visitGridItem = (
+    nodeId: number,
+    section?: { title?: string; nodeId?: number },
+  ) => {
     const node = tree.get(nodeId);
     if (!node || node.type !== "Grid.Item") {
       return;
@@ -181,7 +188,8 @@ export function collectGridEntries(tree: Map<number, ExtensionUiNode>, root: Ext
     const subtitle = asString(node.props.subtitle).trim() || undefined;
     entries.push({
       nodeId: node.id,
-      sectionTitle,
+      sectionTitle: section?.title,
+      sectionNodeId: section?.nodeId,
       title,
       subtitle,
       keywords: [title, subtitle ?? ""].join(" ").toLowerCase(),
@@ -204,7 +212,10 @@ export function collectGridEntries(tree: Map<number, ExtensionUiNode>, root: Ext
     if (child.type === "Grid.Section") {
       const sectionTitle = asString(child.props.title).trim() || undefined;
       for (const sectionChildId of child.children) {
-        visitGridItem(sectionChildId, sectionTitle);
+        visitGridItem(sectionChildId, {
+          title: sectionTitle,
+          nodeId: child.id,
+        });
       }
     }
   }
@@ -221,82 +232,6 @@ export function extractText(tree: Map<number, ExtensionUiNode>, nodeId?: number)
     return asString(node.text);
   }
   return node.children.map((childId) => extractText(tree, childId)).join(" ").trim();
-}
-
-export function renderMetadataBlock(tree: Map<number, ExtensionUiNode>, nodeId?: number): ReactNode {
-  const metadataNode = findNode(tree, nodeId);
-  if (!metadataNode) {
-    return null;
-  }
-
-  return (
-    <div className="space-y-2 rounded-md border border-border/60 bg-card p-3">
-      {metadataNode.children.map((childId) => {
-        const child = tree.get(childId);
-        if (!child) {
-          return null;
-        }
-
-        if (child.type.endsWith(".Separator")) {
-          return <div key={childId} className="h-px w-full bg-border/60" />;
-        }
-
-        if (child.type.endsWith(".TagList")) {
-          const tags = child.children
-            .map((tagId) => tree.get(tagId))
-            .filter((tag): tag is ExtensionUiNode => Boolean(tag))
-            .map((tag) => asString(tag.props.text).trim())
-            .filter(Boolean);
-          return (
-            <div key={childId} className="flex flex-wrap gap-1.5">
-              {tags.map((tag) => (
-                <span key={`${childId}:${tag}`} className="rounded bg-muted px-2 py-0.5 text-xs">
-                  {tag}
-                </span>
-              ))}
-            </div>
-          );
-        }
-
-        const title = asString(child.props.title).trim();
-        const text =
-          asString(child.props.text).trim() ||
-          asString(child.props.target).trim() ||
-          extractText(tree, child.id);
-
-        return (
-          <div key={childId} className="flex items-start justify-between gap-3 text-sm">
-            <span className="text-muted-foreground">{title || "Value"}</span>
-            <span className="text-right">{text || "-"}</span>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-export function renderDetailNode(tree: Map<number, ExtensionUiNode>, nodeId?: number): ReactNode {
-  const node = findNode(tree, nodeId);
-  if (!node) {
-    return null;
-  }
-
-  if (node.type === "Detail" || node.type === "List.Item.Detail" || node.type === "Grid.Item.Detail") {
-    const markdown = asString(node.props.markdown).trim();
-    const metadataNodeId = node.namedChildren?.metadata;
-    return (
-      <div className="space-y-3">
-        {markdown ? (
-          <pre className="whitespace-pre-wrap rounded-md border border-border/60 bg-card p-3 text-sm leading-relaxed">
-            {markdown}
-          </pre>
-        ) : null}
-        {renderMetadataBlock(tree, metadataNodeId)}
-      </div>
-    );
-  }
-
-  return renderMetadataBlock(tree, nodeId);
 }
 
 export function collectFormFields(tree: Map<number, ExtensionUiNode>, root: ExtensionUiNode): FormField[] {
@@ -383,38 +318,4 @@ export function collectFormFields(tree: Map<number, ExtensionUiNode>, root: Exte
   }
 
   return fields;
-}
-
-export function collectFormDescriptions(
-  tree: Map<number, ExtensionUiNode>,
-  root: ExtensionUiNode,
-): FormDescriptionEntry[] {
-  const descriptions: FormDescriptionEntry[] = [];
-
-  const walk = (nodeId: number) => {
-    const node = tree.get(nodeId);
-    if (!node) {
-      return;
-    }
-
-    if (node.type === "Form.Description") {
-      const title = asString(node.props.title, "Description").trim() || "Description";
-      const text = asString(node.props.text).trim() || undefined;
-      descriptions.push({
-        nodeId: node.id,
-        title,
-        text,
-      });
-    }
-
-    for (const childId of node.children) {
-      walk(childId);
-    }
-  };
-
-  for (const childId of root.children) {
-    walk(childId);
-  }
-
-  return descriptions;
 }

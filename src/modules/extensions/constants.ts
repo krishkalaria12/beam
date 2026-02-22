@@ -55,6 +55,7 @@ export const EXTENSIONS_RUNNER_ACTION_CONTAINER_TYPE_SET = new Set<string>(
 
 export const EXTENSIONS_RUNNER_FORM_FIELD_TYPES = [
   "Form.TextField",
+  "Form.PasswordField",
   "Form.TextArea",
   "Form.Dropdown",
   "Form.Checkbox",
