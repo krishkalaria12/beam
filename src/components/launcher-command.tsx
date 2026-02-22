@@ -1,6 +1,8 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { isTauri } from "@tauri-apps/api/core";
-import { useEffect, useMemo, useState } from "react";
+import { listen } from "@tauri-apps/api/event";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 
 import { buildCommandContext } from "@/command-registry/context";
 import {
@@ -10,6 +12,7 @@ import {
   toQuicklinkExecuteCommandId,
 } from "@/command-registry/default-providers";
 import { dispatchCommand } from "@/command-registry/dispatcher";
+import type { CustomActionRequest } from "@/command-registry/dispatcher";
 import { createCommandProviderOrchestrator } from "@/command-registry/providers";
 import type { RankedCommand } from "@/command-registry/ranker";
 import { rankCommands } from "@/command-registry/ranker";
@@ -29,6 +32,12 @@ import { LauncherFooter } from "@/modules/launcher/components/launcher-footer";
 import { LauncherSecondaryPanel } from "@/modules/launcher/components/launcher-secondary-panel";
 import { LauncherTakeoverPanel } from "@/modules/launcher/components/launcher-takeover-panel";
 import { createCustomActionHandler } from "@/modules/launcher/lib/create-custom-action-handler";
+import { extensionSidecarService } from "@/modules/extensions/sidecar-service";
+import { getDiscoveredPlugins } from "@/modules/extensions/api/get-discovered-plugins";
+import { ExtensionToastBridge } from "@/modules/extensions/components/extension-toast-bridge";
+import { useExtensionRuntimeStore } from "@/modules/extensions/runtime/store";
+import { parseRaycastDeepLink } from "@/modules/extensions/sidecar/deep-link";
+import { useExtensionsUiStore } from "@/modules/extensions/store/use-extensions-ui-store";
 import { findQuicklinkByKeyword } from "@/modules/quicklinks/api/quicklinks";
 import { useQuicklinks } from "@/modules/quicklinks/hooks/use-quicklinks";
 import { setLauncherCompactMode } from "@/modules/settings/api/set-launcher-compact-mode";
@@ -81,6 +90,154 @@ export default function LauncherCommand() {
       }),
     [],
   );
+
+  const openExtensionsFromDeepLink = useCallback((extensionSlug?: string) => {
+    openPanel("extensions", true);
+    const extensionsUi = useExtensionsUiStore.getState();
+    const normalizedSlug = extensionSlug?.trim() ?? "";
+    if (normalizedSlug.length > 0) {
+      extensionsUi.setSearch(normalizedSlug);
+      extensionsUi.setDebouncedSearch(normalizedSlug);
+      extensionsUi.setSearchDebouncing(false);
+    }
+  }, [openPanel]);
+
+  const runExtensionCommandFromDeepLink = useCallback(async (
+    ownerOrAuthor: string,
+    extensionName: string,
+    commandName: string,
+  ) => {
+    const requestedOwner = ownerOrAuthor.trim().toLowerCase();
+    const requestedExtension = extensionName.trim().toLowerCase();
+    const requestedCommand = commandName.trim().toLowerCase();
+    if (!requestedOwner || !requestedExtension || !requestedCommand) {
+      return;
+    }
+
+    const discovered = await getDiscoveredPlugins();
+    const matchedPlugin = discovered.find((plugin) => {
+      const owner = plugin.owner?.trim().toLowerCase() ?? "";
+      const author = typeof plugin.author === "string"
+        ? plugin.author.trim().toLowerCase()
+        : plugin.author?.name?.trim().toLowerCase() ?? "";
+      const ownerMatches = owner.length > 0 && owner === requestedOwner;
+      const authorMatches = author.length > 0 && author === requestedOwner;
+      if (!ownerMatches && !authorMatches) {
+        return false;
+      }
+
+      return (
+        plugin.pluginName.trim().toLowerCase() === requestedExtension &&
+        plugin.commandName.trim().toLowerCase() === requestedCommand
+      );
+    });
+
+    if (!matchedPlugin) {
+      openExtensionsFromDeepLink(extensionName);
+      toast.error(`Extension command not found: ${ownerOrAuthor}/${extensionName}/${commandName}`);
+      return;
+    }
+
+    const pluginMode = matchedPlugin.mode?.trim().toLowerCase() === "no-view"
+      ? "no-view"
+      : "view";
+    useExtensionRuntimeStore.getState().resetForNewPlugin({
+      pluginPath: matchedPlugin.pluginPath,
+      pluginMode,
+      title: matchedPlugin.title,
+      subtitle: [matchedPlugin.pluginTitle, matchedPlugin.description ?? ""]
+        .filter((part) => part.trim().length > 0)
+        .join(" - ") || undefined,
+    });
+
+    if (pluginMode === "view") {
+      openPanel("extension-runner", true);
+    }
+
+    try {
+      await extensionSidecarService.runPlugin({
+        pluginPath: matchedPlugin.pluginPath,
+        mode: pluginMode,
+        aiAccessStatus: false,
+      });
+    } catch (error) {
+      useExtensionRuntimeStore.getState().resetRuntime();
+      if (pluginMode === "view") {
+        backToCommands();
+      }
+      const message = error instanceof Error ? error.message : String(error);
+      toast.error(`Failed to launch extension command: ${message}`);
+    }
+  }, [backToCommands, openExtensionsFromDeepLink, openPanel]);
+
+  useEffect(() => {
+    if (!isTauri()) {
+      return;
+    }
+
+    let disposed = false;
+    let unlisten: (() => void) | undefined;
+
+    void listen<string>("deep-link", (event) => {
+      const deepLinkUrl = event.payload;
+      if (extensionSidecarService.handleDeepLink(deepLinkUrl)) {
+        return;
+      }
+
+      const parsed = parseRaycastDeepLink(deepLinkUrl);
+      if (!parsed.handled) {
+        return;
+      }
+
+      if (parsed.kind === "extensions-store") {
+        openExtensionsFromDeepLink(parsed.extensionSlug);
+        return;
+      }
+
+      if (parsed.kind === "extensions-command") {
+        void runExtensionCommandFromDeepLink(
+          parsed.ownerOrAuthor,
+          parsed.extensionName,
+          parsed.commandName,
+        );
+      }
+    })
+      .then((cleanup) => {
+        if (disposed) {
+          cleanup();
+          return;
+        }
+        unlisten = cleanup;
+      })
+      .catch((error) => {
+        console.error("Failed to listen for deep links:", error);
+      });
+
+    return () => {
+      disposed = true;
+      unlisten?.();
+    };
+  }, [openExtensionsFromDeepLink, runExtensionCommandFromDeepLink]);
+
+  useEffect(() => {
+    const unsubscribe = extensionSidecarService.subscribe((event) => {
+      if (event.type === "go-back-to-plugin-list") {
+        useExtensionRuntimeStore.getState().resetRuntime();
+        backToCommands();
+        return;
+      }
+
+      if (event.type === "show-hud") {
+        toast.message(event.title);
+      }
+    });
+
+    return () => {
+      unsubscribe();
+      extensionSidecarService.stop();
+      useExtensionRuntimeStore.getState().resetRuntime();
+    };
+  }, [backToCommands]);
 
   const commandContext = useMemo(
     () =>
@@ -201,11 +358,48 @@ export default function LauncherCommand() {
       createCustomActionHandler({
         calculatorSessionId,
         setCommandSearch,
+        runExtensionCommand: async (request: CustomActionRequest) => {
+          const pluginPath = typeof request.payload.pluginPath === "string"
+            ? request.payload.pluginPath.trim()
+            : "";
+          const pluginMode = request.payload.pluginMode === "no-view"
+            ? "no-view"
+            : "view";
+
+          if (!pluginPath) {
+            throw new Error("Extension command payload is missing pluginPath.");
+          }
+
+          useExtensionRuntimeStore.getState().resetForNewPlugin({
+            pluginPath,
+            pluginMode,
+            title: request.command.title,
+            subtitle: request.command.subtitle,
+          });
+
+          if (pluginMode === "view") {
+            openPanel("extension-runner", true);
+          }
+
+          try {
+            await extensionSidecarService.runPlugin({
+              pluginPath,
+              mode: pluginMode,
+              aiAccessStatus: false,
+            });
+          } catch (error) {
+            useExtensionRuntimeStore.getState().resetRuntime();
+            if (pluginMode === "view") {
+              backToCommands();
+            }
+            throw error;
+          }
+        },
         onCalculatorHistoryChanged: () => {
           void queryClient.invalidateQueries({ queryKey: ["calculator", "history"] });
         },
       }),
-    [calculatorSessionId, queryClient, setCommandSearch],
+    [backToCommands, calculatorSessionId, openPanel, queryClient, setCommandSearch],
   );
 
   const handleRegistryCommandSelect = async (
@@ -316,6 +510,7 @@ export default function LauncherCommand() {
 
   return (
     <div className="relative h-full w-full bg-background">
+      <ExtensionToastBridge />
       <Command
         shouldFilter={false}
         onKeyDown={handleKeyDown}
@@ -351,6 +546,9 @@ export default function LauncherCommand() {
             }}
             openClipboard={() => {
               openPanel("clipboard", true);
+            }}
+            openExtensions={() => {
+              openPanel("extensions", true);
             }}
             backToCommands={backToCommands}
           />

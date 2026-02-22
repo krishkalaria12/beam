@@ -28,6 +28,7 @@ export interface ExtensionCommandMetadata {
   requiresQuery?: boolean;
   priority?: number;
   hidden?: boolean;
+  payload?: Record<string, unknown>;
   sandbox?: ExtensionCommandSandboxMetadata;
   execution?: ExtensionCommandExecutionMetadata;
 }
@@ -110,6 +111,7 @@ export function toExtensionCommandDescriptor(
     action: {
       type: "CUSTOM",
       payload: {
+        ...(metadata.payload ?? {}),
         extensionId: metadata.extensionId.trim(),
         extensionCommandId: metadata.commandId.trim(),
         requiresDesktopRuntime: Boolean(metadata.execution?.requiresDesktopRuntime),
@@ -128,4 +130,3 @@ export function toExtensionCommandDescriptors(
 ): CommandDescriptor[] {
   return metadataList.map((entry) => toExtensionCommandDescriptor(entry));
 }
-

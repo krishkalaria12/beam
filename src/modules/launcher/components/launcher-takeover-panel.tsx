@@ -8,6 +8,8 @@ import FileSearchCommandGroup from "@/modules/file-search/components/file-search
 import QuicklinksCommandGroup from "@/modules/quicklinks/components/quicklinks-command-group";
 import SpeedTestCommandGroup from "@/modules/speed-test/components/speed-test-command-group";
 import TranslationCommandGroup from "@/modules/translation/components/translation-command-group";
+import ExtensionsCommandGroup from "@/modules/extensions/components/extensions-command-group";
+import { ExtensionRunnerView } from "@/modules/extensions/components/extension-runner-view";
 import type { QuicklinksView } from "@/store/use-launcher-ui-store";
 
 const TAKEOVER_PANELS = [
@@ -17,6 +19,8 @@ const TAKEOVER_PANELS = [
   "quicklinks",
   "speed-test",
   "clipboard",
+  "extensions",
+  "extension-runner",
 ] as const;
 
 type TakeoverPanel = (typeof TAKEOVER_PANELS)[number];
@@ -37,6 +41,7 @@ interface TakeoverPanelRendererInput {
   openQuicklinks: () => void;
   openSpeedTest: () => void;
   openClipboard: () => void;
+  openExtensions: () => void;
   backToCommands: () => void;
 }
 
@@ -90,6 +95,21 @@ const TAKEOVER_PANEL_RENDERERS: Record<TakeoverPanel, TakeoverPanelRenderer> = {
       onBack={input.backToCommands}
     />
   ),
+  extensions: (input) => (
+    <ExtensionsCommandGroup
+      isOpen
+      onOpen={input.openExtensions}
+      onBack={input.backToCommands}
+    />
+  ),
+  "extension-runner": (input) => (
+    <div className="absolute inset-0 z-50 bg-background">
+      <ExtensionRunnerView
+        onBack={input.backToCommands}
+        onOpenExtensions={input.openExtensions}
+      />
+    </div>
+  ),
 };
 
 interface LauncherTakeoverPanelProps extends TakeoverPanelRendererInput {
@@ -109,6 +129,7 @@ export function LauncherTakeoverPanel({
   openQuicklinks,
   openSpeedTest,
   openClipboard,
+  openExtensions,
   backToCommands,
 }: LauncherTakeoverPanelProps) {
   if (!isTakeoverPanel(activePanel)) {
@@ -127,6 +148,7 @@ export function LauncherTakeoverPanel({
     openQuicklinks,
     openSpeedTest,
     openClipboard,
+    openExtensions,
     backToCommands,
   });
 }

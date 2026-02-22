@@ -12,6 +12,25 @@
     "core:default",
     "dialog:allow-open",
     "clipboard:monitor-all",
-    "clipboard:write-all"
+    "clipboard:write-all",
+    "shell:allow-open",
+    "shell:allow-stdin-write",
+    {
+      "identifier": "shell:allow-spawn",
+      "allow": [
+        {
+          "name": "binaries/app",
+          "sidecar": true,
+          "args": [
+            {
+              "validator": "--data-dir=\\S+"
+            },
+            {
+              "validator": "--cache-dir=\\S+"
+            }
+          ]
+        }
+      ]
+    }
   ]
 }

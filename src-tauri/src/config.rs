@@ -75,6 +75,16 @@ pub struct Config {
 
     // -- Settings
     pub UI_LAYOUT_MODE_VALUE: &'static str,
+
+    // -- Extensions
+    pub EXTENSIONS_PLUGINS_DIRECTORY: &'static str,
+    pub EXTENSIONS_PACKAGE_JSON_FILE: &'static str,
+    pub EXTENSIONS_OAUTH_TOKENS_FILE: &'static str,
+    pub EXTENSIONS_AI_SETTINGS_FILE: &'static str,
+    pub EXTENSIONS_AI_KEYRING_SERVICE: &'static str,
+    pub EXTENSIONS_AI_KEYRING_USERNAME: &'static str,
+    pub EXTENSIONS_HEURISTIC_APPLESCRIPT_SYMBOL: &'static str,
+    pub EXTENSIONS_HEURISTIC_MACOS_PATHS: Vec<&'static str>,
 }
 
 impl Config {
@@ -165,6 +175,15 @@ impl Config {
             QUICKLINK_VALUE_NAME: "quick_links",
 
             UI_LAYOUT_MODE_VALUE: "ui_layout_mode",
+
+            EXTENSIONS_PLUGINS_DIRECTORY: "plugins",
+            EXTENSIONS_PACKAGE_JSON_FILE: "package.json",
+            EXTENSIONS_OAUTH_TOKENS_FILE: "oauth_tokens.json",
+            EXTENSIONS_AI_SETTINGS_FILE: "ai_settings.json",
+            EXTENSIONS_AI_KEYRING_SERVICE: "dev.byteatatime.beam.ai",
+            EXTENSIONS_AI_KEYRING_USERNAME: "openrouter_api_key",
+            EXTENSIONS_HEURISTIC_APPLESCRIPT_SYMBOL: "runAppleScript",
+            EXTENSIONS_HEURISTIC_MACOS_PATHS: vec!["/Applications/", "/Library/", "/Users/"],
         })
     }
 }

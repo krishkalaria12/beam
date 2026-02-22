@@ -1,6 +1,6 @@
 use crate::{
-    applications, calculator, clipboard, dictionary, file_search, launcher_window, quicklinks,
-    search, settings, system_actions, translation,
+    applications, calculator, clipboard, dictionary, extensions, file_search, launcher_window,
+    quicklinks, search, settings, system_actions, translation,
 };
 
 use tauri::ipc::Invoke;
@@ -17,6 +17,13 @@ pub fn get_handler() -> impl Fn(Invoke) -> bool {
         clipboard::get_clipboard_history,
         clipboard::get_clipboard_history_entries,
         clipboard::search_clipboard_history,
+        clipboard::get_selected_finder_items,
+        clipboard::get_selected_text,
+        clipboard::clipboard_read_text,
+        clipboard::clipboard_read,
+        clipboard::clipboard_copy,
+        clipboard::clipboard_paste,
+        clipboard::clipboard_clear,
         file_search::commands::search_files,
         file_search::commands::open_file,
         file_search::commands::get_file_info,
@@ -34,5 +41,20 @@ pub fn get_handler() -> impl Fn(Invoke) -> bool {
         launcher_window::set_launcher_compact_mode,
         settings::get_ui_layout_mode,
         settings::set_ui_layout_mode,
+        extensions::get_discovered_plugins,
+        extensions::install_extension,
+        extensions::uninstall_extension,
+        extensions::browser_extension::browser_extension_check_connection,
+        extensions::browser_extension::browser_extension_request,
+        extensions::oauth::oauth_set_tokens,
+        extensions::oauth::oauth_get_tokens,
+        extensions::oauth::oauth_remove_tokens,
+        extensions::ai::set_ai_api_key,
+        extensions::ai::is_ai_api_key_set,
+        extensions::ai::clear_ai_api_key,
+        extensions::ai::get_ai_settings,
+        extensions::ai::set_ai_settings,
+        extensions::ai::ai_can_access,
+        extensions::ai::ai_ask_stream,
     ]
 }

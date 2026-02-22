@@ -11,6 +11,8 @@ const TAKEOVER_PANELS = new Set<CommandPanel>([
   "quicklinks",
   "speed-test",
   "clipboard",
+  "extensions",
+  "extension-runner",
 ]);
 
 const INPUT_HIDDEN_PANELS = new Set<CommandPanel>([
