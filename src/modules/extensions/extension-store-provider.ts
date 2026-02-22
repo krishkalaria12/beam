@@ -1,18 +1,17 @@
 import type { CommandDescriptor, CommandProvider } from "@/command-registry/types";
 import { searchStoreExtensions } from "@/modules/extensions/api/search-store-extensions";
-import type { ExtensionStoreListing } from "@/modules/extensions/types";
+import {
+  EXTENSIONS_PROVIDER_CACHE_TTL_MS,
+  EXTENSIONS_PROVIDER_SCOPE,
+  EXTENSIONS_STORE_PROVIDER_QUERY_PREFIX,
+  EXTENSIONS_STORE_PROVIDER_SEARCH_LIMIT,
+} from "@/modules/extensions/constants";
+import type {
+  ExtensionStoreListing,
+  ExtensionStoreSearchCacheEntry,
+} from "@/modules/extensions/types";
 
-const PROVIDER_SCOPE: ReadonlyArray<"normal" | "compressed"> = ["normal", "compressed"];
-const QUERY_PREFIX = "ext ";
-const CACHE_TTL_MS = 15_000;
-const SEARCH_LIMIT = 8;
-
-interface SearchCacheEntry {
-  updatedAtMs: number;
-  results: ExtensionStoreListing[];
-}
-
-const queryCache = new Map<string, SearchCacheEntry>();
+const queryCache = new Map<string, ExtensionStoreSearchCacheEntry>();
 const inflightQueryCache = new Map<string, Promise<ExtensionStoreListing[]>>();
 
 function nowMs(): number {
@@ -32,18 +31,18 @@ function parseStoreQuery(query: string): string | null {
     return null;
   }
 
-  if (!normalized.toLowerCase().startsWith(QUERY_PREFIX)) {
+  if (!normalized.toLowerCase().startsWith(EXTENSIONS_STORE_PROVIDER_QUERY_PREFIX)) {
     return null;
   }
 
-  const searchTerm = normalized.slice(QUERY_PREFIX.length).trim();
+  const searchTerm = normalized.slice(EXTENSIONS_STORE_PROVIDER_QUERY_PREFIX.length).trim();
   return searchTerm.length > 0 ? searchTerm : null;
 }
 
 async function getStoreResults(query: string): Promise<ExtensionStoreListing[]> {
   const lowerCased = query.toLowerCase();
   const cached = queryCache.get(lowerCased);
-  if (cached && nowMs() - cached.updatedAtMs <= CACHE_TTL_MS) {
+  if (cached && nowMs() - cached.updatedAtMs <= EXTENSIONS_PROVIDER_CACHE_TTL_MS) {
     return cached.results;
   }
 
@@ -52,7 +51,7 @@ async function getStoreResults(query: string): Promise<ExtensionStoreListing[]> 
     return inflight;
   }
 
-  const request = searchStoreExtensions(query, SEARCH_LIMIT)
+  const request = searchStoreExtensions(query, EXTENSIONS_STORE_PROVIDER_SEARCH_LIMIT)
     .then((results) => {
       queryCache.set(lowerCased, {
         updatedAtMs: nowMs(),
@@ -72,6 +71,8 @@ function toInstallCommand(entry: ExtensionStoreListing): CommandDescriptor {
   const slug = entry.name.trim();
   const author = entry.author.handle.trim();
   const fullSlug = `${author}/${slug}`;
+  const iconReference =
+    entry.icons?.light?.trim() || entry.icons?.dark?.trim() || entry.author.avatar?.trim() || "";
 
   return {
     id: `extensions.store.install.${author}.${slug}`.toLowerCase(),
@@ -90,9 +91,9 @@ function toInstallCommand(entry: ExtensionStoreListing): CommandDescriptor {
       .map((part) => part.trim())
       .filter((part) => part.length > 0),
     endText: "raycast store",
-    icon: "extension",
+    icon: iconReference ? `extension-icon:${iconReference}` : "extension",
     kind: "provider-item",
-    scope: PROVIDER_SCOPE,
+    scope: EXTENSIONS_PROVIDER_SCOPE,
     requiresQuery: true,
     priority: 52,
     action: {
@@ -115,7 +116,7 @@ function toInstallCommand(entry: ExtensionStoreListing): CommandDescriptor {
 export function createExtensionStoreProvider(): CommandProvider {
   return {
     id: "extensions-store-provider",
-    scope: PROVIDER_SCOPE,
+    scope: EXTENSIONS_PROVIDER_SCOPE,
     async provide({ context, signal }) {
       if (signal.aborted || !context.isDesktopRuntime) {
         return [];

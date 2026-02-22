@@ -1,12 +1,10 @@
 import { invoke, isTauri } from "@tauri-apps/api/core";
 
-import { installResultSchema, type InstallResult } from "@/modules/extensions/types";
-
-export interface InstallExtensionInput {
-  downloadUrl: string;
-  slug: string;
-  force?: boolean;
-}
+import {
+  installResultSchema,
+  type InstallExtensionInput,
+  type InstallResult,
+} from "@/modules/extensions/types";
 
 export async function installExtension(
   input: InstallExtensionInput,

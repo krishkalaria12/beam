@@ -1,5 +1,9 @@
 import type { ReactNode } from "react";
 
+import {
+  EXTENSIONS_RUNNER_ACTION_CONTAINER_TYPE_SET,
+  EXTENSIONS_RUNNER_FORM_FIELD_TYPE_SET,
+} from "@/modules/extensions/constants";
 import type { ExtensionUiNode } from "@/modules/extensions/runtime/store";
 import type {
   FlattenedAction,
@@ -8,19 +12,6 @@ import type {
   FormValue,
   ListEntry,
 } from "@/modules/extensions/components/runner/types";
-
-const ACTION_CONTAINER_TYPES = new Set([
-  "ActionPanel",
-  "ActionPanel.Section",
-  "ActionPanel.Submenu",
-]);
-
-const FORM_FIELD_TYPES = new Set([
-  "Form.TextField",
-  "Form.TextArea",
-  "Form.Dropdown",
-  "Form.Checkbox",
-]);
 
 export interface ListModel {
   entries: ListEntry[];
@@ -95,7 +86,11 @@ export function collectActions(
       });
     }
 
-    if (ACTION_CONTAINER_TYPES.has(node.type) || node.type === "Action" || node.type.startsWith("Action.")) {
+    if (
+      EXTENSIONS_RUNNER_ACTION_CONTAINER_TYPE_SET.has(node.type) ||
+      node.type === "Action" ||
+      node.type.startsWith("Action.")
+    ) {
       for (const childId of node.children) {
         stack.push(childId);
       }
@@ -313,7 +308,7 @@ export function collectFormFields(tree: Map<number, ExtensionUiNode>, root: Exte
       return;
     }
 
-    if (FORM_FIELD_TYPES.has(node.type)) {
+    if (EXTENSIONS_RUNNER_FORM_FIELD_TYPE_SET.has(node.type)) {
       const key = asString(node.props.id, String(node.id));
       const title = asString(node.props.title, key);
       const placeholder = asString(node.props.placeholder).trim() || undefined;

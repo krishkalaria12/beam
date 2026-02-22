@@ -6,6 +6,7 @@ import { Command, open as shellOpen, type Child } from "@tauri-apps/plugin-shell
 import { SidecarMessageWithPluginsSchema, type Command as ProtocolCommand } from "@flare/protocol";
 import { Unpackr } from "msgpackr";
 import { inflate } from "pako";
+import { EXTENSIONS_PREFERENCE_REQUEST_TIMEOUT_MS } from "@/modules/extensions/constants";
 import {
   parseConfirmAlertRequest,
   parseLaunchCommandRequest,
@@ -45,8 +46,6 @@ interface PendingPreferenceRequest {
   reject: (error: Error) => void;
   timeoutId: ReturnType<typeof setTimeout>;
 }
-
-const PREFERENCE_REQUEST_TIMEOUT_MS = 7_500;
 
 
 class ExtensionSidecarService {
@@ -105,7 +104,7 @@ class ExtensionSidecarService {
           this.pendingPreferenceResolvers.delete(pluginName);
         }
         reject(new Error(`Timed out while loading preferences for "${pluginName}".`));
-      }, PREFERENCE_REQUEST_TIMEOUT_MS);
+      }, EXTENSIONS_PREFERENCE_REQUEST_TIMEOUT_MS);
       const pendingRequest: PendingPreferenceRequest = {
         resolve,
         reject,

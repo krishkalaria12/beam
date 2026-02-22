@@ -1,16 +1,10 @@
-import type { ExtensionPreferenceField } from "@/modules/extensions/components/extension-preferences-dialog";
-import type { PluginInfo, Preference } from "@/modules/extensions/types";
-
-export interface InstalledExtensionSummary {
-  id: string;
-  slug: string;
-  title: string;
-  owner: string;
-  description: string;
-  commandCount: number;
-  pluginName: string | null;
-  preferences: ExtensionPreferenceField[];
-}
+import { resolveExtensionIconReference } from "@/modules/extensions/lib/icon";
+import type {
+  ExtensionPreferenceField,
+  InstalledExtensionSummary,
+  PluginInfo,
+  Preference,
+} from "@/modules/extensions/types";
 
 interface GroupedInstalledExtension {
   id: string;
@@ -19,6 +13,7 @@ interface GroupedInstalledExtension {
   owner: string;
   description: string;
   commandCount: number;
+  icon: string | null;
   pluginName: string | null;
   preferenceMap: Map<string, ExtensionPreferenceField>;
 }
@@ -177,9 +172,13 @@ export function toInstalledExtensionSummary(plugins: PluginInfo[]): InstalledExt
     const key = `${owner.toLowerCase()}::${slug.toLowerCase()}`;
     const existing = grouped.get(key);
     const pluginName = plugin.pluginName.trim() || null;
+    const icon = resolveExtensionIconReference(plugin.icon, plugin.pluginPath);
     const preferences = collectPreferences(plugin);
     if (existing) {
       existing.commandCount += 1;
+      if (!existing.icon && icon) {
+        existing.icon = icon;
+      }
       if (!existing.pluginName && pluginName) {
         existing.pluginName = pluginName;
       }
@@ -194,6 +193,7 @@ export function toInstalledExtensionSummary(plugins: PluginInfo[]): InstalledExt
       title: plugin.pluginTitle.trim() || plugin.title.trim() || slug,
       description: (plugin.description ?? "").trim(),
       commandCount: 1,
+      icon,
       pluginName,
       preferenceMap: new Map(
         preferences.map((preference) => [preference.name.toLowerCase(), preference]),
@@ -209,6 +209,7 @@ export function toInstalledExtensionSummary(plugins: PluginInfo[]): InstalledExt
       title: group.title,
       description: group.description,
       commandCount: group.commandCount,
+      icon: group.icon,
       pluginName: group.pluginName,
       preferences: [...group.preferenceMap.values()].sort((a, b) =>
         a.title.localeCompare(b.title),
@@ -232,6 +233,7 @@ function toOptimisticInstalledEntry(slug: string): InstalledExtensionSummary {
     title: toSlugLabel(slug),
     description: "",
     commandCount: 0,
+    icon: null,
     pluginName: null,
     preferences: [],
   };

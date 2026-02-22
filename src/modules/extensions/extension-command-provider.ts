@@ -4,10 +4,12 @@ import {
 } from "@/command-registry/extension-adapter";
 import type { CommandProvider } from "@/command-registry/types";
 import { getDiscoveredPlugins } from "@/modules/extensions/api/get-discovered-plugins";
+import {
+  EXTENSIONS_PROVIDER_CACHE_TTL_MS,
+  EXTENSIONS_PROVIDER_SCOPE,
+} from "@/modules/extensions/constants";
+import { resolveExtensionIconReference } from "@/modules/extensions/lib/icon";
 import type { PluginInfo } from "@/modules/extensions/types";
-
-const PROVIDER_SCOPE: ReadonlyArray<"normal" | "compressed"> = ["normal", "compressed"];
-const CACHE_TTL_MS = 15_000;
 
 let cachedPlugins: PluginInfo[] = [];
 let cacheUpdatedAt = 0;
@@ -86,6 +88,7 @@ function toCommandMetadata(plugin: PluginInfo): ExtensionCommandMetadata {
     plugin.pluginTitle.trim(),
     plugin.description?.trim() ?? "",
   ].filter((part) => part.length > 0);
+  const iconReference = resolveExtensionIconReference(plugin.icon, plugin.pluginPath);
 
   return {
     extensionId: toExtensionId(plugin),
@@ -105,8 +108,8 @@ function toCommandMetadata(plugin: PluginInfo): ExtensionCommandMetadata {
       .map((part) => part.trim())
       .filter((part) => part.length > 0),
     endText: "extension",
-    icon: "extension",
-    scope: PROVIDER_SCOPE,
+    icon: iconReference ? `extension-icon:${iconReference}` : "extension",
+    scope: EXTENSIONS_PROVIDER_SCOPE,
     requiresQuery: true,
     priority: 38,
     payload: {
@@ -117,7 +120,7 @@ function toCommandMetadata(plugin: PluginInfo): ExtensionCommandMetadata {
     },
     execution: {
       requiresDesktopRuntime: true,
-      allowedModes: PROVIDER_SCOPE,
+      allowedModes: EXTENSIONS_PROVIDER_SCOPE,
     },
     sandbox: {
       allowOpenUrl: true,
@@ -128,7 +131,7 @@ function toCommandMetadata(plugin: PluginInfo): ExtensionCommandMetadata {
 
 async function loadPlugins(): Promise<PluginInfo[]> {
   const now = nowMs();
-  if (cachedPlugins.length > 0 && now - cacheUpdatedAt < CACHE_TTL_MS) {
+  if (cachedPlugins.length > 0 && now - cacheUpdatedAt < EXTENSIONS_PROVIDER_CACHE_TTL_MS) {
     return cachedPlugins;
   }
 
@@ -152,7 +155,7 @@ async function loadPlugins(): Promise<PluginInfo[]> {
 export function createExtensionCommandProvider(): CommandProvider {
   return {
     id: "extensions-provider",
-    scope: PROVIDER_SCOPE,
+    scope: EXTENSIONS_PROVIDER_SCOPE,
     async provide({ context, signal }) {
       const normalizedQuery = context.query.trim().toLowerCase();
       if (!normalizedQuery || signal.aborted || !context.isDesktopRuntime) {
