@@ -1,4 +1,4 @@
-import { PaintBucket, Sparkles } from "lucide-react";
+import { Layers, PaintBucket, Sparkles } from "lucide-react";
 
 import { useUiStyle, type UiStylePreference } from "@/components/ui-style-provider";
 import { CommandGroup } from "@/components/ui/command";
@@ -21,12 +21,12 @@ export function VisualStyleSettings() {
 
   return (
     <CommandGroup>
-      <div className="space-y-4 px-1 pb-1">
+      <div className="space-y-4 px-1 pb-1 pt-4">
         <div>
           <p className="mb-2 px-2 font-mono text-[9px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">
             Visual Style
           </p>
-          <div className="grid grid-cols-2 gap-2 px-1">
+          <div className="grid grid-cols-3 gap-2 px-1">
             <button
               type="button"
               onClick={() => setStyle("default")}
@@ -74,6 +74,31 @@ export function VisualStyleSettings() {
               </div>
               <span className={cn("text-xs font-bold tracking-tight", uiStyle === "glassy" ? "text-foreground" : "text-muted-foreground")}>
                 Glassy
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setStyle("solid")}
+              className={cn(
+                "group relative flex flex-col items-center gap-2 rounded-xl border p-3 transition-all duration-300",
+                uiStyle === "solid"
+                  ? "border-primary bg-primary/5 ring-2 ring-primary/10"
+                  : "border-border/50 bg-muted/10 hover:border-border hover:bg-muted/20",
+              )}
+            >
+              <div
+                className={cn(
+                  "flex h-10 w-10 items-center justify-center rounded-lg transition-all",
+                  uiStyle === "solid"
+                    ? "bg-primary text-primary-foreground shadow-md"
+                    : "bg-background text-muted-foreground",
+                )}
+              >
+                <Layers className="size-5" />
+              </div>
+              <span className={cn("text-xs font-bold tracking-tight", uiStyle === "solid" ? "text-foreground" : "text-muted-foreground")}>
+                Solid
               </span>
             </button>
           </div>

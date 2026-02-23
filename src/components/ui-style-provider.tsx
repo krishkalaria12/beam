@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
-export type UiStylePreference = "default" | "glassy";
+export type UiStylePreference = "default" | "glassy" | "solid";
 
 type UiStyleProviderState = {
   uiStyle: UiStylePreference;
@@ -31,7 +31,10 @@ const initialState: UiStyleProviderState = {
 const UiStyleProviderContext = createContext<UiStyleProviderState>(initialState);
 
 function normalizeUiStyle(value: string | null | undefined): UiStylePreference {
-  return String(value || "").trim().toLowerCase() === "glassy" ? "glassy" : "default";
+  const normalized = String(value || "").trim().toLowerCase();
+  if (normalized === "glassy") return "glassy";
+  if (normalized === "solid") return "solid";
+  return "default";
 }
 
 function normalizeBaseColor(value: string | null | undefined): string {
@@ -66,9 +69,19 @@ function applyUiStyle(uiStyle: UiStylePreference): void {
 
   const root = document.documentElement;
   const body = document.body;
-  const isGlassy = uiStyle === "glassy";
-  root.classList.toggle("sc-glassy", isGlassy);
-  body?.classList.toggle("sc-glassy", isGlassy);
+  
+  // Remove all style classes first
+  root.classList.remove("sc-glassy", "sc-solid");
+  body?.classList.remove("sc-glassy", "sc-solid");
+  
+  // Apply the selected style
+  if (uiStyle === "glassy") {
+    root.classList.add("sc-glassy");
+    body?.classList.add("sc-glassy");
+  } else if (uiStyle === "solid") {
+    root.classList.add("sc-solid");
+    body?.classList.add("sc-solid");
+  }
 }
 
 function applyBaseColor(baseColor: string): void {
