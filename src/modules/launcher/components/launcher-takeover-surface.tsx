@@ -12,7 +12,13 @@ export function LauncherTakeoverSurface({
   className,
 }: LauncherTakeoverSurfaceProps) {
   return (
-    <div className={cn("absolute inset-0 z-50 bg-background", className)}>
+    <div
+      className={cn(
+        "absolute inset-0 z-50 bg-background/95 backdrop-blur-sm",
+        "animate-in fade-in zoom-in-[0.985] duration-200",
+        className,
+      )}
+    >
       {children}
     </div>
   );

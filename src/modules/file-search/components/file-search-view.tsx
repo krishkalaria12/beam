@@ -4,6 +4,7 @@ import debounce from "@/lib/debounce";
 
 import { CommandFooterBar } from "@/components/command/command-footer-bar";
 import { CommandKeyHint } from "@/components/command/command-key-hint";
+import { CommandStatusChip } from "@/components/command/command-status-chip";
 import { useFileSearch } from "../hooks/use-file-search";
 import { useOpenFile } from "../hooks/use-open-file";
 import { FileList } from "./file-list";
@@ -72,14 +73,14 @@ export function FileSearchView({ initialQuery, onBack }: FileSearchViewProps) {
   };
 
   return (
-    <div className="flex h-full w-full flex-col bg-background">
+    <div className="flex h-full w-full flex-col bg-background/90">
       {/* Top Bar */}
-      <div className="flex h-12 items-center gap-3 border-b border-border/40 px-3">
+      <div className="flex h-[52px] items-center gap-3 border-b border-border/40 px-4">
         <button
           onClick={onBack}
-          className="flex items-center justify-center rounded-sm text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+          className="flex items-center justify-center rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
         >
-          <ArrowLeft className="size-5" />
+          <ArrowLeft className="size-4" />
         </button>
 
         <div className="relative flex-1">
@@ -89,22 +90,19 @@ export function FileSearchView({ initialQuery, onBack }: FileSearchViewProps) {
             value={query}
             onChange={handleChange}
             onKeyDown={handleKeyDown}
-            className="h-9 w-full rounded-md bg-transparent pl-8 text-sm outline-none placeholder:text-muted-foreground/50"
+            className="h-9 w-full rounded-md border border-border/50 bg-background/40 pl-8 text-sm outline-none transition-colors focus:border-primary/50 placeholder:text-muted-foreground/50"
             placeholder="Search files..."
             autoFocus
           />
         </div>
 
-        {/* Optional Right Side Controls (e.g. "This Mac" dropdown from image - placeholder for now) */}
-        <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground/50">Local System</span>
-        </div>
+        <CommandStatusChip label="Local System" tone="neutral" />
       </div>
 
       {/* Content Area - Split View */}
-      <div className="flex min-h-0 flex-1 overflow-hidden">
+      <div className="flex min-h-0 flex-1 overflow-hidden animate-in fade-in-50 duration-300">
         {/* Left: List */}
-        <div className="w-[45%] border-r border-border/40 bg-background/50">
+        <div className="w-[45%] border-r border-border/40 bg-background/40">
           <FileList 
             results={results} 
             selectedIndex={selectedIndex} 
@@ -126,7 +124,7 @@ export function FileSearchView({ initialQuery, onBack }: FileSearchViewProps) {
         leftSlot={<span>{results.length} results</span>}
         rightSlot={(
           <>
-            <CommandKeyHint keyLabel="ENTER" label="Open" />
+            <CommandKeyHint keyLabel="ENTER" label={selectedFile ? "Open" : "Select"} />
             <CommandKeyHint keyLabel="ESC" label="Back" />
           </>
         )}

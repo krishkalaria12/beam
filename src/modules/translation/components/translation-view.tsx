@@ -11,6 +11,7 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { CommandKeyHint } from "@/components/command/command-key-hint";
+import { CommandStatusChip } from "@/components/command/command-status-chip";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -245,7 +246,7 @@ export function TranslationView({ initialQuery, onBack }: TranslationViewProps) 
   return (
     <div className="flex h-full w-full flex-col bg-black/30 backdrop-blur-3xl text-zinc-100">
       {/* Header */}
-      <div className="flex h-14 shrink-0 items-center gap-3 border-b border-white/10 px-4">
+      <div className="flex h-[52px] shrink-0 items-center gap-3 border-b border-white/10 px-4">
         <Button
           variant="ghost"
           size="icon"
@@ -259,10 +260,17 @@ export function TranslationView({ initialQuery, onBack }: TranslationViewProps) 
         </h1>
         
         {isTranslating && (
-            <div className="ml-auto flex items-center gap-2 rounded-full bg-white/5 px-3 py-1 text-[10px] font-medium text-zinc-300 animate-in fade-in zoom-in duration-300">
+          <CommandStatusChip
+            label={(
+              <span className="inline-flex items-center gap-1.5">
                 <Loader2 className="size-3 animate-spin" />
-                <span>PROCESSING</span>
-            </div>
+                <span>Processing</span>
+              </span>
+            )}
+            tone="info"
+            pulse
+            className="ml-auto border-white/20 bg-white/10 text-zinc-200"
+          />
          )}
       </div>
 
