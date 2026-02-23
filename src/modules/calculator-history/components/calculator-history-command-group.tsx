@@ -2,6 +2,8 @@ import { useCommandState } from "cmdk";
 import { ArrowLeft, Calculator } from "lucide-react";
 import { useEffect, useState } from "react";
 
+import { OpenModuleCommandRow } from "@/components/command/open-module-command-row";
+import { CommandIcon } from "@/components/icons/command-icon";
 import { CommandGroup, CommandItem, CommandShortcut } from "@/components/ui/command";
 import { useCalculatorHistory } from "../hooks/use-calculator-history";
 import { HISTORY_COPY_FEEDBACK_MS } from "../constants";
@@ -62,15 +64,12 @@ export default function CalculatorHistoryCommandGroup({
 
     return (
       <CommandGroup>
-        <CommandItem value="open calculator history" onSelect={onOpen}>
-          <div className="flex size-6 items-center justify-center rounded-sm bg-orange-500/10 text-orange-500">
-            <Calculator className="size-4" />
-          </div>
-          <p className="truncate text-foreground capitalize">
-            calculator history
-          </p>
-          <CommandShortcut>open</CommandShortcut>
-        </CommandItem>
+        <OpenModuleCommandRow
+          value="open calculator history"
+          onSelect={onOpen}
+          icon={<CommandIcon icon="calculator" />}
+          title="calculator history"
+        />
       </CommandGroup>
     );
   }

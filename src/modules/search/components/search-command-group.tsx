@@ -1,8 +1,8 @@
 import { useCommandState } from "cmdk";
 
-import duckduckgoIcon from "@/assets/icons/duckduckgo.png";
-import googleIcon from "@/assets/icons/google.jpeg";
-import { CommandGroup, CommandItem, CommandShortcut } from "@/components/ui/command";
+import { AsyncCommandRow } from "@/components/command/async-command-row";
+import { CommandIcon } from "@/components/icons/command-icon";
+import { CommandGroup } from "@/components/ui/command";
 
 import { type SearchSite } from "../api/search-with-browser";
 import { useSearchWithBrowser } from "../hooks/use-search-with-browser";
@@ -17,12 +17,12 @@ const searchProviders: SearchProvider[] = [
   {
     id: "google",
     title: "search with google",
-    icon: googleIcon,
+    icon: "google",
   },
   {
     id: "duckduckgo",
     title: "search with duckduckgo",
-    icon: duckduckgoIcon,
+    icon: "duckduckgo",
   },
 ];
 
@@ -44,10 +44,11 @@ export default function SearchCommandGroup({ queryOverride }: SearchCommandGroup
         const isDisabled = isSearching || !hasQuery;
 
         return (
-          <CommandItem
+          <AsyncCommandRow
             key={provider.id}
             value={query ? `${provider.title} ${query}` : provider.title}
-            disabled={isDisabled}
+            disabled={!hasQuery}
+            isBusy={isSearching}
             onSelect={() => {
               if (isDisabled || !hasQuery) {
                 return;
@@ -55,18 +56,11 @@ export default function SearchCommandGroup({ queryOverride }: SearchCommandGroup
 
               runSearch(provider.id, query);
             }}
-          >
-            <img
-              src={provider.icon}
-              alt={`${provider.id} icon`}
-              loading="lazy"
-              className="size-6 rounded-sm object-cover"
-            />
-            <p className="truncate text-foreground capitalize">{provider.title}</p>
-            <CommandShortcut>
-              {isSearching ? "opening" : "web"}
-            </CommandShortcut>
-          </CommandItem>
+            icon={<CommandIcon icon={provider.icon} />}
+            title={provider.title}
+            busyShortcut="opening"
+            idleShortcut="web"
+          />
         );
       })}
     </CommandGroup>

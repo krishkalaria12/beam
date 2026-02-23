@@ -1,7 +1,8 @@
 import { useCommandState } from "cmdk";
-import { Puzzle } from "lucide-react";
 
-import { CommandGroup, CommandItem, CommandShortcut } from "@/components/ui/command";
+import { OpenModuleCommandRow } from "@/components/command/open-module-command-row";
+import { CommandIcon } from "@/components/icons/command-icon";
+import { CommandGroup } from "@/components/ui/command";
 import { ExtensionsView } from "@/modules/extensions/components/extensions-view";
 
 type ExtensionsCommandGroupProps = {
@@ -36,13 +37,12 @@ export default function ExtensionsCommandGroup({
 
   return (
     <CommandGroup>
-      <CommandItem value="open extensions manager" onSelect={onOpen}>
-        <div className="flex size-6 items-center justify-center rounded-sm bg-primary/10 text-primary">
-          <Puzzle className="size-4" />
-        </div>
-        <p className="truncate text-foreground capitalize">extensions</p>
-        <CommandShortcut>open</CommandShortcut>
-      </CommandItem>
+      <OpenModuleCommandRow
+        value="open extensions manager"
+        onSelect={onOpen}
+        icon={<CommandIcon icon="extension" />}
+        title="extensions"
+      />
     </CommandGroup>
   );
 }

@@ -3,7 +3,6 @@ import { useForm } from "@tanstack/react-form";
 import { ArrowLeft, Loader2, Link2, Trash2, Plus, Pencil, Command, Folder, File, FolderOpen } from "lucide-react";
 import { z } from "zod";
 
-import fileQuicklinkIcon from "@/assets/icons/file-icon-quicklink.png";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -28,6 +27,7 @@ import {
   pickQuicklinkFolderPath,
 } from "../api/quicklinks";
 import type { Quicklink } from "../types";
+import { QuicklinkIcon } from "./quicklink-icon";
 
 const quicklinkSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -115,7 +115,7 @@ function QuicklinkCreateForm({ onBack, onSuccess, initialData, editKeyword }: Qu
   const fetchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mutationError = isEditMode ? updateMutation.error : createMutation.error;
   const isSubmitting = isEditMode ? updateMutation.isPending : createMutation.isPending;
-  const previewIcon = isFileTarget ? fileQuicklinkIcon : fetchedIcon;
+  const previewIcon = fetchedIcon;
 
   const form = useForm({
     defaultValues: {
@@ -252,7 +252,12 @@ function QuicklinkCreateForm({ onBack, onSuccess, initialData, editKeyword }: Qu
                 {isFetchingIcon ? (
                   <Loader2 className="size-8 animate-spin text-muted-foreground" />
                 ) : (
-                  <img src={previewIcon} alt="Icon" className="size-16 rounded-xl object-contain" />
+                  <QuicklinkIcon
+                    icon={previewIcon}
+                    isFileTarget={isFileTarget}
+                    className="size-16 rounded-xl object-contain"
+                    fallbackClassName="size-16 rounded-xl bg-muted/50"
+                  />
                 )}
                  <div className="absolute -bottom-2 rounded-full bg-background border px-2 py-0.5 text-[10px] font-medium text-muted-foreground shadow-sm">
                     {isFetchingIcon ? "Fetching..." : isFileTarget ? "File Path" : "Auto-detected"}
@@ -495,15 +500,12 @@ function QuicklinksManageView({ onBack, onCreate, onEdit }: QuicklinksManageView
                 className="flex items-center justify-between rounded-lg border border-border p-3"
               >
                 <div className="flex items-center gap-3">
-                  {ql.icon ? (
-                    <img src={ql.icon} alt="" className="size-8 rounded object-cover" />
-                  ) : isFileQuicklinkTarget(ql.url) ? (
-                    <img src={fileQuicklinkIcon} alt="" className="size-8 rounded object-cover" />
-                  ) : (
-                    <div className="flex size-8 items-center justify-center rounded bg-muted">
-                      <Link2 className="size-4 text-muted-foreground" />
-                    </div>
-                  )}
+                  <QuicklinkIcon
+                    icon={ql.icon}
+                    isFileTarget={isFileQuicklinkTarget(ql.url)}
+                    className="size-8 rounded object-cover"
+                    fallbackClassName="size-8 rounded bg-muted"
+                  />
                   <div>
                     <p className="font-medium">{ql.name}</p>
                     <p className="text-xs text-muted-foreground">!{ql.keyword}</p>

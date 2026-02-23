@@ -1,7 +1,8 @@
 import { useCommandState } from "cmdk";
-import { Gauge } from "lucide-react";
 
-import { CommandGroup, CommandItem, CommandShortcut } from "@/components/ui/command";
+import { OpenModuleCommandRow } from "@/components/command/open-module-command-row";
+import { CommandIcon } from "@/components/icons/command-icon";
+import { CommandGroup } from "@/components/ui/command";
 
 import { SpeedTestView } from "./speed-test-view";
 
@@ -52,18 +53,13 @@ export default function SpeedTestCommandGroup({
 
   return (
     <CommandGroup>
-      <CommandItem
+      <OpenModuleCommandRow
         onSelect={onOpen}
         value="speed test internet speed network diagnostics"
-      >
-        <div className="flex size-6 items-center justify-center rounded-sm bg-cyan-500/10 text-cyan-500">
-          <Gauge className="size-4" />
-        </div>
-        <p className="truncate text-foreground capitalize">
-          Network Speed Test
-        </p>
-        <CommandShortcut>network</CommandShortcut>
-      </CommandItem>
+        icon={<CommandIcon icon="speed-test" />}
+        title="Network Speed Test"
+        shortcut="network"
+      />
     </CommandGroup>
   );
 }

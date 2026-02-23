@@ -1,7 +1,9 @@
 import { useCommandState } from "cmdk";
-import { ArrowRightLeft, Languages } from "lucide-react";
+import { ArrowRightLeft } from "lucide-react";
 
-import { CommandGroup, CommandItem, CommandShortcut } from "@/components/ui/command";
+import { BaseCommandRow } from "@/components/command/base-command-row";
+import { CommandIcon } from "@/components/icons/command-icon";
+import { CommandGroup, CommandShortcut } from "@/components/ui/command";
 
 import { TranslationView } from "./translation-view";
 
@@ -79,19 +81,19 @@ export default function TranslationCommandGroup({
 
   return (
     <CommandGroup>
-      <CommandItem
+      <BaseCommandRow
         value="translate translation language convert text"
         onSelect={() => onOpen(getInitialTextFromQuery(queryOverride ?? searchInput))}
-      >
-        <div className="flex size-6 items-center justify-center rounded-sm bg-primary/10 text-primary">
-          <Languages className="size-4" />
-        </div>
-        <p className="truncate text-foreground capitalize">Translate text</p>
-        <div className="ml-auto flex items-center gap-2">
-          <ArrowRightLeft className="size-3.5 text-muted-foreground/60" />
-          <CommandShortcut>translate</CommandShortcut>
-        </div>
-      </CommandItem>
+        icon={<CommandIcon icon="translation" />}
+        title="Translate text"
+        titleClassName="truncate text-foreground capitalize"
+        endSlot={(
+          <div className="ml-auto flex items-center gap-2">
+            <ArrowRightLeft className="size-3.5 text-muted-foreground/60" />
+            <CommandShortcut>translate</CommandShortcut>
+          </div>
+        )}
+      />
     </CommandGroup>
   );
 }

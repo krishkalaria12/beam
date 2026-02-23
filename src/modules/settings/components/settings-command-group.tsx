@@ -1,9 +1,9 @@
 import { useCommandState } from "cmdk";
 import { useState } from "react";
-import { Settings } from "lucide-react";
 
-import settingsIcon from "@/assets/icons/settings.png";
-import { CommandGroup, CommandItem, CommandShortcut } from "@/components/ui/command";
+import { OpenModuleCommandRow } from "@/components/command/open-module-command-row";
+import { CommandIcon } from "@/components/icons/command-icon";
+import { CommandGroup } from "@/components/ui/command";
 import type { SettingsView } from "../constants";
 import { SettingsMenu } from "./SettingsMenu";
 import { AppearanceSettings } from "./AppearanceSettings";
@@ -38,17 +38,15 @@ export default function SettingsCommandGroup({ isOpen, onOpen, onBack }: Setting
 
     return (
       <CommandGroup>
-        <CommandItem 
+        <OpenModuleCommandRow
           value="open settings" 
           onSelect={() => {
             setView("main");
             onOpen();
           }}
-        >
-          <img src={settingsIcon} alt="settings" className="size-6 rounded-sm object-cover" />
-          <p className="truncate text-foreground capitalize">settings</p>
-          <CommandShortcut>open</CommandShortcut>
-        </CommandItem>
+          icon={<CommandIcon icon="settings" />}
+          title="settings"
+        />
       </CommandGroup>
     );
   }

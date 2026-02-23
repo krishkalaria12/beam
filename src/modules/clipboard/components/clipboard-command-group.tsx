@@ -1,7 +1,8 @@
 import { useCommandState } from "cmdk";
 
-import { CommandGroup, CommandItem, CommandShortcut } from "@/components/ui/command";
-import clipboardIcon from "@/assets/icons/clipboard.png";
+import { OpenModuleCommandRow } from "@/components/command/open-module-command-row";
+import { CommandIcon } from "@/components/icons/command-icon";
+import { CommandGroup } from "@/components/ui/command";
 
 import { ClipboardView } from "./clipboard-view";
 
@@ -31,11 +32,12 @@ export default function ClipboardCommandGroup({ isOpen, onOpen, onBack }: Clipbo
 
   return (
     <CommandGroup>
-      <CommandItem value="open clipboard history" onSelect={onOpen}>
-        <img src={clipboardIcon} alt="clipboard" className="size-6 rounded-sm object-cover" />
-        <p className="truncate text-foreground capitalize">clipboard history</p>
-        <CommandShortcut>open</CommandShortcut>
-      </CommandItem>
+      <OpenModuleCommandRow
+        value="open clipboard history"
+        onSelect={onOpen}
+        icon={<CommandIcon icon="clipboard" />}
+        title="clipboard history"
+      />
     </CommandGroup>
   );
 }

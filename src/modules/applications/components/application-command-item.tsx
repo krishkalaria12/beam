@@ -1,7 +1,7 @@
-import { CommandItem, CommandShortcut } from "@/components/ui/command";
+import { AsyncCommandRow } from "@/components/command/async-command-row";
+import { CommandIcon } from "@/components/icons/command-icon";
 
 import { type Application } from "../api/search-applications";
-import ApplicationIcon from "./application-icon";
 
 type ApplicationCommandItemProps = {
   application: Application;
@@ -20,9 +20,10 @@ export default function ApplicationCommandItem({
   const isLaunchable = execPath.length > 0;
 
   return (
-    <CommandItem
+    <AsyncCommandRow
       value={application.name}
-      disabled={!isLaunchable || isLaunching}
+      disabled={!isLaunchable}
+      isBusy={isLaunching}
       onSelect={() => {
         if (!isLaunchable || isLaunching) {
           return;
@@ -30,15 +31,12 @@ export default function ApplicationCommandItem({
 
         onOpen(execPath);
       }}
-    >
-      <ApplicationIcon iconPath={application.icon} className="size-6 rounded-sm" />
-      <p className="truncate text-foreground capitalize">{application.name}</p>
-      {launchErrorMessage && (
-        <p className="truncate text-[10px] text-destructive ml-2">{launchErrorMessage}</p>
-      )}
-      <CommandShortcut>
-        {isLaunching ? "launching" : isLaunchable ? "app" : "unavailable"}
-      </CommandShortcut>
-    </CommandItem>
+      icon={<CommandIcon icon={`app-icon:${application.icon}`} />}
+      title={application.name}
+      subtitle={launchErrorMessage ?? undefined}
+      subtitleClassName="truncate text-[10px] text-destructive"
+      busyShortcut="launching"
+      idleShortcut={isLaunchable ? "app" : "unavailable"}
+    />
   );
 }

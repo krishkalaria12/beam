@@ -1,8 +1,9 @@
 import { useCommandState } from "cmdk";
 import { useEffect, useMemo, useState, useCallback } from "react";
 
-import emojiIcon from "@/assets/icons/emoji.png";
-import { CommandGroup, CommandItem, CommandShortcut } from "@/components/ui/command";
+import { OpenModuleCommandRow } from "@/components/command/open-module-command-row";
+import { CommandIcon } from "@/components/icons/command-icon";
+import { CommandGroup } from "@/components/ui/command";
 
 // Import types
 import type { EmojiData } from "../types";
@@ -140,11 +141,12 @@ export default function EmojiCommandGroup({ isOpen, onOpen, onBack }: EmojiComma
 
     return (
       <CommandGroup>
-        <CommandItem value="open emoji picker" onSelect={onOpen}>
-          <img src={emojiIcon} alt="emoji" className="size-6 rounded-sm object-cover" />
-          <p className="truncate text-foreground capitalize">emoji picker</p>
-          <CommandShortcut>open</CommandShortcut>
-        </CommandItem>
+        <OpenModuleCommandRow
+          value="open emoji picker"
+          onSelect={onOpen}
+          icon={<CommandIcon icon="emoji" />}
+          title="emoji picker"
+        />
       </CommandGroup>
     );
   }
