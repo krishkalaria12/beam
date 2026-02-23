@@ -26,10 +26,10 @@
 - [x] Preserve query-gated behavior: hover/select works, execute remains no-op without valid query.
 
 ## Phase 4: Icon System Parity
-- [ ] Finalize centralized icon registry (token -> lucide renderer config).
-- [ ] Match SuperCmd-style icon chip sizing/background/foreground contrast.
-- [ ] Apply vector chips only to Beam-owned commands.
-- [ ] Keep extension/app-specific icons on image-based rendering.
+- [x] Finalize centralized icon registry (token -> lucide renderer config).
+- [x] Match SuperCmd-style icon chip sizing/background/foreground contrast.
+- [x] Apply vector chips only to Beam-owned commands.
+- [x] Keep extension/app-specific icons on image-based rendering.
 
 ## Phase 5: Takeover Panel and Module Surface Alignment
 - [ ] Normalize glass shell usage for takeover panels (file search, dictionary, translation, quicklinks, speed test, clipboard, extensions).
@@ -58,3 +58,4 @@
 - [x] Phase 1 complete.
 - [x] Phase 2 complete.
 - [x] Phase 3 complete.
+- [x] Phase 4 complete.

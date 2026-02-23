@@ -49,6 +49,9 @@
   --icon-purple-fg: rgba(126, 34, 206, 0.96);
   --icon-red-bg: rgba(220, 38, 38, 0.18);
   --icon-red-fg: rgba(185, 28, 28, 0.96);
+  --icon-chip-border: rgba(148, 163, 184, 0.34);
+  --icon-chip-gloss: rgba(255, 255, 255, 0.36);
+  --icon-chip-shadow: rgba(15, 23, 42, 0.14);
   --glass-outline: rgba(184, 190, 198, 0.2);
   --ui-divider: rgba(156, 164, 178, 0.2);
   --command-item-hover-bg: rgba(118, 130, 149, 0.08);
@@ -115,6 +118,9 @@
   --icon-purple-fg: rgba(233, 213, 255, 0.94);
   --icon-red-bg: rgba(220, 38, 38, 0.24);
   --icon-red-fg: rgba(254, 202, 202, 0.94);
+  --icon-chip-border: rgba(255, 255, 255, 0.2);
+  --icon-chip-gloss: rgba(255, 255, 255, 0.22);
+  --icon-chip-shadow: rgba(0, 0, 0, 0.34);
   --glass-outline: rgba(184, 190, 198, 0.11);
   --ui-divider: rgba(255, 255, 255, 0.05);
   --command-item-hover-bg: rgba(255, 255, 255, 0.06);
@@ -469,6 +475,9 @@
   --border: oklch(1 0 0 / 30%);
   --input: oklch(1 0 0 / 20%);
   --ring: oklch(0 0 0 / 20%);
+  --icon-chip-border: rgba(148, 163, 184, 0.4);
+  --icon-chip-gloss: rgba(255, 255, 255, 0.44);
+  --icon-chip-shadow: rgba(15, 23, 42, 0.16);
   --glass-outline: rgba(184, 190, 198, 0.24);
   --ui-divider: rgba(156, 164, 178, 0.28);
   --command-item-hover-bg: rgba(86, 98, 118, 0.09);
@@ -508,6 +517,9 @@
   --border: oklch(1 0 0 / 20%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(1 0 0 / 30%);
+  --icon-chip-border: rgba(255, 255, 255, 0.26);
+  --icon-chip-gloss: rgba(255, 255, 255, 0.24);
+  --icon-chip-shadow: rgba(0, 0, 0, 0.4);
   --glass-outline: rgba(255, 255, 255, 0.22);
   --ui-divider: rgba(255, 255, 255, 0.12);
   --command-item-hover-bg: rgba(255, 255, 255, 0.08);
@@ -623,6 +635,24 @@
 .command-item[data-disabled="true"]:hover {
   background: var(--command-item-hover-bg);
   border-color: var(--command-item-hover-border);
+}
+
+.command-icon-chip {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--icon-chip-border);
+  box-shadow:
+    inset 0 1px 0 var(--icon-chip-gloss),
+    0 1px 1px var(--icon-chip-shadow);
+}
+
+.command-icon-chip::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.2), transparent 58%);
+  pointer-events: none;
+  z-index: 1;
 }
 
 .custom-scrollbar::-webkit-scrollbar {

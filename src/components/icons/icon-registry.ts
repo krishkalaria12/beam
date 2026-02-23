@@ -58,6 +58,11 @@ export interface CommandToneSpec {
   tone: IconTone;
 }
 
+interface CommandIdTonePrefixSpec {
+  prefix: string;
+  spec: CommandToneSpec;
+}
+
 export function normalizeIconToken(value: string): string {
   const cleaned = value
     .trim()
@@ -160,6 +165,16 @@ const COMMAND_TONE_SPEC_BY_TOKEN: Record<string, CommandToneSpec> = {
   translation: { icon: Languages, tone: "primary" },
 };
 
+const COMMAND_TONE_SPEC_BY_COMMAND_ID: Record<string, CommandToneSpec> = {
+  "system.awake": { icon: Power, tone: "red" },
+};
+
+const COMMAND_TONE_SPEC_BY_COMMAND_ID_PREFIXES: ReadonlyArray<CommandIdTonePrefixSpec> = [
+  { prefix: "system.", spec: { icon: Power, tone: "red" } },
+  { prefix: "quicklinks.", spec: { icon: Link2, tone: "neutral" } },
+  { prefix: "search.web", spec: { icon: Search, tone: "neutral" } },
+];
+
 export function resolveIconAssetSource(value: string): string | null {
   const token = normalizeIconToken(value);
   return ICON_ASSET_BY_TOKEN[token] ?? null;
@@ -180,14 +195,15 @@ export function resolveCommandToneSpecByCommandId(commandId: string | undefined)
     return null;
   }
 
-  if (commandId.startsWith("system.")) {
-    return { icon: Power, tone: "red" };
+  const exact = COMMAND_TONE_SPEC_BY_COMMAND_ID[commandId];
+  if (exact) {
+    return exact;
   }
-  if (commandId.startsWith("quicklinks.")) {
-    return { icon: Link2, tone: "neutral" };
-  }
-  if (commandId.startsWith("search.web")) {
-    return { icon: Search, tone: "neutral" };
+
+  for (const { prefix, spec } of COMMAND_TONE_SPEC_BY_COMMAND_ID_PREFIXES) {
+    if (commandId.startsWith(prefix)) {
+      return spec;
+    }
   }
 
   return null;
