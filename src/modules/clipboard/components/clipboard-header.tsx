@@ -37,7 +37,7 @@ export function ClipboardHeader({
   inputRef,
 }: ClipboardHeaderProps) {
   return (
-    <div className="flex h-14 items-center gap-4 border-b border-border/40 px-4 shrink-0 bg-background/50 backdrop-blur-md">
+    <div className="flex h-14 shrink-0 items-center gap-4 border-b border-[var(--ui-divider)] px-4">
       <button
         onClick={onBack}
         className="flex items-center justify-center rounded-md text-muted-foreground transition-all hover:bg-foreground/10 hover:text-foreground size-8"

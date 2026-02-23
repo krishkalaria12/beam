@@ -73,12 +73,12 @@ export function FileSearchView({ initialQuery, onBack }: FileSearchViewProps) {
   };
 
   return (
-    <div className="flex h-full w-full flex-col bg-background/90">
+    <div className="glass-effect flex h-full w-full flex-col text-foreground">
       {/* Top Bar */}
-      <div className="flex h-[52px] items-center gap-3 border-b border-border/40 px-4">
+      <div className="flex h-[52px] items-center gap-3 border-b border-[var(--ui-divider)] px-4">
         <button
           onClick={onBack}
-          className="flex items-center justify-center rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+          className="flex items-center justify-center rounded-md p-1 text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground"
         >
           <ArrowLeft className="size-4" />
         </button>
@@ -90,7 +90,7 @@ export function FileSearchView({ initialQuery, onBack }: FileSearchViewProps) {
             value={query}
             onChange={handleChange}
             onKeyDown={handleKeyDown}
-            className="h-9 w-full rounded-md border border-border/50 bg-background/40 pl-8 text-sm outline-none transition-colors focus:border-primary/50 placeholder:text-muted-foreground/50"
+            className="h-9 w-full rounded-md border border-border/40 bg-background/20 pl-8 text-sm text-foreground outline-none transition-colors focus:border-primary/50 placeholder:text-muted-foreground/50"
             placeholder="Search files..."
             autoFocus
           />
@@ -100,9 +100,9 @@ export function FileSearchView({ initialQuery, onBack }: FileSearchViewProps) {
       </div>
 
       {/* Content Area - Split View */}
-      <div className="flex min-h-0 flex-1 overflow-hidden animate-in fade-in-50 duration-300">
+      <div className="list-area custom-scrollbar flex min-h-0 flex-1 overflow-hidden animate-in fade-in-50 duration-300">
         {/* Left: List */}
-        <div className="w-[45%] border-r border-border/40 bg-background/40">
+        <div className="w-[45%] border-r border-[var(--ui-divider)] bg-background/20">
           <FileList 
             results={results} 
             selectedIndex={selectedIndex} 
@@ -113,14 +113,13 @@ export function FileSearchView({ initialQuery, onBack }: FileSearchViewProps) {
         </div>
 
         {/* Right: Details */}
-        <div className="flex-1 bg-muted/5">
+        <div className="flex-1 bg-background/10">
           <FileDetails selectedFile={selectedFile} />
         </div>
       </div>
       
       {/* Footer / Status Bar (Optional, can match main launcher footer) */}
       <CommandFooterBar
-        className="bg-background"
         leftSlot={<span>{results.length} results</span>}
         rightSlot={(
           <>

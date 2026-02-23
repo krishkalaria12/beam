@@ -32,9 +32,9 @@
 - [x] Keep extension/app-specific icons on image-based rendering.
 
 ## Phase 5: Takeover Panel and Module Surface Alignment
-- [ ] Normalize glass shell usage for takeover panels (file search, dictionary, translation, quicklinks, speed test, clipboard, extensions).
-- [ ] Replace one-off visual treatments with shared surface primitives where feasible.
-- [ ] Maintain existing interactions and keyboard flow.
+- [x] Normalize glass shell usage for takeover panels (file search, dictionary, translation, quicklinks, speed test, clipboard, extensions).
+- [x] Replace one-off visual treatments with shared surface primitives where feasible.
+- [x] Maintain existing interactions and keyboard flow.
 
 ## Phase 6: Extensions UX Glass Unification
 - [ ] Align extensions list/setup/runner views to the same glass tokens and shell rules.
@@ -59,3 +59,4 @@
 - [x] Phase 2 complete.
 - [x] Phase 3 complete.
 - [x] Phase 4 complete.
+- [x] Phase 5 complete.

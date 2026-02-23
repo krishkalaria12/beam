@@ -14,7 +14,7 @@ export function LauncherTakeoverSurface({
   return (
     <div
       className={cn(
-        "absolute inset-0 z-50 bg-background/95 backdrop-blur-sm",
+        "absolute inset-0 z-50",
         "animate-in fade-in zoom-in-[0.985] duration-200",
         className,
       )}

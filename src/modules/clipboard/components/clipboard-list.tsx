@@ -95,8 +95,8 @@ export function ClipboardList({
   }, [entries]);
 
   return (
-    <div className="w-[40%] border-r border-border/40 bg-background/30 flex flex-col">
-      <div className="flex-1 overflow-y-auto p-3 scrollbar-none">
+    <div className="flex w-[40%] flex-col border-r border-[var(--ui-divider)] bg-background/20">
+      <div className="custom-scrollbar list-area flex-1 overflow-y-auto p-3">
         {isLoading ? (
           <div className="p-4 text-center text-sm text-muted-foreground animate-pulse">
             Loading history...

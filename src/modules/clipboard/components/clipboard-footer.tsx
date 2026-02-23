@@ -22,7 +22,7 @@ export function ClipboardFooter({
 
   return (
     <CommandFooterBar
-      className="h-12 shrink-0 bg-background/50 px-5 text-[11px] font-bold tracking-[0.15em] backdrop-blur-md"
+      className="h-12 shrink-0 px-5 text-[11px] font-bold tracking-[0.15em]"
       leftSlot={(
         <>
           <CommandIcon icon="clipboard" className="size-5 rounded-sm object-cover opacity-70" />

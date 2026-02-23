@@ -352,14 +352,14 @@ export function SpeedTestView({ onBack }: SpeedTestViewProps) {
   return (
     <div
       ref={containerRef}
-      className="flex h-full w-full flex-col bg-background/90 outline-none"
+      className="glass-effect flex h-full w-full flex-col text-foreground outline-none"
       onKeyDown={handleContainerKeyDown}
       tabIndex={-1}
     >
-      <div className="flex h-[52px] items-center gap-3 border-b border-border/40 px-4">
+      <div className="flex h-[52px] items-center gap-3 border-b border-[var(--ui-divider)] px-4">
         <button
           onClick={onBack}
-          className="flex items-center justify-center rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+          className="flex items-center justify-center rounded-md p-1 text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground"
           type="button"
         >
           <ArrowLeft className="size-4" />
@@ -382,7 +382,7 @@ export function SpeedTestView({ onBack }: SpeedTestViewProps) {
         />
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-5">
+      <div className="list-area custom-scrollbar flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-5">
         <div className="rounded-2xl border border-border/60 bg-gradient-to-b from-muted/20 to-background/30 p-4 shadow-[0_1px_0_rgba(255,255,255,0.04)_inset]">
           <div className="flex items-start justify-between gap-3">
             <div>
@@ -484,7 +484,6 @@ export function SpeedTestView({ onBack }: SpeedTestViewProps) {
       </div>
 
       <CommandFooterBar
-        className="bg-background"
         leftSlot={<span className="font-mono">{isRunning ? "running" : "ready"}</span>}
         rightSlot={(
           <>

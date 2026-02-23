@@ -223,9 +223,9 @@ function QuicklinkCreateForm({ onBack, onSuccess, initialData, editKeyword }: Qu
   };
 
   return (
-    <div className="flex h-full flex-col bg-background">
+    <div className="glass-effect flex h-full flex-col text-foreground">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-border/40 p-4">
+      <div className="flex items-center justify-between border-b border-[var(--ui-divider)] p-4">
         <Button variant="ghost" size="icon" onClick={onBack} className="size-8">
           <ArrowLeft className="size-4" />
         </Button>
@@ -236,7 +236,7 @@ function QuicklinkCreateForm({ onBack, onSuccess, initialData, editKeyword }: Qu
       </div>
 
       {/* Form Content */}
-      <div className="flex-1 overflow-y-auto p-8">
+      <div className="custom-scrollbar list-area flex-1 overflow-y-auto p-8">
         <form
           id="quicklink-form"
           onSubmit={(e) => {
@@ -400,7 +400,7 @@ function QuicklinkCreateForm({ onBack, onSuccess, initialData, editKeyword }: Qu
       </div>
 
       {/* Footer */}
-      <div className="flex items-center justify-between border-t border-border/40 bg-muted/20 p-4 px-6">
+      <div className="sc-glass-footer flex items-center justify-between p-4 px-6">
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
            <Command className="size-3" />
            <span>{isEditMode ? "Update Quicklink" : "Create Quicklink"}</span>
@@ -452,9 +452,9 @@ function QuicklinksManageView({ onBack, onCreate, onEdit }: QuicklinksManageView
   };
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="glass-effect flex h-full flex-col text-foreground">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-border p-4">
+      <div className="flex items-center justify-between border-b border-[var(--ui-divider)] p-4">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={onBack} className="size-8">
             <ArrowLeft className="size-4" />
@@ -468,7 +468,7 @@ function QuicklinksManageView({ onBack, onCreate, onEdit }: QuicklinksManageView
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="custom-scrollbar list-area flex-1 overflow-y-auto p-4">
         {isLoading && (
           <div className="flex h-20 items-center justify-center">
             <Loader2 className="size-6 animate-spin text-muted-foreground" />
