@@ -30,7 +30,7 @@ if (!rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement);
   root.render(
     <QueryProvider>
-      <ThemeProvider defaultTheme="default">
+      <ThemeProvider defaultTheme="glass">
         <RouterProvider router={router} />
         <Toaster position="top-right" richColors />
       </ThemeProvider>

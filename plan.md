@@ -42,9 +42,9 @@
 - [x] Verify no regressions in extension command execution/runtime UI.
 
 ## Phase 7: Theme and Settings Integration
-- [ ] Decide glass as default standard behavior for launcher surfaces.
-- [ ] Ensure Theme settings reflect the new standard without breaking existing theme options.
-- [ ] Validate dark/light handling and persisted user preference behavior.
+- [x] Decide glass as default standard behavior for launcher surfaces.
+- [x] Ensure Theme settings reflect the new standard without breaking existing theme options.
+- [x] Validate dark/light handling and persisted user preference behavior.
 
 ## Phase 8: Quality Gates and Verification
 - [ ] Run typecheck and relevant local validation commands.
@@ -61,3 +61,4 @@
 - [x] Phase 4 complete.
 - [x] Phase 5 complete.
 - [x] Phase 6 complete.
+- [x] Phase 7 complete.

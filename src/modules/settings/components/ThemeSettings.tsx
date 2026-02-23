@@ -80,6 +80,9 @@ export function ThemeSettings({ onBack }: ThemeSettingsProps) {
         <p className="px-2 mb-2 font-mono text-[9px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">
           Theme Palette
         </p>
+        <p className="px-2 pb-2 text-[10px] text-muted-foreground/70">
+          Glass is the default Beam style.
+        </p>
 
         <div className="grid grid-cols-3 gap-2 px-1 sm:grid-cols-4">
           {THEME_OPTIONS.map((option) => (

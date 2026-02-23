@@ -15,14 +15,17 @@ export function AppearanceSettings({ onBack }: AppearanceSettingsProps) {
 
   const toggleDarkMode = (isDark: boolean) => {
     if (isDark) {
-      if (currentThemeBase === "default") {
+      if (currentThemeBase === "glass") {
+        setTheme("glass-dark");
+      } else if (currentThemeBase === "default") {
         setTheme("dark");
       } else {
         setTheme(`${currentThemeBase}-dark` as any);
       }
     } else {
-      // If switching to light mode and current theme is glass or default, set to default light theme
-      if (currentThemeBase === "glass" || currentThemeBase === "default") {
+      if (currentThemeBase === "glass") {
+        setTheme("glass");
+      } else if (currentThemeBase === "default") {
         setTheme("default");
       } else {
         setTheme(currentThemeBase as any);

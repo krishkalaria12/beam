@@ -13,8 +13,28 @@ type ThemeProviderState = {
   setTheme: (theme: Theme) => void;
 };
 
+const VALID_THEMES: Theme[] = [
+  "default",
+  "dark",
+  "twitter",
+  "twitter-dark",
+  "cyberpunk",
+  "cyberpunk-dark",
+  "nepbrutalism",
+  "nepbrutalism-dark",
+  "northern-lights",
+  "northern-lights-dark",
+  "glass",
+  "glass-dark",
+  "system",
+];
+
+function isTheme(value: string | null): value is Theme {
+  return value !== null && VALID_THEMES.includes(value as Theme);
+}
+
 const initialState: ThemeProviderState = {
-  theme: "system",
+  theme: "glass",
   setTheme: () => null,
 };
 
@@ -22,11 +42,14 @@ const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 
 export function ThemeProvider({
   children,
-  defaultTheme = "system",
+  defaultTheme = "glass",
   storageKey = "beam-theme",
 }: ThemeProviderProps) {
   const [theme, setThemeState] = useState<Theme>(
-    () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
+    () => {
+      const storedTheme = localStorage.getItem(storageKey);
+      return isTheme(storedTheme) ? storedTheme : defaultTheme;
+    },
   );
 
   useEffect(() => {
@@ -42,7 +65,7 @@ export function ThemeProvider({
       const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
         ? "dark"
         : "light";
-      root.classList.add(systemTheme);
+      root.classList.add("glass", systemTheme);
       return;
     }
 

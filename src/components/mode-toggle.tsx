@@ -20,8 +20,8 @@ export function ModeToggle() {
         <span className="sr-only">Toggle theme</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => setTheme("default")}>Light</DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("dark")}>Dark</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme("glass")}>Light</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme("glass-dark")}>Dark</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

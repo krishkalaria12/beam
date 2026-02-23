@@ -7,6 +7,12 @@ export type ThemeOption = {
 
 export const THEME_OPTIONS: ThemeOption[] = [
   {
+    id: "glass",
+    name: "Glass",
+    primary: "oklch(0.5 0 0)",
+    background: "oklch(1 0 0 / 20%)",
+  },
+  {
     id: "default",
     name: "Default",
     primary: "oklch(0.205 0 0)",
@@ -35,12 +41,6 @@ export const THEME_OPTIONS: ThemeOption[] = [
     name: "Northern",
     primary: "oklch(0.6726 0.2904 341.4084)",
     background: "oklch(0.9816 0.0017 247.8390)",
-  },
-  {
-    id: "glass",
-    name: "Glass",
-    primary: "oklch(0.5 0 0)",
-    background: "oklch(1 0 0 / 20%)",
   },
 ];
 
