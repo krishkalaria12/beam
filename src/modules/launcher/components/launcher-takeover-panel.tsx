@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import type { CommandPanel } from "@/command-registry/types";
+import { LauncherTakeoverSurface } from "@/modules/launcher/components/launcher-takeover-surface";
 
 import ClipboardCommandGroup from "@/modules/clipboard/components/clipboard-command-group";
 import DictionaryCommandGroup from "@/modules/dictionary/components/dictionary-command-group";
@@ -103,12 +104,12 @@ const TAKEOVER_PANEL_RENDERERS: Record<TakeoverPanel, TakeoverPanelRenderer> = {
     />
   ),
   "extension-runner": (input) => (
-    <div className="absolute inset-0 z-50 bg-background">
+    <LauncherTakeoverSurface>
       <ExtensionRunnerView
         onBack={input.backToCommands}
         onOpenExtensions={input.openExtensions}
       />
-    </div>
+    </LauncherTakeoverSurface>
   ),
 };
 

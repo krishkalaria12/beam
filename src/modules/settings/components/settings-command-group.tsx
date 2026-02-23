@@ -4,6 +4,7 @@ import { useState } from "react";
 import { OpenModuleCommandRow } from "@/components/command/open-module-command-row";
 import { CommandIcon } from "@/components/icons/command-icon";
 import { CommandGroup } from "@/components/ui/command";
+import { matchesCommandKeywords, normalizeCommandQuery } from "@/modules/launcher/lib/command-query";
 import type { SettingsView } from "../constants";
 import { SettingsMenu } from "./SettingsMenu";
 import { AppearanceSettings } from "./AppearanceSettings";
@@ -16,9 +17,17 @@ type SettingsCommandGroupProps = {
   onBack: () => void;
 };
 
+const SETTINGS_KEYWORDS = [
+  "settings",
+  "theme",
+  "colors",
+  "appearance",
+  "mode",
+] as const;
+
 export default function SettingsCommandGroup({ isOpen, onOpen, onBack }: SettingsCommandGroupProps) {
   const searchInput = useCommandState((state) => state.search);
-  const query = searchInput.trim().toLowerCase();
+  const query = normalizeCommandQuery(searchInput);
   const [view, setView] = useState<SettingsView>("main");
 
   const handleBack = () => {
@@ -30,7 +39,7 @@ export default function SettingsCommandGroup({ isOpen, onOpen, onBack }: Setting
   };
 
   if (!isOpen) {
-    const shouldShowOpenSettings = query.length === 0 || "settings theme colors appearance mode".includes(query);
+    const shouldShowOpenSettings = matchesCommandKeywords(query, SETTINGS_KEYWORDS);
 
     if (!shouldShowOpenSettings) {
       return null;

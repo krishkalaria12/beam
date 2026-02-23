@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { CommandKeyHint } from "@/components/command/command-key-hint";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -425,14 +426,16 @@ export function TranslationView({ initialQuery, onBack }: TranslationViewProps) 
          </div>
 
          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1.5">
-                <kbd className="flex h-5 items-center justify-center rounded border border-white/10 bg-white/5 px-1.5 font-mono text-[10px] text-zinc-400 shadow-sm">⌘ ↵</kbd>
-                <span>Translate</span>
-            </div>
-             <div className="flex items-center gap-1.5">
-                <kbd className="flex h-5 items-center justify-center rounded border border-white/10 bg-white/5 px-1.5 font-mono text-[10px] text-zinc-400 shadow-sm">ESC</kbd>
-                <span>Back</span>
-            </div>
+            <CommandKeyHint
+              keyLabel="⌘ ↵"
+              label="Translate"
+              keyClassName="flex h-5 items-center justify-center border-white/10 bg-white/5 px-1.5 text-[10px] text-zinc-400 shadow-sm"
+            />
+            <CommandKeyHint
+              keyLabel="ESC"
+              label="Back"
+              keyClassName="flex h-5 items-center justify-center border-white/10 bg-white/5 px-1.5 text-[10px] text-zinc-400 shadow-sm"
+            />
          </div>
       </div>
     </div>

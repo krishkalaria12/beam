@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { CommandFooterBar } from "@/components/command/command-footer-bar";
+import { CommandKeyHint } from "@/components/command/command-key-hint";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -476,24 +478,16 @@ export function SpeedTestView({ onBack }: SpeedTestViewProps) {
         </div>
       </div>
 
-      <div className="flex h-8 items-center justify-between border-t border-border/40 bg-background px-4 text-[10px] font-medium uppercase tracking-widest text-muted-foreground/60">
-        <span className="font-mono">{isRunning ? "running" : "ready"}</span>
-
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1">
-            <kbd className="rounded border border-border/60 bg-muted/30 px-1 py-0.5 font-mono text-[9px] text-foreground/70">
-              ENTER
-            </kbd>
-            <span>{hasStarted ? "Restart" : "Start"}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <kbd className="rounded border border-border/60 bg-muted/30 px-1 py-0.5 font-mono text-[9px] text-foreground/70">
-              ESC
-            </kbd>
-            <span>Back</span>
-          </div>
-        </div>
-      </div>
+      <CommandFooterBar
+        className="bg-background"
+        leftSlot={<span className="font-mono">{isRunning ? "running" : "ready"}</span>}
+        rightSlot={(
+          <>
+            <CommandKeyHint keyLabel="ENTER" label={hasStarted ? "Restart" : "Start"} />
+            <CommandKeyHint keyLabel="ESC" label="Back" />
+          </>
+        )}
+      />
     </div>
   );
 }

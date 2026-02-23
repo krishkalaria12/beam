@@ -3,6 +3,11 @@ import { useCommandState } from "cmdk";
 import { OpenModuleCommandRow } from "@/components/command/open-module-command-row";
 import { CommandIcon } from "@/components/icons/command-icon";
 import { CommandGroup } from "@/components/ui/command";
+import { LauncherTakeoverSurface } from "@/modules/launcher/components/launcher-takeover-surface";
+import {
+  matchesCommandKeywords,
+  normalizeCommandQuery,
+} from "@/modules/launcher/lib/command-query";
 
 import { ClipboardView } from "./clipboard-view";
 
@@ -12,19 +17,24 @@ type ClipboardCommandGroupProps = {
   onBack: () => void;
 };
 
+const CLIPBOARD_KEYWORDS = [
+  "clipboard",
+  "clipboard history",
+] as const;
+
 export default function ClipboardCommandGroup({ isOpen, onOpen, onBack }: ClipboardCommandGroupProps) {
   const searchInput = useCommandState((state) => state.search);
-  const query = searchInput.trim().toLowerCase();
+  const query = normalizeCommandQuery(searchInput);
 
   if (isOpen) {
     return (
-      <div className="absolute inset-0 z-50 bg-background">
+      <LauncherTakeoverSurface>
         <ClipboardView onBack={onBack} />
-      </div>
+      </LauncherTakeoverSurface>
     );
   }
 
-  const shouldShowOpenClipboard = query.length === 0 || "clipboard history".includes(query);
+  const shouldShowOpenClipboard = matchesCommandKeywords(query, CLIPBOARD_KEYWORDS);
 
   if (!shouldShowOpenClipboard) {
     return null;

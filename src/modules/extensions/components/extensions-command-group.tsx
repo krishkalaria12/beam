@@ -3,6 +3,11 @@ import { useCommandState } from "cmdk";
 import { OpenModuleCommandRow } from "@/components/command/open-module-command-row";
 import { CommandIcon } from "@/components/icons/command-icon";
 import { CommandGroup } from "@/components/ui/command";
+import { LauncherTakeoverSurface } from "@/modules/launcher/components/launcher-takeover-surface";
+import {
+  matchesCommandKeywords,
+  normalizeCommandQuery,
+} from "@/modules/launcher/lib/command-query";
 import { ExtensionsView } from "@/modules/extensions/components/extensions-view";
 
 type ExtensionsCommandGroupProps = {
@@ -11,25 +16,31 @@ type ExtensionsCommandGroupProps = {
   onBack: () => void;
 };
 
+const EXTENSIONS_KEYWORDS = [
+  "extensions",
+  "extension store",
+  "raycast",
+  "install",
+  "uninstall",
+] as const;
+
 export default function ExtensionsCommandGroup({
   isOpen,
   onOpen,
   onBack,
 }: ExtensionsCommandGroupProps) {
   const searchInput = useCommandState((state) => state.search);
-  const query = searchInput.trim().toLowerCase();
+  const query = normalizeCommandQuery(searchInput);
 
   if (isOpen) {
     return (
-      <div className="absolute inset-0 z-50 bg-background">
+      <LauncherTakeoverSurface>
         <ExtensionsView onBack={onBack} />
-      </div>
+      </LauncherTakeoverSurface>
     );
   }
 
-  const shouldShowOpenExtensions =
-    query.length === 0 ||
-    "extensions extension store raycast install uninstall".includes(query);
+  const shouldShowOpenExtensions = matchesCommandKeywords(query, EXTENSIONS_KEYWORDS);
 
   if (!shouldShowOpenExtensions) {
     return null;

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { OpenModuleCommandRow } from "@/components/command/open-module-command-row";
 import { CommandIcon } from "@/components/icons/command-icon";
 import { CommandGroup } from "@/components/ui/command";
+import { matchesCommandKeywords, normalizeCommandQuery } from "@/modules/launcher/lib/command-query";
 
 // Import types
 import type { EmojiData } from "../types";
@@ -28,6 +29,16 @@ interface EmojiDataItem {
   subgroup?: number;
   version?: number;
 }
+
+const EMOJI_KEYWORDS = [
+  "emoji",
+  "emoji picker",
+  "emoticon",
+  "smiley",
+  "reaction",
+  "kaomoji",
+  "symbols",
+] as const;
 
 function processEmojiData(data: EmojiDataItem[]): EmojiData[] {
   const processed = data
@@ -72,7 +83,7 @@ interface EmojiCommandGroupProps {
 
 export default function EmojiCommandGroup({ isOpen, onOpen, onBack }: EmojiCommandGroupProps) {
   const searchInput = useCommandState((state) => state.search);
-  const query = searchInput.trim().toLowerCase();
+  const query = normalizeCommandQuery(searchInput);
 
   const [emojis, setEmojis] = useState<EmojiData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -131,9 +142,7 @@ export default function EmojiCommandGroup({ isOpen, onOpen, onBack }: EmojiComma
   };
 
   if (!isOpen) {
-    const shouldShowOpenEmoji =
-      query.length === 0 ||
-      "emoji picker emoticon smiley reaction kaomoji symbols".includes(query);
+    const shouldShowOpenEmoji = matchesCommandKeywords(query, EMOJI_KEYWORDS);
 
     if (!shouldShowOpenEmoji) {
       return null;

@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { OpenModuleCommandRow } from "@/components/command/open-module-command-row";
 import { CommandIcon } from "@/components/icons/command-icon";
 import { CommandGroup, CommandItem, CommandShortcut } from "@/components/ui/command";
+import { matchesCommandKeywords, normalizeCommandQuery } from "@/modules/launcher/lib/command-query";
 import { useCalculatorHistory } from "../hooks/use-calculator-history";
 import { HISTORY_COPY_FEEDBACK_MS } from "../constants";
 
@@ -18,6 +19,11 @@ type CalculatorHistoryCommandGroupProps = {
   onOpen: () => void;
   onBack: () => void;
 };
+
+const CALCULATOR_HISTORY_KEYWORDS = [
+  "calculator",
+  "calculator history",
+] as const;
 
 async function copyCalculatorEntry(value: string) {
   if (!navigator?.clipboard?.writeText) {
@@ -33,7 +39,7 @@ export default function CalculatorHistoryCommandGroup({
   onBack,
 }: CalculatorHistoryCommandGroupProps) {
   const searchInput = useCommandState((state) => state.search);
-  const query = searchInput.trim().toLowerCase();
+  const query = normalizeCommandQuery(searchInput);
 
   const { data, isLoading, isError } = useCalculatorHistory(isOpen);
   const history = data ?? [];
@@ -55,8 +61,7 @@ export default function CalculatorHistoryCommandGroup({
   }, [copiedEntryIndex]);
 
   if (!isOpen) {
-    const shouldShowOpenHistory =
-      query.length === 0 || "calculator history".includes(query);
+    const shouldShowOpenHistory = matchesCommandKeywords(query, CALCULATOR_HISTORY_KEYWORDS);
 
     if (!shouldShowOpenHistory) {
       return null;

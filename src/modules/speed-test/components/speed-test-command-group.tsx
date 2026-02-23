@@ -3,6 +3,11 @@ import { useCommandState } from "cmdk";
 import { OpenModuleCommandRow } from "@/components/command/open-module-command-row";
 import { CommandIcon } from "@/components/icons/command-icon";
 import { CommandGroup } from "@/components/ui/command";
+import { LauncherTakeoverSurface } from "@/modules/launcher/components/launcher-takeover-surface";
+import {
+  matchesCommandKeywords,
+  normalizeCommandQuery,
+} from "@/modules/launcher/lib/command-query";
 
 import { SpeedTestView } from "./speed-test-view";
 
@@ -18,17 +23,7 @@ const SPEED_TEST_KEYWORDS = [
   "speed test",
   "internet speed",
   "network",
-];
-
-function matchesSpeedTestQuery(query: string) {
-  if (query.length === 0) {
-    return true;
-  }
-
-  return SPEED_TEST_KEYWORDS.some(
-    (keyword) => keyword.includes(query) || query.includes(keyword),
-  );
-}
+] as const;
 
 export default function SpeedTestCommandGroup({
   isOpen,
@@ -37,17 +32,17 @@ export default function SpeedTestCommandGroup({
   queryOverride,
 }: SpeedTestCommandGroupProps) {
   const searchInput = useCommandState((state) => state.search);
-  const query = (queryOverride ?? searchInput).trim().toLowerCase();
+  const query = normalizeCommandQuery(queryOverride ?? searchInput);
 
   if (isOpen) {
     return (
-      <div className="absolute inset-0 z-50 bg-background">
+      <LauncherTakeoverSurface>
         <SpeedTestView onBack={onBack} />
-      </div>
+      </LauncherTakeoverSurface>
     );
   }
 
-  if (!matchesSpeedTestQuery(query)) {
+  if (!matchesCommandKeywords(query, SPEED_TEST_KEYWORDS)) {
     return null;
   }
 

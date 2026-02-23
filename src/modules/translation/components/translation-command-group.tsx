@@ -4,6 +4,12 @@ import { ArrowRightLeft } from "lucide-react";
 import { BaseCommandRow } from "@/components/command/base-command-row";
 import { CommandIcon } from "@/components/icons/command-icon";
 import { CommandGroup, CommandShortcut } from "@/components/ui/command";
+import { LauncherTakeoverSurface } from "@/modules/launcher/components/launcher-takeover-surface";
+import {
+  extractCommandKeywordRemainder,
+  matchesCommandKeywords,
+  normalizeCommandQuery,
+} from "@/modules/launcher/lib/command-query";
 
 import { TranslationView } from "./translation-view";
 
@@ -20,41 +26,7 @@ const TRANSLATION_KEYWORDS = [
   "translation",
   "language",
   "convert text",
-];
-
-function matchesTranslationQuery(query: string) {
-  if (query.length === 0) {
-    return true;
-  }
-
-  return TRANSLATION_KEYWORDS.some(
-    (keyword) => keyword.includes(query) || query.includes(keyword),
-  );
-}
-
-function getInitialTextFromQuery(rawQuery: string) {
-  const trimmedQuery = rawQuery.trim();
-  if (!trimmedQuery) {
-    return "";
-  }
-
-  const normalizedQuery = trimmedQuery.toLowerCase();
-  const sortedKeywords = [...TRANSLATION_KEYWORDS].sort(
-    (left, right) => right.length - left.length,
-  );
-
-  for (const keyword of sortedKeywords) {
-    if (normalizedQuery === keyword) {
-      return "";
-    }
-
-    if (normalizedQuery.startsWith(`${keyword} `)) {
-      return trimmedQuery.slice(keyword.length).trimStart();
-    }
-  }
-
-  return trimmedQuery;
-}
+] as const;
 
 export default function TranslationCommandGroup({
   isOpen,
@@ -68,14 +40,14 @@ export default function TranslationCommandGroup({
   if (isOpen) {
     const trimmedQuery = query?.trim() ?? "";
     return (
-      <div className="absolute inset-0 z-50 bg-background">
+      <LauncherTakeoverSurface>
         <TranslationView initialQuery={trimmedQuery} onBack={onBack} />
-      </div>
+      </LauncherTakeoverSurface>
     );
   }
 
-  const normalizedQuery = (queryOverride ?? searchInput).trim().toLowerCase();
-  if (!matchesTranslationQuery(normalizedQuery)) {
+  const normalizedQuery = normalizeCommandQuery(queryOverride ?? searchInput);
+  if (!matchesCommandKeywords(normalizedQuery, TRANSLATION_KEYWORDS)) {
     return null;
   }
 
@@ -83,7 +55,7 @@ export default function TranslationCommandGroup({
     <CommandGroup>
       <BaseCommandRow
         value="translate translation language convert text"
-        onSelect={() => onOpen(getInitialTextFromQuery(queryOverride ?? searchInput))}
+        onSelect={() => onOpen(extractCommandKeywordRemainder(queryOverride ?? searchInput, TRANSLATION_KEYWORDS))}
         icon={<CommandIcon icon="translation" />}
         title="Translate text"
         titleClassName="truncate text-foreground capitalize"
