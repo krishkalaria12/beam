@@ -1,8 +1,12 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, ArrowLeft, Loader2, Search, Sparkles, X } from "lucide-react";
+import { AlertTriangle, Loader2, Search, Sparkles, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { toast } from "sonner";
 
+import {
+  CommandPanelBackButton,
+  CommandPanelHeader,
+} from "@/components/command/command-panel-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import debounce from "@/lib/debounce";
@@ -287,15 +291,8 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
 
   return (
     <div className="glass-effect flex h-full w-full flex-col overflow-hidden text-foreground">
-      <div className="relative z-10 flex shrink-0 items-center gap-3 border-b border-[var(--ui-divider)] bg-background/15 px-4 py-3">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={handleBack}
-          className="size-8 rounded-lg text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
-        >
-          <ArrowLeft className="size-4" />
-        </Button>
+      <CommandPanelHeader>
+        <CommandPanelBackButton onClick={handleBack} aria-label="Back" />
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <h2 className="text-base font-medium tracking-tight text-foreground">Extensions</h2>
@@ -331,7 +328,7 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
             ) : null}
           </div>
         </div>
-      </div>
+      </CommandPanelHeader>
 
       <div className="relative custom-scrollbar list-area min-h-0 flex-1 overflow-y-auto p-4">
         {extensionsUi.actionError ? (

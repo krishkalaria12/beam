@@ -1,7 +1,12 @@
 import { useForm } from "@tanstack/react-form";
-import { AlertTriangle, ArrowLeft, Loader2, Save } from "lucide-react";
+import { AlertTriangle, Loader2, Save } from "lucide-react";
 import { useEffect, useState, type KeyboardEvent } from "react";
 
+import {
+  CommandPanelBackButton,
+  CommandPanelHeader,
+  CommandPanelTitleBlock,
+} from "@/components/command/command-panel-header";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -221,22 +226,10 @@ export function ExtensionSetupView({
 
   return (
     <div className="glass-effect flex h-full w-full flex-col overflow-hidden text-foreground">
-      <div className="relative z-10 flex shrink-0 items-center gap-3 border-b border-[var(--ui-divider)] bg-background/15 px-4 py-3">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onBack}
-          className="size-8 rounded-lg text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
-        >
-          <ArrowLeft className="size-4" />
-        </Button>
-        <div className="min-w-0">
-          <p className="truncate text-sm font-medium text-foreground">Extension Setup</p>
-          <p className="truncate text-xs text-muted-foreground">
-            {extensionTitle}
-          </p>
-        </div>
-      </div>
+      <CommandPanelHeader>
+        <CommandPanelBackButton onClick={onBack} aria-label="Back" />
+        <CommandPanelTitleBlock title="Extension Setup" subtitle={extensionTitle} />
+      </CommandPanelHeader>
 
       <div className="relative custom-scrollbar list-area min-h-0 flex-1 overflow-y-auto p-4">
         {error || validationError ? (

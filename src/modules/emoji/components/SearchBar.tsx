@@ -1,5 +1,9 @@
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
-import { AlertTriangle, ArrowLeft } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
+import {
+  CommandPanelBackButton,
+  CommandPanelHeader,
+} from "@/components/command/command-panel-header";
 import { CATEGORY_LABELS, CATEGORY_ORDER } from "../types";
 
 interface SearchBarProps {
@@ -20,15 +24,8 @@ export function SearchBar({
   showError,
 }: SearchBarProps) {
   return (
-    <div className="flex shrink-0 items-center gap-2 border-b border-border bg-accent px-3 py-2">
-      <button
-        type="button"
-        aria-label="Back to commands"
-        className="inline-flex size-8 flex-none items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-        onClick={onBack}
-      >
-        <ArrowLeft className="size-4" />
-      </button>
+    <CommandPanelHeader className="gap-2 border-border bg-accent px-3 py-2">
+      <CommandPanelBackButton onClick={onBack} aria-label="Back to commands" />
 
       <input
         type="text"
@@ -65,6 +62,6 @@ export function SearchBar({
           <AlertTriangle className="size-3.5" />
         </span>
       )}
-    </div>
+    </CommandPanelHeader>
   );
 }

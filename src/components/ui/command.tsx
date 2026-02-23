@@ -3,6 +3,7 @@
 import * as React from "react"
 import { Command as CommandPrimitive } from "cmdk"
 
+import { CommandPanelHeader } from "@/components/command/command-panel-header"
 import { cn } from "@/lib/utils"
 import {
   Dialog,
@@ -68,7 +69,7 @@ function CommandInput({
 }: React.ComponentProps<typeof CommandPrimitive.Input>) {
   return (
     <div data-slot="command-input-wrapper" className="flex-none">
-      <div className="flex items-center gap-3 border-b border-[var(--ui-divider)] px-5 py-3.5">
+      <CommandPanelHeader>
         <SearchIcon className="size-6 shrink-0 text-muted-foreground/60" />
         <CommandPrimitive.Input
           data-slot="command-input"
@@ -78,7 +79,7 @@ function CommandInput({
           )}
           {...props}
         />
-      </div>
+      </CommandPanelHeader>
     </div>
   )
 }

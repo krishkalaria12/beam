@@ -1,8 +1,9 @@
-import { ArrowLeft, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { useEffect, useState, useRef, useMemo } from "react";
 import debounce from "@/lib/debounce";
 
 import { CommandFooterBar } from "@/components/command/command-footer-bar";
+import { CommandPanelBackButton, CommandPanelHeader } from "@/components/command/command-panel-header";
 import { CommandKeyHint } from "@/components/command/command-key-hint";
 import { CommandStatusChip } from "@/components/command/command-status-chip";
 import { useFileSearch } from "../hooks/use-file-search";
@@ -74,14 +75,8 @@ export function FileSearchView({ initialQuery, onBack }: FileSearchViewProps) {
 
   return (
     <div className="glass-effect flex h-full w-full flex-col text-foreground">
-      {/* Top Bar */}
-      <div className="flex h-[52px] items-center gap-3 border-b border-[var(--ui-divider)] px-4">
-        <button
-          onClick={onBack}
-          className="flex items-center justify-center rounded-md p-1 text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground"
-        >
-          <ArrowLeft className="size-4" />
-        </button>
+      <CommandPanelHeader>
+        <CommandPanelBackButton onClick={onBack} aria-label="Back" />
 
         <div className="relative flex-1">
           <Search className="absolute left-2 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/50" />
@@ -97,7 +92,7 @@ export function FileSearchView({ initialQuery, onBack }: FileSearchViewProps) {
         </div>
 
         <CommandStatusChip label="Local System" tone="neutral" />
-      </div>
+      </CommandPanelHeader>
 
       {/* Content Area - Split View */}
       <div className="list-area custom-scrollbar flex min-h-0 flex-1 overflow-hidden animate-in fade-in-50 duration-300">

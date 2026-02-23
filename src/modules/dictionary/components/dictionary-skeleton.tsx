@@ -1,14 +1,15 @@
+import { CommandPanelHeader } from "@/components/command/command-panel-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 
 export function DictionarySkeleton() {
   return (
     <div className="flex h-full w-full flex-col bg-background">
-      {/* Header - matching new style */}
-      <div className="flex h-14 items-center gap-3 border-b border-border/40 px-4">
-        <Skeleton className="size-8 rounded-full" />
+      {/* Header */}
+      <CommandPanelHeader className="border-border/40">
+        <Skeleton className="size-6 rounded-sm" />
         <Skeleton className="h-9 flex-1 rounded-full" />
-      </div>
+      </CommandPanelHeader>
 
       {/* Content */}
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-6 space-y-8">

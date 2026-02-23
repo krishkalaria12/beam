@@ -1,6 +1,5 @@
 import {
   Activity,
-  ArrowLeft,
   Download,
   Gauge,
   Loader2,
@@ -13,6 +12,11 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { CommandFooterBar } from "@/components/command/command-footer-bar";
+import {
+  CommandPanelBackButton,
+  CommandPanelHeader,
+  CommandPanelTitleBlock,
+} from "@/components/command/command-panel-header";
 import { CommandKeyHint } from "@/components/command/command-key-hint";
 import { CommandStatusChip } from "@/components/command/command-status-chip";
 import { Button } from "@/components/ui/button";
@@ -356,23 +360,13 @@ export function SpeedTestView({ onBack }: SpeedTestViewProps) {
       onKeyDown={handleContainerKeyDown}
       tabIndex={-1}
     >
-      <div className="flex h-[52px] items-center gap-3 border-b border-[var(--ui-divider)] px-4">
-        <button
-          onClick={onBack}
-          className="flex items-center justify-center rounded-md p-1 text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground"
-          type="button"
-        >
-          <ArrowLeft className="size-4" />
-        </button>
-
-        <div className="min-w-0">
-          <p className="truncate text-sm font-medium text-foreground">
-            Network Speed Test
-          </p>
-          <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground/65">
-            cloudflare diagnostics
-          </p>
-        </div>
+      <CommandPanelHeader>
+        <CommandPanelBackButton onClick={onBack} aria-label="Back" />
+        <CommandPanelTitleBlock
+          title="Network Speed Test"
+          subtitle="cloudflare diagnostics"
+          subtitleClassName="font-mono text-[10px] uppercase tracking-widest text-muted-foreground/65"
+        />
 
         <CommandStatusChip
           label={status}
@@ -380,7 +374,7 @@ export function SpeedTestView({ onBack }: SpeedTestViewProps) {
           pulse={status === "running"}
           className="ml-auto"
         />
-      </div>
+      </CommandPanelHeader>
 
       <div className="list-area custom-scrollbar flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-5">
         <div className="rounded-2xl border border-border/60 bg-gradient-to-b from-muted/20 to-background/30 p-4 shadow-[0_1px_0_rgba(255,255,255,0.04)_inset]">

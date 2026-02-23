@@ -1,9 +1,10 @@
-import { ArrowLeft, BookOpen, Search, Copy, Check, Info, AlertCircle, Loader2 } from "lucide-react";
+import { BookOpen, Search, Copy, Check, Info, AlertCircle, Loader2 } from "lucide-react";
 import { useEffect, useRef, useState, useMemo } from "react";
 import { useDictionary } from "../hooks/use-dictionary";
 import { DictionarySkeleton } from "./dictionary-skeleton";
 import { SenseCard } from "./definition-card";
 import { CommandFooterBar } from "@/components/command/command-footer-bar";
+import { CommandPanelBackButton, CommandPanelHeader } from "@/components/command/command-panel-header";
 import { CommandKeyHint } from "@/components/command/command-key-hint";
 import { Button } from "@/components/ui/button";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
@@ -119,16 +120,8 @@ export function DictionaryView({ initialQuery, onBack }: DictionaryViewProps) {
 
   return (
     <div className="glass-effect flex h-full w-full flex-col text-foreground">
-      {/* Header */}
-      <div className="flex h-14 items-center gap-3 border-b border-[var(--ui-divider)] px-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onBack}
-          className="size-8 rounded-full text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground"
-        >
-          <ArrowLeft className="size-4" />
-        </Button>
+      <CommandPanelHeader>
+        <CommandPanelBackButton onClick={onBack} aria-label="Back" />
 
         <InputGroup className="h-9 flex-1 rounded-full border-none bg-background/20 px-1">
           <InputGroupAddon align="inline-start" className="pl-3">
@@ -156,7 +149,7 @@ export function DictionaryView({ initialQuery, onBack }: DictionaryViewProps) {
             </InputGroupAddon>
           )}
         </InputGroup>
-      </div>
+      </CommandPanelHeader>
 
       {/* Content */}
       <div ref={contentRef} className="list-area custom-scrollbar flex min-h-0 flex-1 overflow-y-auto">

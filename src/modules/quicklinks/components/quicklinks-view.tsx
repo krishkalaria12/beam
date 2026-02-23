@@ -1,8 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "@tanstack/react-form";
-import { ArrowLeft, Loader2, Link2, Trash2, Plus, Pencil, Command, Folder, File, FolderOpen } from "lucide-react";
+import { Loader2, Link2, Trash2, Plus, Pencil, Command, Folder, File, FolderOpen } from "lucide-react";
 import { z } from "zod";
 
+import {
+  CommandPanelBackButton,
+  CommandPanelHeader,
+  CommandPanelTitleBlock,
+} from "@/components/command/command-panel-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -221,16 +226,14 @@ function QuicklinkCreateForm({ onBack, onSuccess, initialData, editKeyword }: Qu
 
   return (
     <div className="glass-effect flex h-full flex-col text-foreground">
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-[var(--ui-divider)] p-4">
-        <Button variant="ghost" size="icon" onClick={onBack} className="size-8">
-          <ArrowLeft className="size-4" />
-        </Button>
-        <span className="text-xs font-medium text-muted-foreground uppercase tracking-widest">
-           {isEditMode ? "Edit Quicklink" : "Create Quicklink"}
-        </span>
-        <div className="w-8" />
-      </div>
+      <CommandPanelHeader>
+        <CommandPanelBackButton onClick={onBack} aria-label="Back" />
+        <CommandPanelTitleBlock
+          title={isEditMode ? "Edit Quicklink" : "Create Quicklink"}
+          subtitle="Create shortcuts for links, files, and folders"
+          className="flex-1"
+        />
+      </CommandPanelHeader>
 
       {/* Form Content */}
       <div className="custom-scrollbar list-area flex-1 overflow-y-auto p-8">
@@ -450,19 +453,14 @@ function QuicklinksManageView({ onBack, onCreate, onEdit }: QuicklinksManageView
 
   return (
     <div className="glass-effect flex h-full flex-col text-foreground">
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-[var(--ui-divider)] p-4">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={onBack} className="size-8">
-            <ArrowLeft className="size-4" />
-          </Button>
-          <h2 className="text-lg font-semibold">Quicklinks</h2>
-        </div>
-        <Button variant="outline" size="sm" onClick={onCreate}>
+      <CommandPanelHeader>
+        <CommandPanelBackButton onClick={onBack} aria-label="Back" />
+        <CommandPanelTitleBlock title="Quicklinks" subtitle="Manage custom launcher shortcuts" />
+        <Button variant="outline" size="sm" onClick={onCreate} className="ml-auto">
           <Plus className="mr-2 size-4" />
           Add New
         </Button>
-      </div>
+      </CommandPanelHeader>
 
       {/* Content */}
       <div className="custom-scrollbar list-area flex-1 overflow-y-auto p-4">

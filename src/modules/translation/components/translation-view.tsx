@@ -1,6 +1,5 @@
 import {
   AlertCircle,
-  ArrowLeft,
   ArrowRightLeft,
   Check,
   Copy,
@@ -11,6 +10,7 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { CommandFooterBar } from "@/components/command/command-footer-bar";
+import { CommandPanelBackButton, CommandPanelHeader } from "@/components/command/command-panel-header";
 import { CommandKeyHint } from "@/components/command/command-key-hint";
 import { CommandStatusChip } from "@/components/command/command-status-chip";
 import { Button } from "@/components/ui/button";
@@ -246,16 +246,8 @@ export function TranslationView({ initialQuery, onBack }: TranslationViewProps) 
 
   return (
     <div className="glass-effect flex h-full w-full flex-col text-foreground">
-      {/* Header */}
-      <div className="flex h-[52px] shrink-0 items-center gap-3 border-b border-[var(--ui-divider)] px-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onBack}
-          className="size-8 rounded-full text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground"
-        >
-          <ArrowLeft className="size-4" />
-        </Button>
+      <CommandPanelHeader>
+        <CommandPanelBackButton onClick={onBack} aria-label="Back" />
         <h1 className="text-lg font-semibold tracking-tight text-foreground">
             Translate
         </h1>
@@ -273,7 +265,7 @@ export function TranslationView({ initialQuery, onBack }: TranslationViewProps) 
             className="ml-auto"
           />
          )}
-      </div>
+      </CommandPanelHeader>
 
       {/* Main Content */}
       <div className="flex min-h-0 flex-1 flex-col gap-6 p-6">
