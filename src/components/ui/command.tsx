@@ -21,7 +21,7 @@ function Command({
     <CommandPrimitive
       data-slot="command"
       className={cn(
-        "bg-popover text-popover-foreground rounded-none flex size-full flex-col",
+        "rounded-none flex size-full flex-col bg-transparent text-foreground",
         className
       )}
       {...props}
@@ -68,12 +68,12 @@ function CommandInput({
 }: React.ComponentProps<typeof CommandPrimitive.Input>) {
   return (
     <div data-slot="command-input-wrapper" className="flex-none">
-      <div className="flex items-center gap-3 px-4 py-3.5">
-        <SearchIcon className="size-6 shrink-0 text-muted-foreground/50" />
+      <div className="flex items-center gap-3 border-b border-[var(--ui-divider)] px-5 py-3.5">
+        <SearchIcon className="size-5 shrink-0 text-muted-foreground/60" />
         <CommandPrimitive.Input
           data-slot="command-input"
           className={cn(
-            "w-full bg-transparent text-xl outline-hidden placeholder:text-muted-foreground/30 disabled:cursor-not-allowed disabled:opacity-50 font-medium tracking-tight",
+            "w-full bg-transparent text-[15px] font-medium tracking-[0.005em] text-foreground outline-hidden placeholder:text-muted-foreground/55 disabled:cursor-not-allowed disabled:opacity-50",
             className
           )}
           {...props}
@@ -91,7 +91,7 @@ function CommandList({
       <CommandPrimitive.List
         data-slot="command-list"
         className={cn(
-          "max-h-none scroll-py-2 outline-none overflow-x-hidden overflow-y-auto scrollbar-none",
+          "max-h-none scroll-py-2 outline-none overflow-x-hidden overflow-y-auto",
           className
         )}
         {...props}

@@ -16,9 +16,9 @@
 - [x] Keep one canonical source of truth for glass styling in the repo.
 
 ## Phase 2: Launcher Shell Migration
-- [ ] Migrate main launcher container to shared glass surface classes.
-- [ ] Align search/header/list/footer structure to SuperCmd-style visual hierarchy.
-- [ ] Ensure compact and expanded command modes still behave correctly.
+- [x] Migrate main launcher container to shared glass surface classes.
+- [x] Align search/header/list/footer structure to SuperCmd-style visual hierarchy.
+- [x] Ensure compact and expanded command modes still behave correctly.
 
 ## Phase 3: Reusable Command Row Standardization
 - [ ] Enforce shared row primitives (`BaseCommandRow`, `OpenModuleCommandRow`, `AsyncCommandRow`) across launcher command groups.
@@ -56,3 +56,4 @@
 - [x] Planning complete.
 - [x] Implementation started.
 - [x] Phase 1 complete.
+- [x] Phase 2 complete.

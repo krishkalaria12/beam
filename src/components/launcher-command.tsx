@@ -523,12 +523,12 @@ export default function LauncherCommand() {
   }, [shouldCollapseToInputOnly]);
 
   return (
-    <div className="relative h-full w-full bg-background">
+    <div className="relative h-full w-full bg-transparent">
       <ExtensionToastBridge />
       <Command
         shouldFilter={false}
         onKeyDown={handleKeyDown}
-        className="h-full w-full overflow-hidden bg-transparent"
+        className="glass-effect h-full w-full overflow-hidden text-foreground"
       >
         {!isInputHidden && (
           <CommandInput
@@ -571,7 +571,7 @@ export default function LauncherCommand() {
         {hasTakeoverPanel || shouldCollapseToInputOnly ? null : (
           <CommandList
             className={cn(
-              "flex-1 px-1 transition-all duration-300",
+              "list-area custom-scrollbar flex-1 px-1.5 transition-all duration-300",
               isCommandListExpandedPanel
                 ? "min-h-0 flex flex-col h-full"
                 : "max-h-none overflow-y-auto",

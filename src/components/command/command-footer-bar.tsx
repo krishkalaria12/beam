@@ -16,7 +16,7 @@ export function CommandFooterBar({
   return (
     <div
       className={cn(
-        "flex h-8 items-center justify-between border-t border-border/40 px-4 text-[10px] font-medium uppercase tracking-widest text-muted-foreground/60",
+        "sc-glass-footer flex h-8 items-center justify-between px-4 text-[10px] font-medium uppercase tracking-widest text-muted-foreground/70",
         className,
       )}
     >
