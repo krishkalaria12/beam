@@ -42,6 +42,7 @@ import { findQuicklinkByKeyword } from "@/modules/quicklinks/api/quicklinks";
 import { useQuicklinks } from "@/modules/quicklinks/hooks/use-quicklinks";
 import { setLauncherCompactMode } from "@/modules/settings/api/set-launcher-compact-mode";
 import { useUiLayout } from "@/modules/settings/hooks/use-ui-layout";
+import { useAwakeStore } from "@/modules/system-actions/store/awake-store";
 import {
   isLauncherCommandListExpandedPanel,
   isLauncherFooterHidden,
@@ -432,12 +433,25 @@ export default function LauncherCommand() {
     });
 
     if (!result.ok) {
+      if (commandId === "system.awake") {
+        toast.error(result.message || "Failed to toggle keep awake");
+      }
       logDispatchFailure(commandId, result, {
         mode: commandContext.mode,
         activePanel: commandContext.activePanel,
         query: commandContext.query,
       });
       return;
+    }
+
+    if (commandId === "system.awake") {
+      const isAwake = result.payload?.isAwake;
+      if (typeof isAwake === "boolean") {
+        useAwakeStore.getState().setAwake(isAwake);
+        toast(isAwake ? "Keep awake enabled" : "Keep awake disabled");
+      } else {
+        void useAwakeStore.getState().fetchStatus();
+      }
     }
 
     markUsed(commandId);

@@ -100,6 +100,22 @@ const SYSTEM_ACTION_DESCRIPTORS: CommandDescriptor[] = [
       },
     },
   },
+  {
+    id: "system.awake",
+    title: "keep awake",
+    keywords: ["keep awake", "prevent sleep", "no sleep", "awake", "awake"],
+    endText: "toggle",
+    icon: "system",
+    kind: "backend-action",
+    scope: SCOPE_NORMAL_COMPRESSED_SYSTEM,
+    requiresQuery: true,
+    action: {
+      type: "INVOKE_TAURI",
+      payload: {
+        command: "toggle_awake",
+      },
+    },
+  },
 ];
 
 export const STATIC_COMMANDS: CommandDescriptor[] = [

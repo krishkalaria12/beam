@@ -1,4 +1,4 @@
-import type { SystemActionItem } from "./types";
+import type { SystemActionItem, AwakeActionItem } from "./types";
 
 export const SYSTEM_ACTIONS: SystemActionItem[] = [
   {
@@ -27,3 +27,10 @@ export const SYSTEM_ACTIONS: SystemActionItem[] = [
     keywords: ["deep sleep"],
   },
 ];
+
+export const AWAKE_ACTION: AwakeActionItem = {
+  action: "awake",
+  title: "keep awake",
+  keywords: ["keep awake", "prevent sleep", "no sleep", "awake"],
+  isToggle: true,
+};

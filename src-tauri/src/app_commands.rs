@@ -38,6 +38,8 @@ pub fn get_handler() -> impl Fn(Invoke) -> bool {
         quicklinks::execute_quicklink,
         quicklinks::favicon::get_favicon_for_url,
         system_actions::execute_system_action,
+        system_actions::get_awake_status,
+        system_actions::toggle_awake,
         launcher_window::set_launcher_compact_mode,
         settings::get_ui_layout_mode,
         settings::set_ui_layout_mode,

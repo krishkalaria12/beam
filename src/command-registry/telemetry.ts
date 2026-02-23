@@ -33,21 +33,6 @@ export function logProviderResolution(
       `[provider:${providerError.providerId}] ${providerError.message} ${contextLine}`,
     );
   }
-
-  for (const telemetry of resolution.telemetry ?? []) {
-    const duration = Math.round(telemetry.durationMs);
-    const baseLine =
-      `[provider:${telemetry.providerId}] status=${telemetry.status} duration=${duration}ms`;
-    const metaLine =
-      `commands=${telemetry.commandCount} errors=${telemetry.errorCount} ${contextLine}`;
-
-    if (telemetry.durationMs >= 500) {
-      console.warn(`${baseLine} ${metaLine} (slow provider)`);
-      continue;
-    }
-
-    console.debug(`${baseLine} ${metaLine}`);
-  }
 }
 
 export function logDispatchFailure(

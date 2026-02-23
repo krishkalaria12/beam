@@ -1,11 +1,13 @@
 import { useCommandState } from "cmdk";
 import { Loader2 } from "lucide-react";
+import { useState } from "react";
 
 import systemIcon from "@/assets/icons/system.png";
 import { CommandGroup, CommandItem, CommandShortcut } from "@/components/ui/command";
 
-import { SYSTEM_ACTIONS } from "../constants";
+import { SYSTEM_ACTIONS, AWAKE_ACTION } from "../constants";
 import { useSystemAction } from "../hooks/use-system-action";
+import { useAwakeToggle } from "../hooks/use-awake-toggle";
 
 function matchesQuery(input: string, query: string) {
   return input.toLowerCase().includes(query.toLowerCase());
@@ -24,6 +26,8 @@ export default function SystemActionsCommandGroup({
   const query = (queryOverride ?? searchInput).trim();
 
   const { runSystemAction, runningAction } = useSystemAction();
+  const { isAwake, isLoading, toggle } = useAwakeToggle();
+  const [isToggling, setIsToggling] = useState(false);
 
   if (!query && !showAllWhenEmpty) {
     return null;
@@ -39,7 +43,9 @@ export default function SystemActionsCommandGroup({
         return item.keywords.some((keyword) => matchesQuery(keyword, query));
       });
 
-  if (filteredActions.length === 0) {
+  const showAwake = !query || matchesQuery(AWAKE_ACTION.title, query) || AWAKE_ACTION.keywords.some((keyword) => matchesQuery(keyword, query));
+
+  if (filteredActions.length === 0 && !showAwake) {
     return null;
   }
 
@@ -76,6 +82,35 @@ export default function SystemActionsCommandGroup({
           </CommandItem>
         );
       })}
+      {showAwake && (
+        <CommandItem
+          key={AWAKE_ACTION.action}
+          value={`${AWAKE_ACTION.title} ${AWAKE_ACTION.keywords.join(" ")}`}
+          disabled={isToggling || isLoading}
+          onSelect={async () => {
+            if (isToggling || isLoading) {
+              return;
+            }
+
+            setIsToggling(true);
+            await toggle();
+            setIsToggling(false);
+          }}
+        >
+          {isToggling ? (
+            <Loader2 className="size-6 animate-spin text-muted-foreground/50" />
+          ) : (
+            <img
+              src={systemIcon}
+              alt="system action"
+              loading="lazy"
+              className="size-6 rounded-sm object-cover"
+            />
+          )}
+          <p className="truncate text-foreground capitalize">{AWAKE_ACTION.title}</p>
+          <CommandShortcut>{isAwake ? "on" : "off"}</CommandShortcut>
+        </CommandItem>
+      )}
     </CommandGroup>
   );
 }

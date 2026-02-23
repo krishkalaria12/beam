@@ -60,6 +60,7 @@ shell-words = "1.1.0"
 webbrowser = "1.1.0"
 arboard = { version = "3.6.1", features = ["wayland-data-control"] }
 system_shutdown = "4.1.0"
+keepawake = "0.6.0"
 
 # Security & Cryptography
 keyring = "3.6.3"

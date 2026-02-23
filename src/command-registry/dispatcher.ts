@@ -2,6 +2,7 @@ import { openApplication } from "@/modules/applications/api/open-application";
 import { openFile } from "@/modules/file-search/api/open-file";
 import { searchWithBrowser } from "@/modules/search/api/search-with-browser";
 import { executeSystemAction } from "@/modules/system-actions/api/execute-system-action";
+import { getAwakeStatus, toggleAwake } from "@/modules/system-actions/api/toggle-awake";
 import type { SystemAction } from "@/modules/system-actions/types";
 
 import type { StaticCommandRegistry } from "@/command-registry/static-registry";
@@ -14,6 +15,8 @@ import type {
 const TAURI_INVOKE_ALLOWLIST = new Set([
   "execute_system_action",
   "search_with_browser",
+  "toggle_awake",
+  "get_awake_status",
 ]);
 
 const SYSTEM_ACTION_ALLOWLIST: ReadonlySet<SystemAction> = new Set([
@@ -347,6 +350,17 @@ async function dispatchInvokeAction(
       });
       context.runtime.setCommandSearch("");
       return ok({ commandName, site });
+    }
+
+    if (commandName === "toggle_awake") {
+      const isAwake = await toggleAwake();
+      context.runtime.setCommandSearch("");
+      return ok({ commandName, isAwake });
+    }
+
+    if (commandName === "get_awake_status") {
+      const isAwake = await getAwakeStatus();
+      return ok({ commandName, isAwake });
     }
 
     return error(
