@@ -1,9 +1,14 @@
 import { ImageIcon } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import {
   resolveLucideIconByToken,
 } from "@/components/icons/icon-registry";
+import {
+  ensurePhosphorIconByToken,
+  getCachedPhosphorIconByToken,
+  type ResolvedPhosphorIcon,
+} from "@/components/icons/phosphor-runtime";
 import { cn } from "@/lib/utils";
 import { resolveExtensionIconSource } from "@/modules/extensions/lib/icon";
 
@@ -147,6 +152,37 @@ export function UnifiedIcon({ icon, className, fallback }: UnifiedIconProps) {
   const [failedSource, setFailedSource] = useState<string | null>(null);
   const imageValue = useMemo(() => resolveImageValue(icon), [icon]);
   const iconSource = imageValue ? resolveDirectImageSource(imageValue.value) : null;
+  const tokenCandidate = imageValue?.value?.trim() ?? "";
+  const lucideIcon = tokenCandidate ? resolveLucideIconByToken(tokenCandidate) : null;
+  const [phosphorIcon, setPhosphorIcon] = useState<ResolvedPhosphorIcon | null>(() =>
+    tokenCandidate ? getCachedPhosphorIconByToken(tokenCandidate) : null,
+  );
+
+  useEffect(() => {
+    if (!tokenCandidate || lucideIcon) {
+      setPhosphorIcon(null);
+      return;
+    }
+
+    const cached = getCachedPhosphorIconByToken(tokenCandidate);
+    if (cached) {
+      setPhosphorIcon(cached);
+      return;
+    }
+
+    setPhosphorIcon(null);
+
+    let cancelled = false;
+    void ensurePhosphorIconByToken(tokenCandidate).then((resolved) => {
+      if (!cancelled) {
+        setPhosphorIcon(resolved);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [tokenCandidate, lucideIcon]);
 
   if (iconSource && failedSource !== iconSource) {
     if (imageValue?.tintColor) {
@@ -182,10 +218,14 @@ export function UnifiedIcon({ icon, className, fallback }: UnifiedIconProps) {
     );
   }
 
-  const tokenCandidate = imageValue?.value?.trim() ?? "";
-  const Lucide = tokenCandidate ? resolveLucideIconByToken(tokenCandidate) : null;
-  if (Lucide) {
+  if (lucideIcon) {
+    const Lucide = lucideIcon;
     return <Lucide className={cn("size-4", className)} />;
+  }
+
+  if (phosphorIcon) {
+    const Icon = phosphorIcon.icon;
+    return <Icon className={cn("size-4", className)} weight={phosphorIcon.weight} />;
   }
 
   if (tokenCandidate && isEmojiOrSymbol(tokenCandidate)) {

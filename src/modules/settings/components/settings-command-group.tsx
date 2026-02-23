@@ -9,6 +9,7 @@ import type { SettingsView } from "../constants";
 import { SettingsMenu } from "./SettingsMenu";
 import { AppearanceSettings } from "./AppearanceSettings";
 import { ThemeSettings } from "./ThemeSettings";
+import { VisualStyleSettings } from "./VisualStyleSettings";
 import { LayoutSettings } from "./LayoutSettings";
 
 type SettingsCommandGroupProps = {
@@ -22,6 +23,7 @@ const SETTINGS_KEYWORDS = [
   "theme",
   "colors",
   "appearance",
+  "style",
   "mode",
 ] as const;
 
@@ -65,6 +67,7 @@ export default function SettingsCommandGroup({ isOpen, onOpen, onBack }: Setting
       {view === "main" && <SettingsMenu setView={setView} onBack={handleBack} />}
       {view === "appearance" && <AppearanceSettings onBack={handleBack} />}
       {view === "themes" && <ThemeSettings onBack={handleBack} />}
+      {view === "style" && <VisualStyleSettings onBack={handleBack} />}
       {view === "layout" && <LayoutSettings onBack={handleBack} />}
     </>
   );

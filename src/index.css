@@ -70,6 +70,7 @@
   --scrollbar-track: rgba(118, 130, 149, 0.12);
   --scrollbar-thumb: rgba(118, 130, 149, 0.26);
   --scrollbar-thumb-hover: rgba(118, 130, 149, 0.34);
+  --sc-base-rgb: 16, 17, 19;
   --font-sans: "Manrope", "Ubuntu", "Noto Sans", "Segoe UI", sans-serif;
   --font-mono: "JetBrains Mono", "Fira Code", "Cascadia Mono", monospace;
 }
@@ -475,6 +476,14 @@
   --border: oklch(1 0 0 / 30%);
   --input: oklch(1 0 0 / 20%);
   --ring: oklch(0 0 0 / 20%);
+  --icon-neutral-bg: rgba(118, 130, 149, 0.18);
+  --icon-neutral-fg: rgba(58, 65, 78, 0.78);
+  --icon-primary-bg: rgba(47, 107, 255, 0.18);
+  --icon-primary-fg: rgba(36, 91, 224, 0.95);
+  --icon-orange-bg: rgba(245, 158, 11, 0.2);
+  --icon-orange-fg: rgba(180, 83, 9, 0.95);
+  --icon-cyan-bg: rgba(8, 145, 178, 0.18);
+  --icon-cyan-fg: rgba(14, 116, 144, 0.96);
   --icon-chip-border: rgba(148, 163, 184, 0.4);
   --icon-chip-gloss: rgba(255, 255, 255, 0.44);
   --icon-chip-shadow: rgba(15, 23, 42, 0.16);
@@ -517,6 +526,8 @@
   --border: oklch(1 0 0 / 20%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(1 0 0 / 30%);
+  --icon-neutral-bg: rgba(255, 255, 255, 0.1);
+  --icon-neutral-fg: rgba(255, 255, 255, 0.62);
   --icon-chip-border: rgba(255, 255, 255, 0.26);
   --icon-chip-gloss: rgba(255, 255, 255, 0.24);
   --icon-chip-shadow: rgba(0, 0, 0, 0.4);
@@ -538,6 +549,34 @@
   --scrollbar-track: rgba(255, 255, 255, 0.08);
   --scrollbar-thumb: rgba(255, 255, 255, 0.24);
   --scrollbar-thumb-hover: rgba(255, 255, 255, 0.34);
+}
+
+.sc-glassy {
+  --ui-divider: rgba(156, 164, 178, 0.32);
+  --command-item-hover-bg: rgba(86, 98, 118, 0.09);
+  --command-item-hover-border: rgba(86, 98, 118, 0.14);
+  --command-item-selected-bg: rgba(86, 98, 118, 0.14);
+  --command-item-selected-border: rgba(86, 98, 118, 0.22);
+  --launcher-card-bg: rgba(86, 98, 118, 0.09);
+  --launcher-card-border: rgba(86, 98, 118, 0.14);
+  --launcher-card-hover-bg: rgba(86, 98, 118, 0.13);
+  --launcher-card-selected-bg: rgba(86, 98, 118, 0.17);
+  --launcher-card-selected-border: rgba(86, 98, 118, 0.24);
+  --glass-outline: rgba(184, 190, 198, 0.24);
+  --footer-border: rgba(156, 164, 178, 0.3);
+}
+
+.dark.sc-glassy {
+  --ui-divider: rgba(255, 255, 255, 0.16);
+  --command-item-hover-bg: rgba(255, 255, 255, 0.08);
+  --command-item-hover-border: rgba(255, 255, 255, 0.11);
+  --command-item-selected-bg: rgba(255, 255, 255, 0.11);
+  --command-item-selected-border: rgba(255, 255, 255, 0.16);
+  --launcher-card-bg: rgba(255, 255, 255, 0.12);
+  --launcher-card-border: rgba(255, 255, 255, 0.16);
+  --launcher-card-hover-bg: rgba(255, 255, 255, 0.2);
+  --launcher-card-selected-bg: rgba(255, 255, 255, 0.26);
+  --launcher-card-selected-border: rgba(255, 255, 255, 0.22);
 }
 
 /* SuperCmd-inspired shared glass primitives */
@@ -571,12 +610,12 @@
 }
 
 .glass-effect {
-  --glass-radius: 12px;
+  --glass-radius: 14px;
   background:
-    linear-gradient(160deg, rgb(255 255 255 / 0.08), rgb(255 255 255 / 0.02)),
+    linear-gradient(180deg, rgb(255 255 255 / 0.06), rgb(255 255 255 / 0.02)),
     var(--card);
-  -webkit-backdrop-filter: blur(96px) saturate(190%);
-  backdrop-filter: blur(96px) saturate(190%);
+  -webkit-backdrop-filter: blur(54px) saturate(170%);
+  backdrop-filter: blur(54px) saturate(170%);
   border-radius: var(--glass-radius);
   border: none;
   background-clip: padding-box;
@@ -595,6 +634,21 @@
   z-index: 30;
 }
 
+.sc-glassy .glass-effect {
+  --glass-radius: 12px;
+  background:
+    linear-gradient(160deg, rgb(255 255 255 / 0.08), rgb(255 255 255 / 0.02)),
+    rgb(var(--sc-base-rgb) / 0.72);
+  -webkit-backdrop-filter: blur(96px) saturate(190%);
+  backdrop-filter: blur(96px) saturate(190%);
+}
+
+.dark.sc-glassy .glass-effect {
+  background:
+    linear-gradient(160deg, rgb(255 255 255 / 0.1), rgb(255 255 255 / 0.01)),
+    rgb(var(--sc-base-rgb) / 0.52);
+}
+
 .sc-glass-footer {
   border-top: 1px solid var(--footer-border);
   background:
@@ -602,6 +656,32 @@
     var(--card);
   -webkit-backdrop-filter: blur(48px) saturate(170%);
   backdrop-filter: blur(48px) saturate(170%);
+}
+
+.sc-glassy .sc-glass-footer {
+  border-top: none;
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.08), rgb(255 255 255 / 0.02)),
+    rgb(var(--sc-base-rgb) / 0.58);
+  -webkit-backdrop-filter: blur(104px) saturate(185%);
+  backdrop-filter: blur(104px) saturate(185%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.18);
+}
+
+.sc-glassy .rounded-md {
+  border-radius: 12px !important;
+}
+
+.sc-glassy .rounded-lg {
+  border-radius: 16px !important;
+}
+
+.sc-glassy .rounded-xl {
+  border-radius: 22px !important;
+}
+
+.sc-glassy .rounded-2xl {
+  border-radius: 26px !important;
 }
 
 .list-area {
@@ -612,7 +692,7 @@
   transition: all 0.12s cubic-bezier(0.4, 0, 0.2, 1);
   background: transparent;
   margin: 1px 0;
-  border-radius: 10px;
+  border-radius: 6px;
   border: 1px solid transparent;
 }
 
@@ -624,7 +704,7 @@
 .command-item[data-selected="true"],
 .command-item.selected {
   background: var(--command-item-selected-bg);
-  border-color: var(--command-item-selected-border);
+  border-color: transparent;
 }
 
 .command-item[data-disabled="true"] {

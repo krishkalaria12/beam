@@ -5,6 +5,7 @@ import Loader from "./components/loader";
 import { Toaster } from "./components/ui/sonner";
 import { QueryProvider } from "./providers/query-provider";
 import { ThemeProvider } from "./components/theme-provider";
+import { UiStyleProvider } from "./components/ui-style-provider";
 import { routeTree } from "./routeTree.gen";
 
 const router = createRouter({
@@ -31,8 +32,10 @@ if (!rootElement.innerHTML) {
   root.render(
     <QueryProvider>
       <ThemeProvider defaultTheme="glass">
-        <RouterProvider router={router} />
-        <Toaster position="top-right" richColors />
+        <UiStyleProvider>
+          <RouterProvider router={router} />
+          <Toaster position="top-right" richColors />
+        </UiStyleProvider>
       </ThemeProvider>
     </QueryProvider>,
   );

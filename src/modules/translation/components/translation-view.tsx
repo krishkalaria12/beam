@@ -366,7 +366,7 @@ export function TranslationView({ initialQuery, onBack }: TranslationViewProps) 
                   spellCheck={false}
                 />
                  {languagesError && (
-                    <div className="absolute bottom-4 left-4 right-4 rounded-xl bg-red-500/10 px-4 py-3 text-xs text-red-400 backdrop-blur-md border border-red-500/20">
+                    <div className="absolute bottom-4 left-4 right-4 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-xs text-red-400">
                       Could not load languages: {languagesError.message}
                     </div>
                   )}
@@ -409,7 +409,7 @@ export function TranslationView({ initialQuery, onBack }: TranslationViewProps) 
                 />
 
                 {mutationErrorMessage && (
-                    <div className="absolute bottom-4 left-4 right-4 flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-xs text-red-400 backdrop-blur-md">
+                    <div className="absolute bottom-4 left-4 right-4 flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-xs text-red-400">
                       <AlertCircle className="size-4" />
                       <span>{mutationErrorMessage}</span>
                     </div>

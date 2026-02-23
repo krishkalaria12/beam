@@ -44,4 +44,4 @@ export const THEME_OPTIONS: ThemeOption[] = [
   },
 ];
 
-export type SettingsView = "main" | "appearance" | "themes" | "layout";
+export type SettingsView = "main" | "appearance" | "themes" | "style" | "layout";
