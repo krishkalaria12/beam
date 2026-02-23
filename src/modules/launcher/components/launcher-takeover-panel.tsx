@@ -1,5 +1,4 @@
-import type { ReactNode } from "react";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, type ReactNode } from "react";
 import { Loader2 } from "lucide-react";
 
 import type { CommandPanel } from "@/command-registry/types";
@@ -53,73 +52,6 @@ interface TakeoverPanelRendererInput {
   backToCommands: () => void;
 }
 
-type TakeoverPanelRenderer = (input: TakeoverPanelRendererInput) => ReactNode;
-
-const TAKEOVER_PANEL_RENDERERS: Record<TakeoverPanel, TakeoverPanelRenderer> = {
-  "file-search": (input) => (
-    <FileSearchCommandGroup
-      isOpen
-      query={input.fileSearchQuery}
-      onOpen={input.openFileSearch}
-      onBack={input.backToCommands}
-    />
-  ),
-  dictionary: (input) => (
-    <DictionaryCommandGroup
-      isOpen
-      query={input.dictionaryQuery}
-      onOpen={input.openDictionary}
-      onBack={input.backToCommands}
-    />
-  ),
-  translation: (input) => (
-    <TranslationCommandGroup
-      isOpen
-      query={input.translationQuery}
-      onOpen={input.openTranslation}
-      onBack={input.backToCommands}
-    />
-  ),
-  quicklinks: (input) => (
-    <QuicklinksCommandGroup
-      isOpen
-      view={input.quicklinksView}
-      setView={input.setQuicklinksView}
-      onOpen={input.openQuicklinks}
-      onBack={input.backToCommands}
-    />
-  ),
-  "speed-test": (input) => (
-    <SpeedTestCommandGroup
-      isOpen
-      onOpen={input.openSpeedTest}
-      onBack={input.backToCommands}
-    />
-  ),
-  clipboard: (input) => (
-    <ClipboardCommandGroup
-      isOpen
-      onOpen={input.openClipboard}
-      onBack={input.backToCommands}
-    />
-  ),
-  extensions: (input) => (
-    <ExtensionsCommandGroup
-      isOpen
-      onOpen={input.openExtensions}
-      onBack={input.backToCommands}
-    />
-  ),
-  "extension-runner": (input) => (
-    <LauncherTakeoverSurface>
-      <ExtensionRunnerView
-        onBack={input.backToCommands}
-        onOpenExtensions={input.openExtensions}
-      />
-    </LauncherTakeoverSurface>
-  ),
-};
-
 interface LauncherTakeoverPanelProps extends TakeoverPanelRendererInput {
   activePanel: CommandPanel;
 }
@@ -155,23 +87,83 @@ export function LauncherTakeoverPanel({
     return null;
   }
 
+  let content: ReactNode = null;
+
+  if (activePanel === "file-search") {
+    content = (
+      <FileSearchCommandGroup
+        isOpen
+        query={fileSearchQuery}
+        onOpen={openFileSearch}
+        onBack={backToCommands}
+      />
+    );
+  } else if (activePanel === "dictionary") {
+    content = (
+      <DictionaryCommandGroup
+        isOpen
+        query={dictionaryQuery}
+        onOpen={openDictionary}
+        onBack={backToCommands}
+      />
+    );
+  } else if (activePanel === "translation") {
+    content = (
+      <TranslationCommandGroup
+        isOpen
+        query={translationQuery}
+        onOpen={openTranslation}
+        onBack={backToCommands}
+      />
+    );
+  } else if (activePanel === "quicklinks") {
+    content = (
+      <QuicklinksCommandGroup
+        isOpen
+        view={quicklinksView}
+        setView={setQuicklinksView}
+        onOpen={openQuicklinks}
+        onBack={backToCommands}
+      />
+    );
+  } else if (activePanel === "speed-test") {
+    content = (
+      <SpeedTestCommandGroup
+        isOpen
+        onOpen={openSpeedTest}
+        onBack={backToCommands}
+      />
+    );
+  } else if (activePanel === "clipboard") {
+    content = (
+      <ClipboardCommandGroup
+        isOpen
+        onOpen={openClipboard}
+        onBack={backToCommands}
+      />
+    );
+  } else if (activePanel === "extensions") {
+    content = (
+      <ExtensionsCommandGroup
+        isOpen
+        onOpen={openExtensions}
+        onBack={backToCommands}
+      />
+    );
+  } else if (activePanel === "extension-runner") {
+    content = (
+      <LauncherTakeoverSurface>
+        <ExtensionRunnerView
+          onBack={backToCommands}
+          onOpenExtensions={openExtensions}
+        />
+      </LauncherTakeoverSurface>
+    );
+  }
+
   return (
     <Suspense fallback={<TakeoverPanelFallback />}>
-      {TAKEOVER_PANEL_RENDERERS[activePanel]({
-        fileSearchQuery,
-        dictionaryQuery,
-        translationQuery,
-        quicklinksView,
-        setQuicklinksView,
-        openFileSearch,
-        openDictionary,
-        openTranslation,
-        openQuicklinks,
-        openSpeedTest,
-        openClipboard,
-        openExtensions,
-        backToCommands,
-      })}
+      {content}
     </Suspense>
   );
 }

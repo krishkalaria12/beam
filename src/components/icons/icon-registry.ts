@@ -211,20 +211,20 @@ export function resolveCommandToneSpecByCommandId(commandId: string | undefined)
 
 export function toneClassName(tone: IconTone): string {
   if (tone === "primary") {
-    return "bg-[var(--icon-primary-bg)] text-[var(--icon-primary-fg)]";
+    return "[background:var(--icon-primary-bg)] text-[var(--icon-primary-fg)]";
   }
   if (tone === "orange") {
-    return "bg-[var(--icon-orange-bg)] text-[var(--icon-orange-fg)]";
+    return "[background:var(--icon-orange-bg)] text-[var(--icon-orange-fg)]";
   }
   if (tone === "cyan") {
-    return "bg-[var(--icon-cyan-bg)] text-[var(--icon-cyan-fg)]";
+    return "[background:var(--icon-cyan-bg)] text-[var(--icon-cyan-fg)]";
   }
   if (tone === "purple") {
-    return "bg-[var(--icon-purple-bg)] text-[var(--icon-purple-fg)]";
+    return "[background:var(--icon-purple-bg)] text-[var(--icon-purple-fg)]";
   }
   if (tone === "red") {
-    return "bg-[var(--icon-red-bg)] text-[var(--icon-red-fg)]";
+    return "[background:var(--icon-red-bg)] text-[var(--icon-red-fg)]";
   }
 
-  return "bg-[var(--icon-neutral-bg)] text-[var(--icon-neutral-fg)]";
+  return "[background:var(--icon-neutral-bg)] text-[var(--icon-neutral-fg)]";
 }

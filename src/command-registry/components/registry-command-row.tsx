@@ -47,13 +47,13 @@ export function RegistryCommandRow({
     )
     : isAwakeCommand
     ? (
-      <CommandShortcut className="normal-case tracking-[0.08em] text-[11px]">
+      <CommandShortcut className="normal-case tracking-[0.08em]">
         <AwakeStatusText />
       </CommandShortcut>
     )
     : command.endText
     ? (
-      <CommandShortcut className="normal-case tracking-[0.08em] text-[11px]">
+      <CommandShortcut className="normal-case tracking-[0.08em]">
         {command.endText}
       </CommandShortcut>
     )

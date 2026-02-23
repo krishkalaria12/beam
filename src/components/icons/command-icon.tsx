@@ -23,12 +23,12 @@ function IconChip({
   return (
     <div
       className={cn(
-        "command-icon-chip flex size-5 shrink-0 items-center justify-center rounded-[6px]",
+        "command-icon-chip flex size-8 shrink-0 items-center justify-center rounded-lg",
         toneClass,
         className,
       )}
     >
-      <Icon className="relative z-10 size-3.5 stroke-[2.1]" />
+      <Icon className="relative z-10 size-5 stroke-[2.3]" />
     </div>
   );
 }
@@ -48,7 +48,7 @@ export function CommandIcon({ icon, commandId, className }: CommandIconProps) {
       return (
         <UnifiedIcon
           icon={iconReference}
-          className={cn("size-5 rounded-[6px] object-cover", className)}
+          className={cn("size-8 rounded-lg object-cover", className)}
           fallback={<IconChip icon={Link2} toneClass={toneClassName("neutral")} className={className} />}
         />
       );
@@ -61,7 +61,7 @@ export function CommandIcon({ icon, commandId, className }: CommandIconProps) {
       return (
         <UnifiedIcon
           icon={iconPath}
-          className={cn("size-5 rounded-[6px] object-cover", className)}
+          className={cn("size-8 rounded-lg object-cover", className)}
           fallback={<IconChip icon={Search} toneClass={toneClassName("neutral")} className={className} />}
         />
       );
@@ -81,15 +81,15 @@ export function CommandIcon({ icon, commandId, className }: CommandIconProps) {
   return (
     <span
       className={cn(
-        "command-icon-chip flex size-5 shrink-0 items-center justify-center rounded-[6px]",
-        "bg-[var(--icon-neutral-bg)] text-[var(--icon-neutral-fg)]",
+        "command-icon-chip flex size-8 shrink-0 items-center justify-center rounded-lg",
+        "[background:var(--icon-neutral-bg)] text-[var(--icon-neutral-fg)]",
         className,
       )}
     >
       <UnifiedIcon
         icon={icon}
-        className="relative z-10 size-3.5"
-        fallback={<Search className="relative z-10 size-3.5 stroke-[2.1]" />}
+        className="relative z-10 size-5 stroke-[2.3]"
+        fallback={<Search className="relative z-10 size-5 stroke-[2.3]" />}
       />
     </span>
   );

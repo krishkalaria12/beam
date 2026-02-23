@@ -1,5 +1,4 @@
-import type { ReactNode } from "react";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, type ReactNode } from "react";
 import { Loader2 } from "lucide-react";
 
 import type { CommandPanel } from "@/command-registry/types";
@@ -29,32 +28,6 @@ interface SecondaryPanelRendererInput {
   onBack: () => void;
 }
 
-type SecondaryPanelRenderer = (input: SecondaryPanelRendererInput) => ReactNode;
-
-const SECONDARY_PANEL_RENDERERS: Record<SecondaryPanel, SecondaryPanelRenderer> = {
-  "calculator-history": (input) => (
-    <CalculatorHistoryCommandGroup
-      isOpen
-      onOpen={input.onOpenCalculatorHistory}
-      onBack={input.onBack}
-    />
-  ),
-  emoji: (input) => (
-    <EmojiCommandGroup
-      isOpen
-      onOpen={input.onOpenEmoji}
-      onBack={input.onBack}
-    />
-  ),
-  settings: (input) => (
-    <SettingsCommandGroup
-      isOpen
-      onOpen={input.onOpenSettings}
-      onBack={input.onBack}
-    />
-  ),
-};
-
 interface LauncherSecondaryPanelProps extends SecondaryPanelRendererInput {
   activePanel: CommandPanel;
 }
@@ -79,14 +52,37 @@ export function LauncherSecondaryPanel({
     return null;
   }
 
+  let content: ReactNode = null;
+
+  if (activePanel === "calculator-history") {
+    content = (
+      <CalculatorHistoryCommandGroup
+        isOpen
+        onOpen={onOpenCalculatorHistory}
+        onBack={onBack}
+      />
+    );
+  } else if (activePanel === "emoji") {
+    content = (
+      <EmojiCommandGroup
+        isOpen
+        onOpen={onOpenEmoji}
+        onBack={onBack}
+      />
+    );
+  } else if (activePanel === "settings") {
+    content = (
+      <SettingsCommandGroup
+        isOpen
+        onOpen={onOpenSettings}
+        onBack={onBack}
+      />
+    );
+  }
+
   return (
     <Suspense fallback={<SecondaryPanelFallback />}>
-      {SECONDARY_PANEL_RENDERERS[activePanel]({
-        onOpenCalculatorHistory,
-        onOpenEmoji,
-        onOpenSettings,
-        onBack,
-      })}
+      {content}
     </Suspense>
   );
 }

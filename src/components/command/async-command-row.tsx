@@ -35,7 +35,15 @@ export function AsyncCommandRow({
   return (
     <BaseCommandRow
       value={value}
-      icon={isBusy ? <Loader2 className="size-5 animate-spin text-muted-foreground/65" /> : icon}
+      icon={
+        isBusy ? (
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-transparent">
+            <Loader2 className="size-5 animate-spin text-muted-foreground/65" />
+          </div>
+        ) : (
+          icon
+        )
+      }
       title={title}
       subtitle={subtitle}
       disabled={disabled || isBusy}
@@ -43,7 +51,7 @@ export function AsyncCommandRow({
       endSlot={endSlot}
       shortcut={!endSlot ? (isBusy ? busyShortcut : idleShortcut) : undefined}
       titleClassName={titleClassName ?? "truncate text-foreground capitalize"}
-      subtitleClassName={subtitleClassName ?? "truncate text-xs text-muted-foreground"}
+      subtitleClassName={subtitleClassName ?? "truncate text-sm text-muted-foreground"}
     />
   );
 }
