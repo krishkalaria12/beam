@@ -82,7 +82,9 @@ export function LauncherSecondaryPanel({
 
   return (
     <Suspense fallback={<SecondaryPanelFallback />}>
-      {content}
+      <div className="animate-in fade-in zoom-in-[0.985] duration-200">
+        {content}
+      </div>
     </Suspense>
   );
 }
