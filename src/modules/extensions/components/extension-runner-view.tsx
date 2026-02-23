@@ -25,16 +25,23 @@ export function ExtensionRunnerView({ onBack, onOpenExtensions }: ExtensionRunne
 
   return (
     <div
-      className="flex h-full w-full flex-col bg-background"
+      className="glass-effect flex h-full w-full flex-col overflow-hidden text-foreground"
       onKeyDownCapture={state.handleRootKeyDownCapture}
       onKeyDown={state.handleRootKeyDown}
     >
-      <div className="flex items-center gap-3 border-b border-border/50 p-3">
-        <Button variant="ghost" size="icon" onClick={state.handleBack} className="size-8">
+      <div className="relative z-10 flex shrink-0 items-center gap-3 border-b border-border/10 bg-background/20 px-4 py-3 backdrop-blur-md">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={state.handleBack}
+          className="size-8 rounded-lg text-muted-foreground hover:bg-white/10 hover:text-foreground"
+        >
           <ArrowLeft className="size-4" />
         </Button>
         <div className="min-w-0 shrink-0">
-          <p className="truncate text-sm font-medium">{state.runningSession?.title || "Extension"}</p>
+          <p className="truncate text-sm font-medium text-foreground">
+            {state.runningSession?.title || "Extension"}
+          </p>
           <p className="truncate text-xs text-muted-foreground">
             {state.runningSession?.subtitle ||
               state.runningSession?.pluginPath ||
@@ -43,14 +50,14 @@ export function ExtensionRunnerView({ onBack, onOpenExtensions }: ExtensionRunne
         </div>
         {showSearchInput ? (
           <div className="relative ml-auto w-full max-w-[360px]">
-            <Search className="pointer-events-none absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
+            <Search className="pointer-events-none absolute left-3 top-2.5 size-4 text-muted-foreground" />
             <Input
               value={state.searchText}
               onChange={(event) => {
                 state.handleSearchInputChange(event.target.value);
               }}
               placeholder={searchPlaceholder}
-              className="h-9 pl-8"
+              className="h-9 rounded-lg border-white/10 bg-white/5 pl-9 text-sm text-foreground shadow-none placeholder:text-muted-foreground/50 focus-visible:bg-white/10 focus-visible:ring-1 focus-visible:ring-primary/50"
             />
           </div>
         ) : (
@@ -61,10 +68,10 @@ export function ExtensionRunnerView({ onBack, onOpenExtensions }: ExtensionRunne
         ) : null}
         {onOpenExtensions ? (
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={onOpenExtensions}
-            className="h-8 shrink-0 gap-1.5"
+            className="h-8 shrink-0 gap-1.5 rounded-lg border border-white/10 text-xs font-medium text-muted-foreground hover:bg-white/10 hover:text-foreground"
           >
             <Settings2 className="size-3.5" />
             Setup

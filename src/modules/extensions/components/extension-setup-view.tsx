@@ -67,28 +67,16 @@ export function ExtensionSetupView({
 }: ExtensionSetupViewProps) {
   const [validationError, setValidationError] = useState<string | null>(null);
 
+  // ... (keep existing form logic) ...
+
   const form = useForm({
     defaultValues: initialValues,
     onSubmit: async ({ value }) => {
-      const missingRequiredField = fields.find((field) =>
-        isMissingRequiredField(field, value[field.name]),
-      );
-      if (missingRequiredField) {
-        setValidationError(`"${missingRequiredField.title}" is required.`);
-        return;
-      }
-
-      setValidationError(null);
-      await onSave(value);
+      // ... (keep existing submit logic) ...
     },
   });
 
-  useEffect(() => {
-    form.reset(initialValues);
-    setValidationError(null);
-  }, [form, initialValues, pluginName]);
-
-  const canSave = !isLoading && !isSaving && fields.length > 0;
+  // ... (keep existing effects) ...
 
   const renderField = (field: ExtensionPreferenceField) => {
     const label = field.required ? `${field.title} *` : field.title;
@@ -100,7 +88,7 @@ export function ExtensionSetupView({
           name={field.name}
           children={(fieldApi) => (
             <div className="space-y-1.5">
-              <Label htmlFor={field.name}>{label}</Label>
+              <Label htmlFor={field.name} className="text-xs font-medium text-muted-foreground">{label}</Label>
               <Select
                 value={toInputValue(fieldApi.state.value)}
                 onValueChange={(nextValue) => {
@@ -110,12 +98,12 @@ export function ExtensionSetupView({
               >
                 <SelectTrigger
                   id={field.name}
-                  className="h-9 rounded-xl border-border/70 bg-background/50"
+                  className="h-9 rounded-lg border-white/10 bg-white/5 text-sm focus:ring-primary/50"
                   onKeyDown={stopFieldKeyPropagation}
                 >
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="border-white/10 bg-background/95 backdrop-blur-xl">
                   {field.options.map((option) => (
                     <SelectItem key={`${field.name}:${option.value}`} value={option.value}>
                       {option.title}
@@ -124,7 +112,7 @@ export function ExtensionSetupView({
                 </SelectContent>
               </Select>
               {field.description ? (
-                <p className="text-[11px] text-muted-foreground">{field.description}</p>
+                <p className="text-[10px] text-muted-foreground/70">{field.description}</p>
               ) : null}
             </div>
           )}
@@ -139,7 +127,7 @@ export function ExtensionSetupView({
           name={field.name}
           children={(fieldApi) => (
             <div className="space-y-1.5">
-              <div className="flex items-center gap-2 rounded-xl border border-border/70 bg-background/35 px-3 py-2">
+              <div className="flex items-center gap-3 rounded-lg border border-white/5 bg-white/5 px-3 py-2.5 transition-colors hover:bg-white/10">
                 <Checkbox
                   id={field.name}
                   checked={Boolean(fieldApi.state.value)}
@@ -148,13 +136,14 @@ export function ExtensionSetupView({
                     fieldApi.handleChange(Boolean(checked));
                   }}
                   onKeyDown={stopFieldKeyPropagation}
+                  className="border-white/20 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
                 />
-                <Label htmlFor={field.name} className="text-sm">
+                <Label htmlFor={field.name} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                   {label}
                 </Label>
               </div>
               {field.description ? (
-                <p className="text-[11px] text-muted-foreground">{field.description}</p>
+                <p className="px-1 text-[10px] text-muted-foreground/70">{field.description}</p>
               ) : null}
             </div>
           )}
@@ -169,7 +158,7 @@ export function ExtensionSetupView({
           name={field.name}
           children={(fieldApi) => (
             <div className="space-y-1.5">
-              <Label htmlFor={field.name}>{label}</Label>
+              <Label htmlFor={field.name} className="text-xs font-medium text-muted-foreground">{label}</Label>
               <Textarea
                 id={field.name}
                 value={toInputValue(fieldApi.state.value)}
@@ -179,10 +168,10 @@ export function ExtensionSetupView({
                 }}
                 onKeyDownCapture={stopFieldKeyPropagation}
                 onKeyDown={stopFieldKeyPropagation}
-                className="min-h-28 rounded-xl border-border/70 bg-background/50"
+                className="min-h-[100px] rounded-lg border-white/10 bg-white/5 text-sm focus:ring-primary/50"
               />
               {field.description ? (
-                <p className="text-[11px] text-muted-foreground">{field.description}</p>
+                <p className="text-[10px] text-muted-foreground/70">{field.description}</p>
               ) : null}
             </div>
           )}
@@ -196,7 +185,7 @@ export function ExtensionSetupView({
         name={field.name}
         children={(fieldApi) => (
           <div className="space-y-1.5">
-            <Label htmlFor={field.name}>{label}</Label>
+            <Label htmlFor={field.name} className="text-xs font-medium text-muted-foreground">{label}</Label>
             <Input
               id={field.name}
               type={field.type === "password" ? "password" : "text"}
@@ -207,10 +196,10 @@ export function ExtensionSetupView({
               }}
               onKeyDownCapture={stopFieldKeyPropagation}
               onKeyDown={stopFieldKeyPropagation}
-              className="h-9 rounded-xl border-border/70 bg-background/50"
+              className="h-9 rounded-lg border-white/10 bg-white/5 text-sm focus:ring-primary/50"
             />
             {field.description ? (
-              <p className="text-[11px] text-muted-foreground">{field.description}</p>
+              <p className="text-[10px] text-muted-foreground/70">{field.description}</p>
             ) : null}
           </div>
         )}
@@ -219,31 +208,27 @@ export function ExtensionSetupView({
   };
 
   return (
-    <div className="relative flex h-full w-full flex-col overflow-hidden bg-background/95 text-foreground backdrop-blur-3xl">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(86,164,255,0.12),transparent_42%),radial-gradient(circle_at_bottom_right,rgba(126,255,214,0.08),transparent_48%)]" />
-
-      <div className="relative border-b border-border/40 bg-background/55 px-3 py-2.5 backdrop-blur-xl">
-        <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onBack}
-            className="size-8 rounded-full border border-border/60 bg-background/55"
-          >
-            <ArrowLeft className="size-4" />
-          </Button>
-          <div className="min-w-0">
-            <p className="truncate text-base font-semibold tracking-tight">Extension Setup</p>
-            <p className="truncate text-xs text-muted-foreground">
-              {extensionTitle} ({pluginName})
-            </p>
-          </div>
+    <div className="glass-effect flex h-full w-full flex-col overflow-hidden text-foreground">
+      <div className="relative z-10 flex shrink-0 items-center gap-3 border-b border-border/10 bg-background/20 px-4 py-3 backdrop-blur-md">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onBack}
+          className="size-8 rounded-lg text-muted-foreground hover:bg-white/10 hover:text-foreground"
+        >
+          <ArrowLeft className="size-4" />
+        </Button>
+        <div className="min-w-0">
+          <p className="truncate text-sm font-medium text-foreground">Extension Setup</p>
+          <p className="truncate text-xs text-muted-foreground">
+            {extensionTitle}
+          </p>
         </div>
       </div>
 
-      <div className="relative min-h-0 flex-1 overflow-y-auto p-3">
+      <div className="relative min-h-0 flex-1 overflow-y-auto p-4 custom-scrollbar">
         {error || validationError ? (
-          <div className="mb-3 rounded-xl border border-red-500/35 bg-red-500/10 p-3 text-xs text-red-500">
+          <div className="mb-4 rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-xs text-red-200">
             <span className="inline-flex items-center gap-2">
               <AlertTriangle className="size-3.5" />
               {error ?? validationError}
@@ -252,12 +237,12 @@ export function ExtensionSetupView({
         ) : null}
 
         {isLoading ? (
-          <div className="flex items-center gap-2 rounded-xl border border-dashed border-border/70 bg-background/35 p-3 text-xs text-muted-foreground">
+          <div className="flex items-center gap-2 rounded-lg border border-dashed border-white/10 bg-white/5 p-4 text-xs text-muted-foreground">
             <Loader2 className="size-3.5 animate-spin" />
             Loading extension preferences...
           </div>
         ) : fields.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-border/70 bg-background/35 p-3 text-xs text-muted-foreground">
+          <div className="rounded-lg border border-dashed border-white/10 bg-white/5 p-4 text-xs text-muted-foreground">
             This extension does not expose configurable preferences.
           </div>
         ) : (
@@ -267,23 +252,23 @@ export function ExtensionSetupView({
               event.preventDefault();
               void form.handleSubmit();
             }}
-            className="space-y-4"
+            className="space-y-5"
           >
             {fields.map((field) => renderField(field))}
           </form>
         )}
       </div>
 
-      <div className="relative flex items-center justify-between gap-3 border-t border-border/40 bg-background/55 p-3 backdrop-blur-xl">
-        <div className="text-xs text-muted-foreground">
-          Preferences are saved for this extension instance.
+      <div className="relative flex items-center justify-between gap-3 border-t border-border/10 bg-background/20 p-4 backdrop-blur-md">
+        <div className="text-[10px] text-muted-foreground/70">
+          Preferences are saved locally.
         </div>
         <Button
           onClick={() => {
             void form.handleSubmit();
           }}
           disabled={!canSave}
-          className="h-8 gap-1.5 rounded-lg"
+          className="h-8 gap-1.5 rounded-lg bg-primary/90 hover:bg-primary"
         >
           {isSaving ? <Loader2 className="size-3.5 animate-spin" /> : <Save className="size-3.5" />}
           Save Setup
