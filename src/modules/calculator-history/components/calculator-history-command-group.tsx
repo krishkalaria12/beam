@@ -1,10 +1,10 @@
 import { useCommandState } from "cmdk";
-import { ArrowLeft, Calculator } from "lucide-react";
 import { useEffect, useState } from "react";
 
+import { BaseCommandRow } from "@/components/command/base-command-row";
 import { OpenModuleCommandRow } from "@/components/command/open-module-command-row";
 import { CommandIcon } from "@/components/icons/command-icon";
-import { CommandGroup, CommandItem, CommandShortcut } from "@/components/ui/command";
+import { CommandGroup } from "@/components/ui/command";
 import { matchesCommandKeywords, normalizeCommandQuery } from "@/modules/launcher/lib/command-query";
 import { useCalculatorHistory } from "../hooks/use-calculator-history";
 import { HISTORY_COPY_FEEDBACK_MS } from "../constants";
@@ -91,18 +91,15 @@ export default function CalculatorHistoryCommandGroup({
 
   return (
     <CommandGroup>
-      <CommandItem
+      <BaseCommandRow
         value="back to commands"
-        className="rounded-xl px-4 py-3 mb-2 opacity-60 hover:opacity-100 transition-all"
         onSelect={onBack}
-      >
-        <div className="flex items-center gap-3">
-          <ArrowLeft className="size-4" />
-          <span className="font-mono text-xs uppercase tracking-widest">
-            Back to Beam
-          </span>
-        </div>
-      </CommandItem>
+        icon={<CommandIcon icon="back" />}
+        title="Back to Beam"
+        shortcut="back"
+        className="mb-2 opacity-70 transition-opacity hover:opacity-100"
+        titleClassName="font-mono text-xs uppercase tracking-widest text-muted-foreground"
+      />
 
       {isLoading && <CalculatorHistoryLoading />}
 

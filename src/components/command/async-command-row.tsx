@@ -35,7 +35,7 @@ export function AsyncCommandRow({
   return (
     <BaseCommandRow
       value={value}
-      icon={isBusy ? <Loader2 className="size-6 animate-spin text-muted-foreground/50" /> : icon}
+      icon={isBusy ? <Loader2 className="size-5 animate-spin text-muted-foreground/65" /> : icon}
       title={title}
       subtitle={subtitle}
       disabled={disabled || isBusy}

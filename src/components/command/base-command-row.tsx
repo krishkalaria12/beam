@@ -35,19 +35,19 @@ export function BaseCommandRow({
       value={value}
       disabled={disabled}
       onSelect={onSelect}
-      className={className}
+      className={cn("py-2.5", className)}
     >
       {icon ?? null}
-      <div className="min-w-0">
+      <div className="min-w-0 flex-1 leading-tight">
         {typeof title === "string" ? (
-          <p className={cn("truncate text-foreground", titleClassName)}>{title}</p>
+          <p className={cn("truncate text-foreground text-[13px]", titleClassName)}>{title}</p>
         ) : (
           title
         )}
         {subtitle
           ? typeof subtitle === "string"
             ? (
-              <p className={cn("truncate text-xs text-muted-foreground", subtitleClassName)}>{subtitle}</p>
+              <p className={cn("truncate text-[12px] text-muted-foreground", subtitleClassName)}>{subtitle}</p>
             )
             : subtitle
           : null}

@@ -21,9 +21,9 @@
 - [x] Ensure compact and expanded command modes still behave correctly.
 
 ## Phase 3: Reusable Command Row Standardization
-- [ ] Enforce shared row primitives (`BaseCommandRow`, `OpenModuleCommandRow`, `AsyncCommandRow`) across launcher command groups.
-- [ ] Standardize hover/selected/disabled states via shared classes.
-- [ ] Preserve query-gated behavior: hover/select works, execute remains no-op without valid query.
+- [x] Enforce shared row primitives (`BaseCommandRow`, `OpenModuleCommandRow`, `AsyncCommandRow`) across launcher command groups.
+- [x] Standardize hover/selected/disabled states via shared classes.
+- [x] Preserve query-gated behavior: hover/select works, execute remains no-op without valid query.
 
 ## Phase 4: Icon System Parity
 - [ ] Finalize centralized icon registry (token -> lucide renderer config).
@@ -57,3 +57,4 @@
 - [x] Implementation started.
 - [x] Phase 1 complete.
 - [x] Phase 2 complete.
+- [x] Phase 3 complete.
