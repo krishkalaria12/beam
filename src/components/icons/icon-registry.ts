@@ -7,6 +7,7 @@ import {
   Circle,
   Clipboard,
   Clock3,
+  Compass,
   Command,
   Download,
   Eye,
@@ -15,6 +16,7 @@ import {
   FileText,
   Folder,
   Gauge,
+  Globe,
   Heart,
   History,
   ImageIcon,
@@ -47,17 +49,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-import clipboardIcon from "@/assets/icons/clipboard.png";
-import createQuicklinkIcon from "@/assets/icons/create-quicklink.jpeg";
-import dictionaryIcon from "@/assets/icons/dictionary.png";
-import duckduckgoIcon from "@/assets/icons/duckduckgo.png";
-import emojiIcon from "@/assets/icons/emoji.png";
 import fileQuicklinkIcon from "@/assets/icons/file-icon-quicklink.png";
-import filesIcon from "@/assets/icons/files.png";
-import googleIcon from "@/assets/icons/google.jpeg";
-import listQuicklinksIcon from "@/assets/icons/list-quicklink.png";
-import settingsIcon from "@/assets/icons/settings.png";
-import systemIcon from "@/assets/icons/system.png";
 
 export type IconTone = "neutral" | "primary" | "orange" | "cyan";
 
@@ -78,17 +70,7 @@ export function normalizeIconToken(value: string): string {
 }
 
 const ICON_ASSET_BY_TOKEN: Record<string, string> = {
-  clipboard: clipboardIcon,
-  dictionary: dictionaryIcon,
-  duckduckgo: duckduckgoIcon,
-  emoji: emojiIcon,
   filequicklink: fileQuicklinkIcon,
-  files: filesIcon,
-  google: googleIcon,
-  quicklinkcreate: createQuicklinkIcon,
-  quicklinkmanage: listQuicklinksIcon,
-  settings: settingsIcon,
-  system: systemIcon,
 };
 
 const LUCIDE_ICON_BY_TOKEN: Record<string, LucideIcon> = {
@@ -117,6 +99,7 @@ const LUCIDE_ICON_BY_TOKEN: Record<string, LucideIcon> = {
   folder: Folder,
   gauge: Gauge,
   gear: Settings,
+  google: Globe,
   heart: Heart,
   history: History,
   image: ImageIcon,
@@ -134,6 +117,8 @@ const LUCIDE_ICON_BY_TOKEN: Record<string, LucideIcon> = {
   plus: Plus,
   power: Power,
   puzzle: Puzzle,
+  quicklinkcreate: Plus,
+  quicklinkmanage: Link2,
   refresh: RefreshCw,
   search: Search,
   settings: Settings,
@@ -147,6 +132,7 @@ const LUCIDE_ICON_BY_TOKEN: Record<string, LucideIcon> = {
   terminal: Terminal,
   theme: Smile,
   translation: Languages,
+  duckduckgo: Compass,
   upload: Upload,
   user: User,
   users: Users,
@@ -160,6 +146,10 @@ const COMMAND_TONE_SPEC_BY_TOKEN: Record<string, CommandToneSpec> = {
   calculator: { icon: Calculator, tone: "orange" },
   extension: { icon: Link2, tone: "primary" },
   layout: { icon: FileSearch, tone: "neutral" },
+  quicklinkcreate: { icon: Plus, tone: "primary" },
+  quicklinkmanage: { icon: Link2, tone: "neutral" },
+  google: { icon: Globe, tone: "neutral" },
+  duckduckgo: { icon: Compass, tone: "neutral" },
   search: { icon: Search, tone: "neutral" },
   speedtest: { icon: Gauge, tone: "cyan" },
   theme: { icon: Smile, tone: "neutral" },

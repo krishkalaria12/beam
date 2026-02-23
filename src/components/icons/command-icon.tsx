@@ -5,7 +5,6 @@ import {
   normalizeIconToken,
   resolveCommandToneSpecByCommandId,
   resolveCommandToneSpec,
-  resolveIconAssetSource,
   toneClassName,
 } from "@/components/icons/icon-registry";
 import { cn } from "@/lib/utils";
@@ -61,18 +60,6 @@ export function CommandIcon({ icon, commandId, className }: CommandIconProps) {
         />
       );
     }
-  }
-
-  const staticSource = token ? resolveIconAssetSource(token) : null;
-  if (staticSource) {
-    return (
-      <img
-        src={staticSource}
-        alt=""
-        loading="lazy"
-        className={cn("size-6 rounded-sm object-cover", className)}
-      />
-    );
   }
 
   const toneSpec = token ? resolveCommandToneSpec(token) : null;
