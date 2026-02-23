@@ -4,7 +4,6 @@ import { useEffect, useMemo, useRef } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import debounce from "@/lib/debounce";
 import {
@@ -276,19 +275,19 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
 
   return (
     <div className="glass-effect flex h-full w-full flex-col overflow-hidden text-foreground">
-      <div className="relative z-10 flex shrink-0 items-center gap-3 border-b border-border/10 bg-background/20 px-4 py-3 backdrop-blur-md">
+      <div className="relative z-10 flex shrink-0 items-center gap-3 border-b border-[var(--ui-divider)] bg-background/15 px-4 py-3">
         <Button
           variant="ghost"
           size="icon"
           onClick={onBack}
-          className="size-8 rounded-lg text-muted-foreground hover:bg-white/10 hover:text-foreground"
+          className="size-8 rounded-lg text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
         >
           <ArrowLeft className="size-4" />
         </Button>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <h2 className="text-base font-medium tracking-tight text-foreground">Extensions</h2>
-            <span className="inline-flex items-center gap-1 rounded-md bg-white/5 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground ring-1 ring-inset ring-white/10">
+            <span className="inline-flex items-center gap-1 rounded-md border border-[var(--launcher-chip-border)] bg-[var(--launcher-chip-bg)] px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
               <Sparkles className="size-3 text-primary" />
               {displayedInstalledExtensions.length}
             </span>
@@ -303,7 +302,7 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
               handleSearchChange(event.target.value);
             }}
             placeholder="Search extensions..."
-            className="h-9 rounded-lg border-white/10 bg-white/5 pl-9 pr-8 text-sm text-foreground shadow-none placeholder:text-muted-foreground/50 focus-visible:bg-white/10 focus-visible:ring-1 focus-visible:ring-primary/50"
+            className="h-9 rounded-lg border-border/40 bg-background/20 pl-9 pr-8 text-sm text-foreground shadow-none placeholder:text-muted-foreground/50 focus-visible:bg-background/30 focus-visible:ring-1 focus-visible:ring-primary/50"
           />
           <div className="absolute right-2 top-2 flex items-center gap-1">
             {shouldShowStoreLoadingState ? (
@@ -313,7 +312,7 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
                 variant="ghost"
                 size="icon"
                 onClick={handleClearSearch}
-                className="size-5 rounded-full p-0 text-muted-foreground hover:bg-white/10 hover:text-foreground"
+                className="size-5 rounded-full p-0 text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
               >
                 <X className="size-3" />
               </Button>
@@ -322,9 +321,9 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
         </div>
       </div>
 
-      <div className="relative min-h-0 flex-1 overflow-y-auto p-4 custom-scrollbar">
+      <div className="relative custom-scrollbar list-area min-h-0 flex-1 overflow-y-auto p-4">
         {extensionsUi.actionError ? (
-          <div className="mb-4 rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-xs text-red-200 backdrop-blur-sm">
+          <div className="mb-4 rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-xs text-red-200">
             <span className="inline-flex items-center gap-2">
               <AlertTriangle className="size-3.5" />
               {extensionsUi.actionError}

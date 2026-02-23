@@ -160,7 +160,7 @@ export function GridRootNode({ nodeId, state }: RunnerNodeComponentProps) {
                 {Array.from({ length: pageSize }).map((_, index) => (
                   <div
                     key={`placeholder:${index}`}
-                    className="aspect-square w-full animate-pulse rounded-md bg-white/5"
+                    className="aspect-square w-full animate-pulse rounded-md bg-background/20"
                   />
                 ))}
               </div>

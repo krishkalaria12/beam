@@ -29,12 +29,12 @@ export function ExtensionRunnerView({ onBack, onOpenExtensions }: ExtensionRunne
       onKeyDownCapture={state.handleRootKeyDownCapture}
       onKeyDown={state.handleRootKeyDown}
     >
-      <div className="relative z-10 flex shrink-0 items-center gap-3 border-b border-border/10 bg-background/20 px-4 py-3 backdrop-blur-md">
+      <div className="relative z-10 flex shrink-0 items-center gap-3 border-b border-[var(--ui-divider)] bg-background/15 px-4 py-3">
         <Button
           variant="ghost"
           size="icon"
           onClick={state.handleBack}
-          className="size-8 rounded-lg text-muted-foreground hover:bg-white/10 hover:text-foreground"
+          className="size-8 rounded-lg text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
         >
           <ArrowLeft className="size-4" />
         </Button>
@@ -57,7 +57,7 @@ export function ExtensionRunnerView({ onBack, onOpenExtensions }: ExtensionRunne
                 state.handleSearchInputChange(event.target.value);
               }}
               placeholder={searchPlaceholder}
-              className="h-9 rounded-lg border-white/10 bg-white/5 pl-9 text-sm text-foreground shadow-none placeholder:text-muted-foreground/50 focus-visible:bg-white/10 focus-visible:ring-1 focus-visible:ring-primary/50"
+              className="h-9 rounded-lg border-border/40 bg-background/20 pl-9 text-sm text-foreground shadow-none placeholder:text-muted-foreground/50 focus-visible:bg-background/30 focus-visible:ring-1 focus-visible:ring-primary/50"
             />
           </div>
         ) : (
@@ -71,7 +71,7 @@ export function ExtensionRunnerView({ onBack, onOpenExtensions }: ExtensionRunne
             variant="ghost"
             size="sm"
             onClick={onOpenExtensions}
-            className="h-8 shrink-0 gap-1.5 rounded-lg border border-white/10 text-xs font-medium text-muted-foreground hover:bg-white/10 hover:text-foreground"
+            className="h-8 shrink-0 gap-1.5 rounded-lg border border-border/40 bg-background/20 text-xs font-medium text-muted-foreground hover:bg-background/30 hover:text-foreground"
           >
             <Settings2 className="size-3.5" />
             Setup

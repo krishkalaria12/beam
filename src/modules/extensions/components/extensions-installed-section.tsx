@@ -58,15 +58,15 @@ export function ExtensionsInstalledSection({
         </div>
       ) : shouldShowLoadingSkeleton ? (
         <div className="space-y-2">
-          <Skeleton className="h-20 rounded-xl bg-white/5" />
-          <Skeleton className="h-20 rounded-xl bg-white/5" />
+          <Skeleton className="h-20 rounded-xl bg-background/20" />
+          <Skeleton className="h-20 rounded-xl bg-background/20" />
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
           {entries.map((entry) => (
             <div
               key={entry.id}
-              className="group relative flex flex-col justify-between rounded-xl border border-white/5 bg-white/5 p-3 transition-all hover:bg-white/10 hover:border-white/10"
+              className="group relative flex flex-col justify-between rounded-xl border border-border/30 bg-background/20 p-3 transition-all hover:border-border/50 hover:bg-background/30"
             >
               <div className="flex items-start gap-3">
                 <ExtensionIcon iconReference={entry.icon} title={entry.title} />
@@ -99,7 +99,7 @@ export function ExtensionsInstalledSection({
                       pendingUninstallSlug === entry.slug ||
                       (setupExtensionId === entry.id && (isSetupLoading || isSetupSaving))
                     }
-                    className="h-7 gap-1.5 rounded-md px-2 text-xs text-muted-foreground hover:bg-white/10 hover:text-foreground"
+                    className="h-7 gap-1.5 rounded-md border border-border/40 bg-background/20 px-2 text-xs text-muted-foreground hover:bg-background/30 hover:text-foreground"
                   >
                     {setupExtensionId === entry.id && isSetupLoading ? (
                       <Loader2 className="size-3.5 animate-spin" />

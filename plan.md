@@ -37,9 +37,9 @@
 - [x] Maintain existing interactions and keyboard flow.
 
 ## Phase 6: Extensions UX Glass Unification
-- [ ] Align extensions list/setup/runner views to the same glass tokens and shell rules.
-- [ ] Standardize section cards, action bars, and controls to shared style primitives.
-- [ ] Verify no regressions in extension command execution/runtime UI.
+- [x] Align extensions list/setup/runner views to the same glass tokens and shell rules.
+- [x] Standardize section cards, action bars, and controls to shared style primitives.
+- [x] Verify no regressions in extension command execution/runtime UI.
 
 ## Phase 7: Theme and Settings Integration
 - [ ] Decide glass as default standard behavior for launcher surfaces.
@@ -60,3 +60,4 @@
 - [x] Phase 3 complete.
 - [x] Phase 4 complete.
 - [x] Phase 5 complete.
+- [x] Phase 6 complete.
