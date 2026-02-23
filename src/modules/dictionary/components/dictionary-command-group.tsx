@@ -1,4 +1,5 @@
 import { CommandGroup } from "@/components/ui/command";
+import { LauncherTakeoverSurface } from "@/modules/launcher/components/launcher-takeover-surface";
 import { DictionaryCommandItem } from "./dictionary-command-item";
 import { DictionaryView } from "./dictionary-view";
 
@@ -19,9 +20,9 @@ export default function DictionaryCommandGroup({
   if (isOpen) {
     const trimmedQuery = query?.trim() ?? "";
     return (
-      <div className="absolute inset-0 z-50 bg-background">
+      <LauncherTakeoverSurface>
         <DictionaryView initialQuery={trimmedQuery} onBack={onBack} />
-      </div>
+      </LauncherTakeoverSurface>
     );
   }
 

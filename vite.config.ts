@@ -41,23 +41,31 @@ export default defineConfig({
           if (id.includes("@tanstack")) {
             return "tanstack-vendor";
           }
+          if (id.includes("@phosphor-icons/react")) {
+            return "icons-phosphor";
+          }
+          if (id.includes("lucide-react")) {
+            return "icons-lucide";
+          }
+          if (id.includes("@tauri-apps")) {
+            return "tauri-vendor";
+          }
           if (
             id.includes("react/") ||
             id.includes("react-dom") ||
             id.includes("scheduler") ||
             id.includes("use-sync-external-store") ||
             id.includes("zustand") ||
-            id.includes("lucide-react") ||
-            id.includes("cmdk") ||
-            id.includes("@base-ui") ||
-            id.includes("sonner") ||
             id.includes("class-variance-authority") ||
             id.includes("tailwind-merge") ||
             id.includes("clsx") ||
             id.includes("date-fns") ||
-            id.includes("next-themes")
+            id.includes("next-themes") ||
+            id.includes("cmdk") ||
+            id.includes("@base-ui") ||
+            id.includes("sonner")
           ) {
-            return "framework-vendor";
+            return "react-vendor";
           }
           // Let Rollup auto-place remaining dependencies to avoid forced
           // cross-chunk cycles from over-manualized vendor grouping.

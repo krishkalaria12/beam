@@ -1,6 +1,5 @@
 import {
   AlertCircle,
-  ArrowLeft,
   ArrowRightLeft,
   Check,
   Copy,
@@ -10,6 +9,10 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { CommandFooterBar } from "@/components/command/command-footer-bar";
+import { CommandPanelBackButton, CommandPanelHeader } from "@/components/command/command-panel-header";
+import { CommandKeyHint } from "@/components/command/command-key-hint";
+import { CommandStatusChip } from "@/components/command/command-status-chip";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -242,35 +245,34 @@ export function TranslationView({ initialQuery, onBack }: TranslationViewProps) 
         : null);
 
   return (
-    <div className="flex h-full w-full flex-col bg-black/30 backdrop-blur-3xl text-zinc-100">
-      {/* Header */}
-      <div className="flex h-14 shrink-0 items-center gap-3 border-b border-white/10 px-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onBack}
-          className="size-8 rounded-full text-zinc-400 transition-colors hover:bg-white/10 hover:text-white"
-        >
-          <ArrowLeft className="size-4" />
-        </Button>
-        <h1 className="text-lg font-semibold tracking-tight text-white/90">
+    <div className="glass-effect flex h-full w-full flex-col text-foreground">
+      <CommandPanelHeader>
+        <CommandPanelBackButton onClick={onBack} aria-label="Back" />
+        <h1 className="text-lg font-semibold tracking-tight text-foreground">
             Translate
         </h1>
         
         {isTranslating && (
-            <div className="ml-auto flex items-center gap-2 rounded-full bg-white/5 px-3 py-1 text-[10px] font-medium text-zinc-300 animate-in fade-in zoom-in duration-300">
+          <CommandStatusChip
+            label={(
+              <span className="inline-flex items-center gap-1.5">
                 <Loader2 className="size-3 animate-spin" />
-                <span>PROCESSING</span>
-            </div>
+                <span>Processing</span>
+              </span>
+            )}
+            tone="info"
+            pulse
+            className="ml-auto"
+          />
          )}
-      </div>
+      </CommandPanelHeader>
 
       {/* Main Content */}
       <div className="flex min-h-0 flex-1 flex-col gap-6 p-6">
         
         {/* Language Bar */}
         <div className="flex shrink-0 items-center justify-center">
-            <div className="flex w-full max-w-3xl items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 p-2 shadow-2xl backdrop-blur-2xl transition-colors hover:bg-white/10">
+            <div className="flex w-full max-w-3xl items-center justify-between gap-3 rounded-2xl border border-border/40 bg-background/20 p-2 transition-colors hover:bg-background/30">
                 <Select
                   value={sourceLanguage}
                   onValueChange={(value: string | null) => {
@@ -279,12 +281,12 @@ export function TranslationView({ initialQuery, onBack }: TranslationViewProps) 
                     setDetectedLanguage(null);
                   }}
                 >
-                  <SelectTrigger className="h-10 flex-1 border-transparent bg-transparent text-sm font-medium transition-colors hover:bg-white/5 focus:ring-0">
+                  <SelectTrigger className="h-10 flex-1 border-transparent bg-transparent text-sm font-medium transition-colors hover:bg-foreground/5 focus:ring-0">
                     <span className="truncate px-2">
                       {getLanguageLabel(sourceLanguage)}
                     </span>
                   </SelectTrigger>
-                  <SelectContent className="max-h-[300px] border-border/20 bg-zinc-950/95 backdrop-blur-3xl text-zinc-100">
+                  <SelectContent className="max-h-[300px] border-border/20 bg-background/95 backdrop-blur-3xl text-foreground">
                     <SelectItem value={AUTO_LANGUAGE_CODE}>Auto Detect</SelectItem>
                     {languages.map((language) => (
                       <SelectItem key={language.code} value={language.code}>
@@ -300,7 +302,7 @@ export function TranslationView({ initialQuery, onBack }: TranslationViewProps) 
                   size="icon"
                   onClick={handleSwapLanguages}
                   disabled={sourceLanguage === AUTO_LANGUAGE_CODE || !targetLanguage}
-                  className="size-9 shrink-0 rounded-full text-muted-foreground transition-all hover:bg-white/10 hover:text-foreground hover:rotate-180"
+                  className="size-9 shrink-0 rounded-full text-muted-foreground transition-all hover:bg-foreground/10 hover:text-foreground hover:rotate-180"
                 >
                   <ArrowRightLeft className="size-4" />
                 </Button>
@@ -312,12 +314,12 @@ export function TranslationView({ initialQuery, onBack }: TranslationViewProps) 
                     setTargetLanguage(value);
                   }}
                 >
-                  <SelectTrigger className="h-10 flex-1 border-transparent bg-transparent text-sm font-medium transition-colors hover:bg-white/5 focus:ring-0">
+                  <SelectTrigger className="h-10 flex-1 border-transparent bg-transparent text-sm font-medium transition-colors hover:bg-foreground/5 focus:ring-0">
                     <span className="truncate px-2">
                       {targetLanguage ? getLanguageLabel(targetLanguage) : "Select target"}
                     </span>
                   </SelectTrigger>
-                  <SelectContent className="max-h-[300px] border-border/20 bg-zinc-950/95 backdrop-blur-3xl text-zinc-100">
+                  <SelectContent className="max-h-[300px] border-border/20 bg-background/95 backdrop-blur-3xl text-foreground">
                     {languages.map((language) => (
                       <SelectItem key={language.code} value={language.code}>
                         {language.name}
@@ -329,11 +331,11 @@ export function TranslationView({ initialQuery, onBack }: TranslationViewProps) 
         </div>
 
         {/* Translation Area */}
-        <div className="flex flex-1 flex-col gap-px overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-2xl backdrop-blur-3xl transition-colors hover:bg-white/[0.07]">
+        <div className="flex flex-1 flex-col gap-px overflow-hidden rounded-3xl border border-border/30 bg-background/20 transition-colors hover:bg-background/30">
             
             {/* Source Input */}
-            <div className="group relative flex min-h-[40%] flex-1 flex-col bg-transparent transition-colors hover:bg-white/5">
-                 <div className="absolute right-4 top-4 z-10 text-[10px] font-mono text-zinc-500 pointer-events-none transition-opacity group-hover:text-zinc-400">
+            <div className="group relative flex min-h-[40%] flex-1 flex-col bg-transparent transition-colors hover:bg-foreground/5">
+                 <div className="pointer-events-none absolute right-4 top-4 z-10 text-[10px] font-mono text-muted-foreground/70 transition-opacity group-hover:text-muted-foreground">
                     {sourceText.length} chars
                 </div>
                 <Textarea
@@ -351,25 +353,25 @@ export function TranslationView({ initialQuery, onBack }: TranslationViewProps) 
                       void runTranslation(sourceText);
                     }
                   }}
-                  className="flex-1 resize-none border-none bg-transparent p-6 text-xl leading-relaxed text-zinc-100 placeholder:text-zinc-600 focus-visible:ring-0"
+                  className="flex-1 resize-none border-none bg-transparent p-6 text-xl leading-relaxed text-foreground placeholder:text-muted-foreground/60 focus-visible:ring-0"
                   placeholder="Enter text..."
                   spellCheck={false}
                 />
                  {languagesError && (
-                    <div className="absolute bottom-4 left-4 right-4 rounded-xl bg-red-500/10 px-4 py-3 text-xs text-red-400 backdrop-blur-md border border-red-500/20">
+                    <div className="absolute bottom-4 left-4 right-4 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-xs text-red-400">
                       Could not load languages: {languagesError.message}
                     </div>
                   )}
             </div>
 
             {/* Divider */}
-            <div className="h-px w-full bg-white/10" />
+            <div className="h-px w-full bg-border/35" />
 
             {/* Target Output */}
-            <div className="relative flex min-h-[40%] flex-1 flex-col bg-white/5 transition-colors hover:bg-white/10">
+            <div className="relative flex min-h-[40%] flex-1 flex-col bg-background/10 transition-colors hover:bg-background/20">
                 <div className="absolute left-6 top-6 flex items-center gap-2 pointer-events-none">
                     {detectedLanguageLabel && (
-                        <span className="rounded-full bg-indigo-500/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-indigo-300">
+                        <span className="rounded-full bg-primary/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">
                             {detectedLanguageLabel} {detectedConfidence ? `${detectedConfidence}` : ""}
                         </span>
                     )}
@@ -383,7 +385,7 @@ export function TranslationView({ initialQuery, onBack }: TranslationViewProps) 
                         onClick={handleCopyTranslatedText}
                         disabled={!translatedText.trim()}
                         className={cn(
-                            "size-8 rounded-lg text-zinc-500 transition-all hover:bg-white/10 hover:text-white",
+                            "size-8 rounded-lg text-muted-foreground transition-all hover:bg-foreground/10 hover:text-foreground",
                             copied && "bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 hover:text-emerald-300"
                         )}
                     >
@@ -394,12 +396,12 @@ export function TranslationView({ initialQuery, onBack }: TranslationViewProps) 
                 <Textarea
                   value={translatedText}
                   readOnly
-                  className="flex-1 resize-none border-none bg-transparent p-6 pt-14 text-xl leading-relaxed text-zinc-100 focus-visible:ring-0"
+                  className="flex-1 resize-none border-none bg-transparent p-6 pt-14 text-xl leading-relaxed text-foreground focus-visible:ring-0"
                   placeholder={canTranslate ? "Translation..." : ""}
                 />
 
                 {mutationErrorMessage && (
-                    <div className="absolute bottom-4 left-4 right-4 flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-xs text-red-400 backdrop-blur-md">
+                    <div className="absolute bottom-4 left-4 right-4 flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-xs text-red-400">
                       <AlertCircle className="size-4" />
                       <span>{mutationErrorMessage}</span>
                     </div>
@@ -409,32 +411,33 @@ export function TranslationView({ initialQuery, onBack }: TranslationViewProps) 
       </div>
 
       {/* Footer */}
-      <div className="flex h-10 shrink-0 items-center justify-between border-t border-white/10 bg-white/5 px-4 text-[10px] font-bold uppercase tracking-widest text-zinc-500">
-         <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2 hover:text-zinc-300 transition-colors cursor-pointer" onClick={() => setAutoTranslate(!autoTranslate)}>
-                <div className={cn("size-2 rounded-full ring-2 ring-inset transition-all", autoTranslate ? "bg-indigo-500 ring-indigo-500/30" : "bg-transparent ring-zinc-600/50")} />
-                <span>Auto-translate</span>
-            </div>
-             
-             {targetLanguage && (
-                 <div className="flex items-center gap-2 opacity-50">
-                    <span className="w-1.5 h-1.5 rounded-full bg-zinc-400" />
-                    <span>To {getLanguageLabel(targetLanguage)}</span>
-                 </div>
-             )}
-         </div>
+      <CommandFooterBar
+        leftSlot={(
+          <div className="flex items-center gap-6">
+            <button
+              className="flex cursor-pointer items-center gap-2 transition-colors hover:text-foreground"
+              onClick={() => setAutoTranslate(!autoTranslate)}
+              type="button"
+            >
+              <div className={cn("size-2 rounded-full ring-2 ring-inset transition-all", autoTranslate ? "bg-primary ring-primary/30" : "bg-transparent ring-muted-foreground/50")} />
+              <span>Auto-translate</span>
+            </button>
 
-         <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1.5">
-                <kbd className="flex h-5 items-center justify-center rounded border border-white/10 bg-white/5 px-1.5 font-mono text-[10px] text-zinc-400 shadow-sm">⌘ ↵</kbd>
-                <span>Translate</span>
-            </div>
-             <div className="flex items-center gap-1.5">
-                <kbd className="flex h-5 items-center justify-center rounded border border-white/10 bg-white/5 px-1.5 font-mono text-[10px] text-zinc-400 shadow-sm">ESC</kbd>
-                <span>Back</span>
-            </div>
-         </div>
-      </div>
+            {targetLanguage ? (
+              <div className="flex items-center gap-2 opacity-60">
+                <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground" />
+                <span>To {getLanguageLabel(targetLanguage)}</span>
+              </div>
+            ) : null}
+          </div>
+        )}
+        rightSlot={(
+          <>
+            <CommandKeyHint keyLabel={["⌘", "↵"]} label="Translate" />
+            <CommandKeyHint keyLabel="ESC" label="Back" />
+          </>
+        )}
+      />
     </div>
   );
 }

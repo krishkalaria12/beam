@@ -1,4 +1,5 @@
 import { CommandGroup } from "@/components/ui/command";
+import { LauncherTakeoverSurface } from "@/modules/launcher/components/launcher-takeover-surface";
 import { FileSearchCommandItem } from "./file-search-command-item";
 import { FileSearchView } from "./file-search-view";
 
@@ -21,12 +22,12 @@ export default function FileSearchCommandGroup({
   if (isOpen) {
     const trimmedQuery = query?.trim() ?? "";
     return (
-      <div className="absolute inset-0 z-50 bg-background">
+      <LauncherTakeoverSurface>
         <FileSearchView 
             initialQuery={trimmedQuery}
             onBack={onBack} 
         />
-      </div>
+      </LauncherTakeoverSurface>
     );
   }
 

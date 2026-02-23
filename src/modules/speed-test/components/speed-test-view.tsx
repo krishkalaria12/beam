@@ -1,6 +1,5 @@
 import {
   Activity,
-  ArrowLeft,
   Download,
   Gauge,
   Loader2,
@@ -12,8 +11,15 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { CommandFooterBar } from "@/components/command/command-footer-bar";
+import {
+  CommandPanelBackButton,
+  CommandPanelHeader,
+  CommandPanelTitleBlock,
+} from "@/components/command/command-panel-header";
+import { CommandKeyHint } from "@/components/command/command-key-hint";
+import { CommandStatusChip } from "@/components/command/command-status-chip";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 
 import {
   createSpeedTestInstance,
@@ -136,6 +142,22 @@ function resolveStatus(
     return "paused";
   }
   return "idle";
+}
+
+function statusTone(status: ReturnType<typeof resolveStatus>) {
+  if (status === "running") {
+    return "success";
+  }
+  if (status === "finished") {
+    return "info";
+  }
+  if (status === "error") {
+    return "error";
+  }
+  if (status === "paused") {
+    return "warning";
+  }
+  return "neutral";
 }
 
 export function SpeedTestView({ onBack }: SpeedTestViewProps) {
@@ -334,49 +356,28 @@ export function SpeedTestView({ onBack }: SpeedTestViewProps) {
   return (
     <div
       ref={containerRef}
-      className="flex h-full w-full flex-col bg-background outline-none"
+      className="glass-effect flex h-full w-full flex-col text-foreground outline-none"
       onKeyDown={handleContainerKeyDown}
       tabIndex={-1}
     >
-      <div className="flex h-12 items-center gap-3 border-b border-border/40 px-3">
-        <button
-          onClick={onBack}
-          className="flex items-center justify-center rounded-sm text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
-          type="button"
-        >
-          <ArrowLeft className="size-5" />
-        </button>
+      <CommandPanelHeader>
+        <CommandPanelBackButton onClick={onBack} aria-label="Back" />
+        <CommandPanelTitleBlock
+          title="Network Speed Test"
+          subtitle="cloudflare diagnostics"
+          subtitleClassName="font-mono text-[10px] uppercase tracking-widest text-muted-foreground/65"
+        />
 
-        <div className="min-w-0">
-          <p className="truncate text-sm font-medium text-foreground">
-            Network Speed Test
-          </p>
-          <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground/65">
-            cloudflare diagnostics
-          </p>
-        </div>
+        <CommandStatusChip
+          label={status}
+          tone={statusTone(status)}
+          pulse={status === "running"}
+          className="ml-auto"
+        />
+      </CommandPanelHeader>
 
-        <div
-          className={cn(
-            "ml-auto rounded-full border px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest",
-            status === "running" &&
-              "border-emerald-500/40 bg-emerald-500/10 text-emerald-500",
-            status === "finished" &&
-              "border-sky-500/40 bg-sky-500/10 text-sky-500",
-            status === "error" &&
-              "border-destructive/40 bg-destructive/10 text-destructive",
-            status === "paused" &&
-              "border-amber-500/40 bg-amber-500/10 text-amber-500",
-            status === "idle" &&
-              "border-border/60 bg-muted/20 text-muted-foreground/70",
-          )}
-        >
-          {status}
-        </div>
-      </div>
-
-      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4">
-        <div className="rounded-xl border border-border/60 bg-muted/15 p-4">
+      <div className="list-area custom-scrollbar flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-5">
+        <div className="rounded-2xl border border-border/60 bg-gradient-to-b from-muted/20 to-background/30 p-4 shadow-[0_1px_0_rgba(255,255,255,0.04)_inset]">
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground/75">
@@ -389,7 +390,7 @@ export function SpeedTestView({ onBack }: SpeedTestViewProps) {
             <Gauge className="size-4 shrink-0 text-muted-foreground/70" />
           </div>
 
-          <div className="mt-4 flex flex-wrap items-center gap-2">
+          <div className="mt-4 flex flex-wrap items-center gap-2.5">
             <Button
               className="gap-2 font-mono text-[11px] uppercase tracking-wider"
               disabled={isPreparing}
@@ -433,14 +434,14 @@ export function SpeedTestView({ onBack }: SpeedTestViewProps) {
           </div>
 
           {errorMessage && (
-            <div className="mt-4 flex items-start gap-2 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+            <div className="mt-4 flex items-start gap-2 rounded-xl border border-destructive/40 bg-destructive/10 px-3 py-2.5 text-xs text-destructive">
               <TriangleAlert className="mt-0.5 size-3.5 shrink-0" />
               <p>{errorMessage}</p>
             </div>
           )}
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-2 animate-in fade-in-50 duration-300">
           <MetricCard
             icon={<Download className="size-3.5" />}
             label="Download"
@@ -476,24 +477,15 @@ export function SpeedTestView({ onBack }: SpeedTestViewProps) {
         </div>
       </div>
 
-      <div className="flex h-8 items-center justify-between border-t border-border/40 bg-background px-4 text-[10px] font-medium uppercase tracking-widest text-muted-foreground/60">
-        <span className="font-mono">{isRunning ? "running" : "ready"}</span>
-
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1">
-            <kbd className="rounded border border-border/60 bg-muted/30 px-1 py-0.5 font-mono text-[9px] text-foreground/70">
-              ENTER
-            </kbd>
-            <span>{hasStarted ? "Restart" : "Start"}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <kbd className="rounded border border-border/60 bg-muted/30 px-1 py-0.5 font-mono text-[9px] text-foreground/70">
-              ESC
-            </kbd>
-            <span>Back</span>
-          </div>
-        </div>
-      </div>
+      <CommandFooterBar
+        leftSlot={<span className="font-mono">{isRunning ? "running" : "ready"}</span>}
+        rightSlot={(
+          <>
+            <CommandKeyHint keyLabel="ENTER" label={hasStarted ? "Restart" : "Start"} />
+            <CommandKeyHint keyLabel="ESC" label="Back" />
+          </>
+        )}
+      />
     </div>
   );
 }

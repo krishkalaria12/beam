@@ -1,4 +1,5 @@
 import { QuicklinksCommandItem } from "./quicklinks-command-item";
+import { LauncherTakeoverSurface } from "@/modules/launcher/components/launcher-takeover-surface";
 import { QuicklinksView } from "./quicklinks-view";
 
 type QuicklinksCommandGroupProps = {
@@ -32,12 +33,12 @@ export default function QuicklinksCommandGroup({
   }
 
   return (
-    <div className="absolute inset-0 z-50 flex flex-col bg-background">
+    <LauncherTakeoverSurface className="flex flex-col">
       <QuicklinksView
         view={view}
         setView={setView}
         onBack={onBack}
       />
-    </div>
+    </LauncherTakeoverSurface>
   );
 }

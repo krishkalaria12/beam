@@ -1,8 +1,11 @@
-import { ArrowLeft, BookOpen, Search, Copy, Check, Info, AlertCircle, Loader2 } from "lucide-react";
+import { BookOpen, Search, Copy, Check, Info, AlertCircle, Loader2 } from "lucide-react";
 import { useEffect, useRef, useState, useMemo } from "react";
 import { useDictionary } from "../hooks/use-dictionary";
 import { DictionarySkeleton } from "./dictionary-skeleton";
 import { SenseCard } from "./definition-card";
+import { CommandFooterBar } from "@/components/command/command-footer-bar";
+import { CommandPanelBackButton, CommandPanelHeader } from "@/components/command/command-panel-header";
+import { CommandKeyHint } from "@/components/command/command-key-hint";
 import { Button } from "@/components/ui/button";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import debounce from "@/lib/debounce";
@@ -116,19 +119,11 @@ export function DictionaryView({ initialQuery, onBack }: DictionaryViewProps) {
   }
 
   return (
-    <div className="flex h-full w-full flex-col bg-background">
-      {/* Header */}
-      <div className="flex h-14 items-center gap-3 border-b border-border/40 px-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onBack}
-          className="size-8 rounded-full text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
-        >
-          <ArrowLeft className="size-4" />
-        </Button>
+    <div className="glass-effect flex h-full w-full flex-col text-foreground">
+      <CommandPanelHeader>
+        <CommandPanelBackButton onClick={onBack} aria-label="Back" />
 
-        <InputGroup className="flex-1 h-9 rounded-full bg-muted/30 border-none px-1">
+        <InputGroup className="h-9 flex-1 rounded-full border-none bg-background/20 px-1">
           <InputGroupAddon align="inline-start" className="pl-3">
             <Search className="size-4 text-muted-foreground/50" />
           </InputGroupAddon>
@@ -154,10 +149,10 @@ export function DictionaryView({ initialQuery, onBack }: DictionaryViewProps) {
             </InputGroupAddon>
           )}
         </InputGroup>
-      </div>
+      </CommandPanelHeader>
 
       {/* Content */}
-      <div ref={contentRef} className="flex min-h-0 flex-1 overflow-y-auto">
+      <div ref={contentRef} className="list-area custom-scrollbar flex min-h-0 flex-1 overflow-y-auto">
         {!data ? (
           <div className="flex h-full w-full flex-col items-center justify-center p-12 text-center animate-in fade-in zoom-in-95 duration-300">
             <div className="relative mb-6">
@@ -293,37 +288,26 @@ export function DictionaryView({ initialQuery, onBack }: DictionaryViewProps) {
       </div>
 
       {/* Footer */}
-      <div className="flex h-10 items-center justify-between border-t border-border/40 bg-muted/10 px-4 text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground/60">
-        <div className="flex items-center gap-2">
-          <Info className="size-3" />
-          <span>
-            {data
-              ? `${totalSenses} sense${totalSenses !== 1 ? "s" : ""} found`
-              : "Dictionary Search"}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1.5">
-            <kbd className="flex h-5 items-center justify-center rounded border border-border/60 bg-background px-1.5 font-mono text-[10px] text-foreground shadow-sm">
-              ↑↓
-            </kbd>
-            <span>Select</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <kbd className="flex h-5 items-center justify-center rounded border border-border/60 bg-background px-1.5 font-mono text-[10px] text-foreground shadow-sm">
-              ENTER
-            </kbd>
-            <span>Copy Sense</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <kbd className="flex h-5 items-center justify-center rounded border border-border/60 bg-background px-1.5 font-mono text-[10px] text-foreground shadow-sm">
-              ESC
-            </kbd>
-            <span>Back</span>
-          </div>
-        </div>
-      </div>
+      <CommandFooterBar
+        className="h-10 px-4 text-[10px] font-bold tracking-[0.1em]"
+        leftSlot={(
+          <>
+            <Info className="size-3" />
+            <span>
+              {data
+                ? `${totalSenses} sense${totalSenses !== 1 ? "s" : ""} found`
+                : "Dictionary Search"}
+            </span>
+          </>
+        )}
+        rightSlot={(
+          <>
+            <CommandKeyHint keyLabel="↑↓" label="Select" />
+            <CommandKeyHint keyLabel="ENTER" label="Copy Sense" />
+            <CommandKeyHint keyLabel="ESC" label="Back" />
+          </>
+        )}
+      />
     </div>
   );
 }

@@ -1,16 +1,17 @@
 import { RouterProvider, createRouter } from "@tanstack/react-router";
 import ReactDOM from "react-dom/client";
 
-import Loader from "./components/loader";
+import { CommandLoadingState } from "./components/command/command-loading-state";
 import { Toaster } from "./components/ui/sonner";
 import { QueryProvider } from "./providers/query-provider";
 import { ThemeProvider } from "./components/theme-provider";
+import { UiStyleProvider } from "./components/ui-style-provider";
 import { routeTree } from "./routeTree.gen";
 
 const router = createRouter({
   routeTree,
   defaultPreload: "intent",
-  defaultPendingComponent: () => <Loader />,
+  defaultPendingComponent: () => <CommandLoadingState withSpinner className="py-4" />,
   context: {},
 });
 
@@ -30,9 +31,11 @@ if (!rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement);
   root.render(
     <QueryProvider>
-      <ThemeProvider defaultTheme="default">
-        <RouterProvider router={router} />
-        <Toaster position="top-right" richColors />
+      <ThemeProvider>
+        <UiStyleProvider>
+          <RouterProvider router={router} />
+          <Toaster position="top-right" richColors />
+        </UiStyleProvider>
       </ThemeProvider>
     </QueryProvider>,
   );

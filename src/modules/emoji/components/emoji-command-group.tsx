@@ -1,8 +1,10 @@
 import { useCommandState } from "cmdk";
 import { useEffect, useMemo, useState, useCallback } from "react";
 
-import emojiIcon from "@/assets/icons/emoji.png";
-import { CommandGroup, CommandItem, CommandShortcut } from "@/components/ui/command";
+import { OpenModuleCommandRow } from "@/components/command/open-module-command-row";
+import { CommandIcon } from "@/components/icons/command-icon";
+import { CommandGroup } from "@/components/ui/command";
+import { matchesCommandKeywords, normalizeCommandQuery } from "@/modules/launcher/lib/command-query";
 
 // Import types
 import type { EmojiData } from "../types";
@@ -27,6 +29,16 @@ interface EmojiDataItem {
   subgroup?: number;
   version?: number;
 }
+
+const EMOJI_KEYWORDS = [
+  "emoji",
+  "emoji picker",
+  "emoticon",
+  "smiley",
+  "reaction",
+  "kaomoji",
+  "symbols",
+] as const;
 
 function processEmojiData(data: EmojiDataItem[]): EmojiData[] {
   const processed = data
@@ -71,7 +83,7 @@ interface EmojiCommandGroupProps {
 
 export default function EmojiCommandGroup({ isOpen, onOpen, onBack }: EmojiCommandGroupProps) {
   const searchInput = useCommandState((state) => state.search);
-  const query = searchInput.trim().toLowerCase();
+  const query = normalizeCommandQuery(searchInput);
 
   const [emojis, setEmojis] = useState<EmojiData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -130,9 +142,7 @@ export default function EmojiCommandGroup({ isOpen, onOpen, onBack }: EmojiComma
   };
 
   if (!isOpen) {
-    const shouldShowOpenEmoji =
-      query.length === 0 ||
-      "emoji picker emoticon smiley reaction kaomoji symbols".includes(query);
+    const shouldShowOpenEmoji = matchesCommandKeywords(query, EMOJI_KEYWORDS);
 
     if (!shouldShowOpenEmoji) {
       return null;
@@ -140,11 +150,12 @@ export default function EmojiCommandGroup({ isOpen, onOpen, onBack }: EmojiComma
 
     return (
       <CommandGroup>
-        <CommandItem value="open emoji picker" onSelect={onOpen}>
-          <img src={emojiIcon} alt="emoji" className="size-6 rounded-sm object-cover" />
-          <p className="truncate text-foreground capitalize">emoji picker</p>
-          <CommandShortcut>open</CommandShortcut>
-        </CommandItem>
+        <OpenModuleCommandRow
+          value="open emoji picker"
+          onSelect={onOpen}
+          icon={<CommandIcon icon="emoji" />}
+          title="emoji picker"
+        />
       </CommandGroup>
     );
   }

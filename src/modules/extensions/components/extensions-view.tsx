@@ -1,10 +1,19 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, ArrowLeft, Loader2, Search, Sparkles, X } from "lucide-react";
-import { useEffect, useMemo, useRef } from "react";
+import { AlertTriangle, Loader2, Search, Sparkles, X } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { toast } from "sonner";
 
+import {
+  CommandFooterBar,
+} from "@/components/command/command-footer-bar";
+import {
+  CommandKeyHint,
+} from "@/components/command/command-key-hint";
+import {
+  CommandPanelBackButton,
+  CommandPanelHeader,
+} from "@/components/command/command-panel-header";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import debounce from "@/lib/debounce";
 import {
@@ -29,6 +38,7 @@ import { useInstallExtensionMutation } from "@/modules/extensions/hooks/use-inst
 import { useInstalledExtensionsQuery } from "@/modules/extensions/hooks/use-installed-extensions-query";
 import { useStoreExtensionsSearchQuery } from "@/modules/extensions/hooks/use-store-extensions-search-query";
 import { useUninstallExtensionMutation } from "@/modules/extensions/hooks/use-uninstall-extension-mutation";
+import { useLauncherPanelBackHandler } from "@/modules/launcher/lib/back-navigation";
 import { useExtensionsUiStore } from "@/modules/extensions/store/use-extensions-ui-store";
 import type { InstalledExtensionSummary } from "@/modules/extensions/types";
 
@@ -219,17 +229,28 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
     }
   };
 
-  const resetSetupState = () => {
+  const resetSetupState = useCallback(() => {
     setupLoadRequestIdRef.current += 1;
     extensionsUi.resetSetupState();
-  };
+  }, [extensionsUi]);
 
-  const handleCloseSetup = () => {
+  const handleCloseSetup = useCallback(() => {
     if (extensionsUi.isSetupSaving) {
       return;
     }
     resetSetupState();
-  };
+  }, [extensionsUi.isSetupSaving, resetSetupState]);
+
+  const handleBack = useCallback(() => {
+    if (extensionsUi.setupExtension) {
+      handleCloseSetup();
+      return;
+    }
+
+    onBack();
+  }, [extensionsUi.setupExtension, handleCloseSetup, onBack]);
+
+  useLauncherPanelBackHandler("extensions", handleBack);
 
   const handleSaveSetup = async (values: Record<string, unknown>) => {
     if (!extensionsUi.setupExtension?.pluginName) {
@@ -268,69 +289,56 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
         isLoading={extensionsUi.isSetupLoading}
         isSaving={extensionsUi.isSetupSaving}
         error={extensionsUi.setupError}
-        onBack={handleCloseSetup}
+        onBack={handleBack}
         onSave={handleSaveSetup}
       />
     );
   }
 
   return (
-    <div className="relative flex h-full w-full flex-col overflow-hidden bg-background/95 text-foreground backdrop-blur-3xl">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(86,164,255,0.12),transparent_42%),radial-gradient(circle_at_bottom_right,rgba(126,255,214,0.08),transparent_48%)]" />
-
-      <div className="relative border-b border-border/40 bg-background/55 px-3 pb-3 pt-2.5 backdrop-blur-xl">
-        <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onBack}
-            className="size-8 rounded-full border border-border/60 bg-background/55"
-          >
-            <ArrowLeft className="size-4" />
-          </Button>
-          <div className="min-w-0">
-            <p className="truncate text-base font-semibold tracking-tight">Extensions</p>
-            <p className="truncate text-xs text-muted-foreground">
-              Search, install, and run Raycast-compatible extensions
-            </p>
+    <div className="glass-effect flex h-full w-full flex-col overflow-hidden text-foreground">
+      <CommandPanelHeader>
+        <CommandPanelBackButton onClick={handleBack} aria-label="Back" />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <h2 className="text-base font-medium tracking-tight text-foreground">Extensions</h2>
+            <span className="inline-flex items-center gap-1 rounded-md border border-[var(--launcher-chip-border)] bg-[var(--launcher-chip-bg)] px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+              <Sparkles className="size-3 text-primary" />
+              {displayedInstalledExtensions.length}
+            </span>
           </div>
-          <span className="ml-auto inline-flex items-center gap-1 rounded-lg border border-border/70 bg-background/70 px-2 py-1 text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
-            <Sparkles className="size-3" />
-            {displayedInstalledExtensions.length} installed
-          </span>
         </div>
 
-        <div className="relative mt-3">
+        <div className="relative w-full max-w-[280px]">
           <Search className="pointer-events-none absolute left-3 top-2.5 size-4 text-muted-foreground" />
           <Input
             value={extensionsUi.search}
             onChange={(event) => {
               handleSearchChange(event.target.value);
             }}
-            placeholder="Search store extensions..."
-            className="h-9 rounded-xl border-border/65 bg-background/55 pl-9 pr-20 text-sm shadow-sm"
+            placeholder="Search extensions..."
+            className="h-9 rounded-lg border-border/40 bg-background/20 pl-9 pr-8 text-sm text-foreground shadow-none placeholder:text-muted-foreground/50 focus-visible:bg-background/30 focus-visible:ring-1 focus-visible:ring-primary/50"
           />
-          <div className="absolute right-2 top-1.5 flex items-center gap-1">
+          <div className="absolute right-2 top-2 flex items-center gap-1">
             {shouldShowStoreLoadingState ? (
-              <Loader2 className="size-4 animate-spin text-muted-foreground" />
-            ) : null}
-            {extensionsUi.search.length > 0 ? (
+              <Loader2 className="size-3.5 animate-spin text-muted-foreground" />
+            ) : extensionsUi.search.length > 0 ? (
               <Button
                 variant="ghost"
-                size="icon-sm"
+                size="icon"
                 onClick={handleClearSearch}
-                className="size-6 rounded-md text-muted-foreground hover:text-foreground"
+                className="size-5 rounded-full p-0 text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
               >
-                <X className="size-3.5" />
+                <X className="size-3" />
               </Button>
             ) : null}
           </div>
         </div>
-      </div>
+      </CommandPanelHeader>
 
-      <div className="relative min-h-0 flex-1 space-y-4 overflow-y-auto p-3">
+      <div className="relative custom-scrollbar list-area min-h-0 flex-1 overflow-y-auto p-4">
         {extensionsUi.actionError ? (
-          <div className="rounded-xl border border-red-500/35 bg-red-500/10 p-3 text-xs text-red-500">
+          <div className="mb-4 rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-xs text-red-200">
             <span className="inline-flex items-center gap-2">
               <AlertTriangle className="size-3.5" />
               {extensionsUi.actionError}
@@ -338,53 +346,52 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
           </div>
         ) : null}
 
-        <Card className="rounded-2xl border-border/70 bg-background/35 py-0 shadow-lg backdrop-blur-xl">
-          <CardContent className="py-3">
-            <ExtensionsInstalledSection
-              entries={displayedInstalledExtensions}
-              isFetching={installedQuery.isFetching}
-              isError={installedQuery.isError}
-              pendingUninstallSlug={extensionsUi.pendingUninstallSlug}
-              setupExtensionId={null}
-              isSetupLoading={extensionsUi.isSetupLoading}
-              isSetupSaving={extensionsUi.isSetupSaving}
-              onOpenSetup={(entry) => {
-                void handleOpenSetup(entry);
-              }}
-              onUninstall={(entry) => {
-                void handleUninstall(entry.slug, entry.title);
-              }}
-            />
-          </CardContent>
-        </Card>
+        <div className="space-y-6">
+          <ExtensionsInstalledSection
+            entries={displayedInstalledExtensions}
+            isFetching={installedQuery.isFetching}
+            isError={installedQuery.isError}
+            pendingUninstallSlug={extensionsUi.pendingUninstallSlug}
+            setupExtensionId={null}
+            isSetupLoading={extensionsUi.isSetupLoading}
+            isSetupSaving={extensionsUi.isSetupSaving}
+            onOpenSetup={(entry) => {
+              void handleOpenSetup(entry);
+            }}
+            onUninstall={(entry) => {
+              void handleUninstall(entry.slug, entry.title);
+            }}
+          />
 
-        <Card className="rounded-2xl border-border/70 bg-background/35 py-0 shadow-lg backdrop-blur-xl">
-          <CardContent className="py-3">
-            <ExtensionsStoreResultsSection
-              searchTerm={normalizedSearch}
-              isLoading={shouldShowStoreLoadingState}
-              isError={
-                normalizedSearch.length >= EXTENSIONS_STORE_SEARCH_MIN_LENGTH &&
-                !extensionsUi.isSearchDebouncing &&
-                storeSearchQuery.isError
-              }
-              errorMessage={
-                storeSearchQuery.error instanceof Error ? storeSearchQuery.error.message : undefined
-              }
-              results={storeSearchQuery.data ?? []}
-              pendingInstallSlug={extensionsUi.pendingInstallSlug}
-              pendingUninstallSlug={extensionsUi.pendingUninstallSlug}
-              installedSlugSet={installedSlugSet}
-              onInstall={(input) => {
-                void handleInstall(input);
-              }}
-              onUninstall={(input) => {
-                void handleUninstall(input.slug, input.title);
-              }}
-            />
-          </CardContent>
-        </Card>
+          <ExtensionsStoreResultsSection
+            searchTerm={normalizedSearch}
+            isLoading={shouldShowStoreLoadingState}
+            isError={
+              normalizedSearch.length >= EXTENSIONS_STORE_SEARCH_MIN_LENGTH &&
+              !extensionsUi.isSearchDebouncing &&
+              storeSearchQuery.isError
+            }
+            errorMessage={
+              storeSearchQuery.error instanceof Error ? storeSearchQuery.error.message : undefined
+            }
+            results={storeSearchQuery.data ?? []}
+            pendingInstallSlug={extensionsUi.pendingInstallSlug}
+            pendingUninstallSlug={extensionsUi.pendingUninstallSlug}
+            installedSlugSet={installedSlugSet}
+            onInstall={(input) => {
+              void handleInstall(input);
+            }}
+            onUninstall={(input) => {
+              void handleUninstall(input.slug, input.title);
+            }}
+          />
+        </div>
       </div>
+
+      <CommandFooterBar
+        leftSlot={<span>{displayedInstalledExtensions.length} installed extensions</span>}
+        rightSlot={<CommandKeyHint keyLabel="ESC" label="Back" />}
+      />
     </div>
   );
 }

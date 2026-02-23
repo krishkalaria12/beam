@@ -1,7 +1,13 @@
 import { useCommandState } from "cmdk";
-import { Puzzle } from "lucide-react";
 
-import { CommandGroup, CommandItem, CommandShortcut } from "@/components/ui/command";
+import { OpenModuleCommandRow } from "@/components/command/open-module-command-row";
+import { CommandIcon } from "@/components/icons/command-icon";
+import { CommandGroup } from "@/components/ui/command";
+import { LauncherTakeoverSurface } from "@/modules/launcher/components/launcher-takeover-surface";
+import {
+  matchesCommandKeywords,
+  normalizeCommandQuery,
+} from "@/modules/launcher/lib/command-query";
 import { ExtensionsView } from "@/modules/extensions/components/extensions-view";
 
 type ExtensionsCommandGroupProps = {
@@ -10,25 +16,31 @@ type ExtensionsCommandGroupProps = {
   onBack: () => void;
 };
 
+const EXTENSIONS_KEYWORDS = [
+  "extensions",
+  "extension store",
+  "raycast",
+  "install",
+  "uninstall",
+] as const;
+
 export default function ExtensionsCommandGroup({
   isOpen,
   onOpen,
   onBack,
 }: ExtensionsCommandGroupProps) {
   const searchInput = useCommandState((state) => state.search);
-  const query = searchInput.trim().toLowerCase();
+  const query = normalizeCommandQuery(searchInput);
 
   if (isOpen) {
     return (
-      <div className="absolute inset-0 z-50 bg-background">
+      <LauncherTakeoverSurface>
         <ExtensionsView onBack={onBack} />
-      </div>
+      </LauncherTakeoverSurface>
     );
   }
 
-  const shouldShowOpenExtensions =
-    query.length === 0 ||
-    "extensions extension store raycast install uninstall".includes(query);
+  const shouldShowOpenExtensions = matchesCommandKeywords(query, EXTENSIONS_KEYWORDS);
 
   if (!shouldShowOpenExtensions) {
     return null;
@@ -36,13 +48,12 @@ export default function ExtensionsCommandGroup({
 
   return (
     <CommandGroup>
-      <CommandItem value="open extensions manager" onSelect={onOpen}>
-        <div className="flex size-6 items-center justify-center rounded-sm bg-primary/10 text-primary">
-          <Puzzle className="size-4" />
-        </div>
-        <p className="truncate text-foreground capitalize">extensions</p>
-        <CommandShortcut>open</CommandShortcut>
-      </CommandItem>
+      <OpenModuleCommandRow
+        value="open extensions manager"
+        onSelect={onOpen}
+        icon={<CommandIcon icon="extension" />}
+        title="extensions"
+      />
     </CommandGroup>
   );
 }

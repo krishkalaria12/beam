@@ -1,12 +1,11 @@
-import { AlertTriangle, Loader2 } from "lucide-react";
+import { AlertTriangle, Search } from "lucide-react";
 import { useCommandState } from "cmdk";
 
-import { CommandGroup } from "@/components/ui/command";
+import { CommandGroup, CommandItem } from "@/components/ui/command";
 
 import { useApplicationSearch } from "../hooks/use-application-search";
 import { useOpenApplication } from "../hooks/use-open-application";
 import ApplicationCommandItem from "./application-command-item";
-import ApplicationsStateItem from "./applications-state-item";
 
 export default function ApplicationsCommandGroup() {
   const searchInput = useCommandState((state) => state.search);
@@ -27,19 +26,17 @@ export default function ApplicationsCommandGroup() {
   return (
     <CommandGroup>
       {isLoading && (
-        <ApplicationsStateItem
-          icon={Loader2}
-          iconClassName="size-4 animate-spin text-muted-foreground/40"
-          title="Searching Applications..."
-        />
+        <CommandItem disabled className="opacity-60">
+          <Search className="size-4 text-muted-foreground/40" />
+          <p className="truncate text-foreground/80">Searching applications...</p>
+        </CommandItem>
       )}
 
       {isError && (
-        <ApplicationsStateItem
-          icon={AlertTriangle}
-          iconClassName="size-4 text-destructive/60"
-          title="Could not load applications"
-        />
+        <CommandItem disabled className="opacity-60">
+          <AlertTriangle className="size-4 text-destructive/60" />
+          <p className="truncate text-foreground/80">Could not load applications</p>
+        </CommandItem>
       )}
 
       {!isLoading &&

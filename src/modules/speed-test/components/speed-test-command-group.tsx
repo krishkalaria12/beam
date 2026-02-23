@@ -1,7 +1,13 @@
 import { useCommandState } from "cmdk";
-import { Gauge } from "lucide-react";
 
-import { CommandGroup, CommandItem, CommandShortcut } from "@/components/ui/command";
+import { OpenModuleCommandRow } from "@/components/command/open-module-command-row";
+import { CommandIcon } from "@/components/icons/command-icon";
+import { CommandGroup } from "@/components/ui/command";
+import { LauncherTakeoverSurface } from "@/modules/launcher/components/launcher-takeover-surface";
+import {
+  matchesCommandKeywords,
+  normalizeCommandQuery,
+} from "@/modules/launcher/lib/command-query";
 
 import { SpeedTestView } from "./speed-test-view";
 
@@ -17,17 +23,7 @@ const SPEED_TEST_KEYWORDS = [
   "speed test",
   "internet speed",
   "network",
-];
-
-function matchesSpeedTestQuery(query: string) {
-  if (query.length === 0) {
-    return true;
-  }
-
-  return SPEED_TEST_KEYWORDS.some(
-    (keyword) => keyword.includes(query) || query.includes(keyword),
-  );
-}
+] as const;
 
 export default function SpeedTestCommandGroup({
   isOpen,
@@ -36,34 +32,29 @@ export default function SpeedTestCommandGroup({
   queryOverride,
 }: SpeedTestCommandGroupProps) {
   const searchInput = useCommandState((state) => state.search);
-  const query = (queryOverride ?? searchInput).trim().toLowerCase();
+  const query = normalizeCommandQuery(queryOverride ?? searchInput);
 
   if (isOpen) {
     return (
-      <div className="absolute inset-0 z-50 bg-background">
+      <LauncherTakeoverSurface>
         <SpeedTestView onBack={onBack} />
-      </div>
+      </LauncherTakeoverSurface>
     );
   }
 
-  if (!matchesSpeedTestQuery(query)) {
+  if (!matchesCommandKeywords(query, SPEED_TEST_KEYWORDS)) {
     return null;
   }
 
   return (
     <CommandGroup>
-      <CommandItem
+      <OpenModuleCommandRow
         onSelect={onOpen}
         value="speed test internet speed network diagnostics"
-      >
-        <div className="flex size-6 items-center justify-center rounded-sm bg-cyan-500/10 text-cyan-500">
-          <Gauge className="size-4" />
-        </div>
-        <p className="truncate text-foreground capitalize">
-          Network Speed Test
-        </p>
-        <CommandShortcut>network</CommandShortcut>
-      </CommandItem>
+        icon={<CommandIcon icon="speed-test" />}
+        title="Network Speed Test"
+        shortcut="network"
+      />
     </CommandGroup>
   );
 }

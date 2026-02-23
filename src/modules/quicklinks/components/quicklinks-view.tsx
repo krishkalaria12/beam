@@ -1,9 +1,20 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "@tanstack/react-form";
-import { ArrowLeft, Loader2, Link2, Trash2, Plus, Pencil, Command, Folder, File, FolderOpen } from "lucide-react";
+import { Loader2, Link2, Trash2, Plus, Pencil, Command, Folder, File, FolderOpen } from "lucide-react";
 import { z } from "zod";
 
-import fileQuicklinkIcon from "@/assets/icons/file-icon-quicklink.png";
+import {
+  CommandFooterBar,
+} from "@/components/command/command-footer-bar";
+import { CommandLoadingState } from "@/components/command/command-loading-state";
+import {
+  CommandKeyHint,
+} from "@/components/command/command-key-hint";
+import {
+  CommandPanelBackButton,
+  CommandPanelHeader,
+  CommandPanelTitleBlock,
+} from "@/components/command/command-panel-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -14,6 +25,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { useLauncherPanelBackHandler } from "@/modules/launcher/lib/back-navigation";
 import {
   useCreateQuicklink,
   useDeleteQuicklink,
@@ -28,6 +40,7 @@ import {
   pickQuicklinkFolderPath,
 } from "../api/quicklinks";
 import type { Quicklink } from "../types";
+import { QuicklinkIcon } from "./quicklink-icon";
 
 const quicklinkSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -52,28 +65,24 @@ export function QuicklinksView({ view, setView, onBack }: QuicklinksViewProps) {
   const [editingQuicklink, setEditingQuicklink] = useState<Quicklink | null>(null);
   const [returnToManage, setReturnToManage] = useState(false);
 
+  const handleBack = useCallback(() => {
+    if (view === "create" && (editingQuicklink || returnToManage)) {
+      setEditingQuicklink(null);
+      setReturnToManage(false);
+      setView("manage");
+      return;
+    }
+
+    onBack();
+  }, [editingQuicklink, onBack, returnToManage, setView, view]);
+
+  useLauncherPanelBackHandler("quicklinks", handleBack);
+
   if (view === "create") {
     return (
       <QuicklinkCreateForm 
-        onBack={() => {
-          if (editingQuicklink || returnToManage) {
-            setEditingQuicklink(null);
-            setReturnToManage(false);
-            setView("manage");
-            return;
-          }
-          onBack();
-        }}
-        onSuccess={() => {
-          if (editingQuicklink || returnToManage) {
-            setEditingQuicklink(null);
-            setReturnToManage(false);
-            setView("manage");
-            return;
-          }
-
-          onBack();
-        }}
+        onBack={handleBack}
+        onSuccess={handleBack}
         initialData={editingQuicklink ?? undefined}
         editKeyword={editingQuicklink?.keyword}
       />
@@ -82,7 +91,7 @@ export function QuicklinksView({ view, setView, onBack }: QuicklinksViewProps) {
 
   return (
     <QuicklinksManageView
-      onBack={onBack}
+      onBack={handleBack}
       onCreate={() => {
         setEditingQuicklink(null);
         setReturnToManage(true);
@@ -115,7 +124,7 @@ function QuicklinkCreateForm({ onBack, onSuccess, initialData, editKeyword }: Qu
   const fetchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mutationError = isEditMode ? updateMutation.error : createMutation.error;
   const isSubmitting = isEditMode ? updateMutation.isPending : createMutation.isPending;
-  const previewIcon = isFileTarget ? fileQuicklinkIcon : fetchedIcon;
+  const previewIcon = fetchedIcon;
 
   const form = useForm({
     defaultValues: {
@@ -223,20 +232,18 @@ function QuicklinkCreateForm({ onBack, onSuccess, initialData, editKeyword }: Qu
   };
 
   return (
-    <div className="flex h-full flex-col bg-background">
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-border/40 p-4">
-        <Button variant="ghost" size="icon" onClick={onBack} className="size-8">
-          <ArrowLeft className="size-4" />
-        </Button>
-        <span className="text-xs font-medium text-muted-foreground uppercase tracking-widest">
-           {isEditMode ? "Edit Quicklink" : "Create Quicklink"}
-        </span>
-        <div className="w-8" />
-      </div>
+    <div className="glass-effect flex h-full flex-col text-foreground">
+      <CommandPanelHeader>
+        <CommandPanelBackButton onClick={onBack} aria-label="Back" />
+        <CommandPanelTitleBlock
+          title={isEditMode ? "Edit Quicklink" : "Create Quicklink"}
+          subtitle="Create shortcuts for links, files, and folders"
+          className="flex-1"
+        />
+      </CommandPanelHeader>
 
       {/* Form Content */}
-      <div className="flex-1 overflow-y-auto p-8">
+      <div className="custom-scrollbar list-area flex-1 overflow-y-auto p-8">
         <form
           id="quicklink-form"
           onSubmit={(e) => {
@@ -252,7 +259,12 @@ function QuicklinkCreateForm({ onBack, onSuccess, initialData, editKeyword }: Qu
                 {isFetchingIcon ? (
                   <Loader2 className="size-8 animate-spin text-muted-foreground" />
                 ) : (
-                  <img src={previewIcon} alt="Icon" className="size-16 rounded-xl object-contain" />
+                  <QuicklinkIcon
+                    icon={previewIcon}
+                    isFileTarget={isFileTarget}
+                    className="size-16 rounded-xl object-contain"
+                    fallbackClassName="size-16 rounded-xl bg-muted/50"
+                  />
                 )}
                  <div className="absolute -bottom-2 rounded-full bg-background border px-2 py-0.5 text-[10px] font-medium text-muted-foreground shadow-sm">
                     {isFetchingIcon ? "Fetching..." : isFileTarget ? "File Path" : "Auto-detected"}
@@ -394,32 +406,27 @@ function QuicklinkCreateForm({ onBack, onSuccess, initialData, editKeyword }: Qu
         </form>
       </div>
 
-      {/* Footer */}
-      <div className="flex items-center justify-between border-t border-border/40 bg-muted/20 p-4 px-6">
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-           <Command className="size-3" />
-           <span>{isEditMode ? "Update Quicklink" : "Create Quicklink"}</span>
-        </div>
-        <div className="flex items-center gap-2">
-            <Button
-              variant="ghost" 
-              onClick={onBack}
-            >
+      <CommandFooterBar
+        className="h-[52px] px-6"
+        leftSlot={(
+          <>
+            <Command className="size-3.5" />
+            <span>{isEditMode ? "Update Quicklink" : "Create Quicklink"}</span>
+          </>
+        )}
+        rightSlot={(
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={onBack} className="h-7 px-2.5">
               Cancel
             </Button>
-            <Button
-              onClick={() => form.handleSubmit()}
-              disabled={isSubmitting}
-            >
-              {isSubmitting && <Loader2 className="mr-2 size-4 animate-spin" />}
-              {isEditMode ? "Update Quicklink" : "Create Quicklink"}
-              <div className="ml-2 flex gap-0.5">
-                  <span className="rounded bg-primary-foreground/20 px-1 py-0.5 font-mono text-[10px] text-primary-foreground">⌘</span>
-                  <span className="rounded bg-primary-foreground/20 px-1 py-0.5 font-mono text-[10px] text-primary-foreground">↵</span>
-              </div>
+            <Button onClick={() => form.handleSubmit()} disabled={isSubmitting} className="h-7 gap-2 px-2.5">
+              {isSubmitting ? <Loader2 className="size-3.5 animate-spin" /> : null}
+              {isEditMode ? "Update" : "Create"}
             </Button>
-        </div>
-      </div>
+            <CommandKeyHint keyLabel={["⌘", "↵"]} label={isEditMode ? "Update" : "Create"} />
+          </div>
+        )}
+      />
     </div>
   );
 }
@@ -447,27 +454,20 @@ function QuicklinksManageView({ onBack, onCreate, onEdit }: QuicklinksManageView
   };
 
   return (
-    <div className="flex h-full flex-col">
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-border p-4">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={onBack} className="size-8">
-            <ArrowLeft className="size-4" />
-          </Button>
-          <h2 className="text-lg font-semibold">Quicklinks</h2>
-        </div>
-        <Button variant="outline" size="sm" onClick={onCreate}>
+    <div className="glass-effect flex h-full flex-col text-foreground">
+      <CommandPanelHeader>
+        <CommandPanelBackButton onClick={onBack} aria-label="Back" />
+        <CommandPanelTitleBlock title="Quicklinks" subtitle="Manage custom launcher shortcuts" />
+        <Button variant="outline" size="sm" onClick={onCreate} className="ml-auto">
           <Plus className="mr-2 size-4" />
           Add New
         </Button>
-      </div>
+      </CommandPanelHeader>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="custom-scrollbar list-area flex-1 overflow-y-auto p-4">
         {isLoading && (
-          <div className="flex h-20 items-center justify-center">
-            <Loader2 className="size-6 animate-spin text-muted-foreground" />
-          </div>
+          <CommandLoadingState label="Loading quicklinks..." className="h-20" />
         )}
 
         {error && (
@@ -495,15 +495,12 @@ function QuicklinksManageView({ onBack, onCreate, onEdit }: QuicklinksManageView
                 className="flex items-center justify-between rounded-lg border border-border p-3"
               >
                 <div className="flex items-center gap-3">
-                  {ql.icon ? (
-                    <img src={ql.icon} alt="" className="size-8 rounded object-cover" />
-                  ) : isFileQuicklinkTarget(ql.url) ? (
-                    <img src={fileQuicklinkIcon} alt="" className="size-8 rounded object-cover" />
-                  ) : (
-                    <div className="flex size-8 items-center justify-center rounded bg-muted">
-                      <Link2 className="size-4 text-muted-foreground" />
-                    </div>
-                  )}
+                  <QuicklinkIcon
+                    icon={ql.icon}
+                    isFileTarget={isFileQuicklinkTarget(ql.url)}
+                    className="size-8 rounded object-cover"
+                    fallbackClassName="size-8 rounded bg-muted"
+                  />
                   <div>
                     <p className="font-medium">{ql.name}</p>
                     <p className="text-xs text-muted-foreground">!{ql.keyword}</p>
@@ -544,6 +541,11 @@ function QuicklinksManageView({ onBack, onCreate, onEdit }: QuicklinksManageView
           </div>
         )}
       </div>
+
+      <CommandFooterBar
+        leftSlot={<span>{quicklinks?.length ?? 0} quicklinks</span>}
+        rightSlot={<CommandKeyHint keyLabel="ESC" label="Back" />}
+      />
     </div>
   );
 }

@@ -1,9 +1,9 @@
 import { useCommandState } from "cmdk";
-import { Loader2 } from "lucide-react";
 import { useState } from "react";
 
-import systemIcon from "@/assets/icons/system.png";
-import { CommandGroup, CommandItem, CommandShortcut } from "@/components/ui/command";
+import { AsyncCommandRow } from "@/components/command/async-command-row";
+import { CommandIcon } from "@/components/icons/command-icon";
+import { CommandGroup } from "@/components/ui/command";
 
 import { SYSTEM_ACTIONS, AWAKE_ACTION } from "../constants";
 import { useSystemAction } from "../hooks/use-system-action";
@@ -55,10 +55,10 @@ export default function SystemActionsCommandGroup({
         const isRunning = runningAction === item.action;
 
         return (
-          <CommandItem
+          <AsyncCommandRow
             key={item.action}
             value={`${item.title} ${item.keywords.join(" ")}`}
-            disabled={isRunning}
+            isBusy={isRunning}
             onSelect={() => {
               if (isRunning) {
                 return;
@@ -66,27 +66,18 @@ export default function SystemActionsCommandGroup({
 
               runSystemAction(item.action);
             }}
-          >
-            {isRunning ? (
-              <Loader2 className="size-6 animate-spin text-muted-foreground/50" />
-            ) : (
-              <img
-                src={systemIcon}
-                alt="system action"
-                loading="lazy"
-                className="size-6 rounded-sm object-cover"
-              />
-            )}
-            <p className="truncate text-foreground capitalize">{item.title}</p>
-            <CommandShortcut>{isRunning ? "running" : "system"}</CommandShortcut>
-          </CommandItem>
+            icon={<CommandIcon icon="system" />}
+            title={item.title}
+            idleShortcut="system"
+          />
         );
       })}
       {showAwake && (
-        <CommandItem
+        <AsyncCommandRow
           key={AWAKE_ACTION.action}
           value={`${AWAKE_ACTION.title} ${AWAKE_ACTION.keywords.join(" ")}`}
-          disabled={isToggling || isLoading}
+          disabled={isLoading}
+          isBusy={isToggling}
           onSelect={async () => {
             if (isToggling || isLoading) {
               return;
@@ -96,20 +87,10 @@ export default function SystemActionsCommandGroup({
             await toggle();
             setIsToggling(false);
           }}
-        >
-          {isToggling ? (
-            <Loader2 className="size-6 animate-spin text-muted-foreground/50" />
-          ) : (
-            <img
-              src={systemIcon}
-              alt="system action"
-              loading="lazy"
-              className="size-6 rounded-sm object-cover"
-            />
-          )}
-          <p className="truncate text-foreground capitalize">{AWAKE_ACTION.title}</p>
-          <CommandShortcut>{isAwake ? "on" : "off"}</CommandShortcut>
-        </CommandItem>
+          icon={<CommandIcon icon="system" />}
+          title={AWAKE_ACTION.title}
+          idleShortcut={isAwake ? "on" : "off"}
+        />
       )}
     </CommandGroup>
   );

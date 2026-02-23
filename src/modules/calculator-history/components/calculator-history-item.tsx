@@ -1,5 +1,5 @@
 import { ArrowRight, Check } from "lucide-react";
-import { CommandItem, CommandShortcut } from "@/components/ui/command";
+import { CommandItem } from "@/components/ui/command";
 import type { CalculatorHistoryEntry } from "../api/get-calculator-history";
 
 type CalculatorHistoryItemProps = {
@@ -26,21 +26,20 @@ export function CalculatorHistoryItem({ entry, index, isCopied, onSelect }: Calc
 
           <ArrowRight className="size-4 text-muted-foreground/30" />
 
-          <div className="min-w-0 text-right">
+          <div className="min-w-0 flex items-center justify-end">
+            <span className="hidden sm:inline-flex items-center font-mono text-[10px] uppercase tracking-widest text-muted-foreground/40 group-data-[selected=true]:text-foreground/50 w-0 opacity-0 group-data-[selected=true]:w-auto group-data-[selected=true]:opacity-100 group-data-[selected=true]:mr-3 transition-all duration-300 overflow-hidden whitespace-nowrap">
+              {isCopied ? (
+                <Check className="size-3 text-emerald-500 animate-in zoom-in" />
+              ) : (
+                "copy result"
+              )}
+            </span>
             <p className="truncate font-mono text-xl font-bold tracking-tight text-foreground">
               {entry.result}
             </p>
           </div>
         </div>
       </div>
-
-      <CommandShortcut className="absolute right-2 top-1/2 -translate-y-1/2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground/40 group-data-selected:text-foreground/50 opacity-0 group-data-selected:opacity-100 transition-opacity">
-        {isCopied ? (
-          <Check className="size-4 text-emerald-500 animate-in zoom-in" />
-        ) : (
-          "copy result"
-        )}
-      </CommandShortcut>
     </CommandItem>
   );
 }

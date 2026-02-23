@@ -1,10 +1,19 @@
-import { ArrowLeft, Loader2, Search, Settings2 } from "lucide-react";
+import { Search, Settings2 } from "lucide-react";
 
+import { CommandFooterBar } from "@/components/command/command-footer-bar";
+import { CommandLoadingState } from "@/components/command/command-loading-state";
+import { CommandKeyHint } from "@/components/command/command-key-hint";
+import {
+  CommandPanelBackButton,
+  CommandPanelHeader,
+  CommandPanelTitleBlock,
+} from "@/components/command/command-panel-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RunnerNodeRenderer } from "@/modules/extensions/components/runner/nodes/node-renderer";
 import { RootNodeRenderer } from "@/modules/extensions/components/runner/nodes/root-node-renderer";
 import { useExtensionRunnerState } from "@/modules/extensions/components/runner/use-extension-runner-state";
+import { useLauncherPanelBackHandler } from "@/modules/launcher/lib/back-navigation";
 
 interface ExtensionRunnerViewProps {
   onBack: () => void;
@@ -13,6 +22,7 @@ interface ExtensionRunnerViewProps {
 
 export function ExtensionRunnerView({ onBack, onOpenExtensions }: ExtensionRunnerViewProps) {
   const state = useExtensionRunnerState({ onBack });
+  useLauncherPanelBackHandler("extension-runner", state.handleBack);
   const showSearchInput = state.rootType === "List" || state.rootType === "Grid";
   const searchBarAccessoryNodeId = state.rootNode?.namedChildren?.searchBarAccessory;
   const searchPlaceholder =
@@ -25,32 +35,31 @@ export function ExtensionRunnerView({ onBack, onOpenExtensions }: ExtensionRunne
 
   return (
     <div
-      className="flex h-full w-full flex-col bg-background"
+      className="glass-effect flex h-full w-full flex-col overflow-hidden text-foreground"
       onKeyDownCapture={state.handleRootKeyDownCapture}
       onKeyDown={state.handleRootKeyDown}
     >
-      <div className="flex items-center gap-3 border-b border-border/50 p-3">
-        <Button variant="ghost" size="icon" onClick={state.handleBack} className="size-8">
-          <ArrowLeft className="size-4" />
-        </Button>
-        <div className="min-w-0 shrink-0">
-          <p className="truncate text-sm font-medium">{state.runningSession?.title || "Extension"}</p>
-          <p className="truncate text-xs text-muted-foreground">
-            {state.runningSession?.subtitle ||
-              state.runningSession?.pluginPath ||
-              "Raycast-compatible command"}
-          </p>
-        </div>
+      <CommandPanelHeader>
+        <CommandPanelBackButton onClick={state.handleBack} aria-label="Back" />
+        <CommandPanelTitleBlock
+          className="shrink-0"
+          title={state.runningSession?.title || "Extension"}
+          subtitle={
+            state.runningSession?.subtitle ||
+            state.runningSession?.pluginPath ||
+            "Raycast-compatible command"
+          }
+        />
         {showSearchInput ? (
           <div className="relative ml-auto w-full max-w-[360px]">
-            <Search className="pointer-events-none absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
+            <Search className="pointer-events-none absolute left-3 top-2.5 size-4 text-muted-foreground" />
             <Input
               value={state.searchText}
               onChange={(event) => {
                 state.handleSearchInputChange(event.target.value);
               }}
               placeholder={searchPlaceholder}
-              className="h-9 pl-8"
+              className="h-9 rounded-lg border-border/40 bg-background/20 pl-9 text-sm text-foreground shadow-none placeholder:text-muted-foreground/50 focus-visible:bg-background/30 focus-visible:ring-1 focus-visible:ring-primary/50"
             />
           </div>
         ) : (
@@ -61,21 +70,21 @@ export function ExtensionRunnerView({ onBack, onOpenExtensions }: ExtensionRunne
         ) : null}
         {onOpenExtensions ? (
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={onOpenExtensions}
-            className="h-8 shrink-0 gap-1.5"
+            className="h-8 shrink-0 gap-1.5 rounded-lg border border-border/40 bg-background/20 text-xs font-medium text-muted-foreground hover:bg-background/30 hover:text-foreground"
           >
             <Settings2 className="size-3.5" />
             Setup
           </Button>
         ) : null}
-      </div>
+      </CommandPanelHeader>
       {!state.rootNode ? (
-        <div className="flex min-h-0 flex-1 items-center justify-center text-sm text-muted-foreground">
-          <Loader2 className="mr-2 size-4 animate-spin" />
-          Waiting for extension UI...
-        </div>
+        <>
+          <CommandLoadingState label="Loading extension UI..." className="min-h-0 flex-1" />
+          <CommandFooterBar rightSlot={<CommandKeyHint keyLabel="ESC" label="Back" />} />
+        </>
       ) : (
         <RootNodeRenderer state={state} />
       )}

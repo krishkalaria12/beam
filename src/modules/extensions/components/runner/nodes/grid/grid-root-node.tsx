@@ -1,7 +1,6 @@
 import { useMemo, useRef, type UIEvent } from "react";
 
-import { Loader2 } from "lucide-react";
-
+import { CommandLoadingState } from "@/components/command/command-loading-state";
 import { RunnerActionBar } from "@/modules/extensions/components/runner/runner-action-bar";
 import { RunnerNodeRenderer } from "@/modules/extensions/components/runner/nodes/node-renderer";
 import type { RunnerNodeComponentProps } from "@/modules/extensions/components/runner/nodes/types";
@@ -106,9 +105,7 @@ export function GridRootNode({ nodeId, state }: RunnerNodeComponentProps) {
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-2" onScroll={handleScroll}>
         {sections.length === 0 ? (
           isLoading ? (
-            <div className="flex h-full min-h-[180px] items-center justify-center">
-              <Loader2 className="size-6 animate-spin text-muted-foreground" />
-            </div>
+            <CommandLoadingState label="Loading..." className="min-h-[180px]" />
           ) : emptyViewNodeId ? (
             <RunnerNodeRenderer nodeId={emptyViewNodeId} state={state} />
           ) : (
@@ -160,7 +157,7 @@ export function GridRootNode({ nodeId, state }: RunnerNodeComponentProps) {
                 {Array.from({ length: pageSize }).map((_, index) => (
                   <div
                     key={`placeholder:${index}`}
-                    className="aspect-square w-full animate-pulse rounded-md bg-white/5"
+                    className="aspect-square w-full animate-pulse rounded-md bg-background/20"
                   />
                 ))}
               </div>

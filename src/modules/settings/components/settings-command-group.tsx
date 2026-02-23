@@ -1,13 +1,14 @@
 import { useCommandState } from "cmdk";
-import { useState } from "react";
-import { Settings } from "lucide-react";
+import { useCallback, useState } from "react";
 
-import settingsIcon from "@/assets/icons/settings.png";
-import { CommandGroup, CommandItem, CommandShortcut } from "@/components/ui/command";
+import { OpenModuleCommandRow } from "@/components/command/open-module-command-row";
+import { CommandIcon } from "@/components/icons/command-icon";
+import { CommandGroup } from "@/components/ui/command";
+import { useLauncherPanelBackHandler } from "@/modules/launcher/lib/back-navigation";
+import { matchesCommandKeywords, normalizeCommandQuery } from "@/modules/launcher/lib/command-query";
 import type { SettingsView } from "../constants";
 import { SettingsMenu } from "./SettingsMenu";
-import { AppearanceSettings } from "./AppearanceSettings";
-import { ThemeSettings } from "./ThemeSettings";
+import { VisualStyleSettings } from "./VisualStyleSettings";
 import { LayoutSettings } from "./LayoutSettings";
 
 type SettingsCommandGroupProps = {
@@ -16,21 +17,31 @@ type SettingsCommandGroupProps = {
   onBack: () => void;
 };
 
+const SETTINGS_KEYWORDS = [
+  "settings",
+  "style",
+  "layout",
+  "density",
+  "glassy",
+] as const;
+
 export default function SettingsCommandGroup({ isOpen, onOpen, onBack }: SettingsCommandGroupProps) {
   const searchInput = useCommandState((state) => state.search);
-  const query = searchInput.trim().toLowerCase();
+  const query = normalizeCommandQuery(searchInput);
   const [view, setView] = useState<SettingsView>("main");
 
-  const handleBack = () => {
+  const handleBack = useCallback(() => {
     if (view === "main") {
       onBack();
     } else {
       setView("main");
     }
-  };
+  }, [onBack, view]);
+
+  useLauncherPanelBackHandler("settings", handleBack, isOpen);
 
   if (!isOpen) {
-    const shouldShowOpenSettings = query.length === 0 || "settings theme colors appearance mode".includes(query);
+    const shouldShowOpenSettings = matchesCommandKeywords(query, SETTINGS_KEYWORDS);
 
     if (!shouldShowOpenSettings) {
       return null;
@@ -38,27 +49,24 @@ export default function SettingsCommandGroup({ isOpen, onOpen, onBack }: Setting
 
     return (
       <CommandGroup>
-        <CommandItem 
+        <OpenModuleCommandRow
           value="open settings" 
           onSelect={() => {
             setView("main");
             onOpen();
           }}
-        >
-          <img src={settingsIcon} alt="settings" className="size-6 rounded-sm object-cover" />
-          <p className="truncate text-foreground capitalize">settings</p>
-          <CommandShortcut>open</CommandShortcut>
-        </CommandItem>
+          icon={<CommandIcon icon="settings" />}
+          title="settings"
+        />
       </CommandGroup>
     );
   }
 
   return (
     <>
-      {view === "main" && <SettingsMenu setView={setView} onBack={handleBack} />}
-      {view === "appearance" && <AppearanceSettings onBack={handleBack} />}
-      {view === "themes" && <ThemeSettings onBack={handleBack} />}
-      {view === "layout" && <LayoutSettings onBack={handleBack} />}
+      {view === "main" && <SettingsMenu setView={setView} />}
+      {view === "style" && <VisualStyleSettings />}
+      {view === "layout" && <LayoutSettings />}
     </>
   );
 }

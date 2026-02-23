@@ -1,5 +1,5 @@
-import filesIcon from "@/assets/icons/files.png";
-import { CommandItem, CommandShortcut } from "@/components/ui/command";
+import { BaseCommandRow } from "@/components/command/base-command-row";
+import { CommandIcon } from "@/components/icons/command-icon";
 import { useCommandState } from "cmdk";
 
 interface FileSearchCommandItemProps {
@@ -13,28 +13,18 @@ export function FileSearchCommandItem({ onSelect, queryOverride }: FileSearchCom
   const hasQuery = query.length > 0;
 
   return (
-    <CommandItem
+    <BaseCommandRow
       value="Search Files"
-      disabled={!hasQuery}
       onSelect={() => {
         if (!hasQuery) {
           return;
         }
         onSelect(query);
       }}
-    >
-      <img
-        src={filesIcon}
-        alt="files icon"
-        loading="lazy"
-        className="size-6 rounded-sm object-cover"
-      />
-      <p className="truncate text-foreground capitalize">
-        Search Files
-      </p>
-      <CommandShortcut>
-        files
-      </CommandShortcut>
-    </CommandItem>
+      icon={<CommandIcon icon="files" />}
+      title="Search Files"
+      titleClassName="truncate text-foreground capitalize"
+      shortcut="files"
+    />
   );
 }

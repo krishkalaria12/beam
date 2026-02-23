@@ -1,5 +1,9 @@
-import { ArrowLeft, ChevronDown } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 
+import {
+  CommandPanelBackButton,
+  CommandPanelHeader,
+} from "@/components/command/command-panel-header";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,14 +41,8 @@ export function ClipboardHeader({
   inputRef,
 }: ClipboardHeaderProps) {
   return (
-    <div className="flex h-14 items-center gap-4 border-b border-border/40 px-4 shrink-0 bg-background/50 backdrop-blur-md">
-      <button
-        onClick={onBack}
-        className="flex items-center justify-center rounded-md text-muted-foreground transition-all hover:bg-foreground/10 hover:text-foreground size-8"
-        aria-label="Back"
-      >
-        <ArrowLeft className="size-5" />
-      </button>
+    <CommandPanelHeader className="gap-4">
+      <CommandPanelBackButton onClick={onBack} aria-label="Back" iconClassName="size-5" />
 
       <div className="relative flex-1">
         <input
@@ -80,6 +78,6 @@ export function ClipboardHeader({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-    </div>
+    </CommandPanelHeader>
   );
 }

@@ -73,42 +73,42 @@ export function CalculatorResultItem({
       }}
       className="bg-transparent! p-0 aria-selected:bg-transparent! [&>svg:last-child]:hidden"
     >
-      <div className="group relative w-full overflow-hidden rounded-xl border border-white/10 bg-linear-to-br from-zinc-900/72 via-black/62 to-zinc-950/74 p-4 shadow-[0_14px_36px_-24px_rgba(0,0,0,0.95)] backdrop-blur-xl backdrop-saturate-125 transition-all duration-500 hover:border-white/18">
-        <div className="pointer-events-none absolute inset-0 bg-linear-to-br from-white/7 via-transparent to-transparent" />
+      <div className="group relative w-full overflow-hidden rounded-xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] p-4 transition-all duration-300 hover:bg-[var(--launcher-card-hover-bg)] group-data-[selected=true]/command-item:bg-[var(--launcher-card-selected-bg)] group-data-[selected=true]/command-item:border-[var(--launcher-card-selected-border)]">
+        <div className="pointer-events-none absolute inset-0 bg-linear-to-br from-foreground/[0.06] via-transparent to-transparent" />
         <div className="relative z-10">
           <div className="mb-4 flex items-center justify-center gap-3 text-center">
-            <span className="text-[10px] font-medium uppercase tracking-widest text-zinc-100/75">
+            <span className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground/85">
               Calculator
             </span>
-            <span className="text-[10px] font-medium uppercase tracking-widest text-zinc-200/50">
+            <span className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground/65">
               {shortcutText}
             </span>
           </div>
 
           <div className="mb-6 grid grid-cols-[1fr_auto_1fr] items-center gap-4">
             <div className="min-w-0 text-center">
-              <span className="block truncate text-xl font-mono font-medium tracking-tight text-zinc-100/90">
+              <span className="block truncate text-xl font-mono font-medium tracking-tight text-foreground/90">
                 {calculatorQuery || "Expression"}
               </span>
             </div>
 
-            <ArrowRight className="size-4 shrink-0 text-zinc-300/45" />
+            <ArrowRight className="size-4 shrink-0 text-muted-foreground/70" />
 
             <div className="min-w-0 text-center">
-              <span className="block truncate text-3xl font-mono font-bold tracking-tight text-white transition-all duration-300">
+              <span className="block truncate text-3xl font-mono font-bold tracking-tight text-foreground transition-all duration-300">
                 {calculatorResult}
               </span>
             </div>
           </div>
 
           <div className="flex items-center justify-center gap-3">
-            <div className="inline-flex items-center rounded-full bg-white/8 px-2.5 py-0.5 text-[10px] font-medium text-zinc-100/85 ring-1 ring-inset ring-white/14 transition-colors group-hover:bg-white/14 group-hover:text-white/95">
+            <div className="inline-flex items-center rounded-full border border-[var(--launcher-chip-border)] bg-[var(--launcher-chip-bg)] px-2.5 py-0.5 text-[10px] font-medium text-muted-foreground transition-colors group-hover:text-foreground/90">
               {calculationKind}
             </div>
 
             {textRepresentation ? (
               <div className="max-w-[55%] truncate text-center">
-                <div className="inline-flex items-center rounded-full bg-white/8 px-2.5 py-0.5 text-[10px] font-medium text-zinc-100/85 ring-1 ring-inset ring-white/14 transition-colors group-hover:bg-white/14 group-hover:text-white/95">
+                <div className="inline-flex items-center rounded-full border border-[var(--launcher-chip-border)] bg-[var(--launcher-chip-bg)] px-2.5 py-0.5 text-[10px] font-medium text-muted-foreground transition-colors group-hover:text-foreground/90">
                   <span className="truncate">{textRepresentation}</span>
                 </div>
               </div>

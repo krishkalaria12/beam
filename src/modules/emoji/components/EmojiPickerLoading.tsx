@@ -1,14 +1,15 @@
+import { CommandPanelHeader } from "@/components/command/command-panel-header";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function EmojiPickerLoading() {
   return (
     <div className="flex h-full flex-col">
-      {/* Header - matches SearchBar height */}
-      <div className="flex shrink-0 items-center gap-2 border-b border-border bg-accent px-3 py-2">
+      {/* Header */}
+      <CommandPanelHeader className="gap-2 border-border bg-accent px-3 py-2">
         <Skeleton className="size-8 rounded-md" />
         <Skeleton className="h-9 flex-1 rounded-md" />
         <Skeleton className="h-9 w-[100px] rounded-md" />
-      </div>
+      </CommandPanelHeader>
 
       {/* Content area */}
       <div className="flex-1 overflow-y-auto bg-background p-3">
@@ -42,6 +43,14 @@ export function EmojiPickerLoading() {
               </div>
             </div>
           ))}
+        </div>
+      </div>
+
+      <div className="sc-glass-footer flex h-[42px] items-center justify-between px-4 py-2.5">
+        <Skeleton className="h-3 w-20 rounded" />
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-[22px] w-[22px] rounded" />
+          <Skeleton className="h-3 w-10 rounded" />
         </div>
       </div>
     </div>

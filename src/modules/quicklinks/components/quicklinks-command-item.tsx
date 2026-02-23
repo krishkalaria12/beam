@@ -1,6 +1,6 @@
-import { CommandGroup, CommandItem, CommandShortcut } from "@/components/ui/command";
-import createQuicklinkIcon from "@/assets/icons/create-quicklink.jpeg";
-import listQuicklinksIcon from "@/assets/icons/list-quicklink.png";
+import { BaseCommandRow } from "@/components/command/base-command-row";
+import { CommandIcon } from "@/components/icons/command-icon";
+import { CommandGroup } from "@/components/ui/command";
 
 interface QuicklinksCommandItemProps {
   onAdd: () => void;
@@ -10,26 +10,20 @@ interface QuicklinksCommandItemProps {
 export function QuicklinksCommandItem({ onAdd, onManage }: QuicklinksCommandItemProps) {
   return (
     <CommandGroup>
-      <CommandItem value="add quicklink" onSelect={onAdd}>
-        <img
-          src={createQuicklinkIcon}
-          alt="create quicklink icon"
-          loading="lazy"
-          className="size-6 rounded-sm object-cover"
-        />
-        <span>Add Quicklink</span>
-        <CommandShortcut>quicklink</CommandShortcut>
-      </CommandItem>
-      <CommandItem value="manage quicklinks" onSelect={onManage}>
-        <img
-          src={listQuicklinksIcon}
-          alt="manage quicklinks icon"
-          loading="lazy"
-          className="size-6 rounded-sm object-cover"
-        />
-        <span>Manage Quicklinks</span>
-        <CommandShortcut>quicklink</CommandShortcut>
-      </CommandItem>
+      <BaseCommandRow
+        value="add quicklink"
+        onSelect={onAdd}
+        icon={<CommandIcon icon="quicklink-create" />}
+        title="Add Quicklink"
+        shortcut="quicklink"
+      />
+      <BaseCommandRow
+        value="manage quicklinks"
+        onSelect={onManage}
+        icon={<CommandIcon icon="quicklink-manage" />}
+        title="Manage Quicklinks"
+        shortcut="quicklink"
+      />
     </CommandGroup>
   );
 }

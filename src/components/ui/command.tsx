@@ -3,6 +3,7 @@
 import * as React from "react"
 import { Command as CommandPrimitive } from "cmdk"
 
+import { CommandPanelHeader } from "@/components/command/command-panel-header"
 import { cn } from "@/lib/utils"
 import {
   Dialog,
@@ -21,7 +22,7 @@ function Command({
     <CommandPrimitive
       data-slot="command"
       className={cn(
-        "bg-popover text-popover-foreground rounded-none flex size-full flex-col",
+        "rounded-none flex size-full flex-col bg-transparent text-foreground",
         className
       )}
       {...props}
@@ -68,17 +69,17 @@ function CommandInput({
 }: React.ComponentProps<typeof CommandPrimitive.Input>) {
   return (
     <div data-slot="command-input-wrapper" className="flex-none">
-      <div className="flex items-center gap-3 px-4 py-3.5">
-        <SearchIcon className="size-6 shrink-0 text-muted-foreground/50" />
+      <CommandPanelHeader>
+        <SearchIcon className="size-6 shrink-0 text-muted-foreground/60" />
         <CommandPrimitive.Input
           data-slot="command-input"
           className={cn(
-            "w-full bg-transparent text-xl outline-hidden placeholder:text-muted-foreground/30 disabled:cursor-not-allowed disabled:opacity-50 font-medium tracking-tight",
+            "w-full bg-transparent text-lg font-medium tracking-[0.005em] text-foreground outline-hidden placeholder:text-muted-foreground/55 disabled:cursor-not-allowed disabled:opacity-50",
             className
           )}
           {...props}
         />
-      </div>
+      </CommandPanelHeader>
     </div>
   )
 }
@@ -91,7 +92,7 @@ function CommandList({
       <CommandPrimitive.List
         data-slot="command-list"
         className={cn(
-          "max-h-none scroll-py-2 outline-none overflow-x-hidden overflow-y-auto scrollbar-none",
+          "max-h-none scroll-py-2 outline-none overflow-x-hidden overflow-y-auto",
           className
         )}
         {...props}
@@ -150,8 +151,7 @@ function CommandItem({
     <CommandPrimitive.Item
       data-slot="command-item"
       className={cn(
-        "data-selected:bg-foreground/5 data-selected:text-foreground relative flex cursor-default items-center gap-4 rounded-xl px-4 py-2.5 text-[1.05rem] outline-hidden select-none transition-colors",
-        "group/command-item",
+        "command-item group/command-item relative flex cursor-default items-center gap-4 rounded-lg px-3 py-3 text-sm outline-hidden select-none",
         className
       )}
       {...props}

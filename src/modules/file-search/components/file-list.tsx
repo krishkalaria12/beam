@@ -1,5 +1,6 @@
-import { File, Loader2 } from "lucide-react";
+import { File } from "lucide-react";
 import { useEffect, useRef } from "react";
+import { CommandLoadingState } from "@/components/command/command-loading-state";
 import { cn } from "@/lib/utils";
 import type { SearchResult } from "../types";
 
@@ -25,11 +26,7 @@ export function FileList({ results, selectedIndex, onSelect, isLoading, onOpen }
   }, [selectedIndex]);
 
   if (isLoading && results.length === 0) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <Loader2 className="size-6 animate-spin text-muted-foreground/50" />
-      </div>
-    );
+    return <CommandLoadingState label="Searching files..." />;
   }
 
   if (results.length === 0) {

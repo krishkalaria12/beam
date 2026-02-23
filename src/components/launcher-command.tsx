@@ -1,26 +1,21 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { isTauri } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { getCurrentWindow } from "@tauri-apps/api/window";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { buildCommandContext } from "@/command-registry/context";
 import {
   CALCULATOR_RESULT_COMMAND_ID,
-  createDefaultCommandProviders,
   createQuicklinkExecuteCommandDescriptor,
   toQuicklinkExecuteCommandId,
 } from "@/command-registry/default-providers";
 import { dispatchCommand } from "@/command-registry/dispatcher";
 import type { CustomActionRequest } from "@/command-registry/dispatcher";
-import { createCommandProviderOrchestrator } from "@/command-registry/providers";
-import type { RankedCommand } from "@/command-registry/ranker";
-import { rankCommands } from "@/command-registry/ranker";
 import { staticCommandRegistry } from "@/command-registry/registry";
-import { resolveStaticCommandCandidates } from "@/command-registry/static-candidates";
 import { createStaticCommandRegistryStore } from "@/command-registry/static-registry";
-import { logDispatchFailure, logProviderResolution } from "@/command-registry/telemetry";
-import type { CommandDescriptor, CommandProviderResolution } from "@/command-registry/types";
+import { logDispatchFailure } from "@/command-registry/telemetry";
+import type { CommandDescriptor } from "@/command-registry/types";
 import { useCommandPreferences } from "@/command-registry/use-command-preferences";
 import { Command, CommandInput, CommandList } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
@@ -31,16 +26,21 @@ import { LauncherCommandModeContent } from "@/modules/launcher/components/launch
 import { LauncherFooter } from "@/modules/launcher/components/launcher-footer";
 import { LauncherSecondaryPanel } from "@/modules/launcher/components/launcher-secondary-panel";
 import { LauncherTakeoverPanel } from "@/modules/launcher/components/launcher-takeover-panel";
+import { useExtensionSidecarEvents } from "@/modules/launcher/hooks/use-extension-sidecar-events";
+import { useLauncherDeepLinks } from "@/modules/launcher/hooks/use-launcher-deep-links";
+import { useLauncherPanelPrefetch } from "@/modules/launcher/hooks/use-launcher-panel-prefetch";
+import { useLauncherWindowSizeSync } from "@/modules/launcher/hooks/use-launcher-window-size-sync";
+import { useRankedRegistryCommands } from "@/modules/launcher/hooks/use-ranked-registry-commands";
+import {
+  isLauncherBackHotkey,
+  runLauncherPanelBackHandler,
+} from "@/modules/launcher/lib/back-navigation";
 import { createCustomActionHandler } from "@/modules/launcher/lib/create-custom-action-handler";
 import { extensionSidecarService } from "@/modules/extensions/sidecar-service";
-import { getDiscoveredPlugins } from "@/modules/extensions/api/get-discovered-plugins";
 import { ExtensionToastBridge } from "@/modules/extensions/components/extension-toast-bridge";
 import { useExtensionRuntimeStore } from "@/modules/extensions/runtime/store";
-import { parseRaycastDeepLink } from "@/modules/extensions/sidecar/deep-link";
-import { useExtensionsUiStore } from "@/modules/extensions/store/use-extensions-ui-store";
 import { findQuicklinkByKeyword } from "@/modules/quicklinks/api/quicklinks";
 import { useQuicklinks } from "@/modules/quicklinks/hooks/use-quicklinks";
-import { setLauncherCompactMode } from "@/modules/settings/api/set-launcher-compact-mode";
 import { useUiLayout } from "@/modules/settings/hooks/use-ui-layout";
 import { useAwakeStore } from "@/modules/system-actions/store/awake-store";
 import {
@@ -51,10 +51,35 @@ import {
   useLauncherUiStore,
 } from "@/store/use-launcher-ui-store";
 
+function focusLauncherInputElement() {
+  const input = document.querySelector<HTMLInputElement>('[data-slot="command-input"]');
+  if (!input) {
+    return;
+  }
+
+  if (document.activeElement === input) {
+    return;
+  }
+
+  input.focus({ preventScroll: true });
+}
+
+async function focusLauncherWindow() {
+  if (!isTauri()) {
+    window.focus();
+    return;
+  }
+
+  try {
+    await getCurrentWindow().setFocus();
+  } catch {
+    window.focus();
+  }
+}
+
 export default function LauncherCommand() {
   const queryClient = useQueryClient();
   const [calculatorSessionId, setCalculatorSessionId] = useState(() => crypto.randomUUID());
-  const [rankedRegistryCommands, setRankedRegistryCommands] = useState<RankedCommand[]>([]);
   const commandSearch = useLauncherUiStore((state) => state.commandSearch);
   const activePanel = useLauncherUiStore((state) => state.activePanel);
   const fileSearchQuery = useLauncherUiStore((state) => state.fileSearchQuery);
@@ -84,161 +109,9 @@ export default function LauncherCommand() {
   const matchedQuicklink = quicklinkKeyword
     ? findQuicklinkByKeyword(quicklinks, quicklinkKeyword)
     : undefined;
-  const providerOrchestrator = useMemo(
-    () =>
-      createCommandProviderOrchestrator({
-        providers: createDefaultCommandProviders(),
-      }),
-    [],
-  );
-
-  const openExtensionsFromDeepLink = useCallback((extensionSlug?: string) => {
-    openPanel("extensions", true);
-    const extensionsUi = useExtensionsUiStore.getState();
-    const normalizedSlug = extensionSlug?.trim() ?? "";
-    if (normalizedSlug.length > 0) {
-      extensionsUi.setSearch(normalizedSlug);
-      extensionsUi.setDebouncedSearch(normalizedSlug);
-      extensionsUi.setSearchDebouncing(false);
-    }
-  }, [openPanel]);
-
-  const runExtensionCommandFromDeepLink = useCallback(async (
-    ownerOrAuthor: string,
-    extensionName: string,
-    commandName: string,
-  ) => {
-    const requestedOwner = ownerOrAuthor.trim().toLowerCase();
-    const requestedExtension = extensionName.trim().toLowerCase();
-    const requestedCommand = commandName.trim().toLowerCase();
-    if (!requestedOwner || !requestedExtension || !requestedCommand) {
-      return;
-    }
-
-    const discovered = await getDiscoveredPlugins();
-    const matchedPlugin = discovered.find((plugin) => {
-      const owner = plugin.owner?.trim().toLowerCase() ?? "";
-      const author = typeof plugin.author === "string"
-        ? plugin.author.trim().toLowerCase()
-        : plugin.author?.name?.trim().toLowerCase() ?? "";
-      const ownerMatches = owner.length > 0 && owner === requestedOwner;
-      const authorMatches = author.length > 0 && author === requestedOwner;
-      if (!ownerMatches && !authorMatches) {
-        return false;
-      }
-
-      return (
-        plugin.pluginName.trim().toLowerCase() === requestedExtension &&
-        plugin.commandName.trim().toLowerCase() === requestedCommand
-      );
-    });
-
-    if (!matchedPlugin) {
-      openExtensionsFromDeepLink(extensionName);
-      toast.error(`Extension command not found: ${ownerOrAuthor}/${extensionName}/${commandName}`);
-      return;
-    }
-
-    const pluginMode = matchedPlugin.mode?.trim().toLowerCase() === "no-view"
-      ? "no-view"
-      : "view";
-    useExtensionRuntimeStore.getState().resetForNewPlugin({
-      pluginPath: matchedPlugin.pluginPath,
-      pluginMode,
-      title: matchedPlugin.title,
-      subtitle: [matchedPlugin.pluginTitle, matchedPlugin.description ?? ""]
-        .filter((part) => part.trim().length > 0)
-        .join(" - ") || undefined,
-    });
-
-    if (pluginMode === "view") {
-      openPanel("extension-runner", true);
-    }
-
-    try {
-      await extensionSidecarService.runPlugin({
-        pluginPath: matchedPlugin.pluginPath,
-        mode: pluginMode,
-        aiAccessStatus: false,
-      });
-    } catch (error) {
-      useExtensionRuntimeStore.getState().resetRuntime();
-      if (pluginMode === "view") {
-        backToCommands();
-      }
-      const message = error instanceof Error ? error.message : String(error);
-      toast.error(`Failed to launch extension command: ${message}`);
-    }
-  }, [backToCommands, openExtensionsFromDeepLink, openPanel]);
-
-  useEffect(() => {
-    if (!isTauri()) {
-      return;
-    }
-
-    let disposed = false;
-    let unlisten: (() => void) | undefined;
-
-    void listen<string>("deep-link", (event) => {
-      const deepLinkUrl = event.payload;
-      if (extensionSidecarService.handleDeepLink(deepLinkUrl)) {
-        return;
-      }
-
-      const parsed = parseRaycastDeepLink(deepLinkUrl);
-      if (!parsed.handled) {
-        return;
-      }
-
-      if (parsed.kind === "extensions-store") {
-        openExtensionsFromDeepLink(parsed.extensionSlug);
-        return;
-      }
-
-      if (parsed.kind === "extensions-command") {
-        void runExtensionCommandFromDeepLink(
-          parsed.ownerOrAuthor,
-          parsed.extensionName,
-          parsed.commandName,
-        );
-      }
-    })
-      .then((cleanup) => {
-        if (disposed) {
-          cleanup();
-          return;
-        }
-        unlisten = cleanup;
-      })
-      .catch((error) => {
-        console.error("Failed to listen for deep links:", error);
-      });
-
-    return () => {
-      disposed = true;
-      unlisten?.();
-    };
-  }, [openExtensionsFromDeepLink, runExtensionCommandFromDeepLink]);
-
-  useEffect(() => {
-    const unsubscribe = extensionSidecarService.subscribe((event) => {
-      if (event.type === "go-back-to-plugin-list") {
-        useExtensionRuntimeStore.getState().resetRuntime();
-        backToCommands();
-        return;
-      }
-
-      if (event.type === "show-hud") {
-        toast.message(event.title);
-      }
-    });
-
-    return () => {
-      unsubscribe();
-      extensionSidecarService.stop();
-      useExtensionRuntimeStore.getState().resetRuntime();
-    };
-  }, [backToCommands]);
+  useLauncherDeepLinks({ openPanel, backToCommands });
+  useExtensionSidecarEvents({ backToCommands });
+  useLauncherPanelPrefetch();
 
   const commandContext = useMemo(
     () =>
@@ -251,64 +124,11 @@ export default function LauncherCommand() {
     [commandSearch, isCompressed, activePanel],
   );
 
-  useEffect(() => {
-    let cancelled = false;
-    const staticCandidates = resolveStaticCommandCandidates(staticCommandRegistry, commandContext);
-
-    const applyRankedCommands = (dynamicResolution: CommandProviderResolution) => {
-      if (cancelled) {
-        return;
-      }
-
-      const dynamicCommands = dynamicResolution.commands.filter(
-        (command) => command.scope.includes("all") || command.scope.includes(commandContext.mode),
-      );
-      const visibleCommands = [...staticCandidates, ...dynamicCommands].filter(
-        (command) => !hiddenCommandIds.has(command.id),
-      );
-      const ranked = rankCommands({
-        commands: visibleCommands,
-        context: commandContext,
-        signals: rankingSignals,
-      });
-      setRankedRegistryCommands(ranked);
-    };
-
-    applyRankedCommands({
-      commands: [],
-      errors: [],
-      telemetry: [],
-    });
-
-    void providerOrchestrator
-      .resolveIncremental(commandContext, (partialResolution) => {
-        applyRankedCommands(partialResolution);
-      })
-      .then((result) => {
-        if (cancelled) {
-          return;
-        }
-
-        applyRankedCommands(result);
-        logProviderResolution(result, {
-          mode: commandContext.mode,
-          activePanel: commandContext.activePanel,
-          query: commandContext.query,
-        });
-      })
-      .catch((error) => {
-        if (cancelled) {
-          return;
-        }
-        console.error("Failed to resolve registry commands:", error);
-        setRankedRegistryCommands([]);
-      });
-
-    return () => {
-      cancelled = true;
-      providerOrchestrator.cancel();
-    };
-  }, [commandContext, hiddenCommandIds, providerOrchestrator, rankingSignals]);
+  const { rankedRegistryCommands } = useRankedRegistryCommands({
+    commandContext,
+    hiddenCommandIds,
+    rankingSignals,
+  });
 
   useEffect(() => {
     if (trimmedCommandSearch.length === 0) {
@@ -479,7 +299,21 @@ export default function LauncherCommand() {
   };
 
   const handleKeyDown = async (e: React.KeyboardEvent) => {
+    if (e.defaultPrevented) {
+      return;
+    }
+
     if (activePanel !== "commands") {
+      if (isLauncherBackHotkey(e)) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const handledByPanel = runLauncherPanelBackHandler(activePanel);
+        if (!handledByPanel) {
+          backToCommands();
+        }
+      }
+
       return;
     }
 
@@ -489,6 +323,31 @@ export default function LauncherCommand() {
     }
   };
 
+  useEffect(() => {
+    if (activePanel === "commands") {
+      return;
+    }
+
+    const handleWindowBackHotkey = (event: KeyboardEvent) => {
+      if (event.defaultPrevented || !isLauncherBackHotkey(event)) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      const handledByPanel = runLauncherPanelBackHandler(activePanel);
+      if (!handledByPanel) {
+        backToCommands();
+      }
+    };
+
+    window.addEventListener("keydown", handleWindowBackHotkey);
+    return () => {
+      window.removeEventListener("keydown", handleWindowBackHotkey);
+    };
+  }, [activePanel, backToCommands]);
+
   const shouldCollapseToInputOnly =
     activePanel === "commands" && isCompressed && trimmedCommandSearch.length === 0;
   const isInputHidden = isLauncherInputHidden(activePanel);
@@ -497,38 +356,57 @@ export default function LauncherCommand() {
 
   const shouldShowFooter = !shouldCollapseToInputOnly && !isLauncherFooterHidden(activePanel);
 
-  useEffect(() => {
-    const syncWindowSize = async () => {
-      try {
-        const inputWrapper = document.querySelector<HTMLElement>(
-          "[data-slot='command-input-wrapper']",
-        );
-        const measuredInputHeight = inputWrapper
-          ? Math.ceil(inputWrapper.getBoundingClientRect().height)
-          : undefined;
+  useLauncherWindowSizeSync(shouldCollapseToInputOnly);
 
-        await setLauncherCompactMode(shouldCollapseToInputOnly, measuredInputHeight);
-      } catch (error) {
-        console.error("Failed to update launcher window size:", error);
+  useEffect(() => {
+    let cancelled = false;
+
+    const scheduleFocus = () => {
+      if (document.visibilityState === "hidden") {
+        return;
       }
+
+      window.requestAnimationFrame(() => {
+        if (cancelled) {
+          return;
+        }
+        void focusLauncherWindow();
+        focusLauncherInputElement();
+      });
     };
 
-    const frame = window.requestAnimationFrame(() => {
-      void syncWindowSize();
+    scheduleFocus();
+    window.addEventListener("focus", scheduleFocus);
+    document.addEventListener("visibilitychange", scheduleFocus);
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener("focus", scheduleFocus);
+      document.removeEventListener("visibilitychange", scheduleFocus);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (activePanel !== "commands" || isInputHidden) {
+      return;
+    }
+
+    const frameId = window.requestAnimationFrame(() => {
+      focusLauncherInputElement();
     });
 
     return () => {
-      window.cancelAnimationFrame(frame);
+      window.cancelAnimationFrame(frameId);
     };
-  }, [shouldCollapseToInputOnly]);
+  }, [activePanel, isInputHidden]);
 
   return (
-    <div className="relative h-full w-full bg-background">
+    <div className="relative h-full w-full bg-transparent">
       <ExtensionToastBridge />
       <Command
         shouldFilter={false}
         onKeyDown={handleKeyDown}
-        className="h-full w-full overflow-hidden bg-transparent"
+        className="glass-effect h-full w-full overflow-hidden text-foreground"
       >
         {!isInputHidden && (
           <CommandInput
@@ -571,7 +449,7 @@ export default function LauncherCommand() {
         {hasTakeoverPanel || shouldCollapseToInputOnly ? null : (
           <CommandList
             className={cn(
-              "flex-1 px-1 transition-all duration-300",
+              "list-area custom-scrollbar flex-1 px-1.5 transition-all duration-300",
               isCommandListExpandedPanel
                 ? "min-h-0 flex flex-col h-full"
                 : "max-h-none overflow-y-auto",

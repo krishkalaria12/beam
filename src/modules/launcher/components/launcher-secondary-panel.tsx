@@ -1,9 +1,13 @@
-import type { ReactNode } from "react";
+import { lazy, Suspense, type ReactNode } from "react";
 
+import { CommandLoadingState } from "@/components/command/command-loading-state";
 import type { CommandPanel } from "@/command-registry/types";
-import CalculatorHistoryCommandGroup from "@/modules/calculator-history/components/calculator-history-command-group";
-import EmojiCommandGroup from "@/modules/emoji/components/emoji-command-group";
-import SettingsCommandGroup from "@/modules/settings/components/settings-command-group";
+
+const CalculatorHistoryCommandGroup = lazy(() =>
+  import("@/modules/calculator-history/components/calculator-history-command-group")
+);
+const EmojiCommandGroup = lazy(() => import("@/modules/emoji/components/emoji-command-group"));
+const SettingsCommandGroup = lazy(() => import("@/modules/settings/components/settings-command-group"));
 
 const SECONDARY_PANELS = [
   "calculator-history",
@@ -24,34 +28,14 @@ interface SecondaryPanelRendererInput {
   onBack: () => void;
 }
 
-type SecondaryPanelRenderer = (input: SecondaryPanelRendererInput) => ReactNode;
-
-const SECONDARY_PANEL_RENDERERS: Record<SecondaryPanel, SecondaryPanelRenderer> = {
-  "calculator-history": (input) => (
-    <CalculatorHistoryCommandGroup
-      isOpen
-      onOpen={input.onOpenCalculatorHistory}
-      onBack={input.onBack}
-    />
-  ),
-  emoji: (input) => (
-    <EmojiCommandGroup
-      isOpen
-      onOpen={input.onOpenEmoji}
-      onBack={input.onBack}
-    />
-  ),
-  settings: (input) => (
-    <SettingsCommandGroup
-      isOpen
-      onOpen={input.onOpenSettings}
-      onBack={input.onBack}
-    />
-  ),
-};
-
 interface LauncherSecondaryPanelProps extends SecondaryPanelRendererInput {
   activePanel: CommandPanel;
+}
+
+function SecondaryPanelFallback() {
+  return (
+    <CommandLoadingState label="Loading..." className="px-4 py-6 text-xs" />
+  );
 }
 
 export function LauncherSecondaryPanel({
@@ -65,10 +49,38 @@ export function LauncherSecondaryPanel({
     return null;
   }
 
-  return SECONDARY_PANEL_RENDERERS[activePanel]({
-    onOpenCalculatorHistory,
-    onOpenEmoji,
-    onOpenSettings,
-    onBack,
-  });
+  let content: ReactNode = null;
+
+  if (activePanel === "calculator-history") {
+    content = (
+      <CalculatorHistoryCommandGroup
+        isOpen
+        onOpen={onOpenCalculatorHistory}
+      />
+    );
+  } else if (activePanel === "emoji") {
+    content = (
+      <EmojiCommandGroup
+        isOpen
+        onOpen={onOpenEmoji}
+        onBack={onBack}
+      />
+    );
+  } else if (activePanel === "settings") {
+    content = (
+      <SettingsCommandGroup
+        isOpen
+        onOpen={onOpenSettings}
+        onBack={onBack}
+      />
+    );
+  }
+
+  return (
+    <Suspense fallback={<SecondaryPanelFallback />}>
+      <div className="animate-in fade-in zoom-in-[0.985] duration-200">
+        {content}
+      </div>
+    </Suspense>
+  );
 }

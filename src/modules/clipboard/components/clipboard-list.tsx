@@ -1,4 +1,5 @@
 import { ClipboardContentType, type ClipboardHistoryEntry } from "../types";
+import { CommandLoadingState } from "@/components/command/command-loading-state";
 import { cn } from "@/lib/utils";
 import { FileText, ImageIcon, Link } from "lucide-react";
 import { memo, useMemo } from "react";
@@ -95,12 +96,10 @@ export function ClipboardList({
   }, [entries]);
 
   return (
-    <div className="w-[40%] border-r border-border/40 bg-background/30 flex flex-col">
-      <div className="flex-1 overflow-y-auto p-3 scrollbar-none">
+    <div className="flex w-[40%] flex-col border-r border-[var(--ui-divider)] bg-background/20">
+      <div className="custom-scrollbar list-area flex-1 overflow-y-auto p-3">
         {isLoading ? (
-          <div className="p-4 text-center text-sm text-muted-foreground animate-pulse">
-            Loading history...
-          </div>
+          <CommandLoadingState label="Loading history..." />
         ) : entries.length === 0 ? (
           <div className="p-8 text-center text-sm text-muted-foreground/60 flex flex-col items-center gap-2">
             <div className="size-10 rounded-full bg-muted/20 flex items-center justify-center">

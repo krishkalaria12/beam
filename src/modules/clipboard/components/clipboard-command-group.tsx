@@ -1,7 +1,13 @@
 import { useCommandState } from "cmdk";
 
-import { CommandGroup, CommandItem, CommandShortcut } from "@/components/ui/command";
-import clipboardIcon from "@/assets/icons/clipboard.png";
+import { OpenModuleCommandRow } from "@/components/command/open-module-command-row";
+import { CommandIcon } from "@/components/icons/command-icon";
+import { CommandGroup } from "@/components/ui/command";
+import { LauncherTakeoverSurface } from "@/modules/launcher/components/launcher-takeover-surface";
+import {
+  matchesCommandKeywords,
+  normalizeCommandQuery,
+} from "@/modules/launcher/lib/command-query";
 
 import { ClipboardView } from "./clipboard-view";
 
@@ -11,19 +17,24 @@ type ClipboardCommandGroupProps = {
   onBack: () => void;
 };
 
+const CLIPBOARD_KEYWORDS = [
+  "clipboard",
+  "clipboard history",
+] as const;
+
 export default function ClipboardCommandGroup({ isOpen, onOpen, onBack }: ClipboardCommandGroupProps) {
   const searchInput = useCommandState((state) => state.search);
-  const query = searchInput.trim().toLowerCase();
+  const query = normalizeCommandQuery(searchInput);
 
   if (isOpen) {
     return (
-      <div className="absolute inset-0 z-50 bg-background">
+      <LauncherTakeoverSurface>
         <ClipboardView onBack={onBack} />
-      </div>
+      </LauncherTakeoverSurface>
     );
   }
 
-  const shouldShowOpenClipboard = query.length === 0 || "clipboard history".includes(query);
+  const shouldShowOpenClipboard = matchesCommandKeywords(query, CLIPBOARD_KEYWORDS);
 
   if (!shouldShowOpenClipboard) {
     return null;
@@ -31,11 +42,12 @@ export default function ClipboardCommandGroup({ isOpen, onOpen, onBack }: Clipbo
 
   return (
     <CommandGroup>
-      <CommandItem value="open clipboard history" onSelect={onOpen}>
-        <img src={clipboardIcon} alt="clipboard" className="size-6 rounded-sm object-cover" />
-        <p className="truncate text-foreground capitalize">clipboard history</p>
-        <CommandShortcut>open</CommandShortcut>
-      </CommandItem>
+      <OpenModuleCommandRow
+        value="open clipboard history"
+        onSelect={onOpen}
+        icon={<CommandIcon icon="clipboard" />}
+        title="clipboard history"
+      />
     </CommandGroup>
   );
 }

@@ -1,8 +1,7 @@
 import { Link2 } from "lucide-react";
-import { useState } from "react";
 
+import { UnifiedIcon } from "@/components/icons/unified-icon";
 import { cn } from "@/lib/utils";
-import { resolveExtensionIconSource } from "@/modules/extensions/lib/icon";
 
 interface ExtensionIconProps {
   iconReference?: string | null;
@@ -11,34 +10,24 @@ interface ExtensionIconProps {
 }
 
 export function ExtensionIcon({ iconReference, title, className }: ExtensionIconProps) {
-  const imageSource = resolveExtensionIconSource(iconReference);
-  const [failedSource, setFailedSource] = useState<string | null>(null);
-
-  if (!imageSource || failedSource === imageSource) {
-    return (
-      <div
-        className={cn(
-          "flex size-10 shrink-0 items-center justify-center rounded-xl border border-border/60 bg-background/60 text-muted-foreground",
-          className,
-        )}
-      >
-        <Link2 className="size-4" />
-      </div>
-    );
-  }
-
   return (
-    <img
-      src={imageSource}
-      alt={`${title} icon`}
+    <UnifiedIcon
+      icon={iconReference}
       className={cn(
         "size-10 shrink-0 rounded-xl border border-border/60 bg-background/40 object-cover",
         className,
       )}
-      loading="lazy"
-      onError={() => {
-        setFailedSource(imageSource);
-      }}
+      fallback={(
+        <div
+          className={cn(
+            "flex size-10 shrink-0 items-center justify-center rounded-xl border border-border/60 bg-background/60 text-muted-foreground",
+            className,
+          )}
+          title={`${title} icon`}
+        >
+          <Link2 className="size-4" />
+        </div>
+      )}
     />
   );
 }

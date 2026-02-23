@@ -136,7 +136,7 @@ export function ClipboardView({ onBack }: ClipboardViewProps) {
 
   return (
     <div
-      className="flex h-full w-full flex-col bg-background/95 text-foreground outline-none backdrop-blur-xl"
+      className="glass-effect flex h-full w-full flex-col text-foreground outline-none"
       onClick={() => inputRef.current?.focus()}
       onKeyDown={handleKeyDown}
     >
