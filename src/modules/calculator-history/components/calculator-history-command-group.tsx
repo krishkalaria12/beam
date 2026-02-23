@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 
 import { OpenModuleCommandRow } from "@/components/command/open-module-command-row";
 import { CommandIcon } from "@/components/icons/command-icon";
-import { CommandGroup } from "@/components/ui/command";
+import { CommandGroup, CommandItem } from "@/components/ui/command";
 import { matchesCommandKeywords, normalizeCommandQuery } from "@/modules/launcher/lib/command-query";
 import { useCalculatorHistory } from "../hooks/use-calculator-history";
 import { HISTORY_COPY_FEEDBACK_MS } from "../constants";
@@ -11,7 +11,6 @@ import { HISTORY_COPY_FEEDBACK_MS } from "../constants";
 import { CalculatorHistoryEmpty } from "./calculator-history-empty";
 import { CalculatorHistoryError } from "./calculator-history-error";
 import { CalculatorHistoryItem } from "./calculator-history-item";
-import { CalculatorHistoryLoading } from "./calculator-history-loading";
 
 type CalculatorHistoryCommandGroupProps = {
   isOpen: boolean;
@@ -88,7 +87,15 @@ export default function CalculatorHistoryCommandGroup({
 
   return (
     <CommandGroup>
-      {isLoading && <CalculatorHistoryLoading />}
+      {isLoading && (
+        <CommandItem disabled className="px-3 py-3 opacity-80">
+          <div className="min-w-0">
+            <p className="truncate text-[1.04rem] leading-tight text-foreground/80">
+              loading calculator history...
+            </p>
+          </div>
+        </CommandItem>
+      )}
 
       {isError && <CalculatorHistoryError />}
 

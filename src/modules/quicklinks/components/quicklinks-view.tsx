@@ -6,6 +6,7 @@ import { z } from "zod";
 import {
   CommandFooterBar,
 } from "@/components/command/command-footer-bar";
+import { CommandLoadingState } from "@/components/command/command-loading-state";
 import {
   CommandKeyHint,
 } from "@/components/command/command-key-hint";
@@ -466,9 +467,7 @@ function QuicklinksManageView({ onBack, onCreate, onEdit }: QuicklinksManageView
       {/* Content */}
       <div className="custom-scrollbar list-area flex-1 overflow-y-auto p-4">
         {isLoading && (
-          <div className="flex h-20 items-center justify-center">
-            <Loader2 className="size-6 animate-spin text-muted-foreground" />
-          </div>
+          <CommandLoadingState label="Loading quicklinks..." className="h-20" />
         )}
 
         {error && (

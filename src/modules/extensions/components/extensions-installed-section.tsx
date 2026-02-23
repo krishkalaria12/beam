@@ -1,5 +1,6 @@
 import { AlertTriangle, Loader2, Settings2, Trash2 } from "lucide-react";
 
+import { CommandInlineLoading } from "@/components/command/command-loading-state";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -42,10 +43,7 @@ export function ExtensionsInstalledSection({
           Installed
         </h3>
         {isFetching ? (
-          <span className="inline-flex items-center gap-1.5 text-[10px] text-muted-foreground">
-            <Loader2 className="size-3 animate-spin" />
-            Syncing
-          </span>
+          <CommandInlineLoading label="Syncing" iconClassName="size-3" />
         ) : null}
       </div>
 

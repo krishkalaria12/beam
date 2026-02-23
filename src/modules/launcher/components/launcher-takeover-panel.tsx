@@ -1,7 +1,7 @@
 import { lazy, Suspense, type ReactNode } from "react";
-import { Loader2 } from "lucide-react";
 
 import type { CommandPanel } from "@/command-registry/types";
+import { CommandLoadingState } from "@/components/command/command-loading-state";
 import { LauncherTakeoverSurface } from "@/modules/launcher/components/launcher-takeover-surface";
 
 import type { QuicklinksView } from "@/store/use-launcher-ui-store";
@@ -59,10 +59,7 @@ interface LauncherTakeoverPanelProps extends TakeoverPanelRendererInput {
 function TakeoverPanelFallback() {
   return (
     <LauncherTakeoverSurface>
-      <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
-        <Loader2 className="mr-2 size-4 animate-spin" />
-        Loading panel...
-      </div>
+      <CommandLoadingState label="Loading..." className="text-xs" />
     </LauncherTakeoverSurface>
   );
 }

@@ -1,6 +1,6 @@
 import { lazy, Suspense, type ReactNode } from "react";
-import { Loader2 } from "lucide-react";
 
+import { CommandLoadingState } from "@/components/command/command-loading-state";
 import type { CommandPanel } from "@/command-registry/types";
 
 const CalculatorHistoryCommandGroup = lazy(() =>
@@ -34,10 +34,7 @@ interface LauncherSecondaryPanelProps extends SecondaryPanelRendererInput {
 
 function SecondaryPanelFallback() {
   return (
-    <div className="flex items-center justify-center px-4 py-6 text-xs text-muted-foreground">
-      <Loader2 className="mr-2 size-3.5 animate-spin" />
-      Loading...
-    </div>
+    <CommandLoadingState label="Loading..." className="px-4 py-6 text-xs" />
   );
 }
 

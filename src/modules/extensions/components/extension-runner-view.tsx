@@ -1,6 +1,7 @@
-import { Loader2, Search, Settings2 } from "lucide-react";
+import { Search, Settings2 } from "lucide-react";
 
 import { CommandFooterBar } from "@/components/command/command-footer-bar";
+import { CommandLoadingState } from "@/components/command/command-loading-state";
 import { CommandKeyHint } from "@/components/command/command-key-hint";
 import {
   CommandPanelBackButton,
@@ -81,10 +82,7 @@ export function ExtensionRunnerView({ onBack, onOpenExtensions }: ExtensionRunne
       </CommandPanelHeader>
       {!state.rootNode ? (
         <>
-          <div className="flex min-h-0 flex-1 items-center justify-center text-sm text-muted-foreground">
-            <Loader2 className="mr-2 size-4 animate-spin" />
-            Waiting for extension UI...
-          </div>
+          <CommandLoadingState label="Loading extension UI..." className="min-h-0 flex-1" />
           <CommandFooterBar rightSlot={<CommandKeyHint keyLabel="ESC" label="Back" />} />
         </>
       ) : (

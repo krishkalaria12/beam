@@ -1,5 +1,6 @@
 import { Download, Loader2, Search, Trash2 } from "lucide-react";
 
+import { CommandInlineLoading } from "@/components/command/command-loading-state";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -49,10 +50,7 @@ export function ExtensionsStoreResultsSection({
           ) : null}
         </div>
         {isLoading ? (
-          <span className="inline-flex items-center gap-1.5 text-[10px] text-muted-foreground">
-            <Loader2 className="size-3 animate-spin" />
-            Searching
-          </span>
+          <CommandInlineLoading label="Searching" iconClassName="size-3" />
         ) : null}
       </div>
 
