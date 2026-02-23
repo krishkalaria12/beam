@@ -1,12 +1,8 @@
-import { ArrowLeft, PaintBucket, Sparkles } from "lucide-react";
+import { PaintBucket, Sparkles } from "lucide-react";
 
 import { useUiStyle, type UiStylePreference } from "@/components/ui-style-provider";
-import { CommandGroup, CommandItem } from "@/components/ui/command";
+import { CommandGroup } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
-
-interface VisualStyleSettingsProps {
-  onBack: () => void;
-}
 
 const BASE_COLOR_PRESETS = [
   "#101113",
@@ -16,7 +12,7 @@ const BASE_COLOR_PRESETS = [
   "#2e1f3a",
 ] as const;
 
-export function VisualStyleSettings({ onBack }: VisualStyleSettingsProps) {
+export function VisualStyleSettings() {
   const { uiStyle, baseColor, setUiStyle, setBaseColor } = useUiStyle();
 
   const setStyle = (style: UiStylePreference) => {
@@ -25,17 +21,6 @@ export function VisualStyleSettings({ onBack }: VisualStyleSettingsProps) {
 
   return (
     <CommandGroup>
-      <CommandItem
-        value="back to settings"
-        className="mb-1 opacity-60 hover:opacity-100 transition-opacity"
-        onSelect={onBack}
-      >
-        <div className="flex items-center gap-2">
-          <ArrowLeft className="size-5" />
-          <span className="font-mono text-[10px] uppercase tracking-widest">Back</span>
-        </div>
-      </CommandItem>
-
       <div className="space-y-4 px-1 pb-1">
         <div>
           <p className="mb-2 px-2 font-mono text-[9px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50">

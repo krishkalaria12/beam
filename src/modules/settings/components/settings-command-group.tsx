@@ -1,14 +1,13 @@
 import { useCommandState } from "cmdk";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 
 import { OpenModuleCommandRow } from "@/components/command/open-module-command-row";
 import { CommandIcon } from "@/components/icons/command-icon";
 import { CommandGroup } from "@/components/ui/command";
+import { useLauncherPanelBackHandler } from "@/modules/launcher/lib/back-navigation";
 import { matchesCommandKeywords, normalizeCommandQuery } from "@/modules/launcher/lib/command-query";
 import type { SettingsView } from "../constants";
 import { SettingsMenu } from "./SettingsMenu";
-import { AppearanceSettings } from "./AppearanceSettings";
-import { ThemeSettings } from "./ThemeSettings";
 import { VisualStyleSettings } from "./VisualStyleSettings";
 import { LayoutSettings } from "./LayoutSettings";
 
@@ -20,11 +19,10 @@ type SettingsCommandGroupProps = {
 
 const SETTINGS_KEYWORDS = [
   "settings",
-  "theme",
-  "colors",
-  "appearance",
   "style",
-  "mode",
+  "layout",
+  "density",
+  "glassy",
 ] as const;
 
 export default function SettingsCommandGroup({ isOpen, onOpen, onBack }: SettingsCommandGroupProps) {
@@ -32,13 +30,15 @@ export default function SettingsCommandGroup({ isOpen, onOpen, onBack }: Setting
   const query = normalizeCommandQuery(searchInput);
   const [view, setView] = useState<SettingsView>("main");
 
-  const handleBack = () => {
+  const handleBack = useCallback(() => {
     if (view === "main") {
       onBack();
     } else {
       setView("main");
     }
-  };
+  }, [onBack, view]);
+
+  useLauncherPanelBackHandler("settings", handleBack, isOpen);
 
   if (!isOpen) {
     const shouldShowOpenSettings = matchesCommandKeywords(query, SETTINGS_KEYWORDS);
@@ -64,11 +64,9 @@ export default function SettingsCommandGroup({ isOpen, onOpen, onBack }: Setting
 
   return (
     <>
-      {view === "main" && <SettingsMenu setView={setView} onBack={handleBack} />}
-      {view === "appearance" && <AppearanceSettings onBack={handleBack} />}
-      {view === "themes" && <ThemeSettings onBack={handleBack} />}
-      {view === "style" && <VisualStyleSettings onBack={handleBack} />}
-      {view === "layout" && <LayoutSettings onBack={handleBack} />}
+      {view === "main" && <SettingsMenu setView={setView} />}
+      {view === "style" && <VisualStyleSettings />}
+      {view === "layout" && <LayoutSettings />}
     </>
   );
 }

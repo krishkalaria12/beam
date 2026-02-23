@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "@tanstack/react-form";
 import { ArrowLeft, Loader2, Link2, Trash2, Plus, Pencil, Command, Folder, File, FolderOpen } from "lucide-react";
 import { z } from "zod";
@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { useLauncherPanelBackHandler } from "@/modules/launcher/lib/back-navigation";
 import {
   useCreateQuicklink,
   useDeleteQuicklink,
@@ -52,28 +53,24 @@ export function QuicklinksView({ view, setView, onBack }: QuicklinksViewProps) {
   const [editingQuicklink, setEditingQuicklink] = useState<Quicklink | null>(null);
   const [returnToManage, setReturnToManage] = useState(false);
 
+  const handleBack = useCallback(() => {
+    if (view === "create" && (editingQuicklink || returnToManage)) {
+      setEditingQuicklink(null);
+      setReturnToManage(false);
+      setView("manage");
+      return;
+    }
+
+    onBack();
+  }, [editingQuicklink, onBack, returnToManage, setView, view]);
+
+  useLauncherPanelBackHandler("quicklinks", handleBack);
+
   if (view === "create") {
     return (
       <QuicklinkCreateForm 
-        onBack={() => {
-          if (editingQuicklink || returnToManage) {
-            setEditingQuicklink(null);
-            setReturnToManage(false);
-            setView("manage");
-            return;
-          }
-          onBack();
-        }}
-        onSuccess={() => {
-          if (editingQuicklink || returnToManage) {
-            setEditingQuicklink(null);
-            setReturnToManage(false);
-            setView("manage");
-            return;
-          }
-
-          onBack();
-        }}
+        onBack={handleBack}
+        onSuccess={handleBack}
         initialData={editingQuicklink ?? undefined}
         editKeyword={editingQuicklink?.keyword}
       />
@@ -82,7 +79,7 @@ export function QuicklinksView({ view, setView, onBack }: QuicklinksViewProps) {
 
   return (
     <QuicklinksManageView
-      onBack={onBack}
+      onBack={handleBack}
       onCreate={() => {
         setEditingQuicklink(null);
         setReturnToManage(true);

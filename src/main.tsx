@@ -31,7 +31,7 @@ if (!rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement);
   root.render(
     <QueryProvider>
-      <ThemeProvider defaultTheme="glass">
+      <ThemeProvider>
         <UiStyleProvider>
           <RouterProvider router={router} />
           <Toaster position="top-right" richColors />

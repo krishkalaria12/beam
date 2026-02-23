@@ -59,7 +59,6 @@ export function LauncherSecondaryPanel({
       <CalculatorHistoryCommandGroup
         isOpen
         onOpen={onOpenCalculatorHistory}
-        onBack={onBack}
       />
     );
   } else if (activePanel === "emoji") {

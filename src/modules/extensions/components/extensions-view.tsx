@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, ArrowLeft, Loader2, Search, Sparkles, X } from "lucide-react";
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,7 @@ import { useInstallExtensionMutation } from "@/modules/extensions/hooks/use-inst
 import { useInstalledExtensionsQuery } from "@/modules/extensions/hooks/use-installed-extensions-query";
 import { useStoreExtensionsSearchQuery } from "@/modules/extensions/hooks/use-store-extensions-search-query";
 import { useUninstallExtensionMutation } from "@/modules/extensions/hooks/use-uninstall-extension-mutation";
+import { useLauncherPanelBackHandler } from "@/modules/launcher/lib/back-navigation";
 import { useExtensionsUiStore } from "@/modules/extensions/store/use-extensions-ui-store";
 import type { InstalledExtensionSummary } from "@/modules/extensions/types";
 
@@ -218,17 +219,28 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
     }
   };
 
-  const resetSetupState = () => {
+  const resetSetupState = useCallback(() => {
     setupLoadRequestIdRef.current += 1;
     extensionsUi.resetSetupState();
-  };
+  }, [extensionsUi]);
 
-  const handleCloseSetup = () => {
+  const handleCloseSetup = useCallback(() => {
     if (extensionsUi.isSetupSaving) {
       return;
     }
     resetSetupState();
-  };
+  }, [extensionsUi.isSetupSaving, resetSetupState]);
+
+  const handleBack = useCallback(() => {
+    if (extensionsUi.setupExtension) {
+      handleCloseSetup();
+      return;
+    }
+
+    onBack();
+  }, [extensionsUi.setupExtension, handleCloseSetup, onBack]);
+
+  useLauncherPanelBackHandler("extensions", handleBack);
 
   const handleSaveSetup = async (values: Record<string, unknown>) => {
     if (!extensionsUi.setupExtension?.pluginName) {
@@ -267,7 +279,7 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
         isLoading={extensionsUi.isSetupLoading}
         isSaving={extensionsUi.isSetupSaving}
         error={extensionsUi.setupError}
-        onBack={handleCloseSetup}
+        onBack={handleBack}
         onSave={handleSaveSetup}
       />
     );
@@ -279,7 +291,7 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
         <Button
           variant="ghost"
           size="icon"
-          onClick={onBack}
+          onClick={handleBack}
           className="size-8 rounded-lg text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
         >
           <ArrowLeft className="size-4" />

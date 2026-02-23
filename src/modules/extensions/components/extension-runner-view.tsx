@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { RunnerNodeRenderer } from "@/modules/extensions/components/runner/nodes/node-renderer";
 import { RootNodeRenderer } from "@/modules/extensions/components/runner/nodes/root-node-renderer";
 import { useExtensionRunnerState } from "@/modules/extensions/components/runner/use-extension-runner-state";
+import { useLauncherPanelBackHandler } from "@/modules/launcher/lib/back-navigation";
 
 interface ExtensionRunnerViewProps {
   onBack: () => void;
@@ -13,6 +14,7 @@ interface ExtensionRunnerViewProps {
 
 export function ExtensionRunnerView({ onBack, onOpenExtensions }: ExtensionRunnerViewProps) {
   const state = useExtensionRunnerState({ onBack });
+  useLauncherPanelBackHandler("extension-runner", state.handleBack);
   const showSearchInput = state.rootType === "List" || state.rootType === "Grid";
   const searchBarAccessoryNodeId = state.rootNode?.namedChildren?.searchBarAccessory;
   const searchPlaceholder =

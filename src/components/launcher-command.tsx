@@ -1,5 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { isTauri } from "@tauri-apps/api/core";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -30,6 +31,10 @@ import { useLauncherDeepLinks } from "@/modules/launcher/hooks/use-launcher-deep
 import { useLauncherPanelPrefetch } from "@/modules/launcher/hooks/use-launcher-panel-prefetch";
 import { useLauncherWindowSizeSync } from "@/modules/launcher/hooks/use-launcher-window-size-sync";
 import { useRankedRegistryCommands } from "@/modules/launcher/hooks/use-ranked-registry-commands";
+import {
+  isLauncherBackHotkey,
+  runLauncherPanelBackHandler,
+} from "@/modules/launcher/lib/back-navigation";
 import { createCustomActionHandler } from "@/modules/launcher/lib/create-custom-action-handler";
 import { extensionSidecarService } from "@/modules/extensions/sidecar-service";
 import { ExtensionToastBridge } from "@/modules/extensions/components/extension-toast-bridge";
@@ -45,6 +50,32 @@ import {
   isLauncherTakeoverPanel,
   useLauncherUiStore,
 } from "@/store/use-launcher-ui-store";
+
+function focusLauncherInputElement() {
+  const input = document.querySelector<HTMLInputElement>('[data-slot="command-input"]');
+  if (!input) {
+    return;
+  }
+
+  if (document.activeElement === input) {
+    return;
+  }
+
+  input.focus({ preventScroll: true });
+}
+
+async function focusLauncherWindow() {
+  if (!isTauri()) {
+    window.focus();
+    return;
+  }
+
+  try {
+    await getCurrentWindow().setFocus();
+  } catch {
+    window.focus();
+  }
+}
 
 export default function LauncherCommand() {
   const queryClient = useQueryClient();
@@ -268,7 +299,21 @@ export default function LauncherCommand() {
   };
 
   const handleKeyDown = async (e: React.KeyboardEvent) => {
+    if (e.defaultPrevented) {
+      return;
+    }
+
     if (activePanel !== "commands") {
+      if (isLauncherBackHotkey(e)) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const handledByPanel = runLauncherPanelBackHandler(activePanel);
+        if (!handledByPanel) {
+          backToCommands();
+        }
+      }
+
       return;
     }
 
@@ -277,6 +322,31 @@ export default function LauncherCommand() {
       await handleQuicklinkExecute(matchedQuicklink.keyword, quicklinkQuery);
     }
   };
+
+  useEffect(() => {
+    if (activePanel === "commands") {
+      return;
+    }
+
+    const handleWindowBackHotkey = (event: KeyboardEvent) => {
+      if (event.defaultPrevented || !isLauncherBackHotkey(event)) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      const handledByPanel = runLauncherPanelBackHandler(activePanel);
+      if (!handledByPanel) {
+        backToCommands();
+      }
+    };
+
+    window.addEventListener("keydown", handleWindowBackHotkey);
+    return () => {
+      window.removeEventListener("keydown", handleWindowBackHotkey);
+    };
+  }, [activePanel, backToCommands]);
 
   const shouldCollapseToInputOnly =
     activePanel === "commands" && isCompressed && trimmedCommandSearch.length === 0;
@@ -287,6 +357,48 @@ export default function LauncherCommand() {
   const shouldShowFooter = !shouldCollapseToInputOnly && !isLauncherFooterHidden(activePanel);
 
   useLauncherWindowSizeSync(shouldCollapseToInputOnly);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const scheduleFocus = () => {
+      if (document.visibilityState === "hidden") {
+        return;
+      }
+
+      window.requestAnimationFrame(() => {
+        if (cancelled) {
+          return;
+        }
+        void focusLauncherWindow();
+        focusLauncherInputElement();
+      });
+    };
+
+    scheduleFocus();
+    window.addEventListener("focus", scheduleFocus);
+    document.addEventListener("visibilitychange", scheduleFocus);
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener("focus", scheduleFocus);
+      document.removeEventListener("visibilitychange", scheduleFocus);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (activePanel !== "commands" || isInputHidden) {
+      return;
+    }
+
+    const frameId = window.requestAnimationFrame(() => {
+      focusLauncherInputElement();
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+    };
+  }, [activePanel, isInputHidden]);
 
   return (
     <div className="relative h-full w-full bg-transparent">

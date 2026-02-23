@@ -1,7 +1,6 @@
 import { useCommandState } from "cmdk";
 import { useEffect, useState } from "react";
 
-import { BaseCommandRow } from "@/components/command/base-command-row";
 import { OpenModuleCommandRow } from "@/components/command/open-module-command-row";
 import { CommandIcon } from "@/components/icons/command-icon";
 import { CommandGroup } from "@/components/ui/command";
@@ -17,7 +16,6 @@ import { CalculatorHistoryLoading } from "./calculator-history-loading";
 type CalculatorHistoryCommandGroupProps = {
   isOpen: boolean;
   onOpen: () => void;
-  onBack: () => void;
 };
 
 const CALCULATOR_HISTORY_KEYWORDS = [
@@ -36,7 +34,6 @@ async function copyCalculatorEntry(value: string) {
 export default function CalculatorHistoryCommandGroup({
   isOpen,
   onOpen,
-  onBack,
 }: CalculatorHistoryCommandGroupProps) {
   const searchInput = useCommandState((state) => state.search);
   const query = normalizeCommandQuery(searchInput);
@@ -91,16 +88,6 @@ export default function CalculatorHistoryCommandGroup({
 
   return (
     <CommandGroup>
-      <BaseCommandRow
-        value="back to commands"
-        onSelect={onBack}
-        icon={<CommandIcon icon="back" />}
-        title="Back to Beam"
-        shortcut="back"
-        className="mb-2 opacity-70 transition-opacity hover:opacity-100"
-        titleClassName="font-mono text-xs uppercase tracking-widest text-muted-foreground"
-      />
-
       {isLoading && <CalculatorHistoryLoading />}
 
       {isError && <CalculatorHistoryError />}
