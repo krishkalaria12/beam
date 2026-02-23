@@ -45,6 +45,14 @@ export function EmojiPickerLoading() {
           ))}
         </div>
       </div>
+
+      <div className="sc-glass-footer flex h-[42px] items-center justify-between px-4 py-2.5">
+        <Skeleton className="h-3 w-20 rounded" />
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-[22px] w-[22px] rounded" />
+          <Skeleton className="h-3 w-10 rounded" />
+        </div>
+      </div>
     </div>
   );
 }

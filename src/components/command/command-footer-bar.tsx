@@ -6,22 +6,33 @@ interface CommandFooterBarProps {
   leftSlot?: ReactNode;
   rightSlot?: ReactNode;
   className?: string;
+  leftSlotClassName?: string;
+  rightSlotClassName?: string;
 }
 
 export function CommandFooterBar({
   leftSlot,
   rightSlot,
   className,
+  leftSlotClassName,
+  rightSlotClassName,
 }: CommandFooterBarProps) {
   return (
     <div
       className={cn(
-        "sc-glass-footer flex h-8 items-center justify-between px-4 text-[10px] font-medium uppercase tracking-widest text-muted-foreground/70",
+        "sc-glass-footer flex h-[42px] shrink-0 items-center justify-between px-4 py-2.5",
         className,
       )}
     >
-      <div className="flex items-center gap-2">{leftSlot}</div>
-      <div className="flex items-center gap-3">{rightSlot}</div>
+      <div
+        className={cn(
+          "flex min-w-0 flex-1 items-center gap-2 text-xs font-normal text-muted-foreground",
+          leftSlotClassName,
+        )}
+      >
+        {leftSlot}
+      </div>
+      <div className={cn("ml-3 flex items-center gap-3", rightSlotClassName)}>{rightSlot}</div>
     </div>
   );
 }

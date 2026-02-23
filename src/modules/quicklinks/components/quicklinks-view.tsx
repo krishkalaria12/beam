@@ -4,6 +4,12 @@ import { Loader2, Link2, Trash2, Plus, Pencil, Command, Folder, File, FolderOpen
 import { z } from "zod";
 
 import {
+  CommandFooterBar,
+} from "@/components/command/command-footer-bar";
+import {
+  CommandKeyHint,
+} from "@/components/command/command-key-hint";
+import {
   CommandPanelBackButton,
   CommandPanelHeader,
   CommandPanelTitleBlock,
@@ -399,32 +405,27 @@ function QuicklinkCreateForm({ onBack, onSuccess, initialData, editKeyword }: Qu
         </form>
       </div>
 
-      {/* Footer */}
-      <div className="sc-glass-footer flex items-center justify-between p-4 px-6">
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-           <Command className="size-3" />
-           <span>{isEditMode ? "Update Quicklink" : "Create Quicklink"}</span>
-        </div>
-        <div className="flex items-center gap-2">
-            <Button
-              variant="ghost" 
-              onClick={onBack}
-            >
+      <CommandFooterBar
+        className="h-[52px] px-6"
+        leftSlot={(
+          <>
+            <Command className="size-3.5" />
+            <span>{isEditMode ? "Update Quicklink" : "Create Quicklink"}</span>
+          </>
+        )}
+        rightSlot={(
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={onBack} className="h-7 px-2.5">
               Cancel
             </Button>
-            <Button
-              onClick={() => form.handleSubmit()}
-              disabled={isSubmitting}
-            >
-              {isSubmitting && <Loader2 className="mr-2 size-4 animate-spin" />}
-              {isEditMode ? "Update Quicklink" : "Create Quicklink"}
-              <div className="ml-2 flex gap-0.5">
-                  <span className="rounded bg-primary-foreground/20 px-1 py-0.5 font-mono text-[10px] text-primary-foreground">⌘</span>
-                  <span className="rounded bg-primary-foreground/20 px-1 py-0.5 font-mono text-[10px] text-primary-foreground">↵</span>
-              </div>
+            <Button onClick={() => form.handleSubmit()} disabled={isSubmitting} className="h-7 gap-2 px-2.5">
+              {isSubmitting ? <Loader2 className="size-3.5 animate-spin" /> : null}
+              {isEditMode ? "Update" : "Create"}
             </Button>
-        </div>
-      </div>
+            <CommandKeyHint keyLabel={["⌘", "↵"]} label={isEditMode ? "Update" : "Create"} />
+          </div>
+        )}
+      />
     </div>
   );
 }
@@ -541,6 +542,11 @@ function QuicklinksManageView({ onBack, onCreate, onEdit }: QuicklinksManageView
           </div>
         )}
       </div>
+
+      <CommandFooterBar
+        leftSlot={<span>{quicklinks?.length ?? 0} quicklinks</span>}
+        rightSlot={<CommandKeyHint keyLabel="ESC" label="Back" />}
+      />
     </div>
   );
 }

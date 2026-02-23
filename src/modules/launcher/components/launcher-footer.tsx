@@ -6,7 +6,6 @@ import { CommandKeyHint } from "@/components/command/command-key-hint";
 export function LauncherFooter() {
   return (
     <CommandFooterBar
-      className="h-9"
       leftSlot={(
         <>
           <Search className="size-3" />

@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 interface CommandKeyHintProps {
-  keyLabel: ReactNode;
+  keyLabel: ReactNode | ReactNode[];
   label: ReactNode;
   className?: string;
   keyClassName?: string;
@@ -17,35 +17,42 @@ export function CommandKeyHint({
   className,
   keyClassName,
   labelClassName,
-  order = "key-first",
+  order = "label-first",
 }: CommandKeyHintProps) {
-  const keycap = (
-    <kbd
-      className={cn(
-        "rounded border border-border/60 bg-muted/30 px-1 py-0.5 font-mono text-[9px] text-foreground/70",
-        keyClassName,
-      )}
-    >
-      {keyLabel}
-    </kbd>
+  const keyLabels = Array.isArray(keyLabel) ? keyLabel : [keyLabel];
+  const keycaps = (
+    <div className="flex items-center gap-1">
+      {keyLabels.map((entry, index) => (
+        <kbd
+          key={`key:${index}`}
+          className={cn(
+            "inline-flex h-[22px] min-w-[22px] items-center justify-center rounded px-1.5 font-mono text-[11px] font-medium text-muted-foreground",
+            "bg-[var(--kbd-bg)]",
+            keyClassName,
+          )}
+        >
+          {entry}
+        </kbd>
+      ))}
+    </div>
   );
 
   const labelNode = (
-    <span className={cn("text-current", labelClassName)}>
+    <span className={cn("text-xs font-normal text-muted-foreground", labelClassName)}>
       {label}
     </span>
   );
 
   return (
-    <div className={cn("flex items-center gap-1", className)}>
+    <div className={cn("flex items-center gap-1.5", className)}>
       {order === "label-first" ? (
         <>
           {labelNode}
-          {keycap}
+          {keycaps}
         </>
       ) : (
         <>
-          {keycap}
+          {keycaps}
           {labelNode}
         </>
       )}

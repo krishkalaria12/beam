@@ -2,6 +2,8 @@ import { useForm } from "@tanstack/react-form";
 import { AlertTriangle, Loader2, Save } from "lucide-react";
 import { useEffect, useState, type KeyboardEvent } from "react";
 
+import { CommandFooterBar } from "@/components/command/command-footer-bar";
+import { CommandKeyHint } from "@/components/command/command-key-hint";
 import {
   CommandPanelBackButton,
   CommandPanelHeader,
@@ -264,21 +266,25 @@ export function ExtensionSetupView({
         )}
       </div>
 
-      <div className="sc-glass-footer relative flex items-center justify-between gap-3 p-4">
-        <div className="text-[10px] text-muted-foreground/70">
-          Preferences are saved locally.
-        </div>
-        <Button
-          onClick={() => {
-            void form.handleSubmit();
-          }}
-          disabled={!canSave}
-          className="h-8 gap-1.5 rounded-lg bg-primary/90 hover:bg-primary"
-        >
-          {isSaving ? <Loader2 className="size-3.5 animate-spin" /> : <Save className="size-3.5" />}
-          Save Setup
-        </Button>
-      </div>
+      <CommandFooterBar
+        className="h-[52px]"
+        leftSlot={<span>Preferences are saved locally.</span>}
+        rightSlot={(
+          <>
+            <CommandKeyHint keyLabel="ESC" label="Back" />
+            <Button
+              onClick={() => {
+                void form.handleSubmit();
+              }}
+              disabled={!canSave}
+              className="h-8 gap-1.5 rounded-lg bg-primary/90 hover:bg-primary"
+            >
+              {isSaving ? <Loader2 className="size-3.5 animate-spin" /> : <Save className="size-3.5" />}
+              Save Setup
+            </Button>
+          </>
+        )}
+      />
     </div>
   );
 }

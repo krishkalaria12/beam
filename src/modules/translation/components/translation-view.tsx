@@ -412,7 +412,6 @@ export function TranslationView({ initialQuery, onBack }: TranslationViewProps) 
 
       {/* Footer */}
       <CommandFooterBar
-        className="h-10 px-4 text-[10px] font-bold tracking-widest"
         leftSlot={(
           <div className="flex items-center gap-6">
             <button
@@ -434,7 +433,7 @@ export function TranslationView({ initialQuery, onBack }: TranslationViewProps) 
         )}
         rightSlot={(
           <>
-            <CommandKeyHint keyLabel="⌘ ↵" label="Translate" />
+            <CommandKeyHint keyLabel={["⌘", "↵"]} label="Translate" />
             <CommandKeyHint keyLabel="ESC" label="Back" />
           </>
         )}

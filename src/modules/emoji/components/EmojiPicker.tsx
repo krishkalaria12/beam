@@ -1,4 +1,6 @@
 import { useRef } from "react";
+import { CommandFooterBar } from "@/components/command/command-footer-bar";
+import { CommandKeyHint } from "@/components/command/command-key-hint";
 import { type EmojiData } from "../types";
 import { EmojiGrid } from "./EmojiGrid";
 import { RecentlyUsed } from "./RecentlyUsed";
@@ -50,6 +52,11 @@ export function EmojiPicker({
           <EmojiGrid emojis={emojis} onEmojiClick={onEmojiClick} />
         </div>
       </div>
+
+      <CommandFooterBar
+        leftSlot={<span>{emojis.length} emojis</span>}
+        rightSlot={<CommandKeyHint keyLabel="ESC" label="Back" />}
+      />
     </div>
   );
 }

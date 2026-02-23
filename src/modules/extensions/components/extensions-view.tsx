@@ -4,6 +4,12 @@ import { useCallback, useEffect, useMemo, useRef } from "react";
 import { toast } from "sonner";
 
 import {
+  CommandFooterBar,
+} from "@/components/command/command-footer-bar";
+import {
+  CommandKeyHint,
+} from "@/components/command/command-key-hint";
+import {
   CommandPanelBackButton,
   CommandPanelHeader,
 } from "@/components/command/command-panel-header";
@@ -381,6 +387,11 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
           />
         </div>
       </div>
+
+      <CommandFooterBar
+        leftSlot={<span>{displayedInstalledExtensions.length} installed extensions</span>}
+        rightSlot={<CommandKeyHint keyLabel="ESC" label="Back" />}
+      />
     </div>
   );
 }

@@ -63,13 +63,13 @@ export function DictionarySkeleton() {
         ))}
       </div>
 
-      {/* Footer - matching new style */}
-      <div className="flex h-10 items-center justify-between border-t border-border/40 bg-muted/10 px-4">
+      {/* Footer */}
+      <div className="sc-glass-footer flex h-[42px] items-center justify-between px-4 py-2.5">
         <Skeleton className="h-3 w-32" />
         <div className="flex gap-4">
-          <Skeleton className="h-5 w-16 rounded" />
-          <Skeleton className="h-5 w-16 rounded" />
-          <Skeleton className="h-5 w-16 rounded" />
+          <Skeleton className="h-[22px] w-[52px] rounded" />
+          <Skeleton className="h-[22px] w-[52px] rounded" />
+          <Skeleton className="h-[22px] w-[52px] rounded" />
         </div>
       </div>
     </div>
