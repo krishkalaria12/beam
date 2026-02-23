@@ -51,7 +51,7 @@ import type { LucideIcon } from "lucide-react";
 
 import fileQuicklinkIcon from "@/assets/icons/file-icon-quicklink.png";
 
-export type IconTone = "neutral" | "primary" | "orange" | "cyan";
+export type IconTone = "neutral" | "primary" | "orange" | "cyan" | "purple" | "red";
 
 export interface CommandToneSpec {
   icon: LucideIcon;
@@ -144,12 +144,16 @@ const COMMAND_TONE_SPEC_BY_TOKEN: Record<string, CommandToneSpec> = {
   appearance: { icon: Settings, tone: "neutral" },
   back: { icon: History, tone: "neutral" },
   calculator: { icon: Calculator, tone: "orange" },
+  clipboard: { icon: Clipboard, tone: "cyan" },
+  dictionary: { icon: Book, tone: "primary" },
+  duckduckgo: { icon: Compass, tone: "orange" },
+  emoji: { icon: Smile, tone: "orange" },
   extension: { icon: Link2, tone: "primary" },
+  files: { icon: Folder, tone: "primary" },
+  google: { icon: Globe, tone: "primary" },
   layout: { icon: FileSearch, tone: "neutral" },
   quicklinkcreate: { icon: Plus, tone: "primary" },
   quicklinkmanage: { icon: Link2, tone: "neutral" },
-  google: { icon: Globe, tone: "neutral" },
-  duckduckgo: { icon: Compass, tone: "neutral" },
   search: { icon: Search, tone: "neutral" },
   speedtest: { icon: Gauge, tone: "cyan" },
   theme: { icon: Smile, tone: "neutral" },
@@ -177,7 +181,7 @@ export function resolveCommandToneSpecByCommandId(commandId: string | undefined)
   }
 
   if (commandId.startsWith("system.")) {
-    return { icon: Power, tone: "neutral" };
+    return { icon: Power, tone: "red" };
   }
   if (commandId.startsWith("quicklinks.")) {
     return { icon: Link2, tone: "neutral" };
@@ -191,14 +195,20 @@ export function resolveCommandToneSpecByCommandId(commandId: string | undefined)
 
 export function toneClassName(tone: IconTone): string {
   if (tone === "primary") {
-    return "bg-primary/10 text-primary";
+    return "bg-[var(--icon-primary-bg)] text-[var(--icon-primary-fg)]";
   }
   if (tone === "orange") {
-    return "bg-orange-500/10 text-orange-500";
+    return "bg-[var(--icon-orange-bg)] text-[var(--icon-orange-fg)]";
   }
   if (tone === "cyan") {
-    return "bg-cyan-500/10 text-cyan-500";
+    return "bg-[var(--icon-cyan-bg)] text-[var(--icon-cyan-fg)]";
+  }
+  if (tone === "purple") {
+    return "bg-[var(--icon-purple-bg)] text-[var(--icon-purple-fg)]";
+  }
+  if (tone === "red") {
+    return "bg-[var(--icon-red-bg)] text-[var(--icon-red-fg)]";
   }
 
-  return "bg-muted text-muted-foreground";
+  return "bg-[var(--icon-neutral-bg)] text-[var(--icon-neutral-fg)]";
 }

@@ -15,7 +15,6 @@ export function FileSearchCommandItem({ onSelect, queryOverride }: FileSearchCom
   return (
     <BaseCommandRow
       value="Search Files"
-      disabled={!hasQuery}
       onSelect={() => {
         if (!hasQuery) {
           return;

@@ -150,7 +150,7 @@ function CommandItem({
     <CommandPrimitive.Item
       data-slot="command-item"
       className={cn(
-        "data-selected:bg-foreground/5 data-selected:text-foreground relative flex cursor-default items-center gap-4 rounded-xl px-4 py-2.5 text-[1.05rem] outline-hidden select-none transition-colors",
+        "data-selected:bg-accent data-selected:text-accent-foreground relative flex cursor-default items-center gap-4 rounded-lg px-4 py-3 text-[1.05rem] outline-hidden select-none transition-colors",
         "group/command-item",
         className
       )}

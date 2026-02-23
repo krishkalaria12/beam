@@ -62,7 +62,6 @@ export function RegistryCommandRow({
   return (
     <BaseCommandRow
       value={`${command.id} ${command.title} ${command.keywords.join(" ")}`}
-      disabled={isDisabled}
       onSelect={() => {
         if (isDisabled) {
           return;

@@ -37,6 +37,18 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  --icon-neutral-bg: rgba(148, 163, 184, 0.18);
+  --icon-neutral-fg: rgba(71, 85, 105, 0.78);
+  --icon-primary-bg: rgba(47, 107, 255, 0.18);
+  --icon-primary-fg: rgba(36, 91, 224, 0.95);
+  --icon-orange-bg: rgba(245, 158, 11, 0.2);
+  --icon-orange-fg: rgba(180, 83, 9, 0.95);
+  --icon-cyan-bg: rgba(8, 145, 178, 0.18);
+  --icon-cyan-fg: rgba(14, 116, 144, 0.96);
+  --icon-purple-bg: rgba(147, 51, 234, 0.18);
+  --icon-purple-fg: rgba(126, 34, 206, 0.96);
+  --icon-red-bg: rgba(220, 38, 38, 0.18);
+  --icon-red-fg: rgba(185, 28, 28, 0.96);
   --font-sans: "Manrope", "Ubuntu", "Noto Sans", "Segoe UI", sans-serif;
   --font-mono: "JetBrains Mono", "Fira Code", "Cascadia Mono", monospace;
 }
@@ -73,6 +85,18 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+  --icon-neutral-bg: rgba(148, 163, 184, 0.12);
+  --icon-neutral-fg: rgba(203, 213, 225, 0.72);
+  --icon-primary-bg: rgba(59, 130, 246, 0.22);
+  --icon-primary-fg: rgba(191, 219, 254, 0.94);
+  --icon-orange-bg: rgba(245, 158, 11, 0.24);
+  --icon-orange-fg: rgba(253, 230, 138, 0.94);
+  --icon-cyan-bg: rgba(6, 182, 212, 0.24);
+  --icon-cyan-fg: rgba(165, 243, 252, 0.94);
+  --icon-purple-bg: rgba(147, 51, 234, 0.24);
+  --icon-purple-fg: rgba(233, 213, 255, 0.94);
+  --icon-red-bg: rgba(220, 38, 38, 0.24);
+  --icon-red-fg: rgba(254, 202, 202, 0.94);
 }
 
 /* Twitter Theme */

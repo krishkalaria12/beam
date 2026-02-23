@@ -21,8 +21,14 @@ function IconChip({
   className?: string;
 }) {
   return (
-    <div className={cn("flex size-6 items-center justify-center rounded-sm", toneClass, className)}>
-      <Icon className="size-4" />
+    <div
+      className={cn(
+        "flex size-8 shrink-0 items-center justify-center rounded-md",
+        toneClass,
+        className,
+      )}
+    >
+      <Icon className="size-5 stroke-[2.15]" />
     </div>
   );
 }
@@ -42,7 +48,7 @@ export function CommandIcon({ icon, commandId, className }: CommandIconProps) {
       return (
         <UnifiedIcon
           icon={iconReference}
-          className={cn("size-6 rounded-sm object-cover", className)}
+          className={cn("size-8 rounded-md object-cover", className)}
           fallback={<IconChip icon={Link2} toneClass={toneClassName("primary")} className={className} />}
         />
       );
@@ -55,7 +61,7 @@ export function CommandIcon({ icon, commandId, className }: CommandIconProps) {
       return (
         <UnifiedIcon
           icon={iconPath}
-          className={cn("size-6 rounded-sm object-cover", className)}
+          className={cn("size-8 rounded-md object-cover", className)}
           fallback={<IconChip icon={Search} toneClass={toneClassName("neutral")} className={className} />}
         />
       );
@@ -73,10 +79,18 @@ export function CommandIcon({ icon, commandId, className }: CommandIconProps) {
   }
 
   return (
-    <UnifiedIcon
-      icon={icon}
-      className={cn("size-6 rounded-sm", className)}
-      fallback={<IconChip icon={Search} toneClass={toneClassName("neutral")} className={className} />}
-    />
+    <span
+      className={cn(
+        "flex size-8 shrink-0 items-center justify-center rounded-md",
+        "bg-[var(--icon-neutral-bg)] text-[var(--icon-neutral-fg)]",
+        className,
+      )}
+    >
+      <UnifiedIcon
+        icon={icon}
+        className="size-5"
+        fallback={<Search className="size-5 stroke-[2.15]" />}
+      />
+    </span>
   );
 }

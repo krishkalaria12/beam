@@ -47,7 +47,6 @@ export default function SearchCommandGroup({ queryOverride }: SearchCommandGroup
           <AsyncCommandRow
             key={provider.id}
             value={query ? `${provider.title} ${query}` : provider.title}
-            disabled={!hasQuery}
             isBusy={isSearching}
             onSelect={() => {
               if (isDisabled || !hasQuery) {

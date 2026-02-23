@@ -14,7 +14,6 @@ export function DictionaryCommandItem({ onSelect }: DictionaryCommandItemProps) 
   return (
     <BaseCommandRow
       value="dictionary-search"
-      disabled={!hasQuery}
       onSelect={() => {
         if (!hasQuery) {
           return;
