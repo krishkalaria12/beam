@@ -1,9 +1,14 @@
 import type { ReactNode } from "react";
+import { lazy, Suspense } from "react";
+import { Loader2 } from "lucide-react";
 
 import type { CommandPanel } from "@/command-registry/types";
-import CalculatorHistoryCommandGroup from "@/modules/calculator-history/components/calculator-history-command-group";
-import EmojiCommandGroup from "@/modules/emoji/components/emoji-command-group";
-import SettingsCommandGroup from "@/modules/settings/components/settings-command-group";
+
+const CalculatorHistoryCommandGroup = lazy(() =>
+  import("@/modules/calculator-history/components/calculator-history-command-group")
+);
+const EmojiCommandGroup = lazy(() => import("@/modules/emoji/components/emoji-command-group"));
+const SettingsCommandGroup = lazy(() => import("@/modules/settings/components/settings-command-group"));
 
 const SECONDARY_PANELS = [
   "calculator-history",
@@ -54,6 +59,15 @@ interface LauncherSecondaryPanelProps extends SecondaryPanelRendererInput {
   activePanel: CommandPanel;
 }
 
+function SecondaryPanelFallback() {
+  return (
+    <div className="flex items-center justify-center px-4 py-6 text-xs text-muted-foreground">
+      <Loader2 className="mr-2 size-3.5 animate-spin" />
+      Loading...
+    </div>
+  );
+}
+
 export function LauncherSecondaryPanel({
   activePanel,
   onOpenCalculatorHistory,
@@ -65,10 +79,14 @@ export function LauncherSecondaryPanel({
     return null;
   }
 
-  return SECONDARY_PANEL_RENDERERS[activePanel]({
-    onOpenCalculatorHistory,
-    onOpenEmoji,
-    onOpenSettings,
-    onBack,
-  });
+  return (
+    <Suspense fallback={<SecondaryPanelFallback />}>
+      {SECONDARY_PANEL_RENDERERS[activePanel]({
+        onOpenCalculatorHistory,
+        onOpenEmoji,
+        onOpenSettings,
+        onBack,
+      })}
+    </Suspense>
+  );
 }

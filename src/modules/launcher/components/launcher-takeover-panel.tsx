@@ -1,17 +1,24 @@
 import type { ReactNode } from "react";
+import { lazy, Suspense } from "react";
+import { Loader2 } from "lucide-react";
 
 import type { CommandPanel } from "@/command-registry/types";
 import { LauncherTakeoverSurface } from "@/modules/launcher/components/launcher-takeover-surface";
 
-import ClipboardCommandGroup from "@/modules/clipboard/components/clipboard-command-group";
-import DictionaryCommandGroup from "@/modules/dictionary/components/dictionary-command-group";
-import FileSearchCommandGroup from "@/modules/file-search/components/file-search-command-group";
-import QuicklinksCommandGroup from "@/modules/quicklinks/components/quicklinks-command-group";
-import SpeedTestCommandGroup from "@/modules/speed-test/components/speed-test-command-group";
-import TranslationCommandGroup from "@/modules/translation/components/translation-command-group";
-import ExtensionsCommandGroup from "@/modules/extensions/components/extensions-command-group";
-import { ExtensionRunnerView } from "@/modules/extensions/components/extension-runner-view";
 import type { QuicklinksView } from "@/store/use-launcher-ui-store";
+
+const ClipboardCommandGroup = lazy(() => import("@/modules/clipboard/components/clipboard-command-group"));
+const DictionaryCommandGroup = lazy(() => import("@/modules/dictionary/components/dictionary-command-group"));
+const FileSearchCommandGroup = lazy(() => import("@/modules/file-search/components/file-search-command-group"));
+const QuicklinksCommandGroup = lazy(() => import("@/modules/quicklinks/components/quicklinks-command-group"));
+const SpeedTestCommandGroup = lazy(() => import("@/modules/speed-test/components/speed-test-command-group"));
+const TranslationCommandGroup = lazy(() => import("@/modules/translation/components/translation-command-group"));
+const ExtensionsCommandGroup = lazy(() => import("@/modules/extensions/components/extensions-command-group"));
+const ExtensionRunnerView = lazy(() =>
+  import("@/modules/extensions/components/extension-runner-view").then((mod) => ({
+    default: mod.ExtensionRunnerView,
+  }))
+);
 
 const TAKEOVER_PANELS = [
   "file-search",
@@ -117,6 +124,17 @@ interface LauncherTakeoverPanelProps extends TakeoverPanelRendererInput {
   activePanel: CommandPanel;
 }
 
+function TakeoverPanelFallback() {
+  return (
+    <LauncherTakeoverSurface>
+      <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
+        <Loader2 className="mr-2 size-4 animate-spin" />
+        Loading panel...
+      </div>
+    </LauncherTakeoverSurface>
+  );
+}
+
 export function LauncherTakeoverPanel({
   activePanel,
   fileSearchQuery,
@@ -137,19 +155,23 @@ export function LauncherTakeoverPanel({
     return null;
   }
 
-  return TAKEOVER_PANEL_RENDERERS[activePanel]({
-    fileSearchQuery,
-    dictionaryQuery,
-    translationQuery,
-    quicklinksView,
-    setQuicklinksView,
-    openFileSearch,
-    openDictionary,
-    openTranslation,
-    openQuicklinks,
-    openSpeedTest,
-    openClipboard,
-    openExtensions,
-    backToCommands,
-  });
+  return (
+    <Suspense fallback={<TakeoverPanelFallback />}>
+      {TAKEOVER_PANEL_RENDERERS[activePanel]({
+        fileSearchQuery,
+        dictionaryQuery,
+        translationQuery,
+        quicklinksView,
+        setQuicklinksView,
+        openFileSearch,
+        openDictionary,
+        openTranslation,
+        openQuicklinks,
+        openSpeedTest,
+        openClipboard,
+        openExtensions,
+        backToCommands,
+      })}
+    </Suspense>
+  );
 }
