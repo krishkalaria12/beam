@@ -98,6 +98,10 @@ pub struct Config {
 
     // -- Pinned
     pub COMMAND_PINNED_KEY: &'static str,
+
+    // -- Todo
+    pub TODO_DIRECTORY: &'static str,
+    pub TODO_DATABASE_FILE: &'static str,
 }
 
 impl Config {
@@ -210,6 +214,9 @@ impl Config {
             EXTENSIONS_HEURISTIC_MACOS_PATHS: vec!["/Applications/", "/Library/", "/Users/"],
 
             COMMAND_PINNED_KEY: "command_pinned_ids",
+
+            TODO_DIRECTORY: "todo",
+            TODO_DATABASE_FILE: "todo.sqlite3",
         })
     }
 }

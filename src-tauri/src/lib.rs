@@ -18,6 +18,7 @@ pub mod search;
 pub mod settings;
 pub mod state;
 pub mod system_actions;
+pub mod todo;
 pub mod translation;
 pub mod utils;
 
@@ -145,6 +146,7 @@ pub fn run() {
             }
 
             hotkeys::initialize_hotkey_backend(&app.handle());
+            todo::db::init(&app.handle());
 
             Ok(())
         })

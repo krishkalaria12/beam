@@ -1,6 +1,6 @@
 use crate::{
     applications, calculator, clipboard, dictionary, extensions, file_search, hotkeys, hyprwhspr,
-    launcher_window, pinned, quicklinks, search, settings, system_actions, translation,
+    launcher_window, pinned, quicklinks, search, settings, system_actions, todo, translation,
 };
 
 use tauri::ipc::Invoke;
@@ -68,5 +68,13 @@ pub fn get_handler() -> impl Fn(Invoke) -> bool {
         extensions::ai::set_ai_settings,
         extensions::ai::ai_can_access,
         extensions::ai::ai_ask_stream,
+        todo::todo::create_todo,
+        todo::get_todo,
+        todo::get_todos,
+        todo::todo::update_todo,
+        todo::todo::delete_todo,
+        todo::sub_todo::create_sub_todo,
+        todo::sub_todo::update_sub_todo,
+        todo::sub_todo::delete_sub_todo,
     ]
 }

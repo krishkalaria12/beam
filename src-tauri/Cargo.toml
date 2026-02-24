@@ -76,6 +76,10 @@ zip = "4.1.0"
 url = "2.5.8"
 favicon-picker = "1.1.0"
 
+# DB
+sqlx = { version = "0.8.6", features = ["sqlite", "runtime-tokio"] }
+nanoid = "0.4.0"
+
 # Error Handling
 anyhow = "1.0"
 thiserror = "2.0"
