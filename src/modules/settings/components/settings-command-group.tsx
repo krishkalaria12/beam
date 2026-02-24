@@ -11,6 +11,7 @@ import { SettingsMenu } from "./SettingsMenu";
 import { VisualStyleSettings } from "./VisualStyleSettings";
 import { LayoutSettings } from "./LayoutSettings";
 import { PinnedCommandsSettings } from "./PinnedCommandsSettings";
+import HotkeysSettings from "./HotkeysSettings";
 
 type SettingsCommandGroupProps = {
   isOpen: boolean;
@@ -29,6 +30,10 @@ const SETTINGS_KEYWORDS = [
   "glassy",
   "pinned",
   "pin",
+  "hotkeys",
+  "shortcuts",
+  "wayland",
+  "compositor",
 ] as const;
 
 export default function SettingsCommandGroup({
@@ -87,6 +92,7 @@ export default function SettingsCommandGroup({
           onMovePinned={onMovePinned}
         />
       )}
+      {view === "hotkeys" && <HotkeysSettings />}
     </>
   );
 }

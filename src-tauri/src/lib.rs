@@ -8,6 +8,7 @@ pub mod error;
 pub mod extensions;
 pub mod file_search;
 pub mod fuzzy_search;
+pub mod hotkeys;
 pub mod http;
 pub mod hyprwhspr;
 pub mod launcher_window;
@@ -20,51 +21,12 @@ pub mod system_actions;
 pub mod translation;
 pub mod utils;
 
-use std::sync::{Mutex, OnceLock};
-use std::time::{Duration, Instant};
 use tauri::{Emitter, Manager};
 
 use crate::settings::UiLayoutMode;
 
-static LAST_TOGGLE: OnceLock<Mutex<Option<Instant>>> = OnceLock::new();
-
-fn should_toggle_now() -> bool {
-    let now = Instant::now();
-    let min_interval = Duration::from_millis(250);
-    let lock = LAST_TOGGLE.get_or_init(|| Mutex::new(None));
-
-    if let Ok(mut last) = lock.lock() {
-        if let Some(previous) = *last {
-            if now.duration_since(previous) < min_interval {
-                return false;
-            }
-        }
-        *last = Some(now);
-        return true;
-    }
-
-    true
-}
-
 fn toggle_launcher(app: &tauri::AppHandle) {
-    if !should_toggle_now() {
-        return;
-    }
-
-    if let Some(main_window) = app.get_webview_window("main") {
-        let is_visible = main_window.is_visible().unwrap_or(false);
-        let is_focused = main_window.is_focused().unwrap_or(false);
-
-        // Only hide when the launcher is actively focused; otherwise treat toggle as "bring to front".
-        if is_visible && is_focused {
-            let _ = main_window.hide();
-        } else {
-            let _ = main_window.unminimize();
-            let _ = main_window.show();
-            let _ = main_window.center();
-            let _ = main_window.set_focus();
-        }
-    }
+    hotkeys::toggle_launcher(app);
 }
 
 fn extract_deep_link_arg(args: &[String]) -> Option<String> {
@@ -77,12 +39,59 @@ fn extract_deep_link_arg(args: &[String]) -> Option<String> {
         .cloned()
 }
 
+fn extract_run_command_arg(args: &[String]) -> Option<String> {
+    let mut index = 0usize;
+    while index < args.len() {
+        let arg = args[index].trim();
+
+        if let Some(command_id) = arg.strip_prefix("--run-command=") {
+            let normalized = command_id.trim();
+            if !normalized.is_empty() {
+                return Some(normalized.to_string());
+            }
+        }
+
+        if arg == "--run-command" {
+            if let Some(next_arg) = args.get(index + 1) {
+                let normalized = next_arg.trim();
+                if !normalized.is_empty() {
+                    return Some(normalized.to_string());
+                }
+            }
+        }
+
+        index += 1;
+    }
+
+    None
+}
+
 fn emit_deep_link(app: &tauri::AppHandle, deep_link: String) {
     if let Some(main_window) = app.get_webview_window("main") {
         let _ = main_window.emit("deep-link", deep_link);
         let _ = main_window.unminimize();
         let _ = main_window.show();
         let _ = main_window.set_focus();
+    }
+}
+
+fn handle_activation_args(app: &tauri::AppHandle, args: &[String], startup: bool) {
+    if let Some(deep_link) = extract_deep_link_arg(args) {
+        emit_deep_link(app, deep_link);
+        return;
+    }
+
+    if let Some(command_id) = extract_run_command_arg(args) {
+        if startup {
+            hotkeys::dispatch_hotkey_command_startup(app, command_id);
+        } else {
+            hotkeys::dispatch_hotkey_command(app, command_id, "cli");
+        }
+        return;
+    }
+
+    if args.iter().any(|arg| arg == "--toggle") {
+        toggle_launcher(app);
     }
 }
 
@@ -100,14 +109,7 @@ pub fn run() {
     #[cfg(desktop)]
     {
         builder = builder.plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
-            if let Some(deep_link) = extract_deep_link_arg(&args) {
-                emit_deep_link(app, deep_link);
-                return;
-            }
-
-            if args.iter().any(|arg| arg == "--toggle") {
-                toggle_launcher(app);
-            }
+            handle_activation_args(app, &args, false);
         }));
     }
 
@@ -116,12 +118,7 @@ pub fn run() {
             #[cfg(desktop)]
             {
                 let startup_args: Vec<String> = std::env::args().collect();
-
-                if let Some(deep_link) = extract_deep_link_arg(&startup_args) {
-                    emit_deep_link(&app.handle(), deep_link);
-                } else if startup_args.iter().any(|arg| arg == "--toggle") {
-                    toggle_launcher(&app.handle());
-                }
+                handle_activation_args(&app.handle(), &startup_args, true);
             }
 
             if cfg!(debug_assertions) {
@@ -146,6 +143,8 @@ pub fn run() {
             if let Err(error) = calculator::initialize(&app.handle()) {
                 log::warn!("failed to initialize soulver calculator: {error}");
             }
+
+            hotkeys::initialize_hotkey_backend(&app.handle());
 
             Ok(())
         })

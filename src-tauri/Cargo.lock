@@ -185,6 +185,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "ashpd"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6cbdf310d77fd3aaee6ea2093db7011dc2d35d2eb3481e5607f1f8d942ed99df"
+dependencies = [
+ "enumflags2",
+ "futures-channel",
+ "futures-util",
+ "rand 0.9.2",
+ "serde",
+ "serde_repr",
+ "tokio",
+ "url",
+ "zbus",
+]
+
+[[package]]
 name = "async-broadcast"
 version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -434,6 +451,7 @@ dependencies = [
  "aes-gcm",
  "anyhow",
  "arboard",
+ "ashpd",
  "base64 0.22.1",
  "bytecheck",
  "bytes",
@@ -443,6 +461,7 @@ dependencies = [
  "favicon-picker",
  "freedesktop-file-parser",
  "freedesktop-icons",
+ "futures-util",
  "ignore",
  "image",
  "jiff",
@@ -6305,8 +6324,10 @@ dependencies = [
  "libc",
  "mio 1.1.1",
  "pin-project-lite",
+ "signal-hook-registry",
  "socket2",
  "tokio-macros",
+ "tracing",
  "windows-sys 0.61.2",
 ]
 
@@ -7923,6 +7944,7 @@ dependencies = [
  "rustix",
  "serde",
  "serde_repr",
+ "tokio",
  "tracing",
  "uds_windows",
  "uuid",
@@ -8179,6 +8201,7 @@ dependencies = [
  "endi",
  "enumflags2",
  "serde",
+ "url",
  "winnow 0.7.14",
  "zvariant_derive",
  "zvariant_utils",

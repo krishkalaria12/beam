@@ -1,1 +1,1 @@
-export type SettingsView = "main" | "style" | "layout" | "pinned";
+export type SettingsView = "main" | "style" | "layout" | "pinned" | "hotkeys";

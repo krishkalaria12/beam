@@ -75,6 +75,16 @@ pub struct Config {
 
     // -- Settings
     pub UI_LAYOUT_MODE_VALUE: &'static str,
+    pub HOTKEY_GLOBAL_SHORTCUT_VALUE: &'static str,
+    pub HOTKEY_COMMAND_HOTKEYS_VALUE: &'static str,
+    pub HOTKEY_DEFAULT_GLOBAL_SHORTCUT: &'static str,
+    pub HOTKEY_COMMAND_EVENT: &'static str,
+    pub HOTKEY_SETTINGS_UPDATED_EVENT: &'static str,
+    pub HOTKEY_BACKEND_STATUS_EVENT: &'static str,
+    pub HOTKEY_PORTAL_LAUNCHER_SHORTCUT_ID: &'static str,
+    pub HOTKEY_PORTAL_COMMAND_SHORTCUT_PREFIX: &'static str,
+    pub HOTKEY_WAYLAND_FALLBACK_MESSAGE: &'static str,
+    pub HOTKEY_WAYLAND_DISABLED_MESSAGE: &'static str,
 
     // -- Extensions
     pub EXTENSIONS_PLUGINS_DIRECTORY: &'static str,
@@ -178,6 +188,18 @@ impl Config {
             QUICKLINK_VALUE_NAME: "quick_links",
 
             UI_LAYOUT_MODE_VALUE: "ui_layout_mode",
+            HOTKEY_GLOBAL_SHORTCUT_VALUE: "hotkey_global_shortcut",
+            HOTKEY_COMMAND_HOTKEYS_VALUE: "hotkey_command_hotkeys",
+            HOTKEY_DEFAULT_GLOBAL_SHORTCUT: "SUPER+Space",
+            HOTKEY_COMMAND_EVENT: "hotkey-command",
+            HOTKEY_SETTINGS_UPDATED_EVENT: "hotkey-settings-updated",
+            HOTKEY_BACKEND_STATUS_EVENT: "hotkey-backend-status",
+            HOTKEY_PORTAL_LAUNCHER_SHORTCUT_ID: "beam.launcher.toggle",
+            HOTKEY_PORTAL_COMMAND_SHORTCUT_PREFIX: "beam.command",
+            HOTKEY_WAYLAND_FALLBACK_MESSAGE:
+                "Global hotkeys are restricted by your compositor/portal setup.",
+            HOTKEY_WAYLAND_DISABLED_MESSAGE:
+                "Global hotkeys are disabled because this is not a Wayland session.",
             EXTENSIONS_PLUGINS_DIRECTORY: "plugins",
             EXTENSIONS_PACKAGE_JSON_FILE: "package.json",
             EXTENSIONS_OAUTH_TOKENS_FILE: "oauth_tokens.json",

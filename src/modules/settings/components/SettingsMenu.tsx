@@ -1,4 +1,4 @@
-import { Minimize2, Pin, Sparkles } from "lucide-react";
+import { Keyboard, Minimize2, Pin, Sparkles } from "lucide-react";
 
 import { CommandGroup, CommandItem, CommandShortcut } from "@/components/ui/command";
 import type { SettingsView } from "../constants";
@@ -35,6 +35,15 @@ export function SettingsMenu({ setView }: SettingsMenuProps) {
         <Pin className="size-5 text-muted-foreground/70" />
         <p className="truncate text-foreground capitalize">pinned commands</p>
         <CommandShortcut>pins</CommandShortcut>
+      </CommandItem>
+
+      <CommandItem
+        value="hotkeys shortcuts launcher command bindings wayland compositor"
+        onSelect={() => setView("hotkeys")}
+      >
+        <Keyboard className="size-5 text-muted-foreground/70" />
+        <p className="truncate text-foreground capitalize">hotkeys</p>
+        <CommandShortcut>keys</CommandShortcut>
       </CommandItem>
     </CommandGroup>
   );

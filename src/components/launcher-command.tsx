@@ -1,7 +1,8 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { isTauri } from "@tauri-apps/api/core";
+import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { buildCommandContext } from "@/command-registry/context";
@@ -41,6 +42,10 @@ import { ExtensionToastBridge } from "@/modules/extensions/components/extension-
 import { useExtensionRuntimeStore } from "@/modules/extensions/runtime/store";
 import { findQuicklinkByKeyword } from "@/modules/quicklinks/api/quicklinks";
 import { useQuicklinks } from "@/modules/quicklinks/hooks/use-quicklinks";
+import {
+  HOTKEY_BACKEND_STATUS_EVENT,
+  HOTKEY_COMMAND_EVENT,
+} from "@/modules/settings/api/hotkeys";
 import { useUiLayout } from "@/modules/settings/hooks/use-ui-layout";
 import { useAwakeStore } from "@/modules/system-actions/store/awake-store";
 import {
@@ -75,6 +80,18 @@ async function focusLauncherWindow() {
   } catch {
     window.focus();
   }
+}
+
+interface HotkeyCommandEventPayload {
+  command_id?: string;
+  source?: string;
+}
+
+interface HotkeyBackendStatusEventPayload {
+  level?: string;
+  message?: string;
+  hint?: string;
+  source?: string;
 }
 
 export default function LauncherCommand() {
@@ -230,7 +247,7 @@ export default function LauncherCommand() {
     [backToCommands, calculatorSessionId, openPanel, queryClient, setCommandSearch],
   );
 
-  const handleRegistryCommandSelect = async (
+  const handleRegistryCommandSelect = useCallback(async (
     commandId: string,
     fallbackCommand?: CommandDescriptor,
   ) => {
@@ -282,9 +299,20 @@ export default function LauncherCommand() {
     }
 
     markUsed(commandId);
-  };
+  }, [
+    commandContext,
+    customActionHandler,
+    markUsed,
+    rankedRegistryCommands,
+    setActivePanel,
+    setCommandSearch,
+    setDictionaryQuery,
+    setFileSearchQuery,
+    setQuicklinksView,
+    setTranslationQuery,
+  ]);
 
-  const handleQuicklinkExecute = async (
+  const handleQuicklinkExecute = useCallback(async (
     keyword: string = quicklinkKeyword,
     query: string = quicklinkQuery,
   ) => {
@@ -303,7 +331,93 @@ export default function LauncherCommand() {
       toQuicklinkExecuteCommandId(quicklink.keyword),
       fallbackCommand,
     );
-  };
+  }, [handleRegistryCommandSelect, quicklinkKeyword, quicklinkQuery, quicklinks]);
+
+  const rankedCommandsRef = useRef(rankedRegistryCommands);
+  const handleRegistryCommandSelectRef = useRef(handleRegistryCommandSelect);
+
+  useEffect(() => {
+    rankedCommandsRef.current = rankedRegistryCommands;
+  }, [rankedRegistryCommands]);
+
+  useEffect(() => {
+    handleRegistryCommandSelectRef.current = handleRegistryCommandSelect;
+  }, [handleRegistryCommandSelect]);
+
+  useEffect(() => {
+    if (!isTauri()) {
+      return;
+    }
+
+    let unlistenFn: UnlistenFn | null = null;
+
+    listen<HotkeyCommandEventPayload>(HOTKEY_COMMAND_EVENT, (event) => {
+      const commandId = typeof event.payload?.command_id === "string"
+        ? event.payload.command_id.trim()
+        : "";
+      if (!commandId) {
+        return;
+      }
+
+      const dynamicFallback =
+        rankedCommandsRef.current.find((entry) => entry.command.id === commandId)?.command;
+
+      if (!dynamicFallback && !staticCommandRegistry.has(commandId)) {
+        toast.error(`Hotkey command not available: ${commandId}`);
+        return;
+      }
+
+      void handleRegistryCommandSelectRef.current(commandId, dynamicFallback);
+    })
+      .then((cleanup) => {
+        unlistenFn = cleanup;
+      })
+      .catch(() => {
+        unlistenFn = null;
+      });
+
+    return () => {
+      unlistenFn?.();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isTauri()) {
+      return;
+    }
+
+    let unlistenFn: UnlistenFn | null = null;
+
+    listen<HotkeyBackendStatusEventPayload>(HOTKEY_BACKEND_STATUS_EVENT, (event) => {
+      const message = typeof event.payload?.message === "string"
+        ? event.payload.message.trim()
+        : "";
+      const hint = typeof event.payload?.hint === "string"
+        ? event.payload.hint.trim()
+        : "";
+      if (!message) {
+        return;
+      }
+
+      const description = hint
+        ? `Add this compositor binding:\n${hint}`
+        : "Add compositor keybindings for Beam launcher and commands.";
+      toast.warning(message, {
+        description,
+        duration: 9000,
+      });
+    })
+      .then((cleanup) => {
+        unlistenFn = cleanup;
+      })
+      .catch(() => {
+        unlistenFn = null;
+      });
+
+    return () => {
+      unlistenFn?.();
+    };
+  }, []);
 
   const handleKeyDown = async (e: React.KeyboardEvent) => {
     if (e.defaultPrevented) {

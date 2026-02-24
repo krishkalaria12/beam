@@ -1,5 +1,5 @@
 use crate::{
-    applications, calculator, clipboard, dictionary, extensions, file_search, hyprwhspr,
+    applications, calculator, clipboard, dictionary, extensions, file_search, hotkeys, hyprwhspr,
     launcher_window, pinned, quicklinks, search, settings, system_actions, translation,
 };
 
@@ -47,6 +47,12 @@ pub fn get_handler() -> impl Fn(Invoke) -> bool {
         pinned::set_command_pinned,
         settings::get_ui_layout_mode,
         settings::set_ui_layout_mode,
+        hotkeys::commands::get_hotkey_settings,
+        hotkeys::commands::get_hotkey_capabilities,
+        hotkeys::commands::get_hotkey_compositor_bindings,
+        hotkeys::commands::update_global_shortcut,
+        hotkeys::commands::update_command_hotkey,
+        hotkeys::commands::remove_command_hotkey,
         extensions::get_discovered_plugins,
         extensions::install_extension,
         extensions::uninstall_extension,

@@ -122,7 +122,7 @@ export const STATIC_COMMANDS: CommandDescriptor[] = [
   {
     id: "settings.panel.open",
     title: "settings",
-    keywords: ["settings", "style", "layout", "density", "glassy"],
+    keywords: ["settings", "style", "layout", "density", "glassy", "hotkeys", "shortcuts"],
     endText: "open",
     icon: "settings",
     kind: "panel",
