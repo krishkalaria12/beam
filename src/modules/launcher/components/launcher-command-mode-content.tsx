@@ -11,10 +11,12 @@ interface LauncherCommandModeContentProps {
   quicklinkKeyword: string;
   quicklinkQuery: string;
   rankedRegistryCommands: readonly RankedCommand[];
+  pinnedCommandIds: readonly string[];
   commandContext: CommandContext;
   onQuicklinkExecute: (keyword: string, query: string) => void;
   onQuicklinkFill: (value: string) => void;
   onRegistryCommandSelect: (commandId: string) => void;
+  onSetPinned: (commandId: string, pinned: boolean) => void;
 }
 
 export function LauncherCommandModeContent({
@@ -23,10 +25,12 @@ export function LauncherCommandModeContent({
   quicklinkKeyword,
   quicklinkQuery,
   rankedRegistryCommands,
+  pinnedCommandIds,
   commandContext,
   onQuicklinkExecute,
   onQuicklinkFill,
   onRegistryCommandSelect,
+  onSetPinned,
 }: LauncherCommandModeContentProps) {
   return (
     <div className="py-1">
@@ -48,6 +52,8 @@ export function LauncherCommandModeContent({
         query={commandContext.query}
         mode={commandContext.mode}
         onSelect={onRegistryCommandSelect}
+        orderedPinnedCommandIds={pinnedCommandIds}
+        onSetPinned={onSetPinned}
       />
     </div>
   );

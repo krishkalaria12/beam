@@ -11,6 +11,7 @@ pub mod fuzzy_search;
 pub mod http;
 pub mod hyprwhspr;
 pub mod launcher_window;
+pub mod pinned;
 pub mod quicklinks;
 pub mod search;
 pub mod settings;

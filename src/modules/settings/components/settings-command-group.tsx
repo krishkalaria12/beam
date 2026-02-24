@@ -10,11 +10,15 @@ import type { SettingsView } from "../constants";
 import { SettingsMenu } from "./SettingsMenu";
 import { VisualStyleSettings } from "./VisualStyleSettings";
 import { LayoutSettings } from "./LayoutSettings";
+import { PinnedCommandsSettings } from "./PinnedCommandsSettings";
 
 type SettingsCommandGroupProps = {
   isOpen: boolean;
   onOpen: () => void;
   onBack: () => void;
+  pinnedCommandIds: readonly string[];
+  onSetPinned: (commandId: string, pinned: boolean) => void;
+  onMovePinned: (commandId: string, direction: "up" | "down") => void;
 };
 
 const SETTINGS_KEYWORDS = [
@@ -23,9 +27,18 @@ const SETTINGS_KEYWORDS = [
   "layout",
   "density",
   "glassy",
+  "pinned",
+  "pin",
 ] as const;
 
-export default function SettingsCommandGroup({ isOpen, onOpen, onBack }: SettingsCommandGroupProps) {
+export default function SettingsCommandGroup({
+  isOpen,
+  onOpen,
+  onBack,
+  pinnedCommandIds,
+  onSetPinned,
+  onMovePinned,
+}: SettingsCommandGroupProps) {
   const searchInput = useCommandState((state) => state.search);
   const query = normalizeCommandQuery(searchInput);
   const [view, setView] = useState<SettingsView>("main");
@@ -50,7 +63,7 @@ export default function SettingsCommandGroup({ isOpen, onOpen, onBack }: Setting
     return (
       <CommandGroup>
         <OpenModuleCommandRow
-          value="open settings" 
+          value="open settings"
           onSelect={() => {
             setView("main");
             onOpen();
@@ -67,6 +80,13 @@ export default function SettingsCommandGroup({ isOpen, onOpen, onBack }: Setting
       {view === "main" && <SettingsMenu setView={setView} />}
       {view === "style" && <VisualStyleSettings />}
       {view === "layout" && <LayoutSettings />}
+      {view === "pinned" && (
+        <PinnedCommandsSettings
+          pinnedCommandIds={pinnedCommandIds}
+          onSetPinned={onSetPinned}
+          onMovePinned={onMovePinned}
+        />
+      )}
     </>
   );
 }

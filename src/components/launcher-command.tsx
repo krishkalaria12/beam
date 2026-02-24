@@ -100,7 +100,14 @@ export default function LauncherCommand() {
 
   const { data: quicklinks = [] } = useQuicklinks();
   const { isCompressed } = useUiLayout();
-  const { rankingSignals, hiddenCommandIds, markUsed } = useCommandPreferences();
+  const {
+    state: commandPreferences,
+    rankingSignals,
+    hiddenCommandIds,
+    markUsed,
+    setPinned,
+    movePinned,
+  } = useCommandPreferences();
   const trimmedCommandSearch = commandSearch.trim();
   const isQuicklinkTrigger = trimmedCommandSearch.startsWith("!");
   const quicklinkParts = trimmedCommandSearch.slice(1).split(/\s+/).filter(Boolean);
@@ -462,6 +469,7 @@ export default function LauncherCommand() {
                 quicklinkKeyword={quicklinkKeyword}
                 quicklinkQuery={quicklinkQuery}
                 rankedRegistryCommands={rankedRegistryCommands}
+                pinnedCommandIds={commandPreferences.pinnedCommandIds}
                 commandContext={commandContext}
                 onQuicklinkExecute={(keyword, query) => {
                   void handleQuicklinkExecute(keyword, query);
@@ -470,6 +478,7 @@ export default function LauncherCommand() {
                 onRegistryCommandSelect={(commandId) => {
                   void handleRegistryCommandSelect(commandId);
                 }}
+                onSetPinned={setPinned}
               />
             ) : null}
 
@@ -485,6 +494,9 @@ export default function LauncherCommand() {
                 openPanel("settings", true);
               }}
               onBack={backToCommands}
+              pinnedCommandIds={commandPreferences.pinnedCommandIds}
+              onSetPinned={setPinned}
+              onMovePinned={movePinned}
             />
           </CommandList>
         )}

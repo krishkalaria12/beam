@@ -1,4 +1,4 @@
-import { Minimize2, Sparkles } from "lucide-react";
+import { Minimize2, Pin, Sparkles } from "lucide-react";
 
 import { CommandGroup, CommandItem, CommandShortcut } from "@/components/ui/command";
 import type { SettingsView } from "../constants";
@@ -26,6 +26,15 @@ export function SettingsMenu({ setView }: SettingsMenuProps) {
         <Minimize2 className="size-5 text-muted-foreground/70" />
         <p className="truncate text-foreground capitalize">ui density</p>
         <CommandShortcut>size</CommandShortcut>
+      </CommandItem>
+
+      <CommandItem
+        value="pinned commands pin unpin command items"
+        onSelect={() => setView("pinned")}
+      >
+        <Pin className="size-5 text-muted-foreground/70" />
+        <p className="truncate text-foreground capitalize">pinned commands</p>
+        <CommandShortcut>pins</CommandShortcut>
       </CommandItem>
     </CommandGroup>
   );

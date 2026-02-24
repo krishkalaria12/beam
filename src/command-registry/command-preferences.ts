@@ -263,16 +263,26 @@ export function setCommandPinned(
   }
 
   const id = commandId.trim();
-  const next = new Set(state.pinnedCommandIds);
   if (isPinned) {
-    next.add(id);
-  } else {
-    next.delete(id);
+    return {
+      ...state,
+      pinnedCommandIds: [id, ...state.pinnedCommandIds.filter((entry) => entry !== id)],
+    };
   }
 
   return {
     ...state,
-    pinnedCommandIds: [...next],
+    pinnedCommandIds: state.pinnedCommandIds.filter((entry) => entry !== id),
+  };
+}
+
+export function replacePinnedCommandIds(
+  state: CommandPreferencesState,
+  pinnedCommandIds: readonly string[],
+): CommandPreferencesState {
+  return {
+    ...state,
+    pinnedCommandIds: normalizeIdList(pinnedCommandIds),
   };
 }
 
@@ -370,4 +380,3 @@ export function toHiddenCommandIdSet(
 ): ReadonlySet<string> {
   return new Set(state.hiddenCommandIds);
 }
-

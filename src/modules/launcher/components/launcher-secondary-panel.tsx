@@ -26,6 +26,9 @@ interface SecondaryPanelRendererInput {
   onOpenEmoji: () => void;
   onOpenSettings: () => void;
   onBack: () => void;
+  pinnedCommandIds: readonly string[];
+  onSetPinned: (commandId: string, pinned: boolean) => void;
+  onMovePinned: (commandId: string, direction: "up" | "down") => void;
 }
 
 interface LauncherSecondaryPanelProps extends SecondaryPanelRendererInput {
@@ -44,6 +47,9 @@ export function LauncherSecondaryPanel({
   onOpenEmoji,
   onOpenSettings,
   onBack,
+  pinnedCommandIds,
+  onSetPinned,
+  onMovePinned,
 }: LauncherSecondaryPanelProps) {
   if (!isSecondaryPanel(activePanel)) {
     return null;
@@ -72,6 +78,9 @@ export function LauncherSecondaryPanel({
         isOpen
         onOpen={onOpenSettings}
         onBack={onBack}
+        pinnedCommandIds={pinnedCommandIds}
+        onSetPinned={onSetPinned}
+        onMovePinned={onMovePinned}
       />
     );
   }

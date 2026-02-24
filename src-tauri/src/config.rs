@@ -85,6 +85,9 @@ pub struct Config {
     pub EXTENSIONS_AI_KEYRING_USERNAME: &'static str,
     pub EXTENSIONS_HEURISTIC_APPLESCRIPT_SYMBOL: &'static str,
     pub EXTENSIONS_HEURISTIC_MACOS_PATHS: Vec<&'static str>,
+
+    // -- Pinned
+    pub COMMAND_PINNED_KEY: &'static str,
 }
 
 impl Config {
@@ -183,6 +186,8 @@ impl Config {
             EXTENSIONS_AI_KEYRING_USERNAME: "openrouter_api_key",
             EXTENSIONS_HEURISTIC_APPLESCRIPT_SYMBOL: "runAppleScript",
             EXTENSIONS_HEURISTIC_MACOS_PATHS: vec!["/Applications/", "/Library/", "/Users/"],
+
+            COMMAND_PINNED_KEY: "command_pinned_ids",
         })
     }
 }
