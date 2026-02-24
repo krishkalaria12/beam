@@ -12,6 +12,7 @@ const TAKEOVER_PANELS = new Set<CommandPanel>([
   "speed-test",
   "clipboard",
   "extensions",
+  "hyprwhspr",
   "extension-runner",
 ]);
 

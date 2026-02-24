@@ -10,10 +10,6 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     const themeClasses = [
       "light",
       "dark",
-      "twitter",
-      "cyberpunk",
-      "nepbrutalism",
-      "northern-lights",
       "glass",
     ];
 

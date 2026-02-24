@@ -175,7 +175,6 @@ impl Config {
             QUICKLINK_VALUE_NAME: "quick_links",
 
             UI_LAYOUT_MODE_VALUE: "ui_layout_mode",
-
             EXTENSIONS_PLUGINS_DIRECTORY: "plugins",
             EXTENSIONS_PACKAGE_JSON_FILE: "package.json",
             EXTENSIONS_OAUTH_TOKENS_FILE: "oauth_tokens.json",

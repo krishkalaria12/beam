@@ -13,6 +13,11 @@ const QuicklinksCommandGroup = lazy(() => import("@/modules/quicklinks/component
 const SpeedTestCommandGroup = lazy(() => import("@/modules/speed-test/components/speed-test-command-group"));
 const TranslationCommandGroup = lazy(() => import("@/modules/translation/components/translation-command-group"));
 const ExtensionsCommandGroup = lazy(() => import("@/modules/extensions/components/extensions-command-group"));
+const HyprWhsprView = lazy(() =>
+  import("@/modules/hyprwhspr/components/hyprwhspr-view").then((mod) => ({
+    default: mod.HyprWhsprView,
+  }))
+);
 const ExtensionRunnerView = lazy(() =>
   import("@/modules/extensions/components/extension-runner-view").then((mod) => ({
     default: mod.ExtensionRunnerView,
@@ -27,6 +32,7 @@ const TAKEOVER_PANELS = [
   "speed-test",
   "clipboard",
   "extensions",
+  "hyprwhspr",
   "extension-runner",
 ] as const;
 
@@ -146,6 +152,12 @@ export function LauncherTakeoverPanel({
         onOpen={openExtensions}
         onBack={backToCommands}
       />
+    );
+  } else if (activePanel === "hyprwhspr") {
+    content = (
+      <LauncherTakeoverSurface>
+        <HyprWhsprView onBack={backToCommands} />
+      </LauncherTakeoverSurface>
     );
   } else if (activePanel === "extension-runner") {
     content = (

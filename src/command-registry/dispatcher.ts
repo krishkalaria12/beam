@@ -39,6 +39,7 @@ const VALID_PANELS: ReadonlySet<CommandPanel> = new Set([
   "speed-test",
   "translation",
   "extensions",
+  "hyprwhspr",
   "extension-runner",
 ]);
 

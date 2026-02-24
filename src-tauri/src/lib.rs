@@ -9,6 +9,7 @@ pub mod extensions;
 pub mod file_search;
 pub mod fuzzy_search;
 pub mod http;
+pub mod hyprwhspr;
 pub mod launcher_window;
 pub mod quicklinks;
 pub mod search;

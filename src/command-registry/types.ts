@@ -57,6 +57,7 @@ export type CommandPanel =
   | "speed-test"
   | "translation"
   | "extensions"
+  | "hyprwhspr"
   | "extension-runner";
 
 export interface CommandContext {

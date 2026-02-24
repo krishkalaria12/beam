@@ -276,6 +276,28 @@ export const STATIC_COMMANDS: CommandDescriptor[] = [
     },
   },
   {
+    id: "hyprwhspr.panel.open",
+    title: "hyprwhspr voice mode",
+    subtitle: "Push-to-talk dictation controls",
+    keywords: [
+      "hyprwhspr",
+      "voice mode",
+      "whisper mode",
+      "dictation mode",
+      "speech to text",
+      "whisper",
+      "wispr",
+    ],
+    endText: "open",
+    icon: "mic",
+    kind: "panel",
+    scope: SCOPE_NORMAL_COMPRESSED,
+    action: {
+      type: "OPEN_PANEL",
+      payload: { panel: "hyprwhspr" },
+    },
+  },
+  {
     id: "search.web.google",
     title: "search google",
     subtitle: "Browser",

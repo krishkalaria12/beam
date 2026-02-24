@@ -1,6 +1,6 @@
 use crate::{
-    applications, calculator, clipboard, dictionary, extensions, file_search, launcher_window,
-    quicklinks, search, settings, system_actions, translation,
+    applications, calculator, clipboard, dictionary, extensions, file_search, hyprwhspr,
+    launcher_window, quicklinks, search, settings, system_actions, translation,
 };
 
 use tauri::ipc::Invoke;
@@ -40,6 +40,8 @@ pub fn get_handler() -> impl Fn(Invoke) -> bool {
         system_actions::execute_system_action,
         system_actions::get_awake_status,
         system_actions::toggle_awake,
+        hyprwhspr::hyprwhspr_record,
+        hyprwhspr::hyprwhspr_record_status,
         launcher_window::set_launcher_compact_mode,
         settings::get_ui_layout_mode,
         settings::set_ui_layout_mode,
