@@ -125,6 +125,12 @@ export function createCustomActionHandler(
         typeof request.payload.scriptCommandId === "string"
           ? request.payload.scriptCommandId.trim()
           : "";
+      const requiredArgumentCount =
+        typeof request.payload.requiredArgumentCount === "number" &&
+          Number.isFinite(request.payload.requiredArgumentCount) &&
+          request.payload.requiredArgumentCount > 0
+          ? Math.floor(request.payload.requiredArgumentCount)
+          : 0;
       const timeoutMs =
         typeof request.payload.timeoutMs === "number" &&
           Number.isFinite(request.payload.timeoutMs) &&
@@ -140,11 +146,21 @@ export function createCustomActionHandler(
         };
       }
 
+      if (requiredArgumentCount > 0) {
+        toast.error("This script requires arguments. Run it from the Script Commands panel.");
+        return {
+          ok: false,
+          code: "INVALID_INPUT",
+          message: "Script requires arguments. Open Script Commands panel to run it.",
+        };
+      }
+
       try {
         const result = await runScriptCommand({
           commandId: scriptCommandId,
           timeoutMs,
           background: false,
+          arguments: {},
         });
 
         input.setCommandSearch("");

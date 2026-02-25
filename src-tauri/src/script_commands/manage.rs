@@ -96,6 +96,7 @@ pub(super) fn create_script_command(
 
 pub(super) fn open_script_commands_directory(app: &tauri::AppHandle) -> Result<()> {
     let root = resolve_script_commands_directory(app)?;
-    open::that(root).map_err(|error| Error::OpenScriptCommandsDirectoryFailed(error.to_string()))?;
+    open::that(root)
+        .map_err(|error| Error::OpenScriptCommandsDirectoryFailed(error.to_string()))?;
     Ok(())
 }

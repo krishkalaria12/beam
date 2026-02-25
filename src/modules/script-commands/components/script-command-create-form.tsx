@@ -33,6 +33,10 @@ const createScriptFormSchema = z.object({
 
 const DEFAULT_SCRIPT_CONTENT = `#!/usr/bin/env bash
 
+# Optional argument metadata (Beam reads Raycast-style argument definitions):
+# @raycast.argument1 {"type":"text","placeholder":"Name","required":true}
+# @raycast.argument2 {"type":"dropdown","placeholder":"Environment","required":false,"data":[{"title":"Dev","value":"dev"},{"title":"Prod","value":"prod"}]}
+
 echo "Hello from Beam script command"
 `;
 

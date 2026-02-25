@@ -129,8 +129,7 @@ pub fn run() {
                         .level(log::LevelFilter::Info)
                         .filter(|metadata| {
                             let target = metadata.target();
-                            !target.starts_with("zbus")
-                                && !target.starts_with("tracing")
+                            !target.starts_with("zbus") && !target.starts_with("tracing")
                         })
                         .build(),
                 )?;

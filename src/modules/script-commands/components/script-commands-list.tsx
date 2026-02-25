@@ -63,6 +63,11 @@ export function ScriptCommandsList({
             <div className="mt-1 flex items-center gap-2 text-[11px] text-muted-foreground">
               <FileCode2 className="size-3" />
               <span className="truncate">{script.scriptName}</span>
+              {script.argumentDefinitions.length > 0 ? (
+                <span className="rounded-sm border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-[10px] text-amber-300">
+                  args {script.argumentDefinitions.length}
+                </span>
+              ) : null}
               {script.hasShebang ? (
                 <span className="rounded-sm border border-cyan-500/30 bg-cyan-500/10 px-1.5 py-0.5 text-[10px] text-cyan-300">
                   shebang

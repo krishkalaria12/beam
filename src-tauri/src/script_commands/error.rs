@@ -29,6 +29,9 @@ pub enum Error {
     #[error("Failed to execute script: {0}")]
     ExecuteScriptFailed(String),
 
+    #[error("Missing required script arguments: {0}")]
+    MissingRequiredArguments(String),
+
     #[error("Script timed out after {0}ms")]
     ScriptTimedOut(u64),
 

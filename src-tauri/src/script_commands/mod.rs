@@ -2,15 +2,14 @@ mod cache;
 mod discovery;
 mod error;
 mod manage;
-mod runtime;
+mod metadata;
 mod runner;
+mod runtime;
 pub mod types;
 
 use self::error::Result;
 use self::types::{
-    CreateScriptCommandRequest,
-    RunScriptCommandRequest,
-    ScriptCommandSummary,
+    CreateScriptCommandRequest, RunScriptCommandRequest, ScriptCommandSummary,
     ScriptExecutionResult,
 };
 use tauri::command;

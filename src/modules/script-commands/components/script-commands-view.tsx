@@ -10,19 +10,24 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useLauncherPanelBackHandler } from "@/modules/launcher/lib/back-navigation";
 import { openScriptCommandsDirectory } from "@/modules/script-commands/api/open-script-commands-directory";
+import { ScriptCommandArgumentsForm } from "@/modules/script-commands/components/script-command-arguments-form";
 import { ScriptCommandCreateForm } from "@/modules/script-commands/components/script-command-create-form";
 import { ScriptCommandsList } from "@/modules/script-commands/components/script-commands-list";
 import { ScriptCommandsOutput } from "@/modules/script-commands/components/script-commands-output";
 import { useCreateScriptCommandMutation } from "@/modules/script-commands/hooks/use-create-script-command-mutation";
 import { useRunScriptCommandMutation } from "@/modules/script-commands/hooks/use-run-script-command-mutation";
 import { useScriptCommandsQuery } from "@/modules/script-commands/hooks/use-script-commands-query";
-import type { CreateScriptCommandRequest, ScriptExecutionResult } from "@/modules/script-commands/types";
+import type {
+  CreateScriptCommandRequest,
+  ScriptCommandSummary,
+  ScriptExecutionResult,
+} from "@/modules/script-commands/types";
 
 interface ScriptCommandsViewProps {
   onBack: () => void;
 }
 
-type ScriptCommandsViewMode = "manage" | "create";
+type ScriptCommandsViewMode = "manage" | "create" | "arguments";
 
 export function ScriptCommandsView({ onBack }: ScriptCommandsViewProps) {
   const scriptsQuery = useScriptCommandsQuery();
@@ -32,6 +37,8 @@ export function ScriptCommandsView({ onBack }: ScriptCommandsViewProps) {
   const [viewMode, setViewMode] = useState<ScriptCommandsViewMode>("manage");
   const [search, setSearch] = useState("");
   const [selectedScriptId, setSelectedScriptId] = useState<string | null>(null);
+  const [argumentScriptId, setArgumentScriptId] = useState<string | null>(null);
+  const [scriptArgumentValues, setScriptArgumentValues] = useState<Record<string, Record<string, string>>>({});
   const [createErrorMessage, setCreateErrorMessage] = useState<string | null>(null);
   const [runErrorMessage, setRunErrorMessage] = useState<string | null>(null);
   const [executionResult, setExecutionResult] = useState<ScriptExecutionResult | null>(null);
@@ -68,12 +75,28 @@ export function ScriptCommandsView({ onBack }: ScriptCommandsViewProps) {
     [filteredScripts, selectedScriptId],
   );
 
-  const handleRunById = useCallback(async (scriptId: string) => {
+  const argumentScript = useMemo(
+    () => scripts.find((script) => script.id === argumentScriptId) ?? null,
+    [argumentScriptId, scripts],
+  );
+
+  useEffect(() => {
+    if (viewMode !== "arguments") {
+      return;
+    }
+
+    if (!argumentScript) {
+      setViewMode("manage");
+    }
+  }, [argumentScript, viewMode]);
+
+  const executeScriptById = useCallback(async (scriptId: string, argumentValues?: Record<string, string>) => {
     setRunErrorMessage(null);
     try {
       const result = await runMutation.mutateAsync({
         commandId: scriptId,
         background: false,
+        arguments: argumentValues ?? {},
       });
       setExecutionResult(result);
       if (result.exitCode === 0) {
@@ -81,19 +104,57 @@ export function ScriptCommandsView({ onBack }: ScriptCommandsViewProps) {
       } else {
         toast.error(result.message || "Script failed.");
       }
+      return true;
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to run script.";
       setRunErrorMessage(message);
       toast.error(message);
+      return false;
     }
   }, [runMutation]);
+
+  const openRunFlow = useCallback((script: ScriptCommandSummary) => {
+    setRunErrorMessage(null);
+    setSelectedScriptId(script.id);
+    setArgumentScriptId(script.id);
+    if (script.argumentDefinitions.length > 0) {
+      setViewMode("arguments");
+      return;
+    }
+    void executeScriptById(script.id);
+  }, [executeScriptById]);
+
+  const handleRunById = useCallback((scriptId: string) => {
+    const script = scripts.find((entry) => entry.id === scriptId);
+    if (!script) {
+      return;
+    }
+    openRunFlow(script);
+  }, [openRunFlow, scripts]);
 
   const handleRunSelected = useCallback(() => {
     if (!selectedScript) {
       return;
     }
-    void handleRunById(selectedScript.id);
-  }, [handleRunById, selectedScript]);
+    openRunFlow(selectedScript);
+  }, [openRunFlow, selectedScript]);
+
+  const handleRunWithArguments = useCallback(async (argumentValues: Record<string, string>) => {
+    if (!argumentScript) {
+      return;
+    }
+
+    setScriptArgumentValues((current) => ({
+      ...current,
+      [argumentScript.id]: argumentValues,
+    }));
+
+    const didRun = await executeScriptById(argumentScript.id, argumentValues);
+    if (didRun) {
+      setSelectedScriptId(argumentScript.id);
+      setViewMode("manage");
+    }
+  }, [argumentScript, executeScriptById]);
 
   const handleCreateScript = useCallback(async (request: CreateScriptCommandRequest) => {
     setCreateErrorMessage(null);
@@ -124,7 +185,7 @@ export function ScriptCommandsView({ onBack }: ScriptCommandsViewProps) {
   }, []);
 
   const handleBack = useCallback(() => {
-    if (viewMode === "create") {
+    if (viewMode === "create" || viewMode === "arguments") {
       setViewMode("manage");
       return;
     }
@@ -171,6 +232,24 @@ export function ScriptCommandsView({ onBack }: ScriptCommandsViewProps) {
       />
     );
   }
+
+  if (viewMode === "arguments" && argumentScript) {
+    return (
+      <ScriptCommandArgumentsForm
+        key={argumentScript.id}
+        script={argumentScript}
+        initialValues={scriptArgumentValues[argumentScript.id]}
+        isSubmitting={runMutation.isPending}
+        errorMessage={runErrorMessage}
+        onBack={handleBack}
+        onSubmit={handleRunWithArguments}
+      />
+    );
+  }
+
+  const selectedScriptNeedsArguments = selectedScript
+    ? selectedScript.argumentDefinitions.length > 0
+    : false;
 
   return (
     <div className="glass-effect flex h-full w-full flex-col overflow-hidden text-foreground">
@@ -246,7 +325,10 @@ export function ScriptCommandsView({ onBack }: ScriptCommandsViewProps) {
         )}
         rightSlot={(
           <>
-            <CommandKeyHint keyLabel="ENTER" label="Run Selected" />
+            <CommandKeyHint
+              keyLabel="ENTER"
+              label={selectedScriptNeedsArguments ? "Args & Run" : "Run Selected"}
+            />
             <CommandKeyHint keyLabel="CMD/CTRL + N" label="New Script" />
             <Button
               size="sm"
@@ -256,7 +338,7 @@ export function ScriptCommandsView({ onBack }: ScriptCommandsViewProps) {
               disabled={!selectedScript || runMutation.isPending}
             >
               <Play className="size-3.5" />
-              Run
+              {selectedScriptNeedsArguments ? "Args & Run" : "Run"}
             </Button>
           </>
         )}

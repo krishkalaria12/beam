@@ -28,6 +28,14 @@ export function ScriptCommandsOutput({
       <div className="mb-3 rounded-md border border-border/50 bg-background/20 p-3">
         <p className="text-sm font-medium text-foreground">{selectedScript.title}</p>
         <p className="mt-1 truncate text-xs text-muted-foreground">{selectedScript.scriptPath}</p>
+        {selectedScript.argumentDefinitions.length > 0 ? (
+          <p className="mt-1 text-xs text-amber-300/90">
+            Arguments: {selectedScript.argumentDefinitions.length}
+            {selectedScript.requiredArgumentCount > 0
+              ? ` (${selectedScript.requiredArgumentCount} required)`
+              : " (all optional)"}
+          </p>
+        ) : null}
       </div>
 
       {isRunning ? (

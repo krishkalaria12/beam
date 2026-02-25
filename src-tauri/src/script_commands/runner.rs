@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::ffi::OsString;
 use std::path::Path;
 use std::process::Stdio;
@@ -12,6 +13,7 @@ use super::discovery::resolve_script_commands_directory;
 use super::error::{Error, Result};
 use super::runtime::read_shebang_args;
 use super::types::{RunScriptCommandRequest, ScriptCommandSummary, ScriptExecutionResult};
+use url::form_urlencoded;
 
 fn trim_output(output: &[u8], max_bytes: usize) -> String {
     if output.len() <= max_bytes {
@@ -46,7 +48,10 @@ fn resolve_target_command(
     command_id: &str,
 ) -> Result<ScriptCommandSummary> {
     let commands = cache::get_script_commands(app)?;
-    if let Some(command) = commands.into_iter().find(|command| command.id == command_id) {
+    if let Some(command) = commands
+        .into_iter()
+        .find(|command| command.id == command_id)
+    {
         return Ok(command);
     }
 
@@ -58,10 +63,7 @@ fn resolve_target_command(
         .ok_or_else(|| Error::ScriptCommandNotFound(command_id.to_string()))
 }
 
-fn ensure_script_path_is_within_root(
-    app: &tauri::AppHandle,
-    script_path: &Path,
-) -> Result<()> {
+fn ensure_script_path_is_within_root(app: &tauri::AppHandle, script_path: &Path) -> Result<()> {
     let root = resolve_script_commands_directory(app)?;
     if !script_path.starts_with(&root) {
         return Err(Error::ScriptPathOutsideRoot);
@@ -69,7 +71,69 @@ fn ensure_script_path_is_within_root(
     Ok(())
 }
 
-fn build_process(command: &ScriptCommandSummary, script_path: &Path) -> Command {
+fn argument_label(command: &super::types::ScriptCommandArgumentDefinition) -> String {
+    if let Some(title) = command
+        .title
+        .as_ref()
+        .map(|value| value.trim())
+        .filter(|value| !value.is_empty())
+    {
+        return title.to_string();
+    }
+
+    let placeholder = command.placeholder.trim();
+    if !placeholder.is_empty() {
+        return placeholder.to_string();
+    }
+
+    command.name.clone()
+}
+
+fn normalize_script_arguments(
+    command: &ScriptCommandSummary,
+    provided_arguments: &HashMap<String, String>,
+) -> Result<Vec<String>> {
+    if command.argument_definitions.is_empty() {
+        return Ok(Vec::new());
+    }
+
+    let mut args: Vec<String> = Vec::with_capacity(command.argument_definitions.len());
+    let mut missing_required: Vec<String> = Vec::new();
+
+    for definition in &command.argument_definitions {
+        let value = provided_arguments
+            .get(&definition.name)
+            .map(String::as_str)
+            .unwrap_or_default();
+
+        if value.trim().is_empty() {
+            if definition.required {
+                missing_required.push(argument_label(definition));
+            }
+            args.push(String::new());
+            continue;
+        }
+
+        let normalized = if definition.percent_encoded {
+            form_urlencoded::byte_serialize(value.as_bytes()).collect::<String>()
+        } else {
+            value.to_string()
+        };
+        args.push(normalized);
+    }
+
+    if !missing_required.is_empty() {
+        return Err(Error::MissingRequiredArguments(missing_required.join(", ")));
+    }
+
+    Ok(args)
+}
+
+fn build_process(
+    command: &ScriptCommandSummary,
+    script_path: &Path,
+    script_args: &[String],
+) -> Command {
     let script_path_string = script_path.to_string_lossy().to_string();
     let shebang_args = read_shebang_args(script_path);
 
@@ -79,10 +143,12 @@ fn build_process(command: &ScriptCommandSummary, script_path: &Path) -> Command 
             process.args(&parts[1..]);
         }
         process.arg(&script_path_string);
+        process.args(script_args);
         process
     } else {
         let mut process = Command::new("/bin/bash");
         process.arg(&script_path_string);
+        process.args(script_args);
         process
     };
 
@@ -131,7 +197,8 @@ pub(super) async fn run_script_command(
     let timeout = Duration::from_millis(timeout_ms);
     let output_limit = config().SCRIPT_COMMANDS_MAX_OUTPUT_BYTES;
 
-    let mut process = build_process(&command, &script_path);
+    let script_args = normalize_script_arguments(&command, &request.arguments)?;
+    let mut process = build_process(&command, &script_path, &script_args);
     let output = match tokio::time::timeout(timeout, process.output()).await {
         Ok(Ok(output)) => output,
         Ok(Err(error)) => return Err(Error::ExecuteScriptFailed(error.to_string())),

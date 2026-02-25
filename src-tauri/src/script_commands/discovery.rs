@@ -8,6 +8,7 @@ use walkdir::{DirEntry, WalkDir};
 use crate::config::config;
 
 use super::error::{Error, Result};
+use super::metadata::read_argument_definitions;
 use super::runtime::{has_shebang, is_executable};
 use super::types::ScriptCommandSummary;
 
@@ -102,6 +103,11 @@ pub(super) fn discover_script_commands(root: &Path) -> Vec<ScriptCommandSummary>
             .extension()
             .and_then(|extension| extension.to_str())
             .map(|extension| extension.to_string());
+        let argument_definitions = read_argument_definitions(&canonical_path);
+        let required_argument_count = argument_definitions
+            .iter()
+            .filter(|definition| definition.required)
+            .count();
 
         commands.push(ScriptCommandSummary {
             id: hash_script_id(&canonical_path),
@@ -111,6 +117,8 @@ pub(super) fn discover_script_commands(root: &Path) -> Vec<ScriptCommandSummary>
             script_name,
             script_extension,
             has_shebang: detected_shebang,
+            argument_definitions,
+            required_argument_count,
         });
     }
 

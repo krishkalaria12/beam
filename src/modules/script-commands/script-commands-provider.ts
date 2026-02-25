@@ -45,6 +45,8 @@ function matchScript(script: ScriptCommandSummary, normalizedQuery: string): boo
     script.scriptName,
     script.subtitle,
     script.scriptExtension ?? "",
+    ...script.argumentDefinitions.map((argument) => argument.name),
+    ...script.argumentDefinitions.map((argument) => argument.placeholder),
     "script",
     "terminal",
   ]
@@ -55,10 +57,11 @@ function matchScript(script: ScriptCommandSummary, normalizedQuery: string): boo
 }
 
 function toScriptDescriptor(script: ScriptCommandSummary): CommandDescriptor {
+  const requiresArguments = script.requiredArgumentCount > 0;
   return {
     id: createScriptRunCommandId(script.id),
     title: script.title,
-    subtitle: script.scriptName,
+    subtitle: requiresArguments ? `${script.scriptName} • requires args` : script.scriptName,
     keywords: [
       "script",
       "run script",
@@ -66,6 +69,8 @@ function toScriptDescriptor(script: ScriptCommandSummary): CommandDescriptor {
       script.scriptName,
       script.subtitle,
       script.scriptExtension ?? "",
+      ...script.argumentDefinitions.map((argument) => argument.name),
+      ...script.argumentDefinitions.map((argument) => argument.placeholder),
     ]
       .map((value) => value.trim())
       .filter((value) => value.length > 0),
@@ -82,6 +87,7 @@ function toScriptDescriptor(script: ScriptCommandSummary): CommandDescriptor {
         extensionCommandId: SCRIPT_COMMANDS_RUN_EXTENSION_COMMAND_ID,
         scriptCommandId: script.id,
         scriptCommandTitle: script.title,
+        requiredArgumentCount: script.requiredArgumentCount,
         sandbox: {
           allowOpenUrl: false,
           allowReadQuery: false,

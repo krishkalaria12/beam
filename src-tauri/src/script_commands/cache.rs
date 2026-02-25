@@ -20,9 +20,7 @@ pub(super) fn invalidate_script_commands_cache() {
     *cache = None;
 }
 
-pub(super) fn get_script_commands(
-    app: &tauri::AppHandle,
-) -> Result<Vec<ScriptCommandSummary>> {
+pub(super) fn get_script_commands(app: &tauri::AppHandle) -> Result<Vec<ScriptCommandSummary>> {
     let ttl = Duration::from_millis(config().SCRIPT_COMMANDS_DISCOVERY_CACHE_TTL_MS);
 
     {
