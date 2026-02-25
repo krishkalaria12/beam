@@ -3,8 +3,10 @@ import { useEffect, useState } from "react";
 import {
   getTriggerSymbols,
   resetTriggerSymbols,
+  setCustomTriggerBindings,
   setTriggerSymbol,
   TRIGGER_SYMBOLS_CHANGE_EVENT,
+  type CustomTriggerBinding,
   type TriggerSymbolTarget,
   type TriggerSymbols,
 } from "@/modules/settings/api/trigger-symbols";
@@ -36,9 +38,15 @@ export function useTriggerSymbols() {
     setSymbols(getTriggerSymbols());
   };
 
+  const updateCustomBindings = (bindings: CustomTriggerBinding[]) => {
+    setCustomTriggerBindings(bindings);
+    setSymbols(getTriggerSymbols());
+  };
+
   return {
     symbols,
     updateSymbol,
+    updateCustomBindings,
     resetSymbols,
   };
 }

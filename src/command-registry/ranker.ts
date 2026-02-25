@@ -79,6 +79,7 @@ export function rankCommands(options: {
 
   for (const command of options.commands) {
     const aliases = getAliases(signals?.aliasesById, command.id);
+    const isTriggeredCommand = options.context.triggeredCommandId === command.id;
     const match = matchCommand({
       command,
       query: options.context.query,
@@ -86,7 +87,7 @@ export function rankCommands(options: {
       config,
     });
 
-    if (!match.matched) {
+    if (!match.matched && !isTriggeredCommand) {
       continue;
     }
 
@@ -105,6 +106,9 @@ export function rankCommands(options: {
     score +=
       Math.min(usageCount, config.score.usageCountCap) *
       config.score.usageCountMultiplier;
+    if (isTriggeredCommand) {
+      score += 2_000;
+    }
 
     ranked.push({
       command,
@@ -118,4 +122,3 @@ export function rankCommands(options: {
 
   return ranked.sort(compareRankedCommands);
 }
-

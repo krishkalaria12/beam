@@ -21,7 +21,8 @@ interface TriggerDefinition {
 }
 
 interface ParsedTriggerInput extends TriggerParseResult {
-  mode: TriggerMode;
+  mode: CommandMode;
+  triggeredCommandId: string | null;
 }
 
 const QUICKLINK_TRIGGER_ALLOWED_COMMAND_IDS = new Set([
@@ -52,8 +53,11 @@ function parseQuicklinkTrigger(rawQuery: string, symbol: string): TriggerParseRe
   };
 }
 
-function getTriggerDefinitions(): readonly TriggerDefinition[] {
-  const symbols = getTriggerSymbols();
+function getTriggerDefinitions(symbols: {
+  quicklink: string;
+  system: string;
+  script: string;
+}): readonly TriggerDefinition[] {
   return [
     {
       mode: QUICKLINK_TRIGGER_MODE,
@@ -87,8 +91,13 @@ export function getTriggerSymbol(mode: CommandMode): string | null {
   return null;
 }
 
-export function parseTriggerInput(rawQuery: string): ParsedTriggerInput | null {
-  for (const definition of getTriggerDefinitions()) {
+export function parseTriggerInput(
+  rawQuery: string,
+  fallbackMode: "normal" | "compressed",
+): ParsedTriggerInput | null {
+  const symbols = getTriggerSymbols();
+
+  for (const definition of getTriggerDefinitions(symbols)) {
     if (!rawQuery.startsWith(definition.symbol)) {
       continue;
     }
@@ -100,6 +109,21 @@ export function parseTriggerInput(rawQuery: string): ParsedTriggerInput | null {
       mode: definition.mode,
       query: parsed.query,
       quicklinkKeyword: parsed.quicklinkKeyword,
+      triggeredCommandId: null,
+    };
+  }
+
+  for (const binding of symbols.customBindings) {
+    if (!rawQuery.startsWith(binding.symbol)) {
+      continue;
+    }
+
+    const parsed = parseQueryTrigger(rawQuery, binding.symbol);
+    return {
+      mode: fallbackMode,
+      query: parsed.query,
+      quicklinkKeyword: parsed.quicklinkKeyword,
+      triggeredCommandId: binding.commandId,
     };
   }
 

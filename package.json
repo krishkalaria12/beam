@@ -13,6 +13,8 @@
     "serve": "vite preview",
     "start": "vite",
     "check-types": "tsc --noEmit",
+    "rust:fmt": "cargo fmt --manifest-path src-tauri/Cargo.toml --all",
+    "rust:fmt:check": "cargo fmt --manifest-path src-tauri/Cargo.toml --all -- --check",
     "sidecar:build": "bun run --cwd sidecar build",
     "sidecar:check": "bun run --cwd sidecar check",
     "tauri": "tauri",

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { createDefaultCommandProviders } from "@/command-registry/default-providers";
 import { createCommandProviderOrchestrator } from "@/command-registry/providers";
@@ -21,12 +21,10 @@ export function useRankedRegistryCommands({
 }: UseRankedRegistryCommandsInput) {
   const [rankedRegistryCommands, setRankedRegistryCommands] = useState<RankedCommand[]>([]);
 
-  const providerOrchestrator = useMemo(
-    () =>
-      createCommandProviderOrchestrator({
-        providers: createDefaultCommandProviders(),
-      }),
-    [],
+  const [providerOrchestrator] = useState(() =>
+    createCommandProviderOrchestrator({
+      providers: createDefaultCommandProviders(),
+    }),
   );
 
   useEffect(() => {
@@ -41,7 +39,11 @@ export function useRankedRegistryCommands({
       const dynamicCommands = dynamicResolution.commands.filter(
         (command) => command.scope.includes("all") || command.scope.includes(commandContext.mode),
       );
-      const visibleCommands = [...staticCandidates, ...dynamicCommands].filter(
+      const candidateCommands = [...staticCandidates, ...dynamicCommands];
+      const scopedCandidates = commandContext.triggeredCommandId
+        ? candidateCommands.filter((command) => command.id === commandContext.triggeredCommandId)
+        : candidateCommands;
+      const visibleCommands = scopedCandidates.filter(
         (command) => !hiddenCommandIds.has(command.id),
       );
       const ranked = rankCommands({

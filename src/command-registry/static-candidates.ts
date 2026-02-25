@@ -34,6 +34,14 @@ export function resolveStaticCommandCandidates(
   registry: StaticCommandRegistry,
   context: CommandContext,
 ): CommandDescriptor[] {
+  if (context.triggeredCommandId) {
+    return registry
+      .getAll()
+      .filter((command) => !command.hidden)
+      .filter((command) => command.id === context.triggeredCommandId)
+      .filter((command) => matchesPanelState(command, context));
+  }
+
   return registry
     .getAll()
     .filter((command) => !command.hidden)

@@ -37,12 +37,15 @@ export async function resolveCommandCandidates(options: {
   const dynamicCommands = dynamicResolution.commands.filter((command) =>
     command.scope.includes("all") || command.scope.includes(options.context.mode),
   );
+  const mergedCommands = [...staticCommands, ...dynamicCommands];
+  const commands = options.context.triggeredCommandId
+    ? mergedCommands.filter((command) => command.id === options.context.triggeredCommandId)
+    : mergedCommands;
 
   return {
     staticCommands,
     dynamicCommands,
-    commands: [...staticCommands, ...dynamicCommands],
+    commands,
     providerErrors: dynamicResolution.errors,
   };
 }
-

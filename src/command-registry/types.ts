@@ -59,6 +59,7 @@ export interface CommandContext {
   rawQuery: string;
   query: string;
   quicklinkKeyword: string;
+  triggeredCommandId: string | null;
   mode: CommandMode;
   activePanel: CommandPanel;
   isDesktopRuntime: boolean;
