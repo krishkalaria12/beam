@@ -6,7 +6,7 @@ use rayon::prelude::*;
 
 use super::types::{FileEntry, FileIndex, SearchResult};
 use crate::config::config;
-use error::{Error, Result};
+use error::{FileSearchError, Result};
 
 const MATCH_CONFIG: Config = Config::DEFAULT;
 
@@ -49,19 +49,19 @@ pub fn search(query: &str, index: &FileIndex, options: SearchOptions) -> Result<
     let normalized_query = query.trim();
 
     if normalized_query.is_empty() {
-        return Err(Error::EmptyQuery);
+        return Err(FileSearchError::EmptyQuery);
     }
 
     // Validate pagination options
     if options.page == 0 {
-        return Err(Error::InvalidPageNumber {
+        return Err(FileSearchError::InvalidPageNumber {
             provided: options.page,
             reason: "Page number must be 1 or greater".to_string(),
         });
     }
 
     if options.per_page == 0 || options.per_page > config().FILE_SEARCH_MAX_RESULTS_PER_PAGE {
-        return Err(Error::InvalidPerPage {
+        return Err(FileSearchError::InvalidPerPage {
             provided: options.per_page,
             max: config().FILE_SEARCH_MAX_RESULTS_PER_PAGE,
         });

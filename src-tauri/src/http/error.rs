@@ -1,10 +1,10 @@
 use serde::Serialize;
 use thiserror::Error;
 
-pub type Result<T> = std::result::Result<T, Error>;
+pub type Result<T> = std::result::Result<T, HttpError>;
 
 #[derive(Debug, Clone, Error)]
-pub enum Error {
+pub enum HttpError {
     #[error("HTTP request failed: {0}")]
     HttpRequestError(String),
 
@@ -22,7 +22,7 @@ pub enum Error {
     RequestTimeoutError(String),
 }
 
-impl Serialize for Error {
+impl Serialize for HttpError {
     fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where
         S: serde::Serializer,

@@ -4,7 +4,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use tauri::{AppHandle, Emitter, Manager};
 
-use super::error::{ExtensionError, Result};
+use super::error::{ExtensionsError, Result};
 use crate::config::config;
 
 #[derive(Serialize, Deserialize, Default, Debug, Clone)]
@@ -25,7 +25,7 @@ fn get_settings_path(app: &tauri::AppHandle) -> Result<PathBuf> {
     let data_dir = app
         .path()
         .app_local_data_dir()
-        .map_err(|_| ExtensionError::AppDataDirUnavailable)?;
+        .map_err(|_| ExtensionsError::AppDataDirUnavailable)?;
 
     if !data_dir.exists() {
         fs::create_dir_all(&data_dir)?;
@@ -44,7 +44,7 @@ fn read_settings(path: &Path) -> Result<AiSettings> {
         return Ok(AiSettings::default());
     }
 
-    serde_json::from_str(&content).map_err(ExtensionError::from)
+    serde_json::from_str(&content).map_err(ExtensionsError::from)
 }
 
 fn write_settings(path: &Path, settings: &AiSettings) -> Result<()> {
@@ -58,7 +58,7 @@ fn get_keyring_entry() -> Result<keyring::Entry> {
         config().EXTENSIONS_AI_KEYRING_SERVICE,
         config().EXTENSIONS_AI_KEYRING_USERNAME,
     )
-    .map_err(ExtensionError::from)
+    .map_err(ExtensionsError::from)
 }
 
 #[tauri::command]
@@ -76,7 +76,7 @@ pub fn set_ai_settings(app: tauri::AppHandle, settings: AiSettings) -> Result<()
 #[tauri::command]
 pub fn set_ai_api_key(key: String) -> Result<()> {
     let entry = get_keyring_entry()?;
-    entry.set_password(&key).map_err(ExtensionError::from)
+    entry.set_password(&key).map_err(ExtensionsError::from)
 }
 
 #[tauri::command]
@@ -85,14 +85,14 @@ pub fn is_ai_api_key_set() -> Result<bool> {
     match entry.get_password() {
         Ok(_) => Ok(true),
         Err(keyring::Error::NoEntry) => Ok(false),
-        Err(error) => Err(ExtensionError::from(error)),
+        Err(error) => Err(ExtensionsError::from(error)),
     }
 }
 
 #[tauri::command]
 pub fn clear_ai_api_key() -> Result<()> {
     let entry = get_keyring_entry()?;
-    entry.delete_credential().map_err(ExtensionError::from)
+    entry.delete_credential().map_err(ExtensionsError::from)
 }
 
 #[tauri::command]
@@ -112,7 +112,7 @@ pub async fn ai_ask_stream(
     options: AskOptions,
 ) -> Result<()> {
     if !ai_can_access(app_handle.clone())? {
-        return Err(ExtensionError::AiAccessDisabled);
+        return Err(ExtensionsError::AiAccessDisabled);
     }
 
     // Placeholder behavior for now: emit a terminal stream error so extensions can fail gracefully.
@@ -132,7 +132,7 @@ pub async fn ai_ask_stream(
                 "error": message,
             }),
         )
-        .map_err(|error| ExtensionError::Message(error.to_string()))?;
+        .map_err(|error| ExtensionsError::Message(error.to_string()))?;
 
     Ok(())
 }

@@ -1,10 +1,10 @@
 use serde::Serialize;
 use thiserror::Error;
 
-pub type Result<T> = std::result::Result<T, Error>;
+pub type Result<T> = std::result::Result<T, QuicklinkError>;
 
 #[derive(Debug, Clone, Error)]
-pub enum Error {
+pub enum QuicklinkError {
     #[error("Name is empty: {0}")]
     NameIsEmptyError(String),
 
@@ -48,7 +48,7 @@ pub enum Error {
     HideWindowError(String),
 }
 
-impl Serialize for Error {
+impl Serialize for QuicklinkError {
     fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where
         S: serde::Serializer,

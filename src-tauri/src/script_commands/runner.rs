@@ -10,7 +10,7 @@ use crate::config::config;
 
 use super::cache;
 use super::discovery::resolve_script_commands_directory;
-use super::error::{Error, Result};
+use super::error::{Result, ScriptCommandsError};
 use super::runtime::read_shebang_args;
 use super::types::{RunScriptCommandRequest, ScriptCommandSummary, ScriptExecutionResult};
 use url::form_urlencoded;
@@ -60,13 +60,13 @@ fn resolve_target_command(
     fresh_commands
         .into_iter()
         .find(|command| command.id == command_id)
-        .ok_or_else(|| Error::ScriptCommandNotFound(command_id.to_string()))
+        .ok_or_else(|| ScriptCommandsError::ScriptCommandNotFound(command_id.to_string()))
 }
 
 fn ensure_script_path_is_within_root(app: &tauri::AppHandle, script_path: &Path) -> Result<()> {
     let root = resolve_script_commands_directory(app)?;
     if !script_path.starts_with(&root) {
-        return Err(Error::ScriptPathOutsideRoot);
+        return Err(ScriptCommandsError::ScriptPathOutsideRoot);
     }
     Ok(())
 }
@@ -123,7 +123,9 @@ fn normalize_script_arguments(
     }
 
     if !missing_required.is_empty() {
-        return Err(Error::MissingRequiredArguments(missing_required.join(", ")));
+        return Err(ScriptCommandsError::MissingRequiredArguments(
+            missing_required.join(", "),
+        ));
     }
 
     Ok(args)
@@ -180,13 +182,13 @@ pub(super) async fn run_script_command(
 ) -> Result<ScriptExecutionResult> {
     let command_id = request.command_id.trim();
     if command_id.is_empty() {
-        return Err(Error::InvalidCommandId);
+        return Err(ScriptCommandsError::InvalidCommandId);
     }
 
     let command = resolve_target_command(app, command_id)?;
     let script_path = Path::new(&command.script_path)
         .canonicalize()
-        .map_err(|error| Error::ResolveScriptPathFailed(error.to_string()))?;
+        .map_err(|error| ScriptCommandsError::ResolveScriptPathFailed(error.to_string()))?;
 
     ensure_script_path_is_within_root(app, &script_path)?;
 
@@ -201,8 +203,8 @@ pub(super) async fn run_script_command(
     let mut process = build_process(&command, &script_path, &script_args);
     let output = match tokio::time::timeout(timeout, process.output()).await {
         Ok(Ok(output)) => output,
-        Ok(Err(error)) => return Err(Error::ExecuteScriptFailed(error.to_string())),
-        Err(_) => return Err(Error::ScriptTimedOut(timeout_ms)),
+        Ok(Err(error)) => return Err(ScriptCommandsError::ExecuteScriptFailed(error.to_string())),
+        Err(_) => return Err(ScriptCommandsError::ScriptTimedOut(timeout_ms)),
     };
 
     let stdout = trim_output(&output.stdout, output_limit);

@@ -8,7 +8,7 @@ use once_cell::sync::OnceCell;
 use rand::{rng, Rng, RngCore};
 use sha2::{Digest, Sha256};
 
-use super::error::{Error, Result};
+use super::error::{ClipboardError, Result};
 
 use crate::config::config;
 
@@ -33,12 +33,12 @@ fn generate_password(length: usize) -> String {
 pub fn get_password_for_encrypt() -> Result<String> {
     let password = ENCRYPTION_PASSWORD_CACHE.get_or_try_init(|| {
         let entry = Entry::new(&config().SERVICE_NAME, &config().KEYRING_NAME)
-            .map_err(|e| Error::NewEntryKeyringError(e.to_string()))?;
+            .map_err(|e| ClipboardError::NewEntryKeyringError(e.to_string()))?;
 
         let password = match entry.get_password() {
             Ok(password) => password,
             Err(KeyringError::NoEntry) => String::new(),
-            Err(e) => return Err(Error::GettingPasswordKeyring(e.to_string())),
+            Err(e) => return Err(ClipboardError::GettingPasswordKeyring(e.to_string())),
         };
 
         if password.is_empty() {
@@ -46,7 +46,7 @@ pub fn get_password_for_encrypt() -> Result<String> {
                 generate_password(config().CLIPBOARD_ENCRYPTION_PASSWORD_LENGTH);
             entry
                 .set_password(generated_password.as_str())
-                .map_err(|e| Error::SettingPasswordKeyring(e.to_string()))?;
+                .map_err(|e| ClipboardError::SettingPasswordKeyring(e.to_string()))?;
 
             return Ok(generated_password);
         }
@@ -59,13 +59,14 @@ pub fn get_password_for_encrypt() -> Result<String> {
 
 fn get_cipher_for_password(password: &str) -> Result<Aes256Gcm> {
     let digest = Sha256::digest(password.as_bytes());
-    Aes256Gcm::new_from_slice(&digest).map_err(|e| Error::EncryptionCipherInitError(e.to_string()))
+    Aes256Gcm::new_from_slice(&digest)
+        .map_err(|e| ClipboardError::EncryptionCipherInitError(e.to_string()))
 }
 
 fn get_nonce_size_bytes() -> Result<usize> {
     let nonce_size = config().CLIPBOARD_ENCRYPTION_NONCE_BYTES;
     if nonce_size != 12 {
-        return Err(Error::EncryptionCipherInitError(
+        return Err(ClipboardError::EncryptionCipherInitError(
             "CLIPBOARD_ENCRYPTION_NONCE_BYTES must be 12 for AES-GCM".to_string(),
         ));
     }
@@ -83,7 +84,7 @@ fn encrypt_text_with_password(value: &str, password: &str) -> Result<String> {
     let nonce = Nonce::from_slice(&nonce_bytes);
     let encrypted_bytes = cipher
         .encrypt(nonce, value.as_bytes())
-        .map_err(|e| Error::EncryptingClipboardValue(e.to_string()))?;
+        .map_err(|e| ClipboardError::EncryptingClipboardValue(e.to_string()))?;
 
     let mut payload = Vec::with_capacity(nonce_size + encrypted_bytes.len());
     payload.extend_from_slice(&nonce_bytes);
@@ -107,10 +108,10 @@ fn decrypt_text_with_password(value: &str, password: &str) -> Result<String> {
     let payload_b64 = &value[encrypted_value_prefix.len()..];
     let payload = general_purpose::STANDARD
         .decode(payload_b64)
-        .map_err(|e| Error::DecryptingClipboardValue(e.to_string()))?;
+        .map_err(|e| ClipboardError::DecryptingClipboardValue(e.to_string()))?;
 
     if payload.len() <= nonce_size {
-        return Err(Error::DecryptingClipboardValue(
+        return Err(ClipboardError::DecryptingClipboardValue(
             "invalid encrypted clipboard payload".to_string(),
         ));
     }
@@ -121,9 +122,10 @@ fn decrypt_text_with_password(value: &str, password: &str) -> Result<String> {
 
     let decrypted_bytes = cipher
         .decrypt(nonce, encrypted_bytes)
-        .map_err(|e| Error::DecryptingClipboardValue(e.to_string()))?;
+        .map_err(|e| ClipboardError::DecryptingClipboardValue(e.to_string()))?;
 
-    String::from_utf8(decrypted_bytes).map_err(|e| Error::DecryptingClipboardValue(e.to_string()))
+    String::from_utf8(decrypted_bytes)
+        .map_err(|e| ClipboardError::DecryptingClipboardValue(e.to_string()))
 }
 
 pub fn encrypt_value(value: &str) -> Result<String> {
@@ -141,7 +143,7 @@ pub fn decrypt_value(value: &str) -> Result<String> {
                 return Ok(value.to_string());
             }
 
-            Err(Error::DecryptingClipboardValue(
+            Err(ClipboardError::DecryptingClipboardValue(
                 "failed to decrypt encrypted clipboard value".to_string(),
             ))
         }

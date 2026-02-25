@@ -8,7 +8,7 @@ use tauri_plugin_store::{Store, StoreExt};
 use super::{
     app_entry::AppEntry,
     collector::collect_applications,
-    error::{Error, Result},
+    error::{ApplicationsError, Result},
 };
 
 use crate::config::config;
@@ -36,16 +36,16 @@ fn read_cached_applications(store: &Store<Wry>) -> Option<Vec<AppEntry>> {
 }
 
 fn write_applications_cache(store: Arc<Store<Wry>>, applications: &[AppEntry]) -> Result<()> {
-    let app_json =
-        serde_json::to_value(applications).map_err(|e| Error::SerializationError(e.to_string()))?;
+    let app_json = serde_json::to_value(applications)
+        .map_err(|e| ApplicationsError::SerializationError(e.to_string()))?;
     let current_time = serde_json::to_value(Timestamp::now().as_second())
-        .map_err(|e| Error::SerializationError(e.to_string()))?;
+        .map_err(|e| ApplicationsError::SerializationError(e.to_string()))?;
 
     store.set(config().APPLICATIONS_VALUE, app_json);
     store.set(config().LAST_UPDATED_APPLICATIONS_TIMESTAMP, current_time);
     store
         .save()
-        .map_err(|e| Error::StoreSaveError(e.to_string()))?;
+        .map_err(|e| ApplicationsError::StoreSaveError(e.to_string()))?;
 
     Ok(())
 }
@@ -63,7 +63,7 @@ fn refresh_applications_cache_in_background(app: AppHandle<Wry>) {
             let applications = collect_applications()?;
             let store = app
                 .store(&config().STORE_NAME)
-                .map_err(|e| Error::StoreOpeningError(e.to_string()))?;
+                .map_err(|e| ApplicationsError::StoreOpeningError(e.to_string()))?;
 
             write_applications_cache(store, &applications)?;
             let _ = app.emit(config().APPLICATIONS_CACHE_UPDATED_EVENT, ());
@@ -81,7 +81,7 @@ fn refresh_applications_cache_in_background(app: AppHandle<Wry>) {
 pub fn get_applications_with_cache(app: AppHandle<Wry>) -> Result<Vec<AppEntry>> {
     let store = app
         .store(&config().STORE_NAME)
-        .map_err(|e| Error::StoreOpeningError(e.to_string()))?;
+        .map_err(|e| ApplicationsError::StoreOpeningError(e.to_string()))?;
 
     let cache_is_fresh = should_use_cached_applications(&store);
     let cached_applications = read_cached_applications(&store);

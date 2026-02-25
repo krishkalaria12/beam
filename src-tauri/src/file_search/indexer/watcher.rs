@@ -8,7 +8,7 @@ use tokio::sync::mpsc::UnboundedSender;
 
 use super::super::types::IndexUpdate;
 use super::{
-    error::{Error, Result},
+    error::{IndexerError, Result},
     helper::{get_file_metadata, is_ignored_path},
 };
 use crate::config::config;
@@ -47,16 +47,16 @@ pub fn start_watcher(tx: UnboundedSender<IndexUpdate>) -> Result<Debouncer<Recom
             Err(e) => error!("Watcher Error: {:?}", e),
         },
     )
-    .map_err(|e| Error::WatcherError(e.to_string()))?;
+    .map_err(|e| IndexerError::WatcherError(e.to_string()))?;
 
     let root = dirs::home_dir().ok_or_else(|| {
-        Error::ErrorFindingHomeDir("Could not find system home directory".to_string())
+        IndexerError::ErrorFindingHomeDir("Could not find system home directory".to_string())
     })?;
 
     debouncer
         .watcher()
         .watch(&root, RecursiveMode::Recursive)
-        .map_err(|e| Error::WatcherError(e.to_string()))?;
+        .map_err(|e| IndexerError::WatcherError(e.to_string()))?;
 
     Ok(debouncer)
 }

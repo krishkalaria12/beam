@@ -1,14 +1,14 @@
 use std::path::PathBuf;
 use tauri::State;
 
-use crate::config::config;
-use super::search::error::{Error, Result};
+use super::search::error::{FileSearchError, Result};
 use super::search::search;
 use super::types::FileIndex;
 use super::{
     search::SearchOptions,
     types::{FileEntry, PaginatedSearchMetadata, PaginatedSearchResponse, SearchRequest},
 };
+use crate::config::config;
 use crate::state::AppState;
 
 // Searches for files in the index with pagination support
@@ -20,26 +20,26 @@ pub fn search_files(
     // Validate query
     let normalized_query = request.query.trim();
     if normalized_query.is_empty() {
-        return Err(Error::EmptyQuery);
+        return Err(FileSearchError::EmptyQuery);
     }
 
     // Validate pagination parameters
     if request.page == 0 {
-        return Err(Error::InvalidPageNumber {
+        return Err(FileSearchError::InvalidPageNumber {
             provided: request.page,
             reason: "Page number must be 1 or greater".to_string(),
         });
     }
 
     if request.per_page == 0 {
-        return Err(Error::InvalidPerPage {
+        return Err(FileSearchError::InvalidPerPage {
             provided: request.per_page,
             max: config().FILE_SEARCH_MAX_RESULTS_PER_PAGE,
         });
     }
 
     if request.per_page > config().FILE_SEARCH_MAX_RESULTS_PER_PAGE {
-        return Err(Error::InvalidPerPage {
+        return Err(FileSearchError::InvalidPerPage {
             provided: request.per_page,
             max: config().FILE_SEARCH_MAX_RESULTS_PER_PAGE,
         });
@@ -50,7 +50,7 @@ pub fn search_files(
 
     // Check if index is initialized
     if pinned.is_empty() {
-        return Err(Error::IndexNotInitialized);
+        return Err(FileSearchError::IndexNotInitialized);
     }
 
     // Build file index from ConcurrentMap
@@ -105,7 +105,7 @@ pub async fn open_file(file_path: String) -> Result<()> {
 
     // Check if path is absolute
     if !path.is_absolute() {
-        return Err(Error::InvalidFilePath(format!(
+        return Err(FileSearchError::InvalidFilePath(format!(
             "Path must be absolute: {}",
             normalized_path
         )));
@@ -113,18 +113,18 @@ pub async fn open_file(file_path: String) -> Result<()> {
 
     // Check if file exists
     if !path.exists() {
-        return Err(Error::FileNotFound(normalized_path));
+        return Err(FileSearchError::FileNotFound(normalized_path));
     }
 
     // Check if it's a file (not a directory)
     if !path.is_file() {
-        return Err(Error::InvalidFilePath(format!(
+        return Err(FileSearchError::InvalidFilePath(format!(
             "Path is not a file: {}",
             normalized_path
         )));
     }
 
-    open::that(&path).map_err(|e| Error::InvalidFilePath(e.to_string()))?;
+    open::that(&path).map_err(|e| FileSearchError::InvalidFilePath(e.to_string()))?;
 
     Ok(())
 }
@@ -138,5 +138,5 @@ pub fn get_file_info(file_path: String, state: State<AppState>) -> Result<FileEn
     pinned
         .get(&file_path)
         .map(|entry| entry.clone())
-        .ok_or_else(|| Error::FileNotFound(file_path))
+        .ok_or_else(|| FileSearchError::FileNotFound(file_path))
 }

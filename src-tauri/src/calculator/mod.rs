@@ -7,7 +7,7 @@ pub mod types;
 
 use tauri::{command, AppHandle, Manager};
 
-use self::error::{Error, Result};
+use self::error::{CalculatorError, Result};
 use self::history::{get_history, save_to_history, CalculatorHistoryEntry};
 use self::service::CalculatorService;
 use self::types::CalculatorCommandResponse;
@@ -20,12 +20,14 @@ thread_local! {
 
 pub fn initialize(app: &AppHandle) -> Result<()> {
     let resource_dir = app.path().resource_dir().map_err(|error| {
-        Error::ConfigurationError(format!("failed to resolve app resource directory: {error}"))
+        CalculatorError::ConfigurationError(format!(
+            "failed to resolve app resource directory: {error}"
+        ))
     })?;
 
     let soulver_core_path = resource_dir.join("SoulverWrapper/Vendor/SoulverCore-linux");
     let soulver_core_path = soulver_core_path.to_str().ok_or_else(|| {
-        Error::ConfigurationError("failed to resolve soulver core path".to_string())
+        CalculatorError::ConfigurationError("failed to resolve soulver core path".to_string())
     })?;
 
     soulver::initialize(soulver_core_path);

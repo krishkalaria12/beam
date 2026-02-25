@@ -1,10 +1,10 @@
 use serde::Serialize;
 use thiserror::Error;
 
-pub type Result<T> = std::result::Result<T, Error>;
+pub type Result<T> = std::result::Result<T, CalculatorError>;
 
 #[derive(Debug, Clone, Error)]
-pub enum Error {
+pub enum CalculatorError {
     #[error("Configuration error: {0}")]
     ConfigurationError(String),
 
@@ -21,7 +21,7 @@ pub enum Error {
     SerializationError(String),
 }
 
-impl Serialize for Error {
+impl Serialize for CalculatorError {
     fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where
         S: serde::Serializer,

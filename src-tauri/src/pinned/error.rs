@@ -1,10 +1,10 @@
 use serde::Serialize;
 use thiserror::Error;
 
-pub type Result<T> = std::result::Result<T, Error>;
+pub type Result<T> = std::result::Result<T, PinnedError>;
 
 #[derive(Debug, Clone, Error)]
-pub enum Error {
+pub enum PinnedError {
     #[error("{0}")]
     StoreOpeningError(String),
 
@@ -21,7 +21,7 @@ pub enum Error {
     StoreSaveError(String),
 }
 
-impl Serialize for Error {
+impl Serialize for PinnedError {
     fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where
         S: serde::Serializer,

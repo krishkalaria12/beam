@@ -7,7 +7,7 @@ use walkdir::{DirEntry, WalkDir};
 
 use crate::config::config;
 
-use super::error::{Error, Result};
+use super::error::{Result, ScriptCommandsError};
 use super::metadata::read_argument_definitions;
 use super::runtime::{has_shebang, is_executable};
 use super::types::ScriptCommandSummary;
@@ -47,15 +47,15 @@ pub(super) fn resolve_script_commands_directory(app: &tauri::AppHandle) -> Resul
     let base_directory = app
         .path()
         .app_local_data_dir()
-        .map_err(|_| Error::AppDataDirUnavailable)?;
+        .map_err(|_| ScriptCommandsError::AppDataDirUnavailable)?;
 
     let script_directory = base_directory.join(config().SCRIPT_COMMANDS_DIRECTORY);
     fs::create_dir_all(&script_directory)
-        .map_err(|error| Error::CreateScriptDirectoryFailed(error.to_string()))?;
+        .map_err(|error| ScriptCommandsError::CreateScriptDirectoryFailed(error.to_string()))?;
 
     script_directory
         .canonicalize()
-        .map_err(|error| Error::ResolveScriptDirectoryFailed(error.to_string()))
+        .map_err(|error| ScriptCommandsError::ResolveScriptDirectoryFailed(error.to_string()))
 }
 
 pub(super) fn discover_script_commands(root: &Path) -> Vec<ScriptCommandSummary> {

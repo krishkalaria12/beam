@@ -1,10 +1,10 @@
 use serde::Serialize;
 use thiserror::Error;
 
-pub type Result<T> = std::result::Result<T, Error>;
+pub type Result<T> = std::result::Result<T, FileSearchError>;
 
 #[derive(Debug, Error)]
-pub enum Error {
+pub enum FileSearchError {
     #[error("Lock poisoned: {0}")]
     LockPoisoned(String),
 
@@ -33,7 +33,7 @@ pub enum Error {
     InvalidFilePath(String),
 }
 
-impl Serialize for Error {
+impl Serialize for FileSearchError {
     fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where
         S: serde::Serializer,

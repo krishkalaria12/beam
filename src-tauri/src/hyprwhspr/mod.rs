@@ -5,7 +5,7 @@ use std::process::{Command, Stdio};
 use serde::{Deserialize, Serialize};
 use tauri::{command, Window};
 
-use self::error::{Error, Result};
+use self::error::{HyprWhsprError, Result};
 
 #[derive(Debug, Clone, Copy, Deserialize, Serialize, Eq, PartialEq)]
 #[serde(rename_all = "snake_case")]
@@ -58,7 +58,7 @@ fn run_hyprwhspr_command(args: &[&str], command_name: &str) -> Result<String> {
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .output()
-        .map_err(|error| Error::LaunchFailed(error.to_string()))?;
+        .map_err(|error| HyprWhsprError::LaunchFailed(error.to_string()))?;
 
     if !output.status.success() {
         let stderr = stream_to_text(&output.stderr);
@@ -71,7 +71,7 @@ fn run_hyprwhspr_command(args: &[&str], command_name: &str) -> Result<String> {
             format!("command exited with status {}", output.status)
         };
 
-        return Err(Error::GeneralCommandFailed {
+        return Err(HyprWhsprError::GeneralCommandFailed {
             command: command_name.to_string(),
             reason,
         });
@@ -87,12 +87,14 @@ pub fn hyprwhspr_record(
     hide_window: Option<bool>,
 ) -> Result<String> {
     if !cfg!(target_os = "linux") {
-        return Err(Error::UnsupportedPlatform);
+        return Err(HyprWhsprError::UnsupportedPlatform);
     }
 
     let output = run_hyprwhspr_command(&["record", action.as_arg()], "record").map_err(
         |error| match error {
-            Error::GeneralCommandFailed { reason, .. } => Error::CommandFailed { action, reason },
+            HyprWhsprError::GeneralCommandFailed { reason, .. } => {
+                HyprWhsprError::CommandFailed { action, reason }
+            }
             other => other,
         },
     )?;
@@ -103,7 +105,7 @@ pub fn hyprwhspr_record(
     if should_hide_window {
         window
             .hide()
-            .map_err(|error| Error::HideWindowFailed(error.to_string()))?;
+            .map_err(|error| HyprWhsprError::HideWindowFailed(error.to_string()))?;
     }
 
     Ok(output)
@@ -112,7 +114,7 @@ pub fn hyprwhspr_record(
 #[command]
 pub fn hyprwhspr_record_status() -> Result<String> {
     if !cfg!(target_os = "linux") {
-        return Err(Error::UnsupportedPlatform);
+        return Err(HyprWhsprError::UnsupportedPlatform);
     }
 
     run_hyprwhspr_command(&["record", "status"], "record status")

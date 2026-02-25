@@ -3,22 +3,22 @@ use std::process::{Command, Stdio};
 use shell_words::split;
 use tauri::{command, Window};
 
-use super::error::{Error, Result};
+use super::error::{ApplicationsError, Result};
 
 #[command]
 pub fn open_application(window: Window, exec_path: String) -> Result<()> {
     let normalized_exec_path = exec_path.trim();
     if normalized_exec_path.is_empty() {
-        return Err(Error::LaunchingApplicationError(
+        return Err(ApplicationsError::LaunchingApplicationError(
             "application command is missing".to_string(),
         ));
     }
 
-    let command_parts =
-        split(normalized_exec_path).map_err(|e| Error::LaunchingApplicationError(e.to_string()))?;
+    let command_parts = split(normalized_exec_path)
+        .map_err(|e| ApplicationsError::LaunchingApplicationError(e.to_string()))?;
 
     let (program, args) = command_parts.split_first().ok_or_else(|| {
-        Error::LaunchingApplicationError("application command is missing".to_string())
+        ApplicationsError::LaunchingApplicationError("application command is missing".to_string())
     })?;
 
     let mut command = Command::new(program);
@@ -30,12 +30,12 @@ pub fn open_application(window: Window, exec_path: String) -> Result<()> {
 
     command
         .spawn()
-        .map_err(|e| Error::LaunchingApplicationError(e.to_string()))?;
+        .map_err(|e| ApplicationsError::LaunchingApplicationError(e.to_string()))?;
 
     // Hide the window
     window
         .hide()
-        .map_err(|e| Error::HidingWindowApplicationError(e.to_string()))?;
+        .map_err(|e| ApplicationsError::HidingWindowApplicationError(e.to_string()))?;
 
     Ok(())
 }

@@ -1,7 +1,10 @@
 use std::process::Command;
 
 fn patch_wrapper_rpath(path: &str) {
-    let print = Command::new("patchelf").arg("--print-rpath").arg(path).output();
+    let print = Command::new("patchelf")
+        .arg("--print-rpath")
+        .arg(path)
+        .output();
     let current = match print {
         Ok(output) if output.status.success() => {
             String::from_utf8_lossy(&output.stdout).trim().to_string()

@@ -1,7 +1,7 @@
 use chrono::Utc;
 use std::collections::HashMap;
 
-use super::error::{Error, Result};
+use super::error::{Result, TodoError};
 use super::sub_todo::SubTodo;
 use super::todo::Todo;
 use super::TodoWithSubTodos;
@@ -9,7 +9,9 @@ use super::TodoWithSubTodos;
 pub fn normalize_required_text(value: &str, field: &str) -> Result<String> {
     let normalized = value.trim();
     if normalized.is_empty() {
-        return Err(Error::InvalidArguments(format!("{field} cannot be empty")));
+        return Err(TodoError::InvalidArguments(format!(
+            "{field} cannot be empty"
+        )));
     }
 
     Ok(normalized.to_string())

@@ -9,7 +9,7 @@ use tokio::sync::OnceCell;
 
 use crate::config::config;
 
-use super::error::{Error, Result};
+use super::error::{Result, TodoError};
 
 pub type TodoDbPool = Arc<SqlitePool>;
 
@@ -37,7 +37,7 @@ pub async fn get_todo_pool(app: &AppHandle) -> Result<TodoDbPool> {
             let database_path = get_todo_database_path(&app_handle)?;
             if let Some(parent_dir) = database_path.parent() {
                 fs::create_dir_all(parent_dir)
-                    .map_err(|error| Error::CreateDirectory(error.to_string()))?;
+                    .map_err(|error| TodoError::CreateDirectory(error.to_string()))?;
             }
 
             let connect_options = SqliteConnectOptions::new()
@@ -51,7 +51,7 @@ pub async fn get_todo_pool(app: &AppHandle) -> Result<TodoDbPool> {
                 .max_connections(5)
                 .connect_with(connect_options)
                 .await
-                .map_err(|error| Error::DatabaseConnection(error.to_string()))?;
+                .map_err(|error| TodoError::DatabaseConnection(error.to_string()))?;
 
             ensure_todo_schema(&pool).await?;
 
@@ -66,7 +66,7 @@ pub fn get_todo_database_path(app: &AppHandle) -> Result<PathBuf> {
     let app_local_data_dir = app
         .path()
         .app_local_data_dir()
-        .map_err(|_| Error::AppDataDirUnavailable)?;
+        .map_err(|_| TodoError::AppDataDirUnavailable)?;
 
     Ok(app_local_data_dir
         .join(config().TODO_DIRECTORY)
@@ -88,7 +88,7 @@ async fn ensure_todo_schema(pool: &SqlitePool) -> Result<()> {
     )
     .execute(pool)
     .await
-    .map_err(|error| Error::SchemaInitialization(error.to_string()))?;
+    .map_err(|error| TodoError::SchemaInitialization(error.to_string()))?;
 
     sqlx::query(
         r#"
@@ -106,7 +106,7 @@ async fn ensure_todo_schema(pool: &SqlitePool) -> Result<()> {
     )
     .execute(pool)
     .await
-    .map_err(|error| Error::SchemaInitialization(error.to_string()))?;
+    .map_err(|error| TodoError::SchemaInitialization(error.to_string()))?;
 
     sqlx::query(
         r#"
@@ -116,7 +116,7 @@ async fn ensure_todo_schema(pool: &SqlitePool) -> Result<()> {
     )
     .execute(pool)
     .await
-    .map_err(|error| Error::SchemaInitialization(error.to_string()))?;
+    .map_err(|error| TodoError::SchemaInitialization(error.to_string()))?;
 
     sqlx::query(
         r#"
@@ -126,7 +126,7 @@ async fn ensure_todo_schema(pool: &SqlitePool) -> Result<()> {
     )
     .execute(pool)
     .await
-    .map_err(|error| Error::SchemaInitialization(error.to_string()))?;
+    .map_err(|error| TodoError::SchemaInitialization(error.to_string()))?;
 
     Ok(())
 }

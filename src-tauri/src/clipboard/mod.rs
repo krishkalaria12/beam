@@ -127,10 +127,14 @@ pub async fn clipboard_copy(
             .set_text(file_path.clone())
             .map_err(|e| e.to_string())?;
     } else if let Some(text) = &content.text {
-        clipboard.set_text(text.clone()).map_err(|e| e.to_string())?;
+        clipboard
+            .set_text(text.clone())
+            .map_err(|e| e.to_string())?;
     } else if let Some(html) = &content.html {
         // arboard has no HTML channel; degrade to plain text.
-        clipboard.set_text(html.clone()).map_err(|e| e.to_string())?;
+        clipboard
+            .set_text(html.clone())
+            .map_err(|e| e.to_string())?;
     }
 
     Ok(())

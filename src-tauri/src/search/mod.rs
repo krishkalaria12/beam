@@ -2,7 +2,7 @@ use tauri::{command, Window};
 
 pub mod error;
 
-use self::error::{Error, Result};
+use self::error::{Result, SearchError};
 
 #[command]
 pub fn search_with_browser(window: Window, site: String, query: String) -> Result<()> {
@@ -13,14 +13,14 @@ pub fn search_with_browser(window: Window, site: String, query: String) -> Resul
     };
 
     if webbrowser::open(&url).is_err() {
-        return Err(Error::FailedToOpenBrowserError(
+        return Err(SearchError::FailedToOpenBrowserError(
             "Could not open browser".into(),
         ));
     }
 
     window
         .hide()
-        .map_err(|e| Error::HidingWindowApplicationError(e.to_string()))?;
+        .map_err(|e| SearchError::HidingWindowApplicationError(e.to_string()))?;
 
     Ok(())
 }

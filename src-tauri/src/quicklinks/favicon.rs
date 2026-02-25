@@ -6,7 +6,7 @@ use reqwest::{
 use tauri::command;
 use url::Url;
 
-use super::error::{Error, Result};
+use super::error::{QuicklinkError, Result};
 
 #[command]
 pub async fn get_favicon_for_url(url: String) -> Result<String> {
@@ -17,18 +17,20 @@ pub async fn get_favicon_for_url(url: String) -> Result<String> {
             headers
         })
         .build()
-        .map_err(|e| Error::FaviconFetchError(e.to_string()))?;
+        .map_err(|e| QuicklinkError::FaviconFetchError(e.to_string()))?;
 
     let base_url = Url::parse(&url)
-        .map_err(|e| Error::URLParsingError(format!("invalid URL '{}': {}", url, e)))?;
+        .map_err(|e| QuicklinkError::URLParsingError(format!("invalid URL '{}': {}", url, e)))?;
 
     let favicons: Vec<Favicon> = get_favicons_from_url(&client, &base_url)
         .await
-        .map_err(|e| Error::FaviconFetchError(e.to_string()))?;
+        .map_err(|e| QuicklinkError::FaviconFetchError(e.to_string()))?;
 
     favicons
         .into_iter()
         .next()
         .map(|fav| fav.href.to_string())
-        .ok_or_else(|| Error::FaviconNotFoundError(format!("no favicon found for '{}'", url)))
+        .ok_or_else(|| {
+            QuicklinkError::FaviconNotFoundError(format!("no favicon found for '{}'", url))
+        })
 }

@@ -2,10 +2,10 @@ use freedesktop_file_parser::ParseError;
 use serde::Serialize;
 use thiserror::Error;
 
-pub type Result<T> = std::result::Result<T, Error>;
+pub type Result<T> = std::result::Result<T, ApplicationsError>;
 
 #[derive(Debug, Error)]
-pub enum Error {
+pub enum ApplicationsError {
     #[error("{0}")]
     CollectingDesktopFilesError(String),
 
@@ -31,7 +31,7 @@ pub enum Error {
     StoreSaveError(String),
 }
 
-impl Serialize for Error {
+impl Serialize for ApplicationsError {
     fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where
         S: serde::Serializer,

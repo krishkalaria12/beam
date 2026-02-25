@@ -3,10 +3,10 @@ use thiserror::Error;
 
 use crate::hyprwhspr::HyprWhsprRecordAction;
 
-pub type Result<T> = std::result::Result<T, Error>;
+pub type Result<T> = std::result::Result<T, HyprWhsprError>;
 
 #[derive(Debug, Error)]
-pub enum Error {
+pub enum HyprWhsprError {
     #[error("hyprwhspr integration is only supported on Linux")]
     UnsupportedPlatform,
 
@@ -26,7 +26,7 @@ pub enum Error {
     HideWindowFailed(String),
 }
 
-impl Serialize for Error {
+impl Serialize for HyprWhsprError {
     fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where
         S: serde::Serializer,

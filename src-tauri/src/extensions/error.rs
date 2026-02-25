@@ -1,10 +1,10 @@
 use serde::Serialize;
 use thiserror::Error;
 
-pub type Result<T> = std::result::Result<T, ExtensionError>;
+pub type Result<T> = std::result::Result<T, ExtensionsError>;
 
 #[derive(Debug, Error)]
-pub enum ExtensionError {
+pub enum ExtensionsError {
     #[error("Invalid extension slug: {0}")]
     InvalidSlug(String),
 
@@ -36,37 +36,37 @@ pub enum ExtensionError {
     Message(String),
 }
 
-impl From<std::io::Error> for ExtensionError {
+impl From<std::io::Error> for ExtensionsError {
     fn from(error: std::io::Error) -> Self {
-        ExtensionError::Io(error.to_string())
+        ExtensionsError::Io(error.to_string())
     }
 }
 
-impl From<reqwest::Error> for ExtensionError {
+impl From<reqwest::Error> for ExtensionsError {
     fn from(error: reqwest::Error) -> Self {
-        ExtensionError::Network(error.to_string())
+        ExtensionsError::Network(error.to_string())
     }
 }
 
-impl From<serde_json::Error> for ExtensionError {
+impl From<serde_json::Error> for ExtensionsError {
     fn from(error: serde_json::Error) -> Self {
-        ExtensionError::Parse(error.to_string())
+        ExtensionsError::Parse(error.to_string())
     }
 }
 
-impl From<zip::result::ZipError> for ExtensionError {
+impl From<zip::result::ZipError> for ExtensionsError {
     fn from(error: zip::result::ZipError) -> Self {
-        ExtensionError::Archive(error.to_string())
+        ExtensionsError::Archive(error.to_string())
     }
 }
 
-impl From<keyring::Error> for ExtensionError {
+impl From<keyring::Error> for ExtensionsError {
     fn from(error: keyring::Error) -> Self {
-        ExtensionError::Keyring(error.to_string())
+        ExtensionsError::Keyring(error.to_string())
     }
 }
 
-impl Serialize for ExtensionError {
+impl Serialize for ExtensionsError {
     fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where
         S: serde::Serializer,

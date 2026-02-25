@@ -4,7 +4,7 @@ use url::Url;
 use crate::config::config;
 use crate::http;
 
-use super::error::{Error, Result};
+use super::error::{Result, TranslationError};
 use super::model::{
     DetectedLanguage, GoogleLanguagesResponse, TranslateTextRequest, TranslateTextResponse,
     TranslationLanguage,
@@ -26,7 +26,7 @@ fn build_endpoint(base_url: &str, endpoint: &str) -> String {
 
 fn build_url_with_params(endpoint: &str, params: &[(&str, &str)]) -> Result<String> {
     let mut url = Url::parse(endpoint).map_err(|error| {
-        Error::RequestError(format!("invalid translation endpoint URL: {error}"))
+        TranslationError::RequestError(format!("invalid translation endpoint URL: {error}"))
     })?;
 
     {
@@ -47,33 +47,37 @@ fn truncate_for_error(input: &str, max_len: usize) -> String {
     input.chars().take(max_len).collect::<String>() + "..."
 }
 
-fn map_http_error(error: http::error::Error) -> Error {
+fn map_http_error(error: http::error::HttpError) -> TranslationError {
     match error {
-        http::error::Error::HttpRequestError(message) => {
+        http::error::HttpError::HttpRequestError(message) => {
             if message.to_ascii_lowercase().contains("timed out") {
-                Error::TimeoutError(message)
+                TranslationError::TimeoutError(message)
             } else {
-                Error::RequestError(message)
+                TranslationError::RequestError(message)
             }
         }
-        http::error::Error::HttpResponseStatusError {
+        http::error::HttpError::HttpResponseStatusError {
             url,
             status,
             status_text,
-        } => Error::ApiStatusError {
+        } => TranslationError::ApiStatusError {
             url,
             status,
             status_text,
             message: "unexpected upstream response status".to_string(),
         },
-        http::error::Error::HttpResponseDecodeError(message) => Error::ParseError(message),
-        http::error::Error::RequestTimeoutError(message) => Error::TimeoutError(message),
+        http::error::HttpError::HttpResponseDecodeError(message) => {
+            TranslationError::ParseError(message)
+        }
+        http::error::HttpError::RequestTimeoutError(message) => {
+            TranslationError::TimeoutError(message)
+        }
     }
 }
 
 fn parse_json_from_body<T: serde::de::DeserializeOwned>(body: &str) -> Result<T> {
     serde_json::from_str::<T>(body).map_err(|error| {
-        Error::ParseError(format!(
+        TranslationError::ParseError(format!(
             "{} (response body: {})",
             error,
             truncate_for_error(body, 220)
@@ -109,7 +113,9 @@ fn is_valid_language_code(language_code: &str) -> bool {
 fn validate_translate_request(request: TranslateTextRequest) -> Result<ValidatedTranslateRequest> {
     let normalized_text = request.q.trim().to_string();
     if normalized_text.is_empty() {
-        return Err(Error::InvalidInput("text (q) cannot be empty".to_string()));
+        return Err(TranslationError::InvalidInput(
+            "text (q) cannot be empty".to_string(),
+        ));
     }
 
     let source = request
@@ -120,7 +126,7 @@ fn validate_translate_request(request: TranslateTextRequest) -> Result<Validated
         .unwrap_or_else(|| config().TRANSLATION_AUTO_SOURCE_LANGUAGE.to_string());
 
     if !is_auto_language(&source) && !is_valid_language_code(&source) {
-        return Err(Error::InvalidInput(format!(
+        return Err(TranslationError::InvalidInput(format!(
             "source language code '{}' is invalid",
             source
         )));
@@ -128,19 +134,19 @@ fn validate_translate_request(request: TranslateTextRequest) -> Result<Validated
 
     let target = normalize_language_code(&request.target);
     if target.is_empty() {
-        return Err(Error::InvalidInput(
+        return Err(TranslationError::InvalidInput(
             "target language code is required".to_string(),
         ));
     }
 
     if is_auto_language(&target) {
-        return Err(Error::InvalidInput(
+        return Err(TranslationError::InvalidInput(
             "target language cannot be 'auto'".to_string(),
         ));
     }
 
     if !is_valid_language_code(&target) {
-        return Err(Error::InvalidInput(format!(
+        return Err(TranslationError::InvalidInput(format!(
             "target language code '{}' is invalid",
             target
         )));
@@ -154,7 +160,7 @@ fn validate_translate_request(request: TranslateTextRequest) -> Result<Validated
         .unwrap_or_else(|| config().TRANSLATION_DEFAULT_FORMAT.to_string());
 
     if !matches!(format.as_str(), "text" | "html") {
-        return Err(Error::InvalidInput(format!(
+        return Err(TranslationError::InvalidInput(format!(
             "format '{}' is invalid. Supported values: text, html",
             format
         )));
@@ -173,7 +179,7 @@ fn parse_google_translation_payload(
     source_language: &str,
 ) -> Result<TranslateTextResponse> {
     let Some(root) = payload.as_array() else {
-        return Err(Error::ParseError(
+        return Err(TranslationError::ParseError(
             "google translation payload is not an array".to_string(),
         ));
     };
@@ -192,7 +198,7 @@ fn parse_google_translation_payload(
         .unwrap_or_default();
 
     if translated_text.trim().is_empty() {
-        return Err(Error::ParseError(
+        return Err(TranslationError::ParseError(
             "google translation payload did not include translated text".to_string(),
         ));
     }
@@ -255,7 +261,7 @@ pub async fn get_translation_languages() -> Result<Vec<TranslationLanguage>> {
         .collect::<Vec<_>>();
 
     if languages.is_empty() {
-        return Err(Error::ParseError(
+        return Err(TranslationError::ParseError(
             "google language list is empty".to_string(),
         ));
     }

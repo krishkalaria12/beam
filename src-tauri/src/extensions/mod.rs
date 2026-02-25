@@ -8,7 +8,7 @@ use std::io::{self, Cursor, Read};
 use std::path::{Path, PathBuf};
 
 use bytes::Bytes;
-use error::{ExtensionError, Result};
+use error::{ExtensionsError, Result};
 use serde::{Deserialize, Serialize};
 use tauri::Manager;
 use zip::result::ZipError;
@@ -71,7 +71,7 @@ fn get_extension_dir(app: &tauri::AppHandle, slug: &str) -> Result<PathBuf> {
     let data_dir = app
         .path()
         .app_local_data_dir()
-        .map_err(|_| ExtensionError::AppDataDirUnavailable)?;
+        .map_err(|_| ExtensionsError::AppDataDirUnavailable)?;
 
     Ok(data_dir
         .join(config().EXTENSIONS_PLUGINS_DIRECTORY)
@@ -80,9 +80,9 @@ fn get_extension_dir(app: &tauri::AppHandle, slug: &str) -> Result<PathBuf> {
 
 fn is_valid_extension_slug(slug: &str) -> bool {
     !slug.is_empty()
-        && slug
-            .chars()
-            .all(|character| character.is_ascii_alphanumeric() || character == '-' || character == '_')
+        && slug.chars().all(|character| {
+            character.is_ascii_alphanumeric() || character == '-' || character == '_'
+        })
 }
 
 fn has_uri_scheme(value: &str) -> bool {
@@ -100,7 +100,10 @@ fn has_uri_scheme(value: &str) -> bool {
             saw_colon = true;
             break;
         }
-        if !(character.is_ascii_alphanumeric() || character == '+' || character == '-' || character == '.')
+        if !(character.is_ascii_alphanumeric()
+            || character == '+'
+            || character == '-'
+            || character == '.')
         {
             return false;
         }
@@ -209,13 +212,13 @@ fn resolve_plugin_icon_reference(plugin_dir: &Path, icon: Option<&str>) -> Optio
 async fn download_archive(url: &str) -> Result<Bytes> {
     let response = reqwest::get(url).await?;
     if !response.status().is_success() {
-        return Err(ExtensionError::Network(format!(
+        return Err(ExtensionsError::Network(format!(
             "Failed to download extension: status code {}",
             response.status()
         )));
     }
 
-    response.bytes().await.map_err(ExtensionError::from)
+    response.bytes().await.map_err(ExtensionsError::from)
 }
 
 fn find_common_prefix(file_names: &[PathBuf]) -> Option<PathBuf> {
@@ -551,7 +554,7 @@ pub async fn install_extension(
     force: bool,
 ) -> Result<InstallResult> {
     if !is_valid_extension_slug(&slug) {
-        return Err(ExtensionError::InvalidSlug(slug));
+        return Err(ExtensionsError::InvalidSlug(slug));
     }
 
     let extension_dir = get_extension_dir(&app, &slug)?;
@@ -571,7 +574,7 @@ pub async fn install_extension(
 #[tauri::command]
 pub fn uninstall_extension(app: tauri::AppHandle, slug: String) -> Result<bool> {
     if !is_valid_extension_slug(&slug) {
-        return Err(ExtensionError::InvalidSlug(slug));
+        return Err(ExtensionsError::InvalidSlug(slug));
     }
 
     let extension_dir = get_extension_dir(&app, &slug)?;

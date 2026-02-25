@@ -1,10 +1,10 @@
 use serde::Serialize;
 use thiserror::Error;
 
-pub type Result<T> = std::result::Result<T, Error>;
+pub type Result<T> = std::result::Result<T, IndexerError>;
 
 #[derive(Debug, Error)]
-pub enum Error {
+pub enum IndexerError {
     #[error("Failed to create cache folder: {0}")]
     ErrorCreatingCacheFolder(String),
 
@@ -48,7 +48,7 @@ pub enum Error {
     WatcherError(String),
 }
 
-impl Serialize for Error {
+impl Serialize for IndexerError {
     fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where
         S: serde::Serializer,

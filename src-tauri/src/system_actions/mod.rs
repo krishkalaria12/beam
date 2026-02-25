@@ -1,6 +1,6 @@
 pub mod error;
 
-use self::error::{Error, Result};
+use self::error::{Result, SystemActionsError};
 use super::state::AppState;
 use serde::{Deserialize, Serialize};
 use tauri::State;
@@ -40,14 +40,14 @@ pub fn execute_system_action(action: SystemAction) -> Result<()> {
         SystemAction::Sleep => system_shutdown::sleep(),
         SystemAction::Hibernate => system_shutdown::hibernate(),
         SystemAction::Awake => {
-            return Err(Error::ExecutionFailed {
+            return Err(SystemActionsError::ExecutionFailed {
                 action,
                 reason: "Use toggle_awake for the awake action".to_string(),
             })
         }
     };
 
-    result.map_err(|err| Error::ExecutionFailed {
+    result.map_err(|err| SystemActionsError::ExecutionFailed {
         action,
         reason: err.to_string(),
     })
@@ -65,7 +65,7 @@ pub fn toggle_awake(state: State<'_, AppState>) -> Result<bool> {
             .display(true)
             .idle(true)
             .create()
-            .map_err(|err| Error::ExecutionFailed {
+            .map_err(|err| SystemActionsError::ExecutionFailed {
                 action: SystemAction::Awake,
                 reason: err.to_string(),
             })?;

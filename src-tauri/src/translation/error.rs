@@ -1,10 +1,10 @@
 use serde::Serialize;
 use thiserror::Error;
 
-pub type Result<T> = std::result::Result<T, Error>;
+pub type Result<T> = std::result::Result<T, TranslationError>;
 
 #[derive(Debug, Error)]
-pub enum Error {
+pub enum TranslationError {
     #[error("Invalid translation input: {0}")]
     InvalidInput(String),
 
@@ -26,17 +26,17 @@ pub enum Error {
     ParseError(String),
 }
 
-impl From<reqwest::Error> for Error {
+impl From<reqwest::Error> for TranslationError {
     fn from(error: reqwest::Error) -> Self {
         if error.is_timeout() {
-            return Error::TimeoutError(error.to_string());
+            return TranslationError::TimeoutError(error.to_string());
         }
 
-        Error::RequestError(error.to_string())
+        TranslationError::RequestError(error.to_string())
     }
 }
 
-impl Serialize for Error {
+impl Serialize for TranslationError {
     fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where
         S: serde::Serializer,

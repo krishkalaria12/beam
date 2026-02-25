@@ -5,7 +5,7 @@ use walkdir::{DirEntry, WalkDir};
 
 use super::{
     app_entry::AppEntry,
-    error::{Error, Result},
+    error::{ApplicationsError, Result},
     icon_resolver::IconResolver,
 };
 
@@ -84,7 +84,7 @@ fn iterate_through_application_directories() -> Result<Vec<PathBuf>> {
 
 pub fn collect_applications() -> Result<Vec<AppEntry>> {
     let files = iterate_through_application_directories()
-        .map_err(|e| Error::CollectingDesktopFilesError(e.to_string()))?;
+        .map_err(|e| ApplicationsError::CollectingDesktopFilesError(e.to_string()))?;
     let mut icon_resolver = IconResolver::new();
     let mut applications = Vec::new();
 

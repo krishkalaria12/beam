@@ -1,4 +1,4 @@
-use super::error::{Error, Result};
+use super::error::{CalculatorError, Result};
 use super::query_validator::classify_query;
 use super::soulver;
 use super::types::{CalculationOutput, CalculatorCommandResponse, CalculatorStatus};
@@ -27,8 +27,8 @@ impl CalculatorService {
             ));
         }
 
-        let response =
-            soulver::evaluate_expression(&normalized_query).map_err(Error::SoulverError)?;
+        let response = soulver::evaluate_expression(&normalized_query)
+            .map_err(CalculatorError::SoulverError)?;
 
         if let Some(error) = response.error {
             return Ok(CalculatorCommandResponse {

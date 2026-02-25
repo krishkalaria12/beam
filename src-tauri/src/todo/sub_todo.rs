@@ -6,7 +6,7 @@ use tauri::{command, AppHandle};
 use crate::todo::helpers::{normalize_required_text, now_ts};
 
 use super::db::{get_todo_pool, TodoDbPool};
-use super::error::{Error, Result};
+use super::error::{Result, TodoError};
 use super::todo::get_todo_internal;
 
 #[derive(Debug, Serialize, Deserialize, Clone, FromRow)]
@@ -60,7 +60,7 @@ pub async fn create_sub_todo(app: AppHandle, payload: CreateSubTodoPayload) -> R
     .bind(now)
     .execute(pool.as_ref())
     .await
-    .map_err(|error| Error::Database(error.to_string()))?;
+    .map_err(|error| TodoError::Database(error.to_string()))?;
 
     get_sub_todo_internal(pool.as_ref(), &sub_todo_id).await
 }
@@ -92,10 +92,10 @@ pub async fn update_sub_todo(app: AppHandle, payload: UpdateSubTodoPayload) -> R
     .bind(&sub_todo_id)
     .execute(pool.as_ref())
     .await
-    .map_err(|error| Error::Database(error.to_string()))?;
+    .map_err(|error| TodoError::Database(error.to_string()))?;
 
     if result.rows_affected() == 0 {
-        return Err(Error::NotFound(format!(
+        return Err(TodoError::NotFound(format!(
             "sub todo '{}' not found",
             sub_todo_id
         )));
@@ -113,10 +113,10 @@ pub async fn delete_sub_todo(app: AppHandle, sub_todo_id: String) -> Result<()> 
         .bind(&normalized_sub_todo_id)
         .execute(pool.as_ref())
         .await
-        .map_err(|error| Error::Database(error.to_string()))?;
+        .map_err(|error| TodoError::Database(error.to_string()))?;
 
     if result.rows_affected() == 0 {
-        return Err(Error::NotFound(format!(
+        return Err(TodoError::NotFound(format!(
             "sub todo '{}' not found",
             normalized_sub_todo_id
         )));
@@ -135,6 +135,6 @@ pub(crate) async fn get_sub_todo_internal(
     .bind(sub_todo_id)
     .fetch_optional(pool)
     .await
-    .map_err(|error| Error::Database(error.to_string()))?
-    .ok_or_else(|| Error::NotFound(format!("sub todo '{sub_todo_id}' not found")))
+    .map_err(|error| TodoError::Database(error.to_string()))?
+    .ok_or_else(|| TodoError::NotFound(format!("sub todo '{sub_todo_id}' not found")))
 }

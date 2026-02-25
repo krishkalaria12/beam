@@ -6,7 +6,7 @@ use tauri::{command, AppHandle};
 use crate::todo::helpers::{normalize_required_text, now_ts};
 
 use super::db::{get_todo_pool, TodoDbPool};
-use super::error::{Error, Result};
+use super::error::{Result, TodoError};
 
 #[derive(Debug, Serialize, Deserialize, Clone, FromRow)]
 pub struct Todo {
@@ -52,7 +52,7 @@ pub async fn create_todo(app: AppHandle, payload: CreateTodoPayload) -> Result<T
     .bind(now)
     .execute(pool.as_ref())
     .await
-    .map_err(|error| Error::Database(error.to_string()))?;
+    .map_err(|error| TodoError::Database(error.to_string()))?;
 
     get_todo_internal(pool.as_ref(), &todo_id).await
 }
@@ -85,10 +85,10 @@ pub async fn update_todo(app: AppHandle, payload: UpdateTodoPayload) -> Result<(
     .bind(&todo_id)
     .execute(pool.as_ref())
     .await
-    .map_err(|error| Error::Database(error.to_string()))?;
+    .map_err(|error| TodoError::Database(error.to_string()))?;
 
     if result.rows_affected() == 0 {
-        return Err(Error::NotFound(format!("todo '{todo_id}' not found")));
+        return Err(TodoError::NotFound(format!("todo '{todo_id}' not found")));
     }
 
     Ok(())
@@ -103,10 +103,10 @@ pub async fn delete_todo(app: AppHandle, todo_id: String) -> Result<()> {
         .bind(&normalized_todo_id)
         .execute(pool.as_ref())
         .await
-        .map_err(|error| Error::Database(error.to_string()))?;
+        .map_err(|error| TodoError::Database(error.to_string()))?;
 
     if result.rows_affected() == 0 {
-        return Err(Error::NotFound(format!(
+        return Err(TodoError::NotFound(format!(
             "todo '{}' not found",
             normalized_todo_id
         )));
@@ -122,6 +122,6 @@ pub(crate) async fn get_todo_internal(pool: &sqlx::SqlitePool, todo_id: &str) ->
     .bind(todo_id)
     .fetch_optional(pool)
     .await
-    .map_err(|error| Error::Database(error.to_string()))?
-    .ok_or_else(|| Error::NotFound(format!("todo '{todo_id}' not found")))
+    .map_err(|error| TodoError::Database(error.to_string()))?
+    .ok_or_else(|| TodoError::NotFound(format!("todo '{todo_id}' not found")))
 }

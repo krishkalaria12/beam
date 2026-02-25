@@ -1,10 +1,10 @@
 use serde::Serialize;
 use thiserror::Error;
 
-pub type Result<T> = std::result::Result<T, Error>;
+pub type Result<T> = std::result::Result<T, TodoError>;
 
 #[derive(Debug, Clone, Error)]
-pub enum Error {
+pub enum TodoError {
     #[error("failed to resolve app local data directory")]
     AppDataDirUnavailable,
 
@@ -27,7 +27,7 @@ pub enum Error {
     InvalidArguments(String),
 }
 
-impl Serialize for Error {
+impl Serialize for TodoError {
     fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where
         S: serde::Serializer,

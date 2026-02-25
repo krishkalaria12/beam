@@ -1,6 +1,6 @@
 use serde_json::Value;
 
-use super::error::{ExtensionError, Result};
+use super::error::{ExtensionsError, Result};
 
 #[tauri::command]
 pub async fn browser_extension_check_connection() -> Result<bool> {
@@ -9,5 +9,5 @@ pub async fn browser_extension_check_connection() -> Result<bool> {
 
 #[tauri::command]
 pub async fn browser_extension_request(method: String, _params: Value) -> Result<Value> {
-    Err(ExtensionError::BrowserExtensionUnavailable(method))
+    Err(ExtensionsError::BrowserExtensionUnavailable(method))
 }

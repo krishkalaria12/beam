@@ -8,7 +8,7 @@ use tauri_plugin_store::{Store, StoreExt};
 
 use crate::config::config;
 
-use self::error::{Error, Result};
+use self::error::{PinnedError, Result};
 
 pub mod error;
 
@@ -32,9 +32,8 @@ pub fn get_pinned_command_ids(app: AppHandle) -> Result<Vec<String>> {
 
 #[command]
 pub fn set_command_pinned(app: AppHandle, pinned: bool, command_id: String) -> Result<Vec<String>> {
-    let normalized_id = normalize_command_id(&command_id).ok_or_else(|| {
-        Error::InvalidArguments("command id cannot be empty".to_string())
-    })?;
+    let normalized_id = normalize_command_id(&command_id)
+        .ok_or_else(|| PinnedError::InvalidArguments("command id cannot be empty".to_string()))?;
 
     let store = open_store(&app)?;
     let mut pinned_ids = read_pinned_command_ids(&store)?;
@@ -57,7 +56,7 @@ pub fn set_command_pinned(app: AppHandle, pinned: bool, command_id: String) -> R
 
 fn open_store(app: &AppHandle) -> Result<Arc<Store<Wry>>> {
     app.store(&config().STORE_NAME)
-        .map_err(|e| Error::StoreOpeningError(e.to_string()))
+        .map_err(|e| PinnedError::StoreOpeningError(e.to_string()))
 }
 
 fn read_pinned_command_ids(store: &Store<Wry>) -> Result<Vec<String>> {
@@ -66,7 +65,7 @@ fn read_pinned_command_ids(store: &Store<Wry>) -> Result<Vec<String>> {
     };
 
     let entries = from_value::<Vec<StoredPinnedEntry>>(value)
-        .map_err(|e| Error::DeserializationError(e.to_string()))?;
+        .map_err(|e| PinnedError::DeserializationError(e.to_string()))?;
 
     let mut ids = Vec::with_capacity(entries.len());
     for entry in entries {
@@ -99,11 +98,12 @@ fn dedupe_keep_order(values: &mut Vec<String>) {
 }
 
 fn save_to_store(store: &Store<Wry>, pinned_ids: &[String]) -> Result<()> {
-    let app_json = to_value(pinned_ids).map_err(|e| Error::SerializationError(e.to_string()))?;
+    let app_json =
+        to_value(pinned_ids).map_err(|e| PinnedError::SerializationError(e.to_string()))?;
     store.set(config().COMMAND_PINNED_KEY, app_json);
     store
         .save()
-        .map_err(|e| Error::StoreSaveError(e.to_string()))?;
+        .map_err(|e| PinnedError::StoreSaveError(e.to_string()))?;
 
     Ok(())
 }

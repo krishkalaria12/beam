@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use freedesktop_file_parser::IconString;
+use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 

@@ -1,10 +1,10 @@
 use serde::Serialize;
 use thiserror::Error;
 
-pub type Result<T> = std::result::Result<T, Error>;
+pub type Result<T> = std::result::Result<T, SearchError>;
 
 #[derive(Debug, Error)]
-pub enum Error {
+pub enum SearchError {
     #[error("{0}")]
     FailedToOpenBrowserError(String),
 
@@ -12,7 +12,7 @@ pub enum Error {
     HidingWindowApplicationError(String),
 }
 
-impl Serialize for Error {
+impl Serialize for SearchError {
     fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where
         S: serde::Serializer,

@@ -1,7 +1,7 @@
-use crate::config::config;
-use super::error::{Error, Result};
+use super::error::{DictionaryError, Result};
 use super::language::detect_language_code;
 use super::model::{ApiResponse, DictionaryResponse, Entry, Sense};
+use crate::config::config;
 use crate::http::get_async;
 
 #[tauri::command]
@@ -17,10 +17,10 @@ pub async fn get_definition(
 
     let response_text = get_async(&url)
         .await
-        .map_err(|e| Error::RequestError(e.to_string()))?;
+        .map_err(|e| DictionaryError::RequestError(e.to_string()))?;
 
-    let api_response: ApiResponse =
-        serde_json::from_str(&response_text).map_err(|e| Error::ParseError(e.to_string()))?;
+    let api_response: ApiResponse = serde_json::from_str(&response_text)
+        .map_err(|e| DictionaryError::ParseError(e.to_string()))?;
 
     let mut entries = Vec::new();
 
@@ -40,11 +40,11 @@ pub async fn get_definition(
             if let Some(definition) = sense.definition {
                 let mut all_synonyms = sense.synonyms.clone();
                 let mut all_antonyms = sense.antonyms.clone();
-                
+
                 // Add entry-level synonyms/antonyms to each sense
                 all_synonyms.extend(entry.synonyms.clone());
                 all_antonyms.extend(entry.antonyms.clone());
-                
+
                 all_synonyms.sort();
                 all_synonyms.dedup();
                 all_antonyms.sort();

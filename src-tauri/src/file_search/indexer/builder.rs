@@ -2,7 +2,7 @@ use ignore::{WalkBuilder, WalkState};
 use std::cmp::max;
 use tokio::sync::mpsc;
 
-use super::error::{Error, Result};
+use super::error::{IndexerError, Result};
 use super::helper::{get_file_metadata, is_ignored_path};
 use crate::file_search::types::FileEntry;
 
@@ -17,7 +17,7 @@ pub async fn build_file_index() -> Result<Vec<FileEntry>> {
     // 3. Run the Heavy Lifting in a Blocking Task
     let handle = tokio::task::spawn_blocking(move || {
         let root = dirs::home_dir().ok_or_else(|| {
-            Error::ErrorFindingHomeDir("Could not find system home directory".to_string())
+            IndexerError::ErrorFindingHomeDir("Could not find system home directory".to_string())
         })?;
 
         let walker = WalkBuilder::new(root)
@@ -71,7 +71,7 @@ pub async fn build_file_index() -> Result<Vec<FileEntry>> {
     // Check if the background task encountered any fatal errors
     handle
         .await
-        .map_err(|e| Error::ErrorJoiningTask(e.to_string()))??;
+        .map_err(|e| IndexerError::ErrorJoiningTask(e.to_string()))??;
 
     Ok(entries)
 }

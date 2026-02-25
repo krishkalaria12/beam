@@ -6,7 +6,7 @@ use tauri::{AppHandle, Wry};
 use tauri_plugin_store::{Store, StoreExt};
 use url::Url;
 
-use super::error::{Error, Result};
+use super::error::{ClipboardError, Result};
 use super::password::{decrypt_value, encrypt_value};
 
 use crate::config::config;
@@ -39,7 +39,7 @@ struct StoredClipboardHistoryEntry {
 pub fn get_history(app: &AppHandle) -> Result<Vec<ClipboardHistoryEntry>> {
     let store = app
         .store(&config().CLIPBOARD_STORE_NAME)
-        .map_err(|e| Error::StoreOpeningError(e.to_string()))?;
+        .map_err(|e| ClipboardError::StoreOpeningError(e.to_string()))?;
 
     get_decrypted_history(&store)
 }
@@ -52,7 +52,7 @@ pub fn get_history_values(app: &AppHandle) -> Result<Vec<String>> {
 pub fn save_to_history(app: &AppHandle, copy_value: String) -> Result<()> {
     let store = app
         .store(&config().CLIPBOARD_STORE_NAME)
-        .map_err(|e| Error::StoreOpeningError(e.to_string()))?;
+        .map_err(|e| ClipboardError::StoreOpeningError(e.to_string()))?;
 
     let (mut history, mut undecryptable_history) =
         get_decrypted_history_with_undecryptable(&store)?;
@@ -70,8 +70,8 @@ pub fn save_to_history(app: &AppHandle, copy_value: String) -> Result<()> {
     let mut serialized_history =
         Vec::with_capacity(encrypted_history.len() + undecryptable_history.len());
     for entry in encrypted_history {
-        let json_entry =
-            serde_json::to_value(entry).map_err(|e| Error::SerializationError(e.to_string()))?;
+        let json_entry = serde_json::to_value(entry)
+            .map_err(|e| ClipboardError::SerializationError(e.to_string()))?;
         serialized_history.push(json_entry);
     }
 
@@ -84,7 +84,7 @@ pub fn save_to_history(app: &AppHandle, copy_value: String) -> Result<()> {
     store.set(config().CLIPBOARD_HISTORY_VALUE, app_json);
     store
         .save()
-        .map_err(|e| Error::StoreSaveError(e.to_string()))?;
+        .map_err(|e| ClipboardError::StoreSaveError(e.to_string()))?;
 
     Ok(())
 }

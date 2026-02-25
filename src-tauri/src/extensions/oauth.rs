@@ -4,7 +4,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use tauri::Manager;
 
-use super::error::{ExtensionError, Result};
+use super::error::{ExtensionsError, Result};
 use crate::config::config;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -24,7 +24,7 @@ fn get_storage_path(app: &tauri::AppHandle) -> Result<PathBuf> {
     let data_dir = app
         .path()
         .app_local_data_dir()
-        .map_err(|_| ExtensionError::AppDataDirUnavailable)?;
+        .map_err(|_| ExtensionsError::AppDataDirUnavailable)?;
 
     if !data_dir.exists() {
         fs::create_dir_all(&data_dir)?;
@@ -43,7 +43,7 @@ fn read_store(path: &Path) -> Result<TokenStore> {
         return Ok(HashMap::new());
     }
 
-    serde_json::from_str(&content).map_err(ExtensionError::from)
+    serde_json::from_str(&content).map_err(ExtensionsError::from)
 }
 
 fn write_store(path: &Path, store: &TokenStore) -> Result<()> {
@@ -68,7 +68,10 @@ pub fn oauth_set_tokens(
 }
 
 #[tauri::command]
-pub fn oauth_get_tokens(app: tauri::AppHandle, provider_id: String) -> Result<Option<serde_json::Value>> {
+pub fn oauth_get_tokens(
+    app: tauri::AppHandle,
+    provider_id: String,
+) -> Result<Option<serde_json::Value>> {
     let path = get_storage_path(&app)?;
     let store = read_store(&path)?;
 

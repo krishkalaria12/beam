@@ -1,10 +1,10 @@
 use serde::Serialize;
 use thiserror::Error;
 
-pub type Result<T> = std::result::Result<T, Error>;
+pub type Result<T> = std::result::Result<T, ScriptCommandsError>;
 
 #[derive(Debug, Clone, Error)]
-pub enum Error {
+pub enum ScriptCommandsError {
     #[error("Command id is required")]
     InvalidCommandId,
 
@@ -54,7 +54,7 @@ pub enum Error {
     ScriptCreatedButNotIndexed,
 }
 
-impl Serialize for Error {
+impl Serialize for ScriptCommandsError {
     fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
