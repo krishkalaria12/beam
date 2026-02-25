@@ -14,6 +14,7 @@ type IdleWindow = Window & {
 
 const launchPanelPreloaders = [
   () => import("@/modules/clipboard/components/clipboard-command-group"),
+  () => import("@/modules/todo/components/todo-command-group"),
   () => import("@/modules/dictionary/components/dictionary-command-group"),
   () => import("@/modules/file-search/components/file-search-command-group"),
   () => import("@/modules/quicklinks/components/quicklinks-command-group"),

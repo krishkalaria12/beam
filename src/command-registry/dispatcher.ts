@@ -29,6 +29,7 @@ const SYSTEM_ACTION_ALLOWLIST: ReadonlySet<SystemAction> = new Set([
 
 const VALID_PANELS: ReadonlySet<CommandPanel> = new Set([
   "commands",
+  "todo",
   "clipboard",
   "emoji",
   "settings",

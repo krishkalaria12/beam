@@ -3,6 +3,7 @@ import type { CommandContext } from "@/command-registry/types";
 import type { RankedCommand } from "@/command-registry/ranker";
 import { CommandSeparator } from "@/components/ui/command";
 import { QuicklinkPreview } from "@/modules/quicklinks/components/quicklink-preview";
+import { TodoPreviewGroup, shouldShowTodoPreview } from "@/modules/todo/components/todo-preview-group";
 import type { Quicklink } from "@/modules/quicklinks/types";
 
 interface LauncherCommandModeContentProps {
@@ -17,6 +18,7 @@ interface LauncherCommandModeContentProps {
   onQuicklinkFill: (value: string) => void;
   onRegistryCommandSelect: (commandId: string) => void;
   onSetPinned: (commandId: string, pinned: boolean) => void;
+  onOpenTodoPreview: () => void;
 }
 
 export function LauncherCommandModeContent({
@@ -31,7 +33,10 @@ export function LauncherCommandModeContent({
   onQuicklinkFill,
   onRegistryCommandSelect,
   onSetPinned,
+  onOpenTodoPreview,
 }: LauncherCommandModeContentProps) {
+  const shouldRenderTodoPreview = !isQuicklinkTrigger && shouldShowTodoPreview(commandContext.query);
+
   return (
     <div className="py-1">
       {isQuicklinkTrigger ? (
@@ -43,6 +48,13 @@ export function LauncherCommandModeContent({
             onExecute={onQuicklinkExecute}
             onFill={onQuicklinkFill}
           />
+          <CommandSeparator className="my-1 opacity-50" />
+        </>
+      ) : null}
+
+      {shouldRenderTodoPreview ? (
+        <>
+          <TodoPreviewGroup query={commandContext.query} onOpenTodo={onOpenTodoPreview} />
           <CommandSeparator className="my-1 opacity-50" />
         </>
       ) : null}

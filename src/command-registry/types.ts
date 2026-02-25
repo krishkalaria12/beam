@@ -47,6 +47,7 @@ export type CommandMode =
 
 export type CommandPanel =
   | "commands"
+  | "todo"
   | "clipboard"
   | "emoji"
   | "settings"

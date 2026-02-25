@@ -5,6 +5,7 @@ import type { CommandPanel } from "@/command-registry/types";
 export type QuicklinksView = "create" | "manage";
 
 const TAKEOVER_PANELS = new Set<CommandPanel>([
+  "todo",
   "file-search",
   "dictionary",
   "translation",

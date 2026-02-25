@@ -7,6 +7,7 @@ import { LauncherTakeoverSurface } from "@/modules/launcher/components/launcher-
 import type { QuicklinksView } from "@/store/use-launcher-ui-store";
 
 const ClipboardCommandGroup = lazy(() => import("@/modules/clipboard/components/clipboard-command-group"));
+const TodoCommandGroup = lazy(() => import("@/modules/todo/components/todo-command-group"));
 const DictionaryCommandGroup = lazy(() => import("@/modules/dictionary/components/dictionary-command-group"));
 const FileSearchCommandGroup = lazy(() => import("@/modules/file-search/components/file-search-command-group"));
 const QuicklinksCommandGroup = lazy(() => import("@/modules/quicklinks/components/quicklinks-command-group"));
@@ -25,6 +26,7 @@ const ExtensionRunnerView = lazy(() =>
 );
 
 const TAKEOVER_PANELS = [
+  "todo",
   "file-search",
   "dictionary",
   "translation",
@@ -54,6 +56,7 @@ interface TakeoverPanelRendererInput {
   openQuicklinks: () => void;
   openSpeedTest: () => void;
   openClipboard: () => void;
+  openTodo: () => void;
   openExtensions: () => void;
   backToCommands: () => void;
 }
@@ -83,6 +86,7 @@ export function LauncherTakeoverPanel({
   openQuicklinks,
   openSpeedTest,
   openClipboard,
+  openTodo,
   openExtensions,
   backToCommands,
 }: LauncherTakeoverPanelProps) {
@@ -92,7 +96,15 @@ export function LauncherTakeoverPanel({
 
   let content: ReactNode = null;
 
-  if (activePanel === "file-search") {
+  if (activePanel === "todo") {
+    content = (
+      <TodoCommandGroup
+        isOpen
+        onOpen={openTodo}
+        onBack={backToCommands}
+      />
+    );
+  } else if (activePanel === "file-search") {
     content = (
       <FileSearchCommandGroup
         isOpen

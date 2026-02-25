@@ -23,6 +23,7 @@ import {
   Info,
   Languages,
   Link2,
+  ListTodo,
   Lock,
   LockOpen,
   Mic,
@@ -139,6 +140,7 @@ const LUCIDE_ICON_BY_TOKEN: Record<string, LucideIcon> = {
   terminal: Terminal,
   theme: Smile,
   translation: Languages,
+  todo: ListTodo,
   duckduckgo: Compass,
   upload: Upload,
   user: User,
@@ -166,6 +168,7 @@ const COMMAND_TONE_SPEC_BY_TOKEN: Record<string, CommandToneSpec> = {
   speedtest: { icon: Gauge, tone: "cyan" },
   theme: { icon: Smile, tone: "neutral" },
   translation: { icon: Languages, tone: "primary" },
+  todo: { icon: ListTodo, tone: "primary" },
 };
 
 const COMMAND_TONE_SPEC_BY_COMMAND_ID: Record<string, CommandToneSpec> = {

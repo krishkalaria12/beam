@@ -560,6 +560,9 @@ export default function LauncherCommand() {
             openClipboard={() => {
               openPanel("clipboard", true);
             }}
+            openTodo={() => {
+              openPanel("todo", true);
+            }}
             openExtensions={() => {
               openPanel("extensions", true);
             }}
@@ -593,6 +596,9 @@ export default function LauncherCommand() {
                   void handleRegistryCommandSelect(commandId);
                 }}
                 onSetPinned={setPinned}
+                onOpenTodoPreview={() => {
+                  void handleRegistryCommandSelect("todo.panel.open");
+                }}
               />
             ) : null}
 

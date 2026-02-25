@@ -133,6 +133,20 @@ export const STATIC_COMMANDS: CommandDescriptor[] = [
     },
   },
   {
+    id: "todo.panel.open",
+    title: "todo list",
+    subtitle: "Tasks and subtasks",
+    keywords: ["todo", "todos", "tasks", "task list", "checklist", "subtasks"],
+    endText: "open",
+    icon: "todo",
+    kind: "panel",
+    scope: SCOPE_NORMAL_COMPRESSED,
+    action: {
+      type: "OPEN_PANEL",
+      payload: { panel: "todo" },
+    },
+  },
+  {
     id: "clipboard.panel.open",
     title: "clipboard history",
     keywords: ["clipboard", "history"],
