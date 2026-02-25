@@ -290,6 +290,28 @@ export const STATIC_COMMANDS: CommandDescriptor[] = [
     },
   },
   {
+    id: "script_commands.panel.open",
+    title: "script commands",
+    subtitle: "Run and create local scripts",
+    keywords: [
+      "script",
+      "scripts",
+      "script commands",
+      "shell",
+      "bash",
+      "automation",
+      "terminal",
+    ],
+    endText: "open",
+    icon: "terminal",
+    kind: "panel",
+    scope: SCOPE_NORMAL_COMPRESSED,
+    action: {
+      type: "OPEN_PANEL",
+      payload: { panel: "script-commands" },
+    },
+  },
+  {
     id: "hyprwhspr.panel.open",
     title: "hyprwhspr voice mode",
     subtitle: "Push-to-talk dictation controls",

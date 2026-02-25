@@ -566,6 +566,9 @@ export default function LauncherCommand() {
             openExtensions={() => {
               openPanel("extensions", true);
             }}
+            openScriptCommands={() => {
+              openPanel("script-commands", true);
+            }}
             backToCommands={backToCommands}
           />
         )}

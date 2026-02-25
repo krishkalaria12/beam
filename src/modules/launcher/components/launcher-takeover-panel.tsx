@@ -14,6 +14,9 @@ const QuicklinksCommandGroup = lazy(() => import("@/modules/quicklinks/component
 const SpeedTestCommandGroup = lazy(() => import("@/modules/speed-test/components/speed-test-command-group"));
 const TranslationCommandGroup = lazy(() => import("@/modules/translation/components/translation-command-group"));
 const ExtensionsCommandGroup = lazy(() => import("@/modules/extensions/components/extensions-command-group"));
+const ScriptCommandsCommandGroup = lazy(() =>
+  import("@/modules/script-commands/components/script-commands-command-group")
+);
 const HyprWhsprView = lazy(() =>
   import("@/modules/hyprwhspr/components/hyprwhspr-view").then((mod) => ({
     default: mod.HyprWhsprView,
@@ -35,6 +38,7 @@ const TAKEOVER_PANELS = [
   "clipboard",
   "extensions",
   "hyprwhspr",
+  "script-commands",
   "extension-runner",
 ] as const;
 
@@ -58,6 +62,7 @@ interface TakeoverPanelRendererInput {
   openClipboard: () => void;
   openTodo: () => void;
   openExtensions: () => void;
+  openScriptCommands: () => void;
   backToCommands: () => void;
 }
 
@@ -88,6 +93,7 @@ export function LauncherTakeoverPanel({
   openClipboard,
   openTodo,
   openExtensions,
+  openScriptCommands,
   backToCommands,
 }: LauncherTakeoverPanelProps) {
   if (!isTakeoverPanel(activePanel)) {
@@ -162,6 +168,14 @@ export function LauncherTakeoverPanel({
       <ExtensionsCommandGroup
         isOpen
         onOpen={openExtensions}
+        onBack={backToCommands}
+      />
+    );
+  } else if (activePanel === "script-commands") {
+    content = (
+      <ScriptCommandsCommandGroup
+        isOpen
+        onOpen={openScriptCommands}
         onBack={backToCommands}
       />
     );

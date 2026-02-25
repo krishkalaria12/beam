@@ -41,6 +41,7 @@ const VALID_PANELS: ReadonlySet<CommandPanel> = new Set([
   "translation",
   "extensions",
   "hyprwhspr",
+  "script-commands",
   "extension-runner",
 ]);
 

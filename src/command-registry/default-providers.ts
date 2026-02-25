@@ -8,6 +8,7 @@ import {
 } from "@/modules/quicklinks/api/quicklinks";
 import { createExtensionCommandProvider } from "@/modules/extensions/extension-command-provider";
 import { createExtensionStoreProvider } from "@/modules/extensions/extension-store-provider";
+import { createScriptCommandsProvider } from "@/modules/script-commands/script-commands-provider";
 
 const PROVIDER_SCOPE: ReadonlyArray<"normal" | "compressed"> = ["normal", "compressed"];
 const QUICKLINK_SCOPE: ReadonlyArray<"quicklink-trigger"> = ["quicklink-trigger"];
@@ -245,6 +246,7 @@ export function createDefaultCommandProviders(): CommandProvider[] {
     createQuicklinkCommandProvider(),
     createCalculatorCommandProvider(),
     createApplicationsCommandProvider(),
+    createScriptCommandsProvider(),
     createExtensionCommandProvider(),
     createExtensionStoreProvider(),
   ];

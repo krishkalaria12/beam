@@ -14,6 +14,7 @@ const TAKEOVER_PANELS = new Set<CommandPanel>([
   "clipboard",
   "extensions",
   "hyprwhspr",
+  "script-commands",
   "extension-runner",
 ]);
 

@@ -21,6 +21,7 @@ const launchPanelPreloaders = [
   () => import("@/modules/speed-test/components/speed-test-command-group"),
   () => import("@/modules/translation/components/translation-command-group"),
   () => import("@/modules/extensions/components/extensions-command-group"),
+  () => import("@/modules/script-commands/components/script-commands-command-group"),
   () => import("@/modules/extensions/components/extension-runner-view"),
   () => import("@/modules/calculator-history/components/calculator-history-command-group"),
   () => import("@/modules/emoji/components/emoji-command-group"),

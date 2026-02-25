@@ -7,10 +7,13 @@ import {
   INTERNAL_EXTENSION_ID,
   QUICKLINK_EXECUTE_COMMAND_ID,
 } from "@/command-registry/default-providers";
+import { toast } from "sonner";
 import { saveCalculatorHistory } from "@/modules/calculator-history/api/save-calculator-history";
 import { installExtension } from "@/modules/extensions/api/install-extension";
 import { invalidateDiscoveredExtensionsCache } from "@/modules/extensions/extension-command-provider";
 import { executeQuicklink } from "@/modules/quicklinks/api/quicklinks";
+import { runScriptCommand } from "@/modules/script-commands/api/run-script-command";
+import { SCRIPT_COMMANDS_RUN_EXTENSION_COMMAND_ID } from "@/modules/script-commands/constants";
 
 export interface CreateCustomActionHandlerInput {
   calculatorSessionId: string;
@@ -113,6 +116,64 @@ export function createCustomActionHandler(
           ok: false,
           code: "BACKEND_FAILURE",
           message: "Could not execute quicklink.",
+        };
+      }
+    }
+
+    if (request.extensionCommandId === SCRIPT_COMMANDS_RUN_EXTENSION_COMMAND_ID) {
+      const scriptCommandId =
+        typeof request.payload.scriptCommandId === "string"
+          ? request.payload.scriptCommandId.trim()
+          : "";
+      const timeoutMs =
+        typeof request.payload.timeoutMs === "number" &&
+          Number.isFinite(request.payload.timeoutMs) &&
+          request.payload.timeoutMs > 0
+          ? Math.floor(request.payload.timeoutMs)
+          : undefined;
+
+      if (!scriptCommandId) {
+        return {
+          ok: false,
+          code: "INVALID_INPUT",
+          message: "Script command payload is missing scriptCommandId.",
+        };
+      }
+
+      try {
+        const result = await runScriptCommand({
+          commandId: scriptCommandId,
+          timeoutMs,
+          background: false,
+        });
+
+        input.setCommandSearch("");
+
+        if (result.exitCode !== 0) {
+          toast.error(result.message || "Script execution failed.");
+          return {
+            ok: false,
+            code: "BACKEND_FAILURE",
+            message: result.message || "Script execution failed.",
+          };
+        }
+
+        toast.success(result.message || "Script finished.");
+
+        return {
+          ok: true,
+          payload: {
+            scriptCommandId: result.commandId,
+            exitCode: result.exitCode,
+            message: result.message,
+          },
+        };
+      } catch (error) {
+        console.error("Failed to execute script command:", error);
+        return {
+          ok: false,
+          code: "BACKEND_FAILURE",
+          message: "Could not execute script command.",
         };
       }
     }

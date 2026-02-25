@@ -59,6 +59,7 @@ export type CommandPanel =
   | "translation"
   | "extensions"
   | "hyprwhspr"
+  | "script-commands"
   | "extension-runner";
 
 export interface CommandContext {
