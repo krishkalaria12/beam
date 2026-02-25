@@ -16,6 +16,7 @@ import type { CustomActionRequest } from "@/command-registry/dispatcher";
 import { staticCommandRegistry } from "@/command-registry/registry";
 import { createStaticCommandRegistryStore } from "@/command-registry/static-registry";
 import { logDispatchFailure } from "@/command-registry/telemetry";
+import { QUICKLINK_TRIGGER_MODE } from "@/command-registry/trigger-registry";
 import type { CommandDescriptor } from "@/command-registry/types";
 import { useCommandPreferences } from "@/command-registry/use-command-preferences";
 import { Command, CommandInput, CommandList } from "@/components/ui/command";
@@ -125,14 +126,6 @@ export default function LauncherCommand() {
     setPinned,
     movePinned,
   } = useCommandPreferences();
-  const trimmedCommandSearch = commandSearch.trim();
-  const isQuicklinkTrigger = trimmedCommandSearch.startsWith("!");
-  const quicklinkParts = trimmedCommandSearch.slice(1).split(/\s+/).filter(Boolean);
-  const quicklinkKeyword = quicklinkParts[0] ?? "";
-  const quicklinkQuery = quicklinkParts.slice(1).join(" ");
-  const matchedQuicklink = quicklinkKeyword
-    ? findQuicklinkByKeyword(quicklinks, quicklinkKeyword)
-    : undefined;
   useLauncherDeepLinks({ openPanel, backToCommands });
   useExtensionSidecarEvents({ backToCommands });
   useLauncherPanelPrefetch();
@@ -147,6 +140,14 @@ export default function LauncherCommand() {
       }),
     [commandSearch, isCompressed, activePanel],
   );
+
+  const trimmedCommandSearch = commandContext.rawQuery;
+  const isQuicklinkTrigger = commandContext.mode === QUICKLINK_TRIGGER_MODE;
+  const quicklinkKeyword = commandContext.quicklinkKeyword;
+  const quicklinkQuery = commandContext.query;
+  const matchedQuicklink = quicklinkKeyword
+    ? findQuicklinkByKeyword(quicklinks, quicklinkKeyword)
+    : undefined;
 
   const { rankedRegistryCommands } = useRankedRegistryCommands({
     commandContext,

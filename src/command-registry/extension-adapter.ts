@@ -4,6 +4,7 @@ import type {
   CommandMode,
   CommandScope,
 } from "@/command-registry/types";
+import { isCommandMode, isCommandScope } from "@/command-registry/modes";
 
 export interface ExtensionCommandSandboxMetadata {
   allowOpenUrl?: boolean;
@@ -47,12 +48,7 @@ function normalizeScope(input?: readonly CommandScope[]): readonly CommandScope[
     return ["normal", "compressed"];
   }
 
-  const valid = input.filter((scope) =>
-    scope === "normal" ||
-    scope === "compressed" ||
-    scope === "quicklink-trigger" ||
-    scope === "system-trigger" ||
-    scope === "all");
+  const valid = input.filter((scope) => isCommandScope(scope));
 
   return valid.length > 0 ? valid : ["normal", "compressed"];
 }
@@ -90,11 +86,7 @@ export function toExtensionCommandDescriptor(
   }
 
   const allowedModes = metadata.execution?.allowedModes ?? [];
-  const validAllowedModes = allowedModes.filter((mode) =>
-    mode === "normal" ||
-    mode === "compressed" ||
-    mode === "quicklink-trigger" ||
-    mode === "system-trigger");
+  const validAllowedModes = allowedModes.filter((mode) => isCommandMode(mode));
 
   return {
     id: `extension.${extensionSegment}.${commandSegment}`,

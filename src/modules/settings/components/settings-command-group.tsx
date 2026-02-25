@@ -12,6 +12,7 @@ import { VisualStyleSettings } from "./VisualStyleSettings";
 import { LayoutSettings } from "./LayoutSettings";
 import { PinnedCommandsSettings } from "./PinnedCommandsSettings";
 import HotkeysSettings from "./HotkeysSettings";
+import { TriggerSymbolsSettings } from "./TriggerSymbolsSettings";
 
 type SettingsCommandGroupProps = {
   isOpen: boolean;
@@ -34,6 +35,12 @@ const SETTINGS_KEYWORDS = [
   "shortcuts",
   "wayland",
   "compositor",
+  "bang",
+  "bangs",
+  "symbol",
+  "symbols",
+  "trigger",
+  "prefix",
 ] as const;
 
 export default function SettingsCommandGroup({
@@ -93,6 +100,7 @@ export default function SettingsCommandGroup({
         />
       )}
       {view === "hotkeys" && <HotkeysSettings />}
+      {view === "trigger-symbols" && <TriggerSymbolsSettings />}
     </>
   );
 }

@@ -35,7 +35,9 @@ export function LauncherCommandModeContent({
   onSetPinned,
   onOpenTodoPreview,
 }: LauncherCommandModeContentProps) {
-  const shouldRenderTodoPreview = !isQuicklinkTrigger && shouldShowTodoPreview(commandContext.query);
+  const shouldRenderTodoPreview =
+    (commandContext.mode === "normal" || commandContext.mode === "compressed") &&
+    shouldShowTodoPreview(commandContext.query);
 
   return (
     <div className="py-1">

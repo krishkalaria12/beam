@@ -5,6 +5,7 @@ import { executeSystemAction } from "@/modules/system-actions/api/execute-system
 import { getAwakeStatus, toggleAwake } from "@/modules/system-actions/api/toggle-awake";
 import type { SystemAction } from "@/modules/system-actions/types";
 
+import { isCommandMode } from "@/command-registry/modes";
 import type { StaticCommandRegistry } from "@/command-registry/static-registry";
 import type {
   CommandDescriptor,
@@ -181,13 +182,7 @@ function getModeListField(
     return [];
   }
 
-  return value
-    .filter((entry): entry is CommandMode =>
-      entry === "normal" ||
-      entry === "compressed" ||
-      entry === "quicklink-trigger" ||
-      entry === "system-trigger")
-    .map((entry) => entry);
+  return value.filter((entry): entry is CommandMode => isCommandMode(entry));
 }
 
 export function mapDispatchBackendError(

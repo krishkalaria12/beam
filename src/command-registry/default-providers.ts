@@ -1,4 +1,8 @@
 import type { CommandDescriptor, CommandProvider } from "@/command-registry/types";
+import {
+  getTriggerSymbol,
+  QUICKLINK_TRIGGER_MODE,
+} from "@/command-registry/trigger-registry";
 import { searchApplications } from "@/modules/applications/api/search-applications";
 import { calculateExpression } from "@/modules/calculator/api/calculate-expression";
 import { looksLikeCalculationQuery } from "@/modules/calculator/lib/query-match";
@@ -11,7 +15,7 @@ import { createExtensionStoreProvider } from "@/modules/extensions/extension-sto
 import { createScriptCommandsProvider } from "@/modules/script-commands/script-commands-provider";
 
 const PROVIDER_SCOPE: ReadonlyArray<"normal" | "compressed"> = ["normal", "compressed"];
-const QUICKLINK_SCOPE: ReadonlyArray<"quicklink-trigger"> = ["quicklink-trigger"];
+const QUICKLINK_SCOPE: ReadonlyArray<typeof QUICKLINK_TRIGGER_MODE> = [QUICKLINK_TRIGGER_MODE];
 
 export const INTERNAL_EXTENSION_ID = "beam.internal";
 export const CALCULATOR_COPY_COMMAND_ID = "calculator.copy-result";
@@ -57,15 +61,16 @@ export function createQuicklinkExecuteCommandDescriptor(input: {
   const normalizedKeyword = input.keyword.trim();
   const normalizedQuery = input.query.trim();
   const name = input.name?.trim() || normalizedKeyword;
+  const quicklinkSymbol = getTriggerSymbol(QUICKLINK_TRIGGER_MODE) ?? "!";
 
   return {
     id: toQuicklinkExecuteCommandId(normalizedKeyword),
-    title: `run !${normalizedKeyword}`,
+    title: `run ${quicklinkSymbol}${normalizedKeyword}`,
     subtitle: normalizedQuery.length > 0 ? `${name} -> ${normalizedQuery}` : name,
     keywords: [
       "quicklink",
       "run quicklink",
-      `!${normalizedKeyword}`,
+      `${quicklinkSymbol}${normalizedKeyword}`,
       normalizedKeyword,
       name,
       normalizedQuery,

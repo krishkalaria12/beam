@@ -1,9 +1,6 @@
-export type CommandScope =
-  | "normal"
-  | "compressed"
-  | "quicklink-trigger"
-  | "system-trigger"
-  | "all";
+import type { CommandModeValue, CommandScopeValue } from "@/command-registry/modes";
+
+export type CommandScope = CommandScopeValue;
 
 export type CommandKind =
   | "panel"
@@ -39,11 +36,7 @@ export interface CommandDescriptor {
   action?: CommandAction;
 }
 
-export type CommandMode =
-  | "normal"
-  | "compressed"
-  | "quicklink-trigger"
-  | "system-trigger";
+export type CommandMode = CommandModeValue;
 
 export type CommandPanel =
   | "commands"

@@ -1,16 +1,26 @@
 import type { CommandDescriptor, CommandScope } from "@/command-registry/types";
+import {
+  QUICKLINK_TRIGGER_MODE,
+  SCRIPT_TRIGGER_MODE,
+  SYSTEM_TRIGGER_MODE,
+} from "@/command-registry/trigger-registry";
 
 const SCOPE_NORMAL: CommandScope[] = ["normal"];
 const SCOPE_NORMAL_COMPRESSED: CommandScope[] = ["normal", "compressed"];
 const SCOPE_NORMAL_COMPRESSED_QUICKLINK: CommandScope[] = [
   "normal",
   "compressed",
-  "quicklink-trigger",
+  QUICKLINK_TRIGGER_MODE,
 ];
 const SCOPE_NORMAL_COMPRESSED_SYSTEM: CommandScope[] = [
   "normal",
   "compressed",
-  "system-trigger",
+  SYSTEM_TRIGGER_MODE,
+];
+const SCOPE_NORMAL_COMPRESSED_SCRIPT: CommandScope[] = [
+  "normal",
+  "compressed",
+  SCRIPT_TRIGGER_MODE,
 ];
 const SCOPE_ALL: CommandScope[] = ["all"];
 
@@ -122,7 +132,19 @@ export const STATIC_COMMANDS: CommandDescriptor[] = [
   {
     id: "settings.panel.open",
     title: "settings",
-    keywords: ["settings", "style", "layout", "density", "glassy", "hotkeys", "shortcuts"],
+    keywords: [
+      "settings",
+      "style",
+      "layout",
+      "density",
+      "glassy",
+      "hotkeys",
+      "shortcuts",
+      "trigger",
+      "symbols",
+      "bangs",
+      "prefix",
+    ],
     endText: "open",
     icon: "settings",
     kind: "panel",
@@ -305,7 +327,7 @@ export const STATIC_COMMANDS: CommandDescriptor[] = [
     endText: "open",
     icon: "terminal",
     kind: "panel",
-    scope: SCOPE_NORMAL_COMPRESSED,
+    scope: SCOPE_NORMAL_COMPRESSED_SCRIPT,
     action: {
       type: "OPEN_PANEL",
       payload: { panel: "script-commands" },

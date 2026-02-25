@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 
 import { CALCULATOR_RESULT_COMMAND_ID } from "@/command-registry/default-providers";
+import { SYSTEM_TRIGGER_MODE } from "@/command-registry/trigger-registry";
 import { CommandGroup } from "@/components/ui/command";
 import { RegistryCommandRow } from "@/command-registry/components/registry-command-row";
 import type { RankedCommand } from "@/command-registry/ranker";
@@ -70,7 +71,7 @@ export default function RegistryCommandGroup({
   const isCalculatorDisabled = providerCalculatorCommand
     ? Boolean(providerCalculatorCommand.requiresQuery) &&
       query.length === 0 &&
-      !(mode === "system-trigger" && providerCalculatorCommand.id.startsWith("system."))
+      !(mode === SYSTEM_TRIGGER_MODE && providerCalculatorCommand.id.startsWith("system."))
     : false;
 
   const followUpCommands = hasCalculatorCard
@@ -103,7 +104,7 @@ export default function RegistryCommandGroup({
 
   const renderCommandRow = (command: CommandDescriptor) => {
     const isSystemTriggerNoQuerySystemAction =
-      mode === "system-trigger" &&
+      mode === SYSTEM_TRIGGER_MODE &&
       query.length === 0 &&
       command.id.startsWith("system.");
     const isDisabled =
@@ -149,7 +150,7 @@ export default function RegistryCommandGroup({
           <CommandGroup heading={`Use "${calculatorQuery}" with...`}>
             {followUpCommands.map((command) => {
               const isSystemTriggerNoQuerySystemAction =
-                mode === "system-trigger" &&
+                mode === SYSTEM_TRIGGER_MODE &&
                 query.length === 0 &&
                 command.id.startsWith("system.");
               const isDisabled =

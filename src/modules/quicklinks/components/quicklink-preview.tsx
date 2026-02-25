@@ -3,6 +3,10 @@ import { Link2 } from "lucide-react";
 import type { Quicklink } from "@/modules/quicklinks/types";
 import { findQuicklinkByKeyword, isFileQuicklinkTarget } from "@/modules/quicklinks/api/quicklinks";
 import { QuicklinkIcon } from "@/modules/quicklinks/components/quicklink-icon";
+import {
+  getTriggerSymbol,
+  QUICKLINK_TRIGGER_MODE,
+} from "@/command-registry/trigger-registry";
 
 interface QuicklinkPreviewProps {
   quicklinks: Quicklink[];
@@ -20,6 +24,7 @@ export function QuicklinkPreview({
   onFill,
 }: QuicklinkPreviewProps) {
   const quicklink = findQuicklinkByKeyword(quicklinks, keyword);
+  const quicklinkSymbol = getTriggerSymbol(QUICKLINK_TRIGGER_MODE) ?? "!";
 
   if (!keyword) {
     return (
@@ -33,8 +38,8 @@ export function QuicklinkPreview({
           quicklinks.map((ql) => (
             <CommandItem
               key={ql.keyword}
-              value={`!${ql.keyword}`}
-              onSelect={() => onFill(`!${ql.keyword} `)}
+              value={`${quicklinkSymbol}${ql.keyword}`}
+              onSelect={() => onFill(`${quicklinkSymbol}${ql.keyword} `)}
               className="cursor-pointer"
               forceMount
             >
@@ -45,7 +50,10 @@ export function QuicklinkPreview({
                 fallbackClassName="mr-2 size-4 rounded bg-muted"
               />
               <span className="font-medium">{ql.name}</span>
-              <span className="ml-2 text-muted-foreground">!{ql.keyword}</span>
+              <span className="ml-2 text-muted-foreground">
+                {quicklinkSymbol}
+                {ql.keyword}
+              </span>
               <CommandShortcut>quicklink</CommandShortcut>
             </CommandItem>
           ))
@@ -59,7 +67,10 @@ export function QuicklinkPreview({
       <CommandGroup heading="Quicklinks" forceMount>
         <CommandItem disabled className="text-muted-foreground" forceMount>
           <Link2 className="mr-2 size-4" />
-          <span>No quicklink found for !{keyword}</span>
+          <span>
+            No quicklink found for {quicklinkSymbol}
+            {keyword}
+          </span>
         </CommandItem>
       </CommandGroup>
     );
@@ -69,7 +80,7 @@ export function QuicklinkPreview({
     <CommandGroup heading="Quicklinks" forceMount>
       <CommandItem 
         key={quicklink.keyword}
-        value={`!${quicklink.keyword} ${query}`}
+        value={`${quicklinkSymbol}${quicklink.keyword} ${query}`}
         onSelect={() => onExecute(quicklink.keyword, query)}
         className="cursor-pointer"
         forceMount
@@ -81,7 +92,10 @@ export function QuicklinkPreview({
           fallbackClassName="mr-2 size-4 rounded bg-muted"
         />
         <span className="font-medium">{quicklink.name}</span>
-        <span className="ml-2 text-muted-foreground">!{quicklink.keyword}</span>
+        <span className="ml-2 text-muted-foreground">
+          {quicklinkSymbol}
+          {quicklink.keyword}
+        </span>
         {query && (
           <span className="ml-2 text-xs text-muted-foreground">→ {query}</span>
         )}

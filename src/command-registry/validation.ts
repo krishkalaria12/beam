@@ -4,16 +4,11 @@ import type {
   CommandScope,
   CommandValidationError,
 } from "@/command-registry/types";
+import { COMMAND_SCOPE_VALUES } from "@/command-registry/modes";
 
 const COMMAND_ID_PATTERN = /^[a-z0-9]+(?:[._-][a-z0-9]+)*(?:::[a-z0-9._/-]+)?$/;
 
-const VALID_SCOPES: ReadonlySet<CommandScope> = new Set([
-  "normal",
-  "compressed",
-  "quicklink-trigger",
-  "system-trigger",
-  "all",
-]);
+const VALID_SCOPES: ReadonlySet<CommandScope> = new Set(COMMAND_SCOPE_VALUES);
 
 const VALID_KINDS: ReadonlySet<CommandKind> = new Set([
   "panel",
@@ -116,4 +111,3 @@ export function validateCommandDescriptors(descriptors: CommandDescriptor[]): Co
 
   return errors;
 }
-

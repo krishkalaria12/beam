@@ -1,4 +1,4 @@
-import { Keyboard, Minimize2, Pin, Sparkles } from "lucide-react";
+import { AtSign, Keyboard, Minimize2, Pin, Sparkles } from "lucide-react";
 
 import { CommandGroup, CommandItem, CommandShortcut } from "@/components/ui/command";
 import type { SettingsView } from "../constants";
@@ -44,6 +44,15 @@ export function SettingsMenu({ setView }: SettingsMenuProps) {
         <Keyboard className="size-5 text-muted-foreground/70" />
         <p className="truncate text-foreground capitalize">hotkeys</p>
         <CommandShortcut>keys</CommandShortcut>
+      </CommandItem>
+
+      <CommandItem
+        value="trigger symbols bangs prefixes quicklinks system scripts"
+        onSelect={() => setView("trigger-symbols")}
+      >
+        <AtSign className="size-5 text-muted-foreground/70" />
+        <p className="truncate text-foreground capitalize">trigger symbols</p>
+        <CommandShortcut>bangs</CommandShortcut>
       </CommandItem>
     </CommandGroup>
   );
