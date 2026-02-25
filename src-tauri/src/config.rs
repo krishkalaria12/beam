@@ -96,6 +96,12 @@ pub struct Config {
     pub EXTENSIONS_HEURISTIC_APPLESCRIPT_SYMBOL: &'static str,
     pub EXTENSIONS_HEURISTIC_MACOS_PATHS: Vec<&'static str>,
 
+    // -- Script Commands
+    pub SCRIPT_COMMANDS_DIRECTORY: &'static str,
+    pub SCRIPT_COMMANDS_DISCOVERY_CACHE_TTL_MS: u64,
+    pub SCRIPT_COMMANDS_DEFAULT_TIMEOUT_MS: u64,
+    pub SCRIPT_COMMANDS_MAX_OUTPUT_BYTES: usize,
+
     // -- Pinned
     pub COMMAND_PINNED_KEY: &'static str,
 
@@ -212,6 +218,11 @@ impl Config {
             EXTENSIONS_AI_KEYRING_USERNAME: "openrouter_api_key",
             EXTENSIONS_HEURISTIC_APPLESCRIPT_SYMBOL: "runAppleScript",
             EXTENSIONS_HEURISTIC_MACOS_PATHS: vec!["/Applications/", "/Library/", "/Users/"],
+
+            SCRIPT_COMMANDS_DIRECTORY: "script-commands",
+            SCRIPT_COMMANDS_DISCOVERY_CACHE_TTL_MS: 12_000,
+            SCRIPT_COMMANDS_DEFAULT_TIMEOUT_MS: 60_000,
+            SCRIPT_COMMANDS_MAX_OUTPUT_BYTES: 2 * 1024 * 1024,
 
             COMMAND_PINNED_KEY: "command_pinned_ids",
 

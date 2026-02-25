@@ -14,6 +14,7 @@ pub mod hyprwhspr;
 pub mod launcher_window;
 pub mod pinned;
 pub mod quicklinks;
+pub mod script_commands;
 pub mod search;
 pub mod settings;
 pub mod state;

@@ -1,6 +1,7 @@
 use crate::{
     applications, calculator, clipboard, dictionary, extensions, file_search, hotkeys, hyprwhspr,
-    launcher_window, pinned, quicklinks, search, settings, system_actions, todo, translation,
+    launcher_window, pinned, quicklinks, script_commands, search, settings, system_actions, todo,
+    translation,
 };
 
 use tauri::ipc::Invoke;
@@ -42,6 +43,11 @@ pub fn get_handler() -> impl Fn(Invoke) -> bool {
         system_actions::toggle_awake,
         hyprwhspr::hyprwhspr_record,
         hyprwhspr::hyprwhspr_record_status,
+        script_commands::get_script_commands_directory,
+        script_commands::get_script_commands,
+        script_commands::create_script_command,
+        script_commands::open_script_commands_directory,
+        script_commands::run_script_command,
         launcher_window::set_launcher_compact_mode,
         pinned::get_pinned_command_ids,
         pinned::set_command_pinned,
