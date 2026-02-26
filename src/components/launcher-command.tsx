@@ -591,6 +591,7 @@ export default function LauncherCommand() {
                 quicklinkQuery={quicklinkQuery}
                 rankedRegistryCommands={rankedRegistryCommands}
                 pinnedCommandIds={commandPreferences.pinnedCommandIds}
+                usageById={commandPreferences.usageById}
                 commandContext={commandContext}
                 onQuicklinkExecute={(keyword, query) => {
                   void handleQuicklinkExecute(keyword, query);

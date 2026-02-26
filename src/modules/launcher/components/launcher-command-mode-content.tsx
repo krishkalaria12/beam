@@ -1,4 +1,5 @@
 import RegistryCommandGroup from "@/command-registry/components/registry-command-group";
+import type { CommandUsageEntry } from "@/command-registry/command-preferences";
 import type { CommandContext } from "@/command-registry/types";
 import type { RankedCommand } from "@/command-registry/ranker";
 import { CommandSeparator } from "@/components/ui/command";
@@ -13,6 +14,7 @@ interface LauncherCommandModeContentProps {
   quicklinkQuery: string;
   rankedRegistryCommands: readonly RankedCommand[];
   pinnedCommandIds: readonly string[];
+  usageById: Readonly<Record<string, CommandUsageEntry>>;
   commandContext: CommandContext;
   onQuicklinkExecute: (keyword: string, query: string) => void;
   onQuicklinkFill: (value: string) => void;
@@ -28,6 +30,7 @@ export function LauncherCommandModeContent({
   quicklinkQuery,
   rankedRegistryCommands,
   pinnedCommandIds,
+  usageById,
   commandContext,
   onQuicklinkExecute,
   onQuicklinkFill,
@@ -67,6 +70,7 @@ export function LauncherCommandModeContent({
         mode={commandContext.mode}
         onSelect={onRegistryCommandSelect}
         orderedPinnedCommandIds={pinnedCommandIds}
+        usageById={usageById}
         onSetPinned={onSetPinned}
       />
     </div>

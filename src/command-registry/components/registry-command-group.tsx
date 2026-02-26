@@ -1,11 +1,11 @@
-import { useMemo } from "react";
-
 import { CALCULATOR_RESULT_COMMAND_ID } from "@/command-registry/default-providers";
+import { resolveRecentCommands } from "@/command-registry/recent-commands";
 import { SYSTEM_TRIGGER_MODE } from "@/command-registry/trigger-registry";
 import { CommandGroup } from "@/components/ui/command";
 import { RegistryCommandRow } from "@/command-registry/components/registry-command-row";
 import type { RankedCommand } from "@/command-registry/ranker";
 import type { CommandDescriptor, CommandMode } from "@/command-registry/types";
+import type { CommandUsageEntry } from "@/command-registry/command-preferences";
 import { CalculatorResultItem } from "@/modules/calculator/components/calculator-result-item";
 import { useCalculator } from "@/modules/calculator/hooks/use-calculator";
 import { looksLikeCalculationQuery } from "@/modules/calculator/lib/query-match";
@@ -16,6 +16,7 @@ type RegistryCommandGroupProps = {
   mode: CommandMode;
   onSelect: (commandId: string) => void;
   orderedPinnedCommandIds: readonly string[];
+  usageById: Readonly<Record<string, CommandUsageEntry>>;
   onSetPinned: (commandId: string, pinned: boolean) => void;
 };
 
@@ -25,12 +26,11 @@ export default function RegistryCommandGroup({
   mode,
   onSelect,
   orderedPinnedCommandIds,
+  usageById,
   onSetPinned,
 }: RegistryCommandGroupProps) {
-  const pinnedCommandIdSet = useMemo(
-    () => new Set(orderedPinnedCommandIds),
-    [orderedPinnedCommandIds],
-  );
+  const pinnedCommandIdSet = new Set(orderedPinnedCommandIds);
+  const shouldShowRecentGroup = query.trim().length === 0;
   const providerCalculatorCommand = commands.find(
     ({ command }) => command.id === CALCULATOR_RESULT_COMMAND_ID,
   )?.command;
@@ -80,27 +80,34 @@ export default function RegistryCommandGroup({
       .map(({ command }) => command)
     : [];
 
-  const groupedCommands = useMemo(() => {
-    const commandById = new Map<string, RankedCommand>();
-    for (const entry of commands) {
-      commandById.set(entry.command.id, entry);
+  const commandById = new Map<string, CommandDescriptor>();
+  for (const { command } of commands) {
+    commandById.set(command.id, command);
+  }
+
+  const pinned: CommandDescriptor[] = [];
+  for (const commandId of orderedPinnedCommandIds) {
+    const command = commandById.get(commandId);
+    if (command) {
+      pinned.push(command);
     }
+  }
 
-    const pinned = orderedPinnedCommandIds
-      .map((commandId) => commandById.get(commandId))
-      .filter((entry): entry is RankedCommand => Boolean(entry))
-      .map(({ command }) => command);
-
-    const pinnedIds = new Set(pinned.map((command) => command.id));
-    const other = commands
-      .filter(({ command }) => !pinnedIds.has(command.id))
-      .map(({ command }) => command);
-
-    return {
-      pinned,
-      other,
-    };
-  }, [commands, orderedPinnedCommandIds]);
+  const pinnedIds = new Set(pinned.map((command) => command.id));
+  const recent = shouldShowRecentGroup
+    ? resolveRecentCommands({
+      commands,
+      usageById,
+      excludedCommandIds: pinnedIds,
+    })
+    : [];
+  const groupedIds = new Set([
+    ...pinnedIds,
+    ...recent.map((command) => command.id),
+  ]);
+  const other = commands
+    .filter(({ command }) => !groupedIds.has(command.id))
+    .map(({ command }) => command);
 
   const renderCommandRow = (command: CommandDescriptor) => {
     const isSystemTriggerNoQuerySystemAction =
@@ -182,14 +189,21 @@ export default function RegistryCommandGroup({
 
   return (
     <>
-      {groupedCommands.pinned.length > 0 ? (
+      {pinned.length > 0 ? (
         <CommandGroup heading="Pinned">
-          {groupedCommands.pinned.map((command) => renderCommandRow(command))}
+          {pinned.map((command) => renderCommandRow(command))}
         </CommandGroup>
       ) : null}
-      {groupedCommands.other.length > 0 ? (
-        <CommandGroup heading={groupedCommands.pinned.length > 0 ? "Other" : undefined}>
-          {groupedCommands.other.map((command) => renderCommandRow(command))}
+      {recent.length > 0 ? (
+        <CommandGroup heading="Recent">
+          {recent.map((command) => renderCommandRow(command))}
+        </CommandGroup>
+      ) : null}
+      {other.length > 0 ? (
+        <CommandGroup
+          heading={pinned.length > 0 || recent.length > 0 ? "Other" : undefined}
+        >
+          {other.map((command) => renderCommandRow(command))}
         </CommandGroup>
       ) : null}
     </>
