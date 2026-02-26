@@ -1,7 +1,7 @@
 use crate::{
     applications, calculator, clipboard, dictionary, extensions, file_search, hotkeys, hyprwhspr,
-    launcher_window, pinned, quicklinks, script_commands, search, settings, system_actions, todo,
-    translation,
+    launcher_window, pinned, quicklinks, script_commands, search, settings, spotify, system_actions,
+    todo, translation,
 };
 
 use tauri::ipc::Invoke;
@@ -31,6 +31,17 @@ pub fn get_handler() -> impl Fn(Invoke) -> bool {
         dictionary::commands::get_definition,
         translation::commands::get_translation_languages,
         translation::commands::translate_text,
+        spotify::commands::spotify_create_auth_session,
+        spotify::commands::spotify_exchange_code_for_tokens,
+        spotify::commands::spotify_refresh_access_token,
+        spotify::commands::spotify_get_current_user,
+        spotify::commands::spotify_get_current_playback,
+        spotify::commands::spotify_get_devices,
+        spotify::commands::spotify_play,
+        spotify::commands::spotify_pause,
+        spotify::commands::spotify_next_track,
+        spotify::commands::spotify_previous_track,
+        spotify::commands::spotify_search,
         quicklinks::create_quicklink,
         quicklinks::delete_quicklink,
         quicklinks::execute_quicklink,

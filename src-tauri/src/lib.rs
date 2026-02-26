@@ -17,6 +17,7 @@ pub mod quicklinks;
 pub mod script_commands;
 pub mod search;
 pub mod settings;
+pub mod spotify;
 pub mod state;
 pub mod system_actions;
 pub mod todo;
