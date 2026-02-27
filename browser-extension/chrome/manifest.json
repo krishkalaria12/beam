@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "Beam Browser Bridge",
+  "description": "Sync browser tabs/content with Beam launcher",
+  "version": "0.1.0",
+  "permissions": [
+    "tabs",
+    "scripting",
+    "alarms",
+    "storage"
+  ],
+  "host_permissions": [
+    "<all_urls>",
+    "http://127.0.0.1/*",
+    "http://localhost/*"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "Beam Bridge"
+  }
+}

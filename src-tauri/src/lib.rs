@@ -153,6 +153,7 @@ pub fn run() {
 
             hotkeys::initialize_hotkey_backend(&app.handle());
             todo::db::init(&app.handle());
+            extensions::browser_extension::start_bridge_server(&app.handle());
 
             Ok(())
         })

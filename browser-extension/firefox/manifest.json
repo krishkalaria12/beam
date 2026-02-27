@@ -1,0 +1,26 @@
+{
+  "manifest_version": 2,
+  "name": "Beam Browser Bridge (Firefox)",
+  "description": "Sync browser tabs/content with Beam launcher",
+  "version": "0.1.0",
+  "permissions": [
+    "tabs",
+    "activeTab",
+    "storage",
+    "alarms",
+    "<all_urls>",
+    "http://127.0.0.1/*",
+    "http://localhost/*"
+  ],
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "browser_action": {
+    "default_title": "Beam Bridge"
+  },
+  "applications": {
+    "gecko": {
+      "id": "beam-bridge@beam.launcher"
+    }
+  }
+}

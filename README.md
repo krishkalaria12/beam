@@ -27,6 +27,15 @@ bun run desktop:build
 - initial launcher shell with a centered panel
 - heading only: `beam`
 
+## browser extension bridge
+
+Beam now includes a local browser bridge server for extension `BrowserExtension` APIs.
+
+- bridge URL: `http://127.0.0.1:38957`
+- unpacked Chrome extension: `browser-extension/chrome`
+- temporary Firefox add-on: `browser-extension/firefox`
+- install notes: `browser-extension/README.md`
+
 ## command registry architecture notes
 
 - all command-mode listing and execution flow is registry-first

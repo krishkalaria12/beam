@@ -56,6 +56,7 @@ class ExtensionSidecarService {
   private listeners = new Set<SidecarEventListener>();
   private oauthTokenStore = new Map<string, Record<string, unknown>>();
   private aiEventUnlisteners: Array<() => void> = [];
+  private browserExtensionStatusPollId: ReturnType<typeof setInterval> | null = null;
   private pendingOauthStates = new Set<string>();
   private pendingPreferenceResolvers = new Map<string, PendingPreferenceRequest[]>();
 
@@ -186,6 +187,45 @@ class ExtensionSidecarService {
 
   private sendResponse(action: string, payload: Record<string, unknown>): void {
     this.writeEvent({ action, payload });
+  }
+
+  private setBrowserExtensionConnectionStatus(isConnected: boolean): void {
+    this.writeEvent({
+      action: "browser-extension-connection-status",
+      payload: { isConnected },
+    });
+  }
+
+  private async refreshBrowserExtensionConnectionStatus(): Promise<void> {
+    if (!this.child) {
+      return;
+    }
+
+    try {
+      const isConnected = await invoke<boolean>("browser_extension_check_connection");
+      this.setBrowserExtensionConnectionStatus(Boolean(isConnected));
+    } catch {
+      this.setBrowserExtensionConnectionStatus(false);
+    }
+  }
+
+  private startBrowserExtensionStatusPolling(): void {
+    if (this.browserExtensionStatusPollId !== null) {
+      return;
+    }
+
+    this.browserExtensionStatusPollId = setInterval(() => {
+      void this.refreshBrowserExtensionConnectionStatus();
+    }, 5000);
+  }
+
+  private stopBrowserExtensionStatusPolling(): void {
+    if (this.browserExtensionStatusPollId === null) {
+      return;
+    }
+
+    clearInterval(this.browserExtensionStatusPollId);
+    this.browserExtensionStatusPollId = null;
   }
 
   private handleConfirmAlert(payload: {
@@ -415,6 +455,8 @@ class ExtensionSidecarService {
         requestId: payload.requestId,
         error: message,
       });
+    } finally {
+      void this.refreshBrowserExtensionConnectionStatus();
     }
   }
 
@@ -682,6 +724,8 @@ class ExtensionSidecarService {
 
       this.child = await command.spawn();
       void this.setupAiEventListeners();
+      void this.refreshBrowserExtensionConnectionStatus();
+      this.startBrowserExtensionStatusPolling();
     })();
 
     try {
@@ -698,6 +742,7 @@ class ExtensionSidecarService {
 
     this.child.kill();
     this.child = null;
+    this.stopBrowserExtensionStatusPolling();
     this.resetStreamState();
     for (const unlisten of this.aiEventUnlisteners) {
       unlisten();
