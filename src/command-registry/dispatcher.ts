@@ -40,6 +40,7 @@ const VALID_PANELS: ReadonlySet<CommandPanel> = new Set([
   "quicklinks",
   "speed-test",
   "translation",
+  "spotify",
   "extensions",
   "hyprwhspr",
   "script-commands",
@@ -80,6 +81,7 @@ export interface DispatchRuntime {
   setFileSearchQuery: (query: string) => void;
   setDictionaryQuery: (query: string) => void;
   setTranslationQuery: (query: string) => void;
+  setSpotifyQuery: (query: string) => void;
   openUrl?: (url: string) => void | Promise<void>;
   customActionHandler?: (request: CustomActionRequest) => Promise<DispatchResult>;
 }
@@ -287,13 +289,17 @@ async function dispatchPanelAction(
   if (panel === "translation") {
     context.runtime.setTranslationQuery(context.query);
   }
+  if (panel === "spotify") {
+    context.runtime.setSpotifyQuery(context.query);
+  }
 
   context.runtime.setActivePanel(panel as CommandPanel);
 
   if (
     panel !== "file-search" &&
     panel !== "dictionary" &&
-    panel !== "translation"
+    panel !== "translation" &&
+    panel !== "spotify"
   ) {
     context.runtime.setCommandSearch("");
   }

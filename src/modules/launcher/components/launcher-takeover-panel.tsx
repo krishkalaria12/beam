@@ -13,6 +13,7 @@ const FileSearchCommandGroup = lazy(() => import("@/modules/file-search/componen
 const QuicklinksCommandGroup = lazy(() => import("@/modules/quicklinks/components/quicklinks-command-group"));
 const SpeedTestCommandGroup = lazy(() => import("@/modules/speed-test/components/speed-test-command-group"));
 const TranslationCommandGroup = lazy(() => import("@/modules/translation/components/translation-command-group"));
+const SpotifyCommandGroup = lazy(() => import("@/modules/spotify/components/spotify-command-group"));
 const ExtensionsCommandGroup = lazy(() => import("@/modules/extensions/components/extensions-command-group"));
 const ScriptCommandsCommandGroup = lazy(() =>
   import("@/modules/script-commands/components/script-commands-command-group")
@@ -33,6 +34,7 @@ const TAKEOVER_PANELS = [
   "file-search",
   "dictionary",
   "translation",
+  "spotify",
   "quicklinks",
   "speed-test",
   "clipboard",
@@ -52,11 +54,13 @@ interface TakeoverPanelRendererInput {
   fileSearchQuery: string;
   dictionaryQuery: string;
   translationQuery: string;
+  spotifyQuery: string;
   quicklinksView: QuicklinksView;
   setQuicklinksView: (view: QuicklinksView) => void;
   openFileSearch: (query: string) => void;
   openDictionary: (query: string) => void;
   openTranslation: (query: string) => void;
+  openSpotify: (query: string) => void;
   openQuicklinks: () => void;
   openSpeedTest: () => void;
   openClipboard: () => void;
@@ -83,11 +87,13 @@ export function LauncherTakeoverPanel({
   fileSearchQuery,
   dictionaryQuery,
   translationQuery,
+  spotifyQuery,
   quicklinksView,
   setQuicklinksView,
   openFileSearch,
   openDictionary,
   openTranslation,
+  openSpotify,
   openQuicklinks,
   openSpeedTest,
   openClipboard,
@@ -134,6 +140,15 @@ export function LauncherTakeoverPanel({
         isOpen
         query={translationQuery}
         onOpen={openTranslation}
+        onBack={backToCommands}
+      />
+    );
+  } else if (activePanel === "spotify") {
+    content = (
+      <SpotifyCommandGroup
+        isOpen
+        query={spotifyQuery}
+        onOpen={openSpotify}
         onBack={backToCommands}
       />
     );

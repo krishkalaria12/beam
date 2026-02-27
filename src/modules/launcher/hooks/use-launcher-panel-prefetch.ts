@@ -20,6 +20,7 @@ const launchPanelPreloaders = [
   () => import("@/modules/quicklinks/components/quicklinks-command-group"),
   () => import("@/modules/speed-test/components/speed-test-command-group"),
   () => import("@/modules/translation/components/translation-command-group"),
+  () => import("@/modules/spotify/components/spotify-command-group"),
   () => import("@/modules/extensions/components/extensions-command-group"),
   () => import("@/modules/script-commands/components/script-commands-command-group"),
   () => import("@/modules/extensions/components/extension-runner-view"),

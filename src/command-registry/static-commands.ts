@@ -1,3 +1,4 @@
+import spotifyLogo from "@/assets/icons/spotify.png";
 import type { CommandDescriptor, CommandScope } from "@/command-registry/types";
 import {
   QUICKLINK_TRIGGER_MODE,
@@ -261,6 +262,26 @@ export const STATIC_COMMANDS: CommandDescriptor[] = [
     action: {
       type: "OPEN_PANEL",
       payload: { panel: "translation" },
+    },
+  },
+  {
+    id: "spotify.panel.open",
+    title: "spotify controls",
+    keywords: [
+      "spotify",
+      "music",
+      "now playing",
+      "playback",
+      "spotify player",
+      "spotify search",
+    ],
+    endText: "music",
+    icon: `app-icon:${spotifyLogo}`,
+    kind: "panel",
+    scope: SCOPE_NORMAL_COMPRESSED,
+    action: {
+      type: "OPEN_PANEL",
+      payload: { panel: "spotify" },
     },
   },
   {

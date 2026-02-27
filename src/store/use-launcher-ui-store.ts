@@ -9,6 +9,7 @@ const TAKEOVER_PANELS = new Set<CommandPanel>([
   "file-search",
   "dictionary",
   "translation",
+  "spotify",
   "quicklinks",
   "speed-test",
   "clipboard",
@@ -34,17 +35,20 @@ export interface LauncherUiState {
   fileSearchQuery: string;
   dictionaryQuery: string;
   translationQuery: string;
+  spotifyQuery: string;
   quicklinksView: QuicklinksView;
   setCommandSearch(value: string): void;
   setActivePanel(panel: CommandPanel): void;
   setFileSearchQuery(query: string): void;
   setDictionaryQuery(query: string): void;
   setTranslationQuery(query: string): void;
+  setSpotifyQuery(query: string): void;
   setQuicklinksView(view: QuicklinksView): void;
   openPanel(panel: CommandPanel, clearCommandSearch?: boolean): void;
   openFileSearch(query: string): void;
   openDictionary(query: string): void;
   openTranslation(query: string): void;
+  openSpotify(query: string): void;
   backToCommands(): void;
 }
 
@@ -54,12 +58,14 @@ export const useLauncherUiStore = create<LauncherUiState>((set) => ({
   fileSearchQuery: "",
   dictionaryQuery: "",
   translationQuery: "",
+  spotifyQuery: "",
   quicklinksView: "manage",
   setCommandSearch: (value) => set({ commandSearch: value }),
   setActivePanel: (panel) => set({ activePanel: panel }),
   setFileSearchQuery: (query) => set({ fileSearchQuery: query }),
   setDictionaryQuery: (query) => set({ dictionaryQuery: query }),
   setTranslationQuery: (query) => set({ translationQuery: query }),
+  setSpotifyQuery: (query) => set({ spotifyQuery: query }),
   setQuicklinksView: (view) => set({ quicklinksView: view }),
   openPanel: (panel, clearCommandSearch = false) =>
     set((state) => ({
@@ -80,6 +86,11 @@ export const useLauncherUiStore = create<LauncherUiState>((set) => ({
     set({
       translationQuery: query,
       activePanel: "translation",
+    }),
+  openSpotify: (query) =>
+    set({
+      spotifyQuery: query,
+      activePanel: "spotify",
     }),
   backToCommands: () =>
     set({
