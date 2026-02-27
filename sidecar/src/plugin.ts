@@ -116,7 +116,7 @@ interface LaunchProps {
 export const runPlugin = (
 	pluginPath?: string,
 	mode: 'view' | 'no-view' = 'view',
-	aiAccessStatus: boolean
+	aiAccessStatus = false
 ): void => {
 	let pluginName = 'unknown';
 	let preferences: Preference[] = [];
@@ -222,7 +222,8 @@ export const runPlugin = (
 		}
 	} else {
 		writeLog('Plugin loaded. Initializing React render...');
-		const AppElement = React.createElement(PluginRoot as React.ComponentType, launchProps);
+		const ViewComponent = PluginRoot as unknown as React.ComponentType<LaunchProps>;
+		const AppElement = React.createElement(ViewComponent, launchProps);
 		updateContainer(AppElement, () => {
 			writeLog('Initial render complete');
 		});

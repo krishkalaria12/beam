@@ -12,15 +12,29 @@ const onRecoverableError = (error: Error) => {
 	writeLog(`Stack: ${error.stack}`);
 };
 
+const onUncaughtError = (error: Error) => {
+	writeLog(`--- REACT UNCAUGHT ERROR ---`);
+	writeLog(`Error: ${error.message}`);
+	writeLog(`Stack: ${error.stack}`);
+};
+
+const onCaughtError = (error: Error) => {
+	writeLog(`--- REACT CAUGHT ERROR ---`);
+	writeLog(`Error: ${error.message}`);
+	writeLog(`Stack: ${error.stack}`);
+};
+
 export const container = reconciler.createContainer(
 	root,
 	0, // LegacyRoot
 	null,
 	false,
 	null,
-
 	'',
+	onUncaughtError,
+	onCaughtError,
 	onRecoverableError,
+	() => {},
 	null
 );
 

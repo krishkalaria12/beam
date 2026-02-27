@@ -28,7 +28,7 @@ const ActionPush = ({
 		updateContainer(target);
 		onPush?.();
 	};
-	return jsx('Action.Push', { ...props, onAction: handleAction });
+	return React.createElement('Action.Push' as React.ElementType, { ...props, onAction: handleAction });
 };
 
 const Style = {

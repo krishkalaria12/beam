@@ -147,6 +147,9 @@ export function optimizeCommitBuffer(buffer: Command[]): Command[] {
 	for (const ids of propsToIdMap.values()) {
 		if (ids.length > PROPS_TEMPLATE_THRESHOLD) {
 			const templateId = ids[0];
+			if (templateId === undefined) {
+				continue;
+			}
 			const prototypePayload = idToPayloadMap.get(templateId)!;
 
 			finalOps.push({
@@ -158,13 +161,13 @@ export function optimizeCommitBuffer(buffer: Command[]): Command[] {
 				}
 			});
 
-			finalOps.push({
-				type: 'APPLY_PROPS_TEMPLATE',
-				payload: {
-					templateId: templateId,
-					targetIds: ids
-				}
-			});
+				finalOps.push({
+					type: 'APPLY_PROPS_TEMPLATE',
+					payload: {
+						templateId,
+						targetIds: ids
+					}
+				});
 
 			ids.forEach((id) => handledIds.add(id));
 		}

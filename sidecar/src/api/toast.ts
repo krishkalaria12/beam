@@ -1,21 +1,32 @@
-import type * as api from '@raycast/api';
 import { writeOutput } from '../io';
 import { getNextInstanceId, toasts } from '../state';
-import { Toast as ToastEnum } from './types';
+import {
+	ToastStyle,
+	type Toast as RuntimeToast,
+	type ToastActionOptions as RuntimeToastActionOptions
+} from '../types';
 
 let activeToastId: number | null = null;
 
-class ToastImpl implements api.Toast {
+interface ToastOptions {
+	style?: ToastStyle;
+	title: string;
+	message?: string;
+	primaryAction?: RuntimeToastActionOptions;
+	secondaryAction?: RuntimeToastActionOptions;
+}
+
+class ToastImpl implements RuntimeToast {
 	#id: number;
-	#style: api.Toast.Style;
+	#style: ToastStyle;
 	#title: string;
 	#message?: string;
-	primaryAction?: api.Toast.ActionOptions;
-	secondaryAction?: api.Toast.ActionOptions;
+	primaryAction?: RuntimeToastActionOptions;
+	secondaryAction?: RuntimeToastActionOptions;
 
-	constructor(options: api.Toast.Options) {
+	constructor(options: ToastOptions) {
 		this.#id = getNextInstanceId();
-		this.#style = options.style ?? ToastEnum.Style.Success;
+		this.#style = options.style ?? ToastStyle.Success;
 		this.#title = options.title;
 		this.#message = options.message;
 		this.primaryAction = options.primaryAction;
@@ -29,7 +40,7 @@ class ToastImpl implements api.Toast {
 	get style() {
 		return this.#style;
 	}
-	set style(newStyle: api.Toast.Style) {
+	set style(newStyle: ToastStyle) {
 		this.#style = newStyle;
 		this._update();
 	}
@@ -102,19 +113,19 @@ class ToastImpl implements api.Toast {
 	}
 }
 
-export async function showToast(options: api.Toast.Options): Promise<api.Toast>;
+export async function showToast(options: ToastOptions): Promise<RuntimeToast>;
 export async function showToast(
-	style: api.Toast.Style,
+	style: ToastStyle,
 	title: string,
 	message?: string
-): Promise<api.Toast>;
+): Promise<RuntimeToast>;
 
 export async function showToast(
-	optionsOrStyle: api.Toast.Options | api.Toast.Style,
+	optionsOrStyle: ToastOptions | ToastStyle,
 	title?: string,
 	message?: string
-): Promise<api.Toast> {
-	let options: api.Toast.Options;
+): Promise<RuntimeToast> {
+	let options: ToastOptions;
 
 	if (typeof optionsOrStyle === 'object' && optionsOrStyle !== null) {
 		options = optionsOrStyle;

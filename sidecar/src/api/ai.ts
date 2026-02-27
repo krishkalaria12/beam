@@ -143,8 +143,14 @@ export function ask(prompt: string, options: AskOptions = {}): AskResult {
 	});
 
 	const result = promise as AskResult;
-	result.on = emitter.on.bind(emitter);
-	result.off = emitter.off.bind(emitter);
+	result.on = ((event, listener) => {
+		emitter.on(event, listener);
+		return result;
+	}) as AskResult['on'];
+	result.off = ((event, listener) => {
+		emitter.off(event, listener);
+		return result;
+	}) as AskResult['off'];
 
 	return result;
 }

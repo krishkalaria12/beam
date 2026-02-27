@@ -1,4 +1,3 @@
-import type * as api from '@raycast/api';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
@@ -13,16 +12,25 @@ type IndexEntry = {
 
 type PersistedIndex = [string, IndexEntry][];
 
+interface CacheOptions {
+	capacity?: number;
+	namespace?: string;
+	directory?: string;
+}
+
+type CacheSubscriber = (key: string | undefined, data: string | undefined) => void;
+type CacheSubscription = () => void;
+
 export class Cache {
-	private readonly options: Required<api.Cache.Options>;
+	private readonly options: Required<CacheOptions>;
 	private readonly cachePath: string;
 	private readonly indexPath: string;
 
 	private index: Map<string, IndexEntry> = new Map();
-	private subscribers: Set<api.Cache.Subscriber> = new Set();
+	private subscribers: Set<CacheSubscriber> = new Set();
 	private totalSize: number = 0;
 
-	constructor(options: api.Cache.Options = {}) {
+	constructor(options: CacheOptions = {}) {
 		const cacheRoot = config.cacheDir;
 		fs.mkdirSync(cacheRoot, { recursive: true });
 		this.options = {
@@ -145,7 +153,7 @@ export class Cache {
 		}
 	}
 
-	public subscribe(subscriber: api.Cache.Subscriber): api.Cache.Subscription {
+	public subscribe(subscriber: CacheSubscriber): CacheSubscription {
 		this.subscribers.add(subscriber);
 
 		return () => {

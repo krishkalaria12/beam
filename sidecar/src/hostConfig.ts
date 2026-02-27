@@ -20,12 +20,14 @@ import { serializeProps, optimizeCommitBuffer } from './utils';
 import React from 'react';
 
 const handleAccessory = (parent: ParentInstance, child: AnyInstance) => {
+	const isFlareParent = (value: ParentInstance): value is FlareInstance => 'type' in value;
+
 	if (child.type === '_AccessorySlot') {
 		if ('props' in child) {
 			const accessoryName = child.props.name as string;
 			const accessoryInstance = child.children[0];
 
-			if (accessoryInstance && 'id' in parent) {
+			if (accessoryInstance && isFlareParent(parent)) {
 				if (!parent.namedChildren) {
 					parent.namedChildren = {};
 				}

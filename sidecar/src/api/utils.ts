@@ -12,7 +12,7 @@ export const createLocalStorage = () => {
 };
 
 export const createWrapperComponent = (name: string) => {
-	const ComponentFactory = (props: { children?: React.ReactNode }) => {
+	const ComponentFactory = (props: Record<string, unknown> & { children?: React.ReactNode }) => {
 		return jsx(name as ElementType, props);
 	};
 	ComponentFactory.displayName = name;
