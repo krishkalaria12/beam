@@ -1,7 +1,7 @@
 use crate::{
     applications, calculator, clipboard, dictionary, extensions, file_search, hotkeys, hyprwhspr,
-    launcher_window, pinned, quicklinks, script_commands, search, settings, spotify, system_actions,
-    todo, translation,
+    launcher_window, pinned, quicklinks, script_commands, search, settings, spotify,
+    system_actions, todo, translation, window_switcher,
 };
 
 use tauri::ipc::Invoke;
@@ -93,5 +93,8 @@ pub fn get_handler() -> impl Fn(Invoke) -> bool {
         todo::sub_todo::create_sub_todo,
         todo::sub_todo::update_sub_todo,
         todo::sub_todo::delete_sub_todo,
+        window_switcher::list_windows,
+        window_switcher::focus_window,
+        window_switcher::close_window,
     ]
 }

@@ -23,6 +23,7 @@ pub mod system_actions;
 pub mod todo;
 pub mod translation;
 pub mod utils;
+pub mod window_switcher;
 
 use tauri::{Emitter, Manager};
 

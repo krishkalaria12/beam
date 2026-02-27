@@ -163,4 +163,38 @@ impl IconResolver {
             .insert(cache_key, resolved_icon_path.clone());
         resolved_icon_path
     }
+
+    pub fn resolve_from_name(&mut self, icon_name: &str) -> String {
+        let normalized_name = icon_name.trim();
+        if normalized_name.is_empty() {
+            return String::new();
+        }
+
+        if let Some(cached_icon_path) = self.icon_lookup_cache.get(normalized_name) {
+            return cached_icon_path.clone();
+        }
+
+        let mut icon_path = String::new();
+        for size in [24, 32, 48, 64, 96, 128] {
+            if let Some(path) = freedesktop_icons::lookup(normalized_name)
+                .with_size(size)
+                .with_scale(1)
+                .with_cache()
+                .find()
+            {
+                if let Some(path) = to_allowed_icon_path(
+                    path,
+                    &self.allowed_icon_directories,
+                    &self.home_local_directory,
+                ) {
+                    icon_path = path;
+                    break;
+                }
+            }
+        }
+
+        self.icon_lookup_cache
+            .insert(normalized_name.to_string(), icon_path.clone());
+        icon_path
+    }
 }

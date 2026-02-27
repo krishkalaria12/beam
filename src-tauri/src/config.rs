@@ -135,6 +135,9 @@ pub struct Config {
     // -- Todo
     pub TODO_DIRECTORY: &'static str,
     pub TODO_DATABASE_FILE: &'static str,
+
+    // -- Window Switcher
+    pub WINDOW_SWITCHER_PROCESS_CACHE_REFRESH_MS: u64,
 }
 
 impl Config {
@@ -287,6 +290,8 @@ impl Config {
 
             TODO_DIRECTORY: "todo",
             TODO_DATABASE_FILE: "todo.sqlite3",
+
+            WINDOW_SWITCHER_PROCESS_CACHE_REFRESH_MS: 2_000,
         })
     }
 }
