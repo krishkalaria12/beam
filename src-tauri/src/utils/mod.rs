@@ -2,6 +2,8 @@
 //!
 //! This module provides utility functions and helpers used across the application.
 
+pub mod sqlite;
+
 /// Box a value for type erasure
 pub fn boxed<T>(val: T) -> Box<T> {
     Box::new(val)

@@ -136,6 +136,14 @@ pub struct Config {
     pub TODO_DIRECTORY: &'static str,
     pub TODO_DATABASE_FILE: &'static str,
 
+    // -- Snippets
+    pub SNIPPETS_DIRECTORY: &'static str,
+    pub SNIPPETS_DATABASE_FILE: &'static str,
+    pub SNIPPETS_DEFAULT_COOLDOWN_MS: u64,
+    pub SNIPPETS_DEFAULT_MAX_BUFFER_LEN: usize,
+    pub SNIPPETS_MIN_MAX_BUFFER_LEN: usize,
+    pub SNIPPETS_MAX_MAX_BUFFER_LEN: usize,
+
     // -- Window Switcher
     pub WINDOW_SWITCHER_PROCESS_CACHE_REFRESH_MS: u64,
 }
@@ -290,6 +298,13 @@ impl Config {
 
             TODO_DIRECTORY: "todo",
             TODO_DATABASE_FILE: "todo.sqlite3",
+
+            SNIPPETS_DIRECTORY: "snippets",
+            SNIPPETS_DATABASE_FILE: "snippets.sqlite3",
+            SNIPPETS_DEFAULT_COOLDOWN_MS: 120,
+            SNIPPETS_DEFAULT_MAX_BUFFER_LEN: 96,
+            SNIPPETS_MIN_MAX_BUFFER_LEN: 8,
+            SNIPPETS_MAX_MAX_BUFFER_LEN: 512,
 
             WINDOW_SWITCHER_PROCESS_CACHE_REFRESH_MS: 2_000,
         })

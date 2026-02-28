@@ -1,6 +1,6 @@
 use crate::{
     applications, calculator, clipboard, dictionary, extensions, file_search, hotkeys, hyprwhspr,
-    launcher_window, pinned, quicklinks, script_commands, search, settings, spotify,
+    launcher_window, pinned, quicklinks, script_commands, search, settings, snippets, spotify,
     system_actions, todo, translation, window_switcher,
 };
 
@@ -54,6 +54,15 @@ pub fn get_handler() -> impl Fn(Invoke) -> bool {
         system_actions::toggle_awake,
         hyprwhspr::hyprwhspr_record,
         hyprwhspr::hyprwhspr_record_status,
+        snippets::get_snippets,
+        snippets::get_snippet_by_id,
+        snippets::create_snippet,
+        snippets::update_snippet,
+        snippets::delete_snippet,
+        snippets::set_snippet_enabled,
+        snippets::increment_snippet_copied_count,
+        snippets::get_snippet_runtime_settings,
+        snippets::update_snippet_runtime_settings,
         script_commands::get_script_commands_directory,
         script_commands::get_script_commands,
         script_commands::create_script_command,

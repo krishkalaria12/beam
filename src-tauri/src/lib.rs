@@ -17,6 +17,7 @@ pub mod quicklinks;
 pub mod script_commands;
 pub mod search;
 pub mod settings;
+pub mod snippets;
 pub mod spotify;
 pub mod state;
 pub mod system_actions;
@@ -154,6 +155,7 @@ pub fn run() {
 
             hotkeys::initialize_hotkey_backend(&app.handle());
             todo::db::init(&app.handle());
+            snippets::db::init(&app.handle());
             extensions::browser_extension::start_bridge_server(&app.handle());
 
             Ok(())

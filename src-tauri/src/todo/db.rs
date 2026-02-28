@@ -1,13 +1,12 @@
-use std::fs;
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode, SqlitePoolOptions, SqliteSynchronous};
 use sqlx::SqlitePool;
-use tauri::{AppHandle, Manager};
+use tauri::AppHandle;
 use tokio::sync::OnceCell;
 
 use crate::config::config;
+use crate::utils::sqlite::{create_sqlite_pool, get_app_database_path};
 
 use super::error::{Result, TodoError};
 
@@ -35,23 +34,12 @@ pub async fn get_todo_pool(app: &AppHandle) -> Result<TodoDbPool> {
     let pool = TODO_POOL
         .get_or_try_init(|| async move {
             let database_path = get_todo_database_path(&app_handle)?;
-            if let Some(parent_dir) = database_path.parent() {
-                fs::create_dir_all(parent_dir)
-                    .map_err(|error| TodoError::CreateDirectory(error.to_string()))?;
-            }
-
-            let connect_options = SqliteConnectOptions::new()
-                .filename(&database_path)
-                .create_if_missing(true)
-                .foreign_keys(true)
-                .journal_mode(SqliteJournalMode::Wal)
-                .synchronous(SqliteSynchronous::Normal);
-
-            let pool = SqlitePoolOptions::new()
-                .max_connections(5)
-                .connect_with(connect_options)
-                .await
-                .map_err(|error| TodoError::DatabaseConnection(error.to_string()))?;
+            let pool = create_sqlite_pool(
+                &database_path,
+                |error| TodoError::CreateDirectory(error.to_string()),
+                |error| TodoError::DatabaseConnection(error.to_string()),
+            )
+            .await?;
 
             ensure_todo_schema(&pool).await?;
 
@@ -63,14 +51,12 @@ pub async fn get_todo_pool(app: &AppHandle) -> Result<TodoDbPool> {
 }
 
 pub fn get_todo_database_path(app: &AppHandle) -> Result<PathBuf> {
-    let app_local_data_dir = app
-        .path()
-        .app_local_data_dir()
-        .map_err(|_| TodoError::AppDataDirUnavailable)?;
-
-    Ok(app_local_data_dir
-        .join(config().TODO_DIRECTORY)
-        .join(config().TODO_DATABASE_FILE))
+    get_app_database_path(
+        app,
+        config().TODO_DIRECTORY,
+        config().TODO_DATABASE_FILE,
+        || TodoError::AppDataDirUnavailable,
+    )
 }
 
 async fn ensure_todo_schema(pool: &SqlitePool) -> Result<()> {
