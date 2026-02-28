@@ -43,10 +43,7 @@ import { ExtensionToastBridge } from "@/modules/extensions/components/extension-
 import { useExtensionRuntimeStore } from "@/modules/extensions/runtime/store";
 import { findQuicklinkByKeyword } from "@/modules/quicklinks/api/quicklinks";
 import { useQuicklinks } from "@/modules/quicklinks/hooks/use-quicklinks";
-import {
-  HOTKEY_BACKEND_STATUS_EVENT,
-  HOTKEY_COMMAND_EVENT,
-} from "@/modules/settings/api/hotkeys";
+import { HOTKEY_BACKEND_STATUS_EVENT, HOTKEY_COMMAND_EVENT } from "@/modules/settings/api/hotkeys";
 import { useUiLayout } from "@/modules/settings/hooks/use-ui-layout";
 import { useAwakeStore } from "@/modules/system-actions/store/awake-store";
 import {
@@ -212,12 +209,9 @@ export default function LauncherCommand() {
         calculatorSessionId,
         setCommandSearch,
         runExtensionCommand: async (request: CustomActionRequest) => {
-          const pluginPath = typeof request.payload.pluginPath === "string"
-            ? request.payload.pluginPath.trim()
-            : "";
-          const pluginMode = request.payload.pluginMode === "no-view"
-            ? "no-view"
-            : "view";
+          const pluginPath =
+            typeof request.payload.pluginPath === "string" ? request.payload.pluginPath.trim() : "";
+          const pluginMode = request.payload.pluginMode === "no-view" ? "no-view" : "view";
 
           if (!pluginPath) {
             throw new Error("Extension command payload is missing pluginPath.");
@@ -255,93 +249,93 @@ export default function LauncherCommand() {
     [backToCommands, calculatorSessionId, openPanel, queryClient, setCommandSearch],
   );
 
-  const handleRegistryCommandSelect = useCallback(async (
-    commandId: string,
-    fallbackCommand?: CommandDescriptor,
-  ) => {
-    const selectedDynamicCommand =
-      rankedRegistryCommands.find((entry) => entry.command.id === commandId)?.command ??
-      fallbackCommand;
-    const registry = staticCommandRegistry.has(commandId)
-      ? staticCommandRegistry
-      : selectedDynamicCommand
-        ? createStaticCommandRegistryStore([selectedDynamicCommand])
-        : staticCommandRegistry;
+  const handleRegistryCommandSelect = useCallback(
+    async (commandId: string, fallbackCommand?: CommandDescriptor) => {
+      const selectedDynamicCommand =
+        rankedRegistryCommands.find((entry) => entry.command.id === commandId)?.command ??
+        fallbackCommand;
+      const registry = staticCommandRegistry.has(commandId)
+        ? staticCommandRegistry
+        : selectedDynamicCommand
+          ? createStaticCommandRegistryStore([selectedDynamicCommand])
+          : staticCommandRegistry;
 
-    const result = await dispatchCommand(commandId, {
-      query: commandContext.query,
-      mode: commandContext.mode,
-      isDesktopRuntime: commandContext.isDesktopRuntime,
-      registry,
-      runtime: {
-        setActivePanel,
-        setCommandSearch,
-        setQuicklinksView,
-        setFileSearchQuery,
-        setDictionaryQuery,
-        setTranslationQuery,
-        setSpotifyQuery,
-        customActionHandler,
-      },
-    });
-
-    if (!result.ok) {
-      if (commandId === "system.awake") {
-        toast.error(result.message || "Failed to toggle keep awake");
-      }
-      logDispatchFailure(commandId, result, {
-        mode: commandContext.mode,
-        activePanel: commandContext.activePanel,
+      const result = await dispatchCommand(commandId, {
         query: commandContext.query,
+        mode: commandContext.mode,
+        isDesktopRuntime: commandContext.isDesktopRuntime,
+        registry,
+        runtime: {
+          setActivePanel,
+          setCommandSearch,
+          setQuicklinksView,
+          setFileSearchQuery,
+          setDictionaryQuery,
+          setTranslationQuery,
+          setSpotifyQuery,
+          customActionHandler,
+        },
       });
-      return;
-    }
 
-    if (commandId === "system.awake") {
-      const isAwake = result.payload?.isAwake;
-      if (typeof isAwake === "boolean") {
-        useAwakeStore.getState().setAwake(isAwake);
-        toast(isAwake ? "Keep awake enabled" : "Keep awake disabled");
-      } else {
-        void useAwakeStore.getState().fetchStatus();
+      if (!result.ok) {
+        if (commandId === "system.awake") {
+          toast.error(result.message || "Failed to toggle keep awake");
+        }
+        logDispatchFailure(commandId, result, {
+          mode: commandContext.mode,
+          activePanel: commandContext.activePanel,
+          query: commandContext.query,
+        });
+        return;
       }
-    }
 
-    markUsed(commandId);
-  }, [
-    commandContext,
-    customActionHandler,
-    markUsed,
-    rankedRegistryCommands,
-    setActivePanel,
-    setCommandSearch,
-    setDictionaryQuery,
-    setFileSearchQuery,
-    setQuicklinksView,
-    setSpotifyQuery,
-    setTranslationQuery,
-  ]);
+      if (commandId === "system.awake") {
+        const isAwake = result.payload?.isAwake;
+        if (typeof isAwake === "boolean") {
+          useAwakeStore.getState().setAwake(isAwake);
+          toast(isAwake ? "Keep awake enabled" : "Keep awake disabled");
+        } else {
+          void useAwakeStore.getState().fetchStatus();
+        }
+      }
 
-  const handleQuicklinkExecute = useCallback(async (
-    keyword: string = quicklinkKeyword,
-    query: string = quicklinkQuery,
-  ) => {
-    const quicklink = findQuicklinkByKeyword(quicklinks, keyword);
-    if (!quicklink) {
-      return;
-    }
+      markUsed(commandId);
+    },
+    [
+      commandContext,
+      customActionHandler,
+      markUsed,
+      rankedRegistryCommands,
+      setActivePanel,
+      setCommandSearch,
+      setDictionaryQuery,
+      setFileSearchQuery,
+      setQuicklinksView,
+      setSpotifyQuery,
+      setTranslationQuery,
+    ],
+  );
 
-    const fallbackCommand = createQuicklinkExecuteCommandDescriptor({
-      keyword: quicklink.keyword,
-      query,
-      name: quicklink.name,
-    });
+  const handleQuicklinkExecute = useCallback(
+    async (keyword: string = quicklinkKeyword, query: string = quicklinkQuery) => {
+      const quicklink = findQuicklinkByKeyword(quicklinks, keyword);
+      if (!quicklink) {
+        return;
+      }
 
-    await handleRegistryCommandSelect(
-      toQuicklinkExecuteCommandId(quicklink.keyword),
-      fallbackCommand,
-    );
-  }, [handleRegistryCommandSelect, quicklinkKeyword, quicklinkQuery, quicklinks]);
+      const fallbackCommand = createQuicklinkExecuteCommandDescriptor({
+        keyword: quicklink.keyword,
+        query,
+        name: quicklink.name,
+      });
+
+      await handleRegistryCommandSelect(
+        toQuicklinkExecuteCommandId(quicklink.keyword),
+        fallbackCommand,
+      );
+    },
+    [handleRegistryCommandSelect, quicklinkKeyword, quicklinkQuery, quicklinks],
+  );
 
   const rankedCommandsRef = useRef(rankedRegistryCommands);
   const handleRegistryCommandSelectRef = useRef(handleRegistryCommandSelect);
@@ -362,15 +356,15 @@ export default function LauncherCommand() {
     let unlistenFn: UnlistenFn | null = null;
 
     listen<HotkeyCommandEventPayload>(HOTKEY_COMMAND_EVENT, (event) => {
-      const commandId = typeof event.payload?.command_id === "string"
-        ? event.payload.command_id.trim()
-        : "";
+      const commandId =
+        typeof event.payload?.command_id === "string" ? event.payload.command_id.trim() : "";
       if (!commandId) {
         return;
       }
 
-      const dynamicFallback =
-        rankedCommandsRef.current.find((entry) => entry.command.id === commandId)?.command;
+      const dynamicFallback = rankedCommandsRef.current.find(
+        (entry) => entry.command.id === commandId,
+      )?.command;
 
       if (!dynamicFallback && !staticCommandRegistry.has(commandId)) {
         toast.error(`Hotkey command not available: ${commandId}`);
@@ -399,12 +393,9 @@ export default function LauncherCommand() {
     let unlistenFn: UnlistenFn | null = null;
 
     listen<HotkeyBackendStatusEventPayload>(HOTKEY_BACKEND_STATUS_EVENT, (event) => {
-      const message = typeof event.payload?.message === "string"
-        ? event.payload.message.trim()
-        : "";
-      const hint = typeof event.payload?.hint === "string"
-        ? event.payload.hint.trim()
-        : "";
+      const message =
+        typeof event.payload?.message === "string" ? event.payload.message.trim() : "";
+      const hint = typeof event.payload?.hint === "string" ? event.payload.hint.trim() : "";
       if (!message) {
         return;
       }
@@ -574,6 +565,9 @@ export default function LauncherCommand() {
             }}
             openTodo={() => {
               openPanel("todo", true);
+            }}
+            openSnippets={() => {
+              openPanel("snippets", true);
             }}
             openExtensions={() => {
               openPanel("extensions", true);

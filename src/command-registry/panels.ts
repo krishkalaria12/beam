@@ -1,6 +1,7 @@
 export const COMMAND_PANELS = {
   COMMANDS: "commands",
   TODO: "todo",
+  SNIPPETS: "snippets",
   CLIPBOARD: "clipboard",
   EMOJI: "emoji",
   SETTINGS: "settings",
@@ -18,26 +19,19 @@ export const COMMAND_PANELS = {
   EXTENSION_RUNNER: "extension-runner",
 } as const;
 
-export type CommandPanelValue =
-  (typeof COMMAND_PANELS)[keyof typeof COMMAND_PANELS];
+export type CommandPanelValue = (typeof COMMAND_PANELS)[keyof typeof COMMAND_PANELS];
 
-export const COMMAND_PANEL_VALUES = Object.values(
-  COMMAND_PANELS,
-) as readonly CommandPanelValue[];
+export const COMMAND_PANEL_VALUES = Object.values(COMMAND_PANELS) as readonly CommandPanelValue[];
 
-const COMMAND_PANEL_SET: ReadonlySet<CommandPanelValue> = new Set(
-  COMMAND_PANEL_VALUES,
-);
+const COMMAND_PANEL_SET: ReadonlySet<CommandPanelValue> = new Set(COMMAND_PANEL_VALUES);
 
 export function isCommandPanel(value: unknown): value is CommandPanelValue {
-  return (
-    typeof value === "string" &&
-    COMMAND_PANEL_SET.has(value as CommandPanelValue)
-  );
+  return typeof value === "string" && COMMAND_PANEL_SET.has(value as CommandPanelValue);
 }
 
 export const TAKEOVER_COMMAND_PANELS = [
   COMMAND_PANELS.TODO,
+  COMMAND_PANELS.SNIPPETS,
   COMMAND_PANELS.FILE_SEARCH,
   COMMAND_PANELS.DICTIONARY,
   COMMAND_PANELS.TRANSLATION,
@@ -53,4 +47,3 @@ export const TAKEOVER_COMMAND_PANELS = [
 ] as const;
 
 export type TakeoverCommandPanel = (typeof TAKEOVER_COMMAND_PANELS)[number];
-

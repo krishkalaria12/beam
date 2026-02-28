@@ -131,6 +131,7 @@ const LUCIDE_ICON_BY_TOKEN: Record<string, LucideIcon> = {
   refresh: RefreshCw,
   search: Search,
   settings: Settings,
+  snippets: FileText,
   smile: Smile,
   sparkles: Sparkles,
   speedtest: Gauge,
@@ -167,6 +168,7 @@ const COMMAND_TONE_SPEC_BY_TOKEN: Record<string, CommandToneSpec> = {
   quicklinkcreate: { icon: Plus, tone: "primary" },
   quicklinkmanage: { icon: Link2, tone: "neutral" },
   search: { icon: Search, tone: "neutral" },
+  snippets: { icon: FileText, tone: "primary" },
   speedtest: { icon: Gauge, tone: "cyan" },
   spotify: { icon: Music, tone: "primary" },
   theme: { icon: Smile, tone: "neutral" },
@@ -199,7 +201,9 @@ export function resolveCommandToneSpec(value: string): CommandToneSpec | null {
   return COMMAND_TONE_SPEC_BY_TOKEN[token] ?? null;
 }
 
-export function resolveCommandToneSpecByCommandId(commandId: string | undefined): CommandToneSpec | null {
+export function resolveCommandToneSpecByCommandId(
+  commandId: string | undefined,
+): CommandToneSpec | null {
   if (!commandId) {
     return null;
   }

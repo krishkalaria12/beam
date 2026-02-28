@@ -1,39 +1,55 @@
 import { lazy, Suspense, type ReactNode } from "react";
 
-import {
-  COMMAND_PANELS,
-  TAKEOVER_COMMAND_PANELS,
-} from "@/command-registry/panels";
+import { COMMAND_PANELS, TAKEOVER_COMMAND_PANELS } from "@/command-registry/panels";
 import type { CommandPanel } from "@/command-registry/types";
 import { CommandLoadingState } from "@/components/command/command-loading-state";
 import { LauncherTakeoverSurface } from "@/modules/launcher/components/launcher-takeover-surface";
 
 import type { QuicklinksView } from "@/store/use-launcher-ui-store";
 
-const ClipboardCommandGroup = lazy(() => import("@/modules/clipboard/components/clipboard-command-group"));
-const TodoCommandGroup = lazy(() => import("@/modules/todo/components/todo-command-group"));
-const DictionaryCommandGroup = lazy(() => import("@/modules/dictionary/components/dictionary-command-group"));
-const FileSearchCommandGroup = lazy(() => import("@/modules/file-search/components/file-search-command-group"));
-const QuicklinksCommandGroup = lazy(() => import("@/modules/quicklinks/components/quicklinks-command-group"));
-const SpeedTestCommandGroup = lazy(() => import("@/modules/speed-test/components/speed-test-command-group"));
-const TranslationCommandGroup = lazy(() => import("@/modules/translation/components/translation-command-group"));
-const SpotifyCommandGroup = lazy(() => import("@/modules/spotify/components/spotify-command-group"));
-const ExtensionsCommandGroup = lazy(() => import("@/modules/extensions/components/extensions-command-group"));
-const WindowSwitcherCommandGroup = lazy(() =>
-  import("@/modules/window-switcher/components/window-switcher-command-group")
+const ClipboardCommandGroup = lazy(
+  () => import("@/modules/clipboard/components/clipboard-command-group"),
 );
-const ScriptCommandsCommandGroup = lazy(() =>
-  import("@/modules/script-commands/components/script-commands-command-group")
+const TodoCommandGroup = lazy(() => import("@/modules/todo/components/todo-command-group"));
+const SnippetsCommandGroup = lazy(
+  () => import("@/modules/snippets/components/snippets-command-group"),
+);
+const DictionaryCommandGroup = lazy(
+  () => import("@/modules/dictionary/components/dictionary-command-group"),
+);
+const FileSearchCommandGroup = lazy(
+  () => import("@/modules/file-search/components/file-search-command-group"),
+);
+const QuicklinksCommandGroup = lazy(
+  () => import("@/modules/quicklinks/components/quicklinks-command-group"),
+);
+const SpeedTestCommandGroup = lazy(
+  () => import("@/modules/speed-test/components/speed-test-command-group"),
+);
+const TranslationCommandGroup = lazy(
+  () => import("@/modules/translation/components/translation-command-group"),
+);
+const SpotifyCommandGroup = lazy(
+  () => import("@/modules/spotify/components/spotify-command-group"),
+);
+const ExtensionsCommandGroup = lazy(
+  () => import("@/modules/extensions/components/extensions-command-group"),
+);
+const WindowSwitcherCommandGroup = lazy(
+  () => import("@/modules/window-switcher/components/window-switcher-command-group"),
+);
+const ScriptCommandsCommandGroup = lazy(
+  () => import("@/modules/script-commands/components/script-commands-command-group"),
 );
 const HyprWhsprView = lazy(() =>
   import("@/modules/hyprwhspr/components/hyprwhspr-view").then((mod) => ({
     default: mod.HyprWhsprView,
-  }))
+  })),
 );
 const ExtensionRunnerView = lazy(() =>
   import("@/modules/extensions/components/extension-runner-view").then((mod) => ({
     default: mod.ExtensionRunnerView,
-  }))
+  })),
 );
 
 type TakeoverPanel = (typeof TAKEOVER_COMMAND_PANELS)[number];
@@ -57,6 +73,7 @@ interface TakeoverPanelRendererInput {
   openSpeedTest: () => void;
   openClipboard: () => void;
   openTodo: () => void;
+  openSnippets: () => void;
   openExtensions: () => void;
   openScriptCommands: () => void;
   backToCommands: () => void;
@@ -90,6 +107,7 @@ export function LauncherTakeoverPanel({
   openSpeedTest,
   openClipboard,
   openTodo,
+  openSnippets,
   openExtensions,
   openScriptCommands,
   backToCommands,
@@ -101,13 +119,9 @@ export function LauncherTakeoverPanel({
   let content: ReactNode = null;
 
   if (activePanel === COMMAND_PANELS.TODO) {
-    content = (
-      <TodoCommandGroup
-        isOpen
-        onOpen={openTodo}
-        onBack={backToCommands}
-      />
-    );
+    content = <TodoCommandGroup isOpen onOpen={openTodo} onBack={backToCommands} />;
+  } else if (activePanel === COMMAND_PANELS.SNIPPETS) {
+    content = <SnippetsCommandGroup isOpen onOpen={openSnippets} onBack={backToCommands} />;
   } else if (activePanel === COMMAND_PANELS.FILE_SEARCH) {
     content = (
       <FileSearchCommandGroup
@@ -155,43 +169,16 @@ export function LauncherTakeoverPanel({
       />
     );
   } else if (activePanel === COMMAND_PANELS.SPEED_TEST) {
-    content = (
-      <SpeedTestCommandGroup
-        isOpen
-        onOpen={openSpeedTest}
-        onBack={backToCommands}
-      />
-    );
+    content = <SpeedTestCommandGroup isOpen onOpen={openSpeedTest} onBack={backToCommands} />;
   } else if (activePanel === COMMAND_PANELS.CLIPBOARD) {
-    content = (
-      <ClipboardCommandGroup
-        isOpen
-        onOpen={openClipboard}
-        onBack={backToCommands}
-      />
-    );
+    content = <ClipboardCommandGroup isOpen onOpen={openClipboard} onBack={backToCommands} />;
   } else if (activePanel === COMMAND_PANELS.EXTENSIONS) {
-    content = (
-      <ExtensionsCommandGroup
-        isOpen
-        onOpen={openExtensions}
-        onBack={backToCommands}
-      />
-    );
+    content = <ExtensionsCommandGroup isOpen onOpen={openExtensions} onBack={backToCommands} />;
   } else if (activePanel === COMMAND_PANELS.WINDOW_SWITCHER) {
-    content = (
-      <WindowSwitcherCommandGroup
-        isOpen
-        onBack={backToCommands}
-      />
-    );
+    content = <WindowSwitcherCommandGroup isOpen onBack={backToCommands} />;
   } else if (activePanel === COMMAND_PANELS.SCRIPT_COMMANDS) {
     content = (
-      <ScriptCommandsCommandGroup
-        isOpen
-        onOpen={openScriptCommands}
-        onBack={backToCommands}
-      />
+      <ScriptCommandsCommandGroup isOpen onOpen={openScriptCommands} onBack={backToCommands} />
     );
   } else if (activePanel === COMMAND_PANELS.HYPRWHSPR) {
     content = (
@@ -202,17 +189,10 @@ export function LauncherTakeoverPanel({
   } else if (activePanel === COMMAND_PANELS.EXTENSION_RUNNER) {
     content = (
       <LauncherTakeoverSurface>
-        <ExtensionRunnerView
-          onBack={backToCommands}
-          onOpenExtensions={openExtensions}
-        />
+        <ExtensionRunnerView onBack={backToCommands} onOpenExtensions={openExtensions} />
       </LauncherTakeoverSurface>
     );
   }
 
-  return (
-    <Suspense fallback={<TakeoverPanelFallback />}>
-      {content}
-    </Suspense>
-  );
+  return <Suspense fallback={<TakeoverPanelFallback />}>{content}</Suspense>;
 }

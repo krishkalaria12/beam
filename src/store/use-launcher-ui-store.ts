@@ -6,6 +6,7 @@ export type QuicklinksView = "create" | "manage";
 
 const TAKEOVER_PANELS = new Set<CommandPanel>([
   "todo",
+  "snippets",
   "file-search",
   "dictionary",
   "translation",
@@ -20,15 +21,9 @@ const TAKEOVER_PANELS = new Set<CommandPanel>([
   "extension-runner",
 ]);
 
-const INPUT_HIDDEN_PANELS = new Set<CommandPanel>([
-  ...TAKEOVER_PANELS,
-  "emoji",
-]);
+const INPUT_HIDDEN_PANELS = new Set<CommandPanel>([...TAKEOVER_PANELS, "emoji"]);
 
-const FOOTER_HIDDEN_PANELS = new Set<CommandPanel>([
-  ...TAKEOVER_PANELS,
-  "emoji",
-]);
+const FOOTER_HIDDEN_PANELS = new Set<CommandPanel>([...TAKEOVER_PANELS, "emoji"]);
 
 export interface LauncherUiState {
   commandSearch: string;
