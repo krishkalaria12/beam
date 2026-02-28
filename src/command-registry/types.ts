@@ -52,6 +52,7 @@ export type CommandPanel =
   | "translation"
   | "spotify"
   | "extensions"
+  | "window-switcher"
   | "hyprwhspr"
   | "script-commands"
   | "extension-runner";

@@ -252,6 +252,27 @@ export const STATIC_COMMANDS: CommandDescriptor[] = [
     },
   },
   {
+    id: "window_switcher.panel.open",
+    title: "focus open windows",
+    subtitle: "Window Switcher",
+    keywords: [
+      "window",
+      "windows",
+      "window switcher",
+      "focus window",
+      "switch window",
+      "app window",
+    ],
+    endText: "focus",
+    icon: "appwindowgrid2x2",
+    kind: "panel",
+    scope: SCOPE_NORMAL_COMPRESSED,
+    action: {
+      type: "OPEN_PANEL",
+      payload: { panel: "window-switcher" },
+    },
+  },
+  {
     id: "translation.panel.open",
     title: "translate text",
     keywords: ["translate", "translation", "language", "convert text"],

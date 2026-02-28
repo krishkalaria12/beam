@@ -14,6 +14,7 @@ const TAKEOVER_PANELS = new Set<CommandPanel>([
   "speed-test",
   "clipboard",
   "extensions",
+  "window-switcher",
   "hyprwhspr",
   "script-commands",
   "extension-runner",

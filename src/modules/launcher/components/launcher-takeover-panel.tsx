@@ -15,6 +15,9 @@ const SpeedTestCommandGroup = lazy(() => import("@/modules/speed-test/components
 const TranslationCommandGroup = lazy(() => import("@/modules/translation/components/translation-command-group"));
 const SpotifyCommandGroup = lazy(() => import("@/modules/spotify/components/spotify-command-group"));
 const ExtensionsCommandGroup = lazy(() => import("@/modules/extensions/components/extensions-command-group"));
+const WindowSwitcherCommandGroup = lazy(() =>
+  import("@/modules/window-switcher/components/window-switcher-command-group")
+);
 const ScriptCommandsCommandGroup = lazy(() =>
   import("@/modules/script-commands/components/script-commands-command-group")
 );
@@ -39,6 +42,7 @@ const TAKEOVER_PANELS = [
   "speed-test",
   "clipboard",
   "extensions",
+  "window-switcher",
   "hyprwhspr",
   "script-commands",
   "extension-runner",
@@ -183,6 +187,13 @@ export function LauncherTakeoverPanel({
       <ExtensionsCommandGroup
         isOpen
         onOpen={openExtensions}
+        onBack={backToCommands}
+      />
+    );
+  } else if (activePanel === "window-switcher") {
+    content = (
+      <WindowSwitcherCommandGroup
+        isOpen
         onBack={backToCommands}
       />
     );

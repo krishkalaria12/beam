@@ -42,6 +42,7 @@ const VALID_PANELS: ReadonlySet<CommandPanel> = new Set([
   "translation",
   "spotify",
   "extensions",
+  "window-switcher",
   "hyprwhspr",
   "script-commands",
   "extension-runner",
