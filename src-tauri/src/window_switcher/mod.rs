@@ -1,14 +1,15 @@
+mod backends;
 mod error;
 
 #[cfg(target_os = "linux")]
-use hyprland::{
-    data::Clients,
-    dispatch::{Dispatch, DispatchType, WindowIdentifier as HyprIdentifier},
-    shared::{Address, HyprData as _},
-};
+use hyprland::shared::Address;
 use serde::{Deserialize, Serialize};
 use tauri::{command, State};
 
+use self::backends::{
+    close_hypr_window, close_sway_window, find_hypr_window, find_sway_window, focus_hypr_window,
+    focus_sway_window, list_hypr_windows, list_sway_windows,
+};
 use self::error::{Result, WindowSwitcherError};
 use crate::{applications::icon_resolver::IconResolver, state::AppState};
 
@@ -22,7 +23,22 @@ pub struct WindowEntry {
     pub is_focused: bool,
 }
 
-fn app_name_from_entry(state: &State<'_, AppState>, pid: u32, class_name: &str) -> String {
+#[cfg(target_os = "linux")]
+enum LinuxWindowTarget {
+    Hypr(Address),
+    Sway(i64),
+}
+
+#[cfg(target_os = "linux")]
+pub(super) const HYPR_WINDOW_ID_PREFIX: &str = "hypr:";
+#[cfg(target_os = "linux")]
+pub(super) const SWAY_WINDOW_ID_PREFIX: &str = "sway:";
+
+pub(super) fn app_name_from_entry(
+    state: &State<'_, AppState>,
+    pid: u32,
+    class_name: &str,
+) -> String {
     let process_name = state
         .process_cache
         .lock()
@@ -35,53 +51,8 @@ fn app_name_from_entry(state: &State<'_, AppState>, pid: u32, class_name: &str) 
     class_name.trim().to_string()
 }
 
-#[command]
-pub fn list_windows(state: State<'_, AppState>) -> Result<Vec<WindowEntry>> {
-    #[cfg(not(target_os = "linux"))]
-    {
-        return Err(WindowSwitcherError::UnsupportedPlatform);
-    }
-
-    #[cfg(target_os = "linux")]
-    {
-        let clients =
-            Clients::get().map_err(|e| WindowSwitcherError::ClientError(e.to_string()))?;
-        let mut windows: Vec<WindowEntry> = Vec::new();
-        let mut icon_resolver = IconResolver::new();
-
-        for entry in clients.iter() {
-            let id = entry.address.to_string();
-            let window_title = entry.title.trim();
-            let initial_title = entry.initial_title.trim();
-            let title = if !window_title.is_empty() {
-                window_title.to_string()
-            } else {
-                initial_title.to_string()
-            };
-            let class = entry.class.trim().to_string();
-            let workspace = entry.workspace.name.trim().to_string();
-            let is_focused = entry.focus_history_id == 0;
-            let pid = entry.pid as u32;
-
-            let app_name = app_name_from_entry(&state, pid, &class);
-            let app_icon = resolve_icon_path(&mut icon_resolver, &app_name, &class);
-
-            windows.push(WindowEntry {
-                id,
-                title,
-                app_name,
-                app_icon,
-                workspace,
-                is_focused,
-            });
-        }
-
-        Ok(windows)
-    }
-}
-
-fn resolve_icon_path(
-    icon_resolver: &mut crate::applications::icon_resolver::IconResolver,
+pub(super) fn resolve_icon_path(
+    icon_resolver: &mut IconResolver,
     app_name: &str,
     class_name: &str,
 ) -> String {
@@ -101,41 +72,76 @@ fn resolve_icon_path(
     String::new()
 }
 
-#[cfg(target_os = "linux")]
-fn find_client_by_address(address: &Address) -> Result<bool> {
-    let clients = Clients::get().map_err(|e| WindowSwitcherError::ClientError(e.to_string()))?;
-    Ok(clients.iter().any(|entry| entry.address == *address))
+#[command]
+pub fn list_windows(state: State<'_, AppState>) -> Result<Vec<WindowEntry>> {
+    #[cfg(not(target_os = "linux"))]
+    {
+        let _ = state;
+        return Err(WindowSwitcherError::UnsupportedPlatform);
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        let mut icon_resolver = IconResolver::new();
+        if let Ok(hypr_windows) = list_hypr_windows(&state, &mut icon_resolver) {
+            return Ok(hypr_windows);
+        }
+
+        list_sway_windows(&state, &mut icon_resolver)
+    }
 }
 
 #[cfg(target_os = "linux")]
-fn parse_window_address(window_id: &str) -> Result<Address> {
+fn parse_window_target(window_id: &str) -> Result<LinuxWindowTarget> {
     let normalized = window_id.trim();
     if normalized.is_empty() {
         return Err(WindowSwitcherError::InvalidWindowId);
     }
 
-    Ok(Address::new(normalized.to_string()))
+    if let Some(sway_id) = normalized.strip_prefix(SWAY_WINDOW_ID_PREFIX) {
+        let parsed_id = sway_id
+            .trim()
+            .parse::<i64>()
+            .map_err(|_| WindowSwitcherError::InvalidWindowId)?;
+        return Ok(LinuxWindowTarget::Sway(parsed_id));
+    }
+
+    if let Some(hypr_address) = normalized.strip_prefix(HYPR_WINDOW_ID_PREFIX) {
+        return Ok(LinuxWindowTarget::Hypr(Address::new(
+            hypr_address.trim().to_string(),
+        )));
+    }
+
+    Ok(LinuxWindowTarget::Hypr(Address::new(
+        normalized.to_string(),
+    )))
 }
 
 #[command]
 pub fn focus_window(window_id: String) -> Result<()> {
     #[cfg(not(target_os = "linux"))]
     {
+        let _ = window_id;
         return Err(WindowSwitcherError::UnsupportedPlatform);
     }
 
     #[cfg(target_os = "linux")]
     {
-        let address = parse_window_address(&window_id)?;
-        if !find_client_by_address(&address)? {
-            return Err(WindowSwitcherError::WindowNotFound(window_id));
+        match parse_window_target(&window_id)? {
+            LinuxWindowTarget::Hypr(address) => {
+                if !find_hypr_window(&address)? {
+                    return Err(WindowSwitcherError::WindowNotFound(window_id));
+                }
+
+                focus_hypr_window(address)
+            }
+            LinuxWindowTarget::Sway(con_id) => {
+                if !find_sway_window(con_id)? {
+                    return Err(WindowSwitcherError::WindowNotFound(window_id));
+                }
+                focus_sway_window(con_id)
+            }
         }
-
-        let hypr_identifier = HyprIdentifier::Address(address);
-        Dispatch::call(DispatchType::FocusWindow(hypr_identifier))
-            .map_err(|e| WindowSwitcherError::FocusingWindowError(e.to_string()))?;
-
-        Ok(())
     }
 }
 
@@ -143,19 +149,26 @@ pub fn focus_window(window_id: String) -> Result<()> {
 pub fn close_window(window_id: String) -> Result<()> {
     #[cfg(not(target_os = "linux"))]
     {
+        let _ = window_id;
         return Err(WindowSwitcherError::UnsupportedPlatform);
     }
 
     #[cfg(target_os = "linux")]
     {
-        let address = parse_window_address(&window_id)?;
-        if !find_client_by_address(&address)? {
-            return Err(WindowSwitcherError::WindowNotFound(window_id));
-        }
+        match parse_window_target(&window_id)? {
+            LinuxWindowTarget::Hypr(address) => {
+                if !find_hypr_window(&address)? {
+                    return Err(WindowSwitcherError::WindowNotFound(window_id));
+                }
 
-        let hypr_identifier = HyprIdentifier::Address(address);
-        Dispatch::call(DispatchType::CloseWindow(hypr_identifier))
-            .map_err(|e| WindowSwitcherError::ClosingWindowError(e.to_string()))?;
-        Ok(())
+                close_hypr_window(address)
+            }
+            LinuxWindowTarget::Sway(con_id) => {
+                if !find_sway_window(con_id)? {
+                    return Err(WindowSwitcherError::WindowNotFound(window_id));
+                }
+                close_sway_window(con_id)
+            }
+        }
     }
 }

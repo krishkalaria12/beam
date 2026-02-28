@@ -345,7 +345,11 @@ fn search_tabs_snapshot(query: &str) -> Vec<BridgeTabOutput> {
         .collect()
 }
 
-fn get_content_from_bridge(tab_id: Option<u64>, field: ContentField, selector: Option<&str>) -> Option<String> {
+fn get_content_from_bridge(
+    tab_id: Option<u64>,
+    field: ContentField,
+    selector: Option<&str>,
+) -> Option<String> {
     let mut state = BRIDGE_STATE.write();
     let now = Instant::now();
     prune_stale_clients(&mut state, now);
@@ -389,13 +393,19 @@ fn json_header(name: &[u8], value: &[u8]) -> Header {
 fn send_json_response(request: Request, status: u16, body: Value) {
     let mut response = Response::from_string(body.to_string())
         .with_status_code(StatusCode(status))
-        .with_header(json_header(b"Content-Type", b"application/json; charset=utf-8"));
+        .with_header(json_header(
+            b"Content-Type",
+            b"application/json; charset=utf-8",
+        ));
     response.add_header(json_header(b"Access-Control-Allow-Origin", b"*"));
     response.add_header(json_header(
         b"Access-Control-Allow-Methods",
         b"GET, POST, OPTIONS",
     ));
-    response.add_header(json_header(b"Access-Control-Allow-Headers", b"Content-Type"));
+    response.add_header(json_header(
+        b"Access-Control-Allow-Headers",
+        b"Content-Type",
+    ));
     response.add_header(json_header(b"Cache-Control", b"no-store"));
 
     let _ = request.respond(response);
@@ -408,7 +418,10 @@ fn send_empty_response(request: Request, status: u16) {
         b"Access-Control-Allow-Methods",
         b"GET, POST, OPTIONS",
     ));
-    response.add_header(json_header(b"Access-Control-Allow-Headers", b"Content-Type"));
+    response.add_header(json_header(
+        b"Access-Control-Allow-Headers",
+        b"Content-Type",
+    ));
     let _ = request.respond(response);
 }
 
@@ -454,24 +467,28 @@ fn handle_bridge_http_request(mut request: Request) {
                 }),
             );
         }
-        (Method::Post, "/bridge/connect") => match parse_json_body::<BridgeConnectPayload>(&mut request) {
-            Ok(payload) => {
-                set_client_connected(payload);
-                send_json_response(request, 200, json!({ "ok": true }));
+        (Method::Post, "/bridge/connect") => {
+            match parse_json_body::<BridgeConnectPayload>(&mut request) {
+                Ok(payload) => {
+                    set_client_connected(payload);
+                    send_json_response(request, 200, json!({ "ok": true }));
+                }
+                Err(error) => {
+                    send_json_response(request, 400, json!({ "ok": false, "error": error }));
+                }
             }
-            Err(error) => {
-                send_json_response(request, 400, json!({ "ok": false, "error": error }));
+        }
+        (Method::Post, "/bridge/tabs") => {
+            match parse_json_body::<BridgeTabsPayload>(&mut request) {
+                Ok(payload) => {
+                    upsert_tabs(payload);
+                    send_json_response(request, 200, json!({ "ok": true }));
+                }
+                Err(error) => {
+                    send_json_response(request, 400, json!({ "ok": false, "error": error }));
+                }
             }
-        },
-        (Method::Post, "/bridge/tabs") => match parse_json_body::<BridgeTabsPayload>(&mut request) {
-            Ok(payload) => {
-                upsert_tabs(payload);
-                send_json_response(request, 200, json!({ "ok": true }));
-            }
-            Err(error) => {
-                send_json_response(request, 400, json!({ "ok": false, "error": error }));
-            }
-        },
+        }
         _ => {
             send_json_response(
                 request,
@@ -537,9 +554,8 @@ pub async fn browser_extension_request(method: String, params: Value) -> Result<
                 return Err(ExtensionsError::BrowserExtensionUnavailable(method));
             }
 
-            let parsed: TabByIdParams = serde_json::from_value(params).unwrap_or(TabByIdParams {
-                tab_id: None,
-            });
+            let parsed: TabByIdParams =
+                serde_json::from_value(params).unwrap_or(TabByIdParams { tab_id: None });
             let Some(tab_id) = parsed.tab_id else {
                 return Err(ExtensionsError::Message(
                     "browser extension request requires tabId".to_string(),
@@ -576,7 +592,9 @@ pub async fn browser_extension_request(method: String, params: Value) -> Result<
                 return Err(ExtensionsError::BrowserExtensionUnavailable(method));
             }
 
-            if let Some(value) = get_content_from_bridge(parsed.tab_id, field, parsed.selector.as_deref()) {
+            if let Some(value) =
+                get_content_from_bridge(parsed.tab_id, field, parsed.selector.as_deref())
+            {
                 return Ok(json!({ "value": value }));
             }
 

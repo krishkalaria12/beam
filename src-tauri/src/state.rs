@@ -26,7 +26,8 @@ impl ProcessStateCache {
     }
 
     fn refresh_if_stale(&mut self) {
-        let refresh_interval = Duration::from_millis(config().WINDOW_SWITCHER_PROCESS_CACHE_REFRESH_MS);
+        let refresh_interval =
+            Duration::from_millis(config().WINDOW_SWITCHER_PROCESS_CACHE_REFRESH_MS);
         let should_refresh = self
             .last_refresh
             .map(|last| last.elapsed() >= refresh_interval)

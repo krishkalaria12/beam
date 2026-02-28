@@ -1,4 +1,4 @@
-use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
+use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine as _};
 use rand::RngCore;
 use reqwest::{Client, StatusCode};
 use serde::de::DeserializeOwned;
@@ -390,7 +390,9 @@ fn validate_search_request(request: SpotifySearchRequest) -> Result<ValidatedSea
         }
     }
 
-    let limit = request.limit.unwrap_or(config().SPOTIFY_SEARCH_DEFAULT_LIMIT);
+    let limit = request
+        .limit
+        .unwrap_or(config().SPOTIFY_SEARCH_DEFAULT_LIMIT);
     let limit = limit.clamp(1, config().SPOTIFY_SEARCH_MAX_LIMIT);
 
     let offset = request.offset.unwrap_or(0);
@@ -440,7 +442,10 @@ pub fn spotify_create_auth_session(
         query.append_pair("response_type", "code");
         query.append_pair("redirect_uri", &request.redirect_uri);
         query.append_pair("state", &request.state);
-        query.append_pair("code_challenge_method", config().SPOTIFY_PKCE_CHALLENGE_METHOD);
+        query.append_pair(
+            "code_challenge_method",
+            config().SPOTIFY_PKCE_CHALLENGE_METHOD,
+        );
         query.append_pair("code_challenge", &code_challenge);
 
         if !request.scopes.is_empty() {
@@ -538,7 +543,10 @@ pub async fn spotify_get_current_user(access_token: String) -> Result<Value> {
 
 pub async fn spotify_get_current_playback(access_token: String) -> Result<Option<Value>> {
     let access = validate_access_token(access_token)?;
-    let endpoint = build_endpoint(config().SPOTIFY_API_BASE_URL, config().SPOTIFY_PLAYER_ENDPOINT);
+    let endpoint = build_endpoint(
+        config().SPOTIFY_API_BASE_URL,
+        config().SPOTIFY_PLAYER_ENDPOINT,
+    );
 
     let client = build_http_client()?;
     let response = client
@@ -652,7 +660,8 @@ pub async fn spotify_search(request: SpotifySearchRequest) -> Result<Value> {
         config().SPOTIFY_SEARCH_ENDPOINT,
     );
 
-    let mut url = Url::parse(&endpoint).map_err(|error| SpotifyError::RequestError(error.to_string()))?;
+    let mut url =
+        Url::parse(&endpoint).map_err(|error| SpotifyError::RequestError(error.to_string()))?;
     {
         let mut query = url.query_pairs_mut();
         query.append_pair("q", &request.query);
