@@ -3,9 +3,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   createDefaultCommandPreferencesState,
+  replaceFallbackCommandIds,
   replacePinnedCommandIds,
   readCommandPreferences,
   recordCommandUsage,
+  setFallbackEnabled,
   setCommandAliases,
   setCommandFavorite,
   setCommandHidden,
@@ -183,6 +185,14 @@ export function useCommandPreferences() {
     updateState((previous) => setCommandHotkey(previous, commandId, hotkey));
   }, [updateState]);
 
+  const setFallbackActionsEnabled = useCallback((enabled: boolean) => {
+    updateState((previous) => setFallbackEnabled(previous, enabled));
+  }, [updateState]);
+
+  const setFallbackCommandIds = useCallback((fallbackCommandIds: readonly string[]) => {
+    updateState((previous) => replaceFallbackCommandIds(previous, fallbackCommandIds));
+  }, [updateState]);
+
   const rankingSignals = useMemo(() => toRankingSignals(state), [state]);
   const hiddenCommandIds = useMemo(() => toHiddenCommandIdSet(state), [state]);
 
@@ -197,6 +207,8 @@ export function useCommandPreferences() {
     setHidden,
     setAliases,
     setHotkey,
+    setFallbackActionsEnabled,
+    setFallbackCommandIds,
     reset,
   };
 }

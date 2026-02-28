@@ -11,6 +11,7 @@ import { SettingsMenu } from "./SettingsMenu";
 import { VisualStyleSettings } from "./VisualStyleSettings";
 import { LayoutSettings } from "./LayoutSettings";
 import { PinnedCommandsSettings } from "./PinnedCommandsSettings";
+import { FallbackActionsSettings } from "./FallbackActionsSettings";
 import HotkeysSettings from "./HotkeysSettings";
 import { TriggerSymbolsSettings } from "./TriggerSymbolsSettings";
 
@@ -21,6 +22,10 @@ type SettingsCommandGroupProps = {
   pinnedCommandIds: readonly string[];
   onSetPinned: (commandId: string, pinned: boolean) => void;
   onMovePinned: (commandId: string, direction: "up" | "down") => void;
+  fallbackEnabled: boolean;
+  fallbackCommandIds: readonly string[];
+  onSetFallbackEnabled: (enabled: boolean) => void;
+  onSetFallbackCommandIds: (fallbackCommandIds: readonly string[]) => void;
 };
 
 const SETTINGS_KEYWORDS = [
@@ -31,6 +36,8 @@ const SETTINGS_KEYWORDS = [
   "glassy",
   "pinned",
   "pin",
+  "fallback",
+  "no results",
   "hotkeys",
   "shortcuts",
   "wayland",
@@ -50,6 +57,10 @@ export default function SettingsCommandGroup({
   pinnedCommandIds,
   onSetPinned,
   onMovePinned,
+  fallbackEnabled,
+  fallbackCommandIds,
+  onSetFallbackEnabled,
+  onSetFallbackCommandIds,
 }: SettingsCommandGroupProps) {
   const searchInput = useCommandState((state) => state.search);
   const query = normalizeCommandQuery(searchInput);
@@ -97,6 +108,14 @@ export default function SettingsCommandGroup({
           pinnedCommandIds={pinnedCommandIds}
           onSetPinned={onSetPinned}
           onMovePinned={onMovePinned}
+        />
+      )}
+      {view === "fallback" && (
+        <FallbackActionsSettings
+          enabled={fallbackEnabled}
+          fallbackCommandIds={fallbackCommandIds}
+          onSetEnabled={onSetFallbackEnabled}
+          onSetFallbackCommandIds={onSetFallbackCommandIds}
         />
       )}
       {view === "hotkeys" && <HotkeysSettings />}

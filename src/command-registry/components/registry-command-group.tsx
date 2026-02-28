@@ -12,6 +12,7 @@ import { looksLikeCalculationQuery } from "@/modules/calculator/lib/query-match"
 
 type RegistryCommandGroupProps = {
   commands: readonly RankedCommand[];
+  fallbackCommands: readonly CommandDescriptor[];
   query: string;
   mode: CommandMode;
   onSelect: (commandId: string) => void;
@@ -22,6 +23,7 @@ type RegistryCommandGroupProps = {
 
 export default function RegistryCommandGroup({
   commands,
+  fallbackCommands,
   query,
   mode,
   onSelect,
@@ -184,7 +186,13 @@ export default function RegistryCommandGroup({
   }
 
   if (commands.length === 0) {
-    return null;
+    return fallbackCommands.length > 0
+      ? (
+        <CommandGroup heading="Fallback">
+          {fallbackCommands.map((command) => renderCommandRow(command))}
+        </CommandGroup>
+      )
+      : null;
   }
 
   return (
@@ -204,6 +212,11 @@ export default function RegistryCommandGroup({
           heading={pinned.length > 0 || recent.length > 0 ? "Other" : undefined}
         >
           {other.map((command) => renderCommandRow(command))}
+        </CommandGroup>
+      ) : null}
+      {fallbackCommands.length > 0 ? (
+        <CommandGroup heading="Fallback">
+          {fallbackCommands.map((command) => renderCommandRow(command))}
         </CommandGroup>
       ) : null}
     </>

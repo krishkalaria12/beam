@@ -6,6 +6,7 @@ import { getAwakeStatus, toggleAwake } from "@/modules/system-actions/api/toggle
 import type { SystemAction } from "@/modules/system-actions/types";
 
 import { isCommandMode } from "@/command-registry/modes";
+import { COMMAND_PANELS, isCommandPanel } from "@/command-registry/panels";
 import type { StaticCommandRegistry } from "@/command-registry/static-registry";
 import type {
   CommandDescriptor,
@@ -26,26 +27,6 @@ const SYSTEM_ACTION_ALLOWLIST: ReadonlySet<SystemAction> = new Set([
   "logout",
   "sleep",
   "hibernate",
-]);
-
-const VALID_PANELS: ReadonlySet<CommandPanel> = new Set([
-  "commands",
-  "todo",
-  "clipboard",
-  "emoji",
-  "settings",
-  "calculator-history",
-  "file-search",
-  "dictionary",
-  "quicklinks",
-  "speed-test",
-  "translation",
-  "spotify",
-  "extensions",
-  "window-switcher",
-  "hyprwhspr",
-  "script-commands",
-  "extension-runner",
 ]);
 
 export type DispatchErrorCode =
@@ -270,37 +251,37 @@ async function dispatchPanelAction(
   const payload = toPayloadRecord(command.action?.payload);
   const panel = getStringField(payload, "panel");
 
-  if (!panel || !VALID_PANELS.has(panel as CommandPanel)) {
+  if (!panel || !isCommandPanel(panel)) {
     return error("INVALID_INPUT", "Panel action is missing a valid target panel.");
   }
 
-  if (panel === "quicklinks") {
+  if (panel === COMMAND_PANELS.QUICKLINKS) {
     const view = getStringField(payload, "view");
     if (view === "create" || view === "manage") {
       context.runtime.setQuicklinksView(view);
     }
   }
 
-  if (panel === "file-search") {
+  if (panel === COMMAND_PANELS.FILE_SEARCH) {
     context.runtime.setFileSearchQuery(context.query);
   }
-  if (panel === "dictionary") {
+  if (panel === COMMAND_PANELS.DICTIONARY) {
     context.runtime.setDictionaryQuery(context.query);
   }
-  if (panel === "translation") {
+  if (panel === COMMAND_PANELS.TRANSLATION) {
     context.runtime.setTranslationQuery(context.query);
   }
-  if (panel === "spotify") {
+  if (panel === COMMAND_PANELS.SPOTIFY) {
     context.runtime.setSpotifyQuery(context.query);
   }
 
-  context.runtime.setActivePanel(panel as CommandPanel);
+  context.runtime.setActivePanel(panel);
 
   if (
-    panel !== "file-search" &&
-    panel !== "dictionary" &&
-    panel !== "translation" &&
-    panel !== "spotify"
+    panel !== COMMAND_PANELS.FILE_SEARCH &&
+    panel !== COMMAND_PANELS.DICTIONARY &&
+    panel !== COMMAND_PANELS.TRANSLATION &&
+    panel !== COMMAND_PANELS.SPOTIFY
   ) {
     context.runtime.setCommandSearch("");
   }

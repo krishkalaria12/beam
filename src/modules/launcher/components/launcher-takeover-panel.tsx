@@ -1,5 +1,9 @@
 import { lazy, Suspense, type ReactNode } from "react";
 
+import {
+  COMMAND_PANELS,
+  TAKEOVER_COMMAND_PANELS,
+} from "@/command-registry/panels";
 import type { CommandPanel } from "@/command-registry/types";
 import { CommandLoadingState } from "@/components/command/command-loading-state";
 import { LauncherTakeoverSurface } from "@/modules/launcher/components/launcher-takeover-surface";
@@ -32,26 +36,10 @@ const ExtensionRunnerView = lazy(() =>
   }))
 );
 
-const TAKEOVER_PANELS = [
-  "todo",
-  "file-search",
-  "dictionary",
-  "translation",
-  "spotify",
-  "quicklinks",
-  "speed-test",
-  "clipboard",
-  "extensions",
-  "window-switcher",
-  "hyprwhspr",
-  "script-commands",
-  "extension-runner",
-] as const;
-
-type TakeoverPanel = (typeof TAKEOVER_PANELS)[number];
+type TakeoverPanel = (typeof TAKEOVER_COMMAND_PANELS)[number];
 
 function isTakeoverPanel(panel: CommandPanel): panel is TakeoverPanel {
-  return (TAKEOVER_PANELS as readonly string[]).includes(panel);
+  return (TAKEOVER_COMMAND_PANELS as readonly string[]).includes(panel);
 }
 
 interface TakeoverPanelRendererInput {
@@ -112,7 +100,7 @@ export function LauncherTakeoverPanel({
 
   let content: ReactNode = null;
 
-  if (activePanel === "todo") {
+  if (activePanel === COMMAND_PANELS.TODO) {
     content = (
       <TodoCommandGroup
         isOpen
@@ -120,7 +108,7 @@ export function LauncherTakeoverPanel({
         onBack={backToCommands}
       />
     );
-  } else if (activePanel === "file-search") {
+  } else if (activePanel === COMMAND_PANELS.FILE_SEARCH) {
     content = (
       <FileSearchCommandGroup
         isOpen
@@ -129,7 +117,7 @@ export function LauncherTakeoverPanel({
         onBack={backToCommands}
       />
     );
-  } else if (activePanel === "dictionary") {
+  } else if (activePanel === COMMAND_PANELS.DICTIONARY) {
     content = (
       <DictionaryCommandGroup
         isOpen
@@ -138,7 +126,7 @@ export function LauncherTakeoverPanel({
         onBack={backToCommands}
       />
     );
-  } else if (activePanel === "translation") {
+  } else if (activePanel === COMMAND_PANELS.TRANSLATION) {
     content = (
       <TranslationCommandGroup
         isOpen
@@ -147,7 +135,7 @@ export function LauncherTakeoverPanel({
         onBack={backToCommands}
       />
     );
-  } else if (activePanel === "spotify") {
+  } else if (activePanel === COMMAND_PANELS.SPOTIFY) {
     content = (
       <SpotifyCommandGroup
         isOpen
@@ -156,7 +144,7 @@ export function LauncherTakeoverPanel({
         onBack={backToCommands}
       />
     );
-  } else if (activePanel === "quicklinks") {
+  } else if (activePanel === COMMAND_PANELS.QUICKLINKS) {
     content = (
       <QuicklinksCommandGroup
         isOpen
@@ -166,7 +154,7 @@ export function LauncherTakeoverPanel({
         onBack={backToCommands}
       />
     );
-  } else if (activePanel === "speed-test") {
+  } else if (activePanel === COMMAND_PANELS.SPEED_TEST) {
     content = (
       <SpeedTestCommandGroup
         isOpen
@@ -174,7 +162,7 @@ export function LauncherTakeoverPanel({
         onBack={backToCommands}
       />
     );
-  } else if (activePanel === "clipboard") {
+  } else if (activePanel === COMMAND_PANELS.CLIPBOARD) {
     content = (
       <ClipboardCommandGroup
         isOpen
@@ -182,7 +170,7 @@ export function LauncherTakeoverPanel({
         onBack={backToCommands}
       />
     );
-  } else if (activePanel === "extensions") {
+  } else if (activePanel === COMMAND_PANELS.EXTENSIONS) {
     content = (
       <ExtensionsCommandGroup
         isOpen
@@ -190,14 +178,14 @@ export function LauncherTakeoverPanel({
         onBack={backToCommands}
       />
     );
-  } else if (activePanel === "window-switcher") {
+  } else if (activePanel === COMMAND_PANELS.WINDOW_SWITCHER) {
     content = (
       <WindowSwitcherCommandGroup
         isOpen
         onBack={backToCommands}
       />
     );
-  } else if (activePanel === "script-commands") {
+  } else if (activePanel === COMMAND_PANELS.SCRIPT_COMMANDS) {
     content = (
       <ScriptCommandsCommandGroup
         isOpen
@@ -205,13 +193,13 @@ export function LauncherTakeoverPanel({
         onBack={backToCommands}
       />
     );
-  } else if (activePanel === "hyprwhspr") {
+  } else if (activePanel === COMMAND_PANELS.HYPRWHSPR) {
     content = (
       <LauncherTakeoverSurface>
         <HyprWhsprView onBack={backToCommands} />
       </LauncherTakeoverSurface>
     );
-  } else if (activePanel === "extension-runner") {
+  } else if (activePanel === COMMAND_PANELS.EXTENSION_RUNNER) {
     content = (
       <LauncherTakeoverSurface>
         <ExtensionRunnerView

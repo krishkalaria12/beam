@@ -128,6 +128,8 @@ export default function LauncherCommand() {
     markUsed,
     setPinned,
     movePinned,
+    setFallbackActionsEnabled,
+    setFallbackCommandIds,
   } = useCommandPreferences();
   useLauncherDeepLinks({ openPanel, backToCommands });
   useExtensionSidecarEvents({ backToCommands });
@@ -152,10 +154,12 @@ export default function LauncherCommand() {
     ? findQuicklinkByKeyword(quicklinks, quicklinkKeyword)
     : undefined;
 
-  const { rankedRegistryCommands } = useRankedRegistryCommands({
+  const { rankedRegistryCommands, fallbackRegistryCommands } = useRankedRegistryCommands({
     commandContext,
     hiddenCommandIds,
     rankingSignals,
+    fallbackEnabled: commandPreferences.fallbackEnabled,
+    fallbackCommandIds: commandPreferences.fallbackCommandIds,
   });
 
   useEffect(() => {
@@ -597,6 +601,7 @@ export default function LauncherCommand() {
                 quicklinkKeyword={quicklinkKeyword}
                 quicklinkQuery={quicklinkQuery}
                 rankedRegistryCommands={rankedRegistryCommands}
+                fallbackRegistryCommands={fallbackRegistryCommands}
                 pinnedCommandIds={commandPreferences.pinnedCommandIds}
                 usageById={commandPreferences.usageById}
                 commandContext={commandContext}
@@ -627,8 +632,12 @@ export default function LauncherCommand() {
               }}
               onBack={backToCommands}
               pinnedCommandIds={commandPreferences.pinnedCommandIds}
+              fallbackEnabled={commandPreferences.fallbackEnabled}
+              fallbackCommandIds={commandPreferences.fallbackCommandIds}
               onSetPinned={setPinned}
               onMovePinned={movePinned}
+              onSetFallbackEnabled={setFallbackActionsEnabled}
+              onSetFallbackCommandIds={setFallbackCommandIds}
             />
           </CommandList>
         )}

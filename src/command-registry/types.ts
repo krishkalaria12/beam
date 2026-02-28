@@ -1,4 +1,5 @@
 import type { CommandModeValue, CommandScopeValue } from "@/command-registry/modes";
+import type { CommandPanelValue } from "@/command-registry/panels";
 
 export type CommandScope = CommandScopeValue;
 
@@ -38,24 +39,7 @@ export interface CommandDescriptor {
 
 export type CommandMode = CommandModeValue;
 
-export type CommandPanel =
-  | "commands"
-  | "todo"
-  | "clipboard"
-  | "emoji"
-  | "settings"
-  | "calculator-history"
-  | "file-search"
-  | "dictionary"
-  | "quicklinks"
-  | "speed-test"
-  | "translation"
-  | "spotify"
-  | "extensions"
-  | "window-switcher"
-  | "hyprwhspr"
-  | "script-commands"
-  | "extension-runner";
+export type CommandPanel = CommandPanelValue;
 
 export interface CommandContext {
   rawQuery: string;

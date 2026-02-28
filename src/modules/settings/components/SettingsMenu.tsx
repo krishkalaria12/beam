@@ -1,4 +1,4 @@
-import { AtSign, Keyboard, Minimize2, Pin, Sparkles } from "lucide-react";
+import { AtSign, Keyboard, Minimize2, Pin, Sparkles, WandSparkles } from "lucide-react";
 
 import { CommandGroup, CommandItem, CommandShortcut } from "@/components/ui/command";
 import type { SettingsView } from "../constants";
@@ -35,6 +35,15 @@ export function SettingsMenu({ setView }: SettingsMenuProps) {
         <Pin className="size-5 text-muted-foreground/70" />
         <p className="truncate text-foreground capitalize">pinned commands</p>
         <CommandShortcut>pins</CommandShortcut>
+      </CommandItem>
+
+      <CommandItem
+        value="fallback actions no results files google quicklink script todo"
+        onSelect={() => setView("fallback")}
+      >
+        <WandSparkles className="size-5 text-muted-foreground/70" />
+        <p className="truncate text-foreground capitalize">fallback actions</p>
+        <CommandShortcut>fallback</CommandShortcut>
       </CommandItem>
 
       <CommandItem

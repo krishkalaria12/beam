@@ -3,5 +3,6 @@ export type SettingsView =
   | "style"
   | "layout"
   | "pinned"
+  | "fallback"
   | "hotkeys"
   | "trigger-symbols";

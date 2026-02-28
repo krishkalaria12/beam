@@ -10,13 +10,6 @@ const CALCULATOR_CONTEXT_FALLBACK_COMMAND_IDS = new Set([
   "search.web.duckduckgo",
 ]);
 
-const GENERAL_QUERY_FALLBACK_COMMAND_IDS = new Set([
-  "file_search.panel.open",
-  "dictionary.panel.open",
-  "search.web.google",
-  "search.web.duckduckgo",
-]);
-
 function normalize(value: string): string {
   return value.trim().toLowerCase();
 }
@@ -151,16 +144,9 @@ export function matchCommand(input: CommandMatchInput): CommandMatchResult {
     CALCULATOR_CONTEXT_FALLBACK_COMMAND_IDS.has(input.command.id) &&
     looksLikeCalculationQuery(query);
 
-  const shouldForceGeneralQueryFallbackMatch =
-    !matched &&
-    query.length > 0 &&
-    Boolean(input.command.requiresQuery) &&
-    GENERAL_QUERY_FALLBACK_COMMAND_IDS.has(input.command.id);
-
   if (
     !matched &&
-    !shouldForceCalculatorFallbackMatch &&
-    !shouldForceGeneralQueryFallbackMatch
+    !shouldForceCalculatorFallbackMatch
   ) {
     return {
       matched: false,
@@ -184,10 +170,6 @@ export function matchCommand(input: CommandMatchInput): CommandMatchResult {
   if (shouldForceCalculatorFallbackMatch) {
     score += config.match.tokenCoveragePerToken;
   }
-  if (shouldForceGeneralQueryFallbackMatch) {
-    score += config.match.tokenCoveragePerToken;
-  }
-
   return {
     matched: true,
     score,

@@ -1,6 +1,6 @@
 import RegistryCommandGroup from "@/command-registry/components/registry-command-group";
 import type { CommandUsageEntry } from "@/command-registry/command-preferences";
-import type { CommandContext } from "@/command-registry/types";
+import type { CommandContext, CommandDescriptor } from "@/command-registry/types";
 import type { RankedCommand } from "@/command-registry/ranker";
 import { CommandSeparator } from "@/components/ui/command";
 import { QuicklinkPreview } from "@/modules/quicklinks/components/quicklink-preview";
@@ -13,6 +13,7 @@ interface LauncherCommandModeContentProps {
   quicklinkKeyword: string;
   quicklinkQuery: string;
   rankedRegistryCommands: readonly RankedCommand[];
+  fallbackRegistryCommands: readonly CommandDescriptor[];
   pinnedCommandIds: readonly string[];
   usageById: Readonly<Record<string, CommandUsageEntry>>;
   commandContext: CommandContext;
@@ -29,6 +30,7 @@ export function LauncherCommandModeContent({
   quicklinkKeyword,
   quicklinkQuery,
   rankedRegistryCommands,
+  fallbackRegistryCommands,
   pinnedCommandIds,
   usageById,
   commandContext,
@@ -66,6 +68,7 @@ export function LauncherCommandModeContent({
 
       <RegistryCommandGroup
         commands={rankedRegistryCommands}
+        fallbackCommands={fallbackRegistryCommands}
         query={commandContext.query}
         mode={commandContext.mode}
         onSelect={onRegistryCommandSelect}

@@ -1,7 +1,12 @@
 import type { CommandRankingSignals } from "@/command-registry/ranker";
+import {
+  DEFAULT_FALLBACK_COMMAND_IDS,
+  normalizeFallbackCommandIds,
+  type FallbackCommandId,
+} from "@/command-registry/fallback-commands";
 
 export const COMMAND_PREFERENCES_STORAGE_KEY = "beam-command-preferences";
-export const COMMAND_PREFERENCES_SCHEMA_VERSION = 2 as const;
+export const COMMAND_PREFERENCES_SCHEMA_VERSION = 3 as const;
 
 export interface CommandUsageEntry {
   count: number;
@@ -16,6 +21,8 @@ export interface CommandPreferencesState {
   hiddenCommandIds: string[];
   aliasesById: Record<string, string[]>;
   hotkeysByCommandId: Record<string, string>;
+  fallbackEnabled: boolean;
+  fallbackCommandIds: FallbackCommandId[];
 }
 
 type StorageLike = Pick<Storage, "getItem" | "setItem">;
@@ -142,6 +149,8 @@ export function createDefaultCommandPreferencesState(): CommandPreferencesState 
     hiddenCommandIds: [],
     aliasesById: {},
     hotkeysByCommandId: {},
+    fallbackEnabled: true,
+    fallbackCommandIds: [...DEFAULT_FALLBACK_COMMAND_IDS],
   };
 }
 
@@ -162,6 +171,8 @@ export function migrateCommandPreferences(raw: unknown): CommandPreferencesState
       hiddenCommandIds: normalizeIdList(record.hiddenCommandIds),
       aliasesById: normalizeAliases(record.aliasesById),
       hotkeysByCommandId: normalizeHotkeys(record.hotkeysByCommandId),
+      fallbackEnabled: typeof record.fallbackEnabled === "boolean" ? record.fallbackEnabled : true,
+      fallbackCommandIds: normalizeFallbackCommandIds(record.fallbackCommandIds),
     };
   }
 
@@ -174,6 +185,8 @@ export function migrateCommandPreferences(raw: unknown): CommandPreferencesState
     hiddenCommandIds: normalizeIdList(record.hiddenCommandIds ?? record.hidden),
     aliasesById: normalizeAliases(record.aliasesById ?? record.aliases),
     hotkeysByCommandId: normalizeHotkeys(record.hotkeysByCommandId ?? record.hotkeys),
+    fallbackEnabled: typeof record.fallbackEnabled === "boolean" ? record.fallbackEnabled : true,
+    fallbackCommandIds: normalizeFallbackCommandIds(record.fallbackCommandIds),
   };
 }
 
@@ -349,6 +362,26 @@ export function setCommandHotkey(
   return {
     ...state,
     hotkeysByCommandId: next,
+  };
+}
+
+export function setFallbackEnabled(
+  state: CommandPreferencesState,
+  enabled: boolean,
+): CommandPreferencesState {
+  return {
+    ...state,
+    fallbackEnabled: enabled,
+  };
+}
+
+export function replaceFallbackCommandIds(
+  state: CommandPreferencesState,
+  fallbackCommandIds: readonly string[],
+): CommandPreferencesState {
+  return {
+    ...state,
+    fallbackCommandIds: normalizeFallbackCommandIds(fallbackCommandIds),
   };
 }
 
