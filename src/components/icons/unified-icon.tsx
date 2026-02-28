@@ -126,6 +126,17 @@ function resolveDirectImageSource(rawValue: string): string | null {
     return null;
   }
 
+  // Keep web-bundled asset paths as-is (Vite dev/build). Converting these to
+  // Tauri asset protocol triggers scope checks for non-filesystem URLs.
+  if (
+    value.startsWith("/src/") ||
+    value.startsWith("/assets/") ||
+    value.startsWith("/@fs/") ||
+    value.startsWith("/@id/")
+  ) {
+    return value;
+  }
+
   const resolved = resolveExtensionIconSource(value);
   if (resolved) {
     return resolved;
