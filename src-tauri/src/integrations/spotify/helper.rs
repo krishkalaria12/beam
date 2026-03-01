@@ -1,86 +1,26 @@
-use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine as _};
-use rand::RngCore;
 use reqwest::{Client, StatusCode};
 use serde::de::DeserializeOwned;
 use serde_json::Value;
-use sha2::{Digest, Sha256};
 use url::Url;
 
 use crate::config::config;
+use crate::integrations::helper as integration_helper;
 
 use super::error::{Result, SpotifyError};
 use super::model::{
     SpotifyCreateAuthSessionRequest, SpotifyCreateAuthSessionResponse, SpotifyExchangeCodeRequest,
     SpotifyPlaybackActionRequest, SpotifyRefreshTokenRequest, SpotifySearchRequest,
-    SpotifyTokenResponse,
+    SpotifyTokenResponse, ValidatedAccessToken, ValidatedAuthSessionRequest,
+    ValidatedExchangeCodeRequest, ValidatedRefreshRequest, ValidatedSearchRequest,
 };
-
-#[derive(Debug, Clone)]
-struct ValidatedAuthSessionRequest {
-    client_id: String,
-    redirect_uri: String,
-    scopes: Vec<String>,
-    state: String,
-    show_dialog: bool,
-}
-
-#[derive(Debug, Clone)]
-struct ValidatedExchangeCodeRequest {
-    client_id: String,
-    code: String,
-    redirect_uri: String,
-    code_verifier: String,
-}
-
-#[derive(Debug, Clone)]
-struct ValidatedRefreshRequest {
-    client_id: String,
-    refresh_token: String,
-}
-
-#[derive(Debug, Clone)]
-struct ValidatedAccessToken {
-    access_token: String,
-}
-
-#[derive(Debug, Clone)]
-struct ValidatedSearchRequest {
-    access_token: String,
-    query: String,
-    types: Vec<String>,
-    market: Option<String>,
-    limit: u8,
-    offset: u32,
-    include_external: Option<String>,
-}
 
 fn build_http_client() -> Result<Client> {
     Client::builder()
         .timeout(std::time::Duration::from_secs(
-            config().SPOTIFY_HTTP_TIMEOUT_SECS,
+            config().INTEGRATIONS_HTTP_TIMEOUT_SECS,
         ))
         .build()
         .map_err(|error| SpotifyError::RequestError(error.to_string()))
-}
-
-fn build_endpoint(base_url: &str, endpoint: &str) -> String {
-    let normalized_base = base_url.trim_end_matches('/');
-    let normalized_endpoint = endpoint.trim_start_matches('/');
-    format!("{normalized_base}/{normalized_endpoint}")
-}
-
-fn build_url_with_params(endpoint: &str, params: &[(&str, &str)]) -> Result<String> {
-    let mut url = Url::parse(endpoint)
-        .map_err(|error| SpotifyError::RequestError(format!("invalid endpoint URL: {error}")))?;
-
-    {
-        let mut query_pairs = url.query_pairs_mut();
-        for (key, value) in params {
-            query_pairs.append_pair(key, value);
-        }
-    }
-
-    Ok(url.to_string())
 }
 
 fn encode_form_body(params: &[(&str, &str)]) -> String {
@@ -94,73 +34,14 @@ fn encode_form_body(params: &[(&str, &str)]) -> String {
 
 fn with_optional_device_id(endpoint: &str, device_id: Option<&str>) -> Result<String> {
     if let Some(device_id) = device_id {
-        return build_url_with_params(endpoint, &[("device_id", device_id)]);
+        return integration_helper::build_url_with_params(
+            endpoint,
+            &[("device_id".to_string(), device_id.to_string())],
+        )
+        .map_err(SpotifyError::RequestError);
     }
 
     Ok(endpoint.to_string())
-}
-
-fn normalize_non_empty(value: &str, field_name: &str) -> Result<String> {
-    let normalized = value.trim();
-    if normalized.is_empty() {
-        return Err(SpotifyError::InvalidInput(format!(
-            "{field_name} cannot be empty"
-        )));
-    }
-
-    Ok(normalized.to_string())
-}
-
-fn validate_redirect_uri(redirect_uri: &str) -> Result<String> {
-    let normalized = normalize_non_empty(redirect_uri, "redirect_uri")?;
-    Url::parse(&normalized)
-        .map_err(|error| SpotifyError::InvalidInput(format!("redirect_uri is invalid: {error}")))?;
-
-    Ok(normalized)
-}
-
-fn normalize_scope(scope: &str) -> Option<String> {
-    let normalized = scope.trim();
-    if normalized.is_empty() {
-        return None;
-    }
-
-    Some(normalized.to_string())
-}
-
-fn normalize_scopes(scopes: Option<Vec<String>>) -> Vec<String> {
-    let raw_scopes = scopes.unwrap_or_default();
-    let mut normalized_scopes = Vec::new();
-
-    if raw_scopes.is_empty() {
-        normalized_scopes.extend(
-            config()
-                .SPOTIFY_DEFAULT_SCOPES
-                .iter()
-                .filter_map(|scope| normalize_scope(scope)),
-        );
-    } else {
-        for scope in raw_scopes {
-            if let Some(normalized_scope) = normalize_scope(&scope) {
-                normalized_scopes.push(normalized_scope);
-            }
-        }
-    }
-
-    normalized_scopes.sort();
-    normalized_scopes.dedup();
-    normalized_scopes
-}
-
-fn generate_random_token(byte_len: usize) -> String {
-    let mut bytes = vec![0_u8; byte_len];
-    rand::rng().fill_bytes(&mut bytes);
-    URL_SAFE_NO_PAD.encode(bytes)
-}
-
-fn build_pkce_challenge(verifier: &str) -> String {
-    let digest = Sha256::digest(verifier.as_bytes());
-    URL_SAFE_NO_PAD.encode(digest)
 }
 
 fn parse_api_error_message(body: &str) -> String {
@@ -273,15 +154,20 @@ async fn ensure_success_response(response: reqwest::Response) -> Result<()> {
 fn validate_auth_session_request(
     request: SpotifyCreateAuthSessionRequest,
 ) -> Result<ValidatedAuthSessionRequest> {
-    let client_id = normalize_non_empty(&request.client_id, "client_id")?;
-    let redirect_uri = validate_redirect_uri(&request.redirect_uri)?;
-    let scopes = normalize_scopes(request.scopes);
+    let client_id = integration_helper::normalize_non_empty(&request.client_id, "client_id")
+        .map_err(SpotifyError::InvalidInput)?;
+    let redirect_uri = integration_helper::validate_redirect_uri(&request.redirect_uri)
+        .map_err(SpotifyError::InvalidInput)?;
+    let scopes =
+        integration_helper::normalize_scopes(request.scopes, &config().SPOTIFY_DEFAULT_SCOPES);
 
     let state = request
         .state
         .as_deref()
-        .and_then(normalize_scope)
-        .unwrap_or_else(|| generate_random_token(config().SPOTIFY_STATE_RANDOM_BYTES));
+        .and_then(integration_helper::normalize_scope)
+        .unwrap_or_else(|| {
+            integration_helper::generate_random_token(config().INTEGRATIONS_STATE_RANDOM_BYTES)
+        });
 
     Ok(ValidatedAuthSessionRequest {
         client_id,
@@ -295,10 +181,15 @@ fn validate_auth_session_request(
 fn validate_exchange_code_request(
     request: SpotifyExchangeCodeRequest,
 ) -> Result<ValidatedExchangeCodeRequest> {
-    let client_id = normalize_non_empty(&request.client_id, "client_id")?;
-    let code = normalize_non_empty(&request.code, "code")?;
-    let redirect_uri = validate_redirect_uri(&request.redirect_uri)?;
-    let code_verifier = normalize_non_empty(&request.code_verifier, "code_verifier")?;
+    let client_id = integration_helper::normalize_non_empty(&request.client_id, "client_id")
+        .map_err(SpotifyError::InvalidInput)?;
+    let code = integration_helper::normalize_non_empty(&request.code, "code")
+        .map_err(SpotifyError::InvalidInput)?;
+    let redirect_uri = integration_helper::validate_redirect_uri(&request.redirect_uri)
+        .map_err(SpotifyError::InvalidInput)?;
+    let code_verifier =
+        integration_helper::normalize_non_empty(&request.code_verifier, "code_verifier")
+            .map_err(SpotifyError::InvalidInput)?;
 
     Ok(ValidatedExchangeCodeRequest {
         client_id,
@@ -311,8 +202,11 @@ fn validate_exchange_code_request(
 fn validate_refresh_token_request(
     request: SpotifyRefreshTokenRequest,
 ) -> Result<ValidatedRefreshRequest> {
-    let client_id = normalize_non_empty(&request.client_id, "client_id")?;
-    let refresh_token = normalize_non_empty(&request.refresh_token, "refresh_token")?;
+    let client_id = integration_helper::normalize_non_empty(&request.client_id, "client_id")
+        .map_err(SpotifyError::InvalidInput)?;
+    let refresh_token =
+        integration_helper::normalize_non_empty(&request.refresh_token, "refresh_token")
+            .map_err(SpotifyError::InvalidInput)?;
 
     Ok(ValidatedRefreshRequest {
         client_id,
@@ -321,7 +215,8 @@ fn validate_refresh_token_request(
 }
 
 fn validate_access_token(access_token: String) -> Result<ValidatedAccessToken> {
-    let access_token = normalize_non_empty(&access_token, "access_token")?;
+    let access_token = integration_helper::normalize_non_empty(&access_token, "access_token")
+        .map_err(SpotifyError::InvalidInput)?;
     Ok(ValidatedAccessToken { access_token })
 }
 
@@ -332,7 +227,7 @@ fn validate_playback_request(
     let device_id = request
         .device_id
         .as_deref()
-        .and_then(normalize_scope)
+        .and_then(integration_helper::normalize_scope)
         .filter(|value| !value.is_empty());
 
     Ok((access, device_id))
@@ -356,7 +251,8 @@ fn is_supported_search_type(search_type: &str) -> bool {
 
 fn validate_search_request(request: SpotifySearchRequest) -> Result<ValidatedSearchRequest> {
     let access_token = validate_access_token(request.access_token)?.access_token;
-    let query = normalize_non_empty(&request.query, "query")?;
+    let query = integration_helper::normalize_non_empty(&request.query, "query")
+        .map_err(SpotifyError::InvalidInput)?;
 
     let raw_types = request.types.unwrap_or_default();
     let mut types = if raw_types.is_empty() {
@@ -400,13 +296,13 @@ fn validate_search_request(request: SpotifySearchRequest) -> Result<ValidatedSea
     let market = request
         .market
         .as_deref()
-        .and_then(normalize_scope)
+        .and_then(integration_helper::normalize_scope)
         .map(|value| value.to_ascii_uppercase());
 
     let include_external = request
         .include_external
         .as_deref()
-        .and_then(normalize_scope)
+        .and_then(integration_helper::normalize_scope)
         .map(|value| value.to_ascii_lowercase());
 
     Ok(ValidatedSearchRequest {
@@ -425,13 +321,11 @@ pub fn spotify_create_auth_session(
 ) -> Result<SpotifyCreateAuthSessionResponse> {
     let request = validate_auth_session_request(request)?;
 
-    let authorize_endpoint = build_endpoint(
-        config().SPOTIFY_ACCOUNTS_BASE_URL,
-        config().SPOTIFY_AUTHORIZE_ENDPOINT,
-    );
+    let authorize_endpoint = config().SPOTIFY_AUTHORIZE_URL.to_string();
 
-    let code_verifier = generate_random_token(config().SPOTIFY_PKCE_VERIFIER_RANDOM_BYTES);
-    let code_challenge = build_pkce_challenge(&code_verifier);
+    let code_verifier =
+        integration_helper::generate_random_token(config().INTEGRATIONS_PKCE_VERIFIER_RANDOM_BYTES);
+    let code_challenge = integration_helper::build_pkce_challenge(&code_verifier);
 
     let mut url = Url::parse(&authorize_endpoint)
         .map_err(|error| SpotifyError::RequestError(error.to_string()))?;
@@ -444,7 +338,7 @@ pub fn spotify_create_auth_session(
         query.append_pair("state", &request.state);
         query.append_pair(
             "code_challenge_method",
-            config().SPOTIFY_PKCE_CHALLENGE_METHOD,
+            config().INTEGRATIONS_PKCE_CHALLENGE_METHOD,
         );
         query.append_pair("code_challenge", &code_challenge);
 
@@ -462,7 +356,7 @@ pub fn spotify_create_auth_session(
         state: request.state,
         code_verifier,
         code_challenge,
-        code_challenge_method: config().SPOTIFY_PKCE_CHALLENGE_METHOD.to_string(),
+        code_challenge_method: config().INTEGRATIONS_PKCE_CHALLENGE_METHOD.to_string(),
     })
 }
 
@@ -471,10 +365,7 @@ pub async fn spotify_exchange_code_for_tokens(
 ) -> Result<SpotifyTokenResponse> {
     let request = validate_exchange_code_request(request)?;
 
-    let token_endpoint = build_endpoint(
-        config().SPOTIFY_ACCOUNTS_BASE_URL,
-        config().SPOTIFY_TOKEN_ENDPOINT,
-    );
+    let token_endpoint = config().SPOTIFY_TOKEN_URL.to_string();
 
     let client = build_http_client()?;
 
@@ -502,10 +393,7 @@ pub async fn spotify_refresh_access_token(
 ) -> Result<SpotifyTokenResponse> {
     let request = validate_refresh_token_request(request)?;
 
-    let token_endpoint = build_endpoint(
-        config().SPOTIFY_ACCOUNTS_BASE_URL,
-        config().SPOTIFY_TOKEN_ENDPOINT,
-    );
+    let token_endpoint = config().SPOTIFY_TOKEN_URL.to_string();
 
     let client = build_http_client()?;
 
@@ -528,7 +416,7 @@ pub async fn spotify_refresh_access_token(
 
 pub async fn spotify_get_current_user(access_token: String) -> Result<Value> {
     let access = validate_access_token(access_token)?;
-    let endpoint = build_endpoint(config().SPOTIFY_API_BASE_URL, config().SPOTIFY_ME_ENDPOINT);
+    let endpoint = config().SPOTIFY_ME_URL.to_string();
 
     let client = build_http_client()?;
     let response = client
@@ -543,10 +431,7 @@ pub async fn spotify_get_current_user(access_token: String) -> Result<Value> {
 
 pub async fn spotify_get_current_playback(access_token: String) -> Result<Option<Value>> {
     let access = validate_access_token(access_token)?;
-    let endpoint = build_endpoint(
-        config().SPOTIFY_API_BASE_URL,
-        config().SPOTIFY_PLAYER_ENDPOINT,
-    );
+    let endpoint = config().SPOTIFY_PLAYER_URL.to_string();
 
     let client = build_http_client()?;
     let response = client
@@ -561,10 +446,7 @@ pub async fn spotify_get_current_playback(access_token: String) -> Result<Option
 
 pub async fn spotify_get_devices(access_token: String) -> Result<Value> {
     let access = validate_access_token(access_token)?;
-    let endpoint = build_endpoint(
-        config().SPOTIFY_API_BASE_URL,
-        config().SPOTIFY_PLAYER_DEVICES_ENDPOINT,
-    );
+    let endpoint = config().SPOTIFY_PLAYER_DEVICES_URL.to_string();
 
     let client = build_http_client()?;
     let response = client
@@ -579,10 +461,7 @@ pub async fn spotify_get_devices(access_token: String) -> Result<Value> {
 
 pub async fn spotify_play(request: SpotifyPlaybackActionRequest) -> Result<()> {
     let (access, device_id) = validate_playback_request(request)?;
-    let endpoint = build_endpoint(
-        config().SPOTIFY_API_BASE_URL,
-        config().SPOTIFY_PLAYER_PLAY_ENDPOINT,
-    );
+    let endpoint = config().SPOTIFY_PLAYER_PLAY_URL.to_string();
     let endpoint_with_device = with_optional_device_id(&endpoint, device_id.as_deref())?;
 
     let client = build_http_client()?;
@@ -598,10 +477,7 @@ pub async fn spotify_play(request: SpotifyPlaybackActionRequest) -> Result<()> {
 
 pub async fn spotify_pause(request: SpotifyPlaybackActionRequest) -> Result<()> {
     let (access, device_id) = validate_playback_request(request)?;
-    let endpoint = build_endpoint(
-        config().SPOTIFY_API_BASE_URL,
-        config().SPOTIFY_PLAYER_PAUSE_ENDPOINT,
-    );
+    let endpoint = config().SPOTIFY_PLAYER_PAUSE_URL.to_string();
     let endpoint_with_device = with_optional_device_id(&endpoint, device_id.as_deref())?;
 
     let client = build_http_client()?;
@@ -617,10 +493,7 @@ pub async fn spotify_pause(request: SpotifyPlaybackActionRequest) -> Result<()> 
 
 pub async fn spotify_next_track(request: SpotifyPlaybackActionRequest) -> Result<()> {
     let (access, device_id) = validate_playback_request(request)?;
-    let endpoint = build_endpoint(
-        config().SPOTIFY_API_BASE_URL,
-        config().SPOTIFY_PLAYER_NEXT_ENDPOINT,
-    );
+    let endpoint = config().SPOTIFY_PLAYER_NEXT_URL.to_string();
     let endpoint_with_device = with_optional_device_id(&endpoint, device_id.as_deref())?;
 
     let client = build_http_client()?;
@@ -636,10 +509,7 @@ pub async fn spotify_next_track(request: SpotifyPlaybackActionRequest) -> Result
 
 pub async fn spotify_previous_track(request: SpotifyPlaybackActionRequest) -> Result<()> {
     let (access, device_id) = validate_playback_request(request)?;
-    let endpoint = build_endpoint(
-        config().SPOTIFY_API_BASE_URL,
-        config().SPOTIFY_PLAYER_PREVIOUS_ENDPOINT,
-    );
+    let endpoint = config().SPOTIFY_PLAYER_PREVIOUS_URL.to_string();
     let endpoint_with_device = with_optional_device_id(&endpoint, device_id.as_deref())?;
 
     let client = build_http_client()?;
@@ -655,10 +525,7 @@ pub async fn spotify_previous_track(request: SpotifyPlaybackActionRequest) -> Re
 
 pub async fn spotify_search(request: SpotifySearchRequest) -> Result<Value> {
     let request = validate_search_request(request)?;
-    let endpoint = build_endpoint(
-        config().SPOTIFY_API_BASE_URL,
-        config().SPOTIFY_SEARCH_ENDPOINT,
-    );
+    let endpoint = config().SPOTIFY_SEARCH_URL.to_string();
 
     let mut url =
         Url::parse(&endpoint).map_err(|error| SpotifyError::RequestError(error.to_string()))?;
