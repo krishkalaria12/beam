@@ -13,6 +13,8 @@
     "serve": "vite preview",
     "start": "vite",
     "check-types": "tsc --noEmit",
+    "fmt": "oxfmt --write .",
+    "fmt:check": "oxfmt --check .",
     "rust:fmt": "cargo fmt --manifest-path src-tauri/Cargo.toml --all",
     "rust:fmt:check": "cargo fmt --manifest-path src-tauri/Cargo.toml --all -- --check",
     "sidecar:build": "bun run --cwd sidecar build",
@@ -62,13 +64,14 @@
     "@types/node": "^22.13.14",
     "@types/react": "19.2.7",
     "@types/react-dom": "19.2.3",
-    "@vitejs/plugin-react": "^4.3.4",
+    "@vitejs/plugin-react-swc": "^4.2.3",
     "babel-plugin-react-compiler": "^1.0.0",
     "oxfmt": "^0.28.0",
     "oxlint": "^1.43.0",
     "postcss": "^8.5.3",
     "tailwindcss": "^4.0.15",
     "typescript": "^5.9.3",
-    "vite": "^6.2.2"
+    "vite": "^6.2.2",
+    "vite-plugin-babel": "^1.5.1"
   }
 }

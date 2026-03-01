@@ -1,3 +1,4 @@
+import githubLogo from "@/assets/icons/github.png";
 import spotifyLogo from "@/assets/icons/spotify.png";
 import type { CommandDescriptor, CommandScope } from "@/command-registry/types";
 import {
@@ -310,6 +311,26 @@ export const STATIC_COMMANDS: CommandDescriptor[] = [
     action: {
       type: "OPEN_PANEL",
       payload: { panel: "spotify" },
+    },
+  },
+  {
+    id: "github.panel.open",
+    title: "github workspace",
+    keywords: [
+      "github",
+      "pull requests",
+      "prs",
+      "issues",
+      "code review",
+      "assigned issues",
+    ],
+    endText: "open",
+    icon: `app-icon:${githubLogo}`,
+    kind: "panel",
+    scope: SCOPE_NORMAL_COMPRESSED,
+    action: {
+      type: "OPEN_PANEL",
+      payload: { panel: "github" },
     },
   },
   {

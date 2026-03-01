@@ -30,7 +30,10 @@ const TranslationCommandGroup = lazy(
   () => import("@/modules/translation/components/translation-command-group"),
 );
 const SpotifyCommandGroup = lazy(
-  () => import("@/modules/spotify/components/spotify-command-group"),
+  () => import("@/modules/integrations/spotify/components/spotify-command-group"),
+);
+const GithubCommandGroup = lazy(
+  () => import("@/modules/integrations/github/components/github-command-group"),
 );
 const ExtensionsCommandGroup = lazy(
   () => import("@/modules/extensions/components/extensions-command-group"),
@@ -63,12 +66,14 @@ interface TakeoverPanelRendererInput {
   dictionaryQuery: string;
   translationQuery: string;
   spotifyQuery: string;
+  githubQuery: string;
   quicklinksView: QuicklinksView;
   setQuicklinksView: (view: QuicklinksView) => void;
   openFileSearch: (query: string) => void;
   openDictionary: (query: string) => void;
   openTranslation: (query: string) => void;
   openSpotify: (query: string) => void;
+  openGithub: (query: string) => void;
   openQuicklinks: () => void;
   openSpeedTest: () => void;
   openClipboard: () => void;
@@ -97,12 +102,14 @@ export function LauncherTakeoverPanel({
   dictionaryQuery,
   translationQuery,
   spotifyQuery,
+  githubQuery,
   quicklinksView,
   setQuicklinksView,
   openFileSearch,
   openDictionary,
   openTranslation,
   openSpotify,
+  openGithub,
   openQuicklinks,
   openSpeedTest,
   openClipboard,
@@ -157,6 +164,10 @@ export function LauncherTakeoverPanel({
         onOpen={openSpotify}
         onBack={backToCommands}
       />
+    );
+  } else if (activePanel === COMMAND_PANELS.GITHUB) {
+    content = (
+      <GithubCommandGroup isOpen query={githubQuery} onOpen={openGithub} onBack={backToCommands} />
     );
   } else if (activePanel === COMMAND_PANELS.QUICKLINKS) {
     content = (

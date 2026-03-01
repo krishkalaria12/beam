@@ -1,15 +1,17 @@
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
-import react from "@vitejs/plugin-react";
+import react from "@vitejs/plugin-react-swc";
 import path from "node:path";
 import { defineConfig } from "vite";
+import babel from "vite-plugin-babel";
 
 export default defineConfig({
   plugins: [
     tailwindcss(),
     tanstackRouter({}),
-    react({
-      babel: {
+    react(),
+    babel({
+      babelConfig: {
         plugins: ["babel-plugin-react-compiler"],
       },
     }),
@@ -18,6 +20,7 @@ export default defineConfig({
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
+    extensions: [".ts", ".tsx", ".js", ".json"],
   },
   server: {
     port: 3001,

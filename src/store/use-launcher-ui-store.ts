@@ -11,6 +11,7 @@ const TAKEOVER_PANELS = new Set<CommandPanel>([
   "dictionary",
   "translation",
   "spotify",
+  "github",
   "quicklinks",
   "speed-test",
   "clipboard",
@@ -32,6 +33,7 @@ export interface LauncherUiState {
   dictionaryQuery: string;
   translationQuery: string;
   spotifyQuery: string;
+  githubQuery: string;
   quicklinksView: QuicklinksView;
   setCommandSearch(value: string): void;
   setActivePanel(panel: CommandPanel): void;
@@ -39,12 +41,14 @@ export interface LauncherUiState {
   setDictionaryQuery(query: string): void;
   setTranslationQuery(query: string): void;
   setSpotifyQuery(query: string): void;
+  setGithubQuery(query: string): void;
   setQuicklinksView(view: QuicklinksView): void;
   openPanel(panel: CommandPanel, clearCommandSearch?: boolean): void;
   openFileSearch(query: string): void;
   openDictionary(query: string): void;
   openTranslation(query: string): void;
   openSpotify(query: string): void;
+  openGithub(query: string): void;
   backToCommands(): void;
 }
 
@@ -55,6 +59,7 @@ export const useLauncherUiStore = create<LauncherUiState>((set) => ({
   dictionaryQuery: "",
   translationQuery: "",
   spotifyQuery: "",
+  githubQuery: "",
   quicklinksView: "manage",
   setCommandSearch: (value) => set({ commandSearch: value }),
   setActivePanel: (panel) => set({ activePanel: panel }),
@@ -62,6 +67,7 @@ export const useLauncherUiStore = create<LauncherUiState>((set) => ({
   setDictionaryQuery: (query) => set({ dictionaryQuery: query }),
   setTranslationQuery: (query) => set({ translationQuery: query }),
   setSpotifyQuery: (query) => set({ spotifyQuery: query }),
+  setGithubQuery: (query) => set({ githubQuery: query }),
   setQuicklinksView: (view) => set({ quicklinksView: view }),
   openPanel: (panel, clearCommandSearch = false) =>
     set((state) => ({
@@ -87,6 +93,11 @@ export const useLauncherUiStore = create<LauncherUiState>((set) => ({
     set({
       spotifyQuery: query,
       activePanel: "spotify",
+    }),
+  openGithub: (query) =>
+    set({
+      githubQuery: query,
+      activePanel: "github",
     }),
   backToCommands: () =>
     set({

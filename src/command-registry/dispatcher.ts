@@ -64,6 +64,7 @@ export interface DispatchRuntime {
   setDictionaryQuery: (query: string) => void;
   setTranslationQuery: (query: string) => void;
   setSpotifyQuery: (query: string) => void;
+  setGithubQuery: (query: string) => void;
   openUrl?: (url: string) => void | Promise<void>;
   customActionHandler?: (request: CustomActionRequest) => Promise<DispatchResult>;
 }
@@ -274,6 +275,9 @@ async function dispatchPanelAction(
   if (panel === COMMAND_PANELS.SPOTIFY) {
     context.runtime.setSpotifyQuery(context.query);
   }
+  if (panel === COMMAND_PANELS.GITHUB) {
+    context.runtime.setGithubQuery(context.query);
+  }
 
   context.runtime.setActivePanel(panel);
 
@@ -281,7 +285,8 @@ async function dispatchPanelAction(
     panel !== COMMAND_PANELS.FILE_SEARCH &&
     panel !== COMMAND_PANELS.DICTIONARY &&
     panel !== COMMAND_PANELS.TRANSLATION &&
-    panel !== COMMAND_PANELS.SPOTIFY
+    panel !== COMMAND_PANELS.SPOTIFY &&
+    panel !== COMMAND_PANELS.GITHUB
   ) {
     context.runtime.setCommandSearch("");
   }
