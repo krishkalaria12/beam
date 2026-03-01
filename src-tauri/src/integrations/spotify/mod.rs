@@ -1,8 +1,11 @@
+pub mod error;
+pub mod helper;
+pub mod model;
+
 use serde_json::Value;
 
-use super::error::Result;
-use super::helper;
-use super::model::{
+use self::error::Result;
+use self::model::{
     SpotifyCreateAuthSessionRequest, SpotifyCreateAuthSessionResponse, SpotifyExchangeCodeRequest,
     SpotifyPlaybackActionRequest, SpotifyRefreshTokenRequest, SpotifySearchRequest,
     SpotifyTokenResponse,
