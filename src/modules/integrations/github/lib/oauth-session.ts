@@ -2,7 +2,7 @@ import type { GithubPendingAuthSession } from "../types";
 
 const PENDING_SESSION_STORAGE_KEY = "beam-github-pending-auth";
 const CLIENT_ID_STORAGE_KEY = "beam-github-client-id";
-const DEFAULT_REDIRECT_URI = "raycast://oauth";
+const DEFAULT_REDIRECT_URI = "beam://oauth";
 
 export function getGithubDefaultRedirectUri() {
   return DEFAULT_REDIRECT_URI;

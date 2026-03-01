@@ -2,7 +2,7 @@ import type { SpotifyPendingAuthSession } from "../types";
 
 const PENDING_SESSION_STORAGE_KEY = "beam-spotify-pending-auth";
 const CLIENT_ID_STORAGE_KEY = "beam-spotify-client-id";
-const DEFAULT_REDIRECT_URI = "raycast://oauth";
+const DEFAULT_REDIRECT_URI = "beam://oauth";
 
 export function getSpotifyDefaultRedirectUri() {
   return DEFAULT_REDIRECT_URI;

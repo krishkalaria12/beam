@@ -154,7 +154,7 @@ export class PKCEClient {
 				redirectURI = `https://raycast.com/redirect?packageName=${packageName}`;
 				break;
 			case RedirectMethod.App:
-				redirectURI = `raycast://oauth?package_name=${packageName}`;
+				redirectURI = `beam://oauth?package_name=${packageName}`;
 				break;
 			case RedirectMethod.AppURI:
 				redirectURI = `com.raycast:/oauth?package_name=${packageName}`;

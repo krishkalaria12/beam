@@ -290,7 +290,7 @@ export function SpotifyView({ initialQuery, onBack }: SpotifyViewProps) {
               className="h-9 border-border/70 bg-muted/15 text-sm"
             />
             <p className="text-[11px] text-muted-foreground/70">
-              Create a Spotify app and add <span className="font-mono">raycast://oauth</span> as redirect URI.
+              Create a Spotify app and add <span className="font-mono">beam://oauth</span> as redirect URI.
             </p>
           </div>
 

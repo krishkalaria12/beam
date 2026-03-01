@@ -68,6 +68,7 @@
     "deep-link": {
       "desktop": {
         "schemes": [
+          "beam",
           "raycast"
         ]
       }

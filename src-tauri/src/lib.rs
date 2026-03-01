@@ -38,6 +38,7 @@ fn extract_deep_link_arg(args: &[String]) -> Option<String> {
     args.iter()
         .find(|arg| {
             arg.starts_with("raycast://")
+                || arg.starts_with("beam://")
                 || arg.starts_with("https://raycast.com/redirect")
                 || arg.starts_with("http://raycast.com/redirect")
         })

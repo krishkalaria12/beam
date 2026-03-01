@@ -52,12 +52,13 @@ export function parseOauthDeepLink(url: string): ParsedOauthDeepLinkResult {
   }
 
   const isRaycastScheme = urlObj.protocol === "raycast:";
+  const isBeamScheme = urlObj.protocol === "beam:";
   const isRaycastRedirect =
     (urlObj.protocol === "https:" || urlObj.protocol === "http:") &&
     urlObj.hostname === "raycast.com" &&
     urlObj.pathname.startsWith("/redirect");
 
-  if (!isRaycastScheme && !isRaycastRedirect) {
+  if (!isRaycastScheme && !isBeamScheme && !isRaycastRedirect) {
     return { handled: false };
   }
 

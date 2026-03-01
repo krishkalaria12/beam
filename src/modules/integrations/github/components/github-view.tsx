@@ -306,7 +306,7 @@ export function GithubView({ initialQuery, onBack }: GithubViewProps) {
               className="h-9 border-border/70 bg-muted/15 text-sm"
             />
             <p className="text-[11px] text-muted-foreground/70">
-              Configure your OAuth app redirect URI as <span className="font-mono">raycast://oauth</span>.
+              Configure your OAuth app redirect URI as <span className="font-mono">beam://oauth</span>.
             </p>
           </div>
 
