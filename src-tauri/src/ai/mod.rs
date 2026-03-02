@@ -9,7 +9,8 @@ pub mod repository;
 
 pub use error::{AiError, Result};
 pub use model::{
-    AiConversationSummary, AiPersistedMessage, AiSettings, AiTokenUsageSummary, AskOptions,
+    AiChatHistoryMessage, AiConversationSummary, AiPersistedMessage, AiSettings,
+    AiTokenUsageSummary, AskOptions,
 };
 
 #[allow(non_snake_case)]
@@ -34,7 +35,7 @@ pub async fn get_ai_chat_history(
     conversation_id: Option<String>,
     conversationId: Option<String>,
     limit: Option<u32>,
-) -> Result<Vec<AiPersistedMessage>> {
+) -> Result<Vec<AiChatHistoryMessage>> {
     helper::get_ai_chat_history(app, conversation_id.or(conversationId), limit).await
 }
 

@@ -126,6 +126,7 @@ pub struct Config {
 
     // -- AI
     pub AI_DIRECTORY: &'static str,
+    pub AI_ATTACHMENTS_DIRECTORY: &'static str,
     pub AI_DATABASE_FILE: &'static str,
     pub AI_DEFAULT_CONVERSATION_ID: &'static str,
     pub AI_CHAT_HISTORY_DEFAULT_LIMIT: u32,
@@ -338,6 +339,7 @@ impl Config {
             HOTKEY_WAYLAND_DISABLED_MESSAGE:
                 "Global hotkeys are disabled because this is not a Wayland session.",
             AI_DIRECTORY: "ai",
+            AI_ATTACHMENTS_DIRECTORY: "attachments",
             AI_DATABASE_FILE: "chat.sqlite3",
             AI_DEFAULT_CONVERSATION_ID: "default",
             AI_CHAT_HISTORY_DEFAULT_LIMIT: 200,

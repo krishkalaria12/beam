@@ -1,8 +1,10 @@
+use base64::{engine::general_purpose::STANDARD, Engine as _};
 use futures_util::StreamExt;
 use rig::completion::{CompletionModel, GetTokenUsage, Usage};
 use rig::prelude::CompletionClient;
 use rig::providers::{anthropic, gemini, openai, openrouter};
 use rig::streaming::StreamedAssistantContent;
+use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 use tauri::{AppHandle, Emitter, Manager};
@@ -15,7 +17,8 @@ use super::key_store::{
     providers, resolve_provider, set_provider_api_key, AiProvider,
 };
 use super::model::{
-    AiConversationSummary, AiPersistedMessage, AiSettings, AiTokenUsageSummary, AskOptions,
+    AiChatHistoryMessage, AiConversationSummary, AiSettings, AiTokenUsageSummary, AskAttachment,
+    AskOptions,
 };
 use super::repository::AiRepository;
 use crate::config::config;
@@ -280,10 +283,93 @@ pub async fn get_ai_chat_history(
     app: tauri::AppHandle,
     conversation_id: Option<String>,
     limit: Option<u32>,
-) -> Result<Vec<AiPersistedMessage>> {
-    AiRepository::new()
+) -> Result<Vec<AiChatHistoryMessage>> {
+    let repository = AiRepository::new();
+    let messages = repository
         .get_chat_history(&app, conversation_id.as_deref(), limit)
-        .await
+        .await?;
+
+    if messages.is_empty() {
+        return Ok(Vec::new());
+    }
+
+    let attachments = repository
+        .get_message_attachments(&app, conversation_id.as_deref())
+        .await?;
+    let message_id_set: HashSet<&str> =
+        messages.iter().map(|message| message.id.as_str()).collect();
+
+    let mut attachments_by_message: HashMap<String, Vec<AskAttachment>> = HashMap::new();
+    for attachment in attachments {
+        if !message_id_set.contains(attachment.message_id.as_str()) {
+            continue;
+        }
+
+        if let Some(data_url) =
+            load_attachment_data_url(&app, &attachment.storage_path, &attachment.mime_type)
+        {
+            attachments_by_message
+                .entry(attachment.message_id)
+                .or_default()
+                .push(AskAttachment {
+                    id: Some(attachment.id),
+                    name: Some(attachment.name),
+                    mime_type: Some(attachment.mime_type),
+                    size: Some(attachment.size_bytes.max(0) as usize),
+                    data: data_url,
+                });
+        }
+    }
+
+    let history_messages = messages
+        .into_iter()
+        .map(|message| {
+            let persisted_attachments = attachments_by_message.remove(&message.id);
+            let attachments = if persisted_attachments.is_some() {
+                persisted_attachments
+            } else {
+                parse_legacy_attachments_json(message.attachments_json.as_deref())
+            };
+
+            AiChatHistoryMessage {
+                id: message.id,
+                request_id: message.request_id,
+                conversation_id: message.conversation_id,
+                role: message.role,
+                provider: message.provider,
+                model: message.model,
+                content: message.content,
+                attachments_json: message.attachments_json,
+                attachments,
+                created_at: message.created_at,
+            }
+        })
+        .collect();
+
+    Ok(history_messages)
+}
+
+fn load_attachment_data_url(
+    app: &tauri::AppHandle,
+    storage_path: &str,
+    mime_type: &str,
+) -> Option<String> {
+    let app_data_dir = app.path().app_local_data_dir().ok()?;
+    let absolute_path = app_data_dir.join(storage_path);
+    let bytes = fs::read(absolute_path).ok()?;
+    let encoded = STANDARD.encode(bytes);
+    Some(format!("data:{mime_type};base64,{encoded}"))
+}
+
+fn parse_legacy_attachments_json(raw: Option<&str>) -> Option<Vec<AskAttachment>> {
+    let payload = raw?.trim();
+    if payload.is_empty() {
+        return None;
+    }
+
+    serde_json::from_str::<Vec<AskAttachment>>(payload)
+        .ok()
+        .filter(|attachments| !attachments.is_empty())
 }
 
 pub async fn get_ai_conversations(
@@ -456,6 +542,7 @@ pub async fn ai_ask_stream(
             provider.id(),
             &model_name,
             &prompt,
+            options.attachments.as_deref(),
         )
         .await
     {

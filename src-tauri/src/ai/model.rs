@@ -17,7 +17,7 @@ impl Default for AiSettings {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AskOptions {
     pub model: Option<String>,
@@ -28,7 +28,7 @@ pub struct AskOptions {
     pub attachments: Option<Vec<AskAttachment>>,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct AskAttachment {
     pub id: Option<String>,
@@ -49,6 +49,36 @@ pub struct AiPersistedMessage {
     pub provider: String,
     pub model: String,
     pub content: String,
+    pub attachments_json: Option<String>,
+    pub created_at: i64,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct AiChatHistoryMessage {
+    pub id: String,
+    pub request_id: String,
+    pub conversation_id: String,
+    pub role: String,
+    pub provider: String,
+    pub model: String,
+    pub content: String,
+    pub attachments_json: Option<String>,
+    pub attachments: Option<Vec<AskAttachment>>,
+    pub created_at: i64,
+}
+
+#[derive(Debug, Clone, sqlx::FromRow)]
+pub struct AiPersistedAttachmentRecord {
+    pub id: String,
+    pub message_id: String,
+    pub conversation_id: String,
+    pub request_id: String,
+    pub name: String,
+    pub mime_type: String,
+    pub size_bytes: i64,
+    pub storage_path: String,
+    pub sha256: String,
     pub created_at: i64,
 }
 
