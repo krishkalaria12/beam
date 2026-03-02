@@ -1,3 +1,4 @@
+pub mod ai;
 mod app_commands;
 pub mod applications;
 pub mod calculator;
@@ -133,7 +134,9 @@ pub fn run() {
                         .level(log::LevelFilter::Info)
                         .filter(|metadata| {
                             let target = metadata.target();
-                            !target.starts_with("zbus") && !target.starts_with("tracing")
+                            !target.starts_with("zbus")
+                                && !target.starts_with("tracing")
+                                && !target.starts_with("rig")
                         })
                         .build(),
                 )?;
@@ -155,6 +158,7 @@ pub fn run() {
             }
 
             hotkeys::initialize_hotkey_backend(&app.handle());
+            ai::db::init(&app.handle());
             todo::db::init(&app.handle());
             snippets::db::init(&app.handle());
             extensions::browser_extension::start_bridge_server(&app.handle());

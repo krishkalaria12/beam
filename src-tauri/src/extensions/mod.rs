@@ -1,4 +1,3 @@
-pub mod ai;
 pub mod browser_extension;
 pub mod error;
 pub mod oauth;
