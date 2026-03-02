@@ -1,0 +1,19 @@
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply font-sans text-foreground;
+    background: transparent !important;
+  }
+  html {
+    @apply font-sans;
+    background: transparent !important;
+  }
+
+  html,
+  body,
+  #app {
+    @apply h-full;
+  }
+}

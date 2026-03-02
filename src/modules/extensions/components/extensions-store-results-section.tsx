@@ -49,9 +49,7 @@ export function ExtensionsStoreResultsSection({
             </span>
           ) : null}
         </div>
-        {isLoading ? (
-          <CommandInlineLoading label="Searching" iconClassName="size-3" />
-        ) : null}
+        {isLoading ? <CommandInlineLoading label="Searching" iconClassName="size-3" /> : null}
       </div>
 
       {!hasActiveSearch ? (

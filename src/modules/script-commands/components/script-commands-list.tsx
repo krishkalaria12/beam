@@ -20,23 +20,32 @@ export function ScriptCommandsList({
 }: ScriptCommandsListProps) {
   if (isLoading) {
     return (
-      <div className="p-4 text-xs text-muted-foreground">
-        Loading scripts...
+      <div className="scripts-loading flex h-full items-center justify-center p-4">
+        <div className="flex flex-col items-center gap-3 text-white/40">
+          <div className="size-8 animate-spin rounded-full border-2 border-white/10 border-t-white/40" />
+          <span className="text-[12px]">Loading scripts...</span>
+        </div>
       </div>
     );
   }
 
   if (scripts.length === 0) {
     return (
-      <div className="p-4 text-xs text-muted-foreground">
-        No scripts found in your script commands folder.
+      <div className="scripts-empty flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
+        <div className="flex size-12 items-center justify-center rounded-xl bg-white/[0.04]">
+          <Terminal className="size-5 text-white/30" />
+        </div>
+        <div>
+          <p className="text-[13px] font-medium text-white/50">No scripts found</p>
+          <p className="mt-1 text-[12px] text-white/30">Add scripts to your commands folder</p>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="custom-scrollbar flex h-full flex-col overflow-y-auto p-2">
-      {scripts.map((script) => {
+      {scripts.map((script, index) => {
         const isSelected = script.id === selectedScriptId;
 
         return (
@@ -44,35 +53,50 @@ export function ScriptCommandsList({
             key={script.id}
             type="button"
             className={cn(
-              "group mb-1 rounded-md border px-2.5 py-2 text-left transition-colors",
+              "scripts-list-item group relative mb-1 rounded-xl px-3 py-2.5 text-left transition-all duration-200",
               isSelected
-                ? "border-primary/40 bg-primary/10"
-                : "border-transparent bg-transparent hover:border-border/50 hover:bg-background/30",
+                ? "bg-white/[0.06] ring-1 ring-white/[0.08]"
+                : "bg-transparent hover:bg-white/[0.04]",
             )}
-            onClick={() => {
-              onSelect(script.id);
-            }}
-            onDoubleClick={() => {
-              onRun(script.id);
-            }}
+            style={{ animationDelay: `${index * 30}ms` }}
+            onClick={() => onSelect(script.id)}
+            onDoubleClick={() => onRun(script.id)}
           >
-            <div className="flex items-center gap-2">
-              <Terminal className="size-3.5 text-muted-foreground/80" />
-              <span className="truncate text-sm font-medium text-foreground">{script.title}</span>
-            </div>
-            <div className="mt-1 flex items-center gap-2 text-[11px] text-muted-foreground">
-              <FileCode2 className="size-3" />
-              <span className="truncate">{script.scriptName}</span>
-              {script.argumentDefinitions.length > 0 ? (
-                <span className="rounded-sm border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-[10px] text-amber-300">
-                  args {script.argumentDefinitions.length}
+            {/* Left accent bar */}
+            <div
+              className={cn(
+                "absolute left-0 top-1/2 h-0 w-[3px] -translate-y-1/2 rounded-r-full bg-[var(--solid-accent,#4ea2ff)] transition-all duration-200",
+                isSelected && "h-[60%]",
+              )}
+            />
+
+            <div className="flex items-center gap-2.5">
+              <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500/15 to-teal-500/15">
+                <Terminal className="size-3.5 text-emerald-400/80" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <span className="block truncate text-[13px] font-medium text-white/90 tracking-[-0.01em]">
+                  {script.title}
                 </span>
-              ) : null}
-              {script.hasShebang ? (
-                <span className="rounded-sm border border-cyan-500/30 bg-cyan-500/10 px-1.5 py-0.5 text-[10px] text-cyan-300">
+                <div className="mt-0.5 flex items-center gap-2 text-[11px] text-white/40">
+                  <FileCode2 className="size-3" />
+                  <span className="truncate">{script.scriptName}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Badges */}
+            <div className="mt-2 flex items-center gap-1.5 pl-10">
+              {script.argumentDefinitions.length > 0 && (
+                <span className="rounded-md bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-medium text-amber-400/90">
+                  {script.argumentDefinitions.length} args
+                </span>
+              )}
+              {script.hasShebang && (
+                <span className="rounded-md bg-cyan-500/15 px-1.5 py-0.5 text-[10px] font-medium text-cyan-400/90">
                   shebang
                 </span>
-              ) : null}
+              )}
             </div>
           </button>
         );

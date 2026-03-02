@@ -1,29 +1,27 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "@tanstack/react-form";
-import { Loader2, Link2, Trash2, Plus, Pencil, Command, Folder, File, FolderOpen } from "lucide-react";
+import {
+  ArrowLeft,
+  Check,
+  ChevronDown,
+  File,
+  Folder,
+  FolderOpen,
+  Link2,
+  Loader2,
+  Pencil,
+  Plus,
+  Trash2,
+  Zap,
+} from "lucide-react";
 import { z } from "zod";
 
-import {
-  CommandFooterBar,
-} from "@/components/command/command-footer-bar";
-import { CommandLoadingState } from "@/components/command/command-loading-state";
-import {
-  CommandKeyHint,
-} from "@/components/command/command-key-hint";
-import {
-  CommandPanelBackButton,
-  CommandPanelHeader,
-  CommandPanelTitleBlock,
-} from "@/components/command/command-panel-header";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { useLauncherPanelBackHandler } from "@/modules/launcher/lib/back-navigation";
 import {
@@ -44,13 +42,16 @@ import { QuicklinkIcon } from "./quicklink-icon";
 
 const quicklinkSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  keyword: z.string().min(1, "Keyword is required").regex(/^[a-zA-Z0-9_]+$/, "Only letters, numbers, and underscores allowed"),
+  keyword: z
+    .string()
+    .min(1, "Keyword is required")
+    .regex(/^[a-zA-Z0-9_]+$/, "Only letters, numbers, and underscores allowed"),
   url: z
     .string()
     .min(1, "Link or file path is required")
     .refine(
       (value) => !isWebQuicklinkTarget(value) || value.includes("{query}"),
-      "Web URL must contain {query} placeholder"
+      "Web URL must contain {query} placeholder",
     ),
   icon: z.string(),
 });
@@ -80,7 +81,7 @@ export function QuicklinksView({ view, setView, onBack }: QuicklinksViewProps) {
 
   if (view === "create") {
     return (
-      <QuicklinkCreateForm 
+      <QuicklinkCreateForm
         onBack={handleBack}
         onSuccess={handleBack}
         initialData={editingQuicklink ?? undefined}
@@ -113,7 +114,12 @@ type QuicklinkCreateFormProps = {
   editKeyword?: string;
 };
 
-function QuicklinkCreateForm({ onBack, onSuccess, initialData, editKeyword }: QuicklinkCreateFormProps) {
+function QuicklinkCreateForm({
+  onBack,
+  onSuccess,
+  initialData,
+  editKeyword,
+}: QuicklinkCreateFormProps) {
   const isEditMode = Boolean(editKeyword);
   const createMutation = useCreateQuicklink();
   const updateMutation = useUpdateQuicklink();
@@ -170,7 +176,7 @@ function QuicklinkCreateForm({ onBack, onSuccess, initialData, editKeyword }: Qu
   const syncTargetState = (value: string) => {
     const isFileTargetValue = isFileQuicklinkTarget(value);
     setIsFileTarget(isFileTargetValue);
-    
+
     if (fetchTimerRef.current) {
       clearTimeout(fetchTimerRef.current);
     }
@@ -232,201 +238,249 @@ function QuicklinkCreateForm({ onBack, onSuccess, initialData, editKeyword }: Qu
   };
 
   return (
-    <div className="glass-effect flex h-full flex-col text-foreground">
-      <CommandPanelHeader>
-        <CommandPanelBackButton onClick={onBack} aria-label="Back" />
-        <CommandPanelTitleBlock
-          title={isEditMode ? "Edit Quicklink" : "Create Quicklink"}
-          subtitle="Create shortcuts for links, files, and folders"
-          className="flex-1"
-        />
-      </CommandPanelHeader>
+    <div className="quicklinks-view flex h-full flex-col">
+      {/* Header */}
+      <div className="quicklinks-header flex items-center gap-3 px-5 py-4">
+        <button
+          type="button"
+          onClick={onBack}
+          className="flex size-9 items-center justify-center rounded-lg bg-white/[0.03] text-white/40 transition-all hover:bg-white/[0.06] hover:text-white/70"
+        >
+          <ArrowLeft className="size-4" />
+        </button>
+
+        <div className="flex-1 min-w-0">
+          <h1 className="text-[14px] font-semibold tracking-[-0.02em] text-white/90">
+            {isEditMode ? "Edit Quicklink" : "Create Quicklink"}
+          </h1>
+          <p className="text-[11px] text-white/40">
+            Create shortcuts for links, files, and folders
+          </p>
+        </div>
+      </div>
 
       {/* Form Content */}
-      <div className="custom-scrollbar list-area flex-1 overflow-y-auto p-8">
+      <div className="quicklinks-content custom-scrollbar flex-1 overflow-y-auto px-5 py-6">
         <form
           id="quicklink-form"
           onSubmit={(e) => {
             e.preventDefault();
             form.handleSubmit();
           }}
-          className="mx-auto max-w-2xl space-y-8"
+          className="mx-auto max-w-lg space-y-6"
         >
-          {/* Icon Display (Auto-produced) */}
+          {/* Icon Preview */}
           {(isFetchingIcon || previewIcon) && (
-            <div className="flex justify-center mb-8">
-              <div className="relative flex size-24 items-center justify-center rounded-2xl border border-border bg-muted/30 shadow-sm transition-all">
+            <div className="flex justify-center">
+              <div className="quicklinks-icon-preview relative flex size-20 items-center justify-center rounded-2xl bg-gradient-to-br from-white/[0.06] to-white/[0.02] ring-1 ring-white/[0.08]">
                 {isFetchingIcon ? (
-                  <Loader2 className="size-8 animate-spin text-muted-foreground" />
+                  <Loader2 className="size-7 animate-spin text-white/30" />
                 ) : (
                   <QuicklinkIcon
                     icon={previewIcon}
                     isFileTarget={isFileTarget}
-                    className="size-16 rounded-xl object-contain"
-                    fallbackClassName="size-16 rounded-xl bg-muted/50"
+                    className="size-12 rounded-xl object-contain"
+                    fallbackClassName="size-12 rounded-xl bg-white/[0.04]"
                   />
                 )}
-                 <div className="absolute -bottom-2 rounded-full bg-background border px-2 py-0.5 text-[10px] font-medium text-muted-foreground shadow-sm">
-                    {isFetchingIcon ? "Fetching..." : isFileTarget ? "File Path" : "Auto-detected"}
-                 </div>
+                <div className="absolute -bottom-2 rounded-full bg-[#2c2c2c] px-2 py-0.5 text-[10px] font-medium text-white/50 ring-1 ring-white/[0.08]">
+                  {isFetchingIcon ? "Fetching..." : isFileTarget ? "File" : "Auto"}
+                </div>
               </div>
             </div>
           )}
 
-          {/* Name */}
+          {/* Name Field */}
           <form.Field
             name="name"
             children={(field) => (
-              <div className="grid grid-cols-[100px_1fr] items-center gap-6">
-                <Label htmlFor="name" className="text-right text-foreground font-medium">Name</Label>
-                <div className="w-full space-y-1">
-                  <Input
-                    id="name"
-                    placeholder="e.g. Google Search"
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    className={cn("h-10", field.state.meta.errors.length > 0 && "border-red-500")}
-                  />
-                  {field.state.meta.errors.length > 0 && (
-                    <p className="text-xs text-red-500">
-                      {(() => {
-                        const error = field.state.meta.errors[0];
-                        return typeof error === "object" && error !== null && "message" in error
-                          ? String((error as { message: unknown }).message)
-                          : String(error);
-                      })()}
-                    </p>
+              <div className="space-y-2">
+                <label htmlFor="name" className="block text-[12px] font-medium text-white/60">
+                  Name
+                </label>
+                <input
+                  id="name"
+                  placeholder="e.g. Google Search"
+                  value={field.state.value}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  className={cn(
+                    "h-11 w-full rounded-xl px-4 text-[14px] font-medium tracking-[-0.01em] text-white/90",
+                    "bg-white/[0.04] ring-1 ring-white/[0.06]",
+                    "placeholder:text-white/25",
+                    "focus:outline-none focus:ring-[var(--solid-accent,#4ea2ff)]",
+                    "transition-all",
+                    field.state.meta.errors.length > 0 && "ring-red-500/50",
                   )}
-                </div>
+                />
+                {field.state.meta.errors.length > 0 && (
+                  <p className="text-[11px] text-red-400">
+                    {(() => {
+                      const error = field.state.meta.errors[0];
+                      return typeof error === "object" && error !== null && "message" in error
+                        ? String((error as { message: unknown }).message)
+                        : String(error);
+                    })()}
+                  </p>
+                )}
               </div>
             )}
           />
 
-          {/* Keyword */}
+          {/* Keyword Field */}
           <form.Field
             name="keyword"
             children={(field) => (
-              <div className="grid grid-cols-[100px_1fr] items-center gap-6">
-                <Label htmlFor="keyword" className="text-right text-foreground font-medium">Keyword</Label>
-                 <div className="w-full space-y-1">
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold">!</span>
-                    <Input
-                      id="keyword"
-                      placeholder="keyword"
-                      value={field.state.value}
-                      onChange={(e) => field.handleChange(e.target.value.toLowerCase())}
-                      className={cn("pl-7 h-10 font-mono", field.state.meta.errors.length > 0 && "border-red-500")}
-                    />
-                  </div>
-                  {field.state.meta.errors.length > 0 && (
-                    <p className="text-xs text-red-500">
-                      {(() => {
-                        const error = field.state.meta.errors[0];
-                        return typeof error === "object" && error !== null && "message" in error
-                          ? String((error as { message: unknown }).message)
-                          : String(error);
-                      })()}
-                    </p>
-                  )}
+              <div className="space-y-2">
+                <label htmlFor="keyword" className="block text-[12px] font-medium text-white/60">
+                  Keyword
+                </label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[14px] font-semibold text-[var(--solid-accent,#4ea2ff)]">
+                    !
+                  </span>
+                  <input
+                    id="keyword"
+                    placeholder="keyword"
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value.toLowerCase())}
+                    className={cn(
+                      "h-11 w-full rounded-xl pl-8 pr-4 font-mono text-[14px] font-medium text-white/90",
+                      "bg-white/[0.04] ring-1 ring-white/[0.06]",
+                      "placeholder:text-white/25",
+                      "focus:outline-none focus:ring-[var(--solid-accent,#4ea2ff)]",
+                      "transition-all",
+                      field.state.meta.errors.length > 0 && "ring-red-500/50",
+                    )}
+                  />
                 </div>
+                {field.state.meta.errors.length > 0 && (
+                  <p className="text-[11px] text-red-400">
+                    {(() => {
+                      const error = field.state.meta.errors[0];
+                      return typeof error === "object" && error !== null && "message" in error
+                        ? String((error as { message: unknown }).message)
+                        : String(error);
+                    })()}
+                  </p>
+                )}
               </div>
             )}
           />
 
-          {/* Link */}
+          {/* URL/Target Field */}
           <form.Field
             name="url"
             children={(field) => (
-              <div className="grid grid-cols-[100px_1fr] gap-6">
-                <Label htmlFor="url" className="text-right text-foreground font-medium pt-2.5">Target</Label>
-                <div className="space-y-2">
-                  <div className="relative">
-                    <Input
-                      id="url"
-                      placeholder="https://google.com/search?q={query} or /home/user/file.txt"
-                      value={field.state.value}
-                      onChange={(e) => {
-                        field.handleChange(e.target.value);
-                        handleUrlChange(e);
-                      }}
-                      className={cn("h-10 pr-10 font-mono text-xs", field.state.meta.errors.length > 0 && "border-red-500")}
-                    />
-                    <DropdownMenu>
-                      <DropdownMenuTrigger
-                        render={
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="absolute right-1 top-1/2 size-8 -translate-y-1/2 rounded-none text-muted-foreground hover:text-foreground"
-                            aria-label="Pick file system target"
-                          />
-                        }
+              <div className="space-y-2">
+                <label htmlFor="url" className="block text-[12px] font-medium text-white/60">
+                  Target
+                </label>
+                <div className="relative">
+                  <input
+                    id="url"
+                    placeholder="https://google.com/search?q={query}"
+                    value={field.state.value}
+                    onChange={(e) => {
+                      field.handleChange(e.target.value);
+                      handleUrlChange(e);
+                    }}
+                    className={cn(
+                      "h-11 w-full rounded-xl px-4 pr-12 font-mono text-[12px] text-white/80",
+                      "bg-white/[0.04] ring-1 ring-white/[0.06]",
+                      "placeholder:text-white/25",
+                      "focus:outline-none focus:ring-[var(--solid-accent,#4ea2ff)]",
+                      "transition-all",
+                      field.state.meta.errors.length > 0 && "ring-red-500/50",
+                    )}
+                  />
+                  <DropdownMenu>
+                    <DropdownMenuTrigger className="absolute right-2 top-1/2 -translate-y-1/2 flex size-7 items-center justify-center rounded-lg text-white/40 transition-colors hover:bg-white/[0.06] hover:text-white/70">
+                      <Folder className="size-4" />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      align="end"
+                      className="w-40 rounded-xl border border-white/[0.08] bg-[#2c2c2c] p-1.5 shadow-xl"
+                    >
+                      <DropdownMenuItem
+                        onClick={handlePickFile}
+                        className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-[12px] font-medium text-white/70 transition-colors hover:bg-white/[0.06] hover:text-white/90 cursor-pointer"
                       >
-                        <Folder className="size-4" />
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={handlePickFile}>
-                          <File className="size-4" />
-                          Pick File
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={handlePickFolder}>
-                          <FolderOpen className="size-4" />
-                          Pick Folder
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                  {field.state.meta.errors.length > 0 && (
-                    <p className="text-xs text-red-500">
-                      {(() => {
-                        const error = field.state.meta.errors[0];
-                        return typeof error === "object" && error !== null && "message" in error
-                          ? String((error as { message: unknown }).message)
-                          : String(error);
-                      })()}
-                    </p>
-                  )}
-                  <p className="text-xs text-muted-foreground/80 leading-relaxed">
-                    Web links must include <strong className="text-primary font-semibold">{"{query}"}</strong>. 
-                    Local file paths can be added directly and open with your system default app.
-                  </p>
+                        <File className="size-4" />
+                        Pick File
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={handlePickFolder}
+                        className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-[12px] font-medium text-white/70 transition-colors hover:bg-white/[0.06] hover:text-white/90 cursor-pointer"
+                      >
+                        <FolderOpen className="size-4" />
+                        Pick Folder
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
+                {field.state.meta.errors.length > 0 && (
+                  <p className="text-[11px] text-red-400">
+                    {(() => {
+                      const error = field.state.meta.errors[0];
+                      return typeof error === "object" && error !== null && "message" in error
+                        ? String((error as { message: unknown }).message)
+                        : String(error);
+                    })()}
+                  </p>
+                )}
+                <p className="text-[11px] text-white/30 leading-relaxed">
+                  Web links must include{" "}
+                  <span className="font-semibold text-[var(--solid-accent,#4ea2ff)]">
+                    {"{query}"}
+                  </span>{" "}
+                  placeholder.
+                </p>
               </div>
             )}
           />
 
-           {mutationError && (
-            <div className="rounded-md bg-red-500/10 p-3 text-sm text-red-500 text-center font-medium">
+          {/* Mutation Error */}
+          {mutationError && (
+            <div className="rounded-xl bg-red-500/10 px-4 py-3 text-[12px] font-medium text-red-400 ring-1 ring-red-500/20">
               {mutationError.message}
             </div>
           )}
-
         </form>
       </div>
 
-      <CommandFooterBar
-        className="h-[52px] px-6"
-        leftSlot={(
-          <>
-            <Command className="size-3.5" />
-            <span>{isEditMode ? "Update Quicklink" : "Create Quicklink"}</span>
-          </>
-        )}
-        rightSlot={(
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={onBack} className="h-7 px-2.5">
-              Cancel
-            </Button>
-            <Button onClick={() => form.handleSubmit()} disabled={isSubmitting} className="h-7 gap-2 px-2.5">
-              {isSubmitting ? <Loader2 className="size-3.5 animate-spin" /> : null}
-              {isEditMode ? "Update" : "Create"}
-            </Button>
-            <CommandKeyHint keyLabel={["⌘", "↵"]} label={isEditMode ? "Update" : "Create"} />
-          </div>
-        )}
-      />
+      {/* Footer */}
+      <div className="quicklinks-footer flex h-14 shrink-0 items-center justify-between border-t border-white/[0.04] px-5">
+        <div className="flex items-center gap-2 text-[11px] text-white/30">
+          <Zap className="size-3.5" />
+          <span className="font-medium tracking-[-0.01em]">
+            {isEditMode ? "Edit Quicklink" : "New Quicklink"}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onBack}
+            className="flex h-8 items-center rounded-lg px-3 text-[12px] font-medium text-white/50 transition-colors hover:bg-white/[0.04] hover:text-white/70"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={() => form.handleSubmit()}
+            disabled={isSubmitting}
+            className={cn(
+              "flex h-8 items-center gap-2 rounded-lg px-4 text-[12px] font-medium transition-all",
+              "bg-[var(--solid-accent,#4ea2ff)]/20 text-[var(--solid-accent,#4ea2ff)]",
+              "hover:bg-[var(--solid-accent,#4ea2ff)]/30",
+              isSubmitting && "opacity-50 cursor-not-allowed",
+            )}
+          >
+            {isSubmitting && <Loader2 className="size-3.5 animate-spin" />}
+            {isEditMode ? "Update" : "Create"}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -454,81 +508,130 @@ function QuicklinksManageView({ onBack, onCreate, onEdit }: QuicklinksManageView
   };
 
   return (
-    <div className="glass-effect flex h-full flex-col text-foreground">
-      <CommandPanelHeader>
-        <CommandPanelBackButton onClick={onBack} aria-label="Back" />
-        <CommandPanelTitleBlock title="Quicklinks" subtitle="Manage custom launcher shortcuts" />
-        <Button variant="outline" size="sm" onClick={onCreate} className="ml-auto">
-          <Plus className="mr-2 size-4" />
+    <div className="quicklinks-view flex h-full flex-col">
+      {/* Header */}
+      <div className="quicklinks-header flex items-center gap-3 px-5 py-4">
+        <button
+          type="button"
+          onClick={onBack}
+          className="flex size-9 items-center justify-center rounded-lg bg-white/[0.03] text-white/40 transition-all hover:bg-white/[0.06] hover:text-white/70"
+        >
+          <ArrowLeft className="size-4" />
+        </button>
+
+        <div className="flex-1 min-w-0">
+          <h1 className="text-[14px] font-semibold tracking-[-0.02em] text-white/90">Quicklinks</h1>
+          <p className="text-[11px] text-white/40">Manage your custom shortcuts</p>
+        </div>
+
+        <button
+          type="button"
+          onClick={onCreate}
+          className={cn(
+            "flex h-9 items-center gap-2 rounded-xl px-4 text-[12px] font-medium transition-all",
+            "bg-[var(--solid-accent,#4ea2ff)]/15 text-[var(--solid-accent,#4ea2ff)]",
+            "ring-1 ring-[var(--solid-accent,#4ea2ff)]/20",
+            "hover:bg-[var(--solid-accent,#4ea2ff)]/25",
+          )}
+        >
+          <Plus className="size-4" />
           Add New
-        </Button>
-      </CommandPanelHeader>
+        </button>
+      </div>
 
       {/* Content */}
-      <div className="custom-scrollbar list-area flex-1 overflow-y-auto p-4">
+      <div className="quicklinks-content custom-scrollbar flex-1 overflow-y-auto px-5 py-3">
         {isLoading && (
-          <CommandLoadingState label="Loading quicklinks..." className="h-20" />
+          <div className="flex h-40 items-center justify-center">
+            <Loader2 className="size-6 animate-spin text-white/30" />
+          </div>
         )}
 
         {error && (
-          <div className="rounded-md bg-red-500/10 p-3 text-sm text-red-500">
+          <div className="rounded-xl bg-red-500/10 px-4 py-3 text-[12px] font-medium text-red-400 ring-1 ring-red-500/20">
             Failed to load quicklinks: {error.message}
           </div>
         )}
 
         {!isLoading && !error && quicklinks?.length === 0 && (
-          <div className="flex h-40 flex-col items-center justify-center gap-3 text-center">
-            <Link2 className="size-10 text-muted-foreground" />
-            <p className="text-muted-foreground">No quicklinks yet</p>
-            <Button variant="outline" size="sm" onClick={onCreate}>
-              <Plus className="mr-2 size-4" />
-              Add your first quicklink
-            </Button>
+          <div className="flex h-full flex-col items-center justify-center gap-4 py-16">
+            <div className="flex size-16 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500/20 to-orange-500/10 ring-1 ring-white/[0.06]">
+              <Link2 className="size-7 text-amber-400" />
+            </div>
+            <div className="text-center">
+              <p className="text-[13px] font-medium text-white/50">No quicklinks yet</p>
+              <p className="mt-1 text-[11px] text-white/25">
+                Add your first shortcut to get started
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onCreate}
+              className={cn(
+                "flex h-9 items-center gap-2 rounded-xl px-4 text-[12px] font-medium transition-all",
+                "bg-white/[0.04] text-white/60 ring-1 ring-white/[0.06]",
+                "hover:bg-white/[0.06] hover:text-white/80",
+              )}
+            >
+              <Plus className="size-4" />
+              Add Quicklink
+            </button>
           </div>
         )}
 
         {quicklinks && quicklinks.length > 0 && (
           <div className="space-y-2">
-            {quicklinks.map((ql) => (
+            {quicklinks.map((ql, index) => (
               <div
                 key={ql.keyword}
-                className="flex items-center justify-between rounded-lg border border-border p-3"
+                className="quicklinks-item group relative flex items-center gap-3.5 rounded-xl bg-white/[0.03] p-3.5 transition-all duration-200 hover:bg-white/[0.05]"
+                style={{ animationDelay: `${index * 30}ms` }}
               >
-                <div className="flex items-center gap-3">
+                {/* Left accent bar */}
+                <div className="absolute left-0 top-1/2 h-6 w-[3px] -translate-y-1/2 rounded-full bg-amber-400 opacity-0 transition-all duration-200 scale-y-50 group-hover:opacity-60 group-hover:scale-y-100" />
+
+                {/* Icon */}
+                <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/10">
                   <QuicklinkIcon
                     icon={ql.icon}
                     isFileTarget={isFileQuicklinkTarget(ql.url)}
-                    className="size-8 rounded object-cover"
-                    fallbackClassName="size-8 rounded bg-muted"
+                    className="size-6 rounded-lg object-cover"
+                    fallbackClassName="size-6 rounded-lg"
                   />
-                  <div>
-                    <p className="font-medium">{ql.name}</p>
-                    <p className="text-xs text-muted-foreground">!{ql.keyword}</p>
-                  </div>
                 </div>
-                <div className="flex items-center gap-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
+
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <p className="text-[13px] font-medium tracking-[-0.01em] text-white/85 truncate">
+                    {ql.name}
+                  </p>
+                  <p className="text-[11px] font-mono text-[var(--solid-accent,#4ea2ff)]/70">
+                    !{ql.keyword}
+                  </p>
+                </div>
+
+                {/* Actions */}
+                <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                  <button
+                    type="button"
                     onClick={() => onEdit(ql)}
                     disabled={deleteMutation.isPending}
-                    className="text-muted-foreground hover:text-foreground"
+                    className="flex size-8 items-center justify-center rounded-lg text-white/40 transition-colors hover:bg-white/[0.06] hover:text-white/70"
                   >
-                    <Pencil className="size-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
+                    <Pencil className="size-3.5" />
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => handleDelete(ql.keyword)}
                     disabled={deleteMutation.isPending}
-                    className="text-muted-foreground hover:text-red-500"
+                    className="flex size-8 items-center justify-center rounded-lg text-white/40 transition-colors hover:bg-red-500/10 hover:text-red-400"
                   >
                     {deletingKeyword === ql.keyword ? (
-                      <Loader2 className="size-4 animate-spin" />
+                      <Loader2 className="size-3.5 animate-spin" />
                     ) : (
-                      <Trash2 className="size-4" />
+                      <Trash2 className="size-3.5" />
                     )}
-                  </Button>
+                  </button>
                 </div>
               </div>
             ))}
@@ -536,16 +639,30 @@ function QuicklinksManageView({ onBack, onCreate, onEdit }: QuicklinksManageView
         )}
 
         {deleteMutation.error && (
-          <div className="mt-3 rounded-md bg-red-500/10 p-3 text-sm text-red-500">
+          <div className="mt-3 rounded-xl bg-red-500/10 px-4 py-3 text-[12px] font-medium text-red-400 ring-1 ring-red-500/20">
             {deleteMutation.error.message}
           </div>
         )}
       </div>
 
-      <CommandFooterBar
-        leftSlot={<span>{quicklinks?.length ?? 0} quicklinks</span>}
-        rightSlot={<CommandKeyHint keyLabel="ESC" label="Back" />}
-      />
+      {/* Footer */}
+      <div className="quicklinks-footer flex h-10 shrink-0 items-center justify-between border-t border-white/[0.04] px-5">
+        <div className="flex items-center gap-2 text-[11px] text-white/30">
+          <Zap className="size-3.5 opacity-50" />
+          <span className="font-medium tracking-[-0.01em]">
+            {quicklinks?.length ?? 0} quicklink{(quicklinks?.length ?? 0) !== 1 ? "s" : ""}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-4 text-[11px] text-white/25">
+          <div className="flex items-center gap-1.5">
+            <kbd className="flex h-5 min-w-[20px] items-center justify-center rounded bg-white/[0.06] px-1.5 font-mono text-[10px] text-white/40">
+              Esc
+            </kbd>
+            <span>Back</span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

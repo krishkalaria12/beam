@@ -67,27 +67,28 @@ export function HyprWhsprView({ onBack }: HyprWhsprViewProps) {
     await queryClient.invalidateQueries({ queryKey: RECORD_STATUS_QUERY_KEY });
   }, [queryClient]);
 
-  const runRecordAction = useCallback(async (action: HyprWhsprRecordAction) => {
-    setRunningAction(action);
-    setErrorMessage(null);
+  const runRecordAction = useCallback(
+    async (action: HyprWhsprRecordAction) => {
+      setRunningAction(action);
+      setErrorMessage(null);
 
-    try {
-      const output = await executeHyprWhsprRecord(action, { hideLauncher: false });
-      const normalizedOutput = output.trim();
-      setLastActionOutput(
-        normalizedOutput.length > 0
-          ? normalizedOutput
-          : `[${action}] command completed (no output)`,
-      );
-      await queryClient.invalidateQueries({ queryKey: RECORD_STATUS_QUERY_KEY });
-    } catch (error) {
-      setErrorMessage(
-        error instanceof Error ? error.message : "HyprWhspr command failed.",
-      );
-    } finally {
-      setRunningAction(null);
-    }
-  }, [queryClient]);
+      try {
+        const output = await executeHyprWhsprRecord(action, { hideLauncher: false });
+        const normalizedOutput = output.trim();
+        setLastActionOutput(
+          normalizedOutput.length > 0
+            ? normalizedOutput
+            : `[${action}] command completed (no output)`,
+        );
+        await queryClient.invalidateQueries({ queryKey: RECORD_STATUS_QUERY_KEY });
+      } catch (error) {
+        setErrorMessage(error instanceof Error ? error.message : "HyprWhspr command failed.");
+      } finally {
+        setRunningAction(null);
+      }
+    },
+    [queryClient],
+  );
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {

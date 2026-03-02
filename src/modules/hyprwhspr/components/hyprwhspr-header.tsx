@@ -20,17 +20,18 @@ export function HyprWhsprHeader({
 }: HyprWhsprHeaderProps) {
   return (
     <CommandPanelHeader>
-      <CommandPanelBackButton onClick={() => { void onBack(); }} aria-label="Back" />
+      <CommandPanelBackButton
+        onClick={() => {
+          void onBack();
+        }}
+        aria-label="Back"
+      />
       <CommandPanelTitleBlock
         title="HyprWhspr"
         subtitle="Push-to-talk dictation mode"
         className="flex-1"
       />
-      <CommandStatusChip
-        tone={statusTone}
-        pulse={isRecording}
-        label={statusLabel}
-      />
+      <CommandStatusChip tone={statusTone} pulse={isRecording} label={statusLabel} />
     </CommandPanelHeader>
   );
 }

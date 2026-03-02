@@ -21,7 +21,7 @@ export function HyprWhsprOutputCard({
           Terminal Output
         </p>
       </div>
-      
+
       <div className="space-y-4 text-xs">
         {isRecordStatusLoading ? (
           <p className="text-muted-foreground/60 animate-pulse">Checking recorder status...</p>

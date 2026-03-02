@@ -1,16 +1,16 @@
-import { KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
+import {
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
 import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, ListTodo, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
-import {
-  CommandPanelBackButton,
-  CommandPanelHeader,
-  CommandPanelTitleBlock,
-} from "@/components/command/command-panel-header";
-import { CommandFooterBar } from "@/components/command/command-footer-bar";
-import { CommandKeyHint } from "@/components/command/command-key-hint";
+import { cn } from "@/lib/utils";
 import { useLauncherPanelBackHandler } from "@/modules/launcher/lib/back-navigation";
 import { SubTodoDetailPanel } from "@/modules/todo/components/subtodo-detail-panel";
 import { TodoListPanel } from "@/modules/todo/components/todo-list-panel";
@@ -87,9 +87,7 @@ export function TodoView({ onBack }: TodoViewProps) {
 
   const orderedTodos = orderTodos(todos, todoOrder);
   const selectedTodo = orderedTodos.find((todo) => todo.id === selectedTodoId) ?? null;
-  const orderedSubTodos = selectedTodo
-    ? orderSubTodos(selectedTodo.sub_todos, subTodoOrder)
-    : [];
+  const orderedSubTodos = selectedTodo ? orderSubTodos(selectedTodo.sub_todos, subTodoOrder) : [];
 
   const completedTodoCount = orderedTodos.reduce(
     (total, todo) => total + (todo.completed ? 1 : 0),
@@ -222,7 +220,8 @@ export function TodoView({ onBack }: TodoViewProps) {
           updateSubTodoMutation.mutateAsync({
             id: subTodo.id,
             completed: true,
-          })),
+          }),
+        ),
       );
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to update subtasks.");
@@ -407,17 +406,49 @@ export function TodoView({ onBack }: TodoViewProps) {
   }
 
   return (
-    <div className="glass-effect flex h-full flex-col text-foreground">
-      <CommandPanelHeader>
-        <CommandPanelBackButton onClick={onBack} aria-label="Back" />
-        <CommandPanelTitleBlock
-          title="Todo"
-          subtitle={`${completedTodoCount}/${orderedTodos.length} completed`}
-          className="flex-1"
-        />
-        {isFetching ? <Loader2 className="size-4 animate-spin text-muted-foreground" /> : null}
-      </CommandPanelHeader>
+    <div className="todo-view-enter flex h-full flex-col">
+      {/* Header */}
+      <header className="todo-header-enter flex items-center gap-3 border-b border-white/[0.06] px-4 py-3">
+        {/* Back button */}
+        <button
+          type="button"
+          onClick={onBack}
+          className={cn(
+            "flex size-9 items-center justify-center rounded-lg transition-all",
+            "bg-white/[0.03] text-white/40",
+            "hover:bg-white/[0.06] hover:text-white/70",
+          )}
+          aria-label="Back"
+        >
+          <ArrowLeft className="size-4" />
+        </button>
 
+        {/* Icon */}
+        <div className="size-9 rounded-xl bg-gradient-to-br from-rose-500/25 to-pink-500/25 p-2">
+          <ListTodo className="size-full text-rose-400" />
+        </div>
+
+        {/* Title block */}
+        <div className="flex-1 min-w-0">
+          <h1 className="text-[14px] font-semibold tracking-[-0.01em] text-white/90">Todos</h1>
+          <p className="text-[11px] text-white/40">
+            {completedTodoCount}/{orderedTodos.length} completed
+          </p>
+        </div>
+
+        {/* Loading indicator */}
+        {isFetching && <Loader2 className="size-4 animate-spin text-white/30" />}
+
+        {/* Completion badge */}
+        {orderedTodos.length > 0 && completedTodoCount === orderedTodos.length && (
+          <div className="flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-2.5 py-1 text-emerald-400">
+            <CheckCircle2 className="size-3.5" />
+            <span className="text-[11px] font-medium">All done!</span>
+          </div>
+        )}
+      </header>
+
+      {/* Content */}
       <div className="flex min-h-0 flex-1 overflow-hidden">
         <TodoListPanel
           isLoading={isLoading}
@@ -467,15 +498,22 @@ export function TodoView({ onBack }: TodoViewProps) {
         />
       </div>
 
-      <CommandFooterBar
-        leftSlot={<span>{orderedTodos.length} todos</span>}
-        rightSlot={(
-          <>
-            <CommandKeyHint keyLabel="ENTER" label="Create/Save" />
-            <CommandKeyHint keyLabel="ESC" label="Back" />
-          </>
-        )}
-      />
+      {/* Minimal footer */}
+      <footer className="todo-footer-enter flex items-center justify-between border-t border-white/[0.06] px-4 py-2">
+        <span className="text-[11px] text-white/30">
+          {orderedTodos.length} {orderedTodos.length === 1 ? "todo" : "todos"}
+        </span>
+        <div className="flex items-center gap-3">
+          <span className="text-[10px] text-white/25">
+            <kbd className="rounded bg-white/[0.06] px-1.5 py-0.5 font-mono text-[9px]">Enter</kbd>
+            <span className="ml-1">Create</span>
+          </span>
+          <span className="text-[10px] text-white/25">
+            <kbd className="rounded bg-white/[0.06] px-1.5 py-0.5 font-mono text-[9px]">Esc</kbd>
+            <span className="ml-1">Back</span>
+          </span>
+        </div>
+      </footer>
     </div>
   );
 }

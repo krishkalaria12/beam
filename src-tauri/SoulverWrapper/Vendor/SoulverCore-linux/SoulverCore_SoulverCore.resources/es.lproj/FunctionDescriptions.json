@@ -1,180 +1,153 @@
 {
-    "weatherRelated": [
-      {
-        "identifier": "lowTemperature",
-        "prototypeExpressions": [
-          "temperatura mínima en __timezone",
-          "baja en __timezone",
-          "temp. mínima en __timezone",
-          "temperatura baja en __timezone",
-          "mínima en __timezone",
-          "__timezone mínima"
-        ]
-      },
-      {
-        "identifier": "highTemperature",
-        "prototypeExpressions": [
-          "temperatura máxima en __timezone",
-          "temp. máxima en __timezone",
-          "máxima en __timezone",
-          "alta en __timezone",
-          "temperatura alta en __timezone",
-          "__timezone máxima"
-        ]
-      },
-      {
-        "identifier": "precipitationChance",
-        "prototypeExpressions": [
-          "probabilidad de lluvia en __timezone",
-          "__timezone probabilidad de lluvia"
-        ]
-      },
-      {
-        "identifier": "rainfallAmount",
-        "prototypeExpressions": [
-          "cantidad de lluvia en __timezone",
-          "precipitación en __timezone",
-          "precipitación de lluvia en __timezone",
-          "lluvia en __timezone",
-          "__timezone lluvia"
-        ]
-      },
-      {
-        "identifier": "snowfallAmount",
-        "prototypeExpressions": [
-          "cantidad de nieve en __timezone",
-          "precipitación de nieve en __timezone",
-          "nieve en __timezone",
-          "__timezone nieve"
-        ]
-      },
-      {
-        "identifier": "apparentTemperature",
-        "prototypeExpressions": [
-          "temperatura aparente en __timezone",
-          "temp. aparente en __timezone",
-          "sensación térmica en __timezone",
-          "__timezone sensación térmica"
-        ]
-      },
-      {
-        "identifier": "currentTemperature",
-        "prototypeExpressions": [
-          "temperatura actual en __timezone",
-          "temp. en __timezone",
-          "temperatura en __timezone"
-        ]
-      },
-      {
-        "identifier": "weatherConditions",
-        "prototypeExpressions": [
-          "clima en __timezone",
-          "condiciones meteorológicas en __timezone",
-          "condiciones climáticas en __timezone"
-        ]
-      },
-      {
-        "identifier": "humidity",
-        "prototypeExpressions": [
-          "humedad en __timezone",
-          "__timezone humedad"
-        ]
-      },
-      {
-        "identifier": "cloudCover",
-        "prototypeExpressions": [
-          "cobertura de nubes en __timezone",
-          "nubosidad en __timezone",
-          "__timezone nubosidad"
-        ]
-      },
-      {
-        "identifier": "visibility",
-        "prototypeExpressions": [
-          "visibilidad en __timezone",
-          "__timezone visibilidad"
-        ]
-      },
-      {
-        "identifier": "windSpeed",
-        "prototypeExpressions": [
-          "velocidad del viento en __timezone",
-          "viento en __timezone",
-          "__timezone viento"
-        ]
-      },
-      {
-        "identifier": "windDirection",
-        "prototypeExpressions": [
-          "dirección del viento en __timezone",
-          "__timezone dirección del viento"
-        ]
-      },
-      {
-        "identifier": "dewPoint",
-        "prototypeExpressions": [
-          "punto de rocío en __timezone",
-          "__timezone punto de rocío"
-        ]
-      },
-      {
-        "identifier": "uvIndex",
-        "prototypeExpressions": [
-          "índice uv en __timezone",
-          "__timezone índice uv"
-        ]
-      },
-      {
-        "identifier": "pressureDirection",
-        "prototypeExpressions": [
-          "dirección de la presión en __timezone",
-          "__timezone dirección de la presión"
-        ]
-      },
-      {
-        "identifier": "pressure",
-        "prototypeExpressions": [
-          "presión en __timezone",
-          "__timezone presión"
-        ]
-      },
-      {
-        "identifier": "sunrise",
-        "prototypeExpressions": [
-          "amanecer en __timezone",
-          "__timezone amanecer"
-        ]
-      },
-      {
-        "identifier": "sunset",
-        "prototypeExpressions": [
-          "atardecer en __timezone",
-          "__timezone atardecer"
-        ]
-      },
-      {
-        "identifier": "moonrise",
-        "prototypeExpressions": [
-          "salida de la luna en __timezone",
-          "__timezone salida de la luna"
-        ]
-      },
-      {
-        "identifier": "moonset",
-        "prototypeExpressions": [
-          "puesta de la luna en __timezone",
-          "__timezone puesta de la luna"
-        ]
-      },
-      {
-        "identifier": "moonPhase",
-        "prototypeExpressions": [
-          "fase lunar en __timezone",
-          "luna en __timezone",
-          "__timezone fase lunar"
-        ]
-      }
-    ],
+  "weatherRelated": [
+    {
+      "identifier": "lowTemperature",
+      "prototypeExpressions": [
+        "temperatura mínima en __timezone",
+        "baja en __timezone",
+        "temp. mínima en __timezone",
+        "temperatura baja en __timezone",
+        "mínima en __timezone",
+        "__timezone mínima"
+      ]
+    },
+    {
+      "identifier": "highTemperature",
+      "prototypeExpressions": [
+        "temperatura máxima en __timezone",
+        "temp. máxima en __timezone",
+        "máxima en __timezone",
+        "alta en __timezone",
+        "temperatura alta en __timezone",
+        "__timezone máxima"
+      ]
+    },
+    {
+      "identifier": "precipitationChance",
+      "prototypeExpressions": [
+        "probabilidad de lluvia en __timezone",
+        "__timezone probabilidad de lluvia"
+      ]
+    },
+    {
+      "identifier": "rainfallAmount",
+      "prototypeExpressions": [
+        "cantidad de lluvia en __timezone",
+        "precipitación en __timezone",
+        "precipitación de lluvia en __timezone",
+        "lluvia en __timezone",
+        "__timezone lluvia"
+      ]
+    },
+    {
+      "identifier": "snowfallAmount",
+      "prototypeExpressions": [
+        "cantidad de nieve en __timezone",
+        "precipitación de nieve en __timezone",
+        "nieve en __timezone",
+        "__timezone nieve"
+      ]
+    },
+    {
+      "identifier": "apparentTemperature",
+      "prototypeExpressions": [
+        "temperatura aparente en __timezone",
+        "temp. aparente en __timezone",
+        "sensación térmica en __timezone",
+        "__timezone sensación térmica"
+      ]
+    },
+    {
+      "identifier": "currentTemperature",
+      "prototypeExpressions": [
+        "temperatura actual en __timezone",
+        "temp. en __timezone",
+        "temperatura en __timezone"
+      ]
+    },
+    {
+      "identifier": "weatherConditions",
+      "prototypeExpressions": [
+        "clima en __timezone",
+        "condiciones meteorológicas en __timezone",
+        "condiciones climáticas en __timezone"
+      ]
+    },
+    {
+      "identifier": "humidity",
+      "prototypeExpressions": ["humedad en __timezone", "__timezone humedad"]
+    },
+    {
+      "identifier": "cloudCover",
+      "prototypeExpressions": [
+        "cobertura de nubes en __timezone",
+        "nubosidad en __timezone",
+        "__timezone nubosidad"
+      ]
+    },
+    {
+      "identifier": "visibility",
+      "prototypeExpressions": ["visibilidad en __timezone", "__timezone visibilidad"]
+    },
+    {
+      "identifier": "windSpeed",
+      "prototypeExpressions": [
+        "velocidad del viento en __timezone",
+        "viento en __timezone",
+        "__timezone viento"
+      ]
+    },
+    {
+      "identifier": "windDirection",
+      "prototypeExpressions": [
+        "dirección del viento en __timezone",
+        "__timezone dirección del viento"
+      ]
+    },
+    {
+      "identifier": "dewPoint",
+      "prototypeExpressions": ["punto de rocío en __timezone", "__timezone punto de rocío"]
+    },
+    {
+      "identifier": "uvIndex",
+      "prototypeExpressions": ["índice uv en __timezone", "__timezone índice uv"]
+    },
+    {
+      "identifier": "pressureDirection",
+      "prototypeExpressions": [
+        "dirección de la presión en __timezone",
+        "__timezone dirección de la presión"
+      ]
+    },
+    {
+      "identifier": "pressure",
+      "prototypeExpressions": ["presión en __timezone", "__timezone presión"]
+    },
+    {
+      "identifier": "sunrise",
+      "prototypeExpressions": ["amanecer en __timezone", "__timezone amanecer"]
+    },
+    {
+      "identifier": "sunset",
+      "prototypeExpressions": ["atardecer en __timezone", "__timezone atardecer"]
+    },
+    {
+      "identifier": "moonrise",
+      "prototypeExpressions": ["salida de la luna en __timezone", "__timezone salida de la luna"]
+    },
+    {
+      "identifier": "moonset",
+      "prototypeExpressions": ["puesta de la luna en __timezone", "__timezone puesta de la luna"]
+    },
+    {
+      "identifier": "moonPhase",
+      "prototypeExpressions": [
+        "fase lunar en __timezone",
+        "luna en __timezone",
+        "__timezone fase lunar"
+      ]
+    }
+  ],
   "datetime": [
     {
       "prototypeExpressions": [
@@ -206,9 +179,7 @@
       "identifier": "calendarUnitToDatespan"
     },
     {
-      "prototypeExpressions": [
-        "__duration en __datestamp"
-      ],
+      "prototypeExpressions": ["__duration en __datestamp"],
       "identifier": "calendarUnitInDate"
     },
     {
@@ -219,9 +190,7 @@
       "identifier": "calendarUnitLeftInDate"
     },
     {
-      "prototypeExpressions": [
-        "__duration en __datespan"
-      ],
+      "prototypeExpressions": ["__duration en __datespan"],
       "identifier": "calendarUnitInDatespan"
     },
     {
@@ -249,17 +218,11 @@
       "identifier": "inclusiveIntervalBetweenDates"
     },
     {
-      "prototypeExpressions": [
-        "desde __timestamp hasta __timestamp",
-        "__timestamp a __timestamp"
-      ],
+      "prototypeExpressions": ["desde __timestamp hasta __timestamp", "__timestamp a __timestamp"],
       "identifier": "intervalBetweenTimestamps"
     },
     {
-      "prototypeExpressions": [
-        "desde __laptime hasta __laptime",
-        "__laptime a __laptime"
-      ],
+      "prototypeExpressions": ["desde __laptime hasta __laptime", "__laptime a __laptime"],
       "identifier": "intervalBetweenLaptimes"
     },
     {
@@ -271,17 +234,11 @@
       "identifier": "framesBetweenFrametimes"
     },
     {
-      "prototypeExpressions": [
-        "desde __frametime hasta __frametime",
-        "__frametime a __frametime"
-      ],
+      "prototypeExpressions": ["desde __frametime hasta __frametime", "__frametime a __frametime"],
       "identifier": "intervalBetweenFrametimes"
     },
     {
-      "prototypeExpressions": [
-        "__duration desde __datestamp",
-        "__duration desde el __datestamp"
-      ],
+      "prototypeExpressions": ["__duration desde __datestamp", "__duration desde el __datestamp"],
       "identifier": "calendarUnitSinceDate"
     },
     {
@@ -293,23 +250,15 @@
       "identifier": "calendarUnitExpressionAfterDate"
     },
     {
-      "prototypeExpressions": [
-        "__timespan antes de __datestamp",
-        "__timespan antes __datestamp"
-      ],
+      "prototypeExpressions": ["__timespan antes de __datestamp", "__timespan antes __datestamp"],
       "identifier": "calendarUnitExpressionBeforeDate"
     },
     {
-      "prototypeExpressions": [
-        "__timespan atrás"
-      ],
+      "prototypeExpressions": ["__timespan atrás"],
       "identifier": "calendarUnitExpressionAgo"
     },
     {
-      "prototypeExpressions": [
-        "nuevo timestamp",
-        "timestamp actual"
-      ],
+      "prototypeExpressions": ["nuevo timestamp", "timestamp actual"],
       "identifier": "generateTimestamp"
     },
     {
@@ -340,10 +289,7 @@
       "identifier": "differenceBetweenTimezones"
     },
     {
-      "prototypeExpressions": [
-        "__datestamp en __timespan",
-        "__datestamp después de __timespan"
-      ],
+      "prototypeExpressions": ["__datestamp en __timespan", "__datestamp después de __timespan"],
       "identifier": "weekdayAfterTimespan"
     },
     {
@@ -355,9 +301,7 @@
       "identifier": "weekOfYearOnDate"
     },
     {
-      "prototypeExpressions": [
-        "semana del año"
-      ],
+      "prototypeExpressions": ["semana del año"],
       "identifier": "weekOfYear"
     },
     {
@@ -369,9 +313,7 @@
       "identifier": "dayNumberOnDate"
     },
     {
-      "prototypeExpressions": [
-        "día del año"
-      ],
+      "prototypeExpressions": ["día del año"],
       "identifier": "dayOfYear"
     },
     {
@@ -409,9 +351,7 @@
       "identifier": "returnOnInvestmentAfter"
     },
     {
-      "prototypeExpressions": [
-        "500 invertidos que devuelven 1000"
-      ],
+      "prototypeExpressions": ["500 invertidos que devuelven 1000"],
       "identifier": "returnOnInvestment"
     },
     {
@@ -570,50 +510,31 @@
   ],
   "general": [
     {
-      "prototypeExpressions": [
-        "el resto de 20 dividido por 3",
-        "resto de 21 dividido por 5"
-      ],
+      "prototypeExpressions": ["el resto de 20 dividido por 3", "resto de 21 dividido por 5"],
       "identifier": "remainder"
     },
     {
-      "prototypeExpressions": [
-        "21 dividido por 7"
-      ],
+      "prototypeExpressions": ["21 dividido por 7"],
       "identifier": "dividedBy"
     },
     {
-      "prototypeExpressions": [
-        "la mitad de 20"
-      ],
+      "prototypeExpressions": ["la mitad de 20"],
       "identifier": "halfOf"
     },
     {
-      "prototypeExpressions": [
-        "el menor de 2 y 30",
-        "menor de 5 y 10"
-      ],
+      "prototypeExpressions": ["el menor de 2 y 30", "menor de 5 y 10"],
       "identifier": "lesserOf"
     },
     {
-      "prototypeExpressions": [
-        "el mayor de 2 y 30",
-        "mayor de 100 y 200"
-      ],
+      "prototypeExpressions": ["el mayor de 2 y 30", "mayor de 100 y 200"],
       "identifier": "greaterOf"
     },
     {
-      "prototypeExpressions": [
-        "el punto medio entre 2 y 32",
-        "punto medio entre 30 y 90"
-      ],
+      "prototypeExpressions": ["el punto medio entre 2 y 32", "punto medio entre 30 y 90"],
       "identifier": "midpoint"
     },
     {
-      "prototypeExpressions": [
-        "mcm de 5 y 8",
-        "mínimo común múltiplo de 5 y 8"
-      ],
+      "prototypeExpressions": ["mcm de 5 y 8", "mínimo común múltiplo de 5 y 8"],
       "identifier": "lcm"
     },
     {
@@ -625,59 +546,39 @@
       "identifier": "gcd"
     },
     {
-      "prototypeExpressions": [
-        "6 está a 600 como qué está a 8",
-        "5 es a 10 como qué es a 80"
-      ],
+      "prototypeExpressions": ["6 está a 600 como qué está a 8", "5 es a 10 como qué es a 80"],
       "identifier": "proportionsFindNumerator"
     },
     {
-      "prototypeExpressions": [
-        "6 está a 600 como 8 está a qué",
-        "6 es a 60 como 8 es a qué"
-      ],
+      "prototypeExpressions": ["6 está a 600 como 8 está a qué", "6 es a 60 como 8 es a qué"],
       "identifier": "proportionsFindDenominator"
     },
     {
-      "prototypeExpressions": [
-        "número aleatorio entre 1 y 5"
-      ],
+      "prototypeExpressions": ["número aleatorio entre 1 y 5"],
       "identifier": "makeRandomNumber"
     },
     {
-      "prototypeExpressions": [
-        "5 como multiplicador de 1"
-      ],
+      "prototypeExpressions": ["5 como multiplicador de 1"],
       "identifier": "isWhatMultiplierOf"
     },
     {
-      "prototypeExpressions": [
-        "5 como multiplicador de"
-      ],
+      "prototypeExpressions": ["5 como multiplicador de"],
       "identifier": "isWhatMultiplierOff"
     },
     {
-      "prototypeExpressions": [
-        "5 como multiplicador en 1"
-      ],
+      "prototypeExpressions": ["5 como multiplicador en 1"],
       "identifier": "isWhatMultiplierOn"
     },
     {
-      "prototypeExpressions": [
-        "raíz cuadrada de 100"
-      ],
+      "prototypeExpressions": ["raíz cuadrada de 100"],
       "identifier": "squareRoot"
     },
     {
-      "prototypeExpressions": [
-        "raíz cúbica de 100"
-      ],
+      "prototypeExpressions": ["raíz cúbica de 100"],
       "identifier": "cubedRoot"
     },
     {
-      "prototypeExpressions": [
-        "raíz 5 de 100"
-      ],
+      "prototypeExpressions": ["raíz 5 de 100"],
       "identifier": "nthRoot"
     },
     {
@@ -700,40 +601,27 @@
       "identifier": "nthLogReversed"
     },
     {
-      "prototypeExpressions": [
-        "5 elegido 3",
-        "combinatoria de 5 elementos tomados de 3 en 3"
-      ],
+      "prototypeExpressions": ["5 elegido 3", "combinatoria de 5 elementos tomados de 3 en 3"],
       "identifier": "combination"
     },
     {
-      "prototypeExpressions": [
-        "5 permutado 3"
-      ],
+      "prototypeExpressions": ["5 permutado 3"],
       "identifier": "permutation"
     },
     {
-      "prototypeExpressions": [
-        "3 combinaciones de 5"
-      ],
+      "prototypeExpressions": ["3 combinaciones de 5"],
       "identifier": "reversedCombination"
     },
     {
-      "prototypeExpressions": [
-        "3 permutaciones de 5"
-      ],
+      "prototypeExpressions": ["3 permutaciones de 5"],
       "identifier": "reversedPermutation"
     },
     {
-      "prototypeExpressions": [
-        "5 permutado 3"
-      ],
+      "prototypeExpressions": ["5 permutado 3"],
       "identifier": "permutation"
     },
     {
-      "prototypeExpressions": [
-        "eliminar 10 del rango 0 a 10"
-      ],
+      "prototypeExpressions": ["eliminar 10 del rango 0 a 10"],
       "identifier": "scrubNumberWithSpecifiedRange"
     }
   ],
@@ -774,17 +662,11 @@
       "identifier": "gpsCoordinatesOfPlace"
     },
     {
-      "prototypeExpressions": [
-        "longitud de __timezone",
-        "longitud de __gpsCoordinates"
-      ],
+      "prototypeExpressions": ["longitud de __timezone", "longitud de __gpsCoordinates"],
       "identifier": "longitudeOfPlace"
     },
     {
-      "prototypeExpressions": [
-        "latitud de __timezone",
-        "latitud de __gpsCoordinates"
-      ],
+      "prototypeExpressions": ["latitud de __timezone", "latitud de __gpsCoordinates"],
       "identifier": "latitudeOfPlace"
     }
   ],
@@ -842,50 +724,33 @@
       "identifier": "xToYIsWhatPercentage"
     },
     {
-      "prototypeExpressions": [
-        "¿Qué multiplicador es de 10 a 20?",
-        "¿Qué múltiple es de 10 a 20?"
-      ],
+      "prototypeExpressions": ["¿Qué multiplicador es de 10 a 20?", "¿Qué múltiple es de 10 a 20?"],
       "identifier": "xToYIsWhatMultiplier"
     },
     {
-      "prototypeExpressions": [
-        "10 a 20"
-      ],
+      "prototypeExpressions": ["10 a 20"],
       "identifier": "xToY"
     }
   ],
   "percentage": [
     {
-      "prototypeExpressions": [
-        "__percentage de 100",
-        "__percentage de 100"
-      ],
+      "prototypeExpressions": ["__percentage de 100", "__percentage de 100"],
       "identifier": "percentOf"
     },
     {
-      "prototypeExpressions": [
-        "__percentage de descuento en 100"
-      ],
+      "prototypeExpressions": ["__percentage de descuento en 100"],
       "identifier": "percentOff"
     },
     {
-      "prototypeExpressions": [
-        "__percentage sobre 100"
-      ],
+      "prototypeExpressions": ["__percentage sobre 100"],
       "identifier": "percentOn"
     },
     {
-      "prototypeExpressions": [
-        "30 es __percentage de qué",
-        "20 es el __percentage de qué"
-      ],
+      "prototypeExpressions": ["30 es __percentage de qué", "20 es el __percentage de qué"],
       "identifier": "isPercentOfWhat"
     },
     {
-      "prototypeExpressions": [
-        "__percentage de qué es 30"
-      ],
+      "prototypeExpressions": ["__percentage de qué es 30"],
       "identifier": "isPercentOfWhatClassic"
     },
     {
@@ -896,9 +761,7 @@
       "identifier": "isPercentOffWhat"
     },
     {
-      "prototypeExpressions": [
-        "__percentage de descuento en qué es 30"
-      ],
+      "prototypeExpressions": ["__percentage de descuento en qué es 30"],
       "identifier": "isPercentOffWhatClassic"
     },
     {
@@ -909,9 +772,7 @@
       "identifier": "isPercentOnWhat"
     },
     {
-      "prototypeExpressions": [
-        "__percentage sobre qué es 30"
-      ],
+      "prototypeExpressions": ["__percentage sobre qué es 30"],
       "identifier": "isPercentOnWhatClassic"
     },
     {
@@ -948,11 +809,7 @@
       "identifier": "isWhatPercentOn"
     },
     {
-      "prototypeExpressions": [
-        "__sales_tax en 500",
-        "__sales_tax de 500",
-        "__sales_tax sobre 500"
-      ],
+      "prototypeExpressions": ["__sales_tax en 500", "__sales_tax de 500", "__sales_tax sobre 500"],
       "identifier": "salesTaxIn"
     }
   ],
@@ -1000,15 +857,11 @@
       "identifier": "substanceWeightToVolumeConversion"
     },
     {
-      "prototypeExpressions": [
-        "densidad de __substance"
-      ],
+      "prototypeExpressions": ["densidad de __substance"],
       "identifier": "densityOfSubstance"
     },
     {
-      "prototypeExpressions": [
-        "__duration en __timespan"
-      ],
+      "prototypeExpressions": ["__duration en __timespan"],
       "identifier": "calendarUnitInTimespan"
     },
     {
@@ -1031,10 +884,7 @@
       "identifier": "rateUnitChange"
     },
     {
-      "prototypeExpressions": [
-        "__unit_rate para un __duration",
-        "__unit_rate para una __duration"
-      ],
+      "prototypeExpressions": ["__unit_rate para un __duration", "__unit_rate para una __duration"],
       "identifier": "rateForADuration"
     },
     {
@@ -1058,15 +908,11 @@
       "identifier": "tyreSpeed"
     },
     {
-      "prototypeExpressions": [
-        "__speed_expression durante __duration_expression"
-      ],
+      "prototypeExpressions": ["__speed_expression durante __duration_expression"],
       "identifier": "speedForTime"
     },
     {
-      "prototypeExpressions": [
-        "__power_expression a __angularVelocity_expression"
-      ],
+      "prototypeExpressions": ["__power_expression a __angularVelocity_expression"],
       "identifier": "powerAtRotation"
     }
   ]

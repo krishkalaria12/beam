@@ -1,10 +1,14 @@
 import { useCommandState } from "cmdk";
 import { useEffect, useState } from "react";
+import { Calculator, Loader2 } from "lucide-react";
 
 import { OpenModuleCommandRow } from "@/components/command/open-module-command-row";
 import { CommandIcon } from "@/components/icons/command-icon";
 import { CommandGroup, CommandItem } from "@/components/ui/command";
-import { matchesCommandKeywords, normalizeCommandQuery } from "@/modules/launcher/lib/command-query";
+import {
+  matchesCommandKeywords,
+  normalizeCommandQuery,
+} from "@/modules/launcher/lib/command-query";
 import { useCalculatorHistory } from "../hooks/use-calculator-history";
 import { HISTORY_COPY_FEEDBACK_MS } from "../constants";
 
@@ -17,10 +21,7 @@ type CalculatorHistoryCommandGroupProps = {
   onOpen: () => void;
 };
 
-const CALCULATOR_HISTORY_KEYWORDS = [
-  "calculator",
-  "calculator history",
-] as const;
+const CALCULATOR_HISTORY_KEYWORDS = ["calculator", "calculator history"] as const;
 
 async function copyCalculatorEntry(value: string) {
   if (!navigator?.clipboard?.writeText) {
@@ -79,34 +80,33 @@ export default function CalculatorHistoryCommandGroup({
     if (!query) {
       return true;
     }
-    return (
-      entry.query.toLowerCase().includes(query) ||
-      entry.result.toLowerCase().includes(query)
-    );
+    return entry.query.toLowerCase().includes(query) || entry.result.toLowerCase().includes(query);
   });
 
   return (
     <CommandGroup>
+      {/* Loading state */}
       {isLoading && (
-        <CommandItem disabled className="px-3 py-3 opacity-80">
-          <div className="min-w-0">
-            <p className="truncate text-[1.04rem] leading-tight text-foreground/80">
-              loading calculator history...
-            </p>
+        <CommandItem disabled className="calc-history-loading px-4 py-6">
+          <div className="flex flex-col items-center justify-center w-full text-center">
+            <div className="size-10 rounded-xl bg-gradient-to-br from-orange-500/15 to-amber-500/15 p-2.5 mb-3">
+              <Loader2 className="size-full text-orange-400 animate-spin" />
+            </div>
+            <p className="text-[12px] text-white/50">Loading history...</p>
           </div>
         </CommandItem>
       )}
 
+      {/* Error state */}
       {isError && <CalculatorHistoryError />}
 
-      {!isLoading && !isError && copyError && (
-        <CalculatorHistoryError message={copyError} />
-      )}
+      {/* Copy error */}
+      {!isLoading && !isError && copyError && <CalculatorHistoryError message={copyError} />}
 
-      {!isLoading && !isError && filteredHistory.length === 0 && (
-        <CalculatorHistoryEmpty />
-      )}
+      {/* Empty state */}
+      {!isLoading && !isError && filteredHistory.length === 0 && <CalculatorHistoryEmpty />}
 
+      {/* History items */}
       {!isLoading &&
         !isError &&
         filteredHistory.map((entry, index) => {
@@ -125,7 +125,7 @@ export default function CalculatorHistoryCommandGroup({
                     setCopyError(null);
                   })
                   .catch(() => {
-                    setCopyError("could not copy entry");
+                    setCopyError("Could not copy to clipboard");
                   });
               }}
             />

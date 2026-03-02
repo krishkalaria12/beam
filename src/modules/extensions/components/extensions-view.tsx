@@ -3,12 +3,8 @@ import { AlertTriangle, Loader2, Search, Sparkles, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { toast } from "sonner";
 
-import {
-  CommandFooterBar,
-} from "@/components/command/command-footer-bar";
-import {
-  CommandKeyHint,
-} from "@/components/command/command-key-hint";
+import { CommandFooterBar } from "@/components/command/command-footer-bar";
+import { CommandKeyHint } from "@/components/command/command-key-hint";
 import {
   CommandPanelBackButton,
   CommandPanelHeader,

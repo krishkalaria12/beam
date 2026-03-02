@@ -29,9 +29,7 @@ export function logProviderResolution(
   const contextLine = `mode=${context.mode} panel=${context.activePanel} query="${query}"`;
 
   for (const providerError of resolution.errors) {
-    console.error(
-      `[provider:${providerError.providerId}] ${providerError.message} ${contextLine}`,
-    );
+    console.error(`[provider:${providerError.providerId}] ${providerError.message} ${contextLine}`);
   }
 }
 

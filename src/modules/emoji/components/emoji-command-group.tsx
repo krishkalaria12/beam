@@ -4,7 +4,10 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { OpenModuleCommandRow } from "@/components/command/open-module-command-row";
 import { CommandIcon } from "@/components/icons/command-icon";
 import { CommandGroup } from "@/components/ui/command";
-import { matchesCommandKeywords, normalizeCommandQuery } from "@/modules/launcher/lib/command-query";
+import {
+  matchesCommandKeywords,
+  normalizeCommandQuery,
+} from "@/modules/launcher/lib/command-query";
 
 // Import types
 import type { EmojiData } from "../types";
@@ -97,7 +100,7 @@ export default function EmojiCommandGroup({ isOpen, onOpen, onBack }: EmojiComma
   // Load emoji data when picker opens
   const loadEmojis = useCallback(async () => {
     if (emojis.length > 0 || isLoading) return;
-    
+
     setIsLoading(true);
     try {
       const data = await loadEmojiData();

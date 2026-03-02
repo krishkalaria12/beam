@@ -1,7 +1,4 @@
-import type {
-  CommandDescriptor,
-  CommandValidationError,
-} from "@/command-registry/types";
+import type { CommandDescriptor, CommandValidationError } from "@/command-registry/types";
 import {
   validateCommandDescriptor,
   validateCommandDescriptors,
@@ -43,7 +40,9 @@ export interface StaticCommandRegistry {
 function createCommandRegistryValidationError(
   errors: CommandValidationError[],
 ): CommandRegistryValidationError {
-  const error = new Error(errors.map((entry) => entry.message).join("\n")) as CommandRegistryValidationError;
+  const error = new Error(
+    errors.map((entry) => entry.message).join("\n"),
+  ) as CommandRegistryValidationError;
   Object.defineProperty(error, "name", {
     value: "CommandRegistryValidationError",
     enumerable: true,
@@ -94,10 +93,7 @@ export function createStaticCommandRegistryStore(
         message: `Command id "${command.id}" is already registered.`,
       }));
 
-    const errors = [
-      ...validateCommandDescriptors(commands),
-      ...duplicateInStore,
-    ];
+    const errors = [...validateCommandDescriptors(commands), ...duplicateInStore];
 
     if (errors.length > 0) {
       throw createCommandRegistryValidationError(errors);

@@ -31,7 +31,9 @@ const initialState: UiStyleProviderState = {
 const UiStyleProviderContext = createContext<UiStyleProviderState>(initialState);
 
 function normalizeUiStyle(value: string | null | undefined): UiStylePreference {
-  const normalized = String(value || "").trim().toLowerCase();
+  const normalized = String(value || "")
+    .trim()
+    .toLowerCase();
   if (normalized === "glassy") return "glassy";
   if (normalized === "solid") return "solid";
   return "default";
@@ -55,11 +57,7 @@ function normalizeBaseColor(value: string | null | undefined): string {
 
 function hexToRgb(hexColor: string): [number, number, number] {
   const value = parseInt(hexColor.slice(1), 16);
-  return [
-    (value >> 16) & 0xff,
-    (value >> 8) & 0xff,
-    value & 0xff,
-  ];
+  return [(value >> 16) & 0xff, (value >> 8) & 0xff, value & 0xff];
 }
 
 function applyUiStyle(uiStyle: UiStylePreference): void {
@@ -69,11 +67,11 @@ function applyUiStyle(uiStyle: UiStylePreference): void {
 
   const root = document.documentElement;
   const body = document.body;
-  
+
   // Remove all style classes first
   root.classList.remove("sc-glassy", "sc-solid");
   body?.classList.remove("sc-glassy", "sc-solid");
-  
+
   // Apply the selected style
   if (uiStyle === "glassy") {
     root.classList.add("sc-glassy");
@@ -137,9 +135,7 @@ export function UiStyleProvider({
   );
 
   return (
-    <UiStyleProviderContext.Provider value={value}>
-      {children}
-    </UiStyleProviderContext.Provider>
+    <UiStyleProviderContext.Provider value={value}>{children}</UiStyleProviderContext.Provider>
   );
 }
 

@@ -42,9 +42,7 @@ export function ExtensionsInstalledSection({
         <h3 className="text-xs font-medium uppercase tracking-widest text-muted-foreground/70">
           Installed
         </h3>
-        {isFetching ? (
-          <CommandInlineLoading label="Syncing" iconClassName="size-3" />
-        ) : null}
+        {isFetching ? <CommandInlineLoading label="Syncing" iconClassName="size-3" /> : null}
       </div>
 
       {isError ? (

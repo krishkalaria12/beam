@@ -403,7 +403,7 @@
       "code": "BOB",
       "symbol": "Bs."
     },
-    "capitalCityTimezoneID": "America/La_Paz",  
+    "capitalCityTimezoneID": "America/La_Paz",
     "name": "Bolivia"
   },
   {
@@ -759,7 +759,7 @@
       "code": "CRC",
       "symbol": "₡"
     },
-    "capitalCityTimezoneID": "America/Costa_Rica",            
+    "capitalCityTimezoneID": "America/Costa_Rica",
     "name": "Costa Rica"
   },
   {
@@ -1060,7 +1060,7 @@
       "code": "FJD",
       "symbol": "$"
     },
-    "capitalCityTimezoneID": "Pacific/Fiji",            
+    "capitalCityTimezoneID": "Pacific/Fiji",
     "name": "Fiji"
   },
   {
@@ -1106,7 +1106,7 @@
       "name": "French",
       "code": "fr"
     },
-    "capitalCityTimezoneID": "America/Cayenne",    
+    "capitalCityTimezoneID": "America/Cayenne",
     "aliases": ["Guyane"],
     "currency": {
       "name": "Euro",
@@ -1282,7 +1282,7 @@
       "code": "DKK",
       "symbol": "kr"
     },
-    "capitalCityTimezoneID": "America/Godthab",            
+    "capitalCityTimezoneID": "America/Godthab",
     "name": "Greenland"
   },
   {
@@ -1300,8 +1300,8 @@
       "symbol": "$"
     },
     "name": "Grenada"
-    },
-    {
+  },
+  {
     "region": "NA",
     "capitalCityTimezoneID": "America/Guatemala",
     "code": "GT",
@@ -1433,7 +1433,7 @@
       "code": "HKD",
       "symbol": "$"
     },
-    "capitalCityTimezoneID": "Asia/Hong_Kong",            
+    "capitalCityTimezoneID": "Asia/Hong_Kong",
     "name": "Hong Kong"
   },
   {
@@ -1458,7 +1458,7 @@
     "code": "IS",
     "capital": "Reykjavík",
     "flagURL": "https://restcountries.eu/data/isl.svg",
-    "capitalCityTimezoneID": "Atlantic/Reykjavik",  
+    "capitalCityTimezoneID": "Atlantic/Reykjavik",
     "language": {
       "name": "Icelandic",
       "code": "is"
@@ -1484,7 +1484,7 @@
       "code": "INR",
       "symbol": "₹"
     },
-    "capitalCityTimezoneID": "Asia/Kolkata",  
+    "capitalCityTimezoneID": "Asia/Kolkata",
     "name": "India"
   },
   {
@@ -1856,7 +1856,7 @@
       "code": "CHF",
       "symbol": "Fr"
     },
-    "capitalCityTimezoneID": "Europe/Vaduz",            
+    "capitalCityTimezoneID": "Europe/Vaduz",
     "name": "Liechtenstein"
   },
   {
@@ -1890,7 +1890,7 @@
       "code": "EUR",
       "symbol": "€"
     },
-    "capitalCityTimezoneID": "Europe/Luxembourg",            
+    "capitalCityTimezoneID": "Europe/Luxembourg",
     "name": "Luxembourg"
   },
   {
@@ -1907,7 +1907,7 @@
       "code": "MOP",
       "symbol": "P"
     },
-    "capitalCityTimezoneID": "Asia/Macau",            
+    "capitalCityTimezoneID": "Asia/Macau",
     "name": "Macao"
   },
   {
@@ -2026,7 +2026,7 @@
       "code": "EUR",
       "symbol": "€"
     },
-    "capitalCityTimezoneID": "Europe/Malta",    
+    "capitalCityTimezoneID": "Europe/Malta",
     "name": "Malta"
   },
   {
@@ -2110,7 +2110,7 @@
       "code": "MDL",
       "symbol": "L"
     },
-    "capitalCityTimezoneID": "Europe/Chisinau",        
+    "capitalCityTimezoneID": "Europe/Chisinau",
     "name": "Moldova"
   },
   {
@@ -2229,7 +2229,7 @@
       "code": "MMK",
       "symbol": "Ks"
     },
-    "capitalCityTimezoneID": "Asia/Rangoon",  
+    "capitalCityTimezoneID": "Asia/Rangoon",
     "name": "Myanmar"
   },
   {
@@ -2446,7 +2446,7 @@
       "code": "PKR",
       "symbol": "₨"
     },
-    "capitalCityTimezoneID": "Asia/Karachi",    
+    "capitalCityTimezoneID": "Asia/Karachi",
     "name": "Pakistan"
   },
   {
@@ -2463,7 +2463,7 @@
       "code": "ILS",
       "symbol": "₪"
     },
-    "capitalCityTimezoneID": "Asia/Gaza",            
+    "capitalCityTimezoneID": "Asia/Gaza",
     "name": "Palestine"
   },
   {
@@ -2480,7 +2480,7 @@
       "code": "USD",
       "symbol": "$"
     },
-    "capitalCityTimezoneID": "America/Panama",            
+    "capitalCityTimezoneID": "America/Panama",
     "name": "Panama"
   },
   {
@@ -2531,7 +2531,7 @@
       "code": "PEN",
       "symbol": "S/."
     },
-    "capitalCityTimezoneID": "America/Lima",            
+    "capitalCityTimezoneID": "America/Lima",
     "name": "Peru"
   },
   {
@@ -3104,7 +3104,7 @@
       "code": "TZS",
       "symbol": "Sh"
     },
-    "capitalCityTimezoneID": "Africa/Dar_es_Salaam",            
+    "capitalCityTimezoneID": "Africa/Dar_es_Salaam",
     "name": "Tanzania"
   },
   {
@@ -3171,7 +3171,7 @@
       "code": "TOP",
       "symbol": "T$"
     },
-    "capitalCityTimezoneID": "Pacific/Tongatapu",            
+    "capitalCityTimezoneID": "Pacific/Tongatapu",
     "name": "Tonga"
   },
   {
@@ -3188,7 +3188,7 @@
       "code": "TND",
       "symbol": "د.ت"
     },
-    "capitalCityTimezoneID": "Africa/Tunis",            
+    "capitalCityTimezoneID": "Africa/Tunis",
     "name": "Tunisia"
   },
   {
@@ -3375,7 +3375,7 @@
       "code": "VUV",
       "symbol": "Vt"
     },
-    "capitalCityTimezoneID": "Pacific/Efate",            
+    "capitalCityTimezoneID": "Pacific/Efate",
     "name": "Vanuatu"
   },
   {
@@ -3426,7 +3426,7 @@
       "code": "YER",
       "symbol": "﷼"
     },
-    "capitalCityTimezoneID": "Asia/Aden",            
+    "capitalCityTimezoneID": "Asia/Aden",
     "name": "Yemen"
   },
   {

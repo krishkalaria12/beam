@@ -52,9 +52,7 @@
     "identifier": "dhaka"
   },
   {
-    "aliases": [
-      "Korea"
-    ],
+    "aliases": ["Korea"],
     "name": "Seoul",
     "identifier": "seoul"
   },
@@ -160,9 +158,7 @@
     "identifier": "bengaluru"
   },
   {
-    "aliases": [
-      "St. Petersburg"
-    ],
+    "aliases": ["St. Petersburg"],
     "name": "Saint Petersburg",
     "identifier": "saint petersburg"
   },
@@ -295,9 +291,7 @@
     "identifier": "jeddah"
   },
   {
-    "aliases": [
-      "Kyiv"
-    ],
+    "aliases": ["Kyiv"],
     "name": "Kiev",
     "identifier": "kyiv"
   },
@@ -706,10 +700,7 @@
     "identifier": "brazzaville"
   },
   {
-    "aliases": [
-      "Nizhny Novgorod",
-      "Nizhny"
-    ],
+    "aliases": ["Nizhny Novgorod", "Nizhny"],
     "name": "Nizhniy Novgorod",
     "identifier": "nizhniy novgorod"
   },
@@ -854,9 +845,7 @@
     "identifier": "calgary"
   },
   {
-    "aliases": [
-      "Europe"
-    ],
+    "aliases": ["Europe"],
     "name": "Brussels",
     "identifier": "brussels"
   },
@@ -998,9 +987,7 @@
     "identifier": "marrakesh"
   },
   {
-    "aliases": [
-      "Bali"
-    ],
+    "aliases": ["Bali"],
     "name": "Denpasar",
     "identifier": "denpasar"
   },
@@ -1217,9 +1204,7 @@
     "identifier": "memphis"
   },
   {
-    "aliases": [
-      "Frankfurt"
-    ],
+    "aliases": ["Frankfurt"],
     "name": "Frankfurt am Main",
     "identifier": "frankfurt am main"
   },
@@ -1372,9 +1357,7 @@
     "identifier": "kerman"
   },
   {
-    "aliases": [
-      "düsseldorf"
-    ],
+    "aliases": ["düsseldorf"],
     "name": "Dusseldorf",
     "identifier": "dusseldorf"
   },
@@ -1459,9 +1442,7 @@
     "identifier": "astrakhan"
   },
   {
-    "aliases": [
-      "nürnberg"
-    ],
+    "aliases": ["nürnberg"],
     "name": "Nuremberg",
     "identifier": "nuremberg"
   },
@@ -2167,9 +2148,7 @@
     "identifier": "lima"
   },
   {
-    "aliases": [
-      "Apple Park"
-    ],
+    "aliases": ["Apple Park"],
     "name": "Cupertino",
     "identifier": "cupertino"
   },

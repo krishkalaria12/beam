@@ -2,8 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 
 function isTauriRuntime() {
   return (
-    typeof window !== "undefined" &&
-    ("__TAURI_INTERNALS__" in window || "__TAURI__" in window)
+    typeof window !== "undefined" && ("__TAURI_INTERNALS__" in window || "__TAURI__" in window)
   );
 }
 

@@ -1,9 +1,5 @@
 import type { StaticCommandRegistry } from "@/command-registry/static-registry";
-import type {
-  CommandContext,
-  CommandDescriptor,
-  CommandScope,
-} from "@/command-registry/types";
+import type { CommandContext, CommandDescriptor, CommandScope } from "@/command-registry/types";
 import {
   matchesTriggerConstraints,
   SYSTEM_TRIGGER_MODE,

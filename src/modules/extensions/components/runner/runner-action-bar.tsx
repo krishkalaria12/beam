@@ -33,18 +33,16 @@ export function RunnerActionBar({
   return (
     <CommandFooterBar
       className="h-auto min-h-[42px] py-2"
-      leftSlot={toast ? (
-        <div className="min-w-0">
-          <RunnerToast
-            toast={toast}
-            onAction={onToastAction}
-            onHide={onToastHide}
-          />
-        </div>
-      ) : (
-        <span>Extension actions</span>
-      )}
-      rightSlot={(
+      leftSlot={
+        toast ? (
+          <div className="min-w-0">
+            <RunnerToast toast={toast} onAction={onToastAction} onHide={onToastHide} />
+          </div>
+        ) : (
+          <span>Extension actions</span>
+        )
+      }
+      rightSlot={
         <div className="flex flex-wrap items-center gap-2">
           {actions.map((action) => (
             <Button
@@ -71,7 +69,7 @@ export function RunnerActionBar({
           ))}
           <CommandKeyHint keyLabel="ESC" label="Back" />
         </div>
-      )}
+      }
     />
   );
 }

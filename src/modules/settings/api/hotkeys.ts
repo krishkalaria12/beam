@@ -104,7 +104,8 @@ function normalizeHotkeySettings(value: unknown): HotkeySettings {
   }
 
   const record = value as RawHotkeySettings;
-  const globalShortcut = toNonEmptyString(record.global_shortcut) ?? defaultHotkeySettings().globalShortcut;
+  const globalShortcut =
+    toNonEmptyString(record.global_shortcut) ?? defaultHotkeySettings().globalShortcut;
   const commandHotkeys = normalizeHotkeysMap(record.command_hotkeys);
 
   return {
@@ -138,8 +139,8 @@ function normalizeHotkeyCapabilities(value: unknown): HotkeyCapabilities {
     launcherOnlySupported: record.launcher_only_supported === false ? false : true,
     notes: Array.isArray(record.notes)
       ? record.notes
-        .map((entry) => toNonEmptyString(entry))
-        .filter((entry): entry is string => Boolean(entry))
+          .map((entry) => toNonEmptyString(entry))
+          .filter((entry): entry is string => Boolean(entry))
       : defaults.notes,
   };
 }
@@ -190,18 +191,18 @@ function normalizeCompositorBindings(value: unknown): CompositorBindings {
     commandPrefix: toNonEmptyString(record.command_prefix) ?? defaults.commandPrefix,
     launcherBindingExamples: Array.isArray(record.launcher_binding_examples)
       ? record.launcher_binding_examples
-        .map((entry) => toNonEmptyString(entry))
-        .filter((entry): entry is string => Boolean(entry))
+          .map((entry) => toNonEmptyString(entry))
+          .filter((entry): entry is string => Boolean(entry))
       : defaults.launcherBindingExamples,
     commandBindingExamples: Array.isArray(record.command_binding_examples)
       ? record.command_binding_examples
-        .map((entry) => toNonEmptyString(entry))
-        .filter((entry): entry is string => Boolean(entry))
+          .map((entry) => toNonEmptyString(entry))
+          .filter((entry): entry is string => Boolean(entry))
       : defaults.commandBindingExamples,
     notes: Array.isArray(record.notes)
       ? record.notes
-        .map((entry) => toNonEmptyString(entry))
-        .filter((entry): entry is string => Boolean(entry))
+          .map((entry) => toNonEmptyString(entry))
+          .filter((entry): entry is string => Boolean(entry))
       : defaults.notes,
   };
 }
@@ -218,7 +219,8 @@ function readLocalHotkeySettings(): HotkeySettings {
     }
     const parsed = JSON.parse(raw) as LocalHotkeySettingsRecord;
     return {
-      globalShortcut: toNonEmptyString(parsed.globalShortcut) ?? defaultHotkeySettings().globalShortcut,
+      globalShortcut:
+        toNonEmptyString(parsed.globalShortcut) ?? defaultHotkeySettings().globalShortcut,
       commandHotkeys: normalizeHotkeysMap(parsed.commandHotkeys),
     };
   } catch {
@@ -230,10 +232,7 @@ function writeLocalHotkeySettings(settings: HotkeySettings) {
   if (typeof window === "undefined") {
     return;
   }
-  localStorage.setItem(
-    HOTKEYS_LOCAL_STORAGE_KEY,
-    JSON.stringify(settings),
-  );
+  localStorage.setItem(HOTKEYS_LOCAL_STORAGE_KEY, JSON.stringify(settings));
 }
 
 function canonicalKeyPart(key: string): string {
@@ -257,7 +256,12 @@ function canonicalHotkey(shortcut: string): string {
   const modifiers = new Set<string>();
   for (const token of tokens.slice(0, -1)) {
     const normalized = token.toLowerCase();
-    if (normalized === "super" || normalized === "meta" || normalized === "cmd" || normalized === "command") {
+    if (
+      normalized === "super" ||
+      normalized === "meta" ||
+      normalized === "cmd" ||
+      normalized === "command"
+    ) {
       modifiers.add("super");
       continue;
     }

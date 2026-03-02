@@ -1,5 +1,6 @@
 import {
   Activity,
+  ArrowLeft,
   Download,
   Gauge,
   Loader2,
@@ -8,19 +9,11 @@ import {
   RotateCcw,
   TriangleAlert,
   Upload,
+  Wifi,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { CommandFooterBar } from "@/components/command/command-footer-bar";
-import {
-  CommandPanelBackButton,
-  CommandPanelHeader,
-  CommandPanelTitleBlock,
-} from "@/components/command/command-panel-header";
-import { CommandKeyHint } from "@/components/command/command-key-hint";
-import { CommandStatusChip } from "@/components/command/command-status-chip";
-import { Button } from "@/components/ui/button";
-
+import { cn } from "@/lib/utils";
 import {
   createSpeedTestInstance,
   type SpeedTestInstance,
@@ -99,23 +92,35 @@ function MetricCard({
   value,
   unit,
   icon,
+  gradient,
+  index,
 }: {
   label: string;
   value: number | null;
   unit: string;
   icon: React.ReactNode;
+  gradient: string;
+  index: number;
 }) {
   return (
-    <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
-      <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.16em] text-muted-foreground/75">
-        <span className="text-primary/80">{icon}</span>
-        <span>{label}</span>
-      </div>
-      <div className="mt-3 flex items-end gap-2">
-        <span className="font-mono text-2xl font-semibold text-foreground">
+    <div
+      className="speedtest-metric-enter group relative rounded-xl bg-white/[0.03] p-4 ring-1 ring-white/[0.06] transition-all duration-200 hover:bg-white/[0.05]"
+      style={{ animationDelay: `${100 + index * 50}ms` }}
+    >
+      {/* Icon */}
+      <div className={cn("size-8 rounded-lg p-1.5 mb-3", gradient)}>{icon}</div>
+
+      {/* Label */}
+      <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-white/40 mb-2">
+        {label}
+      </p>
+
+      {/* Value */}
+      <div className="flex items-baseline gap-1.5">
+        <span className="font-mono text-[28px] font-semibold tracking-[-0.02em] text-white/90">
           {formatMetricValue(value, unit === "Mbps" ? 2 : 1)}
         </span>
-        <span className="pb-1 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground/80">
+        <span className="font-mono text-[11px] uppercase tracking-[0.08em] text-white/40">
           {unit}
         </span>
       </div>
@@ -144,20 +149,33 @@ function resolveStatus(
   return "idle";
 }
 
-function statusTone(status: ReturnType<typeof resolveStatus>) {
-  if (status === "running") {
-    return "success";
-  }
-  if (status === "finished") {
-    return "info";
-  }
-  if (status === "error") {
-    return "error";
-  }
-  if (status === "paused") {
-    return "warning";
-  }
-  return "neutral";
+function StatusBadge({ status }: { status: ReturnType<typeof resolveStatus> }) {
+  const config = {
+    idle: { label: "Ready", bg: "bg-white/[0.06]", text: "text-white/50", dot: "bg-white/30" },
+    running: {
+      label: "Running",
+      bg: "bg-emerald-500/15",
+      text: "text-emerald-400",
+      dot: "bg-emerald-400",
+    },
+    paused: { label: "Paused", bg: "bg-amber-500/15", text: "text-amber-400", dot: "bg-amber-400" },
+    finished: {
+      label: "Complete",
+      bg: "bg-[var(--solid-accent,#4ea2ff)]/15",
+      text: "text-[var(--solid-accent,#4ea2ff)]",
+      dot: "bg-[var(--solid-accent,#4ea2ff)]",
+    },
+    error: { label: "Error", bg: "bg-red-500/15", text: "text-red-400", dot: "bg-red-400" },
+  };
+
+  const { label, bg, text, dot } = config[status];
+
+  return (
+    <div className={cn("flex items-center gap-2 rounded-full px-3 py-1.5", bg)}>
+      <div className={cn("size-1.5 rounded-full", dot, status === "running" && "animate-pulse")} />
+      <span className={cn("text-[11px] font-medium", text)}>{label}</span>
+    </div>
+  );
 }
 
 export function SpeedTestView({ onBack }: SpeedTestViewProps) {
@@ -223,9 +241,7 @@ export function SpeedTestView({ onBack }: SpeedTestViewProps) {
         if (!mountedRef.current) {
           return;
         }
-        setErrorMessage(
-          normalizeSpeedTestError(error || "Speed test failed."),
-        );
+        setErrorMessage(normalizeSpeedTestError(error || "Speed test failed."));
         syncFromSpeedTest();
       };
 
@@ -235,9 +251,7 @@ export function SpeedTestView({ onBack }: SpeedTestViewProps) {
     } catch (error) {
       if (mountedRef.current) {
         setErrorMessage(
-          error instanceof Error
-            ? error.message
-            : "Could not initialize speed test engine.",
+          error instanceof Error ? error.message : "Could not initialize speed test engine.",
         );
       }
       return null;
@@ -288,9 +302,7 @@ export function SpeedTestView({ onBack }: SpeedTestViewProps) {
       await Promise.resolve(speedTest.play());
       syncFromSpeedTest();
     } catch (error) {
-      setErrorMessage(
-        error instanceof Error ? error.message : "Could not start speed test.",
-      );
+      setErrorMessage(error instanceof Error ? error.message : "Could not start speed test.");
     }
   }, [setupSpeedTest, syncFromSpeedTest]);
 
@@ -308,9 +320,7 @@ export function SpeedTestView({ onBack }: SpeedTestViewProps) {
       await Promise.resolve(speedTest.restart());
       syncFromSpeedTest();
     } catch (error) {
-      setErrorMessage(
-        error instanceof Error ? error.message : "Could not restart speed test.",
-      );
+      setErrorMessage(error instanceof Error ? error.message : "Could not restart speed test.");
     }
   }, [setupSpeedTest, syncFromSpeedTest]);
 
@@ -330,9 +340,7 @@ export function SpeedTestView({ onBack }: SpeedTestViewProps) {
       }
       syncFromSpeedTest();
     } catch (error) {
-      setErrorMessage(
-        error instanceof Error ? error.message : "Could not update test state.",
-      );
+      setErrorMessage(error instanceof Error ? error.message : "Could not update test state.");
     }
   }, [syncFromSpeedTest]);
 
@@ -356,43 +364,65 @@ export function SpeedTestView({ onBack }: SpeedTestViewProps) {
   return (
     <div
       ref={containerRef}
-      className="glass-effect flex h-full w-full flex-col text-foreground outline-none"
+      className="speedtest-view-enter flex h-full w-full flex-col outline-none"
       onKeyDown={handleContainerKeyDown}
       tabIndex={-1}
     >
-      <CommandPanelHeader>
-        <CommandPanelBackButton onClick={onBack} aria-label="Back" />
-        <CommandPanelTitleBlock
-          title="Network Speed Test"
-          subtitle="cloudflare diagnostics"
-          subtitleClassName="font-mono text-[10px] uppercase tracking-widest text-muted-foreground/65"
-        />
+      {/* Header */}
+      <header className="speedtest-header-enter flex items-center gap-3 border-b border-white/[0.06] px-4 py-3">
+        {/* Back button */}
+        <button
+          type="button"
+          onClick={onBack}
+          className={cn(
+            "flex size-9 items-center justify-center rounded-lg transition-all",
+            "bg-white/[0.03] text-white/40",
+            "hover:bg-white/[0.06] hover:text-white/70",
+          )}
+          aria-label="Back"
+        >
+          <ArrowLeft className="size-4" />
+        </button>
 
-        <CommandStatusChip
-          label={status}
-          tone={statusTone(status)}
-          pulse={status === "running"}
-          className="ml-auto"
-        />
-      </CommandPanelHeader>
+        {/* Icon */}
+        <div className="size-9 rounded-xl bg-gradient-to-br from-cyan-500/25 to-sky-500/25 p-2">
+          <Wifi className="size-full text-cyan-400" />
+        </div>
 
-      <div className="list-area custom-scrollbar flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-5">
-        <div className="rounded-2xl border border-border/60 bg-gradient-to-b from-muted/20 to-background/30 p-4 shadow-[0_1px_0_rgba(255,255,255,0.04)_inset]">
-          <div className="flex items-start justify-between gap-3">
+        {/* Title block */}
+        <div className="flex-1 min-w-0">
+          <h1 className="text-[14px] font-semibold tracking-[-0.01em] text-white/90">Speed Test</h1>
+          <p className="font-mono text-[10px] uppercase tracking-[0.08em] text-white/35">
+            cloudflare diagnostics
+          </p>
+        </div>
+
+        {/* Status badge */}
+        <StatusBadge status={status} />
+      </header>
+
+      {/* Content */}
+      <div className="speedtest-content-enter custom-scrollbar flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4">
+        {/* Controls panel */}
+        <div className="rounded-xl bg-white/[0.03] p-4 ring-1 ring-white/[0.06]">
+          <div className="flex items-start justify-between gap-3 mb-4">
             <div>
-              <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground/75">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-white/45 mb-1">
                 Test Controls
               </p>
-              <p className="mt-1 text-sm text-foreground/90">
-                Start the test when ready. Results update live during execution.
+              <p className="text-[12px] text-white/60">
+                Start the test when ready. Results update live.
               </p>
             </div>
-            <Gauge className="size-4 shrink-0 text-muted-foreground/70" />
+            <div className="size-8 rounded-lg bg-gradient-to-br from-cyan-500/15 to-sky-500/15 p-1.5">
+              <Gauge className="size-full text-cyan-400/70" />
+            </div>
           </div>
 
-          <div className="mt-4 flex flex-wrap items-center gap-2.5">
-            <Button
-              className="gap-2 font-mono text-[11px] uppercase tracking-wider"
+          {/* Action buttons */}
+          <div className="flex flex-wrap items-center gap-2.5">
+            <button
+              type="button"
               disabled={isPreparing}
               onClick={() => {
                 if (hasStarted) {
@@ -401,7 +431,12 @@ export function SpeedTestView({ onBack }: SpeedTestViewProps) {
                   void handleStart();
                 }
               }}
-              type="button"
+              className={cn(
+                "flex items-center gap-2 rounded-lg px-4 py-2 text-[12px] font-medium transition-all",
+                "bg-[var(--solid-accent,#4ea2ff)] text-white",
+                "hover:bg-[var(--solid-accent,#4ea2ff)]/80",
+                "disabled:opacity-50 disabled:cursor-not-allowed",
+              )}
             >
               {isPreparing ? (
                 <Loader2 className="size-3.5 animate-spin" />
@@ -411,81 +446,100 @@ export function SpeedTestView({ onBack }: SpeedTestViewProps) {
                 <Play className="size-3.5" />
               )}
               {hasStarted ? "Restart Test" : "Start Test"}
-            </Button>
+            </button>
 
             {hasStarted && !isFinished && (
-              <Button
-                className="gap-2 font-mono text-[11px] uppercase tracking-wider"
+              <button
+                type="button"
                 disabled={isPreparing}
                 onClick={() => {
                   void handlePauseResume();
                 }}
-                type="button"
-                variant="outline"
-              >
-                {isRunning ? (
-                  <Pause className="size-3.5" />
-                ) : (
-                  <Play className="size-3.5" />
+                className={cn(
+                  "flex items-center gap-2 rounded-lg px-4 py-2 text-[12px] font-medium transition-all",
+                  "bg-white/[0.06] text-white/70 ring-1 ring-white/[0.08]",
+                  "hover:bg-white/[0.08] hover:text-white/90",
+                  "disabled:opacity-50 disabled:cursor-not-allowed",
                 )}
+              >
+                {isRunning ? <Pause className="size-3.5" /> : <Play className="size-3.5" />}
                 {isRunning ? "Pause" : "Resume"}
-              </Button>
+              </button>
             )}
           </div>
 
+          {/* Error message */}
           {errorMessage && (
-            <div className="mt-4 flex items-start gap-2 rounded-xl border border-destructive/40 bg-destructive/10 px-3 py-2.5 text-xs text-destructive">
-              <TriangleAlert className="mt-0.5 size-3.5 shrink-0" />
-              <p>{errorMessage}</p>
+            <div className="mt-4 flex items-start gap-2.5 rounded-lg bg-red-500/10 px-3 py-2.5 ring-1 ring-red-500/20">
+              <TriangleAlert className="mt-0.5 size-4 shrink-0 text-red-400" />
+              <p className="text-[12px] text-red-300/90">{errorMessage}</p>
             </div>
           )}
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2 animate-in fade-in-50 duration-300">
+        {/* Metrics grid */}
+        <div className="grid gap-3 sm:grid-cols-2">
           <MetricCard
-            icon={<Download className="size-3.5" />}
+            icon={<Download className="size-full text-emerald-400" />}
+            gradient="bg-gradient-to-br from-emerald-500/20 to-teal-500/20"
             label="Download"
             unit="Mbps"
             value={metrics.downloadMbps}
+            index={0}
           />
           <MetricCard
-            icon={<Upload className="size-3.5" />}
+            icon={<Upload className="size-full text-blue-400" />}
+            gradient="bg-gradient-to-br from-blue-500/20 to-indigo-500/20"
             label="Upload"
             unit="Mbps"
             value={metrics.uploadMbps}
+            index={1}
           />
           <MetricCard
-            icon={<Activity className="size-3.5" />}
-            label="Unloaded Latency"
+            icon={<Activity className="size-full text-amber-400" />}
+            gradient="bg-gradient-to-br from-amber-500/20 to-orange-500/20"
+            label="Latency"
             unit="ms"
             value={metrics.unloadedLatencyMs}
+            index={2}
           />
           <MetricCard
-            icon={<Activity className="size-3.5" />}
-            label="Unloaded Jitter"
+            icon={<Activity className="size-full text-purple-400" />}
+            gradient="bg-gradient-to-br from-purple-500/20 to-violet-500/20"
+            label="Jitter"
             unit="ms"
             value={metrics.unloadedJitterMs}
+            index={3}
           />
           {metrics.packetLoss !== null && (
             <MetricCard
-              icon={<Activity className="size-3.5" />}
+              icon={<Activity className="size-full text-red-400" />}
+              gradient="bg-gradient-to-br from-red-500/20 to-rose-500/20"
               label="Packet Loss"
               unit="%"
               value={metrics.packetLoss}
+              index={4}
             />
           )}
         </div>
       </div>
 
-      <CommandFooterBar
-        leftSlot={<span className="font-mono">{isRunning ? "running" : "ready"}</span>}
-        rightSlot={(
-          <>
-            <CommandKeyHint keyLabel="ENTER" label={hasStarted ? "Restart" : "Start"} />
-            <CommandKeyHint keyLabel="ESC" label="Back" />
-          </>
-        )}
-      />
+      {/* Footer */}
+      <footer className="speedtest-footer-enter flex items-center justify-between border-t border-white/[0.06] px-4 py-2">
+        <span className="font-mono text-[11px] text-white/30">
+          {isRunning ? "testing..." : "ready"}
+        </span>
+        <div className="flex items-center gap-3">
+          <span className="text-[10px] text-white/25">
+            <kbd className="rounded bg-white/[0.06] px-1.5 py-0.5 font-mono text-[9px]">Enter</kbd>
+            <span className="ml-1">{hasStarted ? "Restart" : "Start"}</span>
+          </span>
+          <span className="text-[10px] text-white/25">
+            <kbd className="rounded bg-white/[0.06] px-1.5 py-0.5 font-mono text-[9px]">Esc</kbd>
+            <span className="ml-1">Back</span>
+          </span>
+        </div>
+      </footer>
     </div>
   );
 }

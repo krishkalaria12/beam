@@ -41,9 +41,7 @@ export function parseConfirmAlertRequest(raw: unknown): ConfirmAlertRequest | nu
     title: typeof payload.title === "string" ? payload.title : undefined,
     message: typeof payload.message === "string" ? payload.message : undefined,
     primaryActionTitle:
-      typeof payload.primaryActionTitle === "string"
-        ? payload.primaryActionTitle
-        : undefined,
+      typeof payload.primaryActionTitle === "string" ? payload.primaryActionTitle : undefined,
   };
 }
 
@@ -72,7 +70,6 @@ export function parseLaunchCommandRequest(raw: unknown): LaunchCommandRequest | 
       payload.context && typeof payload.context === "object"
         ? (payload.context as Record<string, unknown>)
         : undefined,
-    extensionName:
-      typeof payload.extensionName === "string" ? payload.extensionName : undefined,
+    extensionName: typeof payload.extensionName === "string" ? payload.extensionName : undefined,
   };
 }

@@ -1,8 +1,8 @@
 {
-"weatherRelated": [
+  "weatherRelated": [
     {
-    "identifier": "lowTemperature",
-    "prototypeExpressions": [
+      "identifier": "lowTemperature",
+      "prototypeExpressions": [
         "tiefsttemperatur in __timezone",
         "min. temp. in __timezone",
         "min. in __timezone",
@@ -10,11 +10,11 @@
         "__timezone min. temp.",
         "__timezone min.",
         "__timezone niedrig"
-    ]
+      ]
     },
     {
-    "identifier": "highTemperature",
-    "prototypeExpressions": [
+      "identifier": "highTemperature",
+      "prototypeExpressions": [
         "höchsttemperatur in __timezone",
         "max. temp. in __timezone",
         "max. in __timezone",
@@ -22,167 +22,140 @@
         "__timezone max. temp.",
         "__timezone max.",
         "__timezone hoch"
-    ]
+      ]
     },
     {
-    "identifier": "precipitationChance",
-    "prototypeExpressions": [
+      "identifier": "precipitationChance",
+      "prototypeExpressions": [
         "regenwahrscheinlichkeit in __timezone",
         "__timezone regenwahrscheinlichkeit"
-    ]
+      ]
     },
     {
-    "identifier": "rainfallAmount",
-    "prototypeExpressions": [
+      "identifier": "rainfallAmount",
+      "prototypeExpressions": [
         "regenmenge in __timezone",
         "regenfall in __timezone",
         "regen in __timezone",
         "niederschlag in __timezone",
         "__timezone regen"
-    ]
+      ]
     },
     {
-    "identifier": "snowfallAmount",
-    "prototypeExpressions": [
+      "identifier": "snowfallAmount",
+      "prototypeExpressions": [
         "schneemenge in __timezone",
         "schneefall in __timezone",
         "schnee in __timezone",
         "__timezone schnee"
-    ]
+      ]
     },
     {
-    "identifier": "apparentTemperature",
-    "prototypeExpressions": [
+      "identifier": "apparentTemperature",
+      "prototypeExpressions": [
         "gefühlte temperatur in __timezone",
         "gefühlte temp. in __timezone",
         "scheinbare temperatur in __timezone",
         "__timezone gefühlt"
-    ]
+      ]
     },
     {
-    "identifier": "currentTemperature",
-    "prototypeExpressions": [
-        "aktuelle temperatur in __timezone",
-        "temperatur in __timezone"
-    ]
+      "identifier": "currentTemperature",
+      "prototypeExpressions": ["aktuelle temperatur in __timezone", "temperatur in __timezone"]
     },
     {
-    "identifier": "weatherConditions",
-    "prototypeExpressions": [
+      "identifier": "weatherConditions",
+      "prototypeExpressions": [
         "wetter in __timezone",
         "wetterbedingungen in __timezone",
         "witterungsbedingungen in __timezone"
-    ]
+      ]
     },
     {
-    "identifier": "humidity",
-    "prototypeExpressions": [
-        "luftfeuchtigkeit in __timezone",
-        "__timezone luftfeuchtigkeit"
-    ]
+      "identifier": "humidity",
+      "prototypeExpressions": ["luftfeuchtigkeit in __timezone", "__timezone luftfeuchtigkeit"]
     },
     {
-    "identifier": "cloudCover",
-    "prototypeExpressions": [
+      "identifier": "cloudCover",
+      "prototypeExpressions": [
         "bewölkung in __timezone",
         "wolkendecke in __timezone",
         "__timezone wolkendecke",
         "__timezone bewölkung"
-    ]
+      ]
     },
     {
-    "identifier": "visibility",
-    "prototypeExpressions": [
-        "sichtweite in __timezone",
-        "__timezone sichtweite"
-    ]
+      "identifier": "visibility",
+      "prototypeExpressions": ["sichtweite in __timezone", "__timezone sichtweite"]
     },
     {
-    "identifier": "windSpeed",
-    "prototypeExpressions": [
+      "identifier": "windSpeed",
+      "prototypeExpressions": [
         "windstärke in __timezone",
         "windgeschwindigkeit in __timezone",
         "wind in __timezone",
         "__timezone wind"
-    ]
+      ]
     },
     {
-    "identifier": "windDirection",
-    "prototypeExpressions": [
-        "windrichtung in __timezone",
-        "__timezone windrichtung"
-    ]
+      "identifier": "windDirection",
+      "prototypeExpressions": ["windrichtung in __timezone", "__timezone windrichtung"]
     },
     {
-    "identifier": "dewPoint",
-    "prototypeExpressions": [
-        "taupunkt in __timezone",
-        "__timezone taupunkt"
-    ]
+      "identifier": "dewPoint",
+      "prototypeExpressions": ["taupunkt in __timezone", "__timezone taupunkt"]
     },
     {
-    "identifier": "uvIndex",
-    "prototypeExpressions": [
-        "uv-index in __timezone",
-        "__timezone uv-index"
-    ]
+      "identifier": "uvIndex",
+      "prototypeExpressions": ["uv-index in __timezone", "__timezone uv-index"]
     },
     {
-    "identifier": "pressure",
-    "prototypeExpressions": [
+      "identifier": "pressure",
+      "prototypeExpressions": [
         "luftdruck in __timezone",
         "druck in __timezone",
         "__timezone druck",
         "__timezone luftdruck"
-    ]
+      ]
     },
     {
-    "identifier": "pressureDirection",
-    "prototypeExpressions": [
-        "druckrichtung in __timezone",
-        "__timezone druckrichtung"
-    ]
+      "identifier": "pressureDirection",
+      "prototypeExpressions": ["druckrichtung in __timezone", "__timezone druckrichtung"]
     },
     {
-    "identifier": "sunrise",
-    "prototypeExpressions": [
-        "sonnenaufgang in __timezone",
-        "__timezone sonnenaufgang"
-    ]
+      "identifier": "sunrise",
+      "prototypeExpressions": ["sonnenaufgang in __timezone", "__timezone sonnenaufgang"]
     },
     {
-    "identifier": "sunset",
-    "prototypeExpressions": [
-        "sonnenuntergang in __timezone",
-        "__timezone sonnenuntergang"
-    ]
+      "identifier": "sunset",
+      "prototypeExpressions": ["sonnenuntergang in __timezone", "__timezone sonnenuntergang"]
     },
     {
-    "identifier": "moonrise",
-    "prototypeExpressions": [
+      "identifier": "moonrise",
+      "prototypeExpressions": [
         "mondaufgang in __timezone",
         "mondaufgang __timezone",
         "__timezone mondaufgang"
-    ]
+      ]
     },
     {
-    "identifier": "moonset",
-    "prototypeExpressions": [
+      "identifier": "moonset",
+      "prototypeExpressions": [
         "monduntergang in __timezone",
         "monduntergang __timezone",
         "__timezone monduntergang"
-    ]
+      ]
     },
     {
-    "identifier": "moonPhase",
-    "prototypeExpressions": [
+      "identifier": "moonPhase",
+      "prototypeExpressions": [
         "mondphase in __timezone",
         "mond in __timezone",
         "__timezone mond",
         "__timezone mondphase"
-    ]
+      ]
     }
-],
+  ],
   "financial": [
     {
       "prototypeExpressions": [
@@ -201,9 +174,7 @@
       "identifier": "returnOnInvestmentAfter"
     },
     {
-      "prototypeExpressions": [
-        "500 invested 1000 returned"
-      ],
+      "prototypeExpressions": ["500 invested 1000 returned"],
       "identifier": "returnOnInvestment"
     },
     {
@@ -271,21 +242,15 @@
   ],
   "percentage": [
     {
-      "prototypeExpressions": [
-        "__percentage von 100"
-      ],
+      "prototypeExpressions": ["__percentage von 100"],
       "identifier": "percentOf"
     },
     {
-      "prototypeExpressions": [
-        "__percentage ab von 100"
-      ],
+      "prototypeExpressions": ["__percentage ab von 100"],
       "identifier": "percentOff"
     },
     {
-      "prototypeExpressions": [
-        "__percentage auf 100"
-      ],
+      "prototypeExpressions": ["__percentage auf 100"],
       "identifier": "percentOn"
     },
     {
@@ -296,41 +261,27 @@
       "identifier": "isPercentOfWhat"
     },
     {
-      "prototypeExpressions": [
-        "__percentage von was ist 30"
-      ],
+      "prototypeExpressions": ["__percentage von was ist 30"],
       "identifier": "isPercentOfWhatClassic"
     },
     {
-      "prototypeExpressions": [
-        "30 ist __percentage off was"
-      ],
+      "prototypeExpressions": ["30 ist __percentage off was"],
       "identifier": "isPercentOffWhat"
     },
     {
-      "prototypeExpressions": [
-        "__percentage ab von was ist 30"
-      ],
+      "prototypeExpressions": ["__percentage ab von was ist 30"],
       "identifier": "isPercentOffWhatClassic"
     },
     {
-      "prototypeExpressions": [
-        "30 ist __percentage on was"
-      ],
+      "prototypeExpressions": ["30 ist __percentage on was"],
       "identifier": "isPercentOnWhat"
     },
     {
-      "prototypeExpressions": [
-        "__percentage auf was ist 30"
-      ],
+      "prototypeExpressions": ["__percentage auf was ist 30"],
       "identifier": "isPercentOnWhatClassic"
     },
     {
-      "prototypeExpressions": [
-        "10 ist wieviel % von 20",
-        "10 als % von 20",
-        "10 in % von 30"
-      ],
+      "prototypeExpressions": ["10 ist wieviel % von 20", "10 als % von 20", "10 in % von 30"],
       "identifier": "isWhatPercentOf"
     },
     {
@@ -373,44 +324,27 @@
       "identifier": "calendarUnitToDate"
     },
     {
-      "prototypeExpressions": [
-        "__datestamp bis __datestamp",
-        "__datestamp bis zum __datestamp"
-      ],
+      "prototypeExpressions": ["__datestamp bis __datestamp", "__datestamp bis zum __datestamp"],
       "identifier": "intervalBetweenDates"
     },
     {
-      "prototypeExpressions": [
-        "__timestamp bis __timestamp",
-        "__timestamp bis zum __timestamp"
-      ],
+      "prototypeExpressions": ["__timestamp bis __timestamp", "__timestamp bis zum __timestamp"],
       "identifier": "intervalBetweenTimestamps"
     },
     {
-      "prototypeExpressions": [
-        "__duration seit __datestamp",
-        "__duration seit dem __datestamp"
-      ],
+      "prototypeExpressions": ["__duration seit __datestamp", "__duration seit dem __datestamp"],
       "identifier": "calendarUnitSinceDate"
     },
     {
-      "prototypeExpressions": [
-        "neuer zeitstempel"
-      ],
+      "prototypeExpressions": ["neuer zeitstempel"],
       "identifier": "generateTimestamp"
     },
     {
-      "prototypeExpressions": [
-        "__timespan von __datestamp",
-        "__timespan nach __datestamp"
-      ],
+      "prototypeExpressions": ["__timespan von __datestamp", "__timespan nach __datestamp"],
       "identifier": "calendarUnitExpressionAfterDate"
     },
     {
-      "prototypeExpressions": [
-        "__timezone zeit",
-        "zeit in __timezone"
-      ],
+      "prototypeExpressions": ["__timezone zeit", "zeit in __timezone"],
       "identifier": "timeInTimezone"
     },
     {
@@ -425,23 +359,15 @@
   ],
   "general": [
     {
-      "prototypeExpressions": [
-        "rest von 20 durch 3",
-        "rest von 20 geteilt durch 3"
-      ],
+      "prototypeExpressions": ["rest von 20 durch 3", "rest von 20 geteilt durch 3"],
       "identifier": "remainder"
     },
     {
-      "prototypeExpressions": [
-        "hälfte von 20"
-      ],
+      "prototypeExpressions": ["hälfte von 20"],
       "identifier": "halfOf"
     },
     {
-      "prototypeExpressions": [
-        "kleinere wert von 2 und 30",
-        "kleinere zahl von 2 und 30"
-      ],
+      "prototypeExpressions": ["kleinere wert von 2 und 30", "kleinere zahl von 2 und 30"],
       "identifier": "lesserOf"
     },
     {
@@ -454,37 +380,23 @@
       "identifier": "greaterOf"
     },
     {
-      "prototypeExpressions": [
-        "mitte zwischen 2 und 32"
-      ],
+      "prototypeExpressions": ["mitte zwischen 2 und 32"],
       "identifier": "midpoint"
     },
     {
-      "prototypeExpressions": [
-        "6 ist zu 600 wie was zu 8",
-        "6 verhält sich zu 600 wie was zu 8"
-      ],
+      "prototypeExpressions": ["6 ist zu 600 wie was zu 8", "6 verhält sich zu 600 wie was zu 8"],
       "identifier": "proportionsFindNumerator"
     },
     {
-      "prototypeExpressions": [
-        "6 ist zu 600 wie 8 zu was",
-        "6 verhält sich zu 600 wie 8 zu was"
-      ],
+      "prototypeExpressions": ["6 ist zu 600 wie 8 zu was", "6 verhält sich zu 600 wie 8 zu was"],
       "identifier": "proportionsFindDenominator"
     },
     {
-      "prototypeExpressions": [
-        "zufallszahl zwischen 1 und 5",
-        "zufällig zwischen 1 und 5"
-      ],
+      "prototypeExpressions": ["zufallszahl zwischen 1 und 5", "zufällig zwischen 1 und 5"],
       "identifier": "makeRandomNumber"
     },
     {
-      "prototypeExpressions": [
-        "lcm of 5 and 8",
-        "lowest common multiple of 5 and 8"
-      ],
+      "prototypeExpressions": ["lcm of 5 and 8", "lowest common multiple of 5 and 8"],
       "identifier": "lcm"
     },
     {
@@ -499,9 +411,7 @@
   ],
   "unitRelated": [
     {
-      "prototypeExpressions": [
-        "__duration in __timespan"
-      ],
+      "prototypeExpressions": ["__duration in __timespan"],
       "identifier": "calendarUnitInTimespan"
     },
     {
@@ -522,9 +432,7 @@
       "identifier": "rateUnitChange"
     },
     {
-      "prototypeExpressions": [
-        "__unit in __unit_expression"
-      ],
+      "prototypeExpressions": ["__unit in __unit_expression"],
       "identifier": "unitInUnitExpression"
     }
   ]

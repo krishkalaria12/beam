@@ -84,7 +84,9 @@ export function useSpotifyAuth() {
       await removeSpotifyStoredTokens();
       setTokens(null);
       setUser(null);
-      setError(refreshError instanceof Error ? refreshError.message : "Failed to refresh Spotify token.");
+      setError(
+        refreshError instanceof Error ? refreshError.message : "Failed to refresh Spotify token.",
+      );
       return null;
     } finally {
       setIsRefreshingToken(false);
@@ -142,39 +144,50 @@ export function useSpotifyAuth() {
 
       await openAuthUrl(session.authorizeUrl);
     } catch (connectError) {
-      setError(connectError instanceof Error ? connectError.message : "Failed to start Spotify OAuth flow.");
+      setError(
+        connectError instanceof Error
+          ? connectError.message
+          : "Failed to start Spotify OAuth flow.",
+      );
       setIsAuthorizing(false);
     }
   }, [clientId]);
 
-  const handleOauthSuccess = useCallback(async (state: string, code: string) => {
-    const pending = loadPendingSpotifyAuthSession();
-    if (!pending || pending.state !== state) {
-      return;
-    }
+  const handleOauthSuccess = useCallback(
+    async (state: string, code: string) => {
+      const pending = loadPendingSpotifyAuthSession();
+      if (!pending || pending.state !== state) {
+        return;
+      }
 
-    setError(null);
+      setError(null);
 
-    try {
-      const tokenResponse = await spotifyExchangeCodeForTokens({
-        clientId: pending.clientId,
-        redirectUri: pending.redirectUri,
-        code,
-        codeVerifier: pending.codeVerifier,
-      });
+      try {
+        const tokenResponse = await spotifyExchangeCodeForTokens({
+          clientId: pending.clientId,
+          redirectUri: pending.redirectUri,
+          code,
+          codeVerifier: pending.codeVerifier,
+        });
 
-      const nextTokens = toStoredTokens(tokenResponse, null);
-      await setSpotifyStoredTokens(nextTokens);
-      setTokens(nextTokens);
-      setStoredSpotifyClientId(pending.clientId);
-      clearPendingSpotifyAuthSession();
-      await refreshUserProfile();
-    } catch (exchangeError) {
-      setError(exchangeError instanceof Error ? exchangeError.message : "Failed to complete Spotify OAuth.");
-    } finally {
-      setIsAuthorizing(false);
-    }
-  }, [refreshUserProfile]);
+        const nextTokens = toStoredTokens(tokenResponse, null);
+        await setSpotifyStoredTokens(nextTokens);
+        setTokens(nextTokens);
+        setStoredSpotifyClientId(pending.clientId);
+        clearPendingSpotifyAuthSession();
+        await refreshUserProfile();
+      } catch (exchangeError) {
+        setError(
+          exchangeError instanceof Error
+            ? exchangeError.message
+            : "Failed to complete Spotify OAuth.",
+        );
+      } finally {
+        setIsAuthorizing(false);
+      }
+    },
+    [refreshUserProfile],
+  );
 
   const handleOauthError = useCallback((state: string | undefined, message: string) => {
     const pending = loadPendingSpotifyAuthSession();
@@ -213,7 +226,9 @@ export function useSpotifyAuth() {
           return;
         }
 
-        setError(loadError instanceof Error ? loadError.message : "Failed to load Spotify session.");
+        setError(
+          loadError instanceof Error ? loadError.message : "Failed to load Spotify session.",
+        );
       }
     })();
 

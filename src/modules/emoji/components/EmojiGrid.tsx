@@ -14,6 +14,19 @@ interface GroupedEmojis {
   emojis: EmojiData[];
 }
 
+// Category icons/emojis for visual flair
+const CATEGORY_ICONS: Record<number, string> = {
+  0: "😀", // Smileys & Emotion
+  1: "👋", // People & Body
+  2: "🐶", // Animals & Nature
+  3: "🍕", // Food & Drink
+  4: "✈️", // Travel & Places
+  5: "⚽", // Activities
+  6: "💡", // Objects
+  7: "🔣", // Symbols
+  8: "🚩", // Flags
+};
+
 export function EmojiGrid({
   emojis,
   onEmojiClick,
@@ -21,44 +34,71 @@ export function EmojiGrid({
 }: EmojiGridProps) {
   const groupedEmojis = useMemo(() => {
     const groups: GroupedEmojis[] = [];
-    
+
     for (const groupNum of CATEGORY_ORDER) {
       const groupEmojis = emojis.filter((emoji) => emoji.group === groupNum);
       if (groupEmojis.length > 0) {
         groups.push({ group: groupNum, emojis: groupEmojis });
       }
     }
-    
+
     return groups;
   }, [emojis]);
 
   if (emojis.length === 0) {
     return (
-      <div className="flex h-64 flex-col items-center justify-center gap-2 text-muted-foreground/50 animate-in fade-in zoom-in-95 duration-300">
-        <span className="text-4xl opacity-50">😕</span>
-        <span className="text-sm font-medium">{emptyMessage}</span>
+      <div className="emoji-empty flex h-64 flex-col items-center justify-center gap-4 text-white/40">
+        <div className="relative">
+          <span className="text-5xl opacity-70">😕</span>
+          <div className="absolute inset-0 -z-10 blur-2xl bg-white/5 rounded-full" />
+        </div>
+        <div className="flex flex-col items-center gap-1">
+          <span className="text-[14px] font-medium tracking-[-0.02em] text-white/50">
+            {emptyMessage}
+          </span>
+          <span className="text-[12px] text-white/30">Try a different search term</span>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 pb-20 min-h-[50vh]">
-      {groupedEmojis.map(({ group, emojis: groupEmojis }) => (
-        <div key={group} className="animate-in fade-in slide-in-from-bottom-2 duration-500 fill-mode-both" style={{ animationDelay: `${group * 50}ms` }}>
-          <div className="mb-4 flex items-center gap-4 py-2 opacity-80">
-            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-border/40 to-transparent" />
-            <h3 className="shrink-0 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60 shadow-sm">
-              {CATEGORY_LABELS[group]}
-            </h3>
-            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-border/40 to-transparent" />
+    <div className="emoji-grid-container space-y-8 pb-20 min-h-[50vh]">
+      {groupedEmojis.map(({ group, emojis: groupEmojis }, groupIndex) => (
+        <div
+          key={group}
+          className="emoji-category"
+          style={{ animationDelay: `${groupIndex * 40}ms` }}
+        >
+          {/* Category header - more refined */}
+          <div className="mb-5 flex items-center gap-3">
+            {/* Category icon */}
+            <div className="flex size-8 items-center justify-center rounded-lg bg-white/[0.04] ring-1 ring-white/[0.06]">
+              <span className="text-base">{CATEGORY_ICONS[group] || "📦"}</span>
+            </div>
+
+            {/* Category label */}
+            <div className="flex flex-col">
+              <h3 className="text-[12px] font-semibold tracking-[-0.01em] text-white/60">
+                {CATEGORY_LABELS[group]}
+              </h3>
+              <span className="text-[10px] text-white/25">
+                {groupEmojis.length} emoji{groupEmojis.length !== 1 ? "s" : ""}
+              </span>
+            </div>
+
+            {/* Divider line */}
+            <div className="h-px flex-1 bg-gradient-to-r from-white/[0.06] to-transparent" />
           </div>
-          
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(3.5rem,1fr))] gap-3 content-start px-2">
+
+          {/* Emoji grid - larger cells */}
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(3.75rem,1fr))] gap-2.5 content-start">
             {groupEmojis.map((emoji, idx) => (
               <EmojiCard
                 key={`${emoji.hexcode}-${idx}`}
                 emoji={emoji}
                 onClick={onEmojiClick}
+                style={{ animationDelay: `${groupIndex * 40 + idx * 6}ms` }}
               />
             ))}
           </div>

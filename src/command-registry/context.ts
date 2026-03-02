@@ -1,7 +1,4 @@
-import type {
-  BuildCommandContextInput,
-  CommandContext,
-} from "@/command-registry/types";
+import type { BuildCommandContextInput, CommandContext } from "@/command-registry/types";
 import { parseTriggerInput } from "@/command-registry/trigger-registry";
 
 function normalizeRawQuery(search: string): string {

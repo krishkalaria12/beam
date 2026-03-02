@@ -2,11 +2,11 @@
   "name": "beam",
   "version": "1.0.0",
   "private": true,
-  "type": "module",
   "workspaces": [
     "packages/*",
     "sidecar"
   ],
+  "type": "module",
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",

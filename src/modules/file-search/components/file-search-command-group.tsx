@@ -23,10 +23,7 @@ export default function FileSearchCommandGroup({
     const trimmedQuery = query?.trim() ?? "";
     return (
       <LauncherTakeoverSurface>
-        <FileSearchView 
-            initialQuery={trimmedQuery}
-            onBack={onBack} 
-        />
+        <FileSearchView initialQuery={trimmedQuery} onBack={onBack} />
       </LauncherTakeoverSurface>
     );
   }
@@ -34,8 +31,8 @@ export default function FileSearchCommandGroup({
   // Otherwise, we show the command item in the list
   // The FileSearchCommandItem will read the query from cmdk's state
   return (
-      <CommandGroup>
-        <FileSearchCommandItem onSelect={onOpen} queryOverride={queryOverride} />
-      </CommandGroup>
+    <CommandGroup>
+      <FileSearchCommandItem onSelect={onOpen} queryOverride={queryOverride} />
+    </CommandGroup>
   );
 }

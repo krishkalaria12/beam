@@ -7,7 +7,7 @@ export function useDictionary(word: string, language?: string) {
     queryFn: () => getDefinition(word, language),
     enabled: word.trim().length > 0,
     staleTime: 0, // Disable caching for debugging
-    gcTime: 0, // Disable garbage collection time for debugging  
+    gcTime: 0, // Disable garbage collection time for debugging
     retry: false,
     refetchOnWindowFocus: false,
   });

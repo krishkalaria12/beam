@@ -2,7 +2,10 @@ import { invoke, isTauri } from "@tauri-apps/api/core";
 import { z } from "zod";
 
 const calculatorOutputSchema = z.object({
-  value: z.string().default("").transform((value) => value.trim()),
+  value: z
+    .string()
+    .default("")
+    .transform((value) => value.trim()),
   is_error: z.boolean().default(false),
 });
 

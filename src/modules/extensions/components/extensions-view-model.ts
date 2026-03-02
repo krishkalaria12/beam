@@ -211,9 +211,7 @@ export function toInstalledExtensionSummary(plugins: PluginInfo[]): InstalledExt
       commandCount: group.commandCount,
       icon: group.icon,
       pluginName: group.pluginName,
-      preferences: [...group.preferenceMap.values()].sort((a, b) =>
-        a.title.localeCompare(b.title),
-      ),
+      preferences: [...group.preferenceMap.values()].sort((a, b) => a.title.localeCompare(b.title)),
     }))
     .sort((a, b) => a.title.localeCompare(b.title));
 }

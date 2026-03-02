@@ -128,12 +128,10 @@ function normalizeUsage(value: unknown): Record<string, CommandUsageEntry> {
     const lastUsedAt = entry.lastUsedAt;
 
     usage[commandId.trim()] = {
-      count: typeof count === "number" && Number.isFinite(count)
-        ? Math.max(0, Math.floor(count))
-        : 0,
-      lastUsedAt: typeof lastUsedAt === "string" && lastUsedAt.trim().length > 0
-        ? lastUsedAt
-        : null,
+      count:
+        typeof count === "number" && Number.isFinite(count) ? Math.max(0, Math.floor(count)) : 0,
+      lastUsedAt:
+        typeof lastUsedAt === "string" && lastUsedAt.trim().length > 0 ? lastUsedAt : null,
     };
   }
 
@@ -385,21 +383,14 @@ export function replaceFallbackCommandIds(
   };
 }
 
-export function toRankingSignals(
-  state: CommandPreferencesState,
-): CommandRankingSignals {
-  const favorites = new Set<string>([
-    ...state.favoriteCommandIds,
-    ...state.pinnedCommandIds,
-  ]);
+export function toRankingSignals(state: CommandPreferencesState): CommandRankingSignals {
+  const favorites = new Set<string>([...state.favoriteCommandIds, ...state.pinnedCommandIds]);
   const usageCountById = new Map<string, number>();
   for (const [commandId, usage] of Object.entries(state.usageById)) {
     usageCountById.set(commandId, usage.count);
   }
 
-  const aliasesById = new Map<string, readonly string[]>(
-    Object.entries(state.aliasesById),
-  );
+  const aliasesById = new Map<string, readonly string[]>(Object.entries(state.aliasesById));
 
   return {
     favorites,
@@ -408,8 +399,6 @@ export function toRankingSignals(
   };
 }
 
-export function toHiddenCommandIdSet(
-  state: CommandPreferencesState,
-): ReadonlySet<string> {
+export function toHiddenCommandIdSet(state: CommandPreferencesState): ReadonlySet<string> {
   return new Set(state.hiddenCommandIds);
 }

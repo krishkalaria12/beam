@@ -27,9 +27,10 @@ function resolveColorContent(content: unknown): string | undefined {
       typeof (color as { light?: unknown }).light === "string" &&
       typeof (color as { dark?: unknown }).dark === "string"
     ) {
-      const prefersDark = typeof window !== "undefined"
-        ? window.matchMedia("(prefers-color-scheme: dark)").matches
-        : false;
+      const prefersDark =
+        typeof window !== "undefined"
+          ? window.matchMedia("(prefers-color-scheme: dark)").matches
+          : false;
       return prefersDark ? (color as { dark: string }).dark : (color as { light: string }).light;
     }
   }
@@ -86,10 +87,7 @@ export function GridItemNode({ nodeId, state, renderContext }: RunnerNodeCompone
         ) : (
           <RunnerIcon
             icon={contentValue}
-            className={cn(
-              "h-full w-full",
-              fit === "contain" ? "object-contain" : "object-fill",
-            )}
+            className={cn("h-full w-full", fit === "contain" ? "object-contain" : "object-fill")}
           />
         )}
       </div>

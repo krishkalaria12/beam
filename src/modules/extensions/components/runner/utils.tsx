@@ -33,5 +33,8 @@ export function extractText(tree: Map<number, ExtensionUiNode>, nodeId?: number)
   if (node.type === "TEXT") {
     return asString(node.text);
   }
-  return node.children.map((childId) => extractText(tree, childId)).join(" ").trim();
+  return node.children
+    .map((childId) => extractText(tree, childId))
+    .join(" ")
+    .trim();
 }

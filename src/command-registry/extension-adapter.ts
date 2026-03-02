@@ -53,10 +53,7 @@ function normalizeScope(input?: readonly CommandScope[]): readonly CommandScope[
   return valid.length > 0 ? valid : ["normal", "compressed"];
 }
 
-function normalizeKeywords(
-  title: string,
-  keywords?: readonly string[],
-): readonly string[] {
+function normalizeKeywords(title: string, keywords?: readonly string[]): readonly string[] {
   const all = new Set<string>();
   all.add(title);
 

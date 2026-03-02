@@ -17,12 +17,13 @@ type ClipboardCommandGroupProps = {
   onBack: () => void;
 };
 
-const CLIPBOARD_KEYWORDS = [
-  "clipboard",
-  "clipboard history",
-] as const;
+const CLIPBOARD_KEYWORDS = ["clipboard", "clipboard history"] as const;
 
-export default function ClipboardCommandGroup({ isOpen, onOpen, onBack }: ClipboardCommandGroupProps) {
+export default function ClipboardCommandGroup({
+  isOpen,
+  onOpen,
+  onBack,
+}: ClipboardCommandGroupProps) {
   const searchInput = useCommandState((state) => state.search);
   const query = normalizeCommandQuery(searchInput);
 

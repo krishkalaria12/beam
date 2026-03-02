@@ -74,10 +74,7 @@ const DEFAULT_MEASUREMENTS_WITHOUT_PACKET_LOSS: SpeedTestMeasurement[] = [
 ];
 
 function hasTurnCredentials(config: SpeedTestConfig): boolean {
-  return Boolean(
-    config.turnServerCredsApiUrl ||
-      (config.turnServerUser && config.turnServerPass),
-  );
+  return Boolean(config.turnServerCredsApiUrl || (config.turnServerUser && config.turnServerPass));
 }
 
 export async function createSpeedTestInstance(

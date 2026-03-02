@@ -8,10 +8,7 @@ export const COMMAND_MODE_VALUES = [
 
 export type CommandModeValue = (typeof COMMAND_MODE_VALUES)[number];
 
-export const COMMAND_SCOPE_VALUES = [
-  ...COMMAND_MODE_VALUES,
-  "all",
-] as const;
+export const COMMAND_SCOPE_VALUES = [...COMMAND_MODE_VALUES, "all"] as const;
 
 export type CommandScopeValue = (typeof COMMAND_SCOPE_VALUES)[number];
 

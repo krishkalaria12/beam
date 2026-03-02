@@ -1,23 +1,23 @@
-import { Bold, Camera, Code2, Italic, Sparkles, Strikethrough, Underline } from "lucide-react";
+import {
+  Bold,
+  ChevronDown,
+  Code2,
+  FileText,
+  Italic,
+  Sparkles,
+  Strikethrough,
+  Underline,
+} from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 import { SnippetTagInput } from "@/modules/snippets/components/snippet-tag-input";
 import type { SnippetEditorDraft } from "@/modules/snippets/types";
 
@@ -38,6 +38,12 @@ const DECORATION_BUTTONS = [
   { key: "strike", icon: Strikethrough },
 ] as const;
 
+const CONTENT_TYPE_OPTIONS = [
+  { value: "Text", label: "Text", icon: FileText },
+  { value: "Markdown", label: "Markdown", icon: FileText },
+  { value: "Code", label: "Code", icon: Code2 },
+] as const;
+
 export function SnippetEditor({
   mode,
   draft,
@@ -47,13 +53,19 @@ export function SnippetEditor({
   onCancel,
   onSubmit,
 }: SnippetEditorProps) {
+  const currentContentType =
+    CONTENT_TYPE_OPTIONS.find((opt) => opt.value === draft.contentType) ?? CONTENT_TYPE_OPTIONS[0];
+
   return (
-    <section className="flex min-h-0 flex-1 overflow-hidden px-4 py-3">
-      <div className="flex min-h-0 w-full gap-4">
+    <section className="snippet-editor-enter relative flex min-h-0 flex-1 flex-col overflow-hidden">
+      <div className="flex min-h-0 flex-1 gap-4 overflow-hidden p-4">
+        {/* Left: Snippet Content Editor */}
         <div className="flex min-h-0 w-[47%] flex-col">
-          <Label className="mb-1.5 text-xs text-muted-foreground/80">Snippet</Label>
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border/60 bg-background/20">
-            <Textarea
+          <label className="mb-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-white/45">
+            Snippet Content
+          </label>
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl bg-white/[0.03] ring-1 ring-white/[0.06]">
+            <textarea
               value={draft.template}
               onChange={(event) => {
                 onDraftChange({
@@ -62,73 +74,64 @@ export function SnippetEditor({
                 });
               }}
               placeholder="Type snippet content..."
-              className="min-h-0 flex-1 resize-none border-0 bg-transparent p-3 text-[15px] leading-6"
+              className={cn(
+                "min-h-0 flex-1 resize-none bg-transparent p-4 text-[14px] leading-6 text-white/90 placeholder:text-white/30",
+                "focus:outline-none",
+              )}
             />
 
-            <div className="flex items-center gap-1 border-t border-border/50 px-2 py-1.5">
+            <div className="flex items-center gap-1 border-t border-white/[0.06] px-2 py-1.5">
               {DECORATION_BUTTONS.map(({ key, icon: Icon }) => (
-                <Button
+                <button
                   key={key}
                   type="button"
-                  variant="ghost"
-                  size="icon-xs"
-                  className="size-6"
+                  className="flex size-7 items-center justify-center rounded-lg text-white/40 transition-colors hover:bg-white/[0.06] hover:text-white/70"
                   aria-label={key}
                 >
                   <Icon className="size-3.5" />
-                </Button>
+                </button>
               ))}
             </div>
           </div>
 
-          <p className="mt-2 text-[11px] text-muted-foreground/70">
+          <p className="mt-2 text-[11px] text-white/35">
             Include dynamic placeholders for context values like date and copied text.
           </p>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto">
-          <div className="grid gap-3">
+        {/* Right: Settings */}
+        <div className="scrollbar-hidden-until-hover min-h-0 flex-1 overflow-y-auto pr-1">
+          <div className="grid gap-4">
+            {/* Name */}
             <div>
-              <Label htmlFor="snippet-name" className="text-xs text-muted-foreground/80">
-                Name & Icon
-              </Label>
-              <div className="mt-1.5 flex gap-2">
-                <Input
-                  id="snippet-name"
-                  value={draft.name}
-                  onChange={(event) => {
-                    onDraftChange({
-                      ...draft,
-                      name: event.target.value,
-                    });
-                  }}
-                  placeholder="Snippet name"
-                  className="h-9"
-                />
-
-                <DropdownMenu>
-                  <DropdownMenuTrigger
-                    render={
-                      <Button type="button" variant="outline" size="icon" className="size-9" />
-                    }
-                  >
-                    <Camera className="size-4" />
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-44">
-                    <DropdownMenuItem>Default Icon</DropdownMenuItem>
-                    <DropdownMenuItem>Document Icon</DropdownMenuItem>
-                    <DropdownMenuItem>Code Icon</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+              <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.08em] text-white/45">
+                Name
+              </label>
+              <input
+                type="text"
+                value={draft.name}
+                onChange={(event) => {
+                  onDraftChange({
+                    ...draft,
+                    name: event.target.value,
+                  });
+                }}
+                placeholder="Snippet name"
+                className={cn(
+                  "h-10 w-full rounded-xl bg-white/[0.04] px-3 text-[13px] text-white/90 placeholder:text-white/30",
+                  "ring-1 ring-white/[0.06] transition-all duration-200",
+                  "focus:outline-none focus:ring-[var(--solid-accent,#4ea2ff)]",
+                )}
+              />
             </div>
 
+            {/* Keyword */}
             <div>
-              <Label htmlFor="snippet-trigger" className="text-xs text-muted-foreground/80">
+              <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.08em] text-white/45">
                 Keyword
-              </Label>
-              <Input
-                id="snippet-trigger"
+              </label>
+              <input
+                type="text"
                 value={draft.trigger}
                 onChange={(event) => {
                   onDraftChange({
@@ -137,64 +140,99 @@ export function SnippetEditor({
                   });
                 }}
                 placeholder=";keyword"
-                className="mt-1.5 h-9"
+                className={cn(
+                  "h-10 w-full rounded-xl bg-white/[0.04] px-3 font-mono text-[13px] text-white/90 placeholder:text-white/30",
+                  "ring-1 ring-white/[0.06] transition-all duration-200",
+                  "focus:outline-none focus:ring-[var(--solid-accent,#4ea2ff)]",
+                )}
               />
             </div>
 
+            {/* Tags */}
             <div>
-              <Label className="text-xs text-muted-foreground/80">Tags</Label>
-              <div className="mt-1.5">
-                <SnippetTagInput
-                  value={draft.tags}
-                  suggestions={existingTags}
-                  onChange={(nextTags) => {
-                    onDraftChange({
-                      ...draft,
-                      tags: nextTags,
-                    });
-                  }}
-                />
-              </div>
+              <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.08em] text-white/45">
+                Tags
+              </label>
+              <SnippetTagInput
+                value={draft.tags}
+                suggestions={existingTags}
+                onChange={(nextTags) => {
+                  onDraftChange({
+                    ...draft,
+                    tags: nextTags,
+                  });
+                }}
+              />
             </div>
 
+            {/* Content Type & Placeholders */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label className="text-xs text-muted-foreground/80">Content Type</Label>
-                <Select
-                  value={draft.contentType}
-                  onValueChange={(nextValue) => {
-                    onDraftChange({
-                      ...draft,
-                      contentType: nextValue as SnippetEditorDraft["contentType"],
-                    });
-                  }}
-                >
-                  <SelectTrigger className="mt-1.5 h-9 w-full">
-                    <SelectValue placeholder="Content type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Text">Text</SelectItem>
-                    <SelectItem value="Markdown">Markdown</SelectItem>
-                    <SelectItem value="Code">Code</SelectItem>
-                  </SelectContent>
-                </Select>
+                <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.08em] text-white/45">
+                  Content Type
+                </label>
+                <DropdownMenu>
+                  <DropdownMenuTrigger className="flex h-10 w-full items-center justify-between gap-2 rounded-xl bg-white/[0.04] px-3 text-[13px] font-medium text-white/70 ring-1 ring-white/[0.06] transition-all hover:bg-white/[0.06] hover:text-white/90">
+                    <div className="flex items-center gap-2">
+                      <currentContentType.icon className="size-3.5 text-white/40" />
+                      <span>{currentContentType.label}</span>
+                    </div>
+                    <ChevronDown className="size-3.5 text-white/30" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="start"
+                    className="w-40 rounded-xl border border-white/[0.08] bg-[#2c2c2c] p-1.5 shadow-xl"
+                  >
+                    <DropdownMenuRadioGroup
+                      value={draft.contentType}
+                      onValueChange={(value) => {
+                        onDraftChange({
+                          ...draft,
+                          contentType: value as SnippetEditorDraft["contentType"],
+                        });
+                      }}
+                    >
+                      {CONTENT_TYPE_OPTIONS.map((option) => (
+                        <DropdownMenuRadioItem
+                          key={option.value}
+                          value={option.value}
+                          className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-[12px] font-medium text-white/70 transition-colors hover:bg-white/[0.06] hover:text-white/90 focus:bg-white/[0.06] data-[state=checked]:text-white"
+                        >
+                          <option.icon className="size-3.5 text-white/40" />
+                          {option.label}
+                        </DropdownMenuRadioItem>
+                      ))}
+                    </DropdownMenuRadioGroup>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
 
               <div className="flex items-end">
-                <Button type="button" variant="outline" className="h-9 w-full">
+                <button
+                  type="button"
+                  className={cn(
+                    "inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-white/[0.08] text-[12px] font-medium transition-all duration-200",
+                    "bg-white/[0.03] text-white/60 hover:bg-white/[0.06] hover:text-white/80",
+                  )}
+                >
                   <Sparkles className="size-3.5" />
-                  Dynamic Placeholders
-                </Button>
+                  Placeholders
+                </button>
               </div>
             </div>
 
-            <div className="rounded-xl border border-border/60 bg-background/15 p-3">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground/65">
-                Behavior
-              </p>
-              <div className="space-y-2.5 text-xs">
+            {/* Behavior Section */}
+            <div className="rounded-xl bg-white/[0.02] p-4 ring-1 ring-white/[0.04]">
+              <div className="mb-3 flex items-center gap-3">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-white/45">
+                  Behavior
+                </span>
+                <div className="h-px flex-1 bg-white/[0.06]" />
+              </div>
+
+              <div className="space-y-3 text-[12px]">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-muted-foreground/80">Enabled</span>
+                  <span className="text-white/60">Enabled</span>
                   <Switch
                     checked={draft.enabled}
                     onCheckedChange={(checked) => {
@@ -205,8 +243,10 @@ export function SnippetEditor({
                     }}
                   />
                 </div>
+                <div className="h-px bg-white/[0.04]" />
+
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-muted-foreground/80">Case Sensitive</span>
+                  <span className="text-white/60">Case Sensitive</span>
                   <Switch
                     checked={draft.caseSensitive}
                     onCheckedChange={(checked) => {
@@ -217,8 +257,10 @@ export function SnippetEditor({
                     }}
                   />
                 </div>
+                <div className="h-px bg-white/[0.04]" />
+
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-muted-foreground/80">Word Boundary</span>
+                  <span className="text-white/60">Word Boundary</span>
                   <Switch
                     checked={draft.wordBoundary}
                     onCheckedChange={(checked) => {
@@ -229,8 +271,10 @@ export function SnippetEditor({
                     }}
                   />
                 </div>
+                <div className="h-px bg-white/[0.04]" />
+
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-muted-foreground/80">Instant Expand</span>
+                  <span className="text-white/60">Instant Expand</span>
                   <Switch
                     checked={draft.instantExpand}
                     onCheckedChange={(checked) => {
@@ -247,24 +291,31 @@ export function SnippetEditor({
         </div>
       </div>
 
-      <div className="pointer-events-none absolute bottom-3 right-4 flex items-center gap-2">
-        <Button
+      {/* Footer Actions */}
+      <div className="flex h-14 shrink-0 items-center justify-end gap-2 border-t border-white/[0.06] px-4">
+        <button
           type="button"
-          variant="outline"
-          className="pointer-events-auto h-7"
           onClick={onCancel}
+          className={cn(
+            "inline-flex h-8 items-center gap-1.5 rounded-lg border border-white/[0.08] px-4 text-[12px] font-medium transition-all duration-200",
+            "bg-white/[0.03] text-white/60 hover:bg-white/[0.06] hover:text-white/80",
+          )}
         >
           Cancel
-        </Button>
-        <Button
+        </button>
+        <button
           type="button"
-          className="pointer-events-auto h-7"
           onClick={onSubmit}
           disabled={isSubmitting}
+          className={cn(
+            "inline-flex h-8 items-center gap-1.5 rounded-lg px-4 text-[12px] font-medium transition-all duration-200",
+            "bg-[var(--solid-accent,#4ea2ff)]/20 text-[var(--solid-accent,#4ea2ff)] hover:bg-[var(--solid-accent,#4ea2ff)]/30",
+            "disabled:opacity-50 disabled:pointer-events-none",
+          )}
         >
           <Code2 className="size-3.5" />
-          {isSubmitting ? "Saving" : mode === "create" ? "Save Snippet" : "Update Snippet"}
-        </Button>
+          {isSubmitting ? "Saving..." : mode === "create" ? "Save Snippet" : "Update Snippet"}
+        </button>
       </div>
     </section>
   );

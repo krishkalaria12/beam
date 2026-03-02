@@ -4,7 +4,10 @@ import type { CommandContext, CommandDescriptor } from "@/command-registry/types
 import type { RankedCommand } from "@/command-registry/ranker";
 import { CommandSeparator } from "@/components/ui/command";
 import { QuicklinkPreview } from "@/modules/quicklinks/components/quicklink-preview";
-import { TodoPreviewGroup, shouldShowTodoPreview } from "@/modules/todo/components/todo-preview-group";
+import {
+  TodoPreviewGroup,
+  shouldShowTodoPreview,
+} from "@/modules/todo/components/todo-preview-group";
 import type { Quicklink } from "@/modules/quicklinks/types";
 
 interface LauncherCommandModeContentProps {

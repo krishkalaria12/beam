@@ -1,25 +1,11 @@
 {
   "fixtures": {
-    "midnightAliases": [
-      "midn"
-    ],
-    "pmAliases": [
-      "p"
-    ],
-    "middayAliases": [
-      "midd"
-    ],
-    "amAliases": [
-      "a"
-    ],
-    "todayDateAliases": [
-      "tod"
-    ],
-    "yesterdayDateAliases": [
-      "yes"
-    ],
-    "tomorrowDateAliases": [
-      "tom"
-    ]
+    "midnightAliases": ["midn"],
+    "pmAliases": ["p"],
+    "middayAliases": ["midd"],
+    "amAliases": ["a"],
+    "todayDateAliases": ["tod"],
+    "yesterdayDateAliases": ["yes"],
+    "tomorrowDateAliases": ["tom"]
   }
 }

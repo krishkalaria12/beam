@@ -116,9 +116,11 @@ export function parseRaycastDeepLink(url: string): ParsedRaycastDeepLinkResult {
     return { handled: false };
   }
 
-  const pathParts = (isRaycastScheme
-    ? urlObj.pathname.split("/")
-    : urlObj.pathname.replace(/^\/extensions/, "").split("/"))
+  const pathParts = (
+    isRaycastScheme
+      ? urlObj.pathname.split("/")
+      : urlObj.pathname.replace(/^\/extensions/, "").split("/")
+  )
     .filter((segment) => segment.trim().length > 0)
     .map((segment) => decodeURIComponent(segment.trim()));
 

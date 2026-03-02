@@ -1,7 +1,4 @@
-import type {
-  CustomActionRequest,
-  DispatchResult,
-} from "@/command-registry/dispatcher";
+import type { CustomActionRequest, DispatchResult } from "@/command-registry/dispatcher";
 import {
   CALCULATOR_COPY_COMMAND_ID,
   INTERNAL_EXTENSION_ID,
@@ -58,12 +55,14 @@ export function createCustomActionHandler(
     }
 
     if (request.extensionCommandId === CALCULATOR_COPY_COMMAND_ID) {
-      const calculatorQuery = typeof request.payload.calculatorQuery === "string"
-        ? request.payload.calculatorQuery.trim()
-        : "";
-      const calculatorResult = typeof request.payload.calculatorResult === "string"
-        ? request.payload.calculatorResult.trim()
-        : "";
+      const calculatorQuery =
+        typeof request.payload.calculatorQuery === "string"
+          ? request.payload.calculatorQuery.trim()
+          : "";
+      const calculatorResult =
+        typeof request.payload.calculatorResult === "string"
+          ? request.payload.calculatorResult.trim()
+          : "";
 
       if (!calculatorQuery || !calculatorResult) {
         return {
@@ -75,11 +74,7 @@ export function createCustomActionHandler(
 
       try {
         await navigator.clipboard.writeText(calculatorResult);
-        await saveCalculatorHistory(
-          calculatorQuery,
-          calculatorResult,
-          input.calculatorSessionId,
-        );
+        await saveCalculatorHistory(calculatorQuery, calculatorResult, input.calculatorSessionId);
         input.onCalculatorHistoryChanged();
         return { ok: true, payload: { copied: calculatorResult } };
       } catch (error) {
@@ -127,14 +122,14 @@ export function createCustomActionHandler(
           : "";
       const requiredArgumentCount =
         typeof request.payload.requiredArgumentCount === "number" &&
-          Number.isFinite(request.payload.requiredArgumentCount) &&
-          request.payload.requiredArgumentCount > 0
+        Number.isFinite(request.payload.requiredArgumentCount) &&
+        request.payload.requiredArgumentCount > 0
           ? Math.floor(request.payload.requiredArgumentCount)
           : 0;
       const timeoutMs =
         typeof request.payload.timeoutMs === "number" &&
-          Number.isFinite(request.payload.timeoutMs) &&
-          request.payload.timeoutMs > 0
+        Number.isFinite(request.payload.timeoutMs) &&
+        request.payload.timeoutMs > 0
           ? Math.floor(request.payload.timeoutMs)
           : undefined;
 

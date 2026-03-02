@@ -1,0 +1,1867 @@
+/* file search module styles */
+
+/* File search header */
+.file-search-header {
+  background: var(--solid-bg-header, transparent);
+}
+
+/* File search input - refined focus states */
+.file-search-input {
+  caret-color: var(--solid-accent, #4ea2ff);
+}
+
+.file-search-input::placeholder {
+  letter-spacing: -0.01em;
+}
+
+/* File list item - smooth selection transitions */
+.file-list-item {
+  position: relative;
+}
+
+.file-list-item::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 0;
+  background: var(--solid-accent, #4ea2ff);
+  border-radius: 0 2px 2px 0;
+  transition: height 150ms ease;
+}
+
+.file-list-item[data-selected="true"]::before {
+  height: 60%;
+}
+
+/* File details - preview icon gradient overlay */
+.file-preview-icon {
+  position: relative;
+}
+
+.file-preview-icon::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    135deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.05) 50%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+/* Metadata row hover effect */
+.metadata-row {
+  transition: background-color 150ms ease;
+}
+
+.metadata-row:hover {
+  background: var(--command-item-hover-bg);
+  margin: 0 -0.5rem;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  border-radius: 6px;
+}
+
+/* File type badge colors */
+.file-badge-code {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+}
+
+.file-badge-image {
+  background: rgba(168, 85, 247, 0.15);
+  color: #c084fc;
+}
+
+.file-badge-doc {
+  background: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+}
+
+.file-badge-config {
+  background: rgba(251, 191, 36, 0.15);
+  color: #fbbf24;
+}
+
+/* Solid theme specific overrides */
+.sc-solid .file-search-header {
+  background: var(--solid-bg-header);
+  border-color: var(--solid-border-subtle);
+}
+
+.sc-solid .file-search-input {
+  background: var(--solid-bg-recessed);
+  border-color: var(--solid-border-subtle);
+}
+
+.sc-solid .file-search-input:focus {
+  border-color: var(--solid-accent);
+  box-shadow: 0 0 0 3px rgba(78, 162, 255, 0.15);
+}
+
+.sc-solid .file-list-item[data-selected="true"] {
+  background: var(--solid-selected-bg);
+}
+
+.sc-solid .file-list-item:hover:not([data-selected="true"]) {
+  background: var(--solid-hover-bg);
+}
+
+/* File list pane background */
+.file-search-list-pane {
+  background: var(--solid-bg-base, transparent);
+}
+
+/* File details pane background */
+.file-search-detail-pane {
+  background: var(--solid-bg-recessed, rgba(0, 0, 0, 0.1));
+}
+
+/* Radial gradient utility for glow effects */
+.bg-gradient-radial {
+  background: radial-gradient(circle, var(--tw-gradient-stops));
+}
+
+/* File list item enter animation */
+.file-list-item {
+  animation: file-item-enter 200ms ease-out both;
+}
+
+@keyframes file-item-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Stagger animation for list items */
+.file-list-item:nth-child(1) {
+  animation-delay: 0ms;
+}
+.file-list-item:nth-child(2) {
+  animation-delay: 20ms;
+}
+.file-list-item:nth-child(3) {
+  animation-delay: 40ms;
+}
+.file-list-item:nth-child(4) {
+  animation-delay: 60ms;
+}
+.file-list-item:nth-child(5) {
+  animation-delay: 80ms;
+}
+.file-list-item:nth-child(n + 6) {
+  animation-delay: 100ms;
+}
+
+/* Active/pressed state for file items */
+.file-list-item:active {
+  transform: scale(0.995);
+}
+
+/* File details panel animations */
+.file-search-detail-pane > * {
+  animation: detail-fade-in 250ms ease-out both;
+}
+
+@keyframes detail-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Pulse animation for status indicator */
+@keyframes status-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* settings module styles */
+
+/* Settings view container */
+.settings-view {
+  background: transparent;
+}
+
+/* Settings header */
+.settings-header {
+  background: transparent;
+}
+
+/* Settings content area */
+.settings-content {
+  scrollbar-width: thin;
+  scrollbar-color: var(--solid-border-subtle, rgba(255, 255, 255, 0.1)) transparent;
+}
+
+.settings-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.settings-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.settings-content::-webkit-scrollbar-thumb {
+  background: var(--solid-border-subtle, rgba(255, 255, 255, 0.1));
+  border-radius: 3px;
+}
+
+.settings-content::-webkit-scrollbar-thumb:hover {
+  background: var(--solid-border-subtle, rgba(255, 255, 255, 0.2));
+}
+
+/* Settings panel spacing */
+.settings-panel {
+  animation: settings-panel-enter 200ms ease-out both;
+}
+
+@keyframes settings-panel-enter {
+  from {
+    opacity: 0;
+    transform: translateX(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Settings menu items */
+.settings-menu-item {
+  animation: settings-menu-item-enter 180ms ease-out both;
+}
+
+@keyframes settings-menu-item-enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Settings style cards */
+.settings-style-card {
+  transition: all 200ms ease;
+}
+
+.settings-style-card:active {
+  transform: scale(0.98);
+}
+
+/* Layout option cards */
+.layout-option-card {
+  transition: all 200ms ease;
+}
+
+.layout-option-card:active {
+  transform: scale(0.98);
+}
+
+/* Color picker input */
+.color-picker-input {
+  appearance: none;
+  -webkit-appearance: none;
+  border: none;
+  cursor: pointer;
+}
+
+.color-picker-input::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.color-picker-input::-webkit-color-swatch {
+  border: none;
+  border-radius: 6px;
+}
+
+.color-picker-input::-moz-color-swatch {
+  border: none;
+  border-radius: 6px;
+}
+
+/* Color preset buttons */
+.color-preset-button {
+  transition:
+    transform 150ms ease,
+    border-color 150ms ease;
+}
+
+.color-preset-button:active {
+  transform: scale(0.95) !important;
+}
+
+/* Pinned item animations */
+.pinned-item {
+  animation: pinned-item-enter 180ms ease-out both;
+}
+
+@keyframes pinned-item-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Fallback item animations */
+.fallback-item {
+  animation: fallback-item-enter 180ms ease-out both;
+}
+
+@keyframes fallback-item-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Fallback toggle card */
+.fallback-toggle-card {
+  transition: all 200ms ease;
+}
+
+.fallback-toggle-card:active {
+  transform: scale(0.995);
+}
+
+/* Trigger symbol row animations */
+.trigger-symbol-row {
+  animation: trigger-row-enter 180ms ease-out both;
+}
+
+@keyframes trigger-row-enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Trigger symbol input focus */
+.trigger-symbol-input {
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+/* Custom binding row */
+.custom-binding-row {
+  animation: custom-binding-enter 180ms ease-out both;
+}
+
+@keyframes custom-binding-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Command hotkey item */
+.command-hotkey-item {
+  transition: background-color 150ms ease;
+}
+
+/* Settings status toast */
+.settings-status-toast {
+  animation: status-toast-enter 200ms ease-out both;
+}
+
+@keyframes status-toast-enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Empty state styling */
+.pinned-empty-state {
+  animation: empty-state-fade 300ms ease-out both;
+}
+
+@keyframes empty-state-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* clipboard module styles */
+
+/* Clipboard view container - entrance animation */
+.clipboard-view {
+  animation: clipboard-view-enter 250ms ease-out both;
+}
+
+@keyframes clipboard-view-enter {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Clipboard header entrance */
+.clipboard-header {
+  animation: clipboard-header-enter 200ms ease-out both;
+}
+
+@keyframes clipboard-header-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Clipboard list panel entrance */
+.clipboard-list-panel {
+  animation: clipboard-list-enter 220ms ease-out both;
+  animation-delay: 50ms;
+}
+
+@keyframes clipboard-list-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Clipboard details panel entrance */
+.clipboard-details-panel {
+  animation: clipboard-details-enter 220ms ease-out both;
+  animation-delay: 100ms;
+}
+
+@keyframes clipboard-details-enter {
+  from {
+    opacity: 0;
+    transform: translateX(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Clipboard list item entrance */
+.clipboard-list-item {
+  animation: clipboard-item-enter 180ms ease-out both;
+}
+
+@keyframes clipboard-item-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Clipboard section header */
+.clipboard-section-header {
+  animation: clipboard-section-enter 200ms ease-out both;
+}
+
+@keyframes clipboard-section-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Clipboard footer */
+.clipboard-footer {
+  animation: clipboard-footer-enter 200ms ease-out both;
+  animation-delay: 150ms;
+}
+
+@keyframes clipboard-footer-enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* quicklinks module styles */
+
+/* Quicklinks view container - entrance animation */
+.quicklinks-view {
+  animation: quicklinks-view-enter 250ms ease-out both;
+}
+
+@keyframes quicklinks-view-enter {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Quicklinks header entrance */
+.quicklinks-header {
+  animation: quicklinks-header-enter 200ms ease-out both;
+}
+
+@keyframes quicklinks-header-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Quicklinks content entrance */
+.quicklinks-content {
+  animation: quicklinks-content-enter 220ms ease-out both;
+  animation-delay: 50ms;
+}
+
+@keyframes quicklinks-content-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Quicklinks list item entrance */
+.quicklinks-item {
+  animation: quicklinks-item-enter 180ms ease-out both;
+}
+
+@keyframes quicklinks-item-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Quicklinks icon preview entrance */
+.quicklinks-icon-preview {
+  animation: quicklinks-icon-enter 300ms ease-out both;
+}
+
+@keyframes quicklinks-icon-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Quicklinks footer entrance */
+.quicklinks-footer {
+  animation: quicklinks-footer-enter 200ms ease-out both;
+  animation-delay: 100ms;
+}
+
+@keyframes quicklinks-footer-enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* todo module styles */
+
+/* Todo view container - entrance animation */
+.todo-view-enter {
+  animation: todo-view-enter 250ms ease-out both;
+}
+
+@keyframes todo-view-enter {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Todo header entrance */
+.todo-header-enter {
+  animation: todo-header-enter 200ms ease-out both;
+}
+
+@keyframes todo-header-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Todo panel entrance */
+.todo-panel-enter {
+  animation: todo-panel-enter 220ms ease-out both;
+  animation-delay: 50ms;
+}
+
+@keyframes todo-panel-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Todo detail panel entrance */
+.todo-detail-enter {
+  animation: todo-detail-enter 220ms ease-out both;
+  animation-delay: 80ms;
+}
+
+@keyframes todo-detail-enter {
+  from {
+    opacity: 0;
+    transform: translateX(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Todo row item entrance */
+.todo-row-enter {
+  animation: todo-row-enter 180ms ease-out both;
+}
+
+@keyframes todo-row-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Subtask row entrance */
+.todo-subtask-enter {
+  animation: todo-subtask-enter 160ms ease-out both;
+}
+
+@keyframes todo-subtask-enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Todo footer entrance */
+.todo-footer-enter {
+  animation: todo-footer-enter 200ms ease-out both;
+  animation-delay: 120ms;
+}
+
+@keyframes todo-footer-enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* calculator history module styles */
+
+/* Calculator history item entrance */
+.calc-history-item {
+  animation: calc-history-item-enter 180ms ease-out both;
+}
+
+@keyframes calc-history-item-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Calculator history empty state */
+.calc-history-empty {
+  animation: calc-history-empty-enter 250ms ease-out both;
+}
+
+@keyframes calc-history-empty-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Calculator history error state */
+.calc-history-error {
+  animation: calc-history-error-enter 200ms ease-out both;
+}
+
+@keyframes calc-history-error-enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Calculator history loading state */
+.calc-history-loading {
+  animation: calc-history-loading-enter 200ms ease-out both;
+}
+
+@keyframes calc-history-loading-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* calculator result module styles */
+
+/* Calculator result card - entrance animation */
+.calc-result-card {
+  animation: calc-result-card-enter 250ms ease-out both;
+}
+
+@keyframes calc-result-card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* snippets module styles */
+
+/* Snippets view container - entrance animation */
+.snippets-view-enter {
+  animation: snippets-view-enter 250ms ease-out both;
+}
+
+@keyframes snippets-view-enter {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Snippets header entrance */
+.snippets-header-enter {
+  animation: snippets-header-enter 200ms ease-out both;
+}
+
+@keyframes snippets-header-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Snippets content entrance */
+.snippets-content-enter {
+  animation: snippets-content-enter 220ms ease-out both;
+  animation-delay: 50ms;
+}
+
+@keyframes snippets-content-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Snippets footer entrance */
+.snippets-footer-enter {
+  animation: snippets-footer-enter 200ms ease-out both;
+  animation-delay: 100ms;
+}
+
+@keyframes snippets-footer-enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Snippet list item entrance */
+.snippet-list-item {
+  animation: snippet-list-item-enter 180ms ease-out both;
+}
+
+@keyframes snippet-list-item-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Snippet preview entrance */
+.snippet-preview-enter {
+  animation: snippet-preview-enter 200ms ease-out both;
+  animation-delay: 80ms;
+}
+
+@keyframes snippet-preview-enter {
+  from {
+    opacity: 0;
+    transform: translateX(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Snippet editor entrance */
+.snippet-editor-enter {
+  animation: snippet-editor-enter 220ms ease-out both;
+  animation-delay: 50ms;
+}
+
+@keyframes snippet-editor-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* dictionary module styles */
+
+/* Dictionary view container - entrance animation */
+.dictionary-view-enter {
+  animation: dictionary-view-enter 250ms ease-out both;
+}
+
+@keyframes dictionary-view-enter {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Dictionary header entrance */
+.dictionary-header-enter {
+  animation: dictionary-header-enter 200ms ease-out both;
+}
+
+@keyframes dictionary-header-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Dictionary content entrance */
+.dictionary-content-enter {
+  animation: dictionary-content-enter 220ms ease-out both;
+  animation-delay: 50ms;
+}
+
+@keyframes dictionary-content-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Dictionary footer entrance */
+.dictionary-footer-enter {
+  animation: dictionary-footer-enter 200ms ease-out both;
+  animation-delay: 100ms;
+}
+
+@keyframes dictionary-footer-enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Dictionary sense card entrance */
+.dictionary-sense-card {
+  animation: dictionary-sense-card-enter 180ms ease-out both;
+}
+
+@keyframes dictionary-sense-card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* speed test module styles */
+
+/* Speed test view container - entrance animation */
+.speedtest-view-enter {
+  animation: speedtest-view-enter 250ms ease-out both;
+}
+
+@keyframes speedtest-view-enter {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Speed test header entrance */
+.speedtest-header-enter {
+  animation: speedtest-header-enter 200ms ease-out both;
+}
+
+@keyframes speedtest-header-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Speed test content entrance */
+.speedtest-content-enter {
+  animation: speedtest-content-enter 220ms ease-out both;
+  animation-delay: 50ms;
+}
+
+@keyframes speedtest-content-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Speed test metric card entrance */
+.speedtest-metric-enter {
+  animation: speedtest-metric-enter 200ms ease-out both;
+}
+
+@keyframes speedtest-metric-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Speed test footer entrance */
+.speedtest-footer-enter {
+  animation: speedtest-footer-enter 200ms ease-out both;
+  animation-delay: 120ms;
+}
+
+@keyframes speedtest-footer-enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Solid theme specific overrides for settings */
+.sc-solid .settings-header {
+  background: var(--solid-bg-header);
+  border-color: var(--solid-border-subtle);
+}
+
+.sc-solid .settings-content {
+  background: var(--solid-bg-base);
+}
+
+.sc-solid .settings-menu-item:hover {
+  background: var(--solid-hover-bg);
+}
+
+.sc-solid .settings-style-card[data-selected="true"],
+.sc-solid .layout-option-card[data-selected="true"] {
+  background: var(--solid-selected-bg);
+}
+
+/* emoji module styles */
+
+/* Emoji picker view container - entrance animation */
+.emoji-view-enter {
+  animation: emoji-view-enter 250ms ease-out both;
+}
+
+@keyframes emoji-view-enter {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Emoji header entrance */
+.emoji-header {
+  animation: emoji-header-enter 200ms ease-out both;
+}
+
+@keyframes emoji-header-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Emoji content entrance */
+.emoji-content-enter {
+  animation: emoji-content-enter 220ms ease-out both;
+  animation-delay: 50ms;
+}
+
+@keyframes emoji-content-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Emoji footer entrance */
+.emoji-footer-enter {
+  animation: emoji-footer-enter 200ms ease-out both;
+  animation-delay: 100ms;
+}
+
+@keyframes emoji-footer-enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Emoji grid container */
+.emoji-grid-container {
+  animation: emoji-grid-enter 220ms ease-out both;
+  animation-delay: 80ms;
+}
+
+@keyframes emoji-grid-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Emoji category group */
+.emoji-category {
+  animation: emoji-category-enter 200ms ease-out both;
+}
+
+@keyframes emoji-category-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Emoji card item */
+.emoji-card {
+  animation: emoji-card-enter 150ms ease-out both;
+}
+
+@keyframes emoji-card-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Emoji empty state */
+.emoji-empty {
+  animation: emoji-empty-enter 250ms ease-out both;
+}
+
+@keyframes emoji-empty-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Emoji recent section */
+.emoji-recent {
+  animation: emoji-recent-enter 200ms ease-out both;
+  animation-delay: 30ms;
+}
+
+@keyframes emoji-recent-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Emoji error badge pulse */
+.emoji-error-badge {
+  animation: emoji-error-pulse 2s ease-in-out infinite;
+}
+
+@keyframes emoji-error-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* script commands module styles */
+
+/* Script commands view container - entrance animation */
+.scripts-view-enter {
+  animation: scripts-view-enter 250ms ease-out both;
+}
+
+@keyframes scripts-view-enter {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Script commands header entrance */
+.scripts-header-enter {
+  animation: scripts-header-enter 200ms ease-out both;
+}
+
+@keyframes scripts-header-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Script commands toolbar entrance */
+.scripts-toolbar-enter {
+  animation: scripts-toolbar-enter 200ms ease-out both;
+  animation-delay: 30ms;
+}
+
+@keyframes scripts-toolbar-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Script commands content entrance */
+.scripts-content-enter {
+  animation: scripts-content-enter 220ms ease-out both;
+  animation-delay: 50ms;
+}
+
+@keyframes scripts-content-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Script commands footer entrance */
+.scripts-footer-enter {
+  animation: scripts-footer-enter 200ms ease-out both;
+  animation-delay: 100ms;
+}
+
+@keyframes scripts-footer-enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Script commands list item */
+.scripts-list-item {
+  animation: scripts-list-item-enter 180ms ease-out both;
+}
+
+@keyframes scripts-list-item-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Script commands output panel */
+.scripts-output-enter {
+  animation: scripts-output-enter 200ms ease-out both;
+  animation-delay: 80ms;
+}
+
+@keyframes scripts-output-enter {
+  from {
+    opacity: 0;
+    transform: translateX(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Script commands argument field */
+.scripts-arg-field {
+  animation: scripts-arg-field-enter 180ms ease-out both;
+}
+
+@keyframes scripts-arg-field-enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Script commands create form */
+.scripts-create-enter {
+  animation: scripts-create-enter 220ms ease-out both;
+}
+
+@keyframes scripts-create-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Script commands arguments form */
+.scripts-args-enter {
+  animation: scripts-args-enter 200ms ease-out both;
+  animation-delay: 50ms;
+}
+
+@keyframes scripts-args-enter {
+  from {
+    opacity: 0;
+    transform: translateX(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* window switcher module styles */
+
+/* Window switcher view container - entrance animation */
+.windows-view-enter {
+  animation: windows-view-enter 250ms ease-out both;
+}
+
+@keyframes windows-view-enter {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Window switcher header entrance */
+.windows-header-enter {
+  animation: windows-header-enter 200ms ease-out both;
+}
+
+@keyframes windows-header-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Window switcher toolbar entrance */
+.windows-toolbar-enter {
+  animation: windows-toolbar-enter 200ms ease-out both;
+  animation-delay: 30ms;
+}
+
+@keyframes windows-toolbar-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Window switcher content entrance */
+.windows-content-enter {
+  animation: windows-content-enter 220ms ease-out both;
+  animation-delay: 50ms;
+}
+
+@keyframes windows-content-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Window switcher footer entrance */
+.windows-footer-enter {
+  animation: windows-footer-enter 200ms ease-out both;
+  animation-delay: 100ms;
+}
+
+@keyframes windows-footer-enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Window switcher list item */
+.windows-list-item {
+  animation: windows-list-item-enter 180ms ease-out both;
+}
+
+@keyframes windows-list-item-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* translation module styles */
+
+/* Translation view container - entrance animation */
+.translate-view-enter {
+  animation: translate-view-enter 250ms ease-out both;
+}
+
+@keyframes translate-view-enter {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Translation header entrance */
+.translate-header-enter {
+  animation: translate-header-enter 200ms ease-out both;
+}
+
+@keyframes translate-header-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Translation language bar entrance */
+.translate-langbar-enter {
+  animation: translate-langbar-enter 200ms ease-out both;
+  animation-delay: 30ms;
+}
+
+@keyframes translate-langbar-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Translation content entrance */
+.translate-content-enter {
+  animation: translate-content-enter 220ms ease-out both;
+  animation-delay: 50ms;
+}
+
+@keyframes translate-content-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Translation footer entrance */
+.translate-footer-enter {
+  animation: translate-footer-enter 200ms ease-out both;
+  animation-delay: 100ms;
+}
+
+@keyframes translate-footer-enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* spotify module styles */
+
+/* Spotify view container - entrance animation */
+.spotify-view-enter {
+  animation: spotify-view-enter 250ms ease-out both;
+}
+
+@keyframes spotify-view-enter {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Spotify header entrance */
+.spotify-header {
+  animation: spotify-header-enter 200ms ease-out both;
+}
+
+@keyframes spotify-header-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Spotify content area */
+.spotify-content {
+  animation: spotify-content-enter 220ms ease-out both;
+  animation-delay: 50ms;
+}
+
+@keyframes spotify-content-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Spotify section cards */
+.spotify-section {
+  animation: spotify-section-enter 200ms ease-out both;
+}
+
+@keyframes spotify-section-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Spotify search results */
+.spotify-result {
+  position: relative;
+  animation: spotify-result-enter 150ms ease-out both;
+}
+
+@keyframes spotify-result-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Spotify footer entrance */
+.spotify-footer {
+  animation: spotify-footer-enter 200ms ease-out both;
+  animation-delay: 100ms;
+}
+
+@keyframes spotify-footer-enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* github module styles */
+
+/* GitHub view container - entrance animation */
+.github-view-enter {
+  animation: github-view-enter 250ms ease-out both;
+}
+
+@keyframes github-view-enter {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* GitHub header entrance */
+.github-header {
+  animation: github-header-enter 200ms ease-out both;
+}
+
+@keyframes github-header-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* GitHub content area */
+.github-content {
+  animation: github-content-enter 220ms ease-out both;
+  animation-delay: 50ms;
+}
+
+@keyframes github-content-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* GitHub section cards */
+.github-section {
+  animation: github-section-enter 200ms ease-out both;
+}
+
+@keyframes github-section-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* GitHub issue/PR items */
+.github-item {
+  position: relative;
+  animation: github-item-enter 150ms ease-out both;
+}
+
+@keyframes github-item-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* GitHub footer entrance */
+.github-footer {
+  animation: github-footer-enter 200ms ease-out both;
+  animation-delay: 100ms;
+}
+
+@keyframes github-footer-enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

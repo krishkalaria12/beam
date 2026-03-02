@@ -1,15 +1,9 @@
 import type { CommandDescriptor, CommandProvider } from "@/command-registry/types";
-import {
-  getTriggerSymbol,
-  QUICKLINK_TRIGGER_MODE,
-} from "@/command-registry/trigger-registry";
+import { getTriggerSymbol, QUICKLINK_TRIGGER_MODE } from "@/command-registry/trigger-registry";
 import { searchApplications } from "@/modules/applications/api/search-applications";
 import { calculateExpression } from "@/modules/calculator/api/calculate-expression";
 import { looksLikeCalculationQuery } from "@/modules/calculator/lib/query-match";
-import {
-  findQuicklinkByKeyword,
-  getQuicklinks,
-} from "@/modules/quicklinks/api/quicklinks";
+import { findQuicklinkByKeyword, getQuicklinks } from "@/modules/quicklinks/api/quicklinks";
 import { createExtensionCommandProvider } from "@/modules/extensions/extension-command-provider";
 import { createExtensionStoreProvider } from "@/modules/extensions/extension-store-provider";
 import { createScriptCommandsProvider } from "@/modules/script-commands/script-commands-provider";
@@ -124,11 +118,9 @@ export function createApplicationsCommandProvider(): CommandProvider {
         .filter((application) => application.exec_path.length > 0)
         .map((application) => {
           const title = buildApplicationTitle(application.name, application.exec_path);
-          const keywords = [
-            title,
-            application.description,
-            application.exec_path,
-          ].filter((item) => item.trim().length > 0);
+          const keywords = [title, application.description, application.exec_path].filter(
+            (item) => item.trim().length > 0,
+          );
 
           return {
             id: toApplicationCommandId(title, application.exec_path),
@@ -183,13 +175,7 @@ export function createCalculatorCommandProvider(): CommandProvider {
           id: CALCULATOR_RESULT_COMMAND_ID,
           title: outputValue,
           subtitle: expression,
-          keywords: [
-            "calculator",
-            "calculate",
-            "result",
-            expression,
-            outputValue,
-          ],
+          keywords: ["calculator", "calculate", "result", expression, outputValue],
           endText: "copy",
           icon: "calculator",
           kind: "provider-item",

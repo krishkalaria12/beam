@@ -29,7 +29,11 @@ function formatRelativeDate(value: Date): string {
   return `${years}y`;
 }
 
-function readAccessory(accessory: unknown, nodeId: number, index: number): AccessoryDescriptor | null {
+function readAccessory(
+  accessory: unknown,
+  nodeId: number,
+  index: number,
+): AccessoryDescriptor | null {
   if (!accessory || typeof accessory !== "object") {
     return null;
   }
@@ -66,11 +70,11 @@ function readAccessory(accessory: unknown, nodeId: number, index: number): Acces
     const value = tag.trim();
     return value.length > 0
       ? {
-        key: `${nodeId}:${index}:tag`,
-        text: value,
-        tooltip,
-        icon,
-      }
+          key: `${nodeId}:${index}:tag`,
+          text: value,
+          tooltip,
+          icon,
+        }
       : null;
   }
 
@@ -89,12 +93,12 @@ function readAccessory(accessory: unknown, nodeId: number, index: number): Acces
       const textValue = value.trim();
       return textValue.length > 0
         ? {
-          key: `${nodeId}:${index}:tag-value`,
-          text: textValue,
-          tooltip,
-          icon,
-          color: asString((tag as { color?: unknown }).color).trim() || undefined,
-        }
+            key: `${nodeId}:${index}:tag-value`,
+            text: textValue,
+            tooltip,
+            icon,
+            color: asString((tag as { color?: unknown }).color).trim() || undefined,
+          }
         : null;
     }
   }
@@ -112,11 +116,11 @@ function readAccessory(accessory: unknown, nodeId: number, index: number): Acces
     const textValue = date.trim();
     return textValue.length > 0
       ? {
-        key: `${nodeId}:${index}:date-text`,
-        text: textValue,
-        tooltip,
-        icon,
-      }
+          key: `${nodeId}:${index}:date-text`,
+          text: textValue,
+          tooltip,
+          icon,
+        }
       : null;
   }
 
@@ -134,8 +138,8 @@ export function ListItemNode({ nodeId, state, renderContext }: RunnerNodeCompone
   const icon = node.props.icon;
   const accessories = Array.isArray(node.props.accessories)
     ? node.props.accessories
-      .map((entry, index) => readAccessory(entry, node.id, index))
-      .filter((entry): entry is AccessoryDescriptor => Boolean(entry))
+        .map((entry, index) => readAccessory(entry, node.id, index))
+        .filter((entry): entry is AccessoryDescriptor => Boolean(entry))
     : [];
 
   const isSelected = Boolean(renderContext?.selected);

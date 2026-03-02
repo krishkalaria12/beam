@@ -21,11 +21,7 @@ function shouldCaptureTabUrl(url) {
   if (typeof url !== "string" || url.length === 0) {
     return false;
   }
-  return (
-    url.startsWith("http://") ||
-    url.startsWith("https://") ||
-    url.startsWith("file://")
-  );
+  return url.startsWith("http://") || url.startsWith("https://") || url.startsWith("file://");
 }
 
 function truncate(input, maxChars) {
@@ -62,8 +58,8 @@ async function pingBridge(clientId) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         clientId,
-        browser: "chrome"
-      })
+        browser: "chrome",
+      }),
     });
 
     return response.ok;
@@ -80,7 +76,7 @@ function serializeTabs(tabs) {
       url: tab.url,
       title: tab.title || "",
       favicon: tab.favIconUrl || null,
-      active: Boolean(tab.active)
+      active: Boolean(tab.active),
     }));
 }
 
@@ -98,9 +94,9 @@ async function captureTabContent(tabId) {
         return {
           text,
           html,
-          markdown: text
+          markdown: text,
         };
-      }
+      },
     });
 
     const payload = results?.[0]?.result;
@@ -112,7 +108,7 @@ async function captureTabContent(tabId) {
       tabId,
       text: truncate(payload.text || "", 200000),
       html: truncate(payload.html || "", 200000),
-      markdown: truncate(payload.markdown || "", 200000)
+      markdown: truncate(payload.markdown || "", 200000),
     };
   } catch {
     return null;
@@ -171,8 +167,8 @@ async function syncBridgeSnapshot() {
         browser: "chrome",
         tabs: serializedTabs,
         contents,
-        activeContent
-      })
+        activeContent,
+      }),
     });
 
     await setBadge(response.ok);

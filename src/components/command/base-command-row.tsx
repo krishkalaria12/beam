@@ -40,17 +40,21 @@ export function BaseCommandRow({
       {icon ?? null}
       <div className="min-w-0 flex-1 leading-tight">
         {typeof title === "string" ? (
-          <p className={cn("truncate text-foreground text-base font-medium", titleClassName)}>{title}</p>
+          <p className={cn("truncate text-foreground text-base font-medium", titleClassName)}>
+            {title}
+          </p>
         ) : (
           title
         )}
-        {subtitle
-          ? typeof subtitle === "string"
-            ? (
-              <p className={cn("truncate text-sm text-muted-foreground", subtitleClassName)}>{subtitle}</p>
-            )
-            : subtitle
-          : null}
+        {subtitle ? (
+          typeof subtitle === "string" ? (
+            <p className={cn("truncate text-sm text-muted-foreground", subtitleClassName)}>
+              {subtitle}
+            </p>
+          ) : (
+            subtitle
+          )
+        ) : null}
       </div>
       {endSlot ?? (shortcut ? <CommandShortcut>{shortcut}</CommandShortcut> : null)}
     </CommandItem>

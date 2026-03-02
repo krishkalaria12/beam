@@ -3,17 +3,15 @@ import { lazy, Suspense, type ReactNode } from "react";
 import { CommandLoadingState } from "@/components/command/command-loading-state";
 import type { CommandPanel } from "@/command-registry/types";
 
-const CalculatorHistoryCommandGroup = lazy(() =>
-  import("@/modules/calculator-history/components/calculator-history-command-group")
+const CalculatorHistoryCommandGroup = lazy(
+  () => import("@/modules/calculator-history/components/calculator-history-command-group"),
 );
 const EmojiCommandGroup = lazy(() => import("@/modules/emoji/components/emoji-command-group"));
-const SettingsCommandGroup = lazy(() => import("@/modules/settings/components/settings-command-group"));
+const SettingsCommandGroup = lazy(
+  () => import("@/modules/settings/components/settings-command-group"),
+);
 
-const SECONDARY_PANELS = [
-  "calculator-history",
-  "emoji",
-  "settings",
-] as const;
+const SECONDARY_PANELS = ["calculator-history", "emoji", "settings"] as const;
 
 type SecondaryPanel = (typeof SECONDARY_PANELS)[number];
 
@@ -40,9 +38,7 @@ interface LauncherSecondaryPanelProps extends SecondaryPanelRendererInput {
 }
 
 function SecondaryPanelFallback() {
-  return (
-    <CommandLoadingState label="Loading..." className="px-4 py-6 text-xs" />
-  );
+  return <CommandLoadingState label="Loading..." className="px-4 py-6 text-xs" />;
 }
 
 export function LauncherSecondaryPanel({
@@ -66,20 +62,9 @@ export function LauncherSecondaryPanel({
   let content: ReactNode = null;
 
   if (activePanel === "calculator-history") {
-    content = (
-      <CalculatorHistoryCommandGroup
-        isOpen
-        onOpen={onOpenCalculatorHistory}
-      />
-    );
+    content = <CalculatorHistoryCommandGroup isOpen onOpen={onOpenCalculatorHistory} />;
   } else if (activePanel === "emoji") {
-    content = (
-      <EmojiCommandGroup
-        isOpen
-        onOpen={onOpenEmoji}
-        onBack={onBack}
-      />
-    );
+    content = <EmojiCommandGroup isOpen onOpen={onOpenEmoji} onBack={onBack} />;
   } else if (activePanel === "settings") {
     content = (
       <SettingsCommandGroup
@@ -99,9 +84,7 @@ export function LauncherSecondaryPanel({
 
   return (
     <Suspense fallback={<SecondaryPanelFallback />}>
-      <div className="animate-in fade-in zoom-in-[0.985] duration-200">
-        {content}
-      </div>
+      <div className="animate-in fade-in zoom-in-[0.985] duration-200">{content}</div>
     </Suspense>
   );
 }

@@ -18,12 +18,7 @@ type SpeedTestCommandGroupProps = {
   queryOverride?: string;
 };
 
-const SPEED_TEST_KEYWORDS = [
-  "speed",
-  "speed test",
-  "internet speed",
-  "network",
-] as const;
+const SPEED_TEST_KEYWORDS = ["speed", "speed test", "internet speed", "network"] as const;
 
 export default function SpeedTestCommandGroup({
   isOpen,

@@ -1,31 +1,25 @@
 {
   "rounding": [
     {
-      "prototypeExpressions": [
-        "arrondi"
-      ],
+      "prototypeExpressions": ["arrondi"],
       "identifier": "rounded"
     },
     {
       "prototypeExpressions": [
-      "arrondi à l'inférieur",
-      "arrondi supérieur",
-      "arrondi vers le haut"
+        "arrondi à l'inférieur",
+        "arrondi supérieur",
+        "arrondi vers le haut"
       ],
       "identifier": "roundedUp"
     },
     {
-      "prototypeExpressions": [
-        "arrondi vers le bas",
-        "arrondi à l'inférieur",
-        "arrondi inférieur"
-      ],
+      "prototypeExpressions": ["arrondi vers le bas", "arrondi à l'inférieur", "arrondi inférieur"],
       "identifier": "roundedDown"
     },
     {
       "prototypeExpressions": [
-      "arrondi à 3 décimales",
-      "arrondi 3 décimales",
+        "arrondi à 3 décimales",
+        "arrondi 3 décimales",
         "arrondi à 3 décimales",
         "à 3 décimales",
         "à 3 chiffres",
@@ -54,54 +48,37 @@
       "identifier": "roundedDownToNearestX"
     },
     {
-      "prototypeExpressions": [
-        "à la dizaine la plus proche 10",
-        "au plus proche 10"
-      ],
+      "prototypeExpressions": ["à la dizaine la plus proche 10", "au plus proche 10"],
       "identifier": "roundedToNearestX"
     }
   ],
   "compoundUnits": [
     {
-      "prototypeExpressions": [
-        "__converter_symbol années et mois"
-      ],
+      "prototypeExpressions": ["__converter_symbol années et mois"],
       "identifier": "yearsAndMonths"
     },
     {
-      "prototypeExpressions": [
-        "__converter_symbol mois et semaines"
-      ],
+      "prototypeExpressions": ["__converter_symbol mois et semaines"],
       "identifier": "monthsAndWeeks"
     },
     {
-      "prototypeExpressions": [
-        "__converter_symbol mois et jours"
-      ],
+      "prototypeExpressions": ["__converter_symbol mois et jours"],
       "identifier": "monthsAndDays"
     },
     {
-      "prototypeExpressions": [
-        "__converter_symbol semaines et jours"
-      ],
+      "prototypeExpressions": ["__converter_symbol semaines et jours"],
       "identifier": "weeksAndDays"
     },
     {
-      "prototypeExpressions": [
-        "__converter_symbol jours et heures"
-      ],
+      "prototypeExpressions": ["__converter_symbol jours et heures"],
       "identifier": "daysAndHours"
     },
     {
-      "prototypeExpressions": [
-        "__converter_symbol heures et minutes"
-      ],
+      "prototypeExpressions": ["__converter_symbol heures et minutes"],
       "identifier": "hoursAndMinutes"
     },
     {
-      "prototypeExpressions": [
-        "__converter_symbol minutes et secondes"
-      ],
+      "prototypeExpressions": ["__converter_symbol minutes et secondes"],
       "identifier": "minutesAndSeconds"
     },
     {
@@ -113,32 +90,27 @@
       ],
       "identifier": "feetAndInches"
     }
-
   ],
   "dateTime": [
     {
-      "prototypeExpressions": [
-        "__converter_symbol date"
-      ],
+      "prototypeExpressions": ["__converter_symbol date"],
       "identifier": "toDate"
     },
     {
-      "prototypeExpressions": [
-        "__converter_symbol horodatage"
-      ],
+      "prototypeExpressions": ["__converter_symbol horodatage"],
       "identifier": "toTimestamp"
     },
     {
       "prototypeExpressions": [
-          "__converter_symbol intervalle de temps",
-          "__converter_symbol durée"
+        "__converter_symbol intervalle de temps",
+        "__converter_symbol durée"
       ],
       "identifier": "toTimespan"
     },
     {
       "prototypeExpressions": [
-          "__converter_symbol temps au tour",
-          "__converter_symbol temps de tour"
+        "__converter_symbol temps au tour",
+        "__converter_symbol temps de tour"
       ],
       "identifier": "toLaptime"
     }
@@ -154,32 +126,27 @@
     },
     {
       "prototypeExpressions": [
-          "__converter_symbol hexadecimale",
-          "__converter_symbol hexadécimal",
-          "__converter_symbol hexadécimale"
+        "__converter_symbol hexadecimale",
+        "__converter_symbol hexadécimal",
+        "__converter_symbol hexadécimale"
       ],
       "identifier": "toHexadecimal"
     },
     {
-      "prototypeExpressions": [
-        "__converter_symbol fraction"
-      ],
+      "prototypeExpressions": ["__converter_symbol fraction"],
       "identifier": "toFraction"
     },
     {
       "prototypeExpressions": [
-          "__converter_symbol multiplié par",
-          "__converter_symbol multiplicateur"
+        "__converter_symbol multiplié par",
+        "__converter_symbol multiplicateur"
       ],
       "identifier": "toMultiplier"
     }
-
   ],
   "music": [
     {
-      "prototypeExpressions": [
-        "__converter_symbol note musicale"
-      ],
+      "prototypeExpressions": ["__converter_symbol note musicale"],
       "identifier": "toPitch"
     }
   ]

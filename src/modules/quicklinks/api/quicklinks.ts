@@ -59,7 +59,10 @@ export async function getQuicklinks(): Promise<Quicklink[]> {
   return response;
 }
 
-export function findQuicklinkByKeyword(quicklinks: Quicklink[], keyword: string): Quicklink | undefined {
+export function findQuicklinkByKeyword(
+  quicklinks: Quicklink[],
+  keyword: string,
+): Quicklink | undefined {
   return quicklinks.find((ql) => ql.keyword.toLowerCase() === keyword.toLowerCase());
 }
 
@@ -94,10 +97,7 @@ export async function createQuicklink(data: QuicklinkFormData): Promise<void> {
   });
 }
 
-export async function updateQuicklink(
-  keyword: string,
-  data: QuicklinkFormData
-): Promise<void> {
+export async function updateQuicklink(keyword: string, data: QuicklinkFormData): Promise<void> {
   if (!isTauri()) {
     throw new Error("Not running in Tauri");
   }

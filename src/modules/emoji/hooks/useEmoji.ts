@@ -22,7 +22,7 @@ export function useRecentEmojis(isOpen: boolean) {
 export function useFilteredEmojis(
   emojis: EmojiData[],
   searchValue: string,
-  selectedCategory: string
+  selectedCategory: string,
 ) {
   return useMemo(() => {
     let filtered = emojis;
@@ -37,7 +37,7 @@ export function useFilteredEmojis(
       filtered = filtered.filter(
         (emoji) =>
           emoji.label.includes(searchLower) ||
-          emoji.tags.some((tag) => tag.toLowerCase().includes(searchLower))
+          emoji.tags.some((tag) => tag.toLowerCase().includes(searchLower)),
       );
     }
 

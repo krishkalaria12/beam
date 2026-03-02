@@ -1,9 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { createScriptCommand } from "@/modules/script-commands/api/create-script-command";
-import {
-  SCRIPT_COMMANDS_QUERY_KEY,
-} from "@/modules/script-commands/constants";
+import { SCRIPT_COMMANDS_QUERY_KEY } from "@/modules/script-commands/constants";
 import { invalidateScriptCommandsProviderCache } from "@/modules/script-commands/script-commands-provider";
 import type { CreateScriptCommandRequest } from "@/modules/script-commands/types";
 

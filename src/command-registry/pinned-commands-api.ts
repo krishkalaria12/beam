@@ -13,11 +13,12 @@ function normalizePinnedCommandIds(value: unknown): string[] {
   const normalized: string[] = [];
 
   for (const entry of value) {
-    const rawId = typeof entry === "string"
-      ? entry
-      : isRecord(entry) && typeof entry.command_id === "string"
-        ? entry.command_id
-        : "";
+    const rawId =
+      typeof entry === "string"
+        ? entry
+        : isRecord(entry) && typeof entry.command_id === "string"
+          ? entry.command_id
+          : "";
     const commandId = rawId.trim();
     if (!commandId || seen.has(commandId)) {
       continue;
@@ -34,10 +35,7 @@ export async function getPinnedCommandIds(): Promise<string[]> {
   return normalizePinnedCommandIds(response);
 }
 
-export async function setPinnedCommand(
-  commandId: string,
-  pinned: boolean,
-): Promise<string[]> {
+export async function setPinnedCommand(commandId: string, pinned: boolean): Promise<string[]> {
   const response = await invoke<unknown>("set_command_pinned", {
     commandId,
     pinned,
@@ -45,4 +43,3 @@ export async function setPinnedCommand(
 
   return normalizePinnedCommandIds(response);
 }
-

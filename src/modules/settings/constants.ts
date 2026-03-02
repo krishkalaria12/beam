@@ -1,8 +1,1 @@
-export type SettingsView =
-  | "main"
-  | "style"
-  | "layout"
-  | "pinned"
-  | "fallback"
-  | "hotkeys"
-  | "trigger-symbols";
+export type SettingsView = "main" | "style" | "layout" | "pinned" | "hotkeys" | "trigger-symbols";

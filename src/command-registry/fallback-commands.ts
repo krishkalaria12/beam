@@ -30,9 +30,7 @@ export function isAvailableFallbackCommandId(value: string): value is FallbackCo
   return AVAILABLE_FALLBACK_COMMAND_ID_SET.has(value);
 }
 
-export function normalizeFallbackCommandIds(
-  value: unknown,
-): FallbackCommandId[] {
+export function normalizeFallbackCommandIds(value: unknown): FallbackCommandId[] {
   if (!Array.isArray(value)) {
     return [...DEFAULT_FALLBACK_COMMAND_IDS];
   }
@@ -51,17 +49,16 @@ export function normalizeFallbackCommandIds(
   return [...dedupe];
 }
 
-export function hasStrongRegistryMatch(
-  commands: readonly RankedCommand[],
-): boolean {
+export function hasStrongRegistryMatch(commands: readonly RankedCommand[]): boolean {
   if (commands.length === 0) {
     return false;
   }
 
-  return commands.some((entry) => (
-    entry.match.titleMatch !== "none" ||
-    entry.match.keywordMatch !== "none" ||
-    entry.match.aliasMatch !== "none" ||
-    entry.match.matchedTokenCount > 0
-  ));
+  return commands.some(
+    (entry) =>
+      entry.match.titleMatch !== "none" ||
+      entry.match.keywordMatch !== "none" ||
+      entry.match.aliasMatch !== "none" ||
+      entry.match.matchedTokenCount > 0,
+  );
 }

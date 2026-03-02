@@ -42,26 +42,70 @@ export function HyprWhsprRecordControlsCard({
             {isRecording ? "Recording in progress" : "Ready to dictate"}
           </p>
           <p className="text-xs text-muted-foreground">
-            Hold <kbd className="rounded bg-muted/40 px-1 py-0.5 font-mono text-[10px] font-medium border border-border/40">Space</kbd> to speak, release to stop.
+            Hold{" "}
+            <kbd className="rounded bg-muted/40 px-1 py-0.5 font-mono text-[10px] font-medium border border-border/40">
+              Space
+            </kbd>{" "}
+            to speak, release to stop.
           </p>
         </div>
       </div>
 
       <div className="grid grid-cols-4 gap-2">
-        <Button variant="secondary" size="sm" onClick={onToggle} disabled={runningAction !== null} className="w-full justify-center gap-2 text-xs">
-          {runningAction === "toggle" ? <Loader2 className="size-3.5 animate-spin" /> : <Activity className="size-3.5" />}
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={onToggle}
+          disabled={runningAction !== null}
+          className="w-full justify-center gap-2 text-xs"
+        >
+          {runningAction === "toggle" ? (
+            <Loader2 className="size-3.5 animate-spin" />
+          ) : (
+            <Activity className="size-3.5" />
+          )}
           Toggle
         </Button>
-        <Button variant="outline" size="sm" onClick={onStop} disabled={runningAction !== null} className="w-full justify-center gap-2 text-xs">
-          {runningAction === "stop" ? <Loader2 className="size-3.5 animate-spin" /> : <Square className="size-3.5" />}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onStop}
+          disabled={runningAction !== null}
+          className="w-full justify-center gap-2 text-xs"
+        >
+          {runningAction === "stop" ? (
+            <Loader2 className="size-3.5 animate-spin" />
+          ) : (
+            <Square className="size-3.5" />
+          )}
           Stop
         </Button>
-        <Button variant="outline" size="sm" onClick={onCancel} disabled={runningAction !== null} className="w-full justify-center gap-2 text-xs">
-          {runningAction === "cancel" ? <Loader2 className="size-3.5 animate-spin" /> : <X className="size-3.5" />}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onCancel}
+          disabled={runningAction !== null}
+          className="w-full justify-center gap-2 text-xs"
+        >
+          {runningAction === "cancel" ? (
+            <Loader2 className="size-3.5 animate-spin" />
+          ) : (
+            <X className="size-3.5" />
+          )}
           Cancel
         </Button>
-        <Button variant="outline" size="sm" onClick={onRefresh} disabled={isRecordStatusFetching} className="w-full justify-center gap-2 text-xs">
-          {isRecordStatusFetching ? <Loader2 className="size-3.5 animate-spin" /> : <RefreshCw className="size-3.5" />}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onRefresh}
+          disabled={isRecordStatusFetching}
+          className="w-full justify-center gap-2 text-xs"
+        >
+          {isRecordStatusFetching ? (
+            <Loader2 className="size-3.5 animate-spin" />
+          ) : (
+            <RefreshCw className="size-3.5" />
+          )}
           Refresh
         </Button>
       </div>

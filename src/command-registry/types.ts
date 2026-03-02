@@ -3,11 +3,7 @@ import type { CommandPanelValue } from "@/command-registry/panels";
 
 export type CommandScope = CommandScopeValue;
 
-export type CommandKind =
-  | "panel"
-  | "action"
-  | "backend-action"
-  | "provider-item";
+export type CommandKind = "panel" | "action" | "backend-action" | "provider-item";
 
 export type CommandActionType =
   | "OPEN_PANEL"
@@ -74,11 +70,7 @@ export interface CommandProviderError {
   message: string;
 }
 
-export type CommandProviderStatus =
-  | "success"
-  | "error"
-  | "aborted"
-  | "skipped";
+export type CommandProviderStatus = "success" | "error" | "aborted" | "skipped";
 
 export interface CommandProviderTelemetry {
   providerId: string;

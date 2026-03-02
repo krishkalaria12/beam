@@ -22,13 +22,7 @@ interface SpotifyCommandGroupProps {
   queryOverride?: string;
 }
 
-const SPOTIFY_KEYWORDS = [
-  "spotify",
-  "music",
-  "now playing",
-  "playback",
-  "spotify search",
-] as const;
+const SPOTIFY_KEYWORDS = ["spotify", "music", "now playing", "playback", "spotify search"] as const;
 
 export default function SpotifyCommandGroup({
   isOpen,
@@ -56,16 +50,18 @@ export default function SpotifyCommandGroup({
     <CommandGroup>
       <BaseCommandRow
         value="spotify music now playing playback"
-        onSelect={() => onOpen(extractCommandKeywordRemainder(queryOverride ?? searchInput, SPOTIFY_KEYWORDS))}
+        onSelect={() =>
+          onOpen(extractCommandKeywordRemainder(queryOverride ?? searchInput, SPOTIFY_KEYWORDS))
+        }
         icon={<CommandIcon icon={`app-icon:${spotifyLogo}`} />}
         title="Spotify controls"
         titleClassName="truncate text-foreground capitalize"
-        endSlot={(
+        endSlot={
           <div className="ml-auto flex items-center gap-2">
             <Music className="size-3.5 text-muted-foreground/60" />
             <CommandShortcut>music</CommandShortcut>
           </div>
-        )}
+        }
         subtitle="Now playing, controls, and search"
       />
 
@@ -75,12 +71,12 @@ export default function SpotifyCommandGroup({
         icon={<CommandIcon icon={`app-icon:${spotifyLogo}`} />}
         title="Connect Spotify"
         titleClassName="truncate text-foreground capitalize"
-        endSlot={(
+        endSlot={
           <div className="ml-auto flex items-center gap-2">
             <Radio className="size-3.5 text-muted-foreground/60" />
             <CommandShortcut>oauth</CommandShortcut>
           </div>
-        )}
+        }
       />
     </CommandGroup>
   );

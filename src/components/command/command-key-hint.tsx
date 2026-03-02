@@ -38,9 +38,7 @@ export function CommandKeyHint({
   );
 
   const labelNode = (
-    <span className={cn("text-xs font-normal text-muted-foreground", labelClassName)}>
-      {label}
-    </span>
+    <span className={cn("text-xs font-normal text-muted-foreground", labelClassName)}>{label}</span>
   );
 
   return (

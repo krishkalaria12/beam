@@ -49,7 +49,9 @@ export function CommandIcon({ icon, commandId, className }: CommandIconProps) {
         <UnifiedIcon
           icon={iconReference}
           className={cn("size-8 rounded-lg object-cover", className)}
-          fallback={<IconChip icon={Link2} toneClass={toneClassName("neutral")} className={className} />}
+          fallback={
+            <IconChip icon={Link2} toneClass={toneClassName("neutral")} className={className} />
+          }
         />
       );
     }
@@ -62,7 +64,9 @@ export function CommandIcon({ icon, commandId, className }: CommandIconProps) {
         <UnifiedIcon
           icon={iconPath}
           className={cn("size-8 rounded-lg object-cover", className)}
-          fallback={<IconChip icon={Search} toneClass={toneClassName("neutral")} className={className} />}
+          fallback={
+            <IconChip icon={Search} toneClass={toneClassName("neutral")} className={className} />
+          }
         />
       );
     }
@@ -70,12 +74,24 @@ export function CommandIcon({ icon, commandId, className }: CommandIconProps) {
 
   const toneSpec = token ? resolveCommandToneSpec(token) : null;
   if (toneSpec) {
-    return <IconChip icon={toneSpec.icon} toneClass={toneClassName(toneSpec.tone)} className={className} />;
+    return (
+      <IconChip
+        icon={toneSpec.icon}
+        toneClass={toneClassName(toneSpec.tone)}
+        className={className}
+      />
+    );
   }
 
   const commandIdSpec = resolveCommandToneSpecByCommandId(commandId);
   if (commandIdSpec) {
-    return <IconChip icon={commandIdSpec.icon} toneClass={toneClassName(commandIdSpec.tone)} className={className} />;
+    return (
+      <IconChip
+        icon={commandIdSpec.icon}
+        toneClass={toneClassName(commandIdSpec.tone)}
+        className={className}
+      />
+    );
   }
 
   return (

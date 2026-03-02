@@ -31,8 +31,8 @@ function toGridSections(state: RunnerNodeComponentProps["state"]): GridSectionBl
         sectionNodeId: entry.sectionNodeId,
         columns:
           typeof entry.gridColumns === "number" &&
-            Number.isFinite(entry.gridColumns) &&
-            entry.gridColumns > 0
+          Number.isFinite(entry.gridColumns) &&
+          entry.gridColumns > 0
             ? Math.max(1, Math.floor(entry.gridColumns))
             : 6,
         entries: [],
@@ -61,21 +61,20 @@ export function GridRootNode({ nodeId, state }: RunnerNodeComponentProps) {
     const child = state.uiTree.get(childId);
     return child?.type === "Grid.EmptyView";
   });
-  const selectedActions = state.selectedEntryActions.length > 0
-    ? state.selectedEntryActions
-    : state.rootActions;
+  const selectedActions =
+    state.selectedEntryActions.length > 0 ? state.selectedEntryActions : state.rootActions;
   const isLoading = asBoolean(node.props.isLoading);
 
   const pagination =
     node.props.pagination && typeof node.props.pagination === "object"
       ? (node.props.pagination as Record<string, unknown>)
       : undefined;
-  const hasMore = pagination && typeof pagination.hasMore === "boolean"
-    ? pagination.hasMore
-    : false;
-  const pageSize = pagination && typeof pagination.pageSize === "number" && pagination.pageSize > 0
-    ? Math.max(0, Math.floor(pagination.pageSize))
-    : 0;
+  const hasMore =
+    pagination && typeof pagination.hasMore === "boolean" ? pagination.hasMore : false;
+  const pageSize =
+    pagination && typeof pagination.pageSize === "number" && pagination.pageSize > 0
+      ? Math.max(0, Math.floor(pagination.pageSize))
+      : 0;
   const hasOnLoadMore = pagination ? asBoolean(pagination.onLoadMore) : false;
   const showPlaceholders = hasMore && pageSize > 0;
 

@@ -1,16 +1,7 @@
 import { useForm } from "@tanstack/react-form";
-import { AlertTriangle, Loader2, Play, Terminal } from "lucide-react";
+import { AlertTriangle, ChevronLeft, Loader2, Play, Terminal } from "lucide-react";
 import { useMemo, useState, type KeyboardEvent } from "react";
 
-import { CommandFooterBar } from "@/components/command/command-footer-bar";
-import { CommandKeyHint } from "@/components/command/command-key-hint";
-import {
-  CommandPanelBackButton,
-  CommandPanelHeader,
-  CommandPanelTitleBlock,
-} from "@/components/command/command-panel-header";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -19,7 +10,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { ScriptCommandArgumentDefinition, ScriptCommandSummary } from "@/modules/script-commands/types";
+import type {
+  ScriptCommandArgumentDefinition,
+  ScriptCommandSummary,
+} from "@/modules/script-commands/types";
 
 interface ScriptCommandArgumentsFormProps {
   script: ScriptCommandSummary;
@@ -83,7 +77,8 @@ export function ScriptCommandArgumentsForm({
     defaultValues,
     onSubmit: async ({ value }) => {
       const missingRequired = script.argumentDefinitions.find((argument) =>
-        isMissingRequiredArgument(argument, value[argument.name]));
+        isMissingRequiredArgument(argument, value[argument.name]),
+      );
       if (missingRequired) {
         setValidationError(`"${resolveArgumentLabel(missingRequired)}" is required.`);
         return;
@@ -103,24 +98,47 @@ export function ScriptCommandArgumentsForm({
   };
 
   return (
-    <div className="glass-effect flex h-full w-full flex-col overflow-hidden text-foreground">
-      <CommandPanelHeader>
-        <CommandPanelBackButton onClick={onBack} aria-label="Back" />
-        <CommandPanelTitleBlock
-          title={`Run ${script.title}`}
-          subtitle="Provide arguments before execution"
-          className="flex-1"
-        />
-      </CommandPanelHeader>
+    <div className="scripts-args-enter flex h-full w-full flex-col overflow-hidden text-white">
+      {/* Header */}
+      <header className="scripts-header-enter flex h-14 shrink-0 items-center gap-3 border-b border-white/[0.06] px-4">
+        <button
+          type="button"
+          onClick={onBack}
+          className="flex size-9 items-center justify-center rounded-lg bg-white/[0.03] text-white/40 transition-all duration-200 hover:bg-white/[0.06] hover:text-white/70"
+          aria-label="Back"
+        >
+          <ChevronLeft className="size-4" />
+        </button>
 
-      <div className="custom-scrollbar list-area min-h-0 flex-1 overflow-y-auto p-4">
+        <div className="flex size-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20">
+          <Play className="size-5 text-amber-400" />
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <h1 className="text-[14px] font-semibold tracking-[-0.02em] text-white/90">
+            Run {script.title}
+          </h1>
+          <p className="text-[12px] text-white/40 tracking-[-0.01em]">
+            Provide arguments before execution
+          </p>
+        </div>
+      </header>
+
+      {/* Content */}
+      <div className="scripts-content-enter custom-scrollbar min-h-0 flex-1 overflow-y-auto p-4">
         <div className="mx-auto w-full max-w-2xl space-y-4">
-          <div className="rounded-xl border border-border/40 bg-background/10 p-4">
-            <p className="text-xs uppercase tracking-wide text-muted-foreground/80">Script</p>
-            <p className="mt-1 text-sm font-medium text-foreground">{script.title}</p>
-            <p className="mt-1 break-all font-mono text-xs text-muted-foreground">{script.scriptPath}</p>
+          {/* Script info */}
+          <div className="rounded-xl bg-white/[0.03] p-4 ring-1 ring-white/[0.06]">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-white/45">
+              Script
+            </p>
+            <p className="mt-1.5 text-[14px] font-medium text-white/90">{script.title}</p>
+            <p className="mt-1 break-all font-mono text-[11px] text-white/40">
+              {script.scriptPath}
+            </p>
           </div>
 
+          {/* Arguments form */}
           <form
             id="script-command-arguments-form"
             onSubmit={(event) => {
@@ -130,7 +148,7 @@ export function ScriptCommandArgumentsForm({
             onKeyDownCapture={handleSubmitShortcut}
             className="space-y-4"
           >
-            {script.argumentDefinitions.map((argument) => {
+            {script.argumentDefinitions.map((argument, index) => {
               const label = resolveArgumentLabel(argument);
 
               return (
@@ -138,13 +156,16 @@ export function ScriptCommandArgumentsForm({
                   key={`${script.id}:${argument.name}`}
                   name={argument.name}
                   children={(fieldApi) => (
-                    <div className="rounded-xl border border-border/40 bg-background/10 p-4">
+                    <div
+                      className="scripts-arg-field rounded-xl bg-white/[0.03] p-4 ring-1 ring-white/[0.06]"
+                      style={{ animationDelay: `${index * 50}ms` }}
+                    >
                       <Label
                         htmlFor={`script-argument-${argument.name}`}
-                        className="text-xs font-medium text-muted-foreground"
+                        className="text-[11px] font-semibold uppercase tracking-[0.08em] text-white/45"
                       >
                         {label}
-                        {argument.required ? <span className="ml-1 text-red-300">*</span> : null}
+                        {argument.required && <span className="ml-1 text-red-400">*</span>}
                       </Label>
 
                       <div className="mt-2">
@@ -159,18 +180,19 @@ export function ScriptCommandArgumentsForm({
                             <SelectTrigger
                               id={`script-argument-${argument.name}`}
                               onKeyDown={stopFieldKeyPropagation}
-                              className="h-10"
+                              className="h-10 rounded-xl border-0 bg-white/[0.04] ring-1 ring-white/[0.06] text-[13px] text-white/80 focus:ring-[var(--solid-accent,#4ea2ff)]"
                             >
                               <SelectValue placeholder={argument.placeholder || "Select value"} />
                             </SelectTrigger>
-                            <SelectContent>
-                              {argument.data.map((entry, index) => {
+                            <SelectContent className="rounded-xl border-white/[0.08] bg-[#2c2c2c]">
+                              {argument.data.map((entry, idx) => {
                                 const value = entry.value ?? entry.title ?? "";
                                 const title = entry.title ?? entry.value ?? value;
                                 return (
                                   <SelectItem
-                                    key={`${argument.name}:${index}:${value}`}
+                                    key={`${argument.name}:${idx}:${value}`}
                                     value={value}
+                                    className="text-[12px] text-white/70 focus:bg-white/[0.06] focus:text-white"
                                   >
                                     {title}
                                   </SelectItem>
@@ -179,7 +201,7 @@ export function ScriptCommandArgumentsForm({
                             </SelectContent>
                           </Select>
                         ) : (
-                          <Input
+                          <input
                             id={`script-argument-${argument.name}`}
                             type={argument.type === "password" ? "password" : "text"}
                             value={fieldApi.state.value ?? ""}
@@ -190,7 +212,7 @@ export function ScriptCommandArgumentsForm({
                             onKeyDown={stopFieldKeyPropagation}
                             onKeyDownCapture={stopFieldKeyPropagation}
                             placeholder={argument.placeholder || argument.name}
-                            className="h-10 font-mono"
+                            className="h-10 w-full rounded-xl bg-white/[0.04] px-4 font-mono text-[13px] text-white/90 placeholder:text-white/30 ring-1 ring-white/[0.06] transition-all duration-200 focus:outline-none focus:ring-[var(--solid-accent,#4ea2ff)]"
                             autoFocus={argument.index === 1}
                           />
                         )}
@@ -201,45 +223,52 @@ export function ScriptCommandArgumentsForm({
               );
             })}
 
-            {(validationError || errorMessage) ? (
-              <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-200">
-                <span className="inline-flex items-center gap-2">
-                  <AlertTriangle className="size-3.5" />
-                  {validationError ?? errorMessage}
-                </span>
+            {/* Error message */}
+            {(validationError || errorMessage) && (
+              <div className="flex items-center gap-2.5 rounded-xl bg-red-500/10 px-4 py-3 ring-1 ring-red-500/20">
+                <AlertTriangle className="size-4 text-red-400" />
+                <span className="text-[12px] text-red-300">{validationError ?? errorMessage}</span>
               </div>
-            ) : null}
+            )}
           </form>
         </div>
       </div>
 
-      <CommandFooterBar
-        className="h-[52px]"
-        leftSlot={(
-          <span className="inline-flex items-center gap-2">
-            <Terminal className="size-3.5 text-muted-foreground/70" />
+      {/* Footer */}
+      <footer className="scripts-footer-enter flex h-12 shrink-0 items-center justify-between border-t border-white/[0.06] px-4">
+        <div className="flex items-center gap-2 text-[12px] text-white/40">
+          <Terminal className="size-3.5" />
+          <span>
             {script.requiredArgumentCount > 0
               ? `${script.requiredArgumentCount} required argument(s)`
               : "All arguments are optional"}
           </span>
-        )}
-        rightSlot={(
-          <>
-            <CommandKeyHint keyLabel="ESC" label="Back" />
-            <CommandKeyHint keyLabel="CMD/CTRL + ENTER" label="Run" />
-            <Button
-              onClick={() => {
-                void form.handleSubmit();
-              }}
-              disabled={isSubmitting}
-              className="h-8 gap-1.5 rounded-lg bg-primary/90 hover:bg-primary"
-            >
-              {isSubmitting ? <Loader2 className="size-3.5 animate-spin" /> : <Play className="size-3.5" />}
-              Run Script
-            </Button>
-          </>
-        )}
-      />
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 text-[11px] text-white/30">
+            <kbd className="rounded bg-white/[0.08] px-1.5 py-0.5 font-mono text-[10px]">Esc</kbd>
+            <span>Back</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-[11px] text-white/30">
+            <kbd className="rounded bg-white/[0.08] px-1.5 py-0.5 font-mono text-[10px]">⌘↵</kbd>
+            <span>Run</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => void form.handleSubmit()}
+            disabled={isSubmitting}
+            className="flex h-8 items-center gap-1.5 rounded-lg bg-[var(--solid-accent,#4ea2ff)]/20 px-3.5 text-[12px] font-medium text-[var(--solid-accent,#4ea2ff)] transition-all duration-200 hover:bg-[var(--solid-accent,#4ea2ff)]/30 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {isSubmitting ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <Play className="size-3.5" />
+            )}
+            Run Script
+          </button>
+        </div>
+      </footer>
     </div>
   );
 }

@@ -45,13 +45,13 @@ export default function RegistryCommandGroup({
       ? numericOnlyQuery.toLocaleString("en-US")
       : "";
 
-  const fallbackCalculatorResult = !providerCalculatorCommand &&
-      fallbackCalculatorResponse?.status === "valid"
-    ? fallbackCalculatorResponse.outputs
-      .filter((entry) => !entry.is_error)
-      .map((entry) => entry.value.trim())
-      .filter((value) => value.length > 0)
-    : [];
+  const fallbackCalculatorResult =
+    !providerCalculatorCommand && fallbackCalculatorResponse?.status === "valid"
+      ? fallbackCalculatorResponse.outputs
+          .filter((entry) => !entry.is_error)
+          .map((entry) => entry.value.trim())
+          .filter((value) => value.length > 0)
+      : [];
 
   const fallbackPrimaryResult = fallbackCalculatorResult[0] ?? numericFallbackResult;
   const hasFallbackCalculator =
@@ -60,9 +60,9 @@ export default function RegistryCommandGroup({
     fallbackPrimaryResult.length > 0;
 
   const hasCalculatorCard =
-    !isPlainNumberQuery &&
-    (Boolean(providerCalculatorCommand) || hasFallbackCalculator);
-  const calculatorQuery = providerCalculatorCommand?.subtitle?.trim() ??
+    !isPlainNumberQuery && (Boolean(providerCalculatorCommand) || hasFallbackCalculator);
+  const calculatorQuery =
+    providerCalculatorCommand?.subtitle?.trim() ??
     fallbackCalculatorResponse?.query?.trim() ??
     query.trim();
   const calculatorResult = providerCalculatorCommand?.title.trim() ?? fallbackPrimaryResult;
@@ -78,8 +78,8 @@ export default function RegistryCommandGroup({
 
   const followUpCommands = hasCalculatorCard
     ? commands
-      .filter(({ command }) => command.id !== CALCULATOR_RESULT_COMMAND_ID)
-      .map(({ command }) => command)
+        .filter(({ command }) => command.id !== CALCULATOR_RESULT_COMMAND_ID)
+        .map(({ command }) => command)
     : [];
 
   const commandById = new Map<string, CommandDescriptor>();
@@ -98,28 +98,21 @@ export default function RegistryCommandGroup({
   const pinnedIds = new Set(pinned.map((command) => command.id));
   const recent = shouldShowRecentGroup
     ? resolveRecentCommands({
-      commands,
-      usageById,
-      excludedCommandIds: pinnedIds,
-    })
+        commands,
+        usageById,
+        excludedCommandIds: pinnedIds,
+      })
     : [];
-  const groupedIds = new Set([
-    ...pinnedIds,
-    ...recent.map((command) => command.id),
-  ]);
+  const groupedIds = new Set([...pinnedIds, ...recent.map((command) => command.id)]);
   const other = commands
     .filter(({ command }) => !groupedIds.has(command.id))
     .map(({ command }) => command);
 
   const renderCommandRow = (command: CommandDescriptor) => {
     const isSystemTriggerNoQuerySystemAction =
-      mode === SYSTEM_TRIGGER_MODE &&
-      query.length === 0 &&
-      command.id.startsWith("system.");
+      mode === SYSTEM_TRIGGER_MODE && query.length === 0 && command.id.startsWith("system.");
     const isDisabled =
-      Boolean(command.requiresQuery) &&
-      query.length === 0 &&
-      !isSystemTriggerNoQuerySystemAction;
+      Boolean(command.requiresQuery) && query.length === 0 && !isSystemTriggerNoQuerySystemAction;
 
     return (
       <RegistryCommandRow
@@ -136,11 +129,11 @@ export default function RegistryCommandGroup({
   if (hasCalculatorCard) {
     const activateCalculator = providerCalculatorCommand
       ? () => {
-        onSelect(providerCalculatorCommand.id);
-      }
+          onSelect(providerCalculatorCommand.id);
+        }
       : () => {
-        void navigator.clipboard.writeText(calculatorResult);
-      };
+          void navigator.clipboard.writeText(calculatorResult);
+        };
 
     return (
       <>
@@ -186,13 +179,11 @@ export default function RegistryCommandGroup({
   }
 
   if (commands.length === 0) {
-    return fallbackCommands.length > 0
-      ? (
-        <CommandGroup heading="Fallback">
-          {fallbackCommands.map((command) => renderCommandRow(command))}
-        </CommandGroup>
-      )
-      : null;
+    return fallbackCommands.length > 0 ? (
+      <CommandGroup heading="Fallback">
+        {fallbackCommands.map((command) => renderCommandRow(command))}
+      </CommandGroup>
+    ) : null;
   }
 
   return (
@@ -208,9 +199,7 @@ export default function RegistryCommandGroup({
         </CommandGroup>
       ) : null}
       {other.length > 0 ? (
-        <CommandGroup
-          heading={pinned.length > 0 || recent.length > 0 ? "Other" : undefined}
-        >
+        <CommandGroup heading={pinned.length > 0 || recent.length > 0 ? "Other" : undefined}>
           {other.map((command) => renderCommandRow(command))}
         </CommandGroup>
       ) : null}

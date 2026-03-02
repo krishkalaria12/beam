@@ -88,9 +88,9 @@ export function collectActions(
         shortcutDefinition:
           shortcutKey.length > 0
             ? {
-              key: shortcutKey,
-              modifiers: shortcutModifiers,
-            }
+                key: shortcutKey,
+                modifiers: shortcutModifiers,
+              }
             : undefined,
         style: asString(node.props.style).toLowerCase(),
         hasOnAction: asBoolean(node.props.onAction),

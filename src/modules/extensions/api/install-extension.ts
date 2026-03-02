@@ -6,9 +6,7 @@ import {
   type InstallResult,
 } from "@/modules/extensions/types";
 
-export async function installExtension(
-  input: InstallExtensionInput,
-): Promise<InstallResult> {
+export async function installExtension(input: InstallExtensionInput): Promise<InstallResult> {
   if (!isTauri()) {
     throw new Error("desktop runtime is required");
   }

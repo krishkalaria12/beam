@@ -99,7 +99,9 @@ export function useGithubAuth() {
       setTokens(null);
       tokensRef.current = null;
       setUser(null);
-      setError(refreshError instanceof Error ? refreshError.message : "Failed to refresh GitHub token.");
+      setError(
+        refreshError instanceof Error ? refreshError.message : "Failed to refresh GitHub token.",
+      );
       return null;
     } finally {
       setIsRefreshingToken(false);
@@ -157,7 +159,9 @@ export function useGithubAuth() {
 
       await openAuthUrl(session.authorizeUrl);
     } catch (connectError) {
-      setError(connectError instanceof Error ? connectError.message : "Failed to start GitHub OAuth flow.");
+      setError(
+        connectError instanceof Error ? connectError.message : "Failed to start GitHub OAuth flow.",
+      );
       setIsAuthorizing(false);
     }
   }
@@ -261,7 +265,11 @@ export function useGithubAuth() {
           const profile = await githubGetCurrentUser(nextTokens.accessToken);
           setUser(profile);
         } catch (exchangeError) {
-          setError(exchangeError instanceof Error ? exchangeError.message : "Failed to complete GitHub OAuth.");
+          setError(
+            exchangeError instanceof Error
+              ? exchangeError.message
+              : "Failed to complete GitHub OAuth.",
+          );
         } finally {
           setIsAuthorizing(false);
         }

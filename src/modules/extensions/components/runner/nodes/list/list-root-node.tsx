@@ -50,9 +50,8 @@ export function ListRootNode({ nodeId, state }: RunnerNodeComponentProps) {
   const showDetail =
     asBoolean(node.props.isShowingDetail) && Boolean(state.selectedEntry?.detailNodeId);
 
-  const selectedActions = state.selectedEntryActions.length > 0
-    ? state.selectedEntryActions
-    : state.rootActions;
+  const selectedActions =
+    state.selectedEntryActions.length > 0 ? state.selectedEntryActions : state.rootActions;
 
   return (
     <>
@@ -90,7 +89,11 @@ export function ListRootNode({ nodeId, state }: RunnerNodeComponentProps) {
                     );
                   }
 
-                  if (row.type === "item" && row.nodeId !== undefined && row.entryIndex !== undefined) {
+                  if (
+                    row.type === "item" &&
+                    row.nodeId !== undefined &&
+                    row.entryIndex !== undefined
+                  ) {
                     return (
                       <RunnerNodeRenderer
                         key={row.key}

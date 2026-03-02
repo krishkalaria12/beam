@@ -1,31 +1,31 @@
 {
-	"name": "sidecar",
-	"version": "1.0.0",
-	"description": "",
-	"main": "index.ts",
-	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1",
-		"build": "esbuild src/index.ts --bundle --outfile=dist/index.js --platform=node && pkg dist/index.js --output app --public --sea && bun run rename",
-		"rename": "mkdir -p ../src-tauri/binaries && mv \"app$([[ \"$OSTYPE\" =~ msys|win32 ]] && echo .exe)\" \"../src-tauri/binaries/app-$(rustc -vV | awk '/host:/ {print $2}')$([[ \"$OSTYPE\" =~ msys|win32 ]] && echo .exe)\"",
-		"check": "tsc --noEmit"
-	},
-	"keywords": [],
-	"author": "",
-	"license": "ISC",
-	"devDependencies": {
-		"@types/node": "^24.0.0",
-		"@types/pako": "^2.0.3",
-		"@types/react": "^19.1.7",
-		"@types/react-reconciler": "^0.32.0",
-		"@yao-pkg/pkg": "^6.5.1",
-		"esbuild": "^0.25.5",
-		"typescript": "^5.8.3"
-	},
-	"dependencies": {
-		"@flare/protocol": "workspace:*",
-		"msgpackr": "^1.11.4",
-		"pako": "^2.1.0",
-		"react": "^19.1.0",
-		"react-reconciler": "^0.32.0"
-	}
+  "name": "sidecar",
+  "version": "1.0.0",
+  "description": "",
+  "keywords": [],
+  "license": "ISC",
+  "author": "",
+  "main": "index.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "esbuild src/index.ts --bundle --outfile=dist/index.js --platform=node && pkg dist/index.js --output app --public --sea && bun run rename",
+    "rename": "mkdir -p ../src-tauri/binaries && mv \"app$([[ \"$OSTYPE\" =~ msys|win32 ]] && echo .exe)\" \"../src-tauri/binaries/app-$(rustc -vV | awk '/host:/ {print $2}')$([[ \"$OSTYPE\" =~ msys|win32 ]] && echo .exe)\"",
+    "check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@flare/protocol": "workspace:*",
+    "msgpackr": "^1.11.4",
+    "pako": "^2.1.0",
+    "react": "^19.1.0",
+    "react-reconciler": "^0.32.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/pako": "^2.0.3",
+    "@types/react": "^19.1.7",
+    "@types/react-reconciler": "^0.32.0",
+    "@yao-pkg/pkg": "^6.5.1",
+    "esbuild": "^0.25.5",
+    "typescript": "^5.8.3"
+  }
 }

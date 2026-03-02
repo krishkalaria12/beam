@@ -144,10 +144,7 @@ export function matchCommand(input: CommandMatchInput): CommandMatchResult {
     CALCULATOR_CONTEXT_FALLBACK_COMMAND_IDS.has(input.command.id) &&
     looksLikeCalculationQuery(query);
 
-  if (
-    !matched &&
-    !shouldForceCalculatorFallbackMatch
-  ) {
+  if (!matched && !shouldForceCalculatorFallbackMatch) {
     return {
       matched: false,
       score: 0,

@@ -17,7 +17,7 @@ export function ExtensionIcon({ iconReference, title, className }: ExtensionIcon
         "size-10 shrink-0 rounded-xl border border-border/60 bg-background/40 object-cover",
         className,
       )}
-      fallback={(
+      fallback={
         <div
           className={cn(
             "flex size-10 shrink-0 items-center justify-center rounded-xl border border-border/60 bg-background/60 text-muted-foreground",
@@ -27,7 +27,7 @@ export function ExtensionIcon({ iconReference, title, className }: ExtensionIcon
         >
           <Link2 className="size-4" />
         </div>
-      )}
+      }
     />
   );
 }

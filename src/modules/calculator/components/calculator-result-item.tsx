@@ -1,6 +1,7 @@
-import { ArrowRight } from "lucide-react";
+import { Calculator, Copy, Equal } from "lucide-react";
 
 import { CommandItem } from "@/components/ui/command";
+import { cn } from "@/lib/utils";
 import numWords from "@/lib/num-to-words";
 
 function getCalculationKind(query: string) {
@@ -71,49 +72,74 @@ export function CalculatorResultItem({
         }
         onActivate();
       }}
-      className="bg-transparent! p-0 aria-selected:bg-transparent! [&>svg:last-child]:hidden"
+      className="calc-result-card group bg-transparent! p-0 aria-selected:bg-transparent! [&>svg:last-child]:hidden"
     >
-      <div className="group relative w-full overflow-hidden rounded-xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] p-4 transition-all duration-300 hover:bg-[var(--launcher-card-hover-bg)] group-data-[selected=true]/command-item:bg-[var(--launcher-card-selected-bg)] group-data-[selected=true]/command-item:border-[var(--launcher-card-selected-border)]">
-        <div className="pointer-events-none absolute inset-0 bg-linear-to-br from-foreground/[0.06] via-transparent to-transparent" />
-        <div className="relative z-10">
-          <div className="mb-4 flex items-center justify-center gap-3 text-center">
-            <span className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground/85">
-              Calculator
+      <div
+        className={cn(
+          "relative w-full overflow-hidden rounded-xl p-5 transition-all duration-200",
+          "bg-white/[0.03] ring-1 ring-white/[0.06]",
+          "group-data-[selected=true]:bg-white/[0.05] group-data-[selected=true]:ring-white/20",
+        )}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-center gap-3 mb-5">
+          <div className="size-6 rounded-lg bg-gradient-to-br from-orange-500/25 to-amber-500/25 p-1">
+            <Calculator className="size-full text-orange-400" />
+          </div>
+          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-white/50">
+            Calculator
+          </span>
+          <span className="text-[10px] font-medium uppercase tracking-[0.06em] text-white/30">
+            {shortcutText}
+          </span>
+        </div>
+
+        {/* Expression and Result */}
+        <div className="flex items-center justify-center gap-4 mb-5">
+          {/* Expression */}
+          <div className="min-w-0 max-w-[40%]">
+            <p className="truncate text-center font-mono text-[18px] font-medium tracking-[-0.01em] text-white/70">
+              {calculatorQuery || "Expression"}
+            </p>
+          </div>
+
+          {/* Equals sign */}
+          <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-white/[0.06]">
+            <Equal className="size-4 text-white/40" />
+          </div>
+
+          {/* Result */}
+          <div className="min-w-0 max-w-[40%]">
+            <p className="truncate text-center font-mono text-[32px] font-bold tracking-[-0.02em] text-white/95">
+              {calculatorResult}
+            </p>
+          </div>
+        </div>
+
+        {/* Tags */}
+        <div className="flex items-center justify-center gap-2">
+          {/* Calculation kind tag */}
+          <span className="inline-flex items-center rounded-full bg-orange-500/10 px-2.5 py-1 text-[10px] font-medium text-orange-300/80">
+            {calculationKind}
+          </span>
+
+          {/* Text representation tag */}
+          {textRepresentation && (
+            <span className="inline-flex max-w-[200px] items-center truncate rounded-full bg-white/[0.06] px-2.5 py-1 text-[10px] font-medium text-white/50">
+              {textRepresentation}
             </span>
-            <span className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground/65">
-              {shortcutText}
-            </span>
-          </div>
+          )}
 
-          <div className="mb-6 grid grid-cols-[1fr_auto_1fr] items-center gap-4">
-            <div className="min-w-0 text-center">
-              <span className="block truncate text-xl font-mono font-medium tracking-tight text-foreground/90">
-                {calculatorQuery || "Expression"}
-              </span>
-            </div>
-
-            <ArrowRight className="size-4 shrink-0 text-muted-foreground/70" />
-
-            <div className="min-w-0 text-center">
-              <span className="block truncate text-3xl font-mono font-bold tracking-tight text-foreground transition-all duration-300">
-                {calculatorResult}
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-center gap-3">
-            <div className="inline-flex items-center rounded-full border border-[var(--launcher-chip-border)] bg-[var(--launcher-chip-bg)] px-2.5 py-0.5 text-[10px] font-medium text-muted-foreground transition-colors group-hover:text-foreground/90">
-              {calculationKind}
-            </div>
-
-            {textRepresentation ? (
-              <div className="max-w-[55%] truncate text-center">
-                <div className="inline-flex items-center rounded-full border border-[var(--launcher-chip-border)] bg-[var(--launcher-chip-bg)] px-2.5 py-0.5 text-[10px] font-medium text-muted-foreground transition-colors group-hover:text-foreground/90">
-                  <span className="truncate">{textRepresentation}</span>
-                </div>
-              </div>
-            ) : null}
-          </div>
+          {/* Copy hint on selection */}
+          <span
+            className={cn(
+              "inline-flex items-center gap-1 rounded-full bg-[var(--solid-accent,#4ea2ff)]/15 px-2.5 py-1 text-[10px] font-medium text-[var(--solid-accent,#4ea2ff)] transition-all duration-200",
+              "opacity-0 scale-95 group-data-[selected=true]:opacity-100 group-data-[selected=true]:scale-100",
+            )}
+          >
+            <Copy className="size-3" />
+            Copy
+          </span>
         </div>
       </div>
     </CommandItem>

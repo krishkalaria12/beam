@@ -36,34 +36,26 @@ export function RegistryCommandRow({
 }: RegistryCommandRowProps) {
   const isAwakeCommand = command.id === "system.awake";
 
-  const detailsSlot = compact
-    ? (
-      <>
-        {command.subtitle ? (
-          <span className="text-xs text-muted-foreground/70">{command.subtitle}</span>
-        ) : null}
-        {isAwakeCommand ? (
-          <span className="text-xs text-muted-foreground/55">
-            <AwakeStatusText />
-          </span>
-        ) : command.endText ? (
-          <span className="text-xs text-muted-foreground/55">{command.endText}</span>
-        ) : null}
-      </>
-    )
-    : isAwakeCommand
-    ? (
-      <CommandShortcut className="normal-case tracking-[0.08em]">
-        <AwakeStatusText />
-      </CommandShortcut>
-    )
-    : command.endText
-    ? (
-      <CommandShortcut className="normal-case tracking-[0.08em]">
-        {command.endText}
-      </CommandShortcut>
-    )
-    : null;
+  const detailsSlot = compact ? (
+    <>
+      {command.subtitle ? (
+        <span className="text-xs text-muted-foreground/70">{command.subtitle}</span>
+      ) : null}
+      {isAwakeCommand ? (
+        <span className="text-xs text-muted-foreground/55">
+          <AwakeStatusText />
+        </span>
+      ) : command.endText ? (
+        <span className="text-xs text-muted-foreground/55">{command.endText}</span>
+      ) : null}
+    </>
+  ) : isAwakeCommand ? (
+    <CommandShortcut className="normal-case tracking-[0.08em]">
+      <AwakeStatusText />
+    </CommandShortcut>
+  ) : command.endText ? (
+    <CommandShortcut className="normal-case tracking-[0.08em]">{command.endText}</CommandShortcut>
+  ) : null;
 
   const pinButton = (
     <button

@@ -14,10 +14,7 @@ import type {
   KeyboardShortcutDefinition,
   ListEntry,
 } from "@/modules/extensions/components/runner/types";
-import {
-  asBoolean,
-  asString,
-} from "@/modules/extensions/components/runner/utils";
+import { asBoolean, asString } from "@/modules/extensions/components/runner/utils";
 import { filterEntriesByQuery } from "@/modules/extensions/components/runner/search";
 import { collectActions } from "@/modules/extensions/components/runner/nodes/actions/action-model";
 import { collectFormFields } from "@/modules/extensions/components/runner/nodes/form/form-model";
@@ -94,9 +91,7 @@ function keyMatchesShortcut(event: KeyboardEvent, shortcut: KeyboardShortcutDefi
   const required = new Set(shortcut.modifiers);
   const isMac = isMacPlatform();
   const expectMeta = isMac ? required.has("cmd") : false;
-  const expectCtrl = isMac
-    ? required.has("ctrl")
-    : required.has("cmd") || required.has("ctrl");
+  const expectCtrl = isMac ? required.has("ctrl") : required.has("cmd") || required.has("ctrl");
   const expectAlt = required.has("opt");
   const expectShift = required.has("shift");
 
@@ -194,11 +189,7 @@ export function useExtensionRunnerState({
     [uiTree, selectedEntry?.actionsNodeId],
   );
   const rootActions = useMemo(
-    () =>
-      collectActions(
-        uiTree,
-        rootNode?.namedChildren?.actions ?? listModel?.rootActionsNodeId,
-      ),
+    () => collectActions(uiTree, rootNode?.namedChildren?.actions ?? listModel?.rootActionsNodeId),
     [uiTree, rootNode?.namedChildren?.actions, listModel?.rootActionsNodeId],
   );
 
@@ -244,13 +235,7 @@ export function useExtensionRunnerState({
     if (nextIndex >= 0 && nextIndex !== selectedIndex) {
       setSelectedIndex(nextIndex);
     }
-  }, [
-    currentEntries,
-    rootNode,
-    rootNode?.props.selectedItemId,
-    rootNode?.type,
-    selectedIndex,
-  ]);
+  }, [currentEntries, rootNode, rootNode?.props.selectedItemId, rootNode?.type, selectedIndex]);
 
   useEffect(() => {
     if (!selectedEntry) {
@@ -409,14 +394,27 @@ export function useExtensionRunnerState({
     if (selectedEntry?.hasOnAction) {
       extensionSidecarService.dispatchEvent(selectedEntry.nodeId, "onAction");
     }
-  }, [executeAction, rootActions, selectedEntry?.hasOnAction, selectedEntry?.nodeId, selectedEntryActions]);
+  }, [
+    executeAction,
+    rootActions,
+    selectedEntry?.hasOnAction,
+    selectedEntry?.nodeId,
+    selectedEntryActions,
+  ]);
 
-  const handleSearchInputChange = useCallback((value: string) => {
-    setSearchText(value);
-    if ((rootType === "List" || rootType === "Grid") && rootNode && asBoolean(rootNode.props.onSearchTextChange)) {
-      extensionSidecarService.dispatchEvent(rootNode.id, "onSearchTextChange", [value]);
-    }
-  }, [rootNode, rootType]);
+  const handleSearchInputChange = useCallback(
+    (value: string) => {
+      setSearchText(value);
+      if (
+        (rootType === "List" || rootType === "Grid") &&
+        rootNode &&
+        asBoolean(rootNode.props.onSearchTextChange)
+      ) {
+        extensionSidecarService.dispatchEvent(rootNode.id, "onSearchTextChange", [value]);
+      }
+    },
+    [rootNode, rootType],
+  );
 
   const handleSetFormValue = useCallback((field: FormField, value: FormValue) => {
     setFormValues((previous) => ({ ...previous, [field.key]: value }));
@@ -425,20 +423,25 @@ export function useExtensionRunnerState({
     }
   }, []);
 
-  const handleBlurFormField = useCallback((field: FormField) => {
-    if (!field.hasOnBlur) {
-      return;
-    }
+  const handleBlurFormField = useCallback(
+    (field: FormField) => {
+      if (!field.hasOnBlur) {
+        return;
+      }
 
-    const currentValue = formValues[field.key];
-    extensionSidecarService.dispatchEvent(field.nodeId, "onBlur", [{
-      type: "blur",
-      target: {
-        id: field.key,
-        value: currentValue,
-      },
-    }]);
-  }, [formValues]);
+      const currentValue = formValues[field.key];
+      extensionSidecarService.dispatchEvent(field.nodeId, "onBlur", [
+        {
+          type: "blur",
+          target: {
+            id: field.key,
+            value: currentValue,
+          },
+        },
+      ]);
+    },
+    [formValues],
+  );
 
   const handleToastAction = useCallback((toastId: number, actionType: "primary" | "secondary") => {
     extensionSidecarService.dispatchToastAction(toastId, actionType);
@@ -454,256 +457,257 @@ export function useExtensionRunnerState({
     }
   }, []);
 
-  const handleRootKeyDown = useCallback((event: KeyboardEvent<HTMLDivElement>) => {
-    if (isEditableTarget(event.target)) {
-      return;
-    }
-
-    if (event.key === "Escape") {
-      event.preventDefault();
-      event.stopPropagation();
-      handleBack();
-      return;
-    }
-
-    const availableActions = selectedEntryActions.length > 0
-      ? selectedEntryActions
-      : rootActions;
-
-    if (
-      event.key === "Enter" &&
-      !event.ctrlKey &&
-      !event.metaKey &&
-      !event.shiftKey &&
-      !event.altKey &&
-      availableActions[0] &&
-      !availableActions[0].shortcutDefinition
-    ) {
-      event.preventDefault();
-      event.stopPropagation();
-      void executeAction(availableActions[0]);
-      return;
-    }
-
-    if (
-      event.key === "Enter" &&
-      event.ctrlKey &&
-      !event.metaKey &&
-      !event.shiftKey &&
-      !event.altKey &&
-      availableActions[1] &&
-      !availableActions[1].shortcutDefinition
-    ) {
-      event.preventDefault();
-      event.stopPropagation();
-      void executeAction(availableActions[1]);
-      return;
-    }
-
-    for (const action of availableActions) {
-      if (!action.shortcutDefinition) {
-        continue;
-      }
-      if (keyMatchesShortcut(event, action.shortcutDefinition)) {
-        event.preventDefault();
-        event.stopPropagation();
-        void executeAction(action);
+  const handleRootKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLDivElement>) => {
+      if (isEditableTarget(event.target)) {
         return;
       }
-    }
 
-    if (rootType === "List") {
-      if (event.key === "ArrowDown") {
+      if (event.key === "Escape") {
         event.preventDefault();
         event.stopPropagation();
-        setSelectedIndex((previous) => Math.min(previous + 1, Math.max(0, currentEntries.length - 1)));
+        handleBack();
+        return;
       }
-      if (event.key === "ArrowUp") {
+
+      const availableActions = selectedEntryActions.length > 0 ? selectedEntryActions : rootActions;
+
+      if (
+        event.key === "Enter" &&
+        !event.ctrlKey &&
+        !event.metaKey &&
+        !event.shiftKey &&
+        !event.altKey &&
+        availableActions[0] &&
+        !availableActions[0].shortcutDefinition
+      ) {
         event.preventDefault();
         event.stopPropagation();
-        setSelectedIndex((previous) => Math.max(previous - 1, 0));
+        void executeAction(availableActions[0]);
+        return;
       }
-      if (event.key === "Enter") {
-        if (availableActions.length === 0) {
+
+      if (
+        event.key === "Enter" &&
+        event.ctrlKey &&
+        !event.metaKey &&
+        !event.shiftKey &&
+        !event.altKey &&
+        availableActions[1] &&
+        !availableActions[1].shortcutDefinition
+      ) {
+        event.preventDefault();
+        event.stopPropagation();
+        void executeAction(availableActions[1]);
+        return;
+      }
+
+      for (const action of availableActions) {
+        if (!action.shortcutDefinition) {
+          continue;
+        }
+        if (keyMatchesShortcut(event, action.shortcutDefinition)) {
           event.preventDefault();
           event.stopPropagation();
-          runPrimarySelectionAction();
+          void executeAction(action);
+          return;
         }
       }
-      return;
-    }
 
-    if (rootType === "Grid") {
-      if (currentEntries.length === 0) {
+      if (rootType === "List") {
+        if (event.key === "ArrowDown") {
+          event.preventDefault();
+          event.stopPropagation();
+          setSelectedIndex((previous) =>
+            Math.min(previous + 1, Math.max(0, currentEntries.length - 1)),
+          );
+        }
+        if (event.key === "ArrowUp") {
+          event.preventDefault();
+          event.stopPropagation();
+          setSelectedIndex((previous) => Math.max(previous - 1, 0));
+        }
+        if (event.key === "Enter") {
+          if (availableActions.length === 0) {
+            event.preventDefault();
+            event.stopPropagation();
+            runPrimarySelectionAction();
+          }
+        }
         return;
       }
 
-      const sectionOrder: Array<number | "root"> = [];
-      const sectionIndexByKey = new Map<number | "root", number>();
-      const rowsBySection = new Map<number, number[]>();
-      const positionedEntries: Array<{
-        index: number;
-        sectionIndex: number;
-        rowIndex: number;
-        colIndex: number;
-      }> = [];
+      if (rootType === "Grid") {
+        if (currentEntries.length === 0) {
+          return;
+        }
 
-      let lastSectionKey: number | "root" | null = null;
-      let rowIndex = 0;
-      let colIndex = 0;
-      let sectionColumns = 6;
+        const sectionOrder: Array<number | "root"> = [];
+        const sectionIndexByKey = new Map<number | "root", number>();
+        const rowsBySection = new Map<number, number[]>();
+        const positionedEntries: Array<{
+          index: number;
+          sectionIndex: number;
+          rowIndex: number;
+          colIndex: number;
+        }> = [];
 
-      currentEntries.forEach((entry, index) => {
-        const sectionKey = entry.sectionNodeId ?? "root";
-        if (sectionKey !== lastSectionKey) {
-          lastSectionKey = sectionKey;
-          rowIndex = 0;
-          colIndex = 0;
-          sectionColumns =
-            typeof entry.gridColumns === "number" &&
+        let lastSectionKey: number | "root" | null = null;
+        let rowIndex = 0;
+        let colIndex = 0;
+        let sectionColumns = 6;
+
+        currentEntries.forEach((entry, index) => {
+          const sectionKey = entry.sectionNodeId ?? "root";
+          if (sectionKey !== lastSectionKey) {
+            lastSectionKey = sectionKey;
+            rowIndex = 0;
+            colIndex = 0;
+            sectionColumns =
+              typeof entry.gridColumns === "number" &&
               Number.isFinite(entry.gridColumns) &&
               entry.gridColumns > 0
-              ? Math.max(1, Math.floor(entry.gridColumns))
-              : 6;
+                ? Math.max(1, Math.floor(entry.gridColumns))
+                : 6;
 
-          if (!sectionIndexByKey.has(sectionKey)) {
-            const nextSectionIndex = sectionOrder.length;
-            sectionIndexByKey.set(sectionKey, nextSectionIndex);
-            sectionOrder.push(sectionKey);
+            if (!sectionIndexByKey.has(sectionKey)) {
+              const nextSectionIndex = sectionOrder.length;
+              sectionIndexByKey.set(sectionKey, nextSectionIndex);
+              sectionOrder.push(sectionKey);
+            }
+          } else if (colIndex >= sectionColumns) {
+            rowIndex += 1;
+            colIndex = 0;
           }
-        } else if (colIndex >= sectionColumns) {
-          rowIndex += 1;
-          colIndex = 0;
-        }
 
-        const sectionIndex = sectionIndexByKey.get(sectionKey)!;
-        positionedEntries.push({
-          index,
-          sectionIndex,
-          rowIndex,
-          colIndex,
+          const sectionIndex = sectionIndexByKey.get(sectionKey)!;
+          positionedEntries.push({
+            index,
+            sectionIndex,
+            rowIndex,
+            colIndex,
+          });
+
+          const sectionRows = rowsBySection.get(sectionIndex) ?? [];
+          if (!sectionRows.includes(rowIndex)) {
+            sectionRows.push(rowIndex);
+            rowsBySection.set(sectionIndex, sectionRows);
+          }
+
+          colIndex += 1;
         });
 
-        const sectionRows = rowsBySection.get(sectionIndex) ?? [];
-        if (!sectionRows.includes(rowIndex)) {
-          sectionRows.push(rowIndex);
-          rowsBySection.set(sectionIndex, sectionRows);
+        const selectedPosition = positionedEntries[selectedIndex] ?? positionedEntries[0];
+        if (!selectedPosition) {
+          return;
         }
 
-        colIndex += 1;
-      });
-
-      const selectedPosition = positionedEntries[selectedIndex] ?? positionedEntries[0];
-      if (!selectedPosition) {
-        return;
-      }
-
-      if (event.key === "ArrowRight") {
-        event.preventDefault();
-        event.stopPropagation();
-        setSelectedIndex((previous) => Math.min(previous + 1, Math.max(0, currentEntries.length - 1)));
-      }
-      if (event.key === "ArrowLeft") {
-        event.preventDefault();
-        event.stopPropagation();
-        setSelectedIndex((previous) => Math.max(previous - 1, 0));
-      }
-      if (event.key === "ArrowDown") {
-        event.preventDefault();
-        event.stopPropagation();
-        const direction = 1;
-        let targetSection = selectedPosition.sectionIndex;
-        let targetRow = selectedPosition.rowIndex + direction;
-        let nextIndex = -1;
-
-        while (nextIndex < 0) {
-          const rowCandidates = positionedEntries.filter(
-            (entry) =>
-              entry.sectionIndex === targetSection &&
-              entry.rowIndex === targetRow,
-          );
-
-          if (rowCandidates.length > 0) {
-            const matchingColumn =
-              rowCandidates.find((entry) => entry.colIndex === selectedPosition.colIndex) ??
-              rowCandidates[rowCandidates.length - 1];
-            nextIndex = matchingColumn.index;
-            break;
-          }
-
-          targetSection += direction;
-          if (targetSection >= sectionOrder.length) {
-            break;
-          }
-
-          const rows = rowsBySection.get(targetSection);
-          if (!rows || rows.length === 0) {
-            break;
-          }
-          targetRow = Math.min(...rows);
-        }
-
-        if (nextIndex >= 0) {
-          setSelectedIndex(nextIndex);
-        }
-      }
-      if (event.key === "ArrowUp") {
-        event.preventDefault();
-        event.stopPropagation();
-        const direction = -1;
-        let targetSection = selectedPosition.sectionIndex;
-        let targetRow = selectedPosition.rowIndex + direction;
-        let nextIndex = -1;
-
-        while (nextIndex < 0) {
-          const rowCandidates = positionedEntries.filter(
-            (entry) =>
-              entry.sectionIndex === targetSection &&
-              entry.rowIndex === targetRow,
-          );
-
-          if (rowCandidates.length > 0) {
-            const matchingColumn =
-              rowCandidates.find((entry) => entry.colIndex === selectedPosition.colIndex) ??
-              rowCandidates[rowCandidates.length - 1];
-            nextIndex = matchingColumn.index;
-            break;
-          }
-
-          targetSection += direction;
-          if (targetSection < 0) {
-            break;
-          }
-
-          const rows = rowsBySection.get(targetSection);
-          if (!rows || rows.length === 0) {
-            break;
-          }
-          targetRow = Math.max(...rows);
-        }
-
-        if (nextIndex >= 0) {
-          setSelectedIndex(nextIndex);
-        }
-      }
-      if (event.key === "Enter") {
-        if (availableActions.length === 0) {
+        if (event.key === "ArrowRight") {
           event.preventDefault();
           event.stopPropagation();
-          runPrimarySelectionAction();
+          setSelectedIndex((previous) =>
+            Math.min(previous + 1, Math.max(0, currentEntries.length - 1)),
+          );
+        }
+        if (event.key === "ArrowLeft") {
+          event.preventDefault();
+          event.stopPropagation();
+          setSelectedIndex((previous) => Math.max(previous - 1, 0));
+        }
+        if (event.key === "ArrowDown") {
+          event.preventDefault();
+          event.stopPropagation();
+          const direction = 1;
+          let targetSection = selectedPosition.sectionIndex;
+          let targetRow = selectedPosition.rowIndex + direction;
+          let nextIndex = -1;
+
+          while (nextIndex < 0) {
+            const rowCandidates = positionedEntries.filter(
+              (entry) => entry.sectionIndex === targetSection && entry.rowIndex === targetRow,
+            );
+
+            if (rowCandidates.length > 0) {
+              const matchingColumn =
+                rowCandidates.find((entry) => entry.colIndex === selectedPosition.colIndex) ??
+                rowCandidates[rowCandidates.length - 1];
+              nextIndex = matchingColumn.index;
+              break;
+            }
+
+            targetSection += direction;
+            if (targetSection >= sectionOrder.length) {
+              break;
+            }
+
+            const rows = rowsBySection.get(targetSection);
+            if (!rows || rows.length === 0) {
+              break;
+            }
+            targetRow = Math.min(...rows);
+          }
+
+          if (nextIndex >= 0) {
+            setSelectedIndex(nextIndex);
+          }
+        }
+        if (event.key === "ArrowUp") {
+          event.preventDefault();
+          event.stopPropagation();
+          const direction = -1;
+          let targetSection = selectedPosition.sectionIndex;
+          let targetRow = selectedPosition.rowIndex + direction;
+          let nextIndex = -1;
+
+          while (nextIndex < 0) {
+            const rowCandidates = positionedEntries.filter(
+              (entry) => entry.sectionIndex === targetSection && entry.rowIndex === targetRow,
+            );
+
+            if (rowCandidates.length > 0) {
+              const matchingColumn =
+                rowCandidates.find((entry) => entry.colIndex === selectedPosition.colIndex) ??
+                rowCandidates[rowCandidates.length - 1];
+              nextIndex = matchingColumn.index;
+              break;
+            }
+
+            targetSection += direction;
+            if (targetSection < 0) {
+              break;
+            }
+
+            const rows = rowsBySection.get(targetSection);
+            if (!rows || rows.length === 0) {
+              break;
+            }
+            targetRow = Math.max(...rows);
+          }
+
+          if (nextIndex >= 0) {
+            setSelectedIndex(nextIndex);
+          }
+        }
+        if (event.key === "Enter") {
+          if (availableActions.length === 0) {
+            event.preventDefault();
+            event.stopPropagation();
+            runPrimarySelectionAction();
+          }
         }
       }
-    }
-  }, [
-    currentEntries,
-    executeAction,
-    handleBack,
-    rootActions,
-    rootType,
-    runPrimarySelectionAction,
-    selectedEntryActions,
-    selectedIndex,
-  ]);
+    },
+    [
+      currentEntries,
+      executeAction,
+      handleBack,
+      rootActions,
+      rootType,
+      runPrimarySelectionAction,
+      selectedEntryActions,
+      selectedIndex,
+    ],
+  );
 
   const registerFieldRef = useCallback((nodeId: number, element: HTMLElement | null) => {
     if (!element) {

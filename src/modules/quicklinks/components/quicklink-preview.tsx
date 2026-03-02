@@ -3,10 +3,7 @@ import { Link2 } from "lucide-react";
 import type { Quicklink } from "@/modules/quicklinks/types";
 import { findQuicklinkByKeyword, isFileQuicklinkTarget } from "@/modules/quicklinks/api/quicklinks";
 import { QuicklinkIcon } from "@/modules/quicklinks/components/quicklink-icon";
-import {
-  getTriggerSymbol,
-  QUICKLINK_TRIGGER_MODE,
-} from "@/command-registry/trigger-registry";
+import { getTriggerSymbol, QUICKLINK_TRIGGER_MODE } from "@/command-registry/trigger-registry";
 
 interface QuicklinkPreviewProps {
   quicklinks: Quicklink[];
@@ -78,7 +75,7 @@ export function QuicklinkPreview({
 
   return (
     <CommandGroup heading="Quicklinks" forceMount>
-      <CommandItem 
+      <CommandItem
         key={quicklink.keyword}
         value={`${quicklinkSymbol}${quicklink.keyword} ${query}`}
         onSelect={() => onExecute(quicklink.keyword, query)}
@@ -96,9 +93,7 @@ export function QuicklinkPreview({
           {quicklinkSymbol}
           {quicklink.keyword}
         </span>
-        {query && (
-          <span className="ml-2 text-xs text-muted-foreground">→ {query}</span>
-        )}
+        {query && <span className="ml-2 text-xs text-muted-foreground">→ {query}</span>}
         <CommandShortcut>quicklink</CommandShortcut>
       </CommandItem>
     </CommandGroup>

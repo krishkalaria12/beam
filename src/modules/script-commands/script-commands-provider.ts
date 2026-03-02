@@ -31,7 +31,10 @@ export function invalidateScriptCommandsProviderCache() {
 }
 
 function createScriptRunCommandId(scriptId: string): string {
-  const normalized = scriptId.trim().toLowerCase().replace(/[^a-z0-9_.-]/g, "-");
+  const normalized = scriptId
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_.-]/g, "-");
   return `script_commands.run.${normalized || "script"}`;
 }
 

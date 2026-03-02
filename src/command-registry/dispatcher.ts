@@ -8,11 +8,7 @@ import type { SystemAction } from "@/modules/system-actions/types";
 import { isCommandMode } from "@/command-registry/modes";
 import { COMMAND_PANELS, isCommandPanel } from "@/command-registry/panels";
 import type { StaticCommandRegistry } from "@/command-registry/static-registry";
-import type {
-  CommandDescriptor,
-  CommandMode,
-  CommandPanel,
-} from "@/command-registry/types";
+import type { CommandDescriptor, CommandMode, CommandPanel } from "@/command-registry/types";
 
 const TAURI_INVOKE_ALLOWLIST = new Set([
   "execute_system_action",
@@ -102,10 +98,7 @@ function error(code: DispatchErrorCode, message: string): DispatchResult {
   return { ok: false, code, message };
 }
 
-function backendError(
-  code: DispatchErrorCode,
-  backend: DispatchBackendError,
-): DispatchResult {
+function backendError(code: DispatchErrorCode, backend: DispatchBackendError): DispatchResult {
   return { ok: false, code, message: backend.userMessage, backend };
 }
 
@@ -113,9 +106,7 @@ function isScopeAllowed(command: CommandDescriptor, mode: CommandMode): boolean 
   return command.scope.includes("all") || command.scope.includes(mode);
 }
 
-function toPayloadRecord(
-  payload: unknown,
-): Record<string, unknown> {
+function toPayloadRecord(payload: unknown): Record<string, unknown> {
   if (!payload || typeof payload !== "object") {
     return {};
   }
@@ -133,10 +124,7 @@ function getStringField(payload: Record<string, unknown>, key: string): string |
   return normalized.length > 0 ? normalized : undefined;
 }
 
-function getRecordField(
-  payload: Record<string, unknown>,
-  key: string,
-): Record<string, unknown> {
+function getRecordField(payload: Record<string, unknown>, key: string): Record<string, unknown> {
   const value = payload[key];
   if (!value || typeof value !== "object") {
     return {};
@@ -145,11 +133,7 @@ function getRecordField(
   return value as Record<string, unknown>;
 }
 
-function getBooleanField(
-  payload: Record<string, unknown>,
-  key: string,
-  fallback = false,
-): boolean {
+function getBooleanField(payload: Record<string, unknown>, key: string, fallback = false): boolean {
   const value = payload[key];
   if (typeof value === "boolean") {
     return value;
@@ -158,10 +142,7 @@ function getBooleanField(
   return fallback;
 }
 
-function getModeListField(
-  payload: Record<string, unknown>,
-  key: string,
-): CommandMode[] {
+function getModeListField(payload: Record<string, unknown>, key: string): CommandMode[] {
   const value = payload[key];
   if (!Array.isArray(value)) {
     return [];
@@ -170,14 +151,9 @@ function getModeListField(
   return value.filter((entry): entry is CommandMode => isCommandMode(entry));
 }
 
-export function mapDispatchBackendError(
-  err: unknown,
-  fallback: string,
-): DispatchBackendError {
+export function mapDispatchBackendError(err: unknown, fallback: string): DispatchBackendError {
   const technicalMessage =
-    err instanceof Error && err.message.trim().length > 0
-      ? err.message
-      : fallback;
+    err instanceof Error && err.message.trim().length > 0 ? err.message : fallback;
   const normalized = technicalMessage.toLowerCase();
 
   if (
@@ -231,10 +207,7 @@ export function mapDispatchBackendError(
 }
 
 function mapDesktopUnavailable(commandId: string): DispatchResult {
-  return error(
-    "BACKEND_UNAVAILABLE",
-    `Command "${commandId}" requires desktop runtime.`,
-  );
+  return error("BACKEND_UNAVAILABLE", `Command "${commandId}" requires desktop runtime.`);
 }
 
 function isPrivilegedAction(command: CommandDescriptor): boolean {
@@ -307,10 +280,7 @@ async function dispatchInvokeAction(
   }
 
   if (!TAURI_INVOKE_ALLOWLIST.has(commandName)) {
-    return error(
-      "INVALID_BACKEND_COMMAND",
-      `Backend command "${commandName}" is not allowlisted.`,
-    );
+    return error("INVALID_BACKEND_COMMAND", `Backend command "${commandName}" is not allowlisted.`);
   }
 
   try {
@@ -360,9 +330,7 @@ async function dispatchInvokeAction(
     );
   } catch (err) {
     const mapped = mapDispatchBackendError(err, "Backend action failed.");
-    const code = mapped.type === "runtime_unavailable"
-      ? "BACKEND_UNAVAILABLE"
-      : "BACKEND_FAILURE";
+    const code = mapped.type === "runtime_unavailable" ? "BACKEND_UNAVAILABLE" : "BACKEND_FAILURE";
     return backendError(code, mapped);
   }
 }
@@ -384,9 +352,7 @@ async function dispatchOpenAppAction(
     return ok({ execPath });
   } catch (err) {
     const mapped = mapDispatchBackendError(err, "Could not open application.");
-    const code = mapped.type === "runtime_unavailable"
-      ? "BACKEND_UNAVAILABLE"
-      : "BACKEND_FAILURE";
+    const code = mapped.type === "runtime_unavailable" ? "BACKEND_UNAVAILABLE" : "BACKEND_FAILURE";
     return backendError(code, mapped);
   }
 }
@@ -408,9 +374,7 @@ async function dispatchOpenFileAction(
     return ok({ filePath });
   } catch (err) {
     const mapped = mapDispatchBackendError(err, "Could not open file.");
-    const code = mapped.type === "runtime_unavailable"
-      ? "BACKEND_UNAVAILABLE"
-      : "BACKEND_FAILURE";
+    const code = mapped.type === "runtime_unavailable" ? "BACKEND_UNAVAILABLE" : "BACKEND_FAILURE";
     return backendError(code, mapped);
   }
 }
@@ -454,11 +418,7 @@ async function dispatchCustomAction(
   const payload = toPayloadRecord(command.action?.payload);
   const extensionId = getStringField(payload, "extensionId");
   const extensionCommandId = getStringField(payload, "extensionCommandId");
-  const requiresDesktopRuntime = getBooleanField(
-    payload,
-    "requiresDesktopRuntime",
-    false,
-  );
+  const requiresDesktopRuntime = getBooleanField(payload, "requiresDesktopRuntime", false);
   const allowedModes = getModeListField(payload, "allowedModes");
   const sandboxPayload = getRecordField(payload, "sandbox");
   const policy: CustomActionSandboxPolicy = {
@@ -467,10 +427,7 @@ async function dispatchCustomAction(
   };
 
   if (!extensionId || !extensionCommandId) {
-    return error(
-      "INVALID_INPUT",
-      "Custom command action is missing extension identifiers.",
-    );
+    return error("INVALID_INPUT", "Custom command action is missing extension identifiers.");
   }
 
   if (requiresDesktopRuntime && !context.isDesktopRuntime) {
@@ -504,10 +461,7 @@ async function dispatchCustomAction(
     }
 
     if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-      return error(
-        "UNSUPPORTED_ACTION",
-        "Custom action URL protocol is not allowed.",
-      );
+      return error("UNSUPPORTED_ACTION", "Custom action URL protocol is not allowed.");
     }
 
     try {
@@ -558,10 +512,7 @@ export async function dispatchCommand(
   }
 
   if (!command.action) {
-    return error(
-      "INVALID_ACTION",
-      `Command "${commandId}" has no executable action definition.`,
-    );
+    return error("INVALID_ACTION", `Command "${commandId}" has no executable action definition.`);
   }
 
   if (isPrivilegedAction(command) && !context.isDesktopRuntime) {

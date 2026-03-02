@@ -1,52 +1,55 @@
-import React from 'react';
-import { jsx } from 'react/jsx-runtime';
-import { createWrapperComponent } from '../utils';
-import { currentRootElement, navigationStack } from '../../state';
-import { updateContainer } from '../../reconciler';
+import React from "react";
+import { jsx } from "react/jsx-runtime";
+import { createWrapperComponent } from "../utils";
+import { currentRootElement, navigationStack } from "../../state";
+import { updateContainer } from "../../reconciler";
 
-const Action = createWrapperComponent('Action');
-const ActionPanel = createWrapperComponent('ActionPanel');
-const ActionPanelSection = createWrapperComponent('ActionPanel.Section');
-const ActionPanelSubmenu = createWrapperComponent('ActionPanel.Submenu');
-const ActionPaste = createWrapperComponent('Action.Paste');
-const ActionCopy = createWrapperComponent('Action.CopyToClipboard');
-const ActionOpenInBrowser = createWrapperComponent('Action.OpenInBrowser');
-const ActionSubmitForm = createWrapperComponent('Action.SubmitForm');
+const Action = createWrapperComponent("Action");
+const ActionPanel = createWrapperComponent("ActionPanel");
+const ActionPanelSection = createWrapperComponent("ActionPanel.Section");
+const ActionPanelSubmenu = createWrapperComponent("ActionPanel.Submenu");
+const ActionPaste = createWrapperComponent("Action.Paste");
+const ActionCopy = createWrapperComponent("Action.CopyToClipboard");
+const ActionOpenInBrowser = createWrapperComponent("Action.OpenInBrowser");
+const ActionSubmitForm = createWrapperComponent("Action.SubmitForm");
 
 const ActionPush = ({
-	onPush,
-	target,
-	...props
+  onPush,
+  target,
+  ...props
 }: {
-	onPush?: () => void;
-	target: React.ReactElement;
+  onPush?: () => void;
+  target: React.ReactElement;
 }) => {
-	const handleAction = () => {
-		if (currentRootElement) {
-			navigationStack.push(currentRootElement);
-		}
-		updateContainer(target);
-		onPush?.();
-	};
-	return React.createElement('Action.Push' as React.ElementType, { ...props, onAction: handleAction });
+  const handleAction = () => {
+    if (currentRootElement) {
+      navigationStack.push(currentRootElement);
+    }
+    updateContainer(target);
+    onPush?.();
+  };
+  return React.createElement("Action.Push" as React.ElementType, {
+    ...props,
+    onAction: handleAction,
+  });
 };
 
 const Style = {
-	Regular: 'regular',
-	Destructive: 'destructive'
+  Regular: "regular",
+  Destructive: "destructive",
 } as const;
 
 Object.assign(Action, {
-	Paste: ActionPaste,
-	CopyToClipboard: ActionCopy,
-	OpenInBrowser: ActionOpenInBrowser,
-	Push: ActionPush,
-	SubmitForm: ActionSubmitForm,
-	Style
+  Paste: ActionPaste,
+  CopyToClipboard: ActionCopy,
+  OpenInBrowser: ActionOpenInBrowser,
+  Push: ActionPush,
+  SubmitForm: ActionSubmitForm,
+  Style,
 });
 Object.assign(ActionPanel, {
-	Section: ActionPanelSection,
-	Submenu: ActionPanelSubmenu
+  Section: ActionPanelSection,
+  Submenu: ActionPanelSubmenu,
 });
 
 export { Action, ActionPanel };

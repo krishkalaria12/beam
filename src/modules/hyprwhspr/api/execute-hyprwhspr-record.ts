@@ -1,11 +1,6 @@
 import { invoke, isTauri } from "@tauri-apps/api/core";
 
-export type HyprWhsprRecordAction =
-  | "start"
-  | "stop"
-  | "cancel"
-  | "toggle"
-  | "status";
+export type HyprWhsprRecordAction = "start" | "stop" | "cancel" | "toggle" | "status";
 
 interface ExecuteHyprWhsprRecordOptions {
   hideLauncher?: boolean;

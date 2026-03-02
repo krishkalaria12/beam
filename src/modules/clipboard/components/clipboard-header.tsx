@@ -1,9 +1,5 @@
-import { ChevronDown } from "lucide-react";
+import { ArrowLeft, ChevronDown, FileText, ImageIcon, Link, Search } from "lucide-react";
 
-import {
-  CommandPanelBackButton,
-  CommandPanelHeader,
-} from "@/components/command/command-panel-header";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,12 +20,17 @@ interface ClipboardHeaderProps {
   inputRef?: React.RefObject<HTMLInputElement | null>;
 }
 
-const TYPE_FILTER_LABELS: Record<ClipboardTypeFilter, string> = {
-  all: "All Types",
-  [ClipboardContentType.Text]: "Text",
-  [ClipboardContentType.Link]: "Links",
-  [ClipboardContentType.Image]: "Images",
-};
+const TYPE_FILTER_OPTIONS: { value: ClipboardTypeFilter; label: string; icon: React.ReactNode }[] =
+  [
+    { value: "all", label: "All Types", icon: null },
+    { value: ClipboardContentType.Text, label: "Text", icon: <FileText className="size-3.5" /> },
+    { value: ClipboardContentType.Link, label: "Links", icon: <Link className="size-3.5" /> },
+    {
+      value: ClipboardContentType.Image,
+      label: "Images",
+      icon: <ImageIcon className="size-3.5" />,
+    },
+  ];
 
 export function ClipboardHeader({
   query,
@@ -40,44 +41,66 @@ export function ClipboardHeader({
   onTypeFilterChange,
   inputRef,
 }: ClipboardHeaderProps) {
-  return (
-    <CommandPanelHeader className="gap-4">
-      <CommandPanelBackButton onClick={onBack} aria-label="Back" iconClassName="size-5" />
+  const currentFilter = TYPE_FILTER_OPTIONS.find((f) => f.value === typeFilter);
 
+  return (
+    <div className="clipboard-header flex items-center gap-3 px-5 py-4">
+      {/* Back Button */}
+      <button
+        type="button"
+        onClick={onBack}
+        className="flex size-9 items-center justify-center rounded-lg bg-white/[0.03] text-white/40 transition-all hover:bg-white/[0.06] hover:text-white/70"
+      >
+        <ArrowLeft className="size-4" />
+      </button>
+
+      {/* Search Input */}
       <div className="relative flex-1">
+        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
+          <Search className="size-4 text-white/25" />
+        </div>
         <input
           ref={inputRef}
           value={query}
           onChange={(e) => onQueryChange(e.target.value)}
           onKeyDown={onKeyDown}
-          className="h-10 w-full rounded-md bg-transparent text-[16px] outline-none placeholder:text-muted-foreground/30 text-foreground font-medium tracking-tight"
-          placeholder="Type to filter entries..."
+          className="h-10 w-full rounded-xl bg-white/[0.04] pl-10 pr-4 text-[14px] font-medium tracking-[-0.01em] text-white/90 outline-none ring-1 ring-white/[0.06] transition-all placeholder:text-white/25 focus:bg-white/[0.06] focus:ring-white/[0.12]"
+          placeholder="Search clipboard history..."
           autoFocus
         />
       </div>
 
-      <div className="flex items-center gap-2">
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-foreground/5 border border-border/20 text-muted-foreground/80 hover:bg-foreground/10 transition-colors cursor-pointer group text-xs font-semibold"
-            onKeyDown={(event) => event.stopPropagation()}
+      {/* Type Filter Dropdown */}
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          className="flex h-10 items-center gap-2 rounded-xl bg-white/[0.04] px-3.5 text-[12px] font-medium tracking-[-0.01em] text-white/60 ring-1 ring-white/[0.06] transition-all hover:bg-white/[0.06] hover:text-white/80"
+          onKeyDown={(event) => event.stopPropagation()}
+        >
+          {currentFilter?.icon && <span className="text-white/40">{currentFilter.icon}</span>}
+          <span>{currentFilter?.label || "All Types"}</span>
+          <ChevronDown className="size-3.5 text-white/30" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          align="end"
+          className="w-40 rounded-xl border border-white/[0.08] bg-[#2c2c2c] p-1.5 shadow-xl"
+        >
+          <DropdownMenuRadioGroup
+            value={typeFilter}
+            onValueChange={(value) => onTypeFilterChange(value as ClipboardTypeFilter)}
           >
-            <span className="group-hover:text-foreground transition-colors">{TYPE_FILTER_LABELS[typeFilter]}</span>
-            <ChevronDown className="size-3 opacity-50 group-hover:opacity-100 transition-opacity" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-36 rounded-lg border border-border/40 bg-background/95 p-1">
-            <DropdownMenuRadioGroup
-              value={typeFilter}
-              onValueChange={(value) => onTypeFilterChange(value as ClipboardTypeFilter)}
-            >
-              <DropdownMenuRadioItem value="all">All Types</DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value={ClipboardContentType.Text}>Text</DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value={ClipboardContentType.Link}>Links</DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value={ClipboardContentType.Image}>Images</DropdownMenuRadioItem>
-            </DropdownMenuRadioGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    </CommandPanelHeader>
+            {TYPE_FILTER_OPTIONS.map((option) => (
+              <DropdownMenuRadioItem
+                key={option.value}
+                value={option.value}
+                className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-[12px] font-medium text-white/70 transition-colors hover:bg-white/[0.06] hover:text-white/90 focus:bg-white/[0.06] data-[state=checked]:text-white"
+              >
+                {option.icon && <span className="text-white/40">{option.icon}</span>}
+                {option.label}
+              </DropdownMenuRadioItem>
+            ))}
+          </DropdownMenuRadioGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   );
 }

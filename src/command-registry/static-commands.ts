@@ -316,14 +316,7 @@ export const STATIC_COMMANDS: CommandDescriptor[] = [
   {
     id: "github.panel.open",
     title: "github workspace",
-    keywords: [
-      "github",
-      "pull requests",
-      "prs",
-      "issues",
-      "code review",
-      "assigned issues",
-    ],
+    keywords: ["github", "pull requests", "prs", "issues", "code review", "assigned issues"],
     endText: "open",
     icon: `app-icon:${githubLogo}`,
     kind: "panel",

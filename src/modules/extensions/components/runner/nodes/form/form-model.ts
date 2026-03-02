@@ -89,17 +89,13 @@ export function collectFormFields(
         }
       } else if (node.type === "Form.DatePicker") {
         defaultValue =
-          asString(node.props.value).trim() ||
-          asString(node.props.defaultValue).trim() ||
-          "";
+          asString(node.props.value).trim() || asString(node.props.defaultValue).trim() || "";
         if (typeof node.props.value === "string") {
           controlledValue = node.props.value.trim();
         }
       } else {
         defaultValue =
-          asString(node.props.value).trim() ||
-          asString(node.props.defaultValue).trim() ||
-          "";
+          asString(node.props.value).trim() || asString(node.props.defaultValue).trim() || "";
         if (typeof node.props.value === "string") {
           controlledValue = node.props.value.trim();
         }

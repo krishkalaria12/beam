@@ -19,10 +19,7 @@ export async function resolveCommandCandidates(options: {
   registry: StaticCommandRegistry;
   providers?: CommandProviderOrchestrator;
 }): Promise<CommandCandidatesResult> {
-  const staticCommands = resolveStaticCommandCandidates(
-    options.registry,
-    options.context,
-  );
+  const staticCommands = resolveStaticCommandCandidates(options.registry, options.context);
 
   if (!options.providers) {
     return {
@@ -34,8 +31,8 @@ export async function resolveCommandCandidates(options: {
   }
 
   const dynamicResolution = await options.providers.resolve(options.context);
-  const dynamicCommands = dynamicResolution.commands.filter((command) =>
-    command.scope.includes("all") || command.scope.includes(options.context.mode),
+  const dynamicCommands = dynamicResolution.commands.filter(
+    (command) => command.scope.includes("all") || command.scope.includes(options.context.mode),
   );
   const mergedCommands = [...staticCommands, ...dynamicCommands];
   const commands = options.context.triggeredCommandId

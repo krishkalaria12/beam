@@ -1,69 +1,59 @@
 {
   "rounding": [
-      {
-        "prototypeExpressions": [
-          "rounded"
-        ],
-        "identifier": "rounded"
-      },
-      {
-        "prototypeExpressions": [
-          "rounded up"
-        ],
-        "identifier": "roundedUp"
-      },
-      {
-        "prototypeExpressions": [
-          "rounded down"
-        ],
-        "identifier": "roundedDown"
-      },
-      {
-        "prototypeExpressions": [
-            "rounded to 3 dp",
-            "rounded 3 dp",
-            "rounded to 1 digit",
-            "rounded to 2 digits",
-            "rounded to 1 decimal",
-            "rounded to 2 decimals",
-            "to 3 dp",
-            "to __headNumberCluster_dp",
-            "to 3 digit",
-            "to 3 digits",
-            "to 1 decimal point",
-            "to 1 decimal place",
-            "to 3 decimal points",
-            "to 3 decimal places",
-            "to 3 decimal",
-            "to 3 decimals"
-        ],
-        "identifier": "roundedToDp"
-      },
-      {
-        "prototypeExpressions": [
-          "round up to nearest 10",
-          "rounded up to nearest 10",
-          "round up to next 10",
-          "rounded up to next 10"
-        ],
-        "identifier": "roundedUpToNearestX"
-      },
-      {
-        "prototypeExpressions": [
-          "rounded down to nearest 10",
-          "rounded down to last 10",
-          "rounded down to 10"
-        ],
-        "identifier": "roundedDownToNearestX"
-      },
-      {
-        "prototypeExpressions": [
-          "to nearest 10",
-          "round to nearest 10",
-          "rounded to nearest 10"
-        ],
-        "identifier": "roundedToNearestX"
-      }
+    {
+      "prototypeExpressions": ["rounded"],
+      "identifier": "rounded"
+    },
+    {
+      "prototypeExpressions": ["rounded up"],
+      "identifier": "roundedUp"
+    },
+    {
+      "prototypeExpressions": ["rounded down"],
+      "identifier": "roundedDown"
+    },
+    {
+      "prototypeExpressions": [
+        "rounded to 3 dp",
+        "rounded 3 dp",
+        "rounded to 1 digit",
+        "rounded to 2 digits",
+        "rounded to 1 decimal",
+        "rounded to 2 decimals",
+        "to 3 dp",
+        "to __headNumberCluster_dp",
+        "to 3 digit",
+        "to 3 digits",
+        "to 1 decimal point",
+        "to 1 decimal place",
+        "to 3 decimal points",
+        "to 3 decimal places",
+        "to 3 decimal",
+        "to 3 decimals"
+      ],
+      "identifier": "roundedToDp"
+    },
+    {
+      "prototypeExpressions": [
+        "round up to nearest 10",
+        "rounded up to nearest 10",
+        "round up to next 10",
+        "rounded up to next 10"
+      ],
+      "identifier": "roundedUpToNearestX"
+    },
+    {
+      "prototypeExpressions": [
+        "rounded down to nearest 10",
+        "rounded down to last 10",
+        "rounded down to 10"
+      ],
+      "identifier": "roundedDownToNearestX"
+    },
+    {
+      "prototypeExpressions": ["to nearest 10", "round to nearest 10", "rounded to nearest 10"],
+      "identifier": "roundedToNearestX"
+    }
   ],
   "compoundUnits": [
     {
@@ -164,37 +154,23 @@
   ],
   "dateTime": [
     {
-      "prototypeExpressions": [
-        "__converter_symbol date"
-      ],
+      "prototypeExpressions": ["__converter_symbol date"],
       "identifier": "toDate"
     },
     {
-      "prototypeExpressions": [
-        "__converter_symbol timestamp",
-        "__converter_symbol time stamp"
-      ],
+      "prototypeExpressions": ["__converter_symbol timestamp", "__converter_symbol time stamp"],
       "identifier": "toTimestamp"
     },
     {
-      "prototypeExpressions": [
-        "__converter_symbol timespan",
-        "__converter_symbol time span"
-      ],
+      "prototypeExpressions": ["__converter_symbol timespan", "__converter_symbol time span"],
       "identifier": "toTimespan"
     },
     {
-      "prototypeExpressions": [
-        "__converter_symbol laptime",
-        "__converter_symbol lap time"
-      ],
+      "prototypeExpressions": ["__converter_symbol laptime", "__converter_symbol lap time"],
       "identifier": "toLaptime"
     },
     {
-      "prototypeExpressions": [
-        "__converter_symbol iso8601",
-        "__converter_symbol iso"
-      ],
+      "prototypeExpressions": ["__converter_symbol iso8601", "__converter_symbol iso"],
       "identifier": "toISO8601"
     }
   ],
@@ -227,46 +203,29 @@
       "identifier": "toScientificNotation"
     },
     {
-      "prototypeExpressions": [
-        "__converter_symbol multiplier",
-        "__converter_symbol multiple"
-      ],
+      "prototypeExpressions": ["__converter_symbol multiplier", "__converter_symbol multiple"],
       "identifier": "toMultiplier"
     },
     {
-      "prototypeExpressions": [
-        "__converter_symbol hexadecimal",
-        "__converter_symbol hex"
-      ],
+      "prototypeExpressions": ["__converter_symbol hexadecimal", "__converter_symbol hex"],
       "identifier": "toHexadecimal"
     },
     {
-      "prototypeExpressions": [
-        "__converter_symbol binary",
-        "__converter_symbol bin"
-      ],
+      "prototypeExpressions": ["__converter_symbol binary", "__converter_symbol bin"],
       "identifier": "toBinary"
     },
     {
-      "prototypeExpressions": [
-        "__converter_symbol octal",
-        "__converter_symbol oct"
-      ],
+      "prototypeExpressions": ["__converter_symbol octal", "__converter_symbol oct"],
       "identifier": "toOctal"
     },
     {
-      "prototypeExpressions": [
-        "__converter_symbol base 8"
-      ],
+      "prototypeExpressions": ["__converter_symbol base 8"],
       "identifier": "toBaseX"
     }
   ],
   "music": [
     {
-      "prototypeExpressions": [
-        "__converter_symbol pitch",
-        "__converter_symbol musical note"
-      ],
+      "prototypeExpressions": ["__converter_symbol pitch", "__converter_symbol musical note"],
       "identifier": "toPitch"
     },
     {
@@ -280,9 +239,7 @@
   ],
   "unitRelated": [
     {
-      "prototypeExpressions": [
-        "__converter_symbol dms"
-      ],
+      "prototypeExpressions": ["__converter_symbol dms"],
       "identifier": "toDMS"
     }
   ]

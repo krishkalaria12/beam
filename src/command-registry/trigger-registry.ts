@@ -102,9 +102,10 @@ export function parseTriggerInput(
       continue;
     }
 
-    const parsed = definition.mode === QUICKLINK_TRIGGER_MODE
-      ? parseQuicklinkTrigger(rawQuery, definition.symbol)
-      : parseQueryTrigger(rawQuery, definition.symbol);
+    const parsed =
+      definition.mode === QUICKLINK_TRIGGER_MODE
+        ? parseQuicklinkTrigger(rawQuery, definition.symbol)
+        : parseQueryTrigger(rawQuery, definition.symbol);
     return {
       mode: definition.mode,
       query: parsed.query,
@@ -130,14 +131,10 @@ export function parseTriggerInput(
   return null;
 }
 
-export function matchesTriggerConstraints(
-  command: CommandDescriptor,
-  mode: CommandMode,
-): boolean {
+export function matchesTriggerConstraints(command: CommandDescriptor, mode: CommandMode): boolean {
   if (mode === QUICKLINK_TRIGGER_MODE) {
     return (
-      command.id.startsWith("quicklinks.") ||
-      QUICKLINK_TRIGGER_ALLOWED_COMMAND_IDS.has(command.id)
+      command.id.startsWith("quicklinks.") || QUICKLINK_TRIGGER_ALLOWED_COMMAND_IDS.has(command.id)
     );
   }
 

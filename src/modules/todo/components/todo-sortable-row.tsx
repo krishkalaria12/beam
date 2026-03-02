@@ -1,9 +1,7 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Check, Circle, GripVertical, MoreHorizontal, Trash2 } from "lucide-react";
+import { Check, GripVertical, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,7 +9,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import type { TodoWithSubTodos } from "@/modules/todo/types";
 
@@ -22,6 +19,7 @@ interface TodoSortableRowProps {
   isEditing: boolean;
   editingTitle: string;
   isBusy: boolean;
+  index: number;
   onSelect: (todoId: string) => void;
   onToggle: (todo: TodoWithSubTodos) => void;
   onDelete: (todoId: string) => void;
@@ -38,6 +36,7 @@ export function TodoSortableRow({
   isEditing,
   editingTitle,
   isBusy,
+  index,
   onSelect,
   onToggle,
   onDelete,
@@ -50,106 +49,143 @@ export function TodoSortableRow({
     id: todo.id,
   });
 
+  const progress =
+    todo.sub_todos.length > 0 ? Math.round((subTodoCompleted / todo.sub_todos.length) * 100) : 0;
+
   return (
     <div
       ref={setNodeRef}
       style={{
         transform: CSS.Transform.toString(transform),
         transition,
+        animationDelay: `${index * 30}ms`,
       }}
       onClick={() => onSelect(todo.id)}
       className={cn(
-        "group w-full rounded-none border px-3 py-2 text-left transition-colors",
-        isSelected
-          ? "border-primary/30 bg-primary/8"
-          : "border-transparent bg-background/20 hover:border-border/60 hover:bg-background/35",
-        isDragging && "opacity-60",
+        "todo-row-enter group relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-200 cursor-pointer",
+        isSelected ? "bg-white/[0.06] ring-1 ring-white/20" : "hover:bg-white/[0.04]",
+        isDragging && "opacity-50 scale-[0.98]",
       )}
     >
-      <div className="flex items-start gap-2">
-        <button
-          type="button"
-          className="mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded border border-transparent text-muted-foreground hover:border-border/70 hover:text-foreground"
-          aria-label="Reorder todo"
-          onClick={(event) => event.stopPropagation()}
-          {...attributes}
-          {...listeners}
-        >
-          <GripVertical className="size-3.5" />
-        </button>
+      {/* Left accent bar */}
+      <div
+        className={cn(
+          "absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full transition-all duration-200",
+          isSelected
+            ? "bg-[var(--solid-accent,#4ea2ff)] opacity-100"
+            : "bg-white/40 opacity-0 group-hover:opacity-100",
+        )}
+      />
 
-        <Checkbox
-          checked={todo.completed}
-          onCheckedChange={() => onToggle(todo)}
-          onClick={(event) => event.stopPropagation()}
-          className="mt-0.5"
-        />
+      {/* Drag handle */}
+      <button
+        type="button"
+        className="flex size-6 shrink-0 items-center justify-center rounded-md text-white/30 transition-colors hover:bg-white/[0.06] hover:text-white/50"
+        aria-label="Reorder todo"
+        onClick={(event) => event.stopPropagation()}
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className="size-3.5" />
+      </button>
 
-        <div className="min-w-0 flex-1" onClick={(event) => event.stopPropagation()}>
-          {isEditing ? (
-            <Input
-              autoFocus
-              value={editingTitle}
-              disabled={isBusy}
-              onChange={(event) => onEditingTitleChange(event.target.value)}
-              onBlur={onSubmitEdit}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  event.preventDefault();
-                  onSubmitEdit();
-                } else if (event.key === "Escape") {
-                  event.preventDefault();
-                  onCancelEdit();
-                }
-              }}
-              className="h-7"
-            />
-          ) : (
+      {/* Custom checkbox */}
+      <button
+        type="button"
+        onClick={(event) => {
+          event.stopPropagation();
+          onToggle(todo);
+        }}
+        className={cn(
+          "flex size-5 shrink-0 items-center justify-center rounded-full transition-all duration-200",
+          todo.completed
+            ? "bg-[var(--solid-accent,#4ea2ff)] shadow-lg shadow-[var(--solid-accent,#4ea2ff)]/30"
+            : "ring-2 ring-white/20 hover:ring-white/40",
+        )}
+        aria-label={todo.completed ? "Mark incomplete" : "Mark complete"}
+      >
+        {todo.completed && <Check className="size-3 text-white" strokeWidth={3} />}
+      </button>
+
+      {/* Content */}
+      <div className="min-w-0 flex-1" onClick={(event) => event.stopPropagation()}>
+        {isEditing ? (
+          <input
+            autoFocus
+            value={editingTitle}
+            disabled={isBusy}
+            onChange={(event) => onEditingTitleChange(event.target.value)}
+            onBlur={onSubmitEdit}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                onSubmitEdit();
+              } else if (event.key === "Escape") {
+                event.preventDefault();
+                onCancelEdit();
+              }
+            }}
+            className="w-full bg-transparent text-[13px] font-medium tracking-[-0.01em] text-white/90 outline-none placeholder:text-white/30"
+          />
+        ) : (
+          <div>
             <p
               className={cn(
-                "truncate text-sm font-medium",
-                todo.completed && "text-muted-foreground line-through",
+                "truncate text-[13px] font-medium tracking-[-0.01em] transition-colors",
+                todo.completed ? "text-white/40 line-through" : "text-white/90",
               )}
               onDoubleClick={() => onStartEdit(todo)}
               title="Double-click to rename"
             >
               {todo.title}
             </p>
-          )}
-          <p className="mt-0.5 text-[11px] text-muted-foreground">
-            {subTodoCompleted}/{todo.sub_todos.length} subtasks done
-          </p>
-        </div>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            render={(
-              <Button
-                variant="ghost"
-                size="icon-xs"
-                type="button"
-                className="opacity-70 group-hover:opacity-100"
-                onClick={(event) => event.stopPropagation()}
-                aria-label="Todo actions"
-              >
-                <MoreHorizontal className="size-4" />
-              </Button>
-            )}
-          />
-          <DropdownMenuContent align="end" className="w-44">
-            <DropdownMenuItem onClick={() => onStartEdit(todo)}>Rename</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onToggle(todo)}>
-              {todo.completed ? <Circle className="size-3.5" /> : <Check className="size-3.5" />}
-              {todo.completed ? "Mark incomplete" : "Mark complete"}
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem variant="destructive" onClick={() => onDelete(todo.id)}>
-              <Trash2 className="size-3.5" />
-              Delete todo
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+            <div className="mt-1 flex items-center gap-2">
+              <span className="text-[11px] text-white/40">
+                {subTodoCompleted}/{todo.sub_todos.length} subtasks
+              </span>
+              {todo.sub_todos.length > 0 && (
+                <div className="flex h-1 w-12 overflow-hidden rounded-full bg-white/10">
+                  <div
+                    className="h-full rounded-full bg-[var(--solid-accent,#4ea2ff)] transition-all duration-300"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* Actions dropdown */}
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <button
+              type="button"
+              className="flex size-7 items-center justify-center rounded-lg text-white/30 opacity-0 transition-all hover:bg-white/[0.06] hover:text-white/50 group-hover:opacity-100"
+              onClick={(event) => event.stopPropagation()}
+              aria-label="Todo actions"
+            >
+              <MoreHorizontal className="size-4" />
+            </button>
+          }
+        />
+        <DropdownMenuContent align="end" className="w-44">
+          <DropdownMenuItem onClick={() => onStartEdit(todo)}>
+            <Pencil className="size-3.5" />
+            Rename
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => onToggle(todo)}>
+            <Check className="size-3.5" />
+            {todo.completed ? "Mark incomplete" : "Mark complete"}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem variant="destructive" onClick={() => onDelete(todo.id)}>
+            <Trash2 className="size-3.5" />
+            Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 }

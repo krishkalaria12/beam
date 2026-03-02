@@ -83,8 +83,12 @@ export async function githubSearchIssuesAndPullRequests(request: {
 }): Promise<GithubSearchIssuesResponse> {
   assertGithubDesktopRuntime();
   try {
-    return await invoke<GithubSearchIssuesResponse>("github_search_issues_and_pull_requests", { request });
+    return await invoke<GithubSearchIssuesResponse>("github_search_issues_and_pull_requests", {
+      request,
+    });
   } catch (error) {
-    throw new Error(getInvokeErrorMessage(error, "Failed to search GitHub issues and pull requests."));
+    throw new Error(
+      getInvokeErrorMessage(error, "Failed to search GitHub issues and pull requests."),
+    );
   }
 }

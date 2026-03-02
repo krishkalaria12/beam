@@ -1,9 +1,7 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Check, Circle, GripVertical, MoreHorizontal, Trash2 } from "lucide-react";
+import { Check, GripVertical, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,7 +9,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import type { SubTodo } from "@/modules/todo/types";
 
@@ -20,6 +17,7 @@ interface SubTodoSortableRowProps {
   isEditing: boolean;
   editingTitle: string;
   isBusy: boolean;
+  index: number;
   onToggle: (subTodo: SubTodo) => void;
   onDelete: (subTodoId: string) => void;
   onStartEdit: (subTodo: SubTodo) => void;
@@ -33,6 +31,7 @@ export function SubTodoSortableRow({
   isEditing,
   editingTitle,
   isBusy,
+  index,
   onToggle,
   onDelete,
   onStartEdit,
@@ -50,27 +49,47 @@ export function SubTodoSortableRow({
       style={{
         transform: CSS.Transform.toString(transform),
         transition,
+        animationDelay: `${index * 25}ms`,
       }}
       className={cn(
-        "flex items-center gap-2 rounded-none border border-transparent bg-background/15 px-3 py-2 hover:border-border/50 hover:bg-background/30",
-        isDragging && "opacity-60",
+        "todo-subtask-enter group relative flex items-center gap-3 rounded-lg px-3 py-2 transition-all duration-200",
+        "hover:bg-white/[0.04]",
+        isDragging && "opacity-50 scale-[0.98]",
       )}
     >
+      {/* Left accent bar on hover */}
+      <div className="absolute left-0 top-1/2 h-4 w-[2px] -translate-y-1/2 rounded-full bg-white/40 opacity-0 transition-all duration-200 group-hover:opacity-100" />
+
+      {/* Drag handle */}
       <button
         type="button"
-        className="inline-flex size-5 shrink-0 items-center justify-center rounded border border-transparent text-muted-foreground hover:border-border/70 hover:text-foreground"
+        className="flex size-5 shrink-0 items-center justify-center rounded text-white/25 transition-colors hover:bg-white/[0.06] hover:text-white/45"
         aria-label="Reorder subtask"
         {...attributes}
         {...listeners}
       >
-        <GripVertical className="size-3.5" />
+        <GripVertical className="size-3" />
       </button>
 
-      <Checkbox checked={subTodo.completed} onCheckedChange={() => onToggle(subTodo)} />
+      {/* Custom checkbox - smaller for subtasks */}
+      <button
+        type="button"
+        onClick={() => onToggle(subTodo)}
+        className={cn(
+          "flex size-4 shrink-0 items-center justify-center rounded transition-all duration-200",
+          subTodo.completed
+            ? "bg-[var(--solid-accent,#4ea2ff)] shadow-md shadow-[var(--solid-accent,#4ea2ff)]/25"
+            : "ring-[1.5px] ring-white/20 hover:ring-white/40",
+        )}
+        aria-label={subTodo.completed ? "Mark incomplete" : "Mark complete"}
+      >
+        {subTodo.completed && <Check className="size-2.5 text-white" strokeWidth={3} />}
+      </button>
 
+      {/* Content */}
       <div className="min-w-0 flex-1">
         {isEditing ? (
-          <Input
+          <input
             autoFocus
             value={editingTitle}
             disabled={isBusy}
@@ -85,13 +104,13 @@ export function SubTodoSortableRow({
                 onCancelEdit();
               }
             }}
-            className="h-7"
+            className="w-full bg-transparent text-[12px] text-white/80 outline-none placeholder:text-white/30"
           />
         ) : (
           <p
             className={cn(
-              "truncate text-sm",
-              subTodo.completed && "text-muted-foreground line-through",
+              "truncate text-[12px] transition-colors",
+              subTodo.completed ? "text-white/35 line-through" : "text-white/70",
             )}
             onDoubleClick={() => onStartEdit(subTodo)}
             title="Double-click to rename"
@@ -101,24 +120,32 @@ export function SubTodoSortableRow({
         )}
       </div>
 
+      {/* Actions dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger
-          render={(
-            <Button variant="ghost" size="icon-xs" type="button" aria-label="Subtask actions">
-              <MoreHorizontal className="size-4" />
-            </Button>
-          )}
+          render={
+            <button
+              type="button"
+              className="flex size-6 items-center justify-center rounded-md text-white/25 opacity-0 transition-all hover:bg-white/[0.06] hover:text-white/45 group-hover:opacity-100"
+              aria-label="Subtask actions"
+            >
+              <MoreHorizontal className="size-3.5" />
+            </button>
+          }
         />
-        <DropdownMenuContent align="end" className="w-44">
-          <DropdownMenuItem onClick={() => onStartEdit(subTodo)}>Rename</DropdownMenuItem>
+        <DropdownMenuContent align="end" className="w-40">
+          <DropdownMenuItem onClick={() => onStartEdit(subTodo)}>
+            <Pencil className="size-3.5" />
+            Rename
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={() => onToggle(subTodo)}>
-            {subTodo.completed ? <Circle className="size-3.5" /> : <Check className="size-3.5" />}
+            <Check className="size-3.5" />
             {subTodo.completed ? "Mark incomplete" : "Mark complete"}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem variant="destructive" onClick={() => onDelete(subTodo.id)}>
             <Trash2 className="size-3.5" />
-            Delete subtask
+            Delete
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

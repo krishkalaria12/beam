@@ -49,4 +49,3 @@ export const DEFAULT_COMMAND_RANKING_CONFIG: CommandRankingConfig = {
     usageCountCap: 20,
   },
 };
-

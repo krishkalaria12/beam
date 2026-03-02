@@ -1,9 +1,7 @@
 import { ImageIcon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
-import {
-  resolveLucideIconByToken,
-} from "@/components/icons/icon-registry";
+import { resolveLucideIconByToken } from "@/components/icons/icon-registry";
 import {
   ensurePhosphorIconByToken,
   getCachedPhosphorIconByToken,
@@ -28,9 +26,9 @@ interface ImageLikeObject {
 function isThemeableValue(value: unknown): value is ThemeableValue {
   return Boolean(
     value &&
-      typeof value === "object" &&
-      typeof (value as ThemeableValue).light === "string" &&
-      typeof (value as ThemeableValue).dark === "string",
+    typeof value === "object" &&
+    typeof (value as ThemeableValue).light === "string" &&
+    typeof (value as ThemeableValue).dark === "string",
   );
 }
 
@@ -43,8 +41,8 @@ function resolveThemeableValue(value: string | ThemeableValue | undefined): stri
     return value;
   }
 
-  const prefersDark = typeof window !== "undefined" &&
-    window.matchMedia?.("(prefers-color-scheme: dark)").matches;
+  const prefersDark =
+    typeof window !== "undefined" && window.matchMedia?.("(prefers-color-scheme: dark)").matches;
 
   return prefersDark ? value.dark : value.light;
 }
@@ -95,7 +93,12 @@ function isEmojiOrSymbol(value: string): boolean {
     return false;
   }
 
-  if (value.startsWith("data:") || value.startsWith("http") || value.startsWith("asset:") || value.startsWith("tauri://")) {
+  if (
+    value.startsWith("data:") ||
+    value.startsWith("http") ||
+    value.startsWith("asset:") ||
+    value.startsWith("tauri://")
+  ) {
     return false;
   }
 
@@ -112,7 +115,8 @@ function resolveDirectImageSource(rawValue: string): string | null {
     return null;
   }
 
-  const looksLikePath = value.startsWith("http://") ||
+  const looksLikePath =
+    value.startsWith("http://") ||
     value.startsWith("https://") ||
     value.startsWith("data:") ||
     value.startsWith("file://") ||

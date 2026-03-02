@@ -45,13 +45,16 @@ export function useSystemAction() {
     },
   });
 
-  const runSystemAction = useCallback((action: SystemAction) => {
-    if (mutation.isPending && runningAction === action) {
-      return;
-    }
+  const runSystemAction = useCallback(
+    (action: SystemAction) => {
+      if (mutation.isPending && runningAction === action) {
+        return;
+      }
 
-    mutation.mutate(action);
-  }, [mutation, runningAction]);
+      mutation.mutate(action);
+    },
+    [mutation, runningAction],
+  );
 
   return {
     runSystemAction,

@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 
 import { createDefaultCommandProviders } from "@/command-registry/default-providers";
-import {
-  hasStrongRegistryMatch,
-  isFallbackMode,
-} from "@/command-registry/fallback-commands";
+import { hasStrongRegistryMatch, isFallbackMode } from "@/command-registry/fallback-commands";
 import { createCommandProviderOrchestrator } from "@/command-registry/providers";
-import { rankCommands, type CommandRankingSignals, type RankedCommand } from "@/command-registry/ranker";
+import {
+  rankCommands,
+  type CommandRankingSignals,
+  type RankedCommand,
+} from "@/command-registry/ranker";
 import { staticCommandRegistry } from "@/command-registry/registry";
 import { resolveStaticCommandCandidates } from "@/command-registry/static-candidates";
 import { logProviderResolution } from "@/command-registry/telemetry";

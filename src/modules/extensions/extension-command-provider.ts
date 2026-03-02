@@ -84,10 +84,9 @@ function matchPlugin(plugin: PluginInfo, query: string): boolean {
 
 function toCommandMetadata(plugin: PluginInfo): ExtensionCommandMetadata {
   const title = plugin.title.trim() || plugin.commandName.trim() || plugin.pluginName.trim();
-  const subtitleParts = [
-    plugin.pluginTitle.trim(),
-    plugin.description?.trim() ?? "",
-  ].filter((part) => part.length > 0);
+  const subtitleParts = [plugin.pluginTitle.trim(), plugin.description?.trim() ?? ""].filter(
+    (part) => part.length > 0,
+  );
   const iconReference = resolveExtensionIconReference(plugin.icon);
 
   return {

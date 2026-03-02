@@ -1,4 +1,4 @@
-import githubLogo from "@/assets/icons/github.png";
+import githubLogo from "@/assets/icons/github.jpg";
 import { useCommandState } from "cmdk";
 import { GitPullRequest, Github } from "lucide-react";
 
@@ -63,12 +63,12 @@ export default function GithubCommandGroup({
         icon={<CommandIcon icon={`app-icon:${githubLogo}`} />}
         title="GitHub workspace"
         titleClassName="truncate text-foreground capitalize"
-        endSlot={(
+        endSlot={
           <div className="ml-auto flex items-center gap-2">
             <GitPullRequest className="size-3.5 text-muted-foreground/60" />
             <CommandShortcut>prs</CommandShortcut>
           </div>
-        )}
+        }
         subtitle="Assigned issues, PR search, and quick open"
       />
 
@@ -78,12 +78,12 @@ export default function GithubCommandGroup({
         icon={<CommandIcon icon={`app-icon:${githubLogo}`} />}
         title="Connect GitHub"
         titleClassName="truncate text-foreground capitalize"
-        endSlot={(
+        endSlot={
           <div className="ml-auto flex items-center gap-2">
             <Github className="size-3.5 text-muted-foreground/60" />
             <CommandShortcut>oauth</CommandShortcut>
           </div>
-        )}
+        }
       />
     </CommandGroup>
   );

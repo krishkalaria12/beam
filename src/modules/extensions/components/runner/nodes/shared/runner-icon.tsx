@@ -13,7 +13,7 @@ export function RunnerIcon({ icon, className }: RunnerIconProps) {
     <UnifiedIcon
       icon={icon}
       className={className}
-      fallback={(
+      fallback={
         <span
           className={cn(
             "inline-flex items-center justify-center rounded-sm bg-muted/40 text-muted-foreground",
@@ -23,7 +23,7 @@ export function RunnerIcon({ icon, className }: RunnerIconProps) {
         >
           <ImageIcon className="size-3.5" />
         </span>
-      )}
+      }
     />
   );
 }

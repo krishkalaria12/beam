@@ -52,9 +52,7 @@
     "name": "다카"
   },
   {
-    "aliases": [
-      "Korea"
-    ],
+    "aliases": ["Korea"],
     "identifier": "seoul",
     "name": "서울"
   },
@@ -160,9 +158,7 @@
     "name": "벵갈루루"
   },
   {
-    "aliases": [
-      "St. Petersburg"
-    ],
+    "aliases": ["St. Petersburg"],
     "identifier": "saint petersburg",
     "name": "상트페테르부르크"
   },
@@ -295,9 +291,7 @@
     "name": "제다"
   },
   {
-    "aliases": [
-      "Kyiv"
-    ],
+    "aliases": ["Kyiv"],
     "identifier": "kyiv",
     "name": "키이우"
   },
@@ -706,10 +700,7 @@
     "name": "브라자빌"
   },
   {
-    "aliases": [
-      "Nizhny Novgorod",
-      "Nizhny"
-    ],
+    "aliases": ["Nizhny Novgorod", "Nizhny"],
     "identifier": "nizhniy novgorod",
     "name": "니즈니노브고로드"
   },
@@ -854,9 +845,7 @@
     "name": "캘거리"
   },
   {
-    "aliases": [
-      "Europe"
-    ],
+    "aliases": ["Europe"],
     "identifier": "brussels",
     "name": "브뤼셀"
   },
@@ -998,9 +987,7 @@
     "name": "마라케시"
   },
   {
-    "aliases": [
-      "Bali"
-    ],
+    "aliases": ["Bali"],
     "identifier": "denpasar",
     "name": "덴파사르"
   },
@@ -1217,9 +1204,7 @@
     "name": "멤피스"
   },
   {
-    "aliases": [
-      "Frankfurt"
-    ],
+    "aliases": ["Frankfurt"],
     "identifier": "frankfurt am main",
     "name": "프랑크푸르트암마인"
   },
@@ -1372,9 +1357,7 @@
     "name": "케르만"
   },
   {
-    "aliases": [
-      "düsseldorf"
-    ],
+    "aliases": ["düsseldorf"],
     "identifier": "dusseldorf",
     "name": "뒤셀도르프"
   },
@@ -1459,9 +1442,7 @@
     "name": "아스트라한"
   },
   {
-    "aliases": [
-      "nürnberg"
-    ],
+    "aliases": ["nürnberg"],
     "identifier": "nuremberg",
     "name": "뉘른베르크"
   },
@@ -2162,9 +2143,7 @@
     "name": "리마"
   },
   {
-    "aliases": [
-      "Apple Park"
-    ],
+    "aliases": ["Apple Park"],
     "identifier": "cupertino",
     "name": "쿠퍼티노"
   },

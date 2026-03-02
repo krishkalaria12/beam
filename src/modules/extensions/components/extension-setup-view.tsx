@@ -107,7 +107,9 @@ export function ExtensionSetupView({
           name={field.name}
           children={(fieldApi) => (
             <div className="space-y-1.5">
-              <Label htmlFor={field.name} className="text-xs font-medium text-muted-foreground">{label}</Label>
+              <Label htmlFor={field.name} className="text-xs font-medium text-muted-foreground">
+                {label}
+              </Label>
               <Select
                 value={toInputValue(fieldApi.state.value)}
                 onValueChange={(nextValue) => {
@@ -157,7 +159,10 @@ export function ExtensionSetupView({
                   onKeyDown={stopFieldKeyPropagation}
                   className="border-border/40 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
                 />
-                <Label htmlFor={field.name} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                <Label
+                  htmlFor={field.name}
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
                   {label}
                 </Label>
               </div>
@@ -177,7 +182,9 @@ export function ExtensionSetupView({
           name={field.name}
           children={(fieldApi) => (
             <div className="space-y-1.5">
-              <Label htmlFor={field.name} className="text-xs font-medium text-muted-foreground">{label}</Label>
+              <Label htmlFor={field.name} className="text-xs font-medium text-muted-foreground">
+                {label}
+              </Label>
               <Textarea
                 id={field.name}
                 value={toInputValue(fieldApi.state.value)}
@@ -204,7 +211,9 @@ export function ExtensionSetupView({
         name={field.name}
         children={(fieldApi) => (
           <div className="space-y-1.5">
-            <Label htmlFor={field.name} className="text-xs font-medium text-muted-foreground">{label}</Label>
+            <Label htmlFor={field.name} className="text-xs font-medium text-muted-foreground">
+              {label}
+            </Label>
             <Input
               id={field.name}
               type={field.type === "password" ? "password" : "text"}
@@ -269,7 +278,7 @@ export function ExtensionSetupView({
       <CommandFooterBar
         className="h-[52px]"
         leftSlot={<span>Preferences are saved locally.</span>}
-        rightSlot={(
+        rightSlot={
           <>
             <CommandKeyHint keyLabel="ESC" label="Back" />
             <Button
@@ -279,11 +288,15 @@ export function ExtensionSetupView({
               disabled={!canSave}
               className="h-8 gap-1.5 rounded-lg bg-primary/90 hover:bg-primary"
             >
-              {isSaving ? <Loader2 className="size-3.5 animate-spin" /> : <Save className="size-3.5" />}
+              {isSaving ? (
+                <Loader2 className="size-3.5 animate-spin" />
+              ) : (
+                <Save className="size-3.5" />
+              )}
               Save Setup
             </Button>
           </>
-        )}
+        }
       />
     </div>
   );

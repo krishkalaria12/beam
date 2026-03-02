@@ -1,0 +1,261 @@
+/* phase 3 loading states and transitions styles */
+
+/* Skeleton shimmer animation */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--command-item-hover-bg) 0%,
+    var(--command-item-selected-bg) 50%,
+    var(--command-item-hover-bg) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Solid theme skeleton - uses opaque colors */
+.sc-solid .skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--solid-hover-bg) 0%,
+    var(--solid-selected-bg) 50%,
+    var(--solid-hover-bg) 100%
+  );
+  background-size: 200% 100%;
+}
+
+/* Smooth theme transitions */
+.theme-transition,
+.theme-transition * {
+  transition:
+    background-color 180ms ease,
+    color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease !important;
+}
+
+/* Panel slide transitions */
+.panel-enter {
+  opacity: 0;
+  transform: translateX(8px);
+}
+
+.panel-enter-active {
+  opacity: 1;
+  transform: translateX(0);
+  transition: all 200ms ease-out;
+}
+
+.panel-exit {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.panel-exit-active {
+  opacity: 0;
+  transform: translateX(-8px);
+  transition: all 150ms ease-in;
+}
+
+/* Fade transition */
+.fade-enter {
+  opacity: 0;
+}
+
+.fade-enter-active {
+  opacity: 1;
+  transition: opacity 150ms ease-out;
+}
+
+.fade-exit {
+  opacity: 1;
+}
+
+.fade-exit-active {
+  opacity: 0;
+  transition: opacity 100ms ease-in;
+}
+
+/* Scale-fade transition for modals/popovers */
+.scale-fade-enter {
+  opacity: 0;
+  transform: scale(0.96);
+}
+
+.scale-fade-enter-active {
+  opacity: 1;
+  transform: scale(1);
+  transition: all 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.scale-fade-exit {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.scale-fade-exit-active {
+  opacity: 0;
+  transform: scale(0.96);
+  transition: all 100ms ease-in;
+}
+
+/* phase 4 typography and spacing styles */
+
+/* Footer keyboard badges - unified sizing */
+.footer-kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  font-size: 11px;
+  font-weight: 500;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  background: var(--kbd-bg);
+  border-radius: 5px;
+  color: var(--muted-foreground);
+}
+
+.sc-solid .footer-kbd {
+  background: var(--solid-kbd-bg);
+  border: 1px solid var(--solid-kbd-border);
+  color: var(--solid-kbd-text);
+}
+
+/* Section dividers */
+.section-divider {
+  height: 1px;
+  background: var(--ui-divider);
+  margin: 8px 16px;
+}
+
+/* phase 5 component polish styles */
+
+/* Scrollbar hidden until hover - for action menus and sidebars */
+.scrollbar-hidden-until-hover {
+  scrollbar-color: transparent transparent;
+}
+
+.scrollbar-hidden-until-hover::-webkit-scrollbar-thumb {
+  background: transparent;
+}
+
+.scrollbar-hidden-until-hover:hover {
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+
+.scrollbar-hidden-until-hover:hover::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+}
+
+/* Focus ring utilities */
+.focus-ring {
+  outline: none;
+}
+
+.focus-ring:focus-visible {
+  box-shadow: 0 0 0 2px var(--ring);
+}
+
+.focus-ring-inset:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--ring);
+}
+
+/* Button ghost hover states */
+.btn-ghost {
+  background: transparent;
+  transition: all 120ms ease;
+}
+
+.btn-ghost:hover {
+  background: var(--command-item-hover-bg);
+}
+
+.btn-ghost:active {
+  background: var(--command-item-selected-bg);
+}
+
+.sc-solid .btn-ghost:hover {
+  background: var(--solid-hover-bg);
+}
+
+.sc-solid .btn-ghost:active {
+  background: var(--solid-selected-bg);
+}
+
+/* Icon button - small interactive icon */
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  color: var(--muted-foreground);
+  transition: all 120ms ease;
+}
+
+.btn-icon:hover {
+  background: var(--command-item-hover-bg);
+  color: var(--foreground);
+}
+
+.btn-icon:active {
+  background: var(--command-item-selected-bg);
+}
+
+.sc-solid .btn-icon:hover {
+  background: var(--solid-hover-bg);
+}
+
+.sc-solid .btn-icon:active {
+  background: var(--solid-selected-bg);
+}
+
+/* Text truncation utilities */
+.truncate-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.truncate-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Subtle text link */
+.text-link {
+  color: var(--solid-accent, #4ea2ff);
+  text-decoration: none;
+  transition: color 120ms ease;
+}
+
+.text-link:hover {
+  color: var(--solid-accent-hover, #6bb4ff);
+  text-decoration: underline;
+}
+
+/* Selection highlight */
+::selection {
+  background: rgba(78, 162, 255, 0.3);
+  color: inherit;
+}
+
+/* Ensure footer has proper z-index */
+.sc-glass-footer {
+  position: relative;
+  z-index: 10;
+}

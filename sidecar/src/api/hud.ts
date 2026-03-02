@@ -1,8 +1,8 @@
-import { writeOutput } from '../io';
+import { writeOutput } from "../io";
 
 export async function showHUD(title: string): Promise<void> {
-	writeOutput({
-		type: 'SHOW_HUD',
-		payload: { title }
-	});
+  writeOutput({
+    type: "SHOW_HUD",
+    payload: { title },
+  });
 }

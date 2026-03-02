@@ -1,13 +1,8 @@
-import { BookOpen, Search, Copy, Check, Info, AlertCircle, Loader2 } from "lucide-react";
+import { ArrowLeft, BookOpen, Search, Copy, Check, AlertCircle, Loader2 } from "lucide-react";
 import { useEffect, useRef, useState, useMemo } from "react";
 import { useDictionary } from "../hooks/use-dictionary";
 import { DictionarySkeleton } from "./dictionary-skeleton";
 import { SenseCard } from "./definition-card";
-import { CommandFooterBar } from "@/components/command/command-footer-bar";
-import { CommandPanelBackButton, CommandPanelHeader } from "@/components/command/command-panel-header";
-import { CommandKeyHint } from "@/components/command/command-key-hint";
-import { Button } from "@/components/ui/button";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import debounce from "@/lib/debounce";
 import { cn } from "@/lib/utils";
 
@@ -26,7 +21,7 @@ export function DictionaryView({ initialQuery, onBack }: DictionaryViewProps) {
   // Debounce the query update
   const updateDebouncedQuery = useMemo(
     () => debounce((value: string) => setDebouncedQuery(value), 300),
-    []
+    [],
   );
 
   // Only fetch data with debounced query
@@ -119,21 +114,26 @@ export function DictionaryView({ initialQuery, onBack }: DictionaryViewProps) {
   }
 
   return (
-    <div className="glass-effect flex h-full w-full flex-col text-foreground">
-      <CommandPanelHeader>
-        <CommandPanelBackButton onClick={onBack} aria-label="Back" />
+    <div className="dictionary-view-enter flex h-full w-full flex-col text-white">
+      {/* Header */}
+      <header className="dictionary-header-enter flex h-14 shrink-0 items-center gap-3 border-b border-white/[0.06] px-4">
+        <button
+          type="button"
+          onClick={onBack}
+          className="flex size-9 items-center justify-center rounded-lg bg-white/[0.03] text-white/40 transition-all duration-200 hover:bg-white/[0.06] hover:text-white/70"
+          aria-label="Back"
+        >
+          <ArrowLeft className="size-4" />
+        </button>
 
-        <InputGroup className="h-9 flex-1 rounded-full border-none bg-background/20 px-1">
-          <InputGroupAddon align="inline-start" className="pl-3">
-            <Search className="size-4 text-muted-foreground/50" />
-          </InputGroupAddon>
-          <InputGroupInput
+        <div className="relative flex-1">
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-white/30" />
+          <input
             ref={inputRef}
             type="text"
             value={query}
             onChange={handleInputChange}
             onKeyDown={(e) => {
-              // Priority for arrow keys to avoid default input behavior or parent suppression
               if (e.key === "ArrowDown" || e.key === "ArrowUp") {
                 handleKeyDown(e);
               } else {
@@ -141,54 +141,58 @@ export function DictionaryView({ initialQuery, onBack }: DictionaryViewProps) {
               }
             }}
             placeholder="Search word..."
-            className="text-sm"
+            className={cn(
+              "h-10 w-full rounded-xl bg-white/[0.04] pl-10 pr-3 text-[14px] text-white/90 placeholder:text-white/30",
+              "ring-1 ring-white/[0.06] transition-all duration-200",
+              "focus:outline-none focus:ring-[var(--solid-accent,#4ea2ff)]",
+            )}
           />
           {isLoading && (
-            <InputGroupAddon align="inline-end" className="pr-3">
-              <Loader2 className="size-3.5 animate-spin text-primary" />
-            </InputGroupAddon>
+            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+              <Loader2 className="size-4 animate-spin text-[var(--solid-accent,#4ea2ff)]" />
+            </div>
           )}
-        </InputGroup>
-      </CommandPanelHeader>
+        </div>
+      </header>
 
       {/* Content */}
-      <div ref={contentRef} className="list-area custom-scrollbar flex min-h-0 flex-1 overflow-y-auto">
+      <div
+        ref={contentRef}
+        className="dictionary-content-enter list-area custom-scrollbar flex min-h-0 flex-1 overflow-y-auto"
+      >
         {!data ? (
-          <div className="flex h-full w-full flex-col items-center justify-center p-12 text-center animate-in fade-in zoom-in-95 duration-300">
-            <div className="relative mb-6">
-              <div className="absolute inset-0 scale-150 blur-2xl opacity-10 bg-primary rounded-full" />
-              <BookOpen className="relative size-20 text-muted-foreground/20" />
+          <div className="flex h-full w-full flex-col items-center justify-center p-12 text-center">
+            <div className="mb-5 size-16 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 p-4">
+              <BookOpen className="size-full text-indigo-400/60" />
             </div>
-            
+
             {error ? (
               <>
-                <div className="mb-3 flex items-center gap-2 text-destructive">
+                <div className="mb-3 flex items-center gap-2 text-red-400">
                   <AlertCircle className="size-5" />
-                  <h3 className="text-lg font-semibold">Error loading definition</h3>
+                  <h3 className="text-[14px] font-semibold">Error loading definition</h3>
                 </div>
-                <p className="max-w-xs text-sm text-muted-foreground">
-                  {error.message}
-                </p>
+                <p className="max-w-xs text-[12px] text-white/40">{error.message}</p>
               </>
             ) : isLoading ? (
               <>
-                <h3 className="mb-2 text-lg font-semibold text-foreground">Searching...</h3>
-                <p className="text-sm text-muted-foreground">Finding the perfect definition for you.</p>
+                <h3 className="mb-2 text-[14px] font-semibold text-white/80">Searching...</h3>
+                <p className="text-[12px] text-white/40">Finding the perfect definition for you.</p>
               </>
             ) : (
               <>
-                <h3 className="mb-2 text-lg font-semibold text-foreground">
+                <h3 className="mb-2 text-[14px] font-semibold text-white/80">
                   {query.trim() ? "Word not found" : "Dictionary"}
                 </h3>
-                <p className="max-w-xs text-sm text-muted-foreground">
+                <p className="max-w-xs text-[12px] text-white/40">
                   {query.trim()
                     ? `We couldn't find "${query.trim()}" in our database.`
                     : "Type a word above to explore its meanings, synonyms, and more."}
                 </p>
                 {query.trim() && (
-                  <Button 
-                    variant="link" 
-                    className="mt-4 text-primary"
+                  <button
+                    type="button"
+                    className="mt-4 text-[12px] font-medium text-[var(--solid-accent,#4ea2ff)] transition-colors hover:text-[var(--solid-accent,#4ea2ff)]/80"
                     onClick={() => {
                       setQuery("");
                       setDebouncedQuery("");
@@ -196,67 +200,69 @@ export function DictionaryView({ initialQuery, onBack }: DictionaryViewProps) {
                     }}
                   >
                     Clear search
-                  </Button>
+                  </button>
                 )}
               </>
             )}
           </div>
         ) : (
-          <div className="w-full p-6 space-y-8 animate-in slide-in-from-bottom-2 duration-500">
+          <div className="w-full space-y-6 p-5">
             {/* Word Header */}
-            <div className="flex items-end justify-between pb-2">
+            <div className="flex items-end justify-between pb-3">
               <div className="space-y-1">
                 <div className="flex items-center gap-3">
-                  <h2 className="text-4xl font-extrabold tracking-tight capitalize text-foreground">
+                  <h2 className="text-[28px] font-bold tracking-[-0.02em] capitalize text-white/95">
                     {data.word}
                   </h2>
-                  <div className="flex h-6 items-center rounded-full bg-primary/10 px-2.5 text-[10px] font-bold uppercase tracking-wider text-primary">
+                  <span className="rounded-full bg-[var(--solid-accent,#4ea2ff)]/15 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-[var(--solid-accent,#4ea2ff)]">
                     Word
-                  </div>
+                  </span>
                 </div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  {data.entries.length} meaning{data.entries.length !== 1 ? "s" : ""} • {totalSenses} sense
-                  {totalSenses !== 1 ? "s" : ""} available
+                <p className="text-[12px] text-white/40">
+                  {data.entries.length} meaning{data.entries.length !== 1 ? "s" : ""} •{" "}
+                  {totalSenses} sense
+                  {totalSenses !== 1 ? "s" : ""}
                 </p>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
+              <button
+                type="button"
                 onClick={handleCopyWord}
                 className={cn(
-                  "gap-2 rounded-full h-9 px-4 transition-all duration-300",
-                  copied && "bg-green-500/10 border-green-500/50 text-green-600 dark:text-green-400"
+                  "inline-flex h-8 items-center gap-2 rounded-lg px-3 text-[12px] font-medium transition-all duration-200",
+                  copied
+                    ? "bg-emerald-500/20 text-emerald-400"
+                    : "border border-white/[0.08] bg-white/[0.03] text-white/60 hover:bg-white/[0.06] hover:text-white/80",
                 )}
               >
                 {copied ? (
                   <>
                     <Check className="size-3.5" />
-                    <span className="text-xs font-bold uppercase tracking-wider">Copied</span>
+                    Copied
                   </>
                 ) : (
                   <>
                     <Copy className="size-3.5" />
-                    <span className="text-xs font-bold uppercase tracking-wider">Copy word</span>
+                    Copy word
                   </>
                 )}
-              </Button>
+              </button>
             </div>
 
             {/* Entries with Senses */}
-            <div className="space-y-10">
+            <div className="space-y-8">
               {data.entries.map((entry, entryIdx) => (
                 <div key={entryIdx} className="space-y-4">
                   {/* Part of Speech Header */}
                   <div className="flex items-center gap-4">
-                    <div className="h-px flex-1 bg-border/40" />
-                    <span className="text-[11px] font-black uppercase tracking-[0.2em] text-primary/70">
+                    <div className="h-px flex-1 bg-white/[0.06]" />
+                    <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--solid-accent,#4ea2ff)]/70">
                       {entry.part_of_speech}
                     </span>
-                    <div className="h-px flex-1 bg-border/40" />
+                    <div className="h-px flex-1 bg-white/[0.06]" />
                   </div>
 
                   {/* Senses */}
-                  <div className="grid gap-4">
+                  <div className="grid gap-3">
                     {entry.senses.map((sense, senseIdx) => {
                       // Calculate global sense index
                       let globalIdx = 0;
@@ -280,7 +286,7 @@ export function DictionaryView({ initialQuery, onBack }: DictionaryViewProps) {
                 </div>
               ))}
             </div>
-            
+
             {/* Bottom spacer */}
             <div className="h-4" />
           </div>
@@ -288,26 +294,31 @@ export function DictionaryView({ initialQuery, onBack }: DictionaryViewProps) {
       </div>
 
       {/* Footer */}
-      <CommandFooterBar
-        className="h-10 px-4 text-[10px] font-bold tracking-[0.1em]"
-        leftSlot={(
-          <>
-            <Info className="size-3" />
-            <span>
-              {data
-                ? `${totalSenses} sense${totalSenses !== 1 ? "s" : ""} found`
-                : "Dictionary Search"}
-            </span>
-          </>
-        )}
-        rightSlot={(
-          <>
-            <CommandKeyHint keyLabel="↑↓" label="Select" />
-            <CommandKeyHint keyLabel="ENTER" label="Copy Sense" />
-            <CommandKeyHint keyLabel="ESC" label="Back" />
-          </>
-        )}
-      />
+      <footer className="dictionary-footer-enter flex h-12 shrink-0 items-center justify-between border-t border-white/[0.06] px-4">
+        <div className="flex items-center gap-2 text-[12px] text-white/40">
+          <BookOpen className="size-3.5" />
+          <span>
+            {data
+              ? `${totalSenses} sense${totalSenses !== 1 ? "s" : ""} found`
+              : "Dictionary Search"}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-3 text-[11px] text-white/30">
+          <span>
+            <kbd className="rounded bg-white/[0.08] px-1.5 py-0.5 font-mono text-[10px]">↑↓</kbd>{" "}
+            Select
+          </span>
+          <span>
+            <kbd className="rounded bg-white/[0.08] px-1.5 py-0.5 font-mono text-[10px]">Enter</kbd>{" "}
+            Copy
+          </span>
+          <span>
+            <kbd className="rounded bg-white/[0.08] px-1.5 py-0.5 font-mono text-[10px]">Esc</kbd>{" "}
+            Back
+          </span>
+        </div>
+      </footer>
     </div>
   );
 }

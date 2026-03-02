@@ -30,8 +30,8 @@ export function FormCheckboxNode({ nodeId, state }: RunnerNodeComponentProps) {
           }}
           checked={Boolean(value)}
           onCheckedChange={(checked) => {
-              state.handleSetFormValue(field, Boolean(checked));
-            }}
+            state.handleSetFormValue(field, Boolean(checked));
+          }}
           onBlur={() => {
             state.handleBlurFormField(field);
           }}

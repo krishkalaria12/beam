@@ -2,7 +2,11 @@ import {
   resolveCommandCandidates,
   type CommandCandidatesResult,
 } from "@/command-registry/candidates";
-import { rankCommands, type CommandRankingSignals, type RankedCommand } from "@/command-registry/ranker";
+import {
+  rankCommands,
+  type CommandRankingSignals,
+  type RankedCommand,
+} from "@/command-registry/ranker";
 import type { CommandContext } from "@/command-registry/types";
 import type { CommandRankingConfig } from "@/command-registry/ranking-config";
 import type { StaticCommandRegistry } from "@/command-registry/static-registry";
@@ -37,4 +41,3 @@ export async function resolveRankedCommandCandidates(options: {
     rankedCommands,
   };
 }
-

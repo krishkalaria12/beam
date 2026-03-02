@@ -21,7 +21,10 @@ export function hasSameOrder(current: readonly string[], next: readonly string[]
   return current.every((value, index) => value === next[index]);
 }
 
-export function orderTodos(todos: readonly TodoWithSubTodos[], order: readonly string[]): TodoWithSubTodos[] {
+export function orderTodos(
+  todos: readonly TodoWithSubTodos[],
+  order: readonly string[],
+): TodoWithSubTodos[] {
   const byId = new Map(todos.map((todo) => [todo.id, todo]));
   const ordered = order
     .map((todoId) => byId.get(todoId))

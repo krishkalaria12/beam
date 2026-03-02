@@ -13,8 +13,8 @@
     "windows": [
       {
         "title": "beam",
-        "width": 960,
-        "height": 520,
+        "width": 800,
+        "height": 580,
         "visible": false,
         "resizable": true,
         "fullscreen": false,
@@ -48,9 +48,7 @@
   "bundle": {
     "active": true,
     "targets": "all",
-    "externalBin": [
-      "binaries/app"
-    ],
+    "externalBin": ["binaries/app"],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -67,10 +65,7 @@
   "plugins": {
     "deep-link": {
       "desktop": {
-        "schemes": [
-          "beam",
-          "raycast"
-        ]
+        "schemes": ["beam", "raycast"]
       }
     }
   }

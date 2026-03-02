@@ -21,12 +21,7 @@ interface TranslationCommandGroupProps {
   queryOverride?: string;
 }
 
-const TRANSLATION_KEYWORDS = [
-  "translate",
-  "translation",
-  "language",
-  "convert text",
-] as const;
+const TRANSLATION_KEYWORDS = ["translate", "translation", "language", "convert text"] as const;
 
 export default function TranslationCommandGroup({
   isOpen,
@@ -55,16 +50,18 @@ export default function TranslationCommandGroup({
     <CommandGroup>
       <BaseCommandRow
         value="translate translation language convert text"
-        onSelect={() => onOpen(extractCommandKeywordRemainder(queryOverride ?? searchInput, TRANSLATION_KEYWORDS))}
+        onSelect={() =>
+          onOpen(extractCommandKeywordRemainder(queryOverride ?? searchInput, TRANSLATION_KEYWORDS))
+        }
         icon={<CommandIcon icon="translation" />}
         title="Translate text"
         titleClassName="truncate text-foreground capitalize"
-        endSlot={(
+        endSlot={
           <div className="ml-auto flex items-center gap-2">
             <ArrowRightLeft className="size-3.5 text-muted-foreground/60" />
             <CommandShortcut>translate</CommandShortcut>
           </div>
-        )}
+        }
       />
     </CommandGroup>
   );

@@ -47,7 +47,6 @@ interface PendingPreferenceRequest {
   timeoutId: ReturnType<typeof setTimeout>;
 }
 
-
 class ExtensionSidecarService {
   private child: Child | null = null;
   private startPromise: Promise<void> | null = null;
@@ -282,8 +281,7 @@ class ExtensionSidecarService {
             entry.commandName === requestedCommand &&
             requestedPluginName.length > 0 &&
             entry.pluginName === requestedPluginName,
-        ) ??
-        discovered.find((entry) => entry.commandName === requestedCommand);
+        ) ?? discovered.find((entry) => entry.commandName === requestedCommand);
 
       if (!command) {
         throw new Error(`command "${payload.name}" was not found`);
@@ -293,9 +291,10 @@ class ExtensionSidecarService {
         pluginPath: command.pluginPath,
         pluginMode: command.mode,
         title: command.title,
-        subtitle: [command.pluginTitle, command.description ?? ""]
-          .filter((part) => part.trim().length > 0)
-          .join(" - ") || undefined,
+        subtitle:
+          [command.pluginTitle, command.description ?? ""]
+            .filter((part) => part.trim().length > 0)
+            .join(" - ") || undefined,
       });
 
       await this.runPlugin({
@@ -322,7 +321,10 @@ class ExtensionSidecarService {
   }
 
   private sendOauthResponse(
-    action: "oauth-get-tokens-response" | "oauth-set-tokens-response" | "oauth-remove-tokens-response",
+    action:
+      | "oauth-get-tokens-response"
+      | "oauth-set-tokens-response"
+      | "oauth-remove-tokens-response",
     requestId: string,
     result?: unknown,
     error?: string,
@@ -490,8 +492,8 @@ class ExtensionSidecarService {
           creativity: payload.options?.creativity,
           model_mappings:
             payload.options &&
-              typeof payload.options.modelMappings === "object" &&
-              payload.options.modelMappings
+            typeof payload.options.modelMappings === "object" &&
+            payload.options.modelMappings
               ? payload.options.modelMappings
               : {},
         },
@@ -508,7 +510,10 @@ class ExtensionSidecarService {
   private openTarget(target: string, application?: string): void {
     this.emit({ type: "open", target, application });
     void shellOpen(target, application).catch((error) => {
-      if (typeof window !== "undefined" && (target.startsWith("http://") || target.startsWith("https://"))) {
+      if (
+        typeof window !== "undefined" &&
+        (target.startsWith("http://") || target.startsWith("https://"))
+      ) {
         window.open(target, "_blank", "noopener,noreferrer");
       }
       console.error("[extensions-sidecar] failed to open target:", error);
@@ -650,11 +655,7 @@ class ExtensionSidecarService {
 
     this.pendingStdout = concatChunks(this.pendingStdout, chunk);
     while (this.pendingStdout.length >= 4) {
-      const headerView = new DataView(
-        this.pendingStdout.buffer,
-        this.pendingStdout.byteOffset,
-        4,
-      );
+      const headerView = new DataView(this.pendingStdout.buffer, this.pendingStdout.byteOffset, 4);
       const headerValue = headerView.getUint32(0, false);
       const isCompressed = (headerValue & 0x8000_0000) !== 0;
       const payloadLength = headerValue & 0x7fff_ffff;
@@ -703,10 +704,7 @@ class ExtensionSidecarService {
 
     this.startPromise = (async () => {
       this.resetStreamState();
-      const args = [
-        `--data-dir=${await appLocalDataDir()}`,
-        `--cache-dir=${await appCacheDir()}`,
-      ];
+      const args = [`--data-dir=${await appLocalDataDir()}`, `--cache-dir=${await appCacheDir()}`];
 
       const command = Command.sidecar("binaries/app", args, {
         encoding: "raw",

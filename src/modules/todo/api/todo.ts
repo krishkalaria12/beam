@@ -81,7 +81,9 @@ export async function updateTodo(input: UpdateTodoInput): Promise<void> {
 
   const payload = {
     id: normalizeRequiredText(input.id, "todo id"),
-    ...(typeof input.title === "string" ? { title: normalizeRequiredText(input.title, "todo title") } : {}),
+    ...(typeof input.title === "string"
+      ? { title: normalizeRequiredText(input.title, "todo title") }
+      : {}),
     ...(typeof input.completed === "boolean" ? { completed: input.completed } : {}),
     ...(typeof input.orderIndex === "number" ? { order_index: input.orderIndex } : {}),
   };

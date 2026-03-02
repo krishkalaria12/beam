@@ -112,7 +112,9 @@ export async function spotifyPreviousTrack(request: SpotifyPlaybackActionRequest
   }
 }
 
-export async function spotifySearch(request: SpotifySearchRequest): Promise<SpotifySearchTracksResult> {
+export async function spotifySearch(
+  request: SpotifySearchRequest,
+): Promise<SpotifySearchTracksResult> {
   assertSpotifyDesktopRuntime();
   try {
     return await invoke<SpotifySearchTracksResult>("spotify_search", { request });

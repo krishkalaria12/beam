@@ -1,26 +1,18 @@
 [
   {
-    "aliases": [
-      "w"
-    ],
+    "aliases": ["w"],
     "identifier": "weeks"
   },
   {
-    "aliases": [
-      "mo"
-    ],
+    "aliases": ["mo"],
     "identifier": "months"
   },
   {
-    "aliases": [
-      "d"
-    ],
+    "aliases": ["d"],
     "identifier": "days"
   },
   {
-    "aliases": [
-      "y"
-    ],
+    "aliases": ["y"],
     "identifier": "years"
   }
 ]

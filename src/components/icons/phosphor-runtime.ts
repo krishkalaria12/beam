@@ -186,7 +186,10 @@ const phosphorModuleLoaders = import.meta.glob([
   "/node_modules/@phosphor-icons/react/dist/csr/X.es.js",
   "/node_modules/@phosphor-icons/react/dist/csr/XCircle.es.js",
 ]);
-const phosphorModuleByNormalizedName = new Map<string, { modulePath: string; exportName: string }>();
+const phosphorModuleByNormalizedName = new Map<
+  string,
+  { modulePath: string; exportName: string }
+>();
 const phosphorNamePool: Array<{ name: string; normalized: string; tokens: Set<string> }> = [];
 
 for (const modulePath of Object.keys(phosphorModuleLoaders)) {
@@ -297,7 +300,11 @@ function resolveDescriptor(token: string): {
   if (normalized.includes("person") || normalized.includes("user")) {
     candidateNames.add("User");
   }
-  if (normalized.includes("people") || normalized.includes("users") || normalized.includes("group")) {
+  if (
+    normalized.includes("people") ||
+    normalized.includes("users") ||
+    normalized.includes("group")
+  ) {
     candidateNames.add("Users");
   }
   if (normalized.includes("calendar")) {
@@ -324,10 +331,20 @@ function resolveDescriptor(token: string): {
   if (normalized.includes("heart")) {
     candidateNames.add("Heart");
   }
-  if (normalized.includes("sparkle") || normalized.includes("sparkles") || normalized.includes("wand") || normalized.includes("magic")) {
+  if (
+    normalized.includes("sparkle") ||
+    normalized.includes("sparkles") ||
+    normalized.includes("wand") ||
+    normalized.includes("magic")
+  ) {
     candidateNames.add("Sparkle");
   }
-  if (normalized.includes("cpu") || normalized.includes("processor") || normalized.includes("memory") || normalized.includes("ram")) {
+  if (
+    normalized.includes("cpu") ||
+    normalized.includes("processor") ||
+    normalized.includes("memory") ||
+    normalized.includes("ram")
+  ) {
     candidateNames.add("Cpu");
   }
   if (normalized.includes("network") || normalized.includes("wifi")) {
@@ -411,7 +428,10 @@ function bestFuzzyPhosphorCandidate(input: string): string | undefined {
     if (candidate.normalized === normalizedInput) {
       score += 100;
     }
-    if (candidate.normalized.startsWith(normalizedInput) || normalizedInput.startsWith(candidate.normalized)) {
+    if (
+      candidate.normalized.startsWith(normalizedInput) ||
+      normalizedInput.startsWith(candidate.normalized)
+    ) {
       score += 20;
     }
     if (candidate.tokens.size <= inputSet.size + 1) {
@@ -462,7 +482,9 @@ export function getCachedPhosphorIconByToken(token: string): ResolvedPhosphorIco
   return resolvedCache.get(descriptor.cacheKey) ?? null;
 }
 
-export async function ensurePhosphorIconByToken(token: string): Promise<ResolvedPhosphorIcon | null> {
+export async function ensurePhosphorIconByToken(
+  token: string,
+): Promise<ResolvedPhosphorIcon | null> {
   const descriptor = resolveDescriptor(token);
   if (!descriptor) {
     return null;

@@ -1,7 +1,4 @@
-import type {
-  CommandContext,
-  CommandDescriptor,
-} from "@/command-registry/types";
+import type { CommandContext, CommandDescriptor } from "@/command-registry/types";
 import type { CommandRankingConfig } from "@/command-registry/ranking-config";
 import { DEFAULT_COMMAND_RANKING_CONFIG } from "@/command-registry/ranking-config";
 import { matchCommand, type CommandMatchResult } from "@/command-registry/matcher";
@@ -91,7 +88,7 @@ export function rankCommands(options: {
       continue;
     }
 
-    const priority = Number.isFinite(command.priority) ? command.priority ?? 0 : 0;
+    const priority = Number.isFinite(command.priority) ? (command.priority ?? 0) : 0;
     const isFavorite = signals?.favorites?.has(command.id) ?? false;
     const usageCount = getSafeUsageCount(signals?.usageCountById, command.id);
 
@@ -103,9 +100,7 @@ export function rankCommands(options: {
         : config.score.scopeModeBoost
       : 0;
     score += isFavorite ? config.score.favoriteBoost : 0;
-    score +=
-      Math.min(usageCount, config.score.usageCountCap) *
-      config.score.usageCountMultiplier;
+    score += Math.min(usageCount, config.score.usageCountCap) * config.score.usageCountMultiplier;
     if (isTriggeredCommand) {
       score += 2_000;
     }

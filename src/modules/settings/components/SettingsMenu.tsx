@@ -1,68 +1,120 @@
-import { AtSign, Keyboard, Minimize2, Pin, Sparkles, WandSparkles } from "lucide-react";
+import { AtSign, ChevronRight, Keyboard, Layers, Pin, Sparkles } from "lucide-react";
 
-import { CommandGroup, CommandItem, CommandShortcut } from "@/components/ui/command";
+import { cn } from "@/lib/utils";
 import type { SettingsView } from "../constants";
 
 interface SettingsMenuProps {
   setView: (view: SettingsView) => void;
 }
 
+interface SettingsMenuItem {
+  id: SettingsView;
+  icon: React.ElementType;
+  title: string;
+  description: string;
+  accentColor: string;
+}
+
+const SETTINGS_ITEMS: SettingsMenuItem[] = [
+  {
+    id: "style",
+    icon: Sparkles,
+    title: "Visual Style",
+    description: "Appearance and theme",
+    accentColor: "from-violet-500/20 to-fuchsia-500/20",
+  },
+  {
+    id: "layout",
+    icon: Layers,
+    title: "UI Density",
+    description: "Spacing and sizing",
+    accentColor: "from-blue-500/20 to-cyan-500/20",
+  },
+  {
+    id: "pinned",
+    icon: Pin,
+    title: "Pinned Commands",
+    description: "Quick access items",
+    accentColor: "from-amber-500/20 to-orange-500/20",
+  },
+  {
+    id: "hotkeys",
+    icon: Keyboard,
+    title: "Hotkeys",
+    description: "Keyboard shortcuts",
+    accentColor: "from-rose-500/20 to-pink-500/20",
+  },
+  {
+    id: "trigger-symbols",
+    icon: AtSign,
+    title: "Trigger Symbols",
+    description: "Command prefixes",
+    accentColor: "from-indigo-500/20 to-purple-500/20",
+  },
+];
+
 export function SettingsMenu({ setView }: SettingsMenuProps) {
   return (
-    <CommandGroup>
-      <CommandItem
-        value="visual style glassy default color tint"
-        onSelect={() => setView("style")}
-      >
-        <Sparkles className="size-5 text-muted-foreground/70" />
-        <p className="truncate text-foreground capitalize">visual style</p>
-        <CommandShortcut>style</CommandShortcut>
-      </CommandItem>
+    <div className="settings-menu px-3 py-3">
+      <div className="space-y-1">
+        {SETTINGS_ITEMS.map((item, index) => (
+          <button
+            key={item.id}
+            onClick={() => setView(item.id)}
+            className={cn(
+              "settings-menu-item group relative w-full flex items-center gap-3.5",
+              "px-3 py-3.5 rounded-xl",
+              "transition-all duration-200 ease-out",
+              "hover:bg-white/[0.04]",
+              "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/20",
+            )}
+            style={{ animationDelay: `${index * 35}ms` }}
+          >
+            {/* Accent bar on hover */}
+            <div
+              className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-0 rounded-full
+                bg-gradient-to-b from-white/40 to-white/10
+                group-hover:h-8 transition-all duration-200 ease-out"
+            />
 
-      <CommandItem
-        value="ui density expand compress size"
-        onSelect={() => setView("layout")}
-      >
-        <Minimize2 className="size-5 text-muted-foreground/70" />
-        <p className="truncate text-foreground capitalize">ui density</p>
-        <CommandShortcut>size</CommandShortcut>
-      </CommandItem>
+            {/* Icon container */}
+            <div
+              className={cn(
+                "relative flex size-11 items-center justify-center rounded-xl",
+                "bg-gradient-to-br",
+                item.accentColor,
+                "transition-transform duration-200",
+                "group-hover:scale-105",
+              )}
+            >
+              <item.icon className="size-5 text-white/70 group-hover:text-white/90 transition-colors" />
+            </div>
 
-      <CommandItem
-        value="pinned commands pin unpin command items"
-        onSelect={() => setView("pinned")}
-      >
-        <Pin className="size-5 text-muted-foreground/70" />
-        <p className="truncate text-foreground capitalize">pinned commands</p>
-        <CommandShortcut>pins</CommandShortcut>
-      </CommandItem>
+            {/* Content */}
+            <div className="flex-1 min-w-0 text-left">
+              <p
+                className="text-[14px] font-semibold text-white/90 tracking-[-0.02em]
+                group-hover:text-white transition-colors"
+              >
+                {item.title}
+              </p>
+              <p
+                className="text-[12px] text-white/40 tracking-[-0.01em]
+                group-hover:text-white/50 transition-colors"
+              >
+                {item.description}
+              </p>
+            </div>
 
-      <CommandItem
-        value="fallback actions no results files google quicklink script todo"
-        onSelect={() => setView("fallback")}
-      >
-        <WandSparkles className="size-5 text-muted-foreground/70" />
-        <p className="truncate text-foreground capitalize">fallback actions</p>
-        <CommandShortcut>fallback</CommandShortcut>
-      </CommandItem>
-
-      <CommandItem
-        value="hotkeys shortcuts launcher command bindings wayland compositor"
-        onSelect={() => setView("hotkeys")}
-      >
-        <Keyboard className="size-5 text-muted-foreground/70" />
-        <p className="truncate text-foreground capitalize">hotkeys</p>
-        <CommandShortcut>keys</CommandShortcut>
-      </CommandItem>
-
-      <CommandItem
-        value="trigger symbols bangs prefixes quicklinks system scripts"
-        onSelect={() => setView("trigger-symbols")}
-      >
-        <AtSign className="size-5 text-muted-foreground/70" />
-        <p className="truncate text-foreground capitalize">trigger symbols</p>
-        <CommandShortcut>bangs</CommandShortcut>
-      </CommandItem>
-    </CommandGroup>
+            {/* Chevron */}
+            <ChevronRight
+              className="size-4 text-white/20 
+                group-hover:text-white/40 group-hover:translate-x-0.5
+                transition-all duration-200"
+            />
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }

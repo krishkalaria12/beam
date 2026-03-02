@@ -14,9 +14,7 @@ function stripFileProtocol(input: string): string {
   return input.startsWith("file://") ? input.slice("file://".length) : input;
 }
 
-export function resolveExtensionIconReference(
-  icon: string | null | undefined,
-): string | null {
+export function resolveExtensionIconReference(icon: string | null | undefined): string | null {
   const normalizedIcon = icon?.trim() ?? "";
   if (!normalizedIcon) {
     return null;

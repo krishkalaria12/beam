@@ -28,7 +28,10 @@ async function applyWindowSize(compact: boolean, compactHeight?: number) {
   await window.center();
 }
 
-export async function setLauncherCompactMode(compact: boolean, compactHeight?: number): Promise<void> {
+export async function setLauncherCompactMode(
+  compact: boolean,
+  compactHeight?: number,
+): Promise<void> {
   if (!isTauri()) {
     return;
   }

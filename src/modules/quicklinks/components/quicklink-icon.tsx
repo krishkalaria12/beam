@@ -23,11 +23,16 @@ export function QuicklinkIcon({
     <UnifiedIcon
       icon={iconSource}
       className={cn("rounded object-cover", className)}
-      fallback={(
-        <div className={cn("flex items-center justify-center rounded bg-muted", fallbackClassName ?? className)}>
+      fallback={
+        <div
+          className={cn(
+            "flex items-center justify-center rounded bg-muted",
+            fallbackClassName ?? className,
+          )}
+        >
           <Link2 className="size-4 text-muted-foreground" />
         </div>
-      )}
+      }
     />
   );
 }

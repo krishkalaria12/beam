@@ -1,6 +1,16 @@
 import { formatDistanceToNow } from "date-fns";
-import { ArrowUpRight, Check, Clock, Copy, FileText, ImageIcon, Info, Link } from "lucide-react";
+import {
+  ArrowUpRight,
+  Check,
+  Clock,
+  Copy,
+  FileText,
+  ImageIcon,
+  Link,
+  Clipboard,
+} from "lucide-react";
 import { ClipboardContentType, type ClipboardHistoryEntry } from "../types";
+import { cn } from "@/lib/utils";
 
 interface ClipboardDetailsProps {
   entry: ClipboardHistoryEntry | null;
@@ -9,36 +19,55 @@ interface ClipboardDetailsProps {
   onCopy: () => void;
 }
 
-const getEntryIcon = (type: ClipboardContentType) => {
+const getEntryIconConfig = (type: ClipboardContentType) => {
   switch (type) {
     case ClipboardContentType.Image:
-      return <ImageIcon className="size-3.5" />;
+      return {
+        icon: <ImageIcon className="size-4" />,
+        gradient: "from-amber-500/25 to-orange-500/25",
+        label: "Image",
+      };
     case ClipboardContentType.Link:
-      return <Link className="size-3.5" />;
+      return {
+        icon: <Link className="size-4" />,
+        gradient: "from-emerald-500/25 to-teal-500/25",
+        label: "Link",
+      };
     default:
-      return <FileText className="size-3.5" />;
+      return {
+        icon: <FileText className="size-4" />,
+        gradient: "from-blue-500/25 to-cyan-500/25",
+        label: "Text",
+      };
   }
 };
 
 export function ClipboardDetails({ entry, isCopied, copyError, onCopy }: ClipboardDetailsProps) {
   if (!entry) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground/40 gap-4">
-        <div className="size-16 rounded-3xl bg-muted/10 flex items-center justify-center border border-border/20">
-          <Info className="size-8 opacity-20" />
+      <div className="flex flex-1 flex-col items-center justify-center gap-4 p-8">
+        <div className="flex size-16 items-center justify-center rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] ring-1 ring-white/[0.06]">
+          <Clipboard className="size-7 text-white/15" />
         </div>
-        <p className="text-sm font-medium tracking-tight">Select an entry to view details</p>
+        <div className="text-center">
+          <p className="text-[13px] font-medium tracking-[-0.01em] text-white/40">
+            Select an entry
+          </p>
+          <p className="mt-1 text-[11px] text-white/20">View details and copy to clipboard</p>
+        </div>
       </div>
     );
   }
 
+  const iconConfig = getEntryIconConfig(entry.content_type);
+
   return (
-    <div className="flex-1 bg-background/20 flex flex-col min-w-0 h-full">
-      {/* Content Preview - This part is scrollable */}
-      <div className="flex-1 overflow-y-auto p-8 flex flex-col min-h-0">
+    <div className="clipboard-details-panel flex flex-1 flex-col min-w-0 h-full">
+      {/* Content Preview - Scrollable */}
+      <div className="flex-1 overflow-y-auto p-6">
         {entry.content_type === ClipboardContentType.Image ? (
-          <div className="w-full flex justify-center">
-            <div className="relative max-w-full rounded-xl overflow-hidden border border-border/40 shadow-2xl bg-grid-pattern/5">
+          <div className="flex w-full justify-center">
+            <div className="relative max-w-full overflow-hidden rounded-xl ring-1 ring-white/[0.08] shadow-2xl">
               <img
                 src={entry.value}
                 alt="Preview"
@@ -47,22 +76,43 @@ export function ClipboardDetails({ entry, isCopied, copyError, onCopy }: Clipboa
             </div>
           </div>
         ) : (
-          <div className="w-full text-[15px] font-normal text-foreground/80 leading-relaxed whitespace-pre-wrap wrap-break-word">
+          <div className="w-full text-[14px] font-normal leading-relaxed tracking-[-0.01em] text-white/75 whitespace-pre-wrap break-words">
             {entry.value}
           </div>
         )}
       </div>
 
-      {/* Info Section - Fixed at the bottom */}
-      <div className="border-t border-border/30 bg-muted/5 p-6 space-y-5 shrink-0">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-muted-foreground/50">
-            <Info className="size-3" />
-            <span>Information</span>
+      {/* Info Section - Fixed at bottom */}
+      <div className="shrink-0 border-t border-white/[0.06] bg-white/[0.02] p-5">
+        {/* Copy Button & Status */}
+        <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center gap-2">
+            <div
+              className={cn(
+                "flex size-8 items-center justify-center rounded-lg bg-gradient-to-br text-white/70",
+                iconConfig.gradient,
+              )}
+            >
+              {iconConfig.icon}
+            </div>
+            <div>
+              <p className="text-[12px] font-semibold text-white/80 capitalize">
+                {entry.content_type}
+              </p>
+              <p className="text-[11px] text-white/35">
+                {formatDistanceToNow(new Date(entry.copied_at), { addSuffix: true })}
+              </p>
+            </div>
           </div>
+
           <button
             onClick={onCopy}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-all text-xs font-bold uppercase tracking-wider group"
+            className={cn(
+              "flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-medium transition-all duration-200",
+              isCopied
+                ? "bg-emerald-500/20 text-emerald-400 ring-1 ring-emerald-500/30"
+                : "bg-[var(--solid-accent,#4ea2ff)]/15 text-[var(--solid-accent,#4ea2ff)] ring-1 ring-[var(--solid-accent,#4ea2ff)]/20 hover:bg-[var(--solid-accent,#4ea2ff)]/25",
+            )}
           >
             {isCopied ? (
               <>
@@ -71,63 +121,72 @@ export function ClipboardDetails({ entry, isCopied, copyError, onCopy }: Clipboa
               </>
             ) : (
               <>
-                <Copy className="size-3.5 transition-transform group-hover:scale-110" />
+                <Copy className="size-3.5" />
                 <span>Copy</span>
               </>
             )}
           </button>
         </div>
-        {copyError ? (
-          <p className="text-[11px] font-medium text-destructive/90">{copyError}</p>
-        ) : isCopied ? (
-          <p className="text-[11px] font-medium text-emerald-500/90">Entry copied to clipboard</p>
-        ) : null}
 
+        {/* Status Messages */}
+        {copyError && (
+          <div className="mb-4 rounded-lg bg-red-500/10 px-3 py-2 text-[11px] font-medium text-red-400 ring-1 ring-red-500/20">
+            {copyError}
+          </div>
+        )}
+
+        {/* Metadata Grid */}
         <div className="space-y-3">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground/60">Copied</span>
-            <span className="font-medium flex items-center gap-1.5 text-foreground/90">
-              <Clock className="size-3.5 text-muted-foreground/40" />
-              {formatDistanceToNow(new Date(entry.copied_at), { addSuffix: true })}
+          {/* Divider with label */}
+          <div className="flex items-center gap-3">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-white/30">
+              Details
             </span>
+            <div className="h-px flex-1 bg-white/[0.06]" />
           </div>
 
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground/60">Content type</span>
-            <span className="font-medium capitalize flex items-center gap-2 text-foreground/90">
-              <div className="p-1 rounded bg-muted/20 text-muted-foreground/80">
-                {getEntryIcon(entry.content_type)}
-              </div>
-              {entry.content_type}
-            </span>
-          </div>
-
-          {entry.content_type !== ClipboardContentType.Image && (
-            <>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground/60">Characters</span>
-                <span className="font-mono text-foreground/90">{entry.character_count}</span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground/60">Words</span>
-                <span className="font-mono text-foreground/90">{entry.word_count}</span>
-              </div>
-            </>
-          )}
-
-          {entry.content_type === ClipboardContentType.Link && (
-            <div className="flex items-center justify-between text-sm pt-2 border-t border-border/10">
-              <span className="text-muted-foreground/60">Action</span>
-              <a
-                href={entry.value}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary hover:underline flex items-center gap-1 font-medium"
-              >
-                Open Link <ArrowUpRight className="size-3" />
-              </a>
+          {/* Metadata rows */}
+          <div className="grid gap-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[12px] text-white/40">Copied</span>
+              <span className="flex items-center gap-1.5 text-[12px] font-medium text-white/70">
+                <Clock className="size-3 text-white/30" />
+                {formatDistanceToNow(new Date(entry.copied_at), { addSuffix: true })}
+              </span>
             </div>
-          )}
+
+            {entry.content_type !== ClipboardContentType.Image && (
+              <>
+                <div className="flex items-center justify-between">
+                  <span className="text-[12px] text-white/40">Characters</span>
+                  <span className="text-[12px] font-mono font-medium text-white/70">
+                    {entry.character_count.toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[12px] text-white/40">Words</span>
+                  <span className="text-[12px] font-mono font-medium text-white/70">
+                    {entry.word_count.toLocaleString()}
+                  </span>
+                </div>
+              </>
+            )}
+
+            {entry.content_type === ClipboardContentType.Link && (
+              <div className="flex items-center justify-between pt-2 border-t border-white/[0.04]">
+                <span className="text-[12px] text-white/40">Action</span>
+                <a
+                  href={entry.value}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 text-[12px] font-medium text-[var(--solid-accent,#4ea2ff)] hover:underline transition-colors"
+                >
+                  Open Link
+                  <ArrowUpRight className="size-3" />
+                </a>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

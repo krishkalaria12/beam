@@ -25,8 +25,6 @@ export async function getTranslationLanguages(): Promise<TranslationLanguage[]> 
   try {
     return await invoke<TranslationLanguage[]>("get_translation_languages");
   } catch (error) {
-    throw new Error(
-      getInvokeErrorMessage(error, "Failed to load translation languages"),
-    );
+    throw new Error(getInvokeErrorMessage(error, "Failed to load translation languages"));
   }
 }

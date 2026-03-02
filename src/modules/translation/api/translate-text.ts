@@ -21,9 +21,7 @@ function getInvokeErrorMessage(error: unknown, fallback: string): string {
   return fallback;
 }
 
-export async function translateText(
-  request: TranslateTextRequest,
-): Promise<TranslateTextResponse> {
+export async function translateText(request: TranslateTextRequest): Promise<TranslateTextResponse> {
   try {
     return await invoke<TranslateTextResponse>("translate_text", { request });
   } catch (error) {

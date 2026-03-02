@@ -343,7 +343,9 @@ export const useExtensionRuntimeStore = create<ExtensionRuntimeState>((set, get)
   },
   updateToast: (toastId, partial) => {
     set((state) => ({
-      toasts: state.toasts.map((toast) => (toast.id === toastId ? { ...toast, ...partial } : toast)),
+      toasts: state.toasts.map((toast) =>
+        toast.id === toastId ? { ...toast, ...partial } : toast,
+      ),
     }));
   },
   hideToast: (toastId) => {

@@ -9,9 +9,7 @@ interface DropdownItemDescriptor {
 
 function isDropdownItemType(type: string): boolean {
   return (
-    type === "List.Dropdown.Item" ||
-    type === "Grid.Dropdown.Item" ||
-    type === "Form.Dropdown.Item"
+    type === "List.Dropdown.Item" || type === "Grid.Dropdown.Item" || type === "Form.Dropdown.Item"
   );
 }
 

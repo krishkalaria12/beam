@@ -1,24 +1,38 @@
-import { ClipboardContentType, type ClipboardHistoryEntry } from "../types";
-import { CommandLoadingState } from "@/components/command/command-loading-state";
-import { cn } from "@/lib/utils";
-import { FileText, ImageIcon, Link } from "lucide-react";
+import { FileText, ImageIcon, Link, Clipboard } from "lucide-react";
 import { memo, useMemo } from "react";
 import { isToday, isYesterday, parseISO, format } from "date-fns";
+
+import { CommandLoadingState } from "@/components/command/command-loading-state";
+import { cn } from "@/lib/utils";
+import { ClipboardContentType, type ClipboardHistoryEntry } from "../types";
 
 interface ClipboardListItemProps {
   entry: ClipboardHistoryEntry;
   isSelected: boolean;
   onSelect: () => void;
+  index: number;
 }
 
-const getEntryIcon = (type: ClipboardContentType) => {
+const getEntryIconConfig = (type: ClipboardContentType) => {
   switch (type) {
     case ClipboardContentType.Image:
-      return <ImageIcon className="size-4" />;
+      return {
+        icon: <ImageIcon className="size-4" />,
+        gradient: "from-amber-500/25 to-orange-500/25",
+        accentColor: "bg-amber-400",
+      };
     case ClipboardContentType.Link:
-      return <Link className="size-4" />;
+      return {
+        icon: <Link className="size-4" />,
+        gradient: "from-emerald-500/25 to-teal-500/25",
+        accentColor: "bg-emerald-400",
+      };
     default:
-      return <FileText className="size-4" />;
+      return {
+        icon: <FileText className="size-4" />,
+        gradient: "from-blue-500/25 to-cyan-500/25",
+        accentColor: "bg-blue-400",
+      };
   }
 };
 
@@ -26,31 +40,58 @@ const ClipboardListItem = memo(function ClipboardListItem({
   entry,
   isSelected,
   onSelect,
+  index,
 }: ClipboardListItemProps) {
+  const iconConfig = getEntryIconConfig(entry.content_type);
+
   return (
     <div
       onClick={onSelect}
+      style={{ animationDelay: `${Math.min(index * 20, 150)}ms` }}
       className={cn(
-        "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm cursor-pointer transition-all",
-        isSelected
-          ? "bg-foreground/10 text-foreground shadow-sm"
-          : "text-muted-foreground/80 hover:bg-foreground/5 hover:text-foreground",
+        "clipboard-list-item group relative flex items-center gap-3 rounded-xl px-3 py-2.5 cursor-pointer transition-all duration-200",
+        isSelected ? "bg-white/[0.06] ring-1 ring-white/[0.12]" : "hover:bg-white/[0.04]",
       )}
     >
+      {/* Left accent bar on hover/selected */}
       <div
         className={cn(
-          "shrink-0 flex items-center justify-center size-8 rounded-md bg-foreground/5 transition-colors",
-          isSelected ? "bg-foreground/10 text-foreground" : "text-muted-foreground/60 group-hover:text-foreground/80",
+          "absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full transition-all duration-200",
+          iconConfig.accentColor,
+          isSelected
+            ? "opacity-100 scale-y-100"
+            : "opacity-0 scale-y-50 group-hover:opacity-60 group-hover:scale-y-75",
+        )}
+      />
+
+      {/* Icon with gradient background */}
+      <div
+        className={cn(
+          "shrink-0 flex items-center justify-center size-9 rounded-xl bg-gradient-to-br transition-all duration-200",
+          iconConfig.gradient,
+          isSelected ? "text-white/90" : "text-white/60 group-hover:text-white/80",
         )}
       >
-        {getEntryIcon(entry.content_type)}
+        {iconConfig.icon}
       </div>
+
+      {/* Content */}
       <div className="flex-1 min-w-0">
-        <p className="truncate font-medium leading-tight">
+        <p
+          className={cn(
+            "truncate text-[13px] font-medium leading-tight tracking-[-0.01em] transition-colors",
+            isSelected ? "text-white/95" : "text-white/70 group-hover:text-white/85",
+          )}
+        >
           {entry.content_type === ClipboardContentType.Image
             ? "Image"
             : entry.value.replace(/\s+/g, " ").trim()}
         </p>
+        {entry.content_type !== ClipboardContentType.Image && (
+          <p className="mt-0.5 text-[11px] text-white/30 truncate">
+            {entry.character_count} characters
+          </p>
+        )}
       </div>
     </div>
   );
@@ -63,19 +104,17 @@ interface ClipboardListProps {
   isLoading: boolean;
 }
 
-export function ClipboardList({
-  entries,
-  selectedIndex,
-  onSelect,
-  isLoading,
-}: ClipboardListProps) {
+export function ClipboardList({ entries, selectedIndex, onSelect, isLoading }: ClipboardListProps) {
   const groupedEntries = useMemo(() => {
-    const groups: { title: string; items: { entry: ClipboardHistoryEntry; originalIndex: number }[] }[] = [];
-    
+    const groups: {
+      title: string;
+      items: { entry: ClipboardHistoryEntry; originalIndex: number }[];
+    }[] = [];
+
     entries.forEach((entry, index) => {
       const date = parseISO(entry.copied_at);
       let title = "Earlier";
-      
+
       if (isToday(date)) {
         title = "Today";
       } else if (isYesterday(date)) {
@@ -83,44 +122,59 @@ export function ClipboardList({
       } else {
         title = format(date, "MMMM d, yyyy");
       }
-      
-      let group = groups.find(g => g.title === title);
+
+      let group = groups.find((g) => g.title === title);
       if (!group) {
         group = { title, items: [] };
         groups.push(group);
       }
       group.items.push({ entry, originalIndex: index });
     });
-    
+
     return groups;
   }, [entries]);
 
   return (
-    <div className="flex w-[40%] flex-col border-r border-[var(--ui-divider)] bg-background/20">
-      <div className="custom-scrollbar list-area flex-1 overflow-y-auto p-3">
+    <div className="clipboard-list-panel flex w-[42%] flex-col border-r border-white/[0.06]">
+      <div className="custom-scrollbar flex-1 overflow-y-auto p-3">
         {isLoading ? (
-          <CommandLoadingState label="Loading history..." />
+          <div className="flex h-full items-center justify-center">
+            <CommandLoadingState label="Loading history..." />
+          </div>
         ) : entries.length === 0 ? (
-          <div className="p-8 text-center text-sm text-muted-foreground/60 flex flex-col items-center gap-2">
-            <div className="size-10 rounded-full bg-muted/20 flex items-center justify-center">
-                <FileText className="size-5 opacity-40" />
+          <div className="flex h-full flex-col items-center justify-center gap-4 p-8">
+            <div className="flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] ring-1 ring-white/[0.06]">
+              <Clipboard className="size-6 text-white/20" />
             </div>
-            <span>No entries found</span>
+            <div className="text-center">
+              <p className="text-[13px] font-medium text-white/50">No entries found</p>
+              <p className="mt-1 text-[11px] text-white/25">Copy something to see it here</p>
+            </div>
           </div>
         ) : (
-          <div className="space-y-6">
-            {groupedEntries.map((group) => (
+          <div className="space-y-5">
+            {groupedEntries.map((group, groupIndex) => (
               <div key={group.title} className="space-y-1.5">
-                <h3 className="px-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground/40">
-                  {group.title}
-                </h3>
-                <div className="space-y-1">
+                {/* Section header */}
+                <div
+                  className="clipboard-section-header flex items-center gap-3 px-3 py-1"
+                  style={{ animationDelay: `${groupIndex * 50}ms` }}
+                >
+                  <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-white/40">
+                    {group.title}
+                  </h3>
+                  <div className="h-px flex-1 bg-white/[0.06]" />
+                </div>
+
+                {/* Items */}
+                <div className="space-y-0.5">
                   {group.items.map((item) => (
                     <ClipboardListItem
                       key={item.originalIndex}
                       entry={item.entry}
                       isSelected={item.originalIndex === selectedIndex}
                       onSelect={() => onSelect(item.originalIndex)}
+                      index={item.originalIndex}
                     />
                   ))}
                 </div>

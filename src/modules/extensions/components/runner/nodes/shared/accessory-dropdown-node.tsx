@@ -1,11 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import {
-  Select,
-  SelectContent,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RunnerNodeRenderer } from "@/modules/extensions/components/runner/nodes/node-renderer";
 import { getDropdownItems } from "@/modules/extensions/components/runner/nodes/shared/dropdown-utils";
 import type { RunnerNodeComponentProps } from "@/modules/extensions/components/runner/nodes/types";

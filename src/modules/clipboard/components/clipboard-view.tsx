@@ -36,9 +36,7 @@ export function ClipboardView({ onBack }: ClipboardViewProps) {
   const filteredHistory = useMemo(() => {
     const lowerQuery = debouncedQuery.toLowerCase();
     const filteredByType =
-      typeFilter === "all"
-        ? history
-        : history.filter((entry) => entry.content_type === typeFilter);
+      typeFilter === "all" ? history : history.filter((entry) => entry.content_type === typeFilter);
 
     if (!lowerQuery) {
       return filteredByType;
@@ -136,7 +134,7 @@ export function ClipboardView({ onBack }: ClipboardViewProps) {
 
   return (
     <div
-      className="glass-effect flex h-full w-full flex-col text-foreground outline-none"
+      className="clipboard-view flex h-full w-full flex-col outline-none"
       onClick={() => inputRef.current?.focus()}
       onKeyDown={handleKeyDown}
     >

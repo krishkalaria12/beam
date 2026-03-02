@@ -132,9 +132,7 @@ async function resolveProvider(
     const validationErrors = validateCommandDescriptors(descriptors);
 
     if (validationErrors.length > 0) {
-      const errors = validationErrors.map((entry) =>
-        toProviderError(provider.id, entry.message),
-      );
+      const errors = validationErrors.map((entry) => toProviderError(provider.id, entry.message));
       return {
         commands: [],
         errors,

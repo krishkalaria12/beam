@@ -1,0 +1,158 @@
+/* solid theme styles */
+
+/* Global backdrop-filter disable for solid theme */
+.sc-solid *,
+.sc-solid *::before,
+.sc-solid *::after {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+/* Main glass container - fully opaque */
+.sc-solid .glass-effect {
+  --glass-radius: 12px;
+  background: var(--solid-bg-base) !important;
+  box-shadow: 0 8px 32px #00000066;
+}
+
+/* Glass effect border - use solid border color */
+.sc-solid .glass-effect::after {
+  border-color: var(--solid-border-subtle) !important;
+}
+
+/* Command items: clean flat selection */
+.sc-solid .command-item[data-selected="true"],
+.sc-solid .command-item.selected {
+  background: var(--solid-selected-bg) !important;
+  box-shadow: none !important;
+}
+
+.sc-solid .command-item:hover {
+  background: var(--solid-hover-bg) !important;
+  box-shadow: none !important;
+}
+
+.sc-glass-footer {
+  border-top: 1px solid var(--footer-border);
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.07), rgb(255 255 255 / 0.02)), var(--card);
+  -webkit-backdrop-filter: blur(48px) saturate(170%);
+  backdrop-filter: blur(48px) saturate(170%);
+}
+
+.sc-glassy .sc-glass-footer {
+  border-top: none;
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.08), rgb(255 255 255 / 0.02)),
+    rgb(var(--sc-base-rgb) / 0.58);
+  -webkit-backdrop-filter: blur(104px) saturate(185%);
+  backdrop-filter: blur(104px) saturate(185%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.18);
+}
+
+/* Footer in solid theme - fully opaque */
+.sc-solid .sc-glass-footer {
+  border-top: 1px solid var(--solid-border-subtle) !important;
+  background: var(--solid-bg-footer) !important;
+  box-shadow: none !important;
+}
+
+/* Header in solid theme - fully opaque */
+.sc-solid [cmdk-input-wrapper],
+.sc-solid .command-header {
+  background: var(--solid-bg-header) !important;
+  border-color: var(--solid-border-subtle) !important;
+}
+
+/* Input in solid theme */
+.sc-solid [cmdk-input] {
+  background: transparent !important;
+}
+
+/* Popover/dropdown in solid theme */
+.sc-solid [data-radix-popper-content-wrapper] > *,
+.sc-solid .popover-content {
+  background: var(--solid-bg-overlay) !important;
+  border-color: var(--solid-border-default) !important;
+}
+
+/* Kbd badges in solid theme */
+.sc-solid kbd {
+  background: var(--solid-kbd-bg) !important;
+  border-color: var(--solid-kbd-border) !important;
+  color: var(--solid-kbd-text) !important;
+}
+
+.sc-glassy .rounded-md {
+  border-radius: 12px !important;
+}
+
+.sc-glassy .rounded-lg {
+  border-radius: 16px !important;
+}
+
+.sc-glassy .rounded-xl {
+  border-radius: 22px !important;
+}
+
+.sc-glassy .rounded-2xl {
+  border-radius: 26px !important;
+}
+
+.list-area {
+  background: transparent;
+}
+
+.command-item {
+  transition: all 0.12s cubic-bezier(0.4, 0, 0.2, 1);
+  background: transparent;
+  margin: 1px 0;
+  border-radius: 6px;
+  border: 1px solid transparent;
+}
+
+.command-item:hover {
+  background: var(--command-item-hover-bg);
+  border-color: var(--command-item-hover-border);
+}
+
+.command-item[data-selected="true"],
+.command-item.selected {
+  background: var(--command-item-selected-bg);
+  border-color: transparent;
+}
+
+.command-item[data-disabled="true"] {
+  opacity: 0.55;
+}
+
+/* Keep hover affordance visible for non-actionable rows */
+.command-item[data-disabled="true"]:hover {
+  background: var(--command-item-hover-bg);
+  border-color: var(--command-item-hover-border);
+}
+
+.command-icon-chip {
+  border: 1px solid var(--icon-chip-border);
+  box-shadow: none;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}

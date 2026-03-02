@@ -2,6 +2,8 @@ import { isTauri } from "@tauri-apps/api/core";
 import { open as openExternal } from "@tauri-apps/plugin-shell";
 import {
   ArrowUpRight,
+  ChevronLeft,
+  CircleDot,
   Github,
   GitPullRequest,
   Loader2,
@@ -13,19 +15,9 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
-import {
-  CommandPanelBackButton,
-  CommandPanelHeader,
-  CommandPanelTitleBlock,
-} from "@/components/command/command-panel-header";
-import { CommandStatusChip } from "@/components/command/command-status-chip";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
-import {
-  githubGetAssignedIssues,
-  githubSearchIssuesAndPullRequests,
-} from "../api/github";
+import { githubGetAssignedIssues, githubSearchIssuesAndPullRequests } from "../api/github";
 import { setStoredGithubClientId } from "../lib/oauth-session";
 import { useGithubAuth } from "../hooks/use-github-auth";
 import type { GithubIssueItem } from "../types";
@@ -144,7 +136,9 @@ export function GithubView({ initialQuery, onBack }: GithubViewProps) {
           return;
         }
 
-        setLocalError(loadError instanceof Error ? loadError.message : "Failed to load assigned items.");
+        setLocalError(
+          loadError instanceof Error ? loadError.message : "Failed to load assigned items.",
+        );
       } finally {
         if (!disposed) {
           setIsLoadingAssigned(false);
@@ -163,7 +157,9 @@ export function GithubView({ initialQuery, onBack }: GithubViewProps) {
     try {
       await connect();
     } catch (connectError) {
-      setLocalError(connectError instanceof Error ? connectError.message : "Failed to connect GitHub.");
+      setLocalError(
+        connectError instanceof Error ? connectError.message : "Failed to connect GitHub.",
+      );
     }
   }
 
@@ -176,7 +172,9 @@ export function GithubView({ initialQuery, onBack }: GithubViewProps) {
       setAssignedItems([]);
       setSearchItems([]);
     } catch (disconnectError) {
-      setLocalError(disconnectError instanceof Error ? disconnectError.message : "Failed to disconnect GitHub.");
+      setLocalError(
+        disconnectError instanceof Error ? disconnectError.message : "Failed to disconnect GitHub.",
+      );
     }
   }
 
@@ -195,7 +193,9 @@ export function GithubView({ initialQuery, onBack }: GithubViewProps) {
       setAssignedItems(issues);
       await refreshUserProfile();
     } catch (refreshError) {
-      setLocalError(refreshError instanceof Error ? refreshError.message : "Failed to refresh GitHub data.");
+      setLocalError(
+        refreshError instanceof Error ? refreshError.message : "Failed to refresh GitHub data.",
+      );
     } finally {
       setIsLoadingAssigned(false);
     }
@@ -244,193 +244,352 @@ export function GithubView({ initialQuery, onBack }: GithubViewProps) {
   }
 
   return (
-    <div className="glass-effect flex h-full w-full flex-col text-foreground">
-      <CommandPanelHeader>
-        <CommandPanelBackButton onClick={onBack} aria-label="Back" />
-        <CommandPanelTitleBlock
-          title="GitHub"
-          subtitle="Assigned issues, PR search, and quick open"
-        />
-        <div className="ml-auto">
-          <CommandStatusChip
-            tone={statusTone}
-            pulse={statusLabel === "authorizing" || statusLabel === "refreshing"}
-            label={statusLabel}
-          />
+    <div className="github-view-enter flex h-full w-full flex-col text-white">
+      {/* Custom Header */}
+      <header className="github-header flex h-14 shrink-0 items-center gap-3 border-b border-white/[0.06] px-5">
+        {/* Back button */}
+        <button
+          type="button"
+          onClick={onBack}
+          className="flex size-9 items-center justify-center rounded-lg bg-white/[0.03] text-white/40 transition-all duration-200 hover:bg-white/[0.06] hover:text-white/70"
+          aria-label="Back"
+        >
+          <ChevronLeft className="size-4" />
+        </button>
+
+        {/* Title block */}
+        <div className="flex items-center gap-3">
+          <div className="flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-white/15 to-white/10 ring-1 ring-white/15">
+            <Github className="size-4 text-white/80" />
+          </div>
+          <div className="flex flex-col">
+            <h1 className="text-[14px] font-semibold tracking-[-0.02em] text-white/90">GitHub</h1>
+            <p className="text-[11px] text-white/40">Issues, pull requests & search</p>
+          </div>
         </div>
-      </CommandPanelHeader>
 
-      <div className="list-area custom-scrollbar flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-4">
-        <section className="rounded-xl border border-border/60 bg-background/20 p-3">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground/70">
-              Connection
-            </p>
+        {/* Status chip */}
+        <div className="ml-auto">
+          <div
+            className={cn(
+              "flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.06em]",
+              statusTone === "success" && "bg-emerald-500/15 text-emerald-400",
+              statusTone === "info" && "bg-blue-500/15 text-blue-400",
+              statusTone === "warning" && "bg-amber-500/15 text-amber-400",
+            )}
+          >
+            {(statusLabel === "authorizing" || statusLabel === "refreshing") && (
+              <span className="size-1.5 animate-pulse rounded-full bg-current" />
+            )}
+            {statusLabel}
+          </div>
+        </div>
+      </header>
 
-            <div className="flex items-center gap-2">
+      {/* Scrollable content */}
+      <div className="github-content flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-5 py-5 scrollbar-hidden-until-hover">
+        <div className="mx-auto max-w-2xl space-y-5">
+          {/* Connection Section */}
+          <section
+            className="github-section rounded-2xl bg-white/[0.025] p-4 ring-1 ring-white/[0.04]"
+            style={{ animationDelay: "0ms" }}
+          >
+            <div className="mb-4 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="flex size-6 items-center justify-center rounded-lg bg-white/[0.06]">
+                  <Github className="size-3 text-white/50" />
+                </div>
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-white/45">
+                  Connection
+                </span>
+              </div>
+
               {isConnected ? (
-                <Button
+                <button
                   type="button"
-                  variant="outline"
-                  size="sm"
                   onClick={() => void handleDisconnect()}
-                  className="h-8 gap-1.5"
+                  className="flex items-center gap-1.5 rounded-lg bg-white/[0.04] px-3 py-1.5 text-[12px] font-medium text-white/60 ring-1 ring-white/[0.06] transition-all hover:bg-white/[0.06] hover:text-white/80"
                 >
                   <Unplug className="size-3.5" />
                   Disconnect
-                </Button>
+                </button>
               ) : (
-                <Button
+                <button
                   type="button"
-                  size="sm"
                   onClick={() => void handleConnect()}
                   disabled={isAuthorizing || !clientId.trim()}
-                  className="h-8 gap-1.5"
+                  className="flex items-center gap-1.5 rounded-lg bg-white/20 px-3 py-1.5 text-[12px] font-medium text-white/90 ring-1 ring-white/25 transition-all hover:bg-white/25 disabled:opacity-50"
                 >
-                  {isAuthorizing ? <Loader2 className="size-3.5 animate-spin" /> : <Github className="size-3.5" />}
+                  {isAuthorizing ? (
+                    <Loader2 className="size-3.5 animate-spin" />
+                  ) : (
+                    <Github className="size-3.5" />
+                  )}
                   Connect GitHub
-                </Button>
+                </button>
               )}
             </div>
-          </div>
 
-          <div className="mt-3 grid gap-2">
-            <Input
-              ref={clientIdInputRef}
-              value={clientId}
-              onChange={(event) => {
-                setClientId(event.target.value);
-                setStoredGithubClientId(event.target.value);
-              }}
-              placeholder="GitHub OAuth App Client ID"
-              className="h-9 border-border/70 bg-muted/15 text-sm"
-            />
-            <p className="text-[11px] text-muted-foreground/70">
-              Configure your OAuth app redirect URI as <span className="font-mono">beam://oauth</span>.
-            </p>
-          </div>
-
-          {user ? (
-            <div className="mt-3 rounded-md border border-border/60 bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
-              Connected as <span className="font-medium text-foreground">{user.login}</span>
-              {user.name ? ` • ${user.name}` : ""}
+            <div className="space-y-3">
+              <input
+                ref={clientIdInputRef}
+                value={clientId}
+                onChange={(event) => {
+                  setClientId(event.target.value);
+                  setStoredGithubClientId(event.target.value);
+                }}
+                placeholder="GitHub OAuth App Client ID"
+                className="h-10 w-full rounded-xl bg-white/[0.04] px-4 text-[13px] text-white/90 placeholder:text-white/30 ring-1 ring-white/[0.06] transition-all focus:outline-none focus:ring-white/20"
+              />
+              <p className="text-[11px] text-white/35">
+                Configure your OAuth app redirect URI as{" "}
+                <code className="rounded bg-white/[0.06] px-1.5 py-0.5 font-mono text-[10px] text-white/50">
+                  beam://oauth
+                </code>
+                .
+              </p>
             </div>
-          ) : null}
-        </section>
 
-        <section className="rounded-xl border border-border/60 bg-background/20 p-3">
-          <div className="mb-3 flex items-center justify-between">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground/70">
-              Assigned To Me
-            </p>
+            {user && (
+              <div className="mt-4 flex items-center gap-3 rounded-xl bg-white/[0.05] px-3.5 py-2.5 ring-1 ring-white/[0.08]">
+                <div className="flex size-8 items-center justify-center rounded-full bg-white/10 text-white/70">
+                  <User className="size-3.5" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[12px] font-medium text-white/80">{user.login}</span>
+                  {user.name && <span className="text-[11px] text-white/40">{user.name}</span>}
+                </div>
+              </div>
+            )}
+          </section>
 
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 px-2 text-xs"
-              onClick={() => void refreshAssigned()}
-              disabled={!isConnected || isLoadingAssigned}
-            >
-              {isLoadingAssigned ? <Loader2 className="mr-1.5 size-3.5 animate-spin" /> : <RefreshCw className="mr-1.5 size-3.5" />}
-              Refresh
-            </Button>
-          </div>
+          {/* Assigned Items Section */}
+          <section
+            className="github-section rounded-2xl bg-white/[0.025] p-4 ring-1 ring-white/[0.04]"
+            style={{ animationDelay: "50ms" }}
+          >
+            <div className="mb-4 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="flex size-6 items-center justify-center rounded-lg bg-white/[0.06]">
+                  <CircleDot className="size-3 text-white/50" />
+                </div>
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-white/45">
+                  Assigned To Me
+                </span>
+                {assignedItems.length > 0 && (
+                  <span className="rounded-full bg-white/[0.08] px-2 py-0.5 text-[10px] font-medium text-white/50">
+                    {assignedItems.length}
+                  </span>
+                )}
+              </div>
 
-          {assignedItems.length === 0 ? (
-            <div className="rounded-md border border-dashed border-border/50 px-3 py-4 text-xs text-muted-foreground">
-              {isConnected ? "No assigned open issues right now." : "Connect GitHub to load your assigned issues and PRs."}
+              <button
+                type="button"
+                onClick={() => void refreshAssigned()}
+                disabled={!isConnected || isLoadingAssigned}
+                className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-white/50 transition-all hover:bg-white/[0.04] hover:text-white/70 disabled:opacity-50"
+              >
+                <RefreshCw className={cn("size-3", isLoadingAssigned && "animate-spin")} />
+                Refresh
+              </button>
             </div>
-          ) : (
-            <div className="space-y-2">
-              {assignedItems.slice(0, 8).map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => void openUrl(item.html_url)}
-                  className="w-full rounded-md border border-border/60 bg-muted/10 px-3 py-2 text-left transition-colors hover:bg-muted/20"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="line-clamp-2 text-sm font-medium text-foreground">#{item.number} {item.title}</p>
-                    <span className="inline-flex shrink-0 items-center rounded bg-background/70 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                      {issueKindLabel(item)}
-                    </span>
-                  </div>
-                  <p className="mt-1 text-[11px] text-muted-foreground">
-                    {repositoryNameFromUrl(item.repository_url)}
-                  </p>
-                </button>
-              ))}
+
+            {assignedItems.length === 0 ? (
+              <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-white/[0.08] py-8 text-center">
+                <CircleDot className="size-6 text-white/20" />
+                <p className="mt-2 text-[12px] text-white/40">
+                  {isConnected ? "No assigned open issues" : "Connect GitHub to load issues"}
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {assignedItems.slice(0, 8).map((item, idx) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => void openUrl(item.html_url)}
+                    className="github-item group flex w-full items-start gap-3 rounded-xl bg-white/[0.02] p-3 text-left ring-1 ring-white/[0.04] transition-all hover:bg-white/[0.05] hover:ring-white/[0.08]"
+                    style={{ animationDelay: `${idx * 30}ms` }}
+                  >
+                    {/* Left accent bar */}
+                    <div className="absolute left-0 top-1/2 h-6 w-[2px] -translate-y-1/2 rounded-full bg-white/60 opacity-0 transition-opacity group-hover:opacity-100" />
+
+                    {/* Icon */}
+                    <div
+                      className={cn(
+                        "mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-lg",
+                        item.pull_request
+                          ? "bg-emerald-500/15 text-emerald-400"
+                          : "bg-blue-500/15 text-blue-400",
+                      )}
+                    >
+                      {item.pull_request ? (
+                        <GitPullRequest className="size-3" />
+                      ) : (
+                        <CircleDot className="size-3" />
+                      )}
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="line-clamp-2 text-[13px] font-medium leading-snug text-white/80">
+                          <span className="text-white/40">#{item.number}</span> {item.title}
+                        </p>
+                        <span
+                          className={cn(
+                            "shrink-0 rounded-md px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide",
+                            item.pull_request
+                              ? "bg-emerald-500/15 text-emerald-400"
+                              : "bg-blue-500/15 text-blue-400",
+                          )}
+                        >
+                          {issueKindLabel(item)}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-[11px] text-white/35">
+                        {repositoryNameFromUrl(item.repository_url)}
+                      </p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* Search Section */}
+          <section
+            className="github-section rounded-2xl bg-white/[0.025] p-4 ring-1 ring-white/[0.04]"
+            style={{ animationDelay: "100ms" }}
+          >
+            <div className="mb-4 flex items-center gap-2">
+              <div className="flex size-6 items-center justify-center rounded-lg bg-white/[0.06]">
+                <Search className="size-3 text-white/50" />
+              </div>
+              <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-white/45">
+                Search Issues & PRs
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <div className="flex flex-1 items-center gap-2.5 rounded-xl bg-white/[0.04] px-3.5 h-10 ring-1 ring-white/[0.06] transition-all focus-within:ring-white/20">
+                <Search className="size-4 shrink-0 text-white/30" />
+                <input
+                  type="text"
+                  value={searchInput}
+                  onChange={(event) => setSearchInput(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      void runSearch();
+                    }
+                  }}
+                  className="h-full w-full border-none bg-transparent text-[13px] text-white/90 placeholder:text-white/30 focus:outline-none"
+                  placeholder="e.g. is:open is:pr review-requested:@me"
+                />
+              </div>
+
+              <button
+                type="button"
+                onClick={() => void runSearch()}
+                disabled={!isConnected || isSearching || !searchInput.trim()}
+                className="flex h-10 items-center gap-1.5 rounded-xl bg-white/10 px-4 text-[12px] font-medium text-white/80 ring-1 ring-white/15 transition-all hover:bg-white/15 disabled:opacity-40"
+              >
+                {isSearching ? (
+                  <Loader2 className="size-3.5 animate-spin" />
+                ) : (
+                  <Search className="size-3.5" />
+                )}
+                Search
+              </button>
+            </div>
+
+            {/* Search results */}
+            {searchItems.length > 0 && (
+              <div className="mt-4 space-y-2">
+                {searchItems.slice(0, 8).map((item, idx) => (
+                  <button
+                    key={`${item.id}-search`}
+                    type="button"
+                    onClick={() => void openUrl(item.html_url)}
+                    className="github-item group flex w-full items-start gap-3 rounded-xl bg-white/[0.02] p-3 text-left ring-1 ring-white/[0.04] transition-all hover:bg-white/[0.05] hover:ring-white/[0.08]"
+                    style={{ animationDelay: `${idx * 30}ms` }}
+                  >
+                    {/* Left accent bar */}
+                    <div className="absolute left-0 top-1/2 h-6 w-[2px] -translate-y-1/2 rounded-full bg-white/60 opacity-0 transition-opacity group-hover:opacity-100" />
+
+                    {/* Icon */}
+                    <div
+                      className={cn(
+                        "mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-lg",
+                        item.pull_request
+                          ? "bg-emerald-500/15 text-emerald-400"
+                          : "bg-blue-500/15 text-blue-400",
+                      )}
+                    >
+                      {item.pull_request ? (
+                        <GitPullRequest className="size-3" />
+                      ) : (
+                        <CircleDot className="size-3" />
+                      )}
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <p className="line-clamp-2 text-[13px] font-medium leading-snug text-white/80">
+                        <span className="text-white/40">#{item.number}</span> {item.title}
+                      </p>
+                      <p className="mt-1 text-[11px] text-white/35">
+                        {repositoryNameFromUrl(item.repository_url)}
+                      </p>
+                    </div>
+
+                    <ArrowUpRight className="size-3.5 shrink-0 text-white/30 opacity-0 transition-opacity group-hover:opacity-100" />
+                  </button>
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* Error display */}
+          {mergedError && (
+            <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-[12px] text-red-300">
+              {mergedError}
             </div>
           )}
-        </section>
-
-        <section className="rounded-xl border border-border/60 bg-background/20 p-3">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground/70">
-            Search Issues & PRs
-          </p>
-
-          <div className="flex gap-2">
-            <Input
-              value={searchInput}
-              onChange={(event) => {
-                setSearchInput(event.target.value);
-              }}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  event.preventDefault();
-                  void runSearch();
-                }
-              }}
-              placeholder="e.g. is:open is:pr review-requested:@me"
-              className="h-9 border-border/70 bg-muted/15 text-sm"
-            />
-            <Button
-              type="button"
-              variant="outline"
-              className="h-9 gap-1.5"
-              onClick={() => void runSearch()}
-              disabled={!isConnected || isSearching || !searchInput.trim()}
-            >
-              {isSearching ? <Loader2 className="size-3.5 animate-spin" /> : <Search className="size-3.5" />}
-              Search
-            </Button>
-          </div>
-
-          {searchItems.length > 0 ? (
-            <div className="mt-3 space-y-2">
-              {searchItems.slice(0, 8).map((item) => (
-                <button
-                  key={`${item.id}-search`}
-                  type="button"
-                  onClick={() => void openUrl(item.html_url)}
-                  className="w-full rounded-md border border-border/60 bg-muted/10 px-3 py-2 text-left transition-colors hover:bg-muted/20"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="line-clamp-2 text-sm font-medium text-foreground">#{item.number} {item.title}</p>
-                    <ArrowUpRight className="size-3.5 shrink-0 text-muted-foreground/70" />
-                  </div>
-                  <p className="mt-1 text-[11px] text-muted-foreground">
-                    {repositoryNameFromUrl(item.repository_url)}
-                  </p>
-                </button>
-              ))}
-            </div>
-          ) : null}
-        </section>
-
-        {mergedError ? (
-          <section className="rounded-xl border border-red-500/35 bg-red-500/10 px-3 py-2 text-xs text-red-100">
-            {mergedError}
-          </section>
-        ) : null}
-      </div>
-
-      <div className="border-t border-border/40 px-4 py-2 text-[11px] text-muted-foreground/80">
-        <div className="flex items-center gap-3">
-          <span className="inline-flex items-center gap-1.5"><User className="size-3" /> assigned</span>
-          <span className="inline-flex items-center gap-1.5"><GitPullRequest className="size-3" /> PR + issue search</span>
         </div>
       </div>
+
+      {/* Footer */}
+      <footer className="github-footer flex h-11 shrink-0 items-center justify-between border-t border-white/[0.05] px-5">
+        <div className="flex items-center gap-3 text-[11px] text-white/35">
+          <div className="flex items-center gap-1.5">
+            <div className="flex size-5 items-center justify-center rounded-md bg-white/[0.08]">
+              <CircleDot className="size-3 text-white/50" />
+            </div>
+            <span className="font-medium">Issues</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="flex size-5 items-center justify-center rounded-md bg-white/[0.08]">
+              <GitPullRequest className="size-3 text-white/50" />
+            </div>
+            <span className="font-medium">Pull Requests</span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 text-[11px] text-white/25">
+          <span className="flex items-center gap-1.5">
+            <kbd className="rounded-md bg-white/[0.06] px-1.5 py-0.5 font-mono text-[10px] text-white/40">
+              Enter
+            </kbd>
+            Search
+          </span>
+          <span className="flex items-center gap-1.5">
+            <kbd className="rounded-md bg-white/[0.06] px-1.5 py-0.5 font-mono text-[10px] text-white/40">
+              Esc
+            </kbd>
+            Back
+          </span>
+        </div>
+      </footer>
     </div>
   );
 }

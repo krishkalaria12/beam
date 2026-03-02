@@ -48,13 +48,16 @@ export function useOpenApplication() {
     },
   });
 
-  const launchApplication = useCallback((execPath: string) => {
-    if (mutation.isPending && launchingExecPath === execPath) {
-      return;
-    }
+  const launchApplication = useCallback(
+    (execPath: string) => {
+      if (mutation.isPending && launchingExecPath === execPath) {
+        return;
+      }
 
-    mutation.mutate(execPath);
-  }, [launchingExecPath, mutation.isPending, mutation.mutate]);
+      mutation.mutate(execPath);
+    },
+    [launchingExecPath, mutation.isPending, mutation.mutate],
+  );
 
   return {
     launchApplication,

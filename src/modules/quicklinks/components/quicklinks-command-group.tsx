@@ -19,7 +19,7 @@ export default function QuicklinksCommandGroup({
 }: QuicklinksCommandGroupProps) {
   if (!isOpen) {
     return (
-      <QuicklinksCommandItem 
+      <QuicklinksCommandItem
         onAdd={() => {
           setView("create");
           onOpen();
@@ -34,11 +34,7 @@ export default function QuicklinksCommandGroup({
 
   return (
     <LauncherTakeoverSurface className="flex flex-col">
-      <QuicklinksView
-        view={view}
-        setView={setView}
-        onBack={onBack}
-      />
+      <QuicklinksView view={view} setView={setView} onBack={onBack} />
     </LauncherTakeoverSurface>
   );
 }

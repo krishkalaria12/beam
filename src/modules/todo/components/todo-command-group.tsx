@@ -17,13 +17,7 @@ type TodoCommandGroupProps = {
   onBack: () => void;
 };
 
-const TODO_KEYWORDS = [
-  "todo",
-  "todos",
-  "tasks",
-  "task list",
-  "checklist",
-] as const;
+const TODO_KEYWORDS = ["todo", "todos", "tasks", "task list", "checklist"] as const;
 
 export default function TodoCommandGroup({ isOpen, onOpen, onBack }: TodoCommandGroupProps) {
   const searchInput = useCommandState((state) => state.search);

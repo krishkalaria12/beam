@@ -26,11 +26,7 @@ export function collectGridEntries(
 
     const title = asString(node.props.title, "Untitled");
     const subtitle = asString(node.props.subtitle).trim() || undefined;
-    const keywords = [
-      title,
-      subtitle ?? "",
-      ...asStringArray(node.props.keywords),
-    ]
+    const keywords = [title, subtitle ?? "", ...asStringArray(node.props.keywords)]
       .join(" ")
       .toLowerCase();
 
@@ -82,8 +78,8 @@ export function collectGridEntries(
       const sectionColumnsRaw = child.props.columns;
       const sectionColumns =
         typeof sectionColumnsRaw === "number" &&
-          Number.isFinite(sectionColumnsRaw) &&
-          sectionColumnsRaw > 0
+        Number.isFinite(sectionColumnsRaw) &&
+        sectionColumnsRaw > 0
           ? Math.max(1, Math.floor(sectionColumnsRaw))
           : defaultColumns;
       const sectionAspectRatio = asString(child.props.aspectRatio).trim() || defaultAspectRatio;

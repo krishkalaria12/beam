@@ -83,11 +83,7 @@ function hasUniqueSymbols(symbols: {
   script: string;
   customBindings: readonly CustomTriggerBinding[];
 }): boolean {
-  const used = new Set<string>([
-    symbols.quicklink,
-    symbols.system,
-    symbols.script,
-  ]);
+  const used = new Set<string>([symbols.quicklink, symbols.system, symbols.script]);
 
   if (used.size !== 3) {
     return false;
@@ -104,11 +100,12 @@ function hasUniqueSymbols(symbols: {
 }
 
 function normalizeSymbols(input: unknown): TriggerSymbols {
-  const source = input && typeof input === "object"
-    ? input as Partial<Record<TriggerSymbolTarget, unknown>> & {
-      customBindings?: unknown;
-    }
-    : {};
+  const source =
+    input && typeof input === "object"
+      ? (input as Partial<Record<TriggerSymbolTarget, unknown>> & {
+          customBindings?: unknown;
+        })
+      : {};
   const next: TriggerSymbols = {
     quicklink: sanitizeSymbol(source.quicklink, DEFAULT_TRIGGER_SYMBOLS.quicklink),
     system: sanitizeSymbol(source.system, DEFAULT_TRIGGER_SYMBOLS.system),

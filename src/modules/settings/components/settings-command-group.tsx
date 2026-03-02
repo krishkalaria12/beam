@@ -5,13 +5,16 @@ import { OpenModuleCommandRow } from "@/components/command/open-module-command-r
 import { CommandIcon } from "@/components/icons/command-icon";
 import { CommandGroup } from "@/components/ui/command";
 import { useLauncherPanelBackHandler } from "@/modules/launcher/lib/back-navigation";
-import { matchesCommandKeywords, normalizeCommandQuery } from "@/modules/launcher/lib/command-query";
+import {
+  matchesCommandKeywords,
+  normalizeCommandQuery,
+} from "@/modules/launcher/lib/command-query";
 import type { SettingsView } from "../constants";
 import { SettingsMenu } from "./SettingsMenu";
+import { SettingsViewWrapper } from "./SettingsView";
 import { VisualStyleSettings } from "./VisualStyleSettings";
 import { LayoutSettings } from "./LayoutSettings";
 import { PinnedCommandsSettings } from "./PinnedCommandsSettings";
-import { FallbackActionsSettings } from "./FallbackActionsSettings";
 import HotkeysSettings from "./HotkeysSettings";
 import { TriggerSymbolsSettings } from "./TriggerSymbolsSettings";
 
@@ -22,10 +25,6 @@ type SettingsCommandGroupProps = {
   pinnedCommandIds: readonly string[];
   onSetPinned: (commandId: string, pinned: boolean) => void;
   onMovePinned: (commandId: string, direction: "up" | "down") => void;
-  fallbackEnabled: boolean;
-  fallbackCommandIds: readonly string[];
-  onSetFallbackEnabled: (enabled: boolean) => void;
-  onSetFallbackCommandIds: (fallbackCommandIds: readonly string[]) => void;
 };
 
 const SETTINGS_KEYWORDS = [
@@ -36,8 +35,6 @@ const SETTINGS_KEYWORDS = [
   "glassy",
   "pinned",
   "pin",
-  "fallback",
-  "no results",
   "hotkeys",
   "shortcuts",
   "wayland",
@@ -57,10 +54,6 @@ export default function SettingsCommandGroup({
   pinnedCommandIds,
   onSetPinned,
   onMovePinned,
-  fallbackEnabled,
-  fallbackCommandIds,
-  onSetFallbackEnabled,
-  onSetFallbackCommandIds,
 }: SettingsCommandGroupProps) {
   const searchInput = useCommandState((state) => state.search);
   const query = normalizeCommandQuery(searchInput);
@@ -73,6 +66,10 @@ export default function SettingsCommandGroup({
       setView("main");
     }
   }, [onBack, view]);
+
+  const handleNavigateToMain = useCallback(() => {
+    setView("main");
+  }, []);
 
   useLauncherPanelBackHandler("settings", handleBack, isOpen);
 
@@ -98,28 +95,34 @@ export default function SettingsCommandGroup({
     );
   }
 
+  const renderContent = () => {
+    switch (view) {
+      case "main":
+        return <SettingsMenu setView={setView} />;
+      case "style":
+        return <VisualStyleSettings />;
+      case "layout":
+        return <LayoutSettings />;
+      case "pinned":
+        return (
+          <PinnedCommandsSettings
+            pinnedCommandIds={pinnedCommandIds}
+            onSetPinned={onSetPinned}
+            onMovePinned={onMovePinned}
+          />
+        );
+      case "hotkeys":
+        return <HotkeysSettings />;
+      case "trigger-symbols":
+        return <TriggerSymbolsSettings />;
+      default:
+        return null;
+    }
+  };
+
   return (
-    <>
-      {view === "main" && <SettingsMenu setView={setView} />}
-      {view === "style" && <VisualStyleSettings />}
-      {view === "layout" && <LayoutSettings />}
-      {view === "pinned" && (
-        <PinnedCommandsSettings
-          pinnedCommandIds={pinnedCommandIds}
-          onSetPinned={onSetPinned}
-          onMovePinned={onMovePinned}
-        />
-      )}
-      {view === "fallback" && (
-        <FallbackActionsSettings
-          enabled={fallbackEnabled}
-          fallbackCommandIds={fallbackCommandIds}
-          onSetEnabled={onSetFallbackEnabled}
-          onSetFallbackCommandIds={onSetFallbackCommandIds}
-        />
-      )}
-      {view === "hotkeys" && <HotkeysSettings />}
-      {view === "trigger-symbols" && <TriggerSymbolsSettings />}
-    </>
+    <SettingsViewWrapper view={view} onBack={handleBack} onNavigateToMain={handleNavigateToMain}>
+      {renderContent()}
+    </SettingsViewWrapper>
   );
 }

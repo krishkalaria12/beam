@@ -40,7 +40,10 @@ export function validateCommandDescriptor(descriptor: CommandDescriptor): Comman
     });
   }
 
-  if (!Array.isArray(descriptor.keywords) || descriptor.keywords.some((word) => !hasNonEmptyString(word))) {
+  if (
+    !Array.isArray(descriptor.keywords) ||
+    descriptor.keywords.some((word) => !hasNonEmptyString(word))
+  ) {
     errors.push({
       code: "INVALID_KEYWORDS",
       message: `Command "${descriptor.id}" must provide non-empty keywords.`,
@@ -91,7 +94,9 @@ export function validateCommandDescriptor(descriptor: CommandDescriptor): Comman
   return errors;
 }
 
-export function validateCommandDescriptors(descriptors: CommandDescriptor[]): CommandValidationError[] {
+export function validateCommandDescriptors(
+  descriptors: CommandDescriptor[],
+): CommandValidationError[] {
   const errors: CommandValidationError[] = [];
   const seenIds = new Set<string>();
 

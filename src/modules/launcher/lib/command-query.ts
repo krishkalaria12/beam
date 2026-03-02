@@ -22,14 +22,13 @@ export function matchesCommandKeywords(
       return false;
     }
 
-    return normalizedKeyword.includes(normalizedQuery) || normalizedQuery.includes(normalizedKeyword);
+    return (
+      normalizedKeyword.includes(normalizedQuery) || normalizedQuery.includes(normalizedKeyword)
+    );
   });
 }
 
-export function extractCommandKeywordRemainder(
-  query: string,
-  keywords: readonly string[],
-): string {
+export function extractCommandKeywordRemainder(query: string, keywords: readonly string[]): string {
   const trimmedQuery = query.trim();
   if (!trimmedQuery) {
     return "";

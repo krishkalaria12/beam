@@ -1,5 +1,6 @@
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight, Check, Copy } from "lucide-react";
 import { CommandItem } from "@/components/ui/command";
+import { cn } from "@/lib/utils";
 import type { CalculatorHistoryEntry } from "../api/get-calculator-history";
 
 type CalculatorHistoryItemProps = {
@@ -9,32 +10,64 @@ type CalculatorHistoryItemProps = {
   onSelect: () => void;
 };
 
-export function CalculatorHistoryItem({ entry, index, isCopied, onSelect }: CalculatorHistoryItemProps) {
+export function CalculatorHistoryItem({
+  entry,
+  index,
+  isCopied,
+  onSelect,
+}: CalculatorHistoryItemProps) {
   return (
     <CommandItem
       value={`calculator-history-${index}`}
-      className="group rounded-xl p-0 overflow-hidden"
+      className="calc-history-item group relative rounded-xl p-0 overflow-hidden data-[selected=true]:bg-white/[0.04]"
       onSelect={onSelect}
+      style={{ animationDelay: `${index * 30}ms` }}
     >
-      <div className="w-full">
-        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 py-3">
-          <div className="min-w-0">
-            <p className="truncate font-mono text-base font-medium text-foreground/70">
+      {/* Left accent bar */}
+      <div
+        className={cn(
+          "absolute left-0 top-1/2 h-6 w-[3px] -translate-y-1/2 rounded-full transition-all duration-200",
+          "bg-white/40 opacity-0 group-data-[selected=true]:opacity-100",
+        )}
+      />
+
+      <div className="w-full px-4 py-3">
+        <div className="flex items-center gap-4">
+          {/* Expression */}
+          <div className="min-w-0 flex-1">
+            <p className="truncate font-mono text-[13px] font-medium tracking-[-0.01em] text-white/60 group-data-[selected=true]:text-white/80">
               {entry.query}
             </p>
           </div>
 
-          <ArrowRight className="size-4 text-muted-foreground/30" />
+          {/* Arrow */}
+          <ArrowRight className="size-3.5 shrink-0 text-white/20 group-data-[selected=true]:text-white/40" />
 
-          <div className="min-w-0 flex items-center justify-end">
-            <span className="hidden sm:inline-flex items-center font-mono text-[10px] uppercase tracking-widest text-muted-foreground/40 group-data-[selected=true]:text-foreground/50 w-0 opacity-0 group-data-[selected=true]:w-auto group-data-[selected=true]:opacity-100 group-data-[selected=true]:mr-3 transition-all duration-300 overflow-hidden whitespace-nowrap">
+          {/* Result */}
+          <div className="min-w-0 flex items-center gap-3">
+            {/* Copy hint - shows on selection */}
+            <span
+              className={cn(
+                "hidden sm:flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-[0.06em] transition-all duration-200",
+                "opacity-0 translate-x-2 group-data-[selected=true]:opacity-100 group-data-[selected=true]:translate-x-0",
+                isCopied ? "text-emerald-400" : "text-white/40",
+              )}
+            >
               {isCopied ? (
-                <Check className="size-3 text-emerald-500 animate-in zoom-in" />
+                <>
+                  <Check className="size-3" />
+                  Copied
+                </>
               ) : (
-                "copy result"
+                <>
+                  <Copy className="size-3" />
+                  Copy
+                </>
               )}
             </span>
-            <p className="truncate font-mono text-xl font-bold tracking-tight text-foreground">
+
+            {/* Result value */}
+            <p className="truncate font-mono text-[18px] font-bold tracking-[-0.02em] text-white/90">
               {entry.result}
             </p>
           </div>

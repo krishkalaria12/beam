@@ -43,10 +43,7 @@
       "identifier": "substanceWeightToVolumeConversion"
     },
     {
-      "prototypeExpressions": [
-        "density of __substance",
-        "__substance density"
-      ],
+      "prototypeExpressions": ["density of __substance", "__substance density"],
       "identifier": "densityOfSubstance"
     },
     {
@@ -67,9 +64,7 @@
       "identifier": "rateUnitChange"
     },
     {
-      "prototypeExpressions": [
-        "__unit_rate for a __duration"
-      ],
+      "prototypeExpressions": ["__unit_rate for a __duration"],
       "identifier": "rateForADuration"
     },
     {
@@ -100,15 +95,11 @@
       "identifier": "tyreSpeed"
     },
     {
-      "prototypeExpressions": [
-        "__speed_expression for __duration_expression"
-      ],
+      "prototypeExpressions": ["__speed_expression for __duration_expression"],
       "identifier": "speedForTime"
     },
     {
-      "prototypeExpressions": [
-        "__power_expression __at __angularVelocity_expression"
-      ],
+      "prototypeExpressions": ["__power_expression __at __angularVelocity_expression"],
       "identifier": "powerAtRotation"
     }
   ],
@@ -143,21 +134,15 @@
       "identifier": "calendarUnitToDatespan"
     },
     {
-      "prototypeExpressions": [
-        "__duration in __datestamp"
-      ],
+      "prototypeExpressions": ["__duration in __datestamp"],
       "identifier": "calendarUnitInDate"
     },
     {
-      "prototypeExpressions": [
-        "__duration in __timespan"
-      ],
+      "prototypeExpressions": ["__duration in __timespan"],
       "identifier": "calendarUnitInTimespan"
     },
     {
-      "prototypeExpressions": [
-        "__duration %"
-      ],
+      "prototypeExpressions": ["__duration %"],
       "identifier": "calendarUnitPercentage"
     },
     {
@@ -168,9 +153,7 @@
       "identifier": "calendarUnitLeftInDate"
     },
     {
-      "prototypeExpressions": [
-        "__duration in __datespan"
-      ],
+      "prototypeExpressions": ["__duration in __datespan"],
       "identifier": "calendarUnitInDatespan"
     },
     {
@@ -199,17 +182,11 @@
       "identifier": "inclusiveIntervalBetweenDates"
     },
     {
-      "prototypeExpressions": [
-        "from __timestamp to __timestamp",
-        "__timestamp to __timestamp"
-      ],
+      "prototypeExpressions": ["from __timestamp to __timestamp", "__timestamp to __timestamp"],
       "identifier": "intervalBetweenTimestamps"
     },
     {
-      "prototypeExpressions": [
-        "from __laptime to __laptime",
-        "__laptime to __laptime"
-      ],
+      "prototypeExpressions": ["from __laptime to __laptime", "__laptime to __laptime"],
       "identifier": "intervalBetweenLaptimes"
     },
     {
@@ -221,16 +198,11 @@
       "identifier": "framesBetweenFrametimes"
     },
     {
-      "prototypeExpressions": [
-        "from __frametime to __frametime",
-        "__frametime to __frametime"
-      ],
+      "prototypeExpressions": ["from __frametime to __frametime", "__frametime to __frametime"],
       "identifier": "intervalBetweenFrametimes"
     },
     {
-      "prototypeExpressions": [
-        "__duration since __datestamp"
-      ],
+      "prototypeExpressions": ["__duration since __datestamp"],
       "identifier": "calendarUnitSinceDate"
     },
     {
@@ -243,9 +215,7 @@
       "identifier": "calendarUnitExpressionAfterDate"
     },
     {
-      "prototypeExpressions": [
-        "__timespan before __datestamp"
-      ],
+      "prototypeExpressions": ["__timespan before __datestamp"],
       "identifier": "calendarUnitExpressionBeforeDate"
     },
     {
@@ -259,10 +229,7 @@
       "identifier": "calendarUnitExpressionAgo"
     },
     {
-      "prototypeExpressions": [
-        "new timestamp",
-        "current timestamp"
-      ],
+      "prototypeExpressions": ["new timestamp", "current timestamp"],
       "identifier": "generateTimestamp"
     },
     {
@@ -313,10 +280,7 @@
       "identifier": "differenceBetweenTimezones"
     },
     {
-      "prototypeExpressions": [
-        "__datestamp in __timespan",
-        "__datestamp after __timespan"
-      ],
+      "prototypeExpressions": ["__datestamp in __timespan", "__datestamp after __timespan"],
       "identifier": "weekdayAfterTimespan"
     },
     {
@@ -328,21 +292,15 @@
       "identifier": "weekOfYearOnDate"
     },
     {
-      "prototypeExpressions": [
-        "week of year"
-      ],
+      "prototypeExpressions": ["week of year"],
       "identifier": "weekOfYear"
     },
     {
-      "prototypeExpressions": [
-        "week of month on __datestamp"
-      ],
+      "prototypeExpressions": ["week of month on __datestamp"],
       "identifier": "weekOfMonthOnDate"
     },
     {
-      "prototypeExpressions": [
-        "week of month"
-      ],
+      "prototypeExpressions": ["week of month"],
       "identifier": "weekOfMonth"
     },
     {
@@ -355,25 +313,15 @@
       "identifier": "dayOfYearOnDate"
     },
     {
-      "prototypeExpressions": [
-        "day of month on __datestamp",
-        "day of the month on __datestamp"
-      ],
+      "prototypeExpressions": ["day of month on __datestamp", "day of the month on __datestamp"],
       "identifier": "dayOfMonthOnDate"
     },
     {
-      "prototypeExpressions": [
-        "day of the year",
-        "day of year",
-        "day number"
-      ],
+      "prototypeExpressions": ["day of the year", "day of year", "day number"],
       "identifier": "dayOfYear"
     },
     {
-      "prototypeExpressions": [
-        "day of the month",
-        "day of month"
-      ],
+      "prototypeExpressions": ["day of the month", "day of month"],
       "identifier": "dayOfMonth"
     },
     {
@@ -398,17 +346,11 @@
   ],
   "general": [
     {
-      "prototypeExpressions": [
-        "remainder of 20 divided by 3"
-      ],
+      "prototypeExpressions": ["remainder of 20 divided by 3"],
       "identifier": "remainder"
     },
     {
-      "prototypeExpressions": [
-        "is 20 a prime number",
-        "is 20 prime",
-        "is prime 20"
-      ],
+      "prototypeExpressions": ["is 20 a prime number", "is 20 prime", "is prime 20"],
       "identifier": "isPrime"
     },
     {
@@ -420,15 +362,11 @@
       "identifier": "clamp"
     },
     {
-      "prototypeExpressions": [
-        "21 divided by 7"
-      ],
+      "prototypeExpressions": ["21 divided by 7"],
       "identifier": "dividedBy"
     },
     {
-      "prototypeExpressions": [
-        "21 multiplied by 7"
-      ],
+      "prototypeExpressions": ["21 multiplied by 7"],
       "identifier": "multipliedBy"
     },
     {
@@ -442,21 +380,15 @@
       "identifier": "toThePowerOf"
     },
     {
-      "prototypeExpressions": [
-        "half of 20"
-      ],
+      "prototypeExpressions": ["half of 20"],
       "identifier": "halfOf"
     },
     {
-      "prototypeExpressions": [
-        "round 56 up"
-      ],
+      "prototypeExpressions": ["round 56 up"],
       "identifier": "roundXUp"
     },
     {
-      "prototypeExpressions": [
-        "round 56 down"
-      ],
+      "prototypeExpressions": ["round 56 down"],
       "identifier": "roundXDown"
     },
     {
@@ -483,23 +415,15 @@
       "identifier": "roundDownXToNearestY"
     },
     {
-      "prototypeExpressions": [
-        "round 56 to nearest 10"
-      ],
+      "prototypeExpressions": ["round 56 to nearest 10"],
       "identifier": "roundXToNearestY"
     },
     {
-      "prototypeExpressions": [
-        "lesser of 2 and 30",
-        "lesser of __literal and __literal"
-      ],
+      "prototypeExpressions": ["lesser of 2 and 30", "lesser of __literal and __literal"],
       "identifier": "lesserOf"
     },
     {
-      "prototypeExpressions": [
-        "greater of 2 and 30",
-        "greater of __literal and __literal"
-      ],
+      "prototypeExpressions": ["greater of 2 and 30", "greater of __literal and __literal"],
       "identifier": "greaterOf"
     },
     {
@@ -511,10 +435,7 @@
       "identifier": "midpoint"
     },
     {
-      "prototypeExpressions": [
-        "lcm of 5 and 8",
-        "lowest common multiple of 5 and 8"
-      ],
+      "prototypeExpressions": ["lcm of 5 and 8", "lowest common multiple of 5 and 8"],
       "identifier": "lcm"
     },
     {
@@ -543,10 +464,7 @@
       "identifier": "proportionsFindDenominator"
     },
     {
-      "prototypeExpressions": [
-        "random number between 1 and 5",
-        "random between 1 and 5"
-      ],
+      "prototypeExpressions": ["random number between 1 and 5", "random between 1 and 5"],
       "identifier": "makeRandomNumber"
     },
     {
@@ -574,24 +492,15 @@
       "identifier": "isWhatMultiplierOn"
     },
     {
-      "prototypeExpressions": [
-        "squared root of 100",
-        "squared root 100"
-      ],
+      "prototypeExpressions": ["squared root of 100", "squared root 100"],
       "identifier": "squareRoot"
     },
     {
-      "prototypeExpressions": [
-        "cubed root of 100",
-        "cubed root 100"
-      ],
+      "prototypeExpressions": ["cubed root of 100", "cubed root 100"],
       "identifier": "cubedRoot"
     },
     {
-      "prototypeExpressions": [
-        "5 root of 100",
-        "root 5 of 100"
-      ],
+      "prototypeExpressions": ["5 root of 100", "root 5 of 100"],
       "identifier": "nthRoot"
     },
     {
@@ -617,36 +526,23 @@
       "identifier": "nthLogReversed"
     },
     {
-      "prototypeExpressions": [
-        "5 choose 3",
-        "5 combination 3"
-      ],
+      "prototypeExpressions": ["5 choose 3", "5 combination 3"],
       "identifier": "combination"
     },
     {
-      "prototypeExpressions": [
-        "5 permutation 3"
-      ],
+      "prototypeExpressions": ["5 permutation 3"],
       "identifier": "permutation"
     },
     {
-      "prototypeExpressions": [
-        "3 combinations of 5",
-        "3 combination of 5"
-      ],
+      "prototypeExpressions": ["3 combinations of 5", "3 combination of 5"],
       "identifier": "reversedCombination"
     },
     {
-      "prototypeExpressions": [
-        "3 permutations of 5",
-        "3 permutation of 5"
-      ],
+      "prototypeExpressions": ["3 permutations of 5", "3 permutation of 5"],
       "identifier": "reversedPermutation"
     },
     {
-      "prototypeExpressions": [
-        "5 permutation 3"
-      ],
+      "prototypeExpressions": ["5 permutation 3"],
       "identifier": "permutation"
     },
     {
@@ -691,9 +587,7 @@
       "identifier": "returnOnInvestmentAfter"
     },
     {
-      "prototypeExpressions": [
-        "500 invested 1000 returned"
-      ],
+      "prototypeExpressions": ["500 invested 1000 returned"],
       "identifier": "returnOnInvestment"
     },
     {
@@ -929,10 +823,7 @@
       "identifier": "highTemperature"
     },
     {
-      "prototypeExpressions": [
-        "__timezone chance of rain",
-        "chance of rain in __timezone"
-      ],
+      "prototypeExpressions": ["__timezone chance of rain", "chance of rain in __timezone"],
       "identifier": "precipitationChance"
     },
     {
@@ -985,24 +876,15 @@
       "identifier": "weatherConditions"
     },
     {
-      "prototypeExpressions": [
-        "__timezone humidity",
-        "humidity in __timezone"
-      ],
+      "prototypeExpressions": ["__timezone humidity", "humidity in __timezone"],
       "identifier": "humidity"
     },
     {
-      "prototypeExpressions": [
-        "__timezone cloud cover",
-        "cloud cover in __timezone"
-      ],
+      "prototypeExpressions": ["__timezone cloud cover", "cloud cover in __timezone"],
       "identifier": "cloudCover"
     },
     {
-      "prototypeExpressions": [
-        "__timezone visibility",
-        "visibility in __timezone"
-      ],
+      "prototypeExpressions": ["__timezone visibility", "visibility in __timezone"],
       "identifier": "visibility"
     },
     {
@@ -1015,52 +897,31 @@
       "identifier": "windSpeed"
     },
     {
-      "prototypeExpressions": [
-        "__timezone wind direction",
-        "wind direction in __timezone"
-      ],
+      "prototypeExpressions": ["__timezone wind direction", "wind direction in __timezone"],
       "identifier": "windDirection"
     },
     {
-      "prototypeExpressions": [
-        "__timezone dew point",
-        "dew point in __timezone"
-      ],
+      "prototypeExpressions": ["__timezone dew point", "dew point in __timezone"],
       "identifier": "dewPoint"
     },
     {
-      "prototypeExpressions": [
-        "__timezone uv index",
-        "uv index in __timezone"
-      ],
+      "prototypeExpressions": ["__timezone uv index", "uv index in __timezone"],
       "identifier": "uvIndex"
     },
     {
-      "prototypeExpressions": [
-        "__timezone pressure",
-        "pressure in __timezone"
-      ],
+      "prototypeExpressions": ["__timezone pressure", "pressure in __timezone"],
       "identifier": "pressure"
     },
     {
-      "prototypeExpressions": [
-        "__timezone pressure direction",
-        "pressure direction in __timezone"
-      ],
+      "prototypeExpressions": ["__timezone pressure direction", "pressure direction in __timezone"],
       "identifier": "pressureDirection"
     },
     {
-      "prototypeExpressions": [
-        "__timezone sunrise",
-        "sunrise in __timezone"
-      ],
+      "prototypeExpressions": ["__timezone sunrise", "sunrise in __timezone"],
       "identifier": "sunrise"
     },
     {
-      "prototypeExpressions": [
-        "__timezone sunset",
-        "sunset in __timezone"
-      ],
+      "prototypeExpressions": ["__timezone sunset", "sunset in __timezone"],
       "identifier": "sunset"
     },
     {
@@ -1086,10 +947,7 @@
       "identifier": "moonset"
     },
     {
-      "prototypeExpressions": [
-        "moon phase",
-        "moonphase"
-      ],
+      "prototypeExpressions": ["moon phase", "moonphase"],
       "identifier": "moonPhase"
     },
     {
@@ -1117,17 +975,11 @@
       "identifier": "gpsCoordinatesOfPlace"
     },
     {
-      "prototypeExpressions": [
-        "longitude of __timezone",
-        "longitude of __gpsCoordinates"
-      ],
+      "prototypeExpressions": ["longitude of __timezone", "longitude of __gpsCoordinates"],
       "identifier": "longitudeOfPlace"
     },
     {
-      "prototypeExpressions": [
-        "latitude of __timezone",
-        "latitude of __gpsCoordinates"
-      ],
+      "prototypeExpressions": ["latitude of __timezone", "latitude of __gpsCoordinates"],
       "identifier": "latitudeOfPlace"
     },
     {
@@ -1231,34 +1083,23 @@
       "identifier": "xToYIsWhatMultiplier"
     },
     {
-      "prototypeExpressions": [
-        "10 to 20"
-      ],
+      "prototypeExpressions": ["10 to 20"],
       "identifier": "xToY"
     },
     {
-      "prototypeExpressions": [
-        "10 on 20"
-      ],
+      "prototypeExpressions": ["10 on 20"],
       "identifier": "xOnY"
     },
     {
-      "prototypeExpressions": [
-        "10 off 20"
-      ],
+      "prototypeExpressions": ["10 off 20"],
       "identifier": "xOffY"
     },
     {
-      "prototypeExpressions": [
-        "10 of 20"
-      ],
+      "prototypeExpressions": ["10 of 20"],
       "identifier": "xOfY"
     },
     {
-      "prototypeExpressions": [
-        "__timespan __at 1.5x",
-        "__timespan to 1.5x"
-      ],
+      "prototypeExpressions": ["__timespan __at 1.5x", "__timespan to 1.5x"],
       "identifier": "timeAtMultiplier"
     },
     {
@@ -1289,45 +1130,31 @@
       "identifier": "percentOff"
     },
     {
-      "prototypeExpressions": [
-        "__percentage on 100"
-      ],
+      "prototypeExpressions": ["__percentage on 100"],
       "identifier": "percentOn"
     },
     {
-      "prototypeExpressions": [
-        "30 is __percentage of what"
-      ],
+      "prototypeExpressions": ["30 is __percentage of what"],
       "identifier": "isPercentOfWhat"
     },
     {
-      "prototypeExpressions": [
-        "__percentage of what is 30"
-      ],
+      "prototypeExpressions": ["__percentage of what is 30"],
       "identifier": "isPercentOfWhatClassic"
     },
     {
-      "prototypeExpressions": [
-        "30 is __percentage off what"
-      ],
+      "prototypeExpressions": ["30 is __percentage off what"],
       "identifier": "isPercentOffWhat"
     },
     {
-      "prototypeExpressions": [
-        "__percentage off what is 30"
-      ],
+      "prototypeExpressions": ["__percentage off what is 30"],
       "identifier": "isPercentOffWhatClassic"
     },
     {
-      "prototypeExpressions": [
-        "30 is __percentage on what"
-      ],
+      "prototypeExpressions": ["30 is __percentage on what"],
       "identifier": "isPercentOnWhat"
     },
     {
-      "prototypeExpressions": [
-        "__percentage on what is 30"
-      ],
+      "prototypeExpressions": ["__percentage on what is 30"],
       "identifier": "isPercentOnWhatClassic"
     },
     {
@@ -1394,17 +1221,11 @@
       "identifier": "isWhatPercentOn"
     },
     {
-      "prototypeExpressions": [
-        "__sales_tax in 500",
-        "__sales_tax of 500",
-        "__sales_tax from 500"
-      ],
+      "prototypeExpressions": ["__sales_tax in 500", "__sales_tax of 500", "__sales_tax from 500"],
       "identifier": "salesTaxIn"
     },
     {
-      "prototypeExpressions": [
-        "__sales_tax off 100"
-      ],
+      "prototypeExpressions": ["__sales_tax off 100"],
       "identifier": "salesTaxOff"
     }
   ],
@@ -1428,10 +1249,7 @@
   ],
   "literalRelated": [
     {
-      "prototypeExpressions": [
-        "count of __literal",
-        "count __literal"
-      ],
+      "prototypeExpressions": ["count of __literal", "count __literal"],
       "identifier": "countOfLiteral"
     },
     {
@@ -1451,9 +1269,7 @@
       "identifier": "extractLiteralSuffix"
     },
     {
-      "prototypeExpressions": [
-        "parse __literal"
-      ],
+      "prototypeExpressions": ["parse __literal"],
       "identifier": "parseLiteral"
     }
   ]

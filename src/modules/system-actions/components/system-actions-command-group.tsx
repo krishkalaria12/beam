@@ -43,7 +43,10 @@ export default function SystemActionsCommandGroup({
         return item.keywords.some((keyword) => matchesQuery(keyword, query));
       });
 
-  const showAwake = !query || matchesQuery(AWAKE_ACTION.title, query) || AWAKE_ACTION.keywords.some((keyword) => matchesQuery(keyword, query));
+  const showAwake =
+    !query ||
+    matchesQuery(AWAKE_ACTION.title, query) ||
+    AWAKE_ACTION.keywords.some((keyword) => matchesQuery(keyword, query));
 
   if (filteredActions.length === 0 && !showAwake) {
     return null;

@@ -15,10 +15,7 @@ export function collectListEntries(
   const entries: ListEntry[] = [];
   let emptyViewNodeId: number | undefined;
 
-  const visitItemNode = (
-    nodeId: number,
-    section?: { title?: string; nodeId?: number },
-  ) => {
+  const visitItemNode = (nodeId: number, section?: { title?: string; nodeId?: number }) => {
     const node = tree.get(nodeId);
     if (!node || node.type !== "List.Item") {
       return;
@@ -26,11 +23,7 @@ export function collectListEntries(
 
     const title = asString(node.props.title, "Untitled");
     const subtitle = asString(node.props.subtitle).trim() || undefined;
-    const keywords = [
-      title,
-      subtitle ?? "",
-      ...asStringArray(node.props.keywords),
-    ]
+    const keywords = [title, subtitle ?? "", ...asStringArray(node.props.keywords)]
       .join(" ")
       .toLowerCase();
 

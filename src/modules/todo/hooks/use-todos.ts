@@ -108,7 +108,9 @@ export function useReorderTodosMutation() {
 
   return useMutation({
     mutationFn: async (items: ReadonlyArray<Pick<UpdateTodoInput, "id" | "orderIndex">>) => {
-      await Promise.all(items.map((item) => updateTodo({ id: item.id, orderIndex: item.orderIndex })));
+      await Promise.all(
+        items.map((item) => updateTodo({ id: item.id, orderIndex: item.orderIndex })),
+      );
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: TODO_QUERY_KEY });
@@ -121,7 +123,9 @@ export function useReorderSubTodosMutation() {
 
   return useMutation({
     mutationFn: async (items: ReadonlyArray<Pick<UpdateSubTodoInput, "id" | "orderIndex">>) => {
-      await Promise.all(items.map((item) => updateSubTodo({ id: item.id, orderIndex: item.orderIndex })));
+      await Promise.all(
+        items.map((item) => updateSubTodo({ id: item.id, orderIndex: item.orderIndex })),
+      );
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: TODO_QUERY_KEY });

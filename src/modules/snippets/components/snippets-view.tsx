@@ -1,16 +1,8 @@
-import { CircleDot, FilePlus2, Loader2, NotebookTabs } from "lucide-react";
+import { ArrowLeft, CircleDot, FilePlus2, Loader2, NotebookTabs } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { CommandFooterBar } from "@/components/command/command-footer-bar";
-import { CommandKeyHint } from "@/components/command/command-key-hint";
-import {
-  CommandPanelBackButton,
-  CommandPanelHeader,
-  CommandPanelTitleBlock,
-} from "@/components/command/command-panel-header";
-import { CommandStatusChip } from "@/components/command/command-status-chip";
-import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { useLauncherPanelBackHandler } from "@/modules/launcher/lib/back-navigation";
 import { SnippetEditor } from "@/modules/snippets/components/snippet-editor";
 import { SnippetList } from "@/modules/snippets/components/snippet-list";
@@ -316,9 +308,11 @@ export function SnippetsView({ onBack }: SnippetsViewProps) {
     deleteSnippetMutation.isPending;
 
   return (
-    <div className="glass-effect relative flex h-full w-full flex-col overflow-hidden text-foreground">
-      <CommandPanelHeader>
-        <CommandPanelBackButton
+    <div className="snippets-view-enter relative flex h-full w-full flex-col overflow-hidden text-white">
+      {/* Header */}
+      <header className="snippets-header-enter flex h-14 shrink-0 items-center gap-3 border-b border-white/[0.06] px-4">
+        <button
+          type="button"
           onClick={() => {
             if (viewMode === "create" || viewMode === "edit") {
               setViewMode("view");
@@ -326,18 +320,31 @@ export function SnippetsView({ onBack }: SnippetsViewProps) {
             }
             onBack();
           }}
+          className="flex size-9 items-center justify-center rounded-lg bg-white/[0.03] text-white/40 transition-all duration-200 hover:bg-white/[0.06] hover:text-white/70"
           aria-label="Back"
-        />
-        <CommandPanelTitleBlock
-          title="Snippets"
-          subtitle="Create, preview, and paste text snippets"
-          className="flex-1"
-        />
-        <CommandStatusChip
-          tone="neutral"
-          label={snippets.length > 0 ? `${snippets.length} snippets` : "No snippets"}
-        />
-      </CommandPanelHeader>
+        >
+          <ArrowLeft className="size-4" />
+        </button>
+
+        <div className="flex flex-1 items-center gap-3">
+          <div className="size-8 rounded-xl bg-gradient-to-br from-amber-500/25 to-orange-500/25 p-1.5">
+            <NotebookTabs className="size-full text-amber-400" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-[14px] font-semibold tracking-[-0.02em] text-white/90">Snippets</h1>
+            <p className="text-[12px] tracking-[-0.01em] text-white/45">
+              Create, preview, and paste text snippets
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {snippetsQuery.isFetching && <Loader2 className="size-3.5 animate-spin text-white/40" />}
+          <span className="rounded-full bg-white/[0.06] px-2.5 py-1 text-[11px] font-medium text-white/50">
+            {snippets.length} {snippets.length === 1 ? "snippet" : "snippets"}
+          </span>
+        </div>
+      </header>
 
       {viewMode === "create" || viewMode === "edit" ? (
         <SnippetEditor
@@ -354,7 +361,7 @@ export function SnippetsView({ onBack }: SnippetsViewProps) {
           }}
         />
       ) : (
-        <div className="flex min-h-0 flex-1 overflow-hidden">
+        <div className="snippets-content-enter flex min-h-0 flex-1 overflow-hidden">
           <SnippetList
             snippets={filteredSnippets}
             selectedSnippetId={selectedSnippetId}
@@ -385,43 +392,59 @@ export function SnippetsView({ onBack }: SnippetsViewProps) {
         </div>
       )}
 
-      {viewMode === "view" ? (
-        <CommandFooterBar
-          leftSlot={
-            <div className="inline-flex items-center gap-2">
-              {snippetsQuery.isFetching ? (
-                <Loader2 className="size-3.5 animate-spin" />
-              ) : (
-                <CircleDot className="size-3.5" />
-              )}
-              <span>{filteredSnippets.length} visible</span>
-            </div>
-          }
-          rightSlot={
-            <>
-              <CommandKeyHint keyLabel="CMD/CTRL + N" label="New Snippet" />
-              <CommandKeyHint keyLabel="CMD/CTRL + E" label="Edit" />
-              <Button type="button" size="sm" onClick={openCreateView} className="h-7 px-2.5">
-                <FilePlus2 className="size-3.5" />
+      {viewMode === "view" && (
+        <footer className="snippets-footer-enter flex h-12 shrink-0 items-center justify-between border-t border-white/[0.06] px-4">
+          <div className="flex items-center gap-2 text-[12px] text-white/40">
+            <CircleDot className="size-3.5" />
+            <span>{filteredSnippets.length} visible</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <div className="hidden items-center gap-3 pr-3 text-[11px] text-white/30 sm:flex">
+              <span>
+                <kbd className="rounded bg-white/[0.08] px-1.5 py-0.5 font-mono text-[10px]">
+                  Ctrl+N
+                </kbd>{" "}
                 New
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                className="h-7 px-2.5"
-                onClick={() => {
-                  void handleCopyAndCount();
-                }}
-                disabled={!selectedSnippet || incrementCopiedCountMutation.isPending}
-              >
-                <NotebookTabs className="size-3.5" />
-                Paste
-              </Button>
-            </>
-          }
-        />
-      ) : null}
+              </span>
+              <span>
+                <kbd className="rounded bg-white/[0.08] px-1.5 py-0.5 font-mono text-[10px]">
+                  Ctrl+E
+                </kbd>{" "}
+                Edit
+              </span>
+            </div>
+
+            <button
+              type="button"
+              onClick={openCreateView}
+              className={cn(
+                "inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-[12px] font-medium transition-all duration-200",
+                "bg-[var(--solid-accent,#4ea2ff)]/20 text-[var(--solid-accent,#4ea2ff)] hover:bg-[var(--solid-accent,#4ea2ff)]/30",
+              )}
+            >
+              <FilePlus2 className="size-3.5" />
+              New
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                void handleCopyAndCount();
+              }}
+              disabled={!selectedSnippet || incrementCopiedCountMutation.isPending}
+              className={cn(
+                "inline-flex h-8 items-center gap-1.5 rounded-lg border border-white/[0.08] px-3 text-[12px] font-medium transition-all duration-200",
+                "bg-white/[0.03] text-white/60 hover:bg-white/[0.06] hover:text-white/80",
+                "disabled:opacity-40 disabled:pointer-events-none",
+              )}
+            >
+              <NotebookTabs className="size-3.5" />
+              Paste
+            </button>
+          </div>
+        </footer>
+      )}
     </div>
   );
 }

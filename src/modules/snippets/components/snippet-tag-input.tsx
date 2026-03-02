@@ -1,9 +1,6 @@
 import { Check, Plus, X } from "lucide-react";
 import { useState, type KeyboardEvent } from "react";
 
-import { Button } from "@/components/ui/button";
-import { Command, CommandItem, CommandList } from "@/components/ui/command";
-import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 interface SnippetTagInputProps {
@@ -96,64 +93,68 @@ export function SnippetTagInput({ value, suggestions, onChange, className }: Sni
 
   return (
     <div className={cn("space-y-2", className)}>
-      <div className="flex flex-wrap items-center gap-1.5">
-        {value.map((tag) => (
-          <Button
-            key={tag}
-            type="button"
-            size="xs"
-            variant="secondary"
-            className="h-6 gap-1 rounded-full px-2"
-            onClick={() => {
-              removeTag(tag);
-            }}
-          >
-            <span>{tag}</span>
-            <X className="size-3" />
-          </Button>
-        ))}
-      </div>
+      {/* Selected Tags */}
+      {value.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5">
+          {value.map((tag) => (
+            <button
+              key={tag}
+              type="button"
+              onClick={() => removeTag(tag)}
+              className="group inline-flex h-6 items-center gap-1 rounded-full bg-white/[0.06] px-2 text-[11px] font-medium text-white/70 transition-all hover:bg-white/[0.08] hover:text-white/90"
+            >
+              <span>{tag}</span>
+              <X className="size-3 text-white/40 transition-colors group-hover:text-white/70" />
+            </button>
+          ))}
+        </div>
+      )}
 
-      <Input
+      {/* Input */}
+      <input
+        type="text"
         value={draftTag}
-        onChange={(event) => {
-          setDraftTag(event.target.value);
-        }}
+        onChange={(event) => setDraftTag(event.target.value)}
         onKeyDown={handleDraftTagKeyDown}
         placeholder="Add tag"
-        className="h-9"
+        className={cn(
+          "h-10 w-full rounded-xl bg-white/[0.04] px-3 text-[13px] text-white/90 placeholder:text-white/30",
+          "ring-1 ring-white/[0.06] transition-all duration-200",
+          "focus:outline-none focus:ring-[var(--solid-accent,#4ea2ff)]",
+        )}
       />
 
-      <Command className="rounded-none border border-border/60 bg-background/25">
-        <CommandList className="max-h-32">
-          {canCreateDraftTag ? (
-            <CommandItem
-              value={`create-${draftTag}`}
-              onSelect={() => {
-                addTag(draftTag);
-              }}
-              className="gap-2 px-2 py-2 text-xs"
+      {/* Suggestions */}
+      {(canCreateDraftTag || filteredSuggestions.length > 0) && (
+        <div className="rounded-xl bg-white/[0.02] ring-1 ring-white/[0.06]">
+          {canCreateDraftTag && (
+            <button
+              type="button"
+              onClick={() => addTag(draftTag)}
+              className="flex w-full items-center gap-2 rounded-t-xl px-3 py-2 text-[12px] text-white/70 transition-colors hover:bg-white/[0.04] hover:text-white/90"
             >
-              <Plus className="size-3.5 text-muted-foreground" />
+              <Plus className="size-3.5 text-white/40" />
               <span className="truncate">Create: {normalizedDraftTag}</span>
-            </CommandItem>
-          ) : null}
+            </button>
+          )}
 
-          {filteredSuggestions.map((tag) => (
-            <CommandItem
+          {filteredSuggestions.map((tag, index) => (
+            <button
               key={tag}
-              value={tag}
-              onSelect={() => {
-                addTag(tag);
-              }}
-              className="gap-2 px-2 py-2 text-xs"
+              type="button"
+              onClick={() => addTag(tag)}
+              className={cn(
+                "flex w-full items-center gap-2 px-3 py-2 text-[12px] text-white/70 transition-colors hover:bg-white/[0.04] hover:text-white/90",
+                index === filteredSuggestions.length - 1 && !canCreateDraftTag && "rounded-b-xl",
+                index === 0 && !canCreateDraftTag && "rounded-t-xl",
+              )}
             >
-              <Check className="size-3.5 text-muted-foreground" />
+              <Check className="size-3.5 text-white/40" />
               <span className="truncate">{tag}</span>
-            </CommandItem>
+            </button>
           ))}
-        </CommandList>
-      </Command>
+        </div>
+      )}
     </div>
   );
 }

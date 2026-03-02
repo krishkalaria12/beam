@@ -1,10 +1,6 @@
 import { invoke, isTauri } from "@tauri-apps/api/core";
 
-import {
-  pluginInfoSchema,
-  pluginListSchema,
-  type PluginInfo,
-} from "@/modules/extensions/types";
+import { pluginInfoSchema, pluginListSchema, type PluginInfo } from "@/modules/extensions/types";
 
 function normalizePluginInfo(value: unknown): unknown {
   if (!value || typeof value !== "object") {

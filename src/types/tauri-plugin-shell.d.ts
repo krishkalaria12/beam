@@ -16,11 +16,7 @@ declare module "@tauri-apps/plugin-shell" {
   export function open(path: string, openWith?: string): Promise<void>;
 
   export class Command {
-    static sidecar(
-      program: string,
-      args?: string[],
-      options?: CommandOptions,
-    ): Command;
+    static sidecar(program: string, args?: string[], options?: CommandOptions): Command;
 
     readonly stdout: CommandStream<unknown>;
     readonly stderr: CommandStream<unknown>;

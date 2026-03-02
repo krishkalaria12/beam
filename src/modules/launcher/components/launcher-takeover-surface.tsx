@@ -7,10 +7,7 @@ interface LauncherTakeoverSurfaceProps {
   className?: string;
 }
 
-export function LauncherTakeoverSurface({
-  children,
-  className,
-}: LauncherTakeoverSurfaceProps) {
+export function LauncherTakeoverSurface({ children, className }: LauncherTakeoverSurfaceProps) {
   return (
     <div
       className={cn(

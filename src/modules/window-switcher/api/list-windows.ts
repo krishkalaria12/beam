@@ -5,11 +5,26 @@ import { assertDesktopRuntime, getInvokeErrorMessage } from "@/modules/window-sw
 import type { WindowEntry } from "@/modules/window-switcher/types";
 
 const windowEntrySchema = z.object({
-  id: z.string().default("").transform((value) => value.trim()),
-  title: z.string().default("").transform((value) => value.trim()),
-  app_name: z.string().default("").transform((value) => value.trim()),
-  app_icon: z.string().default("").transform((value) => value.trim()),
-  workspace: z.string().default("").transform((value) => value.trim()),
+  id: z
+    .string()
+    .default("")
+    .transform((value) => value.trim()),
+  title: z
+    .string()
+    .default("")
+    .transform((value) => value.trim()),
+  app_name: z
+    .string()
+    .default("")
+    .transform((value) => value.trim()),
+  app_icon: z
+    .string()
+    .default("")
+    .transform((value) => value.trim()),
+  workspace: z
+    .string()
+    .default("")
+    .transform((value) => value.trim()),
   is_focused: z.boolean().default(false),
 });
 

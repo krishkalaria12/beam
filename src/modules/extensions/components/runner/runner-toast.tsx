@@ -25,11 +25,7 @@ function ToastIcon({ style }: { style?: ExtensionToast["style"] }) {
   return <span className="mt-1 size-2 rounded-full bg-muted-foreground/70" />;
 }
 
-export function RunnerToast({
-  toast,
-  onAction,
-  onHide,
-}: RunnerToastProps) {
+export function RunnerToast({ toast, onAction, onHide }: RunnerToastProps) {
   const primaryAction = toast.primaryAction?.onAction ? toast.primaryAction : undefined;
   const secondaryAction = toast.secondaryAction?.onAction ? toast.secondaryAction : undefined;
 
