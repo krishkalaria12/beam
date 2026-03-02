@@ -125,9 +125,6 @@ export default function EmojiCommandGroup({ isOpen, onOpen, onBack }: EmojiComma
       .filter((e): e is EmojiData => e !== undefined);
   }, [recentEmojis, emojis]);
 
-  // Skip first 26 emojis only when showing all categories
-  const displayEmojis = selectedCategory === "all" ? filteredEmojis.slice(26) : filteredEmojis;
-
   // Clear copy error after timeout
   useEffect(() => {
     if (!copyError) return;
@@ -170,7 +167,7 @@ export default function EmojiCommandGroup({ isOpen, onOpen, onBack }: EmojiComma
 
   return (
     <EmojiPicker
-      emojis={displayEmojis}
+      emojis={filteredEmojis}
       recentEmojis={recentEmojiObjects}
       searchValue={searchValue}
       onSearchChange={setSearchValue}

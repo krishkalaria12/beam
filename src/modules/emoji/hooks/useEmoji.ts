@@ -41,8 +41,12 @@ export function useFilteredEmojis(
       );
     }
 
-    // Skip first 26 emojis only when showing all categories
-    return selectedCategory === "all" ? filtered.slice(26) : filtered;
+    // Skip first 26 emojis only when showing all categories AND not searching
+    if (selectedCategory === "all" && !searchValue) {
+      return filtered.slice(26);
+    }
+    
+    return filtered;
   }, [emojis, searchValue, selectedCategory]);
 }
 

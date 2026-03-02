@@ -43,10 +43,13 @@ export function EmojiPicker({
 
       <div
         ref={scrollContainerRef}
-        className="emoji-content-enter flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-6 py-5 scroll-smooth scrollbar-hidden-until-hover"
+        className="emoji-content-enter flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-5 py-4 scroll-smooth scrollbar-hidden-until-hover"
       >
-        <div className="mx-auto max-w-5xl space-y-8 pb-10">
-          <RecentlyUsed emojis={recentEmojis} onEmojiClick={onEmojiClick} />
+        <div className="space-y-6 pb-6">
+          {/* Only show recent emojis when not searching */}
+          {!searchValue && (
+            <RecentlyUsed emojis={recentEmojis} onEmojiClick={onEmojiClick} />
+          )}
 
           <EmojiGrid emojis={emojis} onEmojiClick={onEmojiClick} />
         </div>
