@@ -16,6 +16,18 @@ import type {
   CommandDescriptor,
   CommandProviderResolution,
 } from "@/command-registry/types";
+import { looksLikeCalculationQuery } from "@/modules/calculator/lib/query-match";
+
+const MANDATORY_TEXT_FALLBACK_COMMAND_IDS = [
+  "search.web.google",
+  "search.web.duckduckgo",
+  "file_search.panel.open",
+  "dictionary.panel.open",
+] as const;
+
+function isTextQuery(query: string): boolean {
+  return /[a-z]/i.test(query);
+}
 
 interface UseRankedRegistryCommandsInput {
   commandContext: CommandContext;
@@ -75,17 +87,44 @@ export function useRankedRegistryCommands({
         isFallbackMode(commandContext.mode) &&
         !hasStrongRegistryMatch(ranked);
 
-      if (!shouldShowFallback) {
-        setFallbackRegistryCommands([]);
-        return;
-      }
-
       const availableById = new Map<string, CommandDescriptor>(
         visibleCommands.map((command) => [command.id, command]),
       );
-      const fallbackCommands = fallbackCommandIds
-        .map((commandId) => availableById.get(commandId))
-        .filter((command): command is CommandDescriptor => Boolean(command));
+      const rankedCommandIds = new Set(ranked.map((entry) => entry.command.id));
+      const fallbackCommandsById = new Map<string, CommandDescriptor>();
+
+      const shouldShowMandatoryTextFallbacks =
+        normalizedQuery.length > 0 &&
+        commandContext.triggeredCommandId === null &&
+        isFallbackMode(commandContext.mode) &&
+        isTextQuery(normalizedQuery) &&
+        !looksLikeCalculationQuery(normalizedQuery);
+
+      if (shouldShowMandatoryTextFallbacks) {
+        for (const commandId of MANDATORY_TEXT_FALLBACK_COMMAND_IDS) {
+          if (rankedCommandIds.has(commandId)) {
+            continue;
+          }
+          const command = availableById.get(commandId);
+          if (command) {
+            fallbackCommandsById.set(command.id, command);
+          }
+        }
+      }
+
+      if (shouldShowFallback) {
+        for (const commandId of fallbackCommandIds) {
+          if (rankedCommandIds.has(commandId)) {
+            continue;
+          }
+          const command = availableById.get(commandId);
+          if (command) {
+            fallbackCommandsById.set(command.id, command);
+          }
+        }
+      }
+
+      const fallbackCommands = [...fallbackCommandsById.values()];
       setFallbackRegistryCommands(fallbackCommands);
     };
 

@@ -1,4 +1,124 @@
-/* solid theme styles */
+/* solid theme variables */
+
+.sc-solid {
+  /* === CORE SURFACE PALETTE (fully opaque hex colors) === */
+  --solid-bg-base: #2c2c2c;           /* Primary background */
+  --solid-bg-elevated: #323232;       /* Cards, elevated surfaces */
+  --solid-bg-recessed: #262626;       /* Inset areas, inputs */
+  --solid-bg-overlay: #383838;        /* Dropdowns, popovers, menus */
+  --solid-bg-header: #2c2c2c;         /* Header background */
+  --solid-bg-footer: #282828;         /* Footer - slightly darker */
+
+  /* === INTERACTIVE STATES (fully opaque) === */
+  --solid-hover-bg: #3a3a3a;          /* Item hover */
+  --solid-selected-bg: #404040;       /* Item selected/active */
+  --solid-active-bg: #464646;         /* Item pressed */
+  --solid-focus-ring: #4ea2ff;        /* Focus ring color */
+
+  /* === BORDER SYSTEM (fully opaque) === */
+  --solid-border-subtle: #3a3a3a;     /* Subtle separators */
+  --solid-border-default: #444444;    /* Default borders */
+  --solid-border-strong: #505050;     /* Emphasized borders */
+  --solid-border-muted: #333333;      /* Very subtle borders */
+
+  /* === TEXT HIERARCHY (fully opaque) === */
+  --solid-text-primary: #f0f2f6;      /* Primary text - high contrast */
+  --solid-text-secondary: #b8bcc4;    /* Secondary text */
+  --solid-text-muted: #808590;        /* Muted/hint text */
+  --solid-text-subtle: #666a72;       /* Very subtle text */
+  --solid-text-disabled: #4a4d52;     /* Disabled text */
+
+  /* === ACCENT COLORS === */
+  --solid-accent: #4ea2ff;            /* Primary accent (blue) */
+  --solid-accent-hover: #6bb4ff;      /* Accent hover */
+  --solid-accent-muted: #3d7ecc;      /* Muted accent */
+  --solid-success: #48c78e;           /* Success green */
+  --solid-success-muted: #2d7a56;     /* Muted success */
+  --solid-danger: #ff6363;            /* Danger red */
+  --solid-danger-muted: #993c3c;      /* Muted danger */
+  --solid-warning: #f5a623;           /* Warning orange */
+
+  /* === KBD/BADGE SYSTEM === */
+  --solid-kbd-bg: #3a3a3a;            /* Keyboard badge background */
+  --solid-kbd-border: #484848;        /* Keyboard badge border */
+  --solid-kbd-text: #a0a4ac;          /* Keyboard badge text */
+
+  /* === SCROLLBAR === */
+  --solid-scrollbar-track: #2a2a2a;
+  --solid-scrollbar-thumb: #484848;
+  --solid-scrollbar-thumb-hover: #585858;
+
+  /* === MAP TO STANDARD VARIABLES === */
+
+  /* Core colors - all fully opaque */
+  --background: #2c2c2c;
+  --foreground: #f0f2f6;
+  --card: #323232;
+  --card-foreground: #f0f2f6;
+  --popover: #383838;
+  --popover-foreground: #f0f2f6;
+  --primary: #f0f2f6;
+  --primary-foreground: #2c2c2c;
+  --secondary: #3a3a3a;
+  --secondary-foreground: #f0f2f6;
+  --muted: #333333;
+  --muted-foreground: #808590;
+  --accent: #404040;
+  --accent-foreground: #f0f2f6;
+  --destructive: #ff6363;
+  --border: #444444;
+  --input: #333333;
+  --ring: #4ea2ff;
+
+  /* UI element colors - all fully opaque */
+  --glass-outline: #3a3a3a;
+  --ui-divider: #383838;
+  --footer-border: #3a3a3a;
+
+  /* Command item states - fully opaque backgrounds */
+  --command-item-hover-bg: #3a3a3a;
+  --command-item-hover-border: #444444;
+  --command-item-selected-bg: #404040;
+  --command-item-selected-border: transparent;
+
+  /* Launcher cards - fully opaque */
+  --launcher-card-bg: #323232;
+  --launcher-card-border: #3a3a3a;
+  --launcher-card-hover-bg: #383838;
+  --launcher-card-selected-bg: #404040;
+  --launcher-card-selected-border: #4a4a4a;
+
+  /* Chips and badges - fully opaque */
+  --launcher-chip-bg: #363636;
+  --launcher-chip-border: #444444;
+  --kbd-bg: #3a3a3a;
+
+  /* Scrollbar - fully opaque */
+  --scrollbar-track: #2a2a2a;
+  --scrollbar-thumb: #484848;
+  --scrollbar-thumb-hover: #585858;
+
+  /* === ICON CHIP COLORS (fully opaque backgrounds) === */
+  --icon-neutral-bg: #3e3e3e;
+  --icon-neutral-fg: #c8ccd4;
+  --icon-primary-bg: #1e3a5f;
+  --icon-primary-fg: #8ec8ff;
+  --icon-orange-bg: #4a3520;
+  --icon-orange-fg: #fcd68a;
+  --icon-cyan-bg: #1a3a40;
+  --icon-cyan-fg: #7de8f4;
+  --icon-purple-bg: #352a4a;
+  --icon-purple-fg: #d4b8ff;
+  --icon-red-bg: #4a2a2a;
+  --icon-red-fg: #ffb0b0;
+  --icon-green-bg: #2a4a2a;
+  --icon-green-fg: #a8e6a8;
+  --icon-chip-border: transparent;
+  --icon-chip-gloss: transparent;
+  --icon-chip-shadow: transparent;
+}
+
+/* solid theme overrides styles */
 
 /* Global backdrop-filter disable for solid theme */
 .sc-solid *,

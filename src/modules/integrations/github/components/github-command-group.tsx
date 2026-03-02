@@ -1,4 +1,4 @@
-import githubLogo from "@/assets/icons/github.jpg";
+import githubLogo from "@/assets/icons/github.png";
 import { useCommandState } from "cmdk";
 import { GitPullRequest, Github } from "lucide-react";
 

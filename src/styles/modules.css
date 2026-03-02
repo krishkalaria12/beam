@@ -1048,7 +1048,7 @@
 /* speed test module styles */
 
 /* Speed test view container - entrance animation */
-.speedtest-view-enter {
+.speedtest-view {
   animation: speedtest-view-enter 250ms ease-out both;
 }
 
@@ -1064,7 +1064,7 @@
 }
 
 /* Speed test header entrance */
-.speedtest-header-enter {
+.speedtest-header {
   animation: speedtest-header-enter 200ms ease-out both;
 }
 
@@ -1080,7 +1080,7 @@
 }
 
 /* Speed test content entrance */
-.speedtest-content-enter {
+.speedtest-content {
   animation: speedtest-content-enter 220ms ease-out both;
   animation-delay: 50ms;
 }
@@ -1096,8 +1096,74 @@
   }
 }
 
+/* Speed test section cards */
+.speedtest-section {
+  animation: speedtest-section-enter 200ms ease-out both;
+}
+
+@keyframes speedtest-section-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Speed test hero display */
+.speedtest-hero {
+  animation: speedtest-hero-enter 220ms ease-out both;
+  animation-delay: 30ms;
+}
+
+@keyframes speedtest-hero-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Speed test controls */
+.speedtest-controls {
+  animation: speedtest-controls-enter 200ms ease-out both;
+  animation-delay: 60ms;
+}
+
+@keyframes speedtest-controls-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Speed test chart card */
+.speedtest-chart {
+  animation: speedtest-chart-enter 180ms ease-out both;
+}
+
+@keyframes speedtest-chart-enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Speed test metric card entrance */
-.speedtest-metric-enter {
+.speedtest-metric {
   animation: speedtest-metric-enter 200ms ease-out both;
 }
 
@@ -1113,7 +1179,7 @@
 }
 
 /* Speed test footer entrance */
-.speedtest-footer-enter {
+.speedtest-footer {
   animation: speedtest-footer-enter 200ms ease-out both;
   animation-delay: 120ms;
 }
@@ -1122,6 +1188,71 @@
   from {
     opacity: 0;
     transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Speed test animated bars for running indicator */
+.speedtest-bar {
+  animation: speedtest-bar-bounce 0.6s ease-in-out infinite;
+}
+
+@keyframes speedtest-bar-bounce {
+  0%,
+  100% {
+    transform: scaleY(0.6);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+/* Speed test card entrance */
+.speedtest-card {
+  animation: speedtest-card-enter 180ms ease-out both;
+}
+
+@keyframes speedtest-card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Speed test sample bars - placeholder animation when no data */
+.speedtest-sample-bar {
+  background: rgba(34, 211, 238, 0.25);
+  animation: speedtest-sample-wave 1.2s ease-in-out infinite;
+}
+
+@keyframes speedtest-sample-wave {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scaleY(0.7);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scaleY(1);
+  }
+}
+
+/* Speed test error banner */
+.speedtest-error {
+  animation: speedtest-error-enter 200ms ease-out both;
+}
+
+@keyframes speedtest-error-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
   }
   to {
     opacity: 1;

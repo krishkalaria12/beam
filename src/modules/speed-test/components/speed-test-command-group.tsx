@@ -32,7 +32,7 @@ export default function SpeedTestCommandGroup({
   if (isOpen) {
     return (
       <LauncherTakeoverSurface>
-        <SpeedTestView onBack={onBack} />
+        <SpeedTestView onBack={onBack} autoStart />
       </LauncherTakeoverSurface>
     );
   }
