@@ -28,7 +28,7 @@ interface SpeedTestStatusBadgeProps {
 
 function SpeedTestStatusBadge({ status, isPreparing }: SpeedTestStatusBadgeProps) {
   const config = {
-    idle: { label: "Ready", bg: "bg-white/[0.06]", text: "text-white/50", dot: "bg-white/30" },
+    idle: { label: "Ready", bg: "bg-[var(--launcher-card-hover-bg)]", text: "text-foreground/50", dot: "bg-[var(--launcher-card-hover-bg)]" },
     running: {
       label: "Testing",
       bg: "bg-cyan-500/15",
@@ -75,11 +75,11 @@ interface SpeedTestHeaderProps {
 
 export function SpeedTestHeader({ status, isPreparing, onBack }: SpeedTestHeaderProps) {
   return (
-    <header className="speedtest-header flex h-14 shrink-0 items-center gap-3 border-b border-white/[0.05] px-5">
+    <header className="speedtest-header flex h-14 shrink-0 items-center gap-3 border-b border-[var(--launcher-card-border)] px-5">
       <button
         type="button"
         onClick={onBack}
-        className="flex size-9 items-center justify-center rounded-lg bg-white/[0.03] text-white/40 transition-all hover:bg-white/[0.06] hover:text-white/70"
+        className="flex size-9 items-center justify-center rounded-lg bg-[var(--launcher-card-hover-bg)] text-foreground/40 transition-all hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground/70"
         aria-label="Back"
       >
         <ChevronLeft className="size-4" />
@@ -90,8 +90,8 @@ export function SpeedTestHeader({ status, isPreparing, onBack }: SpeedTestHeader
           <Wifi className="size-4 text-cyan-400" />
         </div>
         <div className="flex flex-col">
-          <h1 className="text-[14px] font-semibold tracking-[-0.02em] text-white/90">Speed Test</h1>
-          <p className="text-[11px] text-white/40">Network diagnostics</p>
+          <h1 className="text-[14px] font-semibold tracking-[-0.02em] text-foreground/90">Speed Test</h1>
+          <p className="text-[11px] text-foreground/40">Network diagnostics</p>
         </div>
       </div>
 
@@ -125,7 +125,7 @@ interface SpeedCardProps {
 export function SpeedCard({ metric, valueMbps, p90Value, data, isRunning, index }: SpeedCardProps) {
   const isDownload = metric === "download";
   const label = isDownload ? "Download" : "Upload";
-  const color = isDownload ? "#22d3ee" : "#a78bfa"; // cyan-400 / violet-400
+  const color = isDownload ? "var(--icon-cyan-fg)" : "var(--icon-purple-fg)";
   const gradientFrom = isDownload ? "from-cyan-500/20" : "from-violet-500/20";
   const gradientTo = isDownload ? "to-sky-500/20" : "to-purple-500/20";
   const iconColor = isDownload ? "text-cyan-400" : "text-violet-400";
@@ -134,8 +134,8 @@ export function SpeedCard({ metric, valueMbps, p90Value, data, isRunning, index 
   return (
     <div
       className={cn(
-        "speedtest-card group relative flex flex-col overflow-hidden rounded-2xl bg-white/[0.025] p-4 ring-1 ring-white/[0.04] transition-all",
-        "hover:bg-white/[0.035]",
+        "speedtest-card group relative flex flex-col overflow-hidden rounded-2xl bg-[var(--launcher-card-hover-bg)] p-4 ring-1 ring-[var(--launcher-card-border)] transition-all",
+        "hover:bg-[var(--launcher-card-hover-bg)]",
         isRunning && ringColor,
       )}
       style={{ animationDelay: `${index * 40}ms` }}
@@ -157,14 +157,14 @@ export function SpeedCard({ metric, valueMbps, p90Value, data, isRunning, index 
               <ArrowUp className={cn("size-4", iconColor)} />
             )}
           </div>
-          <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-white/45">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-foreground/45">
             {label}
           </span>
         </div>
 
         {p90Value !== null && (
-          <span className="text-[10px] text-white/25">
-            P90: <span className="font-mono text-white/40">{formatMetricValue(p90Value, 0)}</span>
+          <span className="text-[10px] text-foreground/25">
+            P90: <span className="font-mono text-foreground/40">{formatMetricValue(p90Value, 0)}</span>
           </span>
         )}
       </div>
@@ -173,13 +173,13 @@ export function SpeedCard({ metric, valueMbps, p90Value, data, isRunning, index 
       <div className="mb-4 flex items-baseline gap-1.5">
         <span
           className={cn(
-            "font-mono text-[40px] font-bold leading-none tracking-[-0.03em] text-white/95",
+            "font-mono text-[40px] font-bold leading-none tracking-[-0.03em] text-foreground/95",
             isRunning && valueMbps === null && "animate-pulse",
           )}
         >
           {formatMetricValue(valueMbps, 1)}
         </span>
-        <span className="font-mono text-[14px] font-medium text-white/40">Mbps</span>
+        <span className="font-mono text-[14px] font-medium text-foreground/40">Mbps</span>
       </div>
 
       {/* Mini chart - takes remaining space */}
@@ -212,7 +212,7 @@ export function SpeedCard({ metric, valueMbps, p90Value, data, isRunning, index 
                   key={i}
                   className={cn(
                     "w-1 rounded-full transition-all",
-                    isRunning ? "speedtest-sample-bar" : "bg-white/[0.06]",
+                    isRunning ? "speedtest-sample-bar" : "bg-[var(--launcher-card-hover-bg)]",
                   )}
                   style={{
                     height: `${12 + Math.random() * 32}px`,
@@ -254,8 +254,8 @@ export function MetricCard({
   return (
     <div
       className={cn(
-        "speedtest-card group rounded-2xl bg-white/[0.025] p-4 ring-1 ring-white/[0.04] transition-all",
-        "hover:bg-white/[0.035]",
+        "speedtest-card group rounded-2xl bg-[var(--launcher-card-hover-bg)] p-4 ring-1 ring-[var(--launcher-card-border)] transition-all",
+        "hover:bg-[var(--launcher-card-hover-bg)]",
       )}
       style={{ animationDelay: `${index * 40}ms` }}
     >
@@ -269,15 +269,15 @@ export function MetricCard({
         >
           {icon}
         </div>
-        <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-white/45">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-foreground/45">
           {label}
         </span>
       </div>
       <div className="flex items-baseline gap-1">
-        <span className="font-mono text-[32px] font-bold tracking-[-0.02em] text-white/90">
+        <span className="font-mono text-[32px] font-bold tracking-[-0.02em] text-foreground/90">
           {formatMetricValue(value, 1)}
         </span>
-        <span className="font-mono text-[13px] font-medium text-white/35">{unit}</span>
+        <span className="font-mono text-[13px] font-medium text-foreground/35">{unit}</span>
       </div>
     </div>
   );
@@ -324,7 +324,7 @@ export function SpeedTestFooter({
   onRestart,
 }: SpeedTestFooterProps) {
   return (
-    <footer className="speedtest-footer flex h-12 shrink-0 items-center justify-between border-t border-white/[0.05] px-5">
+    <footer className="speedtest-footer flex h-12 shrink-0 items-center justify-between border-t border-[var(--launcher-card-border)] px-5">
       {/* Left side - status and action buttons */}
       <div className="flex items-center gap-3">
         {/* Pause/Resume button - only show when running or paused */}
@@ -335,8 +335,8 @@ export function SpeedTestFooter({
             disabled={isPreparing}
             className={cn(
               "flex items-center gap-2 rounded-lg px-3 py-1.5 text-[11px] font-medium transition-all",
-              "bg-white/[0.04] text-white/60 ring-1 ring-white/[0.06]",
-              "hover:bg-white/[0.07] hover:text-white/80",
+              "bg-[var(--launcher-card-hover-bg)] text-foreground/60 ring-1 ring-[var(--launcher-card-border)]",
+              "hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground/80",
               "disabled:opacity-50 disabled:cursor-not-allowed",
             )}
           >
@@ -374,25 +374,25 @@ export function SpeedTestFooter({
 
         {/* Status text when no buttons */}
         {(!hasStarted || (isRunning && !isPaused)) && (
-          <span className="text-[11px] font-medium text-white/35">
+          <span className="text-[11px] font-medium text-foreground/35">
             {isPreparing ? "Preparing..." : isRunning ? "Testing..." : "Ready"}
           </span>
         )}
       </div>
 
       {/* Right side - keyboard hints */}
-      <div className="flex items-center gap-4 text-[11px] text-white/25">
+      <div className="flex items-center gap-4 text-[11px] text-foreground/25">
         <span className="flex items-center gap-1.5">
-          <kbd className="rounded-md bg-white/[0.06] px-1.5 py-0.5 font-mono text-[10px] text-white/40">
+          <kbd className="rounded-md bg-[var(--launcher-card-hover-bg)] px-1.5 py-0.5 font-mono text-[10px] text-foreground/40">
             Enter
           </kbd>
-          <span className="text-white/35">{hasStarted ? "Restart" : "Start"}</span>
+          <span className="text-foreground/35">{hasStarted ? "Restart" : "Start"}</span>
         </span>
         <span className="flex items-center gap-1.5">
-          <kbd className="rounded-md bg-white/[0.06] px-1.5 py-0.5 font-mono text-[10px] text-white/40">
+          <kbd className="rounded-md bg-[var(--launcher-card-hover-bg)] px-1.5 py-0.5 font-mono text-[10px] text-foreground/40">
             Esc
           </kbd>
-          <span className="text-white/35">Back</span>
+          <span className="text-foreground/35">Back</span>
         </span>
       </div>
     </footer>

@@ -408,15 +408,15 @@ export function TodoView({ onBack }: TodoViewProps) {
   return (
     <div className="todo-view-enter flex h-full flex-col">
       {/* Header */}
-      <header className="todo-header-enter flex items-center gap-3 border-b border-white/[0.06] px-4 py-3">
+      <header className="todo-header-enter flex items-center gap-3 border-b border-[var(--launcher-card-border)] px-4 py-3">
         {/* Back button */}
         <button
           type="button"
           onClick={onBack}
           className={cn(
             "flex size-9 items-center justify-center rounded-lg transition-all",
-            "bg-white/[0.03] text-white/40",
-            "hover:bg-white/[0.06] hover:text-white/70",
+            "bg-[var(--launcher-card-hover-bg)] text-foreground/40",
+            "hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground/70",
           )}
           aria-label="Back"
         >
@@ -430,14 +430,14 @@ export function TodoView({ onBack }: TodoViewProps) {
 
         {/* Title block */}
         <div className="flex-1 min-w-0">
-          <h1 className="text-[14px] font-semibold tracking-[-0.01em] text-white/90">Todos</h1>
-          <p className="text-[11px] text-white/40">
+          <h1 className="text-[14px] font-semibold tracking-[-0.01em] text-foreground/90">Todos</h1>
+          <p className="text-[11px] text-foreground/40">
             {completedTodoCount}/{orderedTodos.length} completed
           </p>
         </div>
 
         {/* Loading indicator */}
-        {isFetching && <Loader2 className="size-4 animate-spin text-white/30" />}
+        {isFetching && <Loader2 className="size-4 animate-spin text-foreground/30" />}
 
         {/* Completion badge */}
         {orderedTodos.length > 0 && completedTodoCount === orderedTodos.length && (
@@ -499,17 +499,21 @@ export function TodoView({ onBack }: TodoViewProps) {
       </div>
 
       {/* Minimal footer */}
-      <footer className="todo-footer-enter flex items-center justify-between border-t border-white/[0.06] px-4 py-2">
-        <span className="text-[11px] text-white/30">
+      <footer className="todo-footer-enter flex items-center justify-between border-t border-[var(--launcher-card-border)] px-4 py-2">
+        <span className="text-[11px] text-foreground/30">
           {orderedTodos.length} {orderedTodos.length === 1 ? "todo" : "todos"}
         </span>
         <div className="flex items-center gap-3">
-          <span className="text-[10px] text-white/25">
-            <kbd className="rounded bg-white/[0.06] px-1.5 py-0.5 font-mono text-[9px]">Enter</kbd>
+          <span className="text-[10px] text-foreground/25">
+            <kbd className="rounded bg-[var(--launcher-card-hover-bg)] px-1.5 py-0.5 font-mono text-[9px]">
+              Enter
+            </kbd>
             <span className="ml-1">Create</span>
           </span>
-          <span className="text-[10px] text-white/25">
-            <kbd className="rounded bg-white/[0.06] px-1.5 py-0.5 font-mono text-[9px]">Esc</kbd>
+          <span className="text-[10px] text-foreground/25">
+            <kbd className="rounded bg-[var(--launcher-card-hover-bg)] px-1.5 py-0.5 font-mono text-[9px]">
+              Esc
+            </kbd>
             <span className="ml-1">Back</span>
           </span>
         </div>

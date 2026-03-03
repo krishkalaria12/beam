@@ -291,14 +291,14 @@ export function FileList({
       <div className="flex h-full flex-col items-center justify-center gap-4 p-8">
         <div className="relative">
           <div className="absolute inset-0 animate-ping opacity-20">
-            <div className="size-14 rounded-2xl bg-[var(--solid-accent,#4ea2ff)]" />
+            <div className="size-14 rounded-2xl bg-[var(--ring)]" />
           </div>
           <div
             className="relative flex size-14 items-center justify-center rounded-2xl 
-            bg-gradient-to-br from-[var(--solid-accent,#4ea2ff)]/20 to-[var(--solid-accent,#4ea2ff)]/5
-            border border-[var(--solid-accent,#4ea2ff)]/20"
+            bg-gradient-to-br from-[var(--ring)]/20 to-[var(--ring)]/5
+            border border-[var(--ring)]/20"
           >
-            <Loader2 className="size-6 animate-spin text-[var(--solid-accent,#4ea2ff)]" />
+            <Loader2 className="size-6 animate-spin text-[var(--ring)]" />
           </div>
         </div>
         <div className="text-center">
@@ -314,7 +314,7 @@ export function FileList({
     return (
       <div className="flex h-full flex-col items-center justify-center gap-4 p-8">
         <div className="relative">
-          <div className="absolute -inset-3 rounded-3xl bg-gradient-to-br from-[var(--solid-accent,#4ea2ff)]/10 to-transparent blur-xl" />
+          <div className="absolute -inset-3 rounded-3xl bg-gradient-to-br from-[var(--ring)]/10 to-transparent blur-xl" />
           <div
             className="relative flex size-16 items-center justify-center rounded-2xl 
             bg-gradient-to-br from-[var(--command-item-hover-bg)] to-[var(--command-item-selected-bg)]
@@ -365,7 +365,7 @@ export function FileList({
         border-b border-[var(--ui-divider)]"
       >
         <div className="flex items-center gap-2">
-          <Sparkles className="size-3 text-[var(--solid-accent,#4ea2ff)]/60" />
+          <Sparkles className="size-3 text-[var(--ring)]/60" />
           <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60">
             Results
           </span>
@@ -405,7 +405,7 @@ export function FileList({
               <div
                 className={cn(
                   "absolute left-0 top-1/2 -translate-y-1/2 w-[3px] rounded-r-full",
-                  "bg-[var(--solid-accent,#4ea2ff)]",
+                  "bg-[var(--ring)]",
                   "transition-all duration-200",
                   isSelected ? "h-8 opacity-100" : "h-0 opacity-0",
                 )}
@@ -417,7 +417,7 @@ export function FileList({
                   "relative flex size-10 flex-shrink-0 items-center justify-center rounded-xl",
                   "transition-all duration-150",
                   typeInfo.bgColor,
-                  isSelected && "ring-1 ring-white/10",
+                  isSelected && "ring-1 ring-[var(--launcher-card-border)]",
                 )}
               >
                 <span className={cn(typeInfo.color, "transition-colors")}>{typeInfo.icon}</span>

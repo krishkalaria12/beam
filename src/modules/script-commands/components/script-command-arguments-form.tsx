@@ -98,13 +98,13 @@ export function ScriptCommandArgumentsForm({
   };
 
   return (
-    <div className="scripts-args-enter flex h-full w-full flex-col overflow-hidden text-white">
+    <div className="scripts-args-enter flex h-full w-full flex-col overflow-hidden text-foreground">
       {/* Header */}
-      <header className="scripts-header-enter flex h-14 shrink-0 items-center gap-3 border-b border-white/[0.06] px-4">
+      <header className="scripts-header-enter flex h-14 shrink-0 items-center gap-3 border-b border-[var(--launcher-card-border)] px-4">
         <button
           type="button"
           onClick={onBack}
-          className="flex size-9 items-center justify-center rounded-lg bg-white/[0.03] text-white/40 transition-all duration-200 hover:bg-white/[0.06] hover:text-white/70"
+          className="flex size-9 items-center justify-center rounded-lg bg-[var(--launcher-card-hover-bg)] text-foreground/40 transition-all duration-200 hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground/70"
           aria-label="Back"
         >
           <ChevronLeft className="size-4" />
@@ -115,10 +115,10 @@ export function ScriptCommandArgumentsForm({
         </div>
 
         <div className="flex-1 min-w-0">
-          <h1 className="text-[14px] font-semibold tracking-[-0.02em] text-white/90">
+          <h1 className="text-[14px] font-semibold tracking-[-0.02em] text-foreground/90">
             Run {script.title}
           </h1>
-          <p className="text-[12px] text-white/40 tracking-[-0.01em]">
+          <p className="text-[12px] text-foreground/40 tracking-[-0.01em]">
             Provide arguments before execution
           </p>
         </div>
@@ -128,12 +128,12 @@ export function ScriptCommandArgumentsForm({
       <div className="scripts-content-enter custom-scrollbar min-h-0 flex-1 overflow-y-auto p-4">
         <div className="mx-auto w-full max-w-2xl space-y-4">
           {/* Script info */}
-          <div className="rounded-xl bg-white/[0.03] p-4 ring-1 ring-white/[0.06]">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-white/45">
+          <div className="rounded-xl bg-[var(--launcher-card-hover-bg)] p-4 ring-1 ring-[var(--launcher-card-border)]">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/45">
               Script
             </p>
-            <p className="mt-1.5 text-[14px] font-medium text-white/90">{script.title}</p>
-            <p className="mt-1 break-all font-mono text-[11px] text-white/40">
+            <p className="mt-1.5 text-[14px] font-medium text-foreground/90">{script.title}</p>
+            <p className="mt-1 break-all font-mono text-[11px] text-foreground/40">
               {script.scriptPath}
             </p>
           </div>
@@ -157,12 +157,12 @@ export function ScriptCommandArgumentsForm({
                   name={argument.name}
                   children={(fieldApi) => (
                     <div
-                      className="scripts-arg-field rounded-xl bg-white/[0.03] p-4 ring-1 ring-white/[0.06]"
+                      className="scripts-arg-field rounded-xl bg-[var(--launcher-card-hover-bg)] p-4 ring-1 ring-[var(--launcher-card-border)]"
                       style={{ animationDelay: `${index * 50}ms` }}
                     >
                       <Label
                         htmlFor={`script-argument-${argument.name}`}
-                        className="text-[11px] font-semibold uppercase tracking-[0.08em] text-white/45"
+                        className="text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/45"
                       >
                         {label}
                         {argument.required && <span className="ml-1 text-red-400">*</span>}
@@ -180,11 +180,11 @@ export function ScriptCommandArgumentsForm({
                             <SelectTrigger
                               id={`script-argument-${argument.name}`}
                               onKeyDown={stopFieldKeyPropagation}
-                              className="h-10 rounded-xl border-0 bg-white/[0.04] ring-1 ring-white/[0.06] text-[13px] text-white/80 focus:ring-[var(--solid-accent,#4ea2ff)]"
+                              className="h-10 rounded-xl border-0 bg-[var(--launcher-card-hover-bg)] ring-1 ring-[var(--launcher-card-border)] text-[13px] text-foreground/80 focus:ring-[var(--ring)]"
                             >
                               <SelectValue placeholder={argument.placeholder || "Select value"} />
                             </SelectTrigger>
-                            <SelectContent className="rounded-xl border-white/[0.08] bg-[#2c2c2c]">
+                            <SelectContent className="rounded-xl border-[var(--launcher-card-border)] bg-[var(--popover)]">
                               {argument.data.map((entry, idx) => {
                                 const value = entry.value ?? entry.title ?? "";
                                 const title = entry.title ?? entry.value ?? value;
@@ -192,7 +192,7 @@ export function ScriptCommandArgumentsForm({
                                   <SelectItem
                                     key={`${argument.name}:${idx}:${value}`}
                                     value={value}
-                                    className="text-[12px] text-white/70 focus:bg-white/[0.06] focus:text-white"
+                                    className="text-[12px] text-foreground/70 focus:bg-[var(--launcher-card-hover-bg)] focus:text-foreground"
                                   >
                                     {title}
                                   </SelectItem>
@@ -212,7 +212,7 @@ export function ScriptCommandArgumentsForm({
                             onKeyDown={stopFieldKeyPropagation}
                             onKeyDownCapture={stopFieldKeyPropagation}
                             placeholder={argument.placeholder || argument.name}
-                            className="h-10 w-full rounded-xl bg-white/[0.04] px-4 font-mono text-[13px] text-white/90 placeholder:text-white/30 ring-1 ring-white/[0.06] transition-all duration-200 focus:outline-none focus:ring-[var(--solid-accent,#4ea2ff)]"
+                            className="h-10 w-full rounded-xl bg-[var(--launcher-card-hover-bg)] px-4 font-mono text-[13px] text-foreground/90 placeholder:text-foreground/30 ring-1 ring-[var(--launcher-card-border)] transition-all duration-200 focus:outline-none focus:ring-[var(--ring)]"
                             autoFocus={argument.index === 1}
                           />
                         )}
@@ -235,8 +235,8 @@ export function ScriptCommandArgumentsForm({
       </div>
 
       {/* Footer */}
-      <footer className="scripts-footer-enter flex h-12 shrink-0 items-center justify-between border-t border-white/[0.06] px-4">
-        <div className="flex items-center gap-2 text-[12px] text-white/40">
+      <footer className="scripts-footer-enter flex h-12 shrink-0 items-center justify-between border-t border-[var(--launcher-card-border)] px-4">
+        <div className="flex items-center gap-2 text-[12px] text-foreground/40">
           <Terminal className="size-3.5" />
           <span>
             {script.requiredArgumentCount > 0
@@ -246,19 +246,23 @@ export function ScriptCommandArgumentsForm({
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 text-[11px] text-white/30">
-            <kbd className="rounded bg-white/[0.08] px-1.5 py-0.5 font-mono text-[10px]">Esc</kbd>
+          <div className="flex items-center gap-1.5 text-[11px] text-foreground/30">
+            <kbd className="rounded bg-[var(--launcher-card-hover-bg)] px-1.5 py-0.5 font-mono text-[10px]">
+              Esc
+            </kbd>
             <span>Back</span>
           </div>
-          <div className="flex items-center gap-1.5 text-[11px] text-white/30">
-            <kbd className="rounded bg-white/[0.08] px-1.5 py-0.5 font-mono text-[10px]">⌘↵</kbd>
+          <div className="flex items-center gap-1.5 text-[11px] text-foreground/30">
+            <kbd className="rounded bg-[var(--launcher-card-hover-bg)] px-1.5 py-0.5 font-mono text-[10px]">
+              ⌘↵
+            </kbd>
             <span>Run</span>
           </div>
           <button
             type="button"
             onClick={() => void form.handleSubmit()}
             disabled={isSubmitting}
-            className="flex h-8 items-center gap-1.5 rounded-lg bg-[var(--solid-accent,#4ea2ff)]/20 px-3.5 text-[12px] font-medium text-[var(--solid-accent,#4ea2ff)] transition-all duration-200 hover:bg-[var(--solid-accent,#4ea2ff)]/30 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex h-8 items-center gap-1.5 rounded-lg bg-[var(--ring)]/20 px-3.5 text-[12px] font-medium text-[var(--ring)] transition-all duration-200 hover:bg-[var(--ring)]/30 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {isSubmitting ? (
               <Loader2 className="size-3.5 animate-spin" />

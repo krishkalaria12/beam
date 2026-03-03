@@ -65,8 +65,8 @@ export function SettingsMenu({ setView }: SettingsMenuProps) {
               "settings-menu-item group relative w-full flex items-center gap-3.5",
               "px-3 py-3.5 rounded-xl",
               "transition-all duration-200 ease-out",
-              "hover:bg-white/[0.04]",
-              "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/20",
+              "hover:bg-[var(--launcher-card-hover-bg)]",
+              "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--launcher-card-selected-border)]",
             )}
             style={{ animationDelay: `${index * 35}ms` }}
           >
@@ -87,20 +87,20 @@ export function SettingsMenu({ setView }: SettingsMenuProps) {
                 "group-hover:scale-105",
               )}
             >
-              <item.icon className="size-5 text-white/70 group-hover:text-white/90 transition-colors" />
+              <item.icon className="size-5 text-foreground/70 group-hover:text-foreground/90 transition-colors" />
             </div>
 
             {/* Content */}
             <div className="flex-1 min-w-0 text-left">
               <p
-                className="text-[14px] font-semibold text-white/90 tracking-[-0.02em]
-                group-hover:text-white transition-colors"
+                className="text-[14px] font-semibold text-foreground/90 tracking-[-0.02em]
+                group-hover:text-foreground transition-colors"
               >
                 {item.title}
               </p>
               <p
-                className="text-[12px] text-white/40 tracking-[-0.01em]
-                group-hover:text-white/50 transition-colors"
+                className="text-[12px] text-foreground/40 tracking-[-0.01em]
+                group-hover:text-foreground/50 transition-colors"
               >
                 {item.description}
               </p>
@@ -108,8 +108,8 @@ export function SettingsMenu({ setView }: SettingsMenuProps) {
 
             {/* Chevron */}
             <ChevronRight
-              className="size-4 text-white/20 
-                group-hover:text-white/40 group-hover:translate-x-0.5
+              className="size-4 text-foreground/20 
+                group-hover:text-foreground/40 group-hover:translate-x-0.5
                 transition-all duration-200"
             />
           </button>

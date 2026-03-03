@@ -84,8 +84,8 @@ export function SubTodoDetailPanel({
         <div className="size-14 rounded-2xl bg-gradient-to-br from-rose-500/15 to-pink-500/15 p-3.5 mb-4">
           <ListChecks className="size-full text-rose-400/60" />
         </div>
-        <p className="text-[13px] text-white/50 mb-1">Select a todo</p>
-        <p className="text-[11px] text-white/30">to manage its subtasks</p>
+        <p className="text-[13px] text-foreground/50 mb-1">Select a todo</p>
+        <p className="text-[11px] text-foreground/30">to manage its subtasks</p>
       </section>
     );
   }
@@ -99,7 +99,7 @@ export function SubTodoDetailPanel({
   return (
     <section className="todo-detail-enter flex min-w-0 flex-1 flex-col">
       {/* Todo header */}
-      <div className="border-b border-white/[0.06] px-4 py-3">
+      <div className="border-b border-[var(--launcher-card-border)] px-4 py-3">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             {/* Todo title */}
@@ -112,17 +112,19 @@ export function SubTodoDetailPanel({
                 className={cn(
                   "flex size-5 shrink-0 items-center justify-center rounded-full transition-all duration-200",
                   selectedTodo.completed
-                    ? "bg-[var(--solid-accent,#4ea2ff)] shadow-lg shadow-[var(--solid-accent,#4ea2ff)]/30"
-                    : "ring-2 ring-white/25 hover:ring-white/45",
+                    ? "bg-[var(--ring)] shadow-lg shadow-[var(--ring)]/30"
+                    : "ring-2 ring-[var(--launcher-card-border)] hover:ring-[var(--launcher-card-border)]",
                 )}
                 aria-label={selectedTodo.completed ? "Mark incomplete" : "Mark complete"}
               >
-                {selectedTodo.completed && <Check className="size-3 text-white" strokeWidth={3} />}
+                {selectedTodo.completed && (
+                  <Check className="size-3 text-foreground" strokeWidth={3} />
+                )}
               </button>
               <p
                 className={cn(
                   "flex-1 truncate text-[14px] font-semibold tracking-[-0.01em]",
-                  selectedTodo.completed ? "text-white/45 line-through" : "text-white/90",
+                  selectedTodo.completed ? "text-foreground/45 line-through" : "text-foreground/90",
                 )}
                 onDoubleClick={() => onStartTodoEdit(selectedTodo)}
                 title="Double-click to rename"
@@ -133,13 +135,13 @@ export function SubTodoDetailPanel({
 
             {/* Progress bar */}
             <div className="flex items-center gap-2">
-              <div className="flex h-1.5 flex-1 max-w-[140px] overflow-hidden rounded-full bg-white/10">
+              <div className="flex h-1.5 flex-1 max-w-[140px] overflow-hidden rounded-full bg-[var(--launcher-card-hover-bg)]">
                 <div
-                  className="h-full rounded-full bg-[var(--solid-accent,#4ea2ff)] transition-all duration-300"
+                  className="h-full rounded-full bg-[var(--ring)] transition-all duration-300"
                   style={{ width: `${progress}%` }}
                 />
               </div>
-              <span className="text-[11px] text-white/40">
+              <span className="text-[11px] text-foreground/40">
                 {completedSubTodoCount}/{selectedTodo.sub_todos.length} subtasks
               </span>
             </div>
@@ -153,13 +155,13 @@ export function SubTodoDetailPanel({
                   type="button"
                   className={cn(
                     "flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12px] font-medium transition-all",
-                    "bg-white/[0.04] text-white/60 ring-1 ring-white/[0.06]",
-                    "hover:bg-white/[0.06] hover:text-white/80",
+                    "bg-[var(--launcher-card-hover-bg)] text-foreground/60 ring-1 ring-[var(--launcher-card-border)]",
+                    "hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground/80",
                   )}
                 >
                   <MoreHorizontal className="size-3.5" />
                   Actions
-                  <ChevronDown className="size-3 text-white/40" />
+                  <ChevronDown className="size-3 text-foreground/40" />
                 </button>
               }
             />
@@ -209,7 +211,7 @@ export function SubTodoDetailPanel({
       </div>
 
       {/* Add subtask input */}
-      <div className="border-b border-white/[0.06] p-3">
+      <div className="border-b border-[var(--launcher-card-border)] p-3">
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
             <input
@@ -224,9 +226,9 @@ export function SubTodoDetailPanel({
               placeholder="Add a subtask..."
               disabled={isBusy}
               className={cn(
-                "h-9 w-full rounded-lg bg-white/[0.04] px-3 text-[12px] text-white/80 outline-none transition-all",
-                "ring-1 ring-white/[0.06] placeholder:text-white/30",
-                "focus:bg-white/[0.06] focus:ring-[var(--solid-accent,#4ea2ff)]",
+                "h-9 w-full rounded-lg bg-[var(--launcher-card-hover-bg)] px-3 text-[12px] text-foreground/80 outline-none transition-all",
+                "ring-1 ring-[var(--launcher-card-border)] placeholder:text-foreground/30",
+                "focus:bg-[var(--launcher-card-hover-bg)] focus:ring-[var(--ring)]",
                 "disabled:opacity-50",
               )}
             />
@@ -239,8 +241,8 @@ export function SubTodoDetailPanel({
             }}
             className={cn(
               "flex size-9 items-center justify-center rounded-lg transition-all",
-              "bg-[var(--solid-accent,#4ea2ff)]/15 text-[var(--solid-accent,#4ea2ff)]",
-              "hover:bg-[var(--solid-accent,#4ea2ff)]/25",
+              "bg-[var(--ring)]/15 text-[var(--ring)]",
+              "hover:bg-[var(--ring)]/25",
               "disabled:opacity-40 disabled:cursor-not-allowed",
             )}
             aria-label="Add subtask"
@@ -257,8 +259,8 @@ export function SubTodoDetailPanel({
             <div className="size-10 rounded-xl bg-gradient-to-br from-rose-500/15 to-pink-500/15 p-2.5 mb-3">
               <ListChecks className="size-full text-rose-400/60" />
             </div>
-            <p className="text-[12px] text-white/45 mb-0.5">No subtasks yet</p>
-            <p className="text-[11px] text-white/30">Add your first subtask above</p>
+            <p className="text-[12px] text-foreground/45 mb-0.5">No subtasks yet</p>
+            <p className="text-[11px] text-foreground/30">Add your first subtask above</p>
           </div>
         ) : (
           <DndContext

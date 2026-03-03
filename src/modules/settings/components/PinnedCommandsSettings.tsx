@@ -43,11 +43,11 @@ export function PinnedCommandsSettings({
     <div className="settings-panel px-4 py-6 space-y-5">
       {/* Section header */}
       <div className="flex items-center gap-3 px-1">
-        <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-white/45">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/45">
           Pinned Commands
         </span>
-        <div className="h-px flex-1 bg-white/[0.06]" />
-        <span className="text-[11px] text-white/35 tabular-nums">
+        <div className="h-px flex-1 bg-[var(--launcher-chip-bg)]" />
+        <span className="text-[11px] text-foreground/35 tabular-nums">
           {pinnedCommands.length} {pinnedCommands.length === 1 ? "item" : "items"}
         </span>
       </div>
@@ -61,8 +61,8 @@ export function PinnedCommandsSettings({
           >
             <Pin className="size-6 text-amber-500/60" />
           </div>
-          <p className="text-[14px] font-medium text-white/70 mb-1.5">No pinned commands</p>
-          <p className="text-[12px] text-white/40 max-w-[220px] leading-relaxed">
+          <p className="text-[14px] font-medium text-foreground/70 mb-1.5">No pinned commands</p>
+          <p className="text-[12px] text-foreground/40 max-w-[220px] leading-relaxed">
             Pin commands from the main launcher to access them quickly
           </p>
         </div>
@@ -73,11 +73,11 @@ export function PinnedCommandsSettings({
             <div
               key={entry.commandId}
               className="pinned-item group flex items-center gap-3 px-3 py-3 rounded-xl
-                bg-white/[0.02] hover:bg-white/[0.05] transition-all duration-200"
+                bg-[var(--launcher-card-bg)] hover:bg-[var(--launcher-card-hover-bg)] transition-all duration-200"
               style={{ animationDelay: `${index * 30}ms` }}
             >
               {/* Drag handle */}
-              <div className="text-white/20 group-hover:text-white/40 transition-colors">
+              <div className="text-foreground/20 group-hover:text-foreground/40 transition-colors">
                 <GripVertical className="size-4" />
               </div>
 
@@ -92,10 +92,10 @@ export function PinnedCommandsSettings({
 
               {/* Content */}
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-medium text-white/90 truncate tracking-[-0.01em]">
+                <p className="text-[13px] font-medium text-foreground/90 truncate tracking-[-0.01em]">
                   {entry.title}
                 </p>
-                <p className="text-[11px] text-white/40 truncate">{entry.subtitle}</p>
+                <p className="text-[11px] text-foreground/40 truncate">{entry.subtitle}</p>
               </div>
 
               {/* Actions */}
@@ -113,7 +113,7 @@ export function PinnedCommandsSettings({
                   }}
                   className={cn(
                     "flex size-8 items-center justify-center rounded-lg transition-all duration-150",
-                    "text-white/40 hover:text-white hover:bg-white/10",
+                    "text-foreground/40 hover:text-foreground hover:bg-[var(--launcher-chip-bg)]",
                     !entry.canMoveUp && "pointer-events-none opacity-30",
                   )}
                   aria-label="Move up"
@@ -133,7 +133,7 @@ export function PinnedCommandsSettings({
                   }}
                   className={cn(
                     "flex size-8 items-center justify-center rounded-lg transition-all duration-150",
-                    "text-white/40 hover:text-white hover:bg-white/10",
+                    "text-foreground/40 hover:text-foreground hover:bg-[var(--launcher-chip-bg)]",
                     !entry.canMoveDown && "pointer-events-none opacity-30",
                   )}
                   aria-label="Move down"
@@ -152,7 +152,7 @@ export function PinnedCommandsSettings({
                     onSetPinned(entry.commandId, false);
                   }}
                   className="flex size-8 items-center justify-center rounded-lg transition-all duration-150
-                    text-white/40 hover:text-rose-400 hover:bg-rose-500/10"
+                    text-foreground/40 hover:text-rose-400 hover:bg-rose-500/10"
                   aria-label="Unpin"
                 >
                   <PinOff className="size-4" />
@@ -164,7 +164,7 @@ export function PinnedCommandsSettings({
       )}
 
       {/* Hint */}
-      <p className="text-[12px] text-white/35 px-1 leading-relaxed">
+      <p className="text-[12px] text-foreground/35 px-1 leading-relaxed">
         Pinned commands appear at the top of your launcher. Drag or use arrows to reorder.
       </p>
     </div>

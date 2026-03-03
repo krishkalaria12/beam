@@ -27,12 +27,11 @@ export function EmojiCard({
       className={cn(
         "emoji-card group relative flex items-center justify-center transition-all duration-150",
         "aspect-square rounded-xl",
-        "bg-white/[0.03] ring-1 ring-inset ring-white/[0.05]",
-        "hover:bg-white/[0.08] hover:ring-white/[0.12]",
-        "focus:outline-none focus:ring-2 focus:ring-[var(--solid-accent,#4ea2ff)]/60",
+        "bg-[var(--launcher-card-hover-bg)] ring-1 ring-inset ring-[var(--launcher-card-border)]",
+        "hover:bg-[var(--launcher-card-hover-bg)] hover:ring-[var(--launcher-card-border)]",
+        "focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/60",
         "active:scale-95 active:duration-75",
-        (isSelected || isRecent) &&
-          "ring-2 ring-[var(--solid-accent,#4ea2ff)]/50 bg-[var(--solid-accent,#4ea2ff)]/[0.08]",
+        (isSelected || isRecent) && "ring-2 ring-[var(--ring)]/50 bg-[var(--ring)]/[0.08]",
         className,
       )}
     >

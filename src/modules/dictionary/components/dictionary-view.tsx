@@ -114,20 +114,20 @@ export function DictionaryView({ initialQuery, onBack }: DictionaryViewProps) {
   }
 
   return (
-    <div className="dictionary-view-enter flex h-full w-full flex-col text-white">
+    <div className="dictionary-view-enter flex h-full w-full flex-col text-foreground">
       {/* Header */}
-      <header className="dictionary-header-enter flex h-14 shrink-0 items-center gap-3 border-b border-white/[0.06] px-4">
+      <header className="dictionary-header-enter flex h-14 shrink-0 items-center gap-3 border-b border-[var(--launcher-card-border)] px-4">
         <button
           type="button"
           onClick={onBack}
-          className="flex size-9 items-center justify-center rounded-lg bg-white/[0.03] text-white/40 transition-all duration-200 hover:bg-white/[0.06] hover:text-white/70"
+          className="flex size-9 items-center justify-center rounded-lg bg-[var(--launcher-card-hover-bg)] text-foreground/40 transition-all duration-200 hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground/70"
           aria-label="Back"
         >
           <ArrowLeft className="size-4" />
         </button>
 
         <div className="relative flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-white/30" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-foreground/30" />
           <input
             ref={inputRef}
             type="text"
@@ -142,14 +142,14 @@ export function DictionaryView({ initialQuery, onBack }: DictionaryViewProps) {
             }}
             placeholder="Search word..."
             className={cn(
-              "h-10 w-full rounded-xl bg-white/[0.04] pl-10 pr-3 text-[14px] text-white/90 placeholder:text-white/30",
-              "ring-1 ring-white/[0.06] transition-all duration-200",
-              "focus:outline-none focus:ring-[var(--solid-accent,#4ea2ff)]",
+              "h-10 w-full rounded-xl bg-[var(--launcher-card-hover-bg)] pl-10 pr-3 text-[14px] text-foreground/90 placeholder:text-foreground/30",
+              "ring-1 ring-[var(--launcher-card-border)] transition-all duration-200",
+              "focus:outline-none focus:ring-[var(--ring)]",
             )}
           />
           {isLoading && (
             <div className="absolute right-3 top-1/2 -translate-y-1/2">
-              <Loader2 className="size-4 animate-spin text-[var(--solid-accent,#4ea2ff)]" />
+              <Loader2 className="size-4 animate-spin text-[var(--ring)]" />
             </div>
           )}
         </div>
@@ -172,19 +172,19 @@ export function DictionaryView({ initialQuery, onBack }: DictionaryViewProps) {
                   <AlertCircle className="size-5" />
                   <h3 className="text-[14px] font-semibold">Error loading definition</h3>
                 </div>
-                <p className="max-w-xs text-[12px] text-white/40">{error.message}</p>
+                <p className="max-w-xs text-[12px] text-foreground/40">{error.message}</p>
               </>
             ) : isLoading ? (
               <>
-                <h3 className="mb-2 text-[14px] font-semibold text-white/80">Searching...</h3>
-                <p className="text-[12px] text-white/40">Finding the perfect definition for you.</p>
+                <h3 className="mb-2 text-[14px] font-semibold text-foreground/80">Searching...</h3>
+                <p className="text-[12px] text-foreground/40">Finding the perfect definition for you.</p>
               </>
             ) : (
               <>
-                <h3 className="mb-2 text-[14px] font-semibold text-white/80">
+                <h3 className="mb-2 text-[14px] font-semibold text-foreground/80">
                   {query.trim() ? "Word not found" : "Dictionary"}
                 </h3>
-                <p className="max-w-xs text-[12px] text-white/40">
+                <p className="max-w-xs text-[12px] text-foreground/40">
                   {query.trim()
                     ? `We couldn't find "${query.trim()}" in our database.`
                     : "Type a word above to explore its meanings, synonyms, and more."}
@@ -192,7 +192,7 @@ export function DictionaryView({ initialQuery, onBack }: DictionaryViewProps) {
                 {query.trim() && (
                   <button
                     type="button"
-                    className="mt-4 text-[12px] font-medium text-[var(--solid-accent,#4ea2ff)] transition-colors hover:text-[var(--solid-accent,#4ea2ff)]/80"
+                    className="mt-4 text-[12px] font-medium text-[var(--ring)] transition-colors hover:text-[var(--ring)]/80"
                     onClick={() => {
                       setQuery("");
                       setDebouncedQuery("");
@@ -211,14 +211,14 @@ export function DictionaryView({ initialQuery, onBack }: DictionaryViewProps) {
             <div className="flex items-end justify-between pb-3">
               <div className="space-y-1">
                 <div className="flex items-center gap-3">
-                  <h2 className="text-[28px] font-bold tracking-[-0.02em] capitalize text-white/95">
+                  <h2 className="text-[28px] font-bold tracking-[-0.02em] capitalize text-foreground/95">
                     {data.word}
                   </h2>
-                  <span className="rounded-full bg-[var(--solid-accent,#4ea2ff)]/15 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-[var(--solid-accent,#4ea2ff)]">
+                  <span className="rounded-full bg-[var(--ring)]/15 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-[var(--ring)]">
                     Word
                   </span>
                 </div>
-                <p className="text-[12px] text-white/40">
+                <p className="text-[12px] text-foreground/40">
                   {data.entries.length} meaning{data.entries.length !== 1 ? "s" : ""} •{" "}
                   {totalSenses} sense
                   {totalSenses !== 1 ? "s" : ""}
@@ -231,7 +231,7 @@ export function DictionaryView({ initialQuery, onBack }: DictionaryViewProps) {
                   "inline-flex h-8 items-center gap-2 rounded-lg px-3 text-[12px] font-medium transition-all duration-200",
                   copied
                     ? "bg-emerald-500/20 text-emerald-400"
-                    : "border border-white/[0.08] bg-white/[0.03] text-white/60 hover:bg-white/[0.06] hover:text-white/80",
+                    : "border border-[var(--launcher-card-border)] bg-[var(--launcher-card-hover-bg)] text-foreground/60 hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground/80",
                 )}
               >
                 {copied ? (
@@ -254,11 +254,11 @@ export function DictionaryView({ initialQuery, onBack }: DictionaryViewProps) {
                 <div key={entryIdx} className="space-y-4">
                   {/* Part of Speech Header */}
                   <div className="flex items-center gap-4">
-                    <div className="h-px flex-1 bg-white/[0.06]" />
-                    <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--solid-accent,#4ea2ff)]/70">
+                    <div className="h-px flex-1 bg-[var(--launcher-card-hover-bg)]" />
+                    <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--ring)]/70">
                       {entry.part_of_speech}
                     </span>
-                    <div className="h-px flex-1 bg-white/[0.06]" />
+                    <div className="h-px flex-1 bg-[var(--launcher-card-hover-bg)]" />
                   </div>
 
                   {/* Senses */}
@@ -294,8 +294,8 @@ export function DictionaryView({ initialQuery, onBack }: DictionaryViewProps) {
       </div>
 
       {/* Footer */}
-      <footer className="dictionary-footer-enter flex h-12 shrink-0 items-center justify-between border-t border-white/[0.06] px-4">
-        <div className="flex items-center gap-2 text-[12px] text-white/40">
+      <footer className="dictionary-footer-enter flex h-12 shrink-0 items-center justify-between border-t border-[var(--launcher-card-border)] px-4">
+        <div className="flex items-center gap-2 text-[12px] text-foreground/40">
           <BookOpen className="size-3.5" />
           <span>
             {data
@@ -304,17 +304,17 @@ export function DictionaryView({ initialQuery, onBack }: DictionaryViewProps) {
           </span>
         </div>
 
-        <div className="flex items-center gap-3 text-[11px] text-white/30">
+        <div className="flex items-center gap-3 text-[11px] text-foreground/30">
           <span>
-            <kbd className="rounded bg-white/[0.08] px-1.5 py-0.5 font-mono text-[10px]">↑↓</kbd>{" "}
+            <kbd className="rounded bg-[var(--launcher-card-hover-bg)] px-1.5 py-0.5 font-mono text-[10px]">↑↓</kbd>{" "}
             Select
           </span>
           <span>
-            <kbd className="rounded bg-white/[0.08] px-1.5 py-0.5 font-mono text-[10px]">Enter</kbd>{" "}
+            <kbd className="rounded bg-[var(--launcher-card-hover-bg)] px-1.5 py-0.5 font-mono text-[10px]">Enter</kbd>{" "}
             Copy
           </span>
           <span>
-            <kbd className="rounded bg-white/[0.08] px-1.5 py-0.5 font-mono text-[10px]">Esc</kbd>{" "}
+            <kbd className="rounded bg-[var(--launcher-card-hover-bg)] px-1.5 py-0.5 font-mono text-[10px]">Esc</kbd>{" "}
             Back
           </span>
         </div>

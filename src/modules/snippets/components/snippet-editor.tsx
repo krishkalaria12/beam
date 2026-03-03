@@ -61,10 +61,10 @@ export function SnippetEditor({
       <div className="flex min-h-0 flex-1 gap-4 overflow-hidden p-4">
         {/* Left: Snippet Content Editor */}
         <div className="flex min-h-0 w-[47%] flex-col">
-          <label className="mb-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-white/45">
+          <label className="mb-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/45">
             Snippet Content
           </label>
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl bg-white/[0.03] ring-1 ring-white/[0.06]">
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl bg-[var(--launcher-card-bg)] ring-1 ring-[var(--launcher-card-border)]">
             <textarea
               value={draft.template}
               onChange={(event) => {
@@ -75,17 +75,17 @@ export function SnippetEditor({
               }}
               placeholder="Type snippet content..."
               className={cn(
-                "min-h-0 flex-1 resize-none bg-transparent p-4 text-[14px] leading-6 text-white/90 placeholder:text-white/30",
+                "min-h-0 flex-1 resize-none bg-transparent p-4 text-[14px] leading-6 text-foreground/90 placeholder:text-foreground/30",
                 "focus:outline-none",
               )}
             />
 
-            <div className="flex items-center gap-1 border-t border-white/[0.06] px-2 py-1.5">
+            <div className="flex items-center gap-1 border-t border-[var(--launcher-card-border)] px-2 py-1.5">
               {DECORATION_BUTTONS.map(({ key, icon: Icon }) => (
                 <button
                   key={key}
                   type="button"
-                  className="flex size-7 items-center justify-center rounded-lg text-white/40 transition-colors hover:bg-white/[0.06] hover:text-white/70"
+                  className="flex size-7 items-center justify-center rounded-lg text-foreground/40 transition-colors hover:bg-[var(--launcher-chip-bg)] hover:text-foreground/70"
                   aria-label={key}
                 >
                   <Icon className="size-3.5" />
@@ -94,7 +94,7 @@ export function SnippetEditor({
             </div>
           </div>
 
-          <p className="mt-2 text-[11px] text-white/35">
+          <p className="mt-2 text-[11px] text-foreground/35">
             Include dynamic placeholders for context values like date and copied text.
           </p>
         </div>
@@ -104,7 +104,7 @@ export function SnippetEditor({
           <div className="grid gap-4">
             {/* Name */}
             <div>
-              <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.08em] text-white/45">
+              <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/45">
                 Name
               </label>
               <input
@@ -118,16 +118,16 @@ export function SnippetEditor({
                 }}
                 placeholder="Snippet name"
                 className={cn(
-                  "h-10 w-full rounded-xl bg-white/[0.04] px-3 text-[13px] text-white/90 placeholder:text-white/30",
-                  "ring-1 ring-white/[0.06] transition-all duration-200",
-                  "focus:outline-none focus:ring-[var(--solid-accent,#4ea2ff)]",
+                  "h-10 w-full rounded-xl bg-[var(--launcher-card-hover-bg)] px-3 text-[13px] text-foreground/90 placeholder:text-foreground/30",
+                  "ring-1 ring-[var(--launcher-card-border)] transition-all duration-200",
+                  "focus:outline-none focus:ring-[var(--ring)]",
                 )}
               />
             </div>
 
             {/* Keyword */}
             <div>
-              <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.08em] text-white/45">
+              <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/45">
                 Keyword
               </label>
               <input
@@ -141,16 +141,16 @@ export function SnippetEditor({
                 }}
                 placeholder=";keyword"
                 className={cn(
-                  "h-10 w-full rounded-xl bg-white/[0.04] px-3 font-mono text-[13px] text-white/90 placeholder:text-white/30",
-                  "ring-1 ring-white/[0.06] transition-all duration-200",
-                  "focus:outline-none focus:ring-[var(--solid-accent,#4ea2ff)]",
+                  "h-10 w-full rounded-xl bg-[var(--launcher-card-hover-bg)] px-3 font-mono text-[13px] text-foreground/90 placeholder:text-foreground/30",
+                  "ring-1 ring-[var(--launcher-card-border)] transition-all duration-200",
+                  "focus:outline-none focus:ring-[var(--ring)]",
                 )}
               />
             </div>
 
             {/* Tags */}
             <div>
-              <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.08em] text-white/45">
+              <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/45">
                 Tags
               </label>
               <SnippetTagInput
@@ -168,20 +168,20 @@ export function SnippetEditor({
             {/* Content Type & Placeholders */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.08em] text-white/45">
+                <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/45">
                   Content Type
                 </label>
                 <DropdownMenu>
-                  <DropdownMenuTrigger className="flex h-10 w-full items-center justify-between gap-2 rounded-xl bg-white/[0.04] px-3 text-[13px] font-medium text-white/70 ring-1 ring-white/[0.06] transition-all hover:bg-white/[0.06] hover:text-white/90">
+                  <DropdownMenuTrigger className="flex h-10 w-full items-center justify-between gap-2 rounded-xl bg-[var(--launcher-card-hover-bg)] px-3 text-[13px] font-medium text-foreground/70 ring-1 ring-[var(--launcher-card-border)] transition-all hover:bg-[var(--launcher-chip-bg)] hover:text-foreground/90">
                     <div className="flex items-center gap-2">
-                      <currentContentType.icon className="size-3.5 text-white/40" />
+                      <currentContentType.icon className="size-3.5 text-foreground/40" />
                       <span>{currentContentType.label}</span>
                     </div>
-                    <ChevronDown className="size-3.5 text-white/30" />
+                    <ChevronDown className="size-3.5 text-foreground/30" />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
                     align="start"
-                    className="w-40 rounded-xl border border-white/[0.08] bg-[#2c2c2c] p-1.5 shadow-xl"
+                    className="w-40 rounded-xl border border-[var(--launcher-card-border)] bg-[var(--popover)] p-1.5 shadow-xl"
                   >
                     <DropdownMenuRadioGroup
                       value={draft.contentType}
@@ -196,9 +196,9 @@ export function SnippetEditor({
                         <DropdownMenuRadioItem
                           key={option.value}
                           value={option.value}
-                          className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-[12px] font-medium text-white/70 transition-colors hover:bg-white/[0.06] hover:text-white/90 focus:bg-white/[0.06] data-[state=checked]:text-white"
+                          className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-[12px] font-medium text-foreground/70 transition-colors hover:bg-[var(--launcher-chip-bg)] hover:text-foreground/90 focus:bg-[var(--launcher-chip-bg)] data-[state=checked]:text-foreground"
                         >
-                          <option.icon className="size-3.5 text-white/40" />
+                          <option.icon className="size-3.5 text-foreground/40" />
                           {option.label}
                         </DropdownMenuRadioItem>
                       ))}
@@ -211,8 +211,8 @@ export function SnippetEditor({
                 <button
                   type="button"
                   className={cn(
-                    "inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-white/[0.08] text-[12px] font-medium transition-all duration-200",
-                    "bg-white/[0.03] text-white/60 hover:bg-white/[0.06] hover:text-white/80",
+                    "inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-[var(--launcher-card-border)] text-[12px] font-medium transition-all duration-200",
+                    "bg-[var(--launcher-card-bg)] text-foreground/60 hover:bg-[var(--launcher-chip-bg)] hover:text-foreground/80",
                   )}
                 >
                   <Sparkles className="size-3.5" />
@@ -222,17 +222,17 @@ export function SnippetEditor({
             </div>
 
             {/* Behavior Section */}
-            <div className="rounded-xl bg-white/[0.02] p-4 ring-1 ring-white/[0.04]">
+            <div className="rounded-xl bg-[var(--launcher-card-bg)] p-4 ring-1 ring-[var(--launcher-card-border)]">
               <div className="mb-3 flex items-center gap-3">
-                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-white/45">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/45">
                   Behavior
                 </span>
-                <div className="h-px flex-1 bg-white/[0.06]" />
+                <div className="h-px flex-1 bg-[var(--launcher-chip-bg)]" />
               </div>
 
               <div className="space-y-3 text-[12px]">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-white/60">Enabled</span>
+                  <span className="text-foreground/60">Enabled</span>
                   <Switch
                     checked={draft.enabled}
                     onCheckedChange={(checked) => {
@@ -243,10 +243,10 @@ export function SnippetEditor({
                     }}
                   />
                 </div>
-                <div className="h-px bg-white/[0.04]" />
+                <div className="h-px bg-[var(--launcher-card-hover-bg)]" />
 
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-white/60">Case Sensitive</span>
+                  <span className="text-foreground/60">Case Sensitive</span>
                   <Switch
                     checked={draft.caseSensitive}
                     onCheckedChange={(checked) => {
@@ -257,10 +257,10 @@ export function SnippetEditor({
                     }}
                   />
                 </div>
-                <div className="h-px bg-white/[0.04]" />
+                <div className="h-px bg-[var(--launcher-card-hover-bg)]" />
 
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-white/60">Word Boundary</span>
+                  <span className="text-foreground/60">Word Boundary</span>
                   <Switch
                     checked={draft.wordBoundary}
                     onCheckedChange={(checked) => {
@@ -271,10 +271,10 @@ export function SnippetEditor({
                     }}
                   />
                 </div>
-                <div className="h-px bg-white/[0.04]" />
+                <div className="h-px bg-[var(--launcher-card-hover-bg)]" />
 
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-white/60">Instant Expand</span>
+                  <span className="text-foreground/60">Instant Expand</span>
                   <Switch
                     checked={draft.instantExpand}
                     onCheckedChange={(checked) => {
@@ -292,13 +292,13 @@ export function SnippetEditor({
       </div>
 
       {/* Footer Actions */}
-      <div className="flex h-14 shrink-0 items-center justify-end gap-2 border-t border-white/[0.06] px-4">
+      <div className="flex h-14 shrink-0 items-center justify-end gap-2 border-t border-[var(--launcher-card-border)] px-4">
         <button
           type="button"
           onClick={onCancel}
           className={cn(
-            "inline-flex h-8 items-center gap-1.5 rounded-lg border border-white/[0.08] px-4 text-[12px] font-medium transition-all duration-200",
-            "bg-white/[0.03] text-white/60 hover:bg-white/[0.06] hover:text-white/80",
+            "inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--launcher-card-border)] px-4 text-[12px] font-medium transition-all duration-200",
+            "bg-[var(--launcher-card-bg)] text-foreground/60 hover:bg-[var(--launcher-chip-bg)] hover:text-foreground/80",
           )}
         >
           Cancel
@@ -309,7 +309,7 @@ export function SnippetEditor({
           disabled={isSubmitting}
           className={cn(
             "inline-flex h-8 items-center gap-1.5 rounded-lg px-4 text-[12px] font-medium transition-all duration-200",
-            "bg-[var(--solid-accent,#4ea2ff)]/20 text-[var(--solid-accent,#4ea2ff)] hover:bg-[var(--solid-accent,#4ea2ff)]/30",
+            "bg-[var(--ring)]/20 text-[var(--ring)] hover:bg-[var(--ring)]/30",
             "disabled:opacity-50 disabled:pointer-events-none",
           )}
         >

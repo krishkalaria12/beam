@@ -63,7 +63,9 @@ export function TodoSortableRow({
       onClick={() => onSelect(todo.id)}
       className={cn(
         "todo-row-enter group relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-200 cursor-pointer",
-        isSelected ? "bg-white/[0.06] ring-1 ring-white/20" : "hover:bg-white/[0.04]",
+        isSelected
+          ? "bg-[var(--launcher-card-hover-bg)] ring-1 ring-[var(--launcher-card-border)]"
+          : "hover:bg-[var(--launcher-card-hover-bg)]",
         isDragging && "opacity-50 scale-[0.98]",
       )}
     >
@@ -72,15 +74,15 @@ export function TodoSortableRow({
         className={cn(
           "absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full transition-all duration-200",
           isSelected
-            ? "bg-[var(--solid-accent,#4ea2ff)] opacity-100"
-            : "bg-white/40 opacity-0 group-hover:opacity-100",
+            ? "bg-[var(--ring)] opacity-100"
+            : "bg-[var(--launcher-card-hover-bg)] opacity-0 group-hover:opacity-100",
         )}
       />
 
       {/* Drag handle */}
       <button
         type="button"
-        className="flex size-6 shrink-0 items-center justify-center rounded-md text-white/30 transition-colors hover:bg-white/[0.06] hover:text-white/50"
+        className="flex size-6 shrink-0 items-center justify-center rounded-md text-foreground/30 transition-colors hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground/50"
         aria-label="Reorder todo"
         onClick={(event) => event.stopPropagation()}
         {...attributes}
@@ -99,12 +101,12 @@ export function TodoSortableRow({
         className={cn(
           "flex size-5 shrink-0 items-center justify-center rounded-full transition-all duration-200",
           todo.completed
-            ? "bg-[var(--solid-accent,#4ea2ff)] shadow-lg shadow-[var(--solid-accent,#4ea2ff)]/30"
-            : "ring-2 ring-white/20 hover:ring-white/40",
+            ? "bg-[var(--ring)] shadow-lg shadow-[var(--ring)]/30"
+            : "ring-2 ring-[var(--launcher-card-border)] hover:ring-[var(--launcher-card-border)]",
         )}
         aria-label={todo.completed ? "Mark incomplete" : "Mark complete"}
       >
-        {todo.completed && <Check className="size-3 text-white" strokeWidth={3} />}
+        {todo.completed && <Check className="size-3 text-foreground" strokeWidth={3} />}
       </button>
 
       {/* Content */}
@@ -125,14 +127,14 @@ export function TodoSortableRow({
                 onCancelEdit();
               }
             }}
-            className="w-full bg-transparent text-[13px] font-medium tracking-[-0.01em] text-white/90 outline-none placeholder:text-white/30"
+            className="w-full bg-transparent text-[13px] font-medium tracking-[-0.01em] text-foreground/90 outline-none placeholder:text-foreground/30"
           />
         ) : (
           <div>
             <p
               className={cn(
                 "truncate text-[13px] font-medium tracking-[-0.01em] transition-colors",
-                todo.completed ? "text-white/40 line-through" : "text-white/90",
+                todo.completed ? "text-foreground/40 line-through" : "text-foreground/90",
               )}
               onDoubleClick={() => onStartEdit(todo)}
               title="Double-click to rename"
@@ -140,13 +142,13 @@ export function TodoSortableRow({
               {todo.title}
             </p>
             <div className="mt-1 flex items-center gap-2">
-              <span className="text-[11px] text-white/40">
+              <span className="text-[11px] text-foreground/40">
                 {subTodoCompleted}/{todo.sub_todos.length} subtasks
               </span>
               {todo.sub_todos.length > 0 && (
-                <div className="flex h-1 w-12 overflow-hidden rounded-full bg-white/10">
+                <div className="flex h-1 w-12 overflow-hidden rounded-full bg-[var(--launcher-card-hover-bg)]">
                   <div
-                    className="h-full rounded-full bg-[var(--solid-accent,#4ea2ff)] transition-all duration-300"
+                    className="h-full rounded-full bg-[var(--ring)] transition-all duration-300"
                     style={{ width: `${progress}%` }}
                   />
                 </div>
@@ -162,7 +164,7 @@ export function TodoSortableRow({
           render={
             <button
               type="button"
-              className="flex size-7 items-center justify-center rounded-lg text-white/30 opacity-0 transition-all hover:bg-white/[0.06] hover:text-white/50 group-hover:opacity-100"
+              className="flex size-7 items-center justify-center rounded-lg text-foreground/30 opacity-0 transition-all hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground/50 group-hover:opacity-100"
               onClick={(event) => event.stopPropagation()}
               aria-label="Todo actions"
             >

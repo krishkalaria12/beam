@@ -239,7 +239,7 @@ export function TranslationView({ initialQuery, onBack }: TranslationViewProps) 
         <button
           type="button"
           onClick={onBack}
-          className="flex size-9 items-center justify-center rounded-lg bg-white/[0.03] text-white/40 transition-colors hover:bg-white/[0.06] hover:text-white/70"
+          className="flex size-9 items-center justify-center rounded-lg bg-[var(--launcher-card-hover-bg)] text-foreground/40 transition-colors hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground/70"
           aria-label="Back"
         >
           <ChevronLeft className="size-[18px]" />
@@ -251,10 +251,10 @@ export function TranslationView({ initialQuery, onBack }: TranslationViewProps) 
             <Languages className="size-[18px] text-purple-400" />
           </div>
           <div className="flex flex-col">
-            <h1 className="text-[14px] font-semibold tracking-[-0.02em] text-white/90">
+            <h1 className="text-[14px] font-semibold tracking-[-0.02em] text-foreground/90">
               Translate
             </h1>
-            <p className="text-[12px] tracking-[-0.01em] text-white/45">
+            <p className="text-[12px] tracking-[-0.01em] text-foreground/45">
               Real-time text translation
             </p>
           </div>
@@ -263,9 +263,9 @@ export function TranslationView({ initialQuery, onBack }: TranslationViewProps) 
         {/* Status */}
         <div className="ml-auto flex items-center gap-2">
           {isTranslating && (
-            <div className="flex items-center gap-1.5 rounded-full bg-white/[0.04] px-2.5 py-1">
-              <Loader2 className="size-3 animate-spin text-[var(--solid-accent,#4ea2ff)]" />
-              <span className="text-[11px] font-medium tracking-[-0.01em] text-white/50">
+            <div className="flex items-center gap-1.5 rounded-full bg-[var(--launcher-card-hover-bg)] px-2.5 py-1">
+              <Loader2 className="size-3 animate-spin text-[var(--ring)]" />
+              <span className="text-[11px] font-medium tracking-[-0.01em] text-foreground/50">
                 Translating
               </span>
             </div>
@@ -275,7 +275,7 @@ export function TranslationView({ initialQuery, onBack }: TranslationViewProps) 
 
       {/* Language Bar */}
       <div className="translate-langbar-enter flex items-center justify-center px-4 pb-3">
-        <div className="flex w-full items-center gap-2 rounded-xl bg-white/[0.03] p-1.5 ring-1 ring-white/[0.06]">
+        <div className="flex w-full items-center gap-2 rounded-xl bg-[var(--launcher-card-hover-bg)] p-1.5 ring-1 ring-[var(--launcher-card-border)]">
           <Select
             value={sourceLanguage}
             onValueChange={(value: string | null) => {
@@ -284,10 +284,10 @@ export function TranslationView({ initialQuery, onBack }: TranslationViewProps) 
               setDetectedLanguage(null);
             }}
           >
-            <SelectTrigger className="h-9 flex-1 border-none bg-transparent text-[13px] font-medium tracking-[-0.01em] text-white/80 shadow-none ring-0 transition-colors hover:bg-white/[0.04] focus:ring-0">
+            <SelectTrigger className="h-9 flex-1 border-none bg-transparent text-[13px] font-medium tracking-[-0.01em] text-foreground/80 shadow-none ring-0 transition-colors hover:bg-[var(--launcher-card-hover-bg)] focus:ring-0">
               <span className="truncate px-1">{getLanguageLabel(sourceLanguage)}</span>
             </SelectTrigger>
-            <SelectContent className="max-h-[300px] border-white/[0.08] bg-[#383838] text-white/90">
+            <SelectContent className="max-h-[300px] border-[var(--launcher-card-border)] bg-[var(--popover)] text-foreground/90">
               <SelectItem value={AUTO_LANGUAGE_CODE}>Auto Detect</SelectItem>
               {languages.map((language) => (
                 <SelectItem key={language.code} value={language.code}>
@@ -301,7 +301,7 @@ export function TranslationView({ initialQuery, onBack }: TranslationViewProps) 
             type="button"
             onClick={handleSwapLanguages}
             disabled={sourceLanguage === AUTO_LANGUAGE_CODE || !targetLanguage}
-            className="flex size-8 shrink-0 items-center justify-center rounded-lg text-white/40 transition-all hover:bg-white/[0.06] hover:text-white/70 disabled:opacity-30"
+            className="flex size-8 shrink-0 items-center justify-center rounded-lg text-foreground/40 transition-all hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground/70 disabled:opacity-30"
           >
             <ArrowRightLeft className="size-4" />
           </button>
@@ -313,12 +313,12 @@ export function TranslationView({ initialQuery, onBack }: TranslationViewProps) 
               setTargetLanguage(value);
             }}
           >
-            <SelectTrigger className="h-9 flex-1 border-none bg-transparent text-[13px] font-medium tracking-[-0.01em] text-white/80 shadow-none ring-0 transition-colors hover:bg-white/[0.04] focus:ring-0">
+            <SelectTrigger className="h-9 flex-1 border-none bg-transparent text-[13px] font-medium tracking-[-0.01em] text-foreground/80 shadow-none ring-0 transition-colors hover:bg-[var(--launcher-card-hover-bg)] focus:ring-0">
               <span className="truncate px-1">
                 {targetLanguage ? getLanguageLabel(targetLanguage) : "Select target"}
               </span>
             </SelectTrigger>
-            <SelectContent className="max-h-[300px] border-white/[0.08] bg-[#383838] text-white/90">
+            <SelectContent className="max-h-[300px] border-[var(--launcher-card-border)] bg-[var(--popover)] text-foreground/90">
               {languages.map((language) => (
                 <SelectItem key={language.code} value={language.code}>
                   {language.name}
@@ -330,10 +330,10 @@ export function TranslationView({ initialQuery, onBack }: TranslationViewProps) 
       </div>
 
       {/* Translation Area */}
-      <div className="translate-content-enter flex min-h-0 flex-1 flex-col gap-px overflow-hidden rounded-2xl mx-4 mb-4 bg-white/[0.02] ring-1 ring-white/[0.06]">
+      <div className="translate-content-enter flex min-h-0 flex-1 flex-col gap-px overflow-hidden rounded-2xl mx-4 mb-4 bg-[var(--launcher-card-hover-bg)] ring-1 ring-[var(--launcher-card-border)]">
         {/* Source Input */}
         <div className="group relative flex min-h-[45%] flex-1 flex-col">
-          <div className="pointer-events-none absolute right-4 top-3 z-10 text-[10px] font-mono tracking-[-0.01em] text-white/30 transition-opacity group-hover:text-white/40">
+          <div className="pointer-events-none absolute right-4 top-3 z-10 text-[10px] font-mono tracking-[-0.01em] text-foreground/30 transition-opacity group-hover:text-foreground/40">
             {sourceText.length} chars
           </div>
           <Textarea
@@ -351,7 +351,7 @@ export function TranslationView({ initialQuery, onBack }: TranslationViewProps) 
                 void runTranslation(sourceText);
               }
             }}
-            className="flex-1 resize-none border-none bg-transparent p-4 text-[15px] leading-relaxed tracking-[-0.01em] text-white/90 placeholder:text-white/30 focus-visible:ring-0"
+            className="flex-1 resize-none border-none bg-transparent p-4 text-[15px] leading-relaxed tracking-[-0.01em] text-foreground/90 placeholder:text-foreground/30 focus-visible:ring-0"
             placeholder="Enter text to translate..."
             spellCheck={false}
           />
@@ -364,14 +364,14 @@ export function TranslationView({ initialQuery, onBack }: TranslationViewProps) 
         </div>
 
         {/* Divider */}
-        <div className="h-px w-full bg-white/[0.06]" />
+        <div className="h-px w-full bg-[var(--launcher-card-hover-bg)]" />
 
         {/* Target Output */}
-        <div className="relative flex min-h-[45%] flex-1 flex-col bg-white/[0.02]">
+        <div className="relative flex min-h-[45%] flex-1 flex-col bg-[var(--launcher-card-hover-bg)]">
           {/* Detected Language Badge */}
           {detectedLanguageLabel && (
             <div className="absolute left-4 top-3 z-10">
-              <span className="rounded-full bg-[var(--solid-accent,#4ea2ff)]/15 px-2 py-0.5 text-[10px] font-medium tracking-[-0.01em] text-[var(--solid-accent,#4ea2ff)]">
+              <span className="rounded-full bg-[var(--ring)]/15 px-2 py-0.5 text-[10px] font-medium tracking-[-0.01em] text-[var(--ring)]">
                 {detectedLanguageLabel} {detectedConfidence ? `(${detectedConfidence})` : ""}
               </span>
             </div>
@@ -387,7 +387,7 @@ export function TranslationView({ initialQuery, onBack }: TranslationViewProps) 
                 "flex size-8 items-center justify-center rounded-lg transition-all disabled:opacity-30",
                 copied
                   ? "bg-emerald-500/15 text-emerald-400"
-                  : "bg-white/[0.04] text-white/40 hover:bg-white/[0.08] hover:text-white/70",
+                  : "bg-[var(--launcher-card-hover-bg)] text-foreground/40 hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground/70",
               )}
             >
               {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
@@ -398,7 +398,7 @@ export function TranslationView({ initialQuery, onBack }: TranslationViewProps) 
             value={translatedText}
             readOnly
             className={cn(
-              "flex-1 resize-none border-none bg-transparent p-4 text-[15px] leading-relaxed tracking-[-0.01em] text-white/90 focus-visible:ring-0",
+              "flex-1 resize-none border-none bg-transparent p-4 text-[15px] leading-relaxed tracking-[-0.01em] text-foreground/90 focus-visible:ring-0",
               detectedLanguageLabel && "pt-10",
             )}
             placeholder={canTranslate ? "Translation will appear here..." : ""}
@@ -414,26 +414,26 @@ export function TranslationView({ initialQuery, onBack }: TranslationViewProps) 
       </div>
 
       {/* Footer */}
-      <div className="translate-footer-enter flex h-12 shrink-0 items-center justify-between border-t border-white/[0.06] px-4">
+      <div className="translate-footer-enter flex h-12 shrink-0 items-center justify-between border-t border-[var(--launcher-card-border)] px-4">
         {/* Auto-translate toggle */}
         <button
           type="button"
           onClick={() => setAutoTranslate(!autoTranslate)}
-          className="flex items-center gap-2 text-[11px] tracking-[-0.01em] text-white/40 transition-colors hover:text-white/60"
+          className="flex items-center gap-2 text-[11px] tracking-[-0.01em] text-foreground/40 transition-colors hover:text-foreground/60"
         >
           <div
             className={cn(
               "size-2 rounded-full ring-2 ring-inset transition-all",
               autoTranslate
-                ? "bg-[var(--solid-accent,#4ea2ff)] ring-[var(--solid-accent,#4ea2ff)]/30"
-                : "bg-transparent ring-white/30",
+                ? "bg-[var(--ring)] ring-[var(--ring)]/30"
+                : "bg-transparent ring-[var(--launcher-card-border)]",
             )}
           />
           <span>Auto-translate</span>
           {targetLanguage && (
             <>
-              <span className="text-white/20">·</span>
-              <span className="text-white/35">To {getLanguageLabel(targetLanguage)}</span>
+              <span className="text-foreground/20">·</span>
+              <span className="text-foreground/35">To {getLanguageLabel(targetLanguage)}</span>
             </>
           )}
         </button>
@@ -441,13 +441,13 @@ export function TranslationView({ initialQuery, onBack }: TranslationViewProps) 
         {/* Keyboard hints */}
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5">
-            <kbd className="flex h-5 min-w-[20px] items-center justify-center rounded bg-white/[0.06] px-1.5 font-mono text-[10px] text-white/40">
+            <kbd className="flex h-5 min-w-[20px] items-center justify-center rounded bg-[var(--launcher-card-hover-bg)] px-1.5 font-mono text-[10px] text-foreground/40">
               Cmd
             </kbd>
-            <kbd className="flex h-5 min-w-[20px] items-center justify-center rounded bg-white/[0.06] px-1.5 font-mono text-[10px] text-white/40">
+            <kbd className="flex h-5 min-w-[20px] items-center justify-center rounded bg-[var(--launcher-card-hover-bg)] px-1.5 font-mono text-[10px] text-foreground/40">
               Enter
             </kbd>
-            <span className="text-[11px] text-white/35">Translate</span>
+            <span className="text-[11px] text-foreground/35">Translate</span>
           </div>
         </div>
       </div>

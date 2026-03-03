@@ -92,7 +92,7 @@ export default function CalculatorHistoryCommandGroup({
             <div className="size-10 rounded-xl bg-gradient-to-br from-orange-500/15 to-amber-500/15 p-2.5 mb-3">
               <Loader2 className="size-full text-orange-400 animate-spin" />
             </div>
-            <p className="text-[12px] text-white/50">Loading history...</p>
+            <p className="text-[12px] text-foreground/50">Loading history...</p>
           </div>
         </CommandItem>
       )}

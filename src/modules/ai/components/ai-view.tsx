@@ -307,7 +307,7 @@ export function AiView({ onBack }: AiViewProps) {
   }
 
   return (
-    <div className="ai-view-enter flex h-full w-full overflow-hidden text-white">
+    <div className="ai-view-enter flex h-full w-full overflow-hidden text-foreground">
       {/* Sidebar */}
       <AiChatSidebar
         activeConversationId={activeConversationId}

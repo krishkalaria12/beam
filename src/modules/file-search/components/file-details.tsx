@@ -264,7 +264,7 @@ export function FileDetails({ selectedFile }: FileDetailsProps) {
             className={cn(
               "relative flex size-24 items-center justify-center rounded-2xl",
               `bg-gradient-to-br ${fileInfo.bgColor}`,
-              "border border-white/5",
+              "border border-[var(--launcher-card-border)]",
               "shadow-lg shadow-black/20",
             )}
           >
@@ -360,7 +360,7 @@ export function FileDetails({ selectedFile }: FileDetailsProps) {
           </div>
           <code
             className="block text-[11px] font-mono text-muted-foreground/70 break-all leading-relaxed
-            selection:bg-[var(--solid-accent,#4ea2ff)]/30"
+            selection:bg-[var(--ring)]/30"
           >
             {selectedFile.path}
           </code>

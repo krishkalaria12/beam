@@ -22,8 +22,8 @@ export function SenseCard({
       className={cn(
         "dictionary-sense-card group relative rounded-xl p-4 transition-all duration-200",
         isSelected
-          ? "bg-white/[0.05] ring-1 ring-white/20"
-          : "bg-white/[0.02] hover:bg-white/[0.04]",
+          ? "bg-[var(--launcher-card-hover-bg)] ring-1 ring-[var(--launcher-card-border)]"
+          : "bg-[var(--launcher-card-hover-bg)] hover:bg-[var(--launcher-card-hover-bg)]",
       )}
     >
       {/* Left Accent Bar */}
@@ -31,8 +31,8 @@ export function SenseCard({
         className={cn(
           "absolute left-0 top-1/2 h-8 w-0.5 -translate-y-1/2 rounded-full transition-all duration-200",
           isSelected
-            ? "bg-[var(--solid-accent,#4ea2ff)]"
-            : "bg-transparent group-hover:bg-white/15",
+            ? "bg-[var(--ring)]"
+            : "bg-transparent group-hover:bg-[var(--launcher-card-hover-bg)]",
         )}
       />
 
@@ -43,8 +43,8 @@ export function SenseCard({
           className={cn(
             "mt-0.5 flex h-5 shrink-0 items-center justify-center rounded px-1.5 font-mono text-[10px] font-semibold transition-colors duration-200",
             isSelected
-              ? "bg-[var(--solid-accent,#4ea2ff)]/20 text-[var(--solid-accent,#4ea2ff)]"
-              : "bg-white/[0.06] text-white/40",
+              ? "bg-[var(--ring)]/20 text-[var(--ring)]"
+              : "bg-[var(--launcher-card-hover-bg)] text-foreground/40",
           )}
         >
           {entryNumber}.{senseNumber}
@@ -55,7 +55,7 @@ export function SenseCard({
           <p
             className={cn(
               "text-[13px] leading-relaxed transition-colors duration-200",
-              isSelected ? "text-white/90" : "text-white/70",
+              isSelected ? "text-foreground/90" : "text-foreground/70",
             )}
           >
             {sense.definition}
@@ -63,9 +63,9 @@ export function SenseCard({
 
           {/* Examples */}
           {sense.examples && sense.examples.length > 0 && (
-            <div className="space-y-1.5 border-l-2 border-white/10 pl-3">
+            <div className="space-y-1.5 border-l-2 border-[var(--launcher-card-border)] pl-3">
               {sense.examples.map((example, idx) => (
-                <p key={idx} className="text-[12px] italic text-white/40 leading-snug">
+                <p key={idx} className="text-[12px] italic text-foreground/40 leading-snug">
                   "{example}"
                 </p>
               ))}
@@ -77,7 +77,7 @@ export function SenseCard({
             <div className="flex flex-wrap gap-4 pt-1">
               {sense.synonyms.length > 0 && (
                 <div className="space-y-1.5">
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.06em] text-white/30">
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.06em] text-foreground/30">
                     Synonyms
                   </span>
                   <div className="flex flex-wrap gap-1.5">
@@ -99,7 +99,7 @@ export function SenseCard({
 
               {sense.antonyms.length > 0 && (
                 <div className="space-y-1.5">
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.06em] text-white/30">
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.06em] text-foreground/30">
                     Antonyms
                   </span>
                   <div className="flex flex-wrap gap-1.5">

@@ -21,8 +21,8 @@ export function ScriptCommandsList({
   if (isLoading) {
     return (
       <div className="scripts-loading flex h-full items-center justify-center p-4">
-        <div className="flex flex-col items-center gap-3 text-white/40">
-          <div className="size-8 animate-spin rounded-full border-2 border-white/10 border-t-white/40" />
+        <div className="flex flex-col items-center gap-3 text-foreground/40">
+          <div className="size-8 animate-spin rounded-full border-2 border-[var(--launcher-card-border)] border-t-white/40" />
           <span className="text-[12px]">Loading scripts...</span>
         </div>
       </div>
@@ -32,12 +32,12 @@ export function ScriptCommandsList({
   if (scripts.length === 0) {
     return (
       <div className="scripts-empty flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
-        <div className="flex size-12 items-center justify-center rounded-xl bg-white/[0.04]">
-          <Terminal className="size-5 text-white/30" />
+        <div className="flex size-12 items-center justify-center rounded-xl bg-[var(--launcher-card-hover-bg)]">
+          <Terminal className="size-5 text-foreground/30" />
         </div>
         <div>
-          <p className="text-[13px] font-medium text-white/50">No scripts found</p>
-          <p className="mt-1 text-[12px] text-white/30">Add scripts to your commands folder</p>
+          <p className="text-[13px] font-medium text-foreground/50">No scripts found</p>
+          <p className="mt-1 text-[12px] text-foreground/30">Add scripts to your commands folder</p>
         </div>
       </div>
     );
@@ -55,8 +55,8 @@ export function ScriptCommandsList({
             className={cn(
               "scripts-list-item group relative mb-1 rounded-xl px-3 py-2.5 text-left transition-all duration-200",
               isSelected
-                ? "bg-white/[0.06] ring-1 ring-white/[0.08]"
-                : "bg-transparent hover:bg-white/[0.04]",
+                ? "bg-[var(--launcher-card-hover-bg)] ring-1 ring-[var(--launcher-card-border)]"
+                : "bg-transparent hover:bg-[var(--launcher-card-hover-bg)]",
             )}
             style={{ animationDelay: `${index * 30}ms` }}
             onClick={() => onSelect(script.id)}
@@ -65,7 +65,7 @@ export function ScriptCommandsList({
             {/* Left accent bar */}
             <div
               className={cn(
-                "absolute left-0 top-1/2 h-0 w-[3px] -translate-y-1/2 rounded-r-full bg-[var(--solid-accent,#4ea2ff)] transition-all duration-200",
+                "absolute left-0 top-1/2 h-0 w-[3px] -translate-y-1/2 rounded-r-full bg-[var(--ring)] transition-all duration-200",
                 isSelected && "h-[60%]",
               )}
             />
@@ -75,10 +75,10 @@ export function ScriptCommandsList({
                 <Terminal className="size-3.5 text-emerald-400/80" />
               </div>
               <div className="flex-1 min-w-0">
-                <span className="block truncate text-[13px] font-medium text-white/90 tracking-[-0.01em]">
+                <span className="block truncate text-[13px] font-medium text-foreground/90 tracking-[-0.01em]">
                   {script.title}
                 </span>
-                <div className="mt-0.5 flex items-center gap-2 text-[11px] text-white/40">
+                <div className="mt-0.5 flex items-center gap-2 text-[11px] text-foreground/40">
                   <FileCode2 className="size-3" />
                   <span className="truncate">{script.scriptName}</span>
                 </div>

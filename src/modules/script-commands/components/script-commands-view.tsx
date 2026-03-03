@@ -263,13 +263,13 @@ export function ScriptCommandsView({ onBack }: ScriptCommandsViewProps) {
     : false;
 
   return (
-    <div className="scripts-view-enter flex h-full w-full flex-col overflow-hidden text-white">
+    <div className="scripts-view-enter flex h-full w-full flex-col overflow-hidden text-foreground">
       {/* Header */}
-      <header className="scripts-header-enter flex h-14 shrink-0 items-center gap-3 border-b border-white/[0.06] px-4">
+      <header className="scripts-header-enter flex h-14 shrink-0 items-center gap-3 border-b border-[var(--launcher-card-border)] px-4">
         <button
           type="button"
           onClick={handleBack}
-          className="flex size-9 items-center justify-center rounded-lg bg-white/[0.03] text-white/40 transition-all duration-200 hover:bg-white/[0.06] hover:text-white/70"
+          className="flex size-9 items-center justify-center rounded-lg bg-[var(--launcher-card-hover-bg)] text-foreground/40 transition-all duration-200 hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground/70"
           aria-label="Back"
         >
           <ChevronLeft className="size-4" />
@@ -281,37 +281,37 @@ export function ScriptCommandsView({ onBack }: ScriptCommandsViewProps) {
         </div>
 
         <div className="flex-1 min-w-0">
-          <h1 className="text-[14px] font-semibold tracking-[-0.02em] text-white/90">
+          <h1 className="text-[14px] font-semibold tracking-[-0.02em] text-foreground/90">
             Script Commands
           </h1>
-          <p className="text-[12px] text-white/40 tracking-[-0.01em]">
+          <p className="text-[12px] text-foreground/40 tracking-[-0.01em]">
             Run local scripts from Beam
           </p>
         </div>
 
         {/* Status badge */}
-        <div className="flex items-center gap-1.5 rounded-full bg-white/[0.04] px-2.5 py-1 text-[11px] font-medium text-white/50">
+        <div className="flex items-center gap-1.5 rounded-full bg-[var(--launcher-card-hover-bg)] px-2.5 py-1 text-[11px] font-medium text-foreground/50">
           <Terminal className="size-3" />
           <span>{scripts.length > 0 ? `${scripts.length} scripts` : "No scripts"}</span>
         </div>
       </header>
 
       {/* Search bar */}
-      <div className="scripts-toolbar-enter flex items-center gap-2 border-b border-white/[0.06] px-4 py-2.5">
+      <div className="scripts-toolbar-enter flex items-center gap-2 border-b border-[var(--launcher-card-border)] px-4 py-2.5">
         <div className="relative flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-white/30" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-foreground/30" />
           <input
             type="text"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search scripts..."
-            className="h-10 w-full rounded-xl bg-white/[0.04] pl-9 pr-4 text-[13px] text-white/90 placeholder:text-white/30 ring-1 ring-white/[0.06] transition-all duration-200 focus:outline-none focus:ring-[var(--solid-accent,#4ea2ff)] focus:bg-white/[0.05]"
+            className="h-10 w-full rounded-xl bg-[var(--launcher-card-hover-bg)] pl-9 pr-4 text-[13px] text-foreground/90 placeholder:text-foreground/30 ring-1 ring-[var(--launcher-card-border)] transition-all duration-200 focus:outline-none focus:ring-[var(--ring)] focus:bg-[var(--launcher-card-hover-bg)]"
           />
         </div>
         <button
           type="button"
           onClick={openCreateView}
-          className="flex h-10 items-center gap-2 rounded-xl bg-white/[0.04] px-3.5 text-[12px] font-medium text-white/70 ring-1 ring-white/[0.06] transition-all duration-200 hover:bg-white/[0.06] hover:text-white/90"
+          className="flex h-10 items-center gap-2 rounded-xl bg-[var(--launcher-card-hover-bg)] px-3.5 text-[12px] font-medium text-foreground/70 ring-1 ring-[var(--launcher-card-border)] transition-all duration-200 hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground/90"
         >
           <Plus className="size-3.5" />
           New
@@ -319,7 +319,7 @@ export function ScriptCommandsView({ onBack }: ScriptCommandsViewProps) {
         <button
           type="button"
           onClick={() => void handleOpenFolder()}
-          className="flex h-10 items-center gap-2 rounded-xl bg-white/[0.04] px-3.5 text-[12px] font-medium text-white/70 ring-1 ring-white/[0.06] transition-all duration-200 hover:bg-white/[0.06] hover:text-white/90"
+          className="flex h-10 items-center gap-2 rounded-xl bg-[var(--launcher-card-hover-bg)] px-3.5 text-[12px] font-medium text-foreground/70 ring-1 ring-[var(--launcher-card-border)] transition-all duration-200 hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground/90"
         >
           <FolderOpen className="size-3.5" />
           Folder
@@ -329,7 +329,7 @@ export function ScriptCommandsView({ onBack }: ScriptCommandsViewProps) {
       {/* Main content */}
       <div className="scripts-content-enter flex min-h-0 flex-1 overflow-hidden">
         {/* Scripts list */}
-        <div className="w-[42%] border-r border-white/[0.06]">
+        <div className="w-[42%] border-r border-[var(--launcher-card-border)]">
           <ScriptCommandsList
             scripts={filteredScripts}
             selectedScriptId={selectedScriptId}
@@ -340,7 +340,7 @@ export function ScriptCommandsView({ onBack }: ScriptCommandsViewProps) {
         </div>
 
         {/* Output panel */}
-        <div className="flex-1 bg-white/[0.01]">
+        <div className="flex-1 bg-[var(--launcher-card-hover-bg)]">
           <ScriptCommandsOutput
             selectedScript={selectedScript}
             executionResult={executionResult}
@@ -351,26 +351,30 @@ export function ScriptCommandsView({ onBack }: ScriptCommandsViewProps) {
       </div>
 
       {/* Footer */}
-      <footer className="scripts-footer-enter flex h-12 shrink-0 items-center justify-between border-t border-white/[0.06] px-4">
-        <div className="flex items-center gap-2 text-[12px] text-white/40">
+      <footer className="scripts-footer-enter flex h-12 shrink-0 items-center justify-between border-t border-[var(--launcher-card-border)] px-4">
+        <div className="flex items-center gap-2 text-[12px] text-foreground/40">
           <Terminal className="size-3.5" />
           <span>{filteredScripts.length} visible</span>
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 text-[11px] text-white/30">
-            <kbd className="rounded bg-white/[0.08] px-1.5 py-0.5 font-mono text-[10px]">Enter</kbd>
+          <div className="flex items-center gap-1.5 text-[11px] text-foreground/30">
+            <kbd className="rounded bg-[var(--launcher-card-hover-bg)] px-1.5 py-0.5 font-mono text-[10px]">
+              Enter
+            </kbd>
             <span>{selectedScriptNeedsArguments ? "Args & Run" : "Run Selected"}</span>
           </div>
-          <div className="flex items-center gap-1.5 text-[11px] text-white/30">
-            <kbd className="rounded bg-white/[0.08] px-1.5 py-0.5 font-mono text-[10px]">⌘N</kbd>
+          <div className="flex items-center gap-1.5 text-[11px] text-foreground/30">
+            <kbd className="rounded bg-[var(--launcher-card-hover-bg)] px-1.5 py-0.5 font-mono text-[10px]">
+              ⌘N
+            </kbd>
             <span>New Script</span>
           </div>
           <button
             type="button"
             onClick={handleRunSelected}
             disabled={!selectedScript || runMutation.isPending}
-            className="flex h-7 items-center gap-1.5 rounded-lg bg-[var(--solid-accent,#4ea2ff)]/20 px-3 text-[12px] font-medium text-[var(--solid-accent,#4ea2ff)] transition-all duration-200 hover:bg-[var(--solid-accent,#4ea2ff)]/30 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex h-7 items-center gap-1.5 rounded-lg bg-[var(--ring)]/20 px-3 text-[12px] font-medium text-[var(--ring)] transition-all duration-200 hover:bg-[var(--ring)]/30 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <Play className="size-3.5" />
             {selectedScriptNeedsArguments ? "Args & Run" : "Run"}

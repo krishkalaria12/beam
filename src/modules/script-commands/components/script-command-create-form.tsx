@@ -110,13 +110,13 @@ export function ScriptCommandCreateForm({
   };
 
   return (
-    <div className="scripts-create-enter flex h-full w-full flex-col overflow-hidden text-white">
+    <div className="scripts-create-enter flex h-full w-full flex-col overflow-hidden text-foreground">
       {/* Header */}
-      <header className="scripts-header-enter flex h-14 shrink-0 items-center gap-3 border-b border-white/[0.06] px-4">
+      <header className="scripts-header-enter flex h-14 shrink-0 items-center gap-3 border-b border-[var(--launcher-card-border)] px-4">
         <button
           type="button"
           onClick={onBack}
-          className="flex size-9 items-center justify-center rounded-lg bg-white/[0.03] text-white/40 transition-all duration-200 hover:bg-white/[0.06] hover:text-white/70"
+          className="flex size-9 items-center justify-center rounded-lg bg-[var(--launcher-card-hover-bg)] text-foreground/40 transition-all duration-200 hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground/70"
           aria-label="Back"
         >
           <ChevronLeft className="size-4" />
@@ -127,10 +127,10 @@ export function ScriptCommandCreateForm({
         </div>
 
         <div className="flex-1 min-w-0">
-          <h1 className="text-[14px] font-semibold tracking-[-0.02em] text-white/90">
+          <h1 className="text-[14px] font-semibold tracking-[-0.02em] text-foreground/90">
             Create Script Command
           </h1>
-          <p className="text-[12px] text-white/40 tracking-[-0.01em]">
+          <p className="text-[12px] text-foreground/40 tracking-[-0.01em]">
             Add a new script to your Beam commands folder
           </p>
         </div>
@@ -148,14 +148,14 @@ export function ScriptCommandCreateForm({
           className="mx-auto flex w-full max-w-3xl flex-col gap-4"
         >
           {/* Scripts folder section */}
-          <section className="rounded-xl bg-white/[0.03] p-4 ring-1 ring-white/[0.06]">
+          <section className="rounded-xl bg-[var(--launcher-card-hover-bg)] p-4 ring-1 ring-[var(--launcher-card-border)]">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-white/45">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/45">
                   Scripts Folder
                 </p>
                 {directoryQuery.isLoading ? (
-                  <p className="mt-1.5 inline-flex items-center gap-2 text-[12px] text-white/50">
+                  <p className="mt-1.5 inline-flex items-center gap-2 text-[12px] text-foreground/50">
                     <Loader2 className="size-3.5 animate-spin" />
                     Resolving script commands directory...
                   </p>
@@ -164,7 +164,7 @@ export function ScriptCommandCreateForm({
                     Unable to load scripts directory.
                   </p>
                 ) : (
-                  <p className="mt-1.5 break-all font-mono text-[12px] text-white/70">
+                  <p className="mt-1.5 break-all font-mono text-[12px] text-foreground/70">
                     {directoryQuery.data}
                   </p>
                 )}
@@ -173,7 +173,7 @@ export function ScriptCommandCreateForm({
               <button
                 type="button"
                 onClick={() => void handleOpenFolder()}
-                className="flex h-9 items-center gap-2 rounded-lg bg-white/[0.04] px-3 text-[12px] font-medium text-white/70 ring-1 ring-white/[0.06] transition-all duration-200 hover:bg-white/[0.06] hover:text-white/90"
+                className="flex h-9 items-center gap-2 rounded-lg bg-[var(--launcher-card-hover-bg)] px-3 text-[12px] font-medium text-foreground/70 ring-1 ring-[var(--launcher-card-border)] transition-all duration-200 hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground/90"
               >
                 <FolderOpen className="size-3.5" />
                 Open Folder
@@ -182,14 +182,14 @@ export function ScriptCommandCreateForm({
           </section>
 
           {/* File name section */}
-          <section className="rounded-xl bg-white/[0.03] p-4 ring-1 ring-white/[0.06]">
+          <section className="rounded-xl bg-[var(--launcher-card-hover-bg)] p-4 ring-1 ring-[var(--launcher-card-border)]">
             <form.Field
               name="fileName"
               children={(field) => (
                 <div className="space-y-2">
                   <Label
                     htmlFor="script-file-name"
-                    className="text-[11px] font-semibold uppercase tracking-[0.08em] text-white/45"
+                    className="text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/45"
                   >
                     File Name
                   </Label>
@@ -202,7 +202,7 @@ export function ScriptCommandCreateForm({
                     onKeyDown={stopFieldKeyPropagation}
                     placeholder="example.sh"
                     className={cn(
-                      "h-10 w-full rounded-xl bg-white/[0.04] px-4 font-mono text-[13px] text-white/90 placeholder:text-white/30 ring-1 ring-white/[0.06] transition-all duration-200 focus:outline-none focus:ring-[var(--solid-accent,#4ea2ff)]",
+                      "h-10 w-full rounded-xl bg-[var(--launcher-card-hover-bg)] px-4 font-mono text-[13px] text-foreground/90 placeholder:text-foreground/30 ring-1 ring-[var(--launcher-card-border)] transition-all duration-200 focus:outline-none focus:ring-[var(--ring)]",
                       field.state.meta.errors.length > 0 && "ring-red-500/50",
                     )}
                     autoFocus
@@ -212,7 +212,7 @@ export function ScriptCommandCreateForm({
                       {readFieldError(field.state.meta.errors[0])}
                     </p>
                   ) : (
-                    <p className="text-[11px] text-white/40">
+                    <p className="text-[11px] text-foreground/40">
                       Use a file name only, for example `deploy.sh` or `cleanup.py`.
                     </p>
                   )}
@@ -222,14 +222,14 @@ export function ScriptCommandCreateForm({
           </section>
 
           {/* Script content section */}
-          <section className="rounded-xl bg-white/[0.03] p-4 ring-1 ring-white/[0.06]">
+          <section className="rounded-xl bg-[var(--launcher-card-hover-bg)] p-4 ring-1 ring-[var(--launcher-card-border)]">
             <form.Field
               name="content"
               children={(field) => (
                 <div className="space-y-2">
                   <Label
                     htmlFor="script-content"
-                    className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-white/45"
+                    className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/45"
                   >
                     <FileCode2 className="size-3.5" />
                     Script Content
@@ -241,7 +241,7 @@ export function ScriptCommandCreateForm({
                     onKeyDownCapture={stopFieldKeyPropagation}
                     onKeyDown={stopFieldKeyPropagation}
                     className={cn(
-                      "min-h-[260px] w-full resize-y rounded-xl bg-white/[0.04] p-4 font-mono text-[12px] leading-relaxed text-white/90 placeholder:text-white/30 ring-1 ring-white/[0.06] transition-all duration-200 focus:outline-none focus:ring-[var(--solid-accent,#4ea2ff)]",
+                      "min-h-[260px] w-full resize-y rounded-xl bg-[var(--launcher-card-hover-bg)] p-4 font-mono text-[12px] leading-relaxed text-foreground/90 placeholder:text-foreground/30 ring-1 ring-[var(--launcher-card-border)] transition-all duration-200 focus:outline-none focus:ring-[var(--ring)]",
                       field.state.meta.errors.length > 0 && "ring-red-500/50",
                     )}
                     placeholder="#!/usr/bin/env bash"
@@ -251,7 +251,7 @@ export function ScriptCommandCreateForm({
                       {readFieldError(field.state.meta.errors[0])}
                     </p>
                   ) : (
-                    <p className="text-[11px] text-white/40">
+                    <p className="text-[11px] text-foreground/40">
                       Add a shebang for portable execution and keep scripts self-contained.
                     </p>
                   )}
@@ -265,23 +265,23 @@ export function ScriptCommandCreateForm({
             <form.Field
               name="makeExecutable"
               children={(field) => (
-                <div className="rounded-xl bg-white/[0.03] p-4 ring-1 ring-white/[0.06]">
+                <div className="rounded-xl bg-[var(--launcher-card-hover-bg)] p-4 ring-1 ring-[var(--launcher-card-border)]">
                   <div className="flex items-center gap-3">
                     <Checkbox
                       id="script-make-executable"
                       checked={Boolean(field.state.value)}
                       onCheckedChange={(checked) => field.handleChange(Boolean(checked))}
                       onKeyDown={stopFieldKeyPropagation}
-                      className="border-white/20 data-[state=checked]:bg-[var(--solid-accent,#4ea2ff)] data-[state=checked]:border-[var(--solid-accent,#4ea2ff)]"
+                      className="border-[var(--launcher-card-border)] data-[state=checked]:bg-[var(--ring)] data-[state=checked]:border-[var(--ring)]"
                     />
                     <Label
                       htmlFor="script-make-executable"
-                      className="text-[13px] font-medium text-white/80"
+                      className="text-[13px] font-medium text-foreground/80"
                     >
                       Mark file as executable
                     </Label>
                   </div>
-                  <p className="mt-2 pl-7 text-[11px] text-white/40">
+                  <p className="mt-2 pl-7 text-[11px] text-foreground/40">
                     Recommended for shell scripts that should run directly.
                   </p>
                 </div>
@@ -291,23 +291,23 @@ export function ScriptCommandCreateForm({
             <form.Field
               name="overwrite"
               children={(field) => (
-                <div className="rounded-xl bg-white/[0.03] p-4 ring-1 ring-white/[0.06]">
+                <div className="rounded-xl bg-[var(--launcher-card-hover-bg)] p-4 ring-1 ring-[var(--launcher-card-border)]">
                   <div className="flex items-center gap-3">
                     <Checkbox
                       id="script-overwrite"
                       checked={Boolean(field.state.value)}
                       onCheckedChange={(checked) => field.handleChange(Boolean(checked))}
                       onKeyDown={stopFieldKeyPropagation}
-                      className="border-white/20 data-[state=checked]:bg-[var(--solid-accent,#4ea2ff)] data-[state=checked]:border-[var(--solid-accent,#4ea2ff)]"
+                      className="border-[var(--launcher-card-border)] data-[state=checked]:bg-[var(--ring)] data-[state=checked]:border-[var(--ring)]"
                     />
                     <Label
                       htmlFor="script-overwrite"
-                      className="text-[13px] font-medium text-white/80"
+                      className="text-[13px] font-medium text-foreground/80"
                     >
                       Overwrite if file exists
                     </Label>
                   </div>
-                  <p className="mt-2 pl-7 text-[11px] text-white/40">
+                  <p className="mt-2 pl-7 text-[11px] text-foreground/40">
                     Keep this off if you want Beam to block duplicate file names.
                   </p>
                 </div>
@@ -326,26 +326,30 @@ export function ScriptCommandCreateForm({
       </div>
 
       {/* Footer */}
-      <footer className="scripts-footer-enter flex h-12 shrink-0 items-center justify-between border-t border-white/[0.06] px-4">
-        <div className="flex items-center gap-2 text-[12px] text-white/40">
+      <footer className="scripts-footer-enter flex h-12 shrink-0 items-center justify-between border-t border-[var(--launcher-card-border)] px-4">
+        <div className="flex items-center gap-2 text-[12px] text-foreground/40">
           <Terminal className="size-3.5" />
           <span>Script file will be created in your commands directory.</span>
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 text-[11px] text-white/30">
-            <kbd className="rounded bg-white/[0.08] px-1.5 py-0.5 font-mono text-[10px]">Esc</kbd>
+          <div className="flex items-center gap-1.5 text-[11px] text-foreground/30">
+            <kbd className="rounded bg-[var(--launcher-card-hover-bg)] px-1.5 py-0.5 font-mono text-[10px]">
+              Esc
+            </kbd>
             <span>Back</span>
           </div>
-          <div className="flex items-center gap-1.5 text-[11px] text-white/30">
-            <kbd className="rounded bg-white/[0.08] px-1.5 py-0.5 font-mono text-[10px]">⌘↵</kbd>
+          <div className="flex items-center gap-1.5 text-[11px] text-foreground/30">
+            <kbd className="rounded bg-[var(--launcher-card-hover-bg)] px-1.5 py-0.5 font-mono text-[10px]">
+              ⌘↵
+            </kbd>
             <span>Create</span>
           </div>
           <button
             type="button"
             onClick={() => void form.handleSubmit()}
             disabled={isSubmitting}
-            className="flex h-8 items-center gap-1.5 rounded-lg bg-[var(--solid-accent,#4ea2ff)]/20 px-3.5 text-[12px] font-medium text-[var(--solid-accent,#4ea2ff)] transition-all duration-200 hover:bg-[var(--solid-accent,#4ea2ff)]/30 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex h-8 items-center gap-1.5 rounded-lg bg-[var(--ring)]/20 px-3.5 text-[12px] font-medium text-[var(--ring)] transition-all duration-200 hover:bg-[var(--ring)]/30 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {isSubmitting ? (
               <Loader2 className="size-3.5 animate-spin" />

@@ -19,7 +19,7 @@ export function CalculatorHistoryError({
         {/* Text */}
         <div className="min-w-0 flex-1">
           <p className="text-[13px] font-medium text-red-300/90 truncate">{message}</p>
-          <p className="text-[11px] text-white/35">Please try again later</p>
+          <p className="text-[11px] text-foreground/35">Please try again later</p>
         </div>
       </div>
     </CommandItem>

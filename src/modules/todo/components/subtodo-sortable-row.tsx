@@ -53,17 +53,17 @@ export function SubTodoSortableRow({
       }}
       className={cn(
         "todo-subtask-enter group relative flex items-center gap-3 rounded-lg px-3 py-2 transition-all duration-200",
-        "hover:bg-white/[0.04]",
+        "hover:bg-[var(--launcher-card-hover-bg)]",
         isDragging && "opacity-50 scale-[0.98]",
       )}
     >
       {/* Left accent bar on hover */}
-      <div className="absolute left-0 top-1/2 h-4 w-[2px] -translate-y-1/2 rounded-full bg-white/40 opacity-0 transition-all duration-200 group-hover:opacity-100" />
+      <div className="absolute left-0 top-1/2 h-4 w-[2px] -translate-y-1/2 rounded-full bg-[var(--launcher-card-hover-bg)] opacity-0 transition-all duration-200 group-hover:opacity-100" />
 
       {/* Drag handle */}
       <button
         type="button"
-        className="flex size-5 shrink-0 items-center justify-center rounded text-white/25 transition-colors hover:bg-white/[0.06] hover:text-white/45"
+        className="flex size-5 shrink-0 items-center justify-center rounded text-foreground/25 transition-colors hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground/45"
         aria-label="Reorder subtask"
         {...attributes}
         {...listeners}
@@ -78,12 +78,12 @@ export function SubTodoSortableRow({
         className={cn(
           "flex size-4 shrink-0 items-center justify-center rounded transition-all duration-200",
           subTodo.completed
-            ? "bg-[var(--solid-accent,#4ea2ff)] shadow-md shadow-[var(--solid-accent,#4ea2ff)]/25"
-            : "ring-[1.5px] ring-white/20 hover:ring-white/40",
+            ? "bg-[var(--ring)] shadow-md shadow-[var(--ring)]/25"
+            : "ring-[1.5px] ring-[var(--launcher-card-border)] hover:ring-[var(--launcher-card-border)]",
         )}
         aria-label={subTodo.completed ? "Mark incomplete" : "Mark complete"}
       >
-        {subTodo.completed && <Check className="size-2.5 text-white" strokeWidth={3} />}
+        {subTodo.completed && <Check className="size-2.5 text-foreground" strokeWidth={3} />}
       </button>
 
       {/* Content */}
@@ -104,13 +104,13 @@ export function SubTodoSortableRow({
                 onCancelEdit();
               }
             }}
-            className="w-full bg-transparent text-[12px] text-white/80 outline-none placeholder:text-white/30"
+            className="w-full bg-transparent text-[12px] text-foreground/80 outline-none placeholder:text-foreground/30"
           />
         ) : (
           <p
             className={cn(
               "truncate text-[12px] transition-colors",
-              subTodo.completed ? "text-white/35 line-through" : "text-white/70",
+              subTodo.completed ? "text-foreground/35 line-through" : "text-foreground/70",
             )}
             onDoubleClick={() => onStartEdit(subTodo)}
             title="Double-click to rename"
@@ -126,7 +126,7 @@ export function SubTodoSortableRow({
           render={
             <button
               type="button"
-              className="flex size-6 items-center justify-center rounded-md text-white/25 opacity-0 transition-all hover:bg-white/[0.06] hover:text-white/45 group-hover:opacity-100"
+              className="flex size-6 items-center justify-center rounded-md text-foreground/25 opacity-0 transition-all hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground/45 group-hover:opacity-100"
               aria-label="Subtask actions"
             >
               <MoreHorizontal className="size-3.5" />

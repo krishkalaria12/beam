@@ -104,20 +104,20 @@ function CommandSelector({
         disabled={disabled}
         className={cn(
           "flex h-11 flex-1 min-w-0 items-center justify-between gap-2 rounded-xl px-3.5",
-          "bg-white/[0.04] text-[13px] font-medium tracking-[-0.01em]",
-          "ring-1 ring-white/[0.06] transition-all",
-          "hover:bg-white/[0.06]",
+          "bg-[var(--launcher-card-hover-bg)] text-[13px] font-medium tracking-[-0.01em]",
+          "ring-1 ring-[var(--launcher-card-border)] transition-all",
+          "hover:bg-[var(--launcher-chip-bg)]",
           disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer",
-          value ? "text-white/80" : "text-white/40",
+          value ? "text-foreground/80" : "text-foreground/40",
         )}
         onKeyDown={(event) => event.stopPropagation()}
       >
         <span className="truncate">{selectedTitle}</span>
-        <ChevronDown className="size-3.5 shrink-0 text-white/30" />
+        <ChevronDown className="size-3.5 shrink-0 text-foreground/30" />
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="start"
-        className="max-h-[280px] w-[280px] overflow-y-auto rounded-xl border border-white/[0.08] bg-[#2c2c2c] p-1.5 shadow-xl"
+        className="max-h-[280px] w-[280px] overflow-y-auto rounded-xl border border-[var(--launcher-card-border)] bg-[var(--popover)] p-1.5 shadow-xl"
       >
         {COMMAND_OPTIONS.map((command) => (
           <DropdownMenuItem
@@ -126,14 +126,12 @@ function CommandSelector({
             className={cn(
               "flex items-center justify-between gap-2 rounded-lg px-2.5 py-2",
               "text-[12px] font-medium transition-colors cursor-pointer",
-              "hover:bg-white/[0.06] focus:bg-white/[0.06]",
-              command.id === value ? "text-white" : "text-white/70",
+              "hover:bg-[var(--launcher-chip-bg)] focus:bg-[var(--launcher-chip-bg)]",
+              command.id === value ? "text-foreground" : "text-foreground/70",
             )}
           >
             <span className="truncate">{command.title}</span>
-            {command.id === value && (
-              <Check className="size-3.5 shrink-0 text-[var(--solid-accent,#4ea2ff)]" />
-            )}
+            {command.id === value && <Check className="size-3.5 shrink-0 text-[var(--ring)]" />}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
@@ -240,13 +238,13 @@ export function TriggerSymbolsSettings() {
       {/* Trigger Symbols Section */}
       <section className="space-y-3">
         <div className="flex items-center gap-3 px-1">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-white/45">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/45">
             Trigger Symbols
           </span>
-          <div className="h-px flex-1 bg-white/[0.06]" />
+          <div className="h-px flex-1 bg-[var(--launcher-chip-bg)]" />
         </div>
 
-        <p className="px-1 text-[12px] text-white/35 leading-relaxed">
+        <p className="px-1 text-[12px] text-foreground/35 leading-relaxed">
           Map launcher prefixes to command groups.
         </p>
 
@@ -261,9 +259,9 @@ export function TriggerSymbolsSettings() {
               <div
                 key={row.key}
                 className={cn(
-                  "group rounded-xl bg-white/[0.03] p-4",
+                  "group rounded-xl bg-[var(--launcher-card-bg)] p-4",
                   "transition-all duration-200",
-                  "hover:bg-white/[0.04]",
+                  "hover:bg-[var(--launcher-card-hover-bg)]",
                 )}
                 style={{ animationDelay: `${index * 50}ms` }}
               >
@@ -281,10 +279,10 @@ export function TriggerSymbolsSettings() {
 
                   {/* Info */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-[14px] font-medium tracking-[-0.02em] text-white/90">
+                    <p className="text-[14px] font-medium tracking-[-0.02em] text-foreground/90">
                       {row.title}
                     </p>
-                    <p className="text-[12px] text-white/40">{row.description}</p>
+                    <p className="text-[12px] text-foreground/40">{row.description}</p>
                   </div>
 
                   {/* Input and Save */}
@@ -299,10 +297,10 @@ export function TriggerSymbolsSettings() {
                       placeholder="#"
                       className={cn(
                         "size-11 rounded-lg text-center",
-                        "bg-white/[0.05] text-[16px] font-semibold text-white/90",
-                        "ring-1 ring-white/10",
-                        "placeholder:text-white/20",
-                        "focus:outline-none focus:ring-[var(--solid-accent,#4ea2ff)]",
+                        "bg-[var(--launcher-card-hover-bg)] text-[16px] font-semibold text-foreground/90",
+                        "ring-1 ring-[var(--launcher-card-border)]",
+                        "placeholder:text-foreground/20",
+                        "focus:outline-none focus:ring-[var(--ring)]",
                         "transition-all duration-150",
                       )}
                       aria-label={`${row.title} trigger symbol`}
@@ -316,8 +314,8 @@ export function TriggerSymbolsSettings() {
                         "text-[12px] font-medium",
                         "transition-all duration-150",
                         hasChanges
-                          ? "bg-[var(--solid-accent,#4ea2ff)]/20 text-[var(--solid-accent,#4ea2ff)] hover:bg-[var(--solid-accent,#4ea2ff)]/30"
-                          : "bg-white/[0.03] text-white/30 cursor-not-allowed",
+                          ? "bg-[var(--ring)]/20 text-[var(--ring)] hover:bg-[var(--ring)]/30"
+                          : "bg-[var(--launcher-card-bg)] text-foreground/30 cursor-not-allowed",
                       )}
                     >
                       Save
@@ -333,13 +331,13 @@ export function TriggerSymbolsSettings() {
       {/* Custom Symbol Mappings */}
       <section className="space-y-3">
         <div className="flex items-center gap-3 px-1">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-white/45">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/45">
             Custom Mappings
           </span>
-          <div className="h-px flex-1 bg-white/[0.06]" />
+          <div className="h-px flex-1 bg-[var(--launcher-chip-bg)]" />
         </div>
 
-        <p className="px-1 text-[12px] text-white/35 leading-relaxed">
+        <p className="px-1 text-[12px] text-foreground/35 leading-relaxed">
           Choose any launcher item and map a symbol to it.
         </p>
 
@@ -349,15 +347,15 @@ export function TriggerSymbolsSettings() {
             <div
               className={cn(
                 "flex flex-col items-center justify-center py-10",
-                "rounded-xl border border-dashed border-white/10",
+                "rounded-xl border border-dashed border-[var(--launcher-card-border)]",
                 "text-center",
               )}
             >
-              <div className="flex size-12 items-center justify-center rounded-xl bg-white/[0.04] mb-3">
-                <Plus className="size-5 text-white/30" />
+              <div className="flex size-12 items-center justify-center rounded-xl bg-[var(--launcher-card-hover-bg)] mb-3">
+                <Plus className="size-5 text-foreground/30" />
               </div>
-              <p className="text-[13px] text-white/45">No custom mappings yet</p>
-              <p className="text-[11px] text-white/30 mt-0.5">Add one below to get started</p>
+              <p className="text-[13px] text-foreground/45">No custom mappings yet</p>
+              <p className="text-[11px] text-foreground/30 mt-0.5">Add one below to get started</p>
             </div>
           ) : (
             draft.customBindings.map((binding, index) => {
@@ -371,15 +369,15 @@ export function TriggerSymbolsSettings() {
                 <div
                   key={`${binding.symbol}:${binding.commandId}:${index}`}
                   className={cn(
-                    "group rounded-xl bg-white/[0.03] p-4",
+                    "group rounded-xl bg-[var(--launcher-card-bg)] p-4",
                     "transition-all duration-200",
-                    "hover:bg-white/[0.04]",
+                    "hover:bg-[var(--launcher-card-hover-bg)]",
                   )}
                   style={{ animationDelay: `${index * 30}ms` }}
                 >
                   <div className="flex items-center gap-3">
                     {/* Order number */}
-                    <div className="flex size-7 items-center justify-center rounded-lg bg-white/[0.04] text-[11px] font-semibold text-white/35 tabular-nums">
+                    <div className="flex size-7 items-center justify-center rounded-lg bg-[var(--launcher-card-hover-bg)] text-[11px] font-semibold text-foreground/35 tabular-nums">
                       {index + 1}
                     </div>
 
@@ -400,10 +398,10 @@ export function TriggerSymbolsSettings() {
                       placeholder="#"
                       className={cn(
                         "size-11 shrink-0 rounded-lg text-center",
-                        "bg-white/[0.05] text-[16px] font-semibold text-white/90",
-                        "ring-1 ring-white/10",
-                        "placeholder:text-white/20",
-                        "focus:outline-none focus:ring-[var(--solid-accent,#4ea2ff)]",
+                        "bg-[var(--launcher-card-hover-bg)] text-[16px] font-semibold text-foreground/90",
+                        "ring-1 ring-[var(--launcher-card-border)]",
+                        "placeholder:text-foreground/20",
+                        "focus:outline-none focus:ring-[var(--ring)]",
                         "transition-all duration-150",
                       )}
                       aria-label={`Custom symbol ${index + 1}`}
@@ -426,8 +424,8 @@ export function TriggerSymbolsSettings() {
                           "text-[12px] font-medium",
                           "transition-all duration-150",
                           hasChanges
-                            ? "bg-[var(--solid-accent,#4ea2ff)]/20 text-[var(--solid-accent,#4ea2ff)] hover:bg-[var(--solid-accent,#4ea2ff)]/30"
-                            : "bg-white/[0.03] text-white/30 cursor-not-allowed",
+                            ? "bg-[var(--ring)]/20 text-[var(--ring)] hover:bg-[var(--ring)]/30"
+                            : "bg-[var(--launcher-card-bg)] text-foreground/30 cursor-not-allowed",
                         )}
                       >
                         Save
@@ -437,8 +435,8 @@ export function TriggerSymbolsSettings() {
                         onClick={() => removeCustomBinding(index)}
                         className={cn(
                           "flex size-11 items-center justify-center rounded-lg",
-                          "text-white/40 hover:text-red-400",
-                          "bg-white/[0.03] hover:bg-red-500/10",
+                          "text-foreground/40 hover:text-red-400",
+                          "bg-[var(--launcher-card-bg)] hover:bg-red-500/10",
                           "transition-all duration-150",
                         )}
                         aria-label="Remove custom mapping"
@@ -454,8 +452,8 @@ export function TriggerSymbolsSettings() {
         </div>
 
         {/* Add new mapping */}
-        <div className="rounded-xl bg-white/[0.02] ring-1 ring-white/[0.06] p-4">
-          <p className="text-[12px] font-medium text-white/50 mb-3">Add new mapping</p>
+        <div className="rounded-xl bg-[var(--launcher-card-bg)] ring-1 ring-[var(--launcher-card-border)] p-4">
+          <p className="text-[12px] font-medium text-foreground/50 mb-3">Add new mapping</p>
 
           <div className="flex items-center gap-3">
             {/* Symbol input */}
@@ -469,10 +467,10 @@ export function TriggerSymbolsSettings() {
               placeholder="#"
               className={cn(
                 "size-11 shrink-0 rounded-lg text-center",
-                "bg-white/[0.05] text-[16px] font-semibold text-white/90",
-                "ring-1 ring-white/10",
-                "placeholder:text-white/20",
-                "focus:outline-none focus:ring-[var(--solid-accent,#4ea2ff)]",
+                "bg-[var(--launcher-card-hover-bg)] text-[16px] font-semibold text-foreground/90",
+                "ring-1 ring-[var(--launcher-card-border)]",
+                "placeholder:text-foreground/20",
+                "focus:outline-none focus:ring-[var(--ring)]",
                 "transition-all duration-150",
               )}
               aria-label="New custom symbol"
@@ -496,8 +494,8 @@ export function TriggerSymbolsSettings() {
                 "text-[12px] font-medium",
                 "transition-all duration-150",
                 HAS_COMMAND_OPTIONS && newCustomSymbol
-                  ? "bg-[var(--solid-accent,#4ea2ff)]/20 text-[var(--solid-accent,#4ea2ff)] hover:bg-[var(--solid-accent,#4ea2ff)]/30"
-                  : "bg-white/[0.03] text-white/30 cursor-not-allowed",
+                  ? "bg-[var(--ring)]/20 text-[var(--ring)] hover:bg-[var(--ring)]/30"
+                  : "bg-[var(--launcher-card-bg)] text-foreground/30 cursor-not-allowed",
               )}
             >
               <Plus className="size-4" />
@@ -514,11 +512,11 @@ export function TriggerSymbolsSettings() {
           onClick={handleReset}
           className={cn(
             "flex items-center gap-2 rounded-lg px-4 py-2.5",
-            "text-[12px] font-medium text-white/50",
-            "bg-white/[0.03] hover:bg-white/[0.06]",
-            "ring-1 ring-white/[0.06]",
+            "text-[12px] font-medium text-foreground/50",
+            "bg-[var(--launcher-card-bg)] hover:bg-[var(--launcher-chip-bg)]",
+            "ring-1 ring-[var(--launcher-card-border)]",
             "transition-all duration-150",
-            "hover:text-white/70",
+            "hover:text-foreground/70",
           )}
         >
           <RotateCcw className="size-4" />

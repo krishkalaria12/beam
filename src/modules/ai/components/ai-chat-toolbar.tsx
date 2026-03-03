@@ -35,17 +35,17 @@ export function AiChatToolbar({
     providerDefinition.models.find((m) => m.id === selectedModel)?.label || selectedModel;
 
   return (
-    <div className="ai-toolbar-enter flex h-11 shrink-0 items-center justify-between border-b border-white/[0.06] px-4">
+    <div className="ai-toolbar-enter flex h-11 shrink-0 items-center justify-between border-b border-[var(--launcher-card-border)] px-4">
       {/* Left: Model selector */}
       <div className="flex items-center gap-2">
         {/* Provider dropdown */}
         <DropdownMenu>
-          <DropdownMenuTrigger className="flex h-7 items-center gap-1.5 rounded-lg bg-white/[0.04] px-2.5 text-[11px] font-medium tracking-[-0.01em] text-white/70 ring-1 ring-white/[0.06] transition-all duration-200 hover:bg-white/[0.07] hover:text-white/90 hover:ring-white/[0.1] focus:outline-none">
-            <Sparkles className="size-3 text-[var(--solid-accent,#4ea2ff)]" />
+          <DropdownMenuTrigger className="flex h-7 items-center gap-1.5 rounded-lg bg-[var(--launcher-card-hover-bg)] px-2.5 text-[11px] font-medium tracking-[-0.01em] text-foreground/70 ring-1 ring-[var(--launcher-card-border)] transition-all duration-200 hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground/90 hover:ring-[var(--launcher-card-border)] focus:outline-none">
+            <Sparkles className="size-3 text-[var(--ring)]" />
             <span>{providerDefinition.label}</span>
-            <ChevronDown className="size-2.5 text-white/40" />
+            <ChevronDown className="size-2.5 text-foreground/40" />
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="min-w-[140px] rounded-xl border-white/[0.08] bg-[#2c2c2c] p-1 shadow-xl shadow-black/40">
+          <DropdownMenuContent className="min-w-[140px] rounded-xl border-[var(--launcher-card-border)] bg-[var(--popover)] p-1 shadow-xl shadow-black/40">
             {AI_PROVIDERS.map((provider) => (
               <DropdownMenuItem
                 key={provider.id}
@@ -56,8 +56,8 @@ export function AiChatToolbar({
                 }}
                 className={`rounded-lg px-2.5 py-1.5 text-[11px] font-medium tracking-[-0.01em] transition-colors ${
                   provider.id === selectedProvider
-                    ? "bg-white/[0.08] text-white"
-                    : "text-white/60 hover:bg-white/[0.05] hover:text-white/90"
+                    ? "bg-[var(--launcher-card-hover-bg)] text-foreground"
+                    : "text-foreground/60 hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground/90"
                 }`}
               >
                 {provider.label}
@@ -67,24 +67,24 @@ export function AiChatToolbar({
         </DropdownMenu>
 
         {/* Separator dot */}
-        <div className="size-1 rounded-full bg-white/[0.15]" />
+        <div className="size-1 rounded-full bg-[var(--launcher-card-hover-bg)]" />
 
         {/* Model dropdown */}
         <DropdownMenu>
-          <DropdownMenuTrigger className="flex h-7 items-center gap-1.5 rounded-lg bg-white/[0.03] px-2.5 text-[11px] tracking-[-0.01em] text-white/50 ring-1 ring-white/[0.05] transition-all duration-200 hover:bg-white/[0.06] hover:text-white/70 hover:ring-white/[0.08] focus:outline-none">
-            <Cpu className="size-3 text-white/40" />
+          <DropdownMenuTrigger className="flex h-7 items-center gap-1.5 rounded-lg bg-[var(--launcher-card-hover-bg)] px-2.5 text-[11px] tracking-[-0.01em] text-foreground/50 ring-1 ring-[var(--launcher-card-border)] transition-all duration-200 hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground/70 hover:ring-[var(--launcher-card-border)] focus:outline-none">
+            <Cpu className="size-3 text-foreground/40" />
             <span className="max-w-[140px] truncate">{currentModelLabel}</span>
-            <ChevronDown className="size-2.5 text-white/30" />
+            <ChevronDown className="size-2.5 text-foreground/30" />
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="max-h-[280px] min-w-[200px] overflow-y-auto rounded-xl border-white/[0.08] bg-[#2c2c2c] p-1 shadow-xl shadow-black/40">
+          <DropdownMenuContent className="max-h-[280px] min-w-[200px] overflow-y-auto rounded-xl border-[var(--launcher-card-border)] bg-[var(--popover)] p-1 shadow-xl shadow-black/40">
             {providerDefinition.models.map((model) => (
               <DropdownMenuItem
                 key={model.id}
                 onClick={() => onModelChange(model.id)}
                 className={`rounded-lg px-2.5 py-1.5 text-[11px] tracking-[-0.01em] transition-colors ${
                   model.id === selectedModel
-                    ? "bg-white/[0.08] font-medium text-white"
-                    : "text-white/60 hover:bg-white/[0.05] hover:text-white/90"
+                    ? "bg-[var(--launcher-card-hover-bg)] font-medium text-foreground"
+                    : "text-foreground/60 hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground/90"
                 }`}
               >
                 {model.label}
@@ -100,7 +100,7 @@ export function AiChatToolbar({
           type="button"
           onClick={onClearChat}
           disabled={isClearingChat || isStreaming}
-          className="flex h-7 items-center gap-1.5 rounded-lg px-2 text-[10px] font-medium uppercase tracking-[0.05em] text-white/35 transition-all duration-200 hover:bg-white/[0.04] hover:text-white/55 disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex h-7 items-center gap-1.5 rounded-lg px-2 text-[10px] font-medium uppercase tracking-[0.05em] text-foreground/35 transition-all duration-200 hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground/55 disabled:cursor-not-allowed disabled:opacity-40"
         >
           {isClearingChat ? (
             <Loader2 className="size-3 animate-spin" />

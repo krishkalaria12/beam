@@ -13,10 +13,10 @@ export function RecentlyUsed({ emojis, onEmojiClick }: RecentlyUsedProps) {
     <div className="emoji-recent">
       {/* Section header - minimal */}
       <div className="mb-3 flex items-center gap-2">
-        <span className="text-[11px] font-medium uppercase tracking-[0.06em] text-white/35">
+        <span className="text-[11px] font-medium uppercase tracking-[0.06em] text-foreground/35">
           Recent
         </span>
-        <div className="h-px flex-1 bg-white/[0.04]" />
+        <div className="h-px flex-1 bg-[var(--launcher-card-hover-bg)]" />
       </div>
 
       {/* 8-column grid for recent emojis */}

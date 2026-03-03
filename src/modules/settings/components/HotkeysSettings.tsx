@@ -268,10 +268,10 @@ export default function HotkeysSettings() {
       <section className="space-y-3">
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-3">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-white/45">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/45">
               Hotkey Backend
             </span>
-            <div className="h-px flex-1 bg-white/[0.06]" />
+            <div className="h-px flex-1 bg-[var(--launcher-chip-bg)]" />
           </div>
           <button
             type="button"
@@ -280,10 +280,10 @@ export default function HotkeysSettings() {
             }}
             className={cn(
               "flex items-center gap-1.5 rounded-lg px-2.5 py-1.5",
-              "text-[11px] font-medium text-white/50",
-              "bg-white/[0.03] hover:bg-white/[0.06]",
+              "text-[11px] font-medium text-foreground/50",
+              "bg-[var(--launcher-card-bg)] hover:bg-[var(--launcher-chip-bg)]",
               "transition-all duration-150",
-              "hover:text-white/70",
+              "hover:text-foreground/70",
             )}
             aria-label="Refresh hotkey status"
           >
@@ -292,26 +292,26 @@ export default function HotkeysSettings() {
           </button>
         </div>
 
-        <div className="rounded-xl bg-white/[0.03] p-4">
+        <div className="rounded-xl bg-[var(--launcher-card-bg)] p-4">
           <div className="flex items-center gap-3.5">
             <div className="flex size-11 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500/20 to-fuchsia-500/10">
               <Keyboard className="size-5 text-violet-400" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[14px] font-medium tracking-[-0.02em] text-white/90 capitalize">
+              <p className="text-[14px] font-medium tracking-[-0.02em] text-foreground/90 capitalize">
                 {capabilitySummary}
               </p>
               {capabilities?.notes?.length ? (
-                <p className="mt-0.5 text-[12px] text-white/40 leading-relaxed truncate">
+                <p className="mt-0.5 text-[12px] text-foreground/40 leading-relaxed truncate">
                   {capabilities.notes[0]}
                 </p>
               ) : null}
             </div>
           </div>
           {capabilities?.notes && capabilities.notes.length > 1 && (
-            <ul className="mt-3 space-y-1 border-t border-white/[0.06] pt-3">
+            <ul className="mt-3 space-y-1 border-t border-[var(--launcher-card-border)] pt-3">
               {capabilities.notes.slice(1).map((note) => (
-                <li key={note} className="text-[12px] text-white/35 leading-relaxed">
+                <li key={note} className="text-[12px] text-foreground/35 leading-relaxed">
                   {note}
                 </li>
               ))}
@@ -323,19 +323,19 @@ export default function HotkeysSettings() {
       {/* Launcher Hotkey Section */}
       <section className="space-y-3">
         <div className="flex items-center gap-3 px-1">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-white/45">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/45">
             Launcher Hotkey
           </span>
-          <div className="h-px flex-1 bg-white/[0.06]" />
+          <div className="h-px flex-1 bg-[var(--launcher-chip-bg)]" />
         </div>
 
-        <div className="rounded-xl bg-white/[0.03] p-4">
+        <div className="rounded-xl bg-[var(--launcher-card-bg)] p-4">
           <div className="flex items-center gap-3.5">
             <div className="flex size-11 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/10">
               <Rocket className="size-5 text-blue-400" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[13px] font-medium text-white/70 mb-2">
+              <p className="text-[13px] font-medium text-foreground/70 mb-2">
                 Global shortcut to open Beam
               </p>
               <HotkeyRecorder
@@ -353,13 +353,13 @@ export default function HotkeysSettings() {
       {/* Command Hotkeys Section */}
       <section className="space-y-3">
         <div className="flex items-center gap-3 px-1">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-white/45">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/45">
             Command Hotkeys
           </span>
-          <div className="h-px flex-1 bg-white/[0.06]" />
+          <div className="h-px flex-1 bg-[var(--launcher-chip-bg)]" />
         </div>
 
-        <p className="px-1 text-[12px] text-white/35 leading-relaxed">
+        <p className="px-1 text-[12px] text-foreground/35 leading-relaxed">
           Assign global hotkeys to commands. On Wayland, configure these through your compositor.
         </p>
 
@@ -371,16 +371,16 @@ export default function HotkeysSettings() {
                 "group flex items-center gap-3 rounded-xl px-3 py-3",
                 "transition-all duration-150",
                 pendingCommandId === command.id
-                  ? "bg-[var(--solid-accent,#4ea2ff)]/10"
-                  : "bg-white/[0.02] hover:bg-white/[0.04]",
+                  ? "bg-[var(--ring)]/10"
+                  : "bg-[var(--launcher-card-bg)] hover:bg-[var(--launcher-card-hover-bg)]",
               )}
               style={{ animationDelay: `${index * 15}ms` }}
             >
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[13px] font-medium tracking-[-0.01em] text-white/80">
+                <p className="truncate text-[13px] font-medium tracking-[-0.01em] text-foreground/80">
                   {command.title}
                 </p>
-                <p className="truncate text-[11px] font-mono text-white/30">{command.id}</p>
+                <p className="truncate text-[11px] font-mono text-foreground/30">{command.id}</p>
               </div>
               <HotkeyRecorder
                 value={commandHotkeys[command.id] ?? ""}
@@ -399,18 +399,18 @@ export default function HotkeysSettings() {
       {bindings ? (
         <section className="space-y-3">
           <div className="flex items-center gap-3 px-1">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-white/45">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/45">
               Compositor Snippets
             </span>
-            <div className="h-px flex-1 bg-white/[0.06]" />
+            <div className="h-px flex-1 bg-[var(--launcher-chip-bg)]" />
           </div>
 
-          <div className="rounded-xl bg-white/[0.03] p-4 space-y-3">
+          <div className="rounded-xl bg-[var(--launcher-card-bg)] p-4 space-y-3">
             <div className="flex items-center gap-2.5 mb-3">
               <div className="flex size-9 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500/20 to-teal-500/10">
                 <Terminal className="size-4 text-emerald-400" />
               </div>
-              <p className="text-[12px] text-white/50">
+              <p className="text-[12px] text-foreground/50">
                 Example bindings for your compositor config
               </p>
             </div>
@@ -421,8 +421,8 @@ export default function HotkeysSettings() {
                   key={entry}
                   className={cn(
                     "overflow-x-auto rounded-lg px-3 py-2",
-                    "bg-white/[0.03] text-[11px] font-mono text-white/50",
-                    "ring-1 ring-white/[0.04]",
+                    "bg-[var(--launcher-card-bg)] text-[11px] font-mono text-foreground/50",
+                    "ring-1 ring-[var(--launcher-card-border)]",
                   )}
                   style={{ animationDelay: `${index * 30}ms` }}
                 >
@@ -434,8 +434,8 @@ export default function HotkeysSettings() {
                   key={entry}
                   className={cn(
                     "overflow-x-auto rounded-lg px-3 py-2",
-                    "bg-white/[0.03] text-[11px] font-mono text-white/50",
-                    "ring-1 ring-white/[0.04]",
+                    "bg-[var(--launcher-card-bg)] text-[11px] font-mono text-foreground/50",
+                    "ring-1 ring-[var(--launcher-card-border)]",
                   )}
                   style={{
                     animationDelay: `${(index + bindings.launcherBindingExamples.length) * 30}ms`,
@@ -472,7 +472,7 @@ export default function HotkeysSettings() {
 
       {/* Loading State */}
       {isLoading && (
-        <div className="flex items-center justify-center gap-2 py-4 text-[12px] text-white/40">
+        <div className="flex items-center justify-center gap-2 py-4 text-[12px] text-foreground/40">
           <Loader2 className="size-4 animate-spin" />
           <span>Loading hotkey settings...</span>
         </div>

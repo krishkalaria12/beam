@@ -244,14 +244,14 @@ export function GithubView({ initialQuery, onBack }: GithubViewProps) {
   }
 
   return (
-    <div className="github-view-enter flex h-full w-full flex-col text-white">
+    <div className="github-view-enter flex h-full w-full flex-col text-foreground">
       {/* Custom Header */}
-      <header className="github-header flex h-14 shrink-0 items-center gap-3 border-b border-white/[0.06] px-5">
+      <header className="github-header flex h-14 shrink-0 items-center gap-3 border-b border-[var(--launcher-card-border)] px-5">
         {/* Back button */}
         <button
           type="button"
           onClick={onBack}
-          className="flex size-9 items-center justify-center rounded-lg bg-white/[0.03] text-white/40 transition-all duration-200 hover:bg-white/[0.06] hover:text-white/70"
+          className="flex size-9 items-center justify-center rounded-lg bg-[var(--launcher-card-bg)] text-foreground/40 transition-all duration-200 hover:bg-[var(--launcher-chip-bg)] hover:text-foreground/70"
           aria-label="Back"
         >
           <ChevronLeft className="size-4" />
@@ -259,12 +259,14 @@ export function GithubView({ initialQuery, onBack }: GithubViewProps) {
 
         {/* Title block */}
         <div className="flex items-center gap-3">
-          <div className="flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-white/15 to-white/10 ring-1 ring-white/15">
-            <Github className="size-4 text-white/80" />
+          <div className="flex size-9 items-center justify-center rounded-xl bg-[var(--launcher-card-hover-bg)] ring-1 ring-[var(--launcher-card-border)]">
+            <Github className="size-4 text-foreground/80" />
           </div>
           <div className="flex flex-col">
-            <h1 className="text-[14px] font-semibold tracking-[-0.02em] text-white/90">GitHub</h1>
-            <p className="text-[11px] text-white/40">Issues, pull requests & search</p>
+            <h1 className="text-[14px] font-semibold tracking-[-0.02em] text-foreground/90">
+              GitHub
+            </h1>
+            <p className="text-[11px] text-foreground/40">Issues, pull requests & search</p>
           </div>
         </div>
 
@@ -291,15 +293,15 @@ export function GithubView({ initialQuery, onBack }: GithubViewProps) {
         <div className="mx-auto max-w-2xl space-y-5">
           {/* Connection Section */}
           <section
-            className="github-section rounded-2xl bg-white/[0.025] p-4 ring-1 ring-white/[0.04]"
+            className="github-section rounded-2xl bg-[var(--launcher-card-bg)] p-4 ring-1 ring-[var(--launcher-card-border)]"
             style={{ animationDelay: "0ms" }}
           >
             <div className="mb-4 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="flex size-6 items-center justify-center rounded-lg bg-white/[0.06]">
-                  <Github className="size-3 text-white/50" />
+                <div className="flex size-6 items-center justify-center rounded-lg bg-[var(--launcher-chip-bg)]">
+                  <Github className="size-3 text-foreground/50" />
                 </div>
-                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-white/45">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/45">
                   Connection
                 </span>
               </div>
@@ -308,7 +310,7 @@ export function GithubView({ initialQuery, onBack }: GithubViewProps) {
                 <button
                   type="button"
                   onClick={() => void handleDisconnect()}
-                  className="flex items-center gap-1.5 rounded-lg bg-white/[0.04] px-3 py-1.5 text-[12px] font-medium text-white/60 ring-1 ring-white/[0.06] transition-all hover:bg-white/[0.06] hover:text-white/80"
+                  className="flex items-center gap-1.5 rounded-lg bg-[var(--launcher-card-hover-bg)] px-3 py-1.5 text-[12px] font-medium text-foreground/60 ring-1 ring-[var(--launcher-card-border)] transition-all hover:bg-[var(--launcher-chip-bg)] hover:text-foreground/80"
                 >
                   <Unplug className="size-3.5" />
                   Disconnect
@@ -318,7 +320,7 @@ export function GithubView({ initialQuery, onBack }: GithubViewProps) {
                   type="button"
                   onClick={() => void handleConnect()}
                   disabled={isAuthorizing || !clientId.trim()}
-                  className="flex items-center gap-1.5 rounded-lg bg-white/20 px-3 py-1.5 text-[12px] font-medium text-white/90 ring-1 ring-white/25 transition-all hover:bg-white/25 disabled:opacity-50"
+                  className="flex items-center gap-1.5 rounded-lg bg-[var(--launcher-card-selected-bg)] px-3 py-1.5 text-[12px] font-medium text-foreground/90 ring-1 ring-[var(--launcher-card-selected-border)] transition-all hover:bg-[var(--launcher-card-hover-bg)] disabled:opacity-50"
                 >
                   {isAuthorizing ? (
                     <Loader2 className="size-3.5 animate-spin" />
@@ -339,11 +341,11 @@ export function GithubView({ initialQuery, onBack }: GithubViewProps) {
                   setStoredGithubClientId(event.target.value);
                 }}
                 placeholder="GitHub OAuth App Client ID"
-                className="h-10 w-full rounded-xl bg-white/[0.04] px-4 text-[13px] text-white/90 placeholder:text-white/30 ring-1 ring-white/[0.06] transition-all focus:outline-none focus:ring-white/20"
+                className="h-10 w-full rounded-xl bg-[var(--launcher-card-hover-bg)] px-4 text-[13px] text-foreground/90 placeholder:text-foreground/30 ring-1 ring-[var(--launcher-card-border)] transition-all focus:outline-none focus:ring-[var(--ring)]"
               />
-              <p className="text-[11px] text-white/35">
+              <p className="text-[11px] text-foreground/35">
                 Configure your OAuth app redirect URI as{" "}
-                <code className="rounded bg-white/[0.06] px-1.5 py-0.5 font-mono text-[10px] text-white/50">
+                <code className="rounded bg-[var(--launcher-chip-bg)] px-1.5 py-0.5 font-mono text-[10px] text-foreground/50">
                   beam://oauth
                 </code>
                 .
@@ -351,13 +353,13 @@ export function GithubView({ initialQuery, onBack }: GithubViewProps) {
             </div>
 
             {user && (
-              <div className="mt-4 flex items-center gap-3 rounded-xl bg-white/[0.05] px-3.5 py-2.5 ring-1 ring-white/[0.08]">
-                <div className="flex size-8 items-center justify-center rounded-full bg-white/10 text-white/70">
+              <div className="mt-4 flex items-center gap-3 rounded-xl bg-[var(--launcher-card-hover-bg)] px-3.5 py-2.5 ring-1 ring-[var(--launcher-card-selected-border)]">
+                <div className="flex size-8 items-center justify-center rounded-full bg-[var(--launcher-chip-bg)] text-foreground/70">
                   <User className="size-3.5" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-[12px] font-medium text-white/80">{user.login}</span>
-                  {user.name && <span className="text-[11px] text-white/40">{user.name}</span>}
+                  <span className="text-[12px] font-medium text-foreground/80">{user.login}</span>
+                  {user.name && <span className="text-[11px] text-foreground/40">{user.name}</span>}
                 </div>
               </div>
             )}
@@ -365,19 +367,19 @@ export function GithubView({ initialQuery, onBack }: GithubViewProps) {
 
           {/* Assigned Items Section */}
           <section
-            className="github-section rounded-2xl bg-white/[0.025] p-4 ring-1 ring-white/[0.04]"
+            className="github-section rounded-2xl bg-[var(--launcher-card-bg)] p-4 ring-1 ring-[var(--launcher-card-border)]"
             style={{ animationDelay: "50ms" }}
           >
             <div className="mb-4 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="flex size-6 items-center justify-center rounded-lg bg-white/[0.06]">
-                  <CircleDot className="size-3 text-white/50" />
+                <div className="flex size-6 items-center justify-center rounded-lg bg-[var(--launcher-chip-bg)]">
+                  <CircleDot className="size-3 text-foreground/50" />
                 </div>
-                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-white/45">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/45">
                   Assigned To Me
                 </span>
                 {assignedItems.length > 0 && (
-                  <span className="rounded-full bg-white/[0.08] px-2 py-0.5 text-[10px] font-medium text-white/50">
+                  <span className="rounded-full bg-[var(--launcher-card-selected-bg)] px-2 py-0.5 text-[10px] font-medium text-foreground/50">
                     {assignedItems.length}
                   </span>
                 )}
@@ -387,7 +389,7 @@ export function GithubView({ initialQuery, onBack }: GithubViewProps) {
                 type="button"
                 onClick={() => void refreshAssigned()}
                 disabled={!isConnected || isLoadingAssigned}
-                className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-white/50 transition-all hover:bg-white/[0.04] hover:text-white/70 disabled:opacity-50"
+                className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-foreground/50 transition-all hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground/70 disabled:opacity-50"
               >
                 <RefreshCw className={cn("size-3", isLoadingAssigned && "animate-spin")} />
                 Refresh
@@ -395,9 +397,9 @@ export function GithubView({ initialQuery, onBack }: GithubViewProps) {
             </div>
 
             {assignedItems.length === 0 ? (
-              <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-white/[0.08] py-8 text-center">
-                <CircleDot className="size-6 text-white/20" />
-                <p className="mt-2 text-[12px] text-white/40">
+              <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-[var(--launcher-card-border)] py-8 text-center">
+                <CircleDot className="size-6 text-foreground/20" />
+                <p className="mt-2 text-[12px] text-foreground/40">
                   {isConnected ? "No assigned open issues" : "Connect GitHub to load issues"}
                 </p>
               </div>
@@ -408,11 +410,11 @@ export function GithubView({ initialQuery, onBack }: GithubViewProps) {
                     key={item.id}
                     type="button"
                     onClick={() => void openUrl(item.html_url)}
-                    className="github-item group flex w-full items-start gap-3 rounded-xl bg-white/[0.02] p-3 text-left ring-1 ring-white/[0.04] transition-all hover:bg-white/[0.05] hover:ring-white/[0.08]"
+                    className="github-item group flex w-full items-start gap-3 rounded-xl bg-[var(--launcher-card-bg)] p-3 text-left ring-1 ring-[var(--launcher-card-border)] transition-all hover:bg-[var(--launcher-card-hover-bg)] hover:ring-[var(--launcher-card-selected-border)]"
                     style={{ animationDelay: `${idx * 30}ms` }}
                   >
                     {/* Left accent bar */}
-                    <div className="absolute left-0 top-1/2 h-6 w-[2px] -translate-y-1/2 rounded-full bg-white/60 opacity-0 transition-opacity group-hover:opacity-100" />
+                    <div className="absolute left-0 top-1/2 h-6 w-[2px] -translate-y-1/2 rounded-full bg-[var(--ring)]/70 opacity-0 transition-opacity group-hover:opacity-100" />
 
                     {/* Icon */}
                     <div
@@ -432,8 +434,8 @@ export function GithubView({ initialQuery, onBack }: GithubViewProps) {
 
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-2">
-                        <p className="line-clamp-2 text-[13px] font-medium leading-snug text-white/80">
-                          <span className="text-white/40">#{item.number}</span> {item.title}
+                        <p className="line-clamp-2 text-[13px] font-medium leading-snug text-foreground/80">
+                          <span className="text-foreground/40">#{item.number}</span> {item.title}
                         </p>
                         <span
                           className={cn(
@@ -446,7 +448,7 @@ export function GithubView({ initialQuery, onBack }: GithubViewProps) {
                           {issueKindLabel(item)}
                         </span>
                       </div>
-                      <p className="mt-1 text-[11px] text-white/35">
+                      <p className="mt-1 text-[11px] text-foreground/35">
                         {repositoryNameFromUrl(item.repository_url)}
                       </p>
                     </div>
@@ -458,21 +460,21 @@ export function GithubView({ initialQuery, onBack }: GithubViewProps) {
 
           {/* Search Section */}
           <section
-            className="github-section rounded-2xl bg-white/[0.025] p-4 ring-1 ring-white/[0.04]"
+            className="github-section rounded-2xl bg-[var(--launcher-card-bg)] p-4 ring-1 ring-[var(--launcher-card-border)]"
             style={{ animationDelay: "100ms" }}
           >
             <div className="mb-4 flex items-center gap-2">
-              <div className="flex size-6 items-center justify-center rounded-lg bg-white/[0.06]">
-                <Search className="size-3 text-white/50" />
+              <div className="flex size-6 items-center justify-center rounded-lg bg-[var(--launcher-chip-bg)]">
+                <Search className="size-3 text-foreground/50" />
               </div>
-              <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-white/45">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/45">
                 Search Issues & PRs
               </span>
             </div>
 
             <div className="flex items-center gap-2">
-              <div className="flex flex-1 items-center gap-2.5 rounded-xl bg-white/[0.04] px-3.5 h-10 ring-1 ring-white/[0.06] transition-all focus-within:ring-white/20">
-                <Search className="size-4 shrink-0 text-white/30" />
+              <div className="flex flex-1 items-center gap-2.5 rounded-xl bg-[var(--launcher-card-hover-bg)] px-3.5 h-10 ring-1 ring-[var(--launcher-card-border)] transition-all focus-within:ring-[var(--ring)]">
+                <Search className="size-4 shrink-0 text-foreground/30" />
                 <input
                   type="text"
                   value={searchInput}
@@ -483,7 +485,7 @@ export function GithubView({ initialQuery, onBack }: GithubViewProps) {
                       void runSearch();
                     }
                   }}
-                  className="h-full w-full border-none bg-transparent text-[13px] text-white/90 placeholder:text-white/30 focus:outline-none"
+                  className="h-full w-full border-none bg-transparent text-[13px] text-foreground/90 placeholder:text-foreground/30 focus:outline-none"
                   placeholder="e.g. is:open is:pr review-requested:@me"
                 />
               </div>
@@ -492,7 +494,7 @@ export function GithubView({ initialQuery, onBack }: GithubViewProps) {
                 type="button"
                 onClick={() => void runSearch()}
                 disabled={!isConnected || isSearching || !searchInput.trim()}
-                className="flex h-10 items-center gap-1.5 rounded-xl bg-white/10 px-4 text-[12px] font-medium text-white/80 ring-1 ring-white/15 transition-all hover:bg-white/15 disabled:opacity-40"
+                className="flex h-10 items-center gap-1.5 rounded-xl bg-[var(--launcher-chip-bg)] px-4 text-[12px] font-medium text-foreground/80 ring-1 ring-[var(--launcher-card-border)] transition-all hover:bg-[var(--launcher-card-hover-bg)] disabled:opacity-40"
               >
                 {isSearching ? (
                   <Loader2 className="size-3.5 animate-spin" />
@@ -511,11 +513,11 @@ export function GithubView({ initialQuery, onBack }: GithubViewProps) {
                     key={`${item.id}-search`}
                     type="button"
                     onClick={() => void openUrl(item.html_url)}
-                    className="github-item group flex w-full items-start gap-3 rounded-xl bg-white/[0.02] p-3 text-left ring-1 ring-white/[0.04] transition-all hover:bg-white/[0.05] hover:ring-white/[0.08]"
+                    className="github-item group flex w-full items-start gap-3 rounded-xl bg-[var(--launcher-card-bg)] p-3 text-left ring-1 ring-[var(--launcher-card-border)] transition-all hover:bg-[var(--launcher-card-hover-bg)] hover:ring-[var(--launcher-card-selected-border)]"
                     style={{ animationDelay: `${idx * 30}ms` }}
                   >
                     {/* Left accent bar */}
-                    <div className="absolute left-0 top-1/2 h-6 w-[2px] -translate-y-1/2 rounded-full bg-white/60 opacity-0 transition-opacity group-hover:opacity-100" />
+                    <div className="absolute left-0 top-1/2 h-6 w-[2px] -translate-y-1/2 rounded-full bg-[var(--ring)]/70 opacity-0 transition-opacity group-hover:opacity-100" />
 
                     {/* Icon */}
                     <div
@@ -534,15 +536,15 @@ export function GithubView({ initialQuery, onBack }: GithubViewProps) {
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <p className="line-clamp-2 text-[13px] font-medium leading-snug text-white/80">
-                        <span className="text-white/40">#{item.number}</span> {item.title}
+                      <p className="line-clamp-2 text-[13px] font-medium leading-snug text-foreground/80">
+                        <span className="text-foreground/40">#{item.number}</span> {item.title}
                       </p>
-                      <p className="mt-1 text-[11px] text-white/35">
+                      <p className="mt-1 text-[11px] text-foreground/35">
                         {repositoryNameFromUrl(item.repository_url)}
                       </p>
                     </div>
 
-                    <ArrowUpRight className="size-3.5 shrink-0 text-white/30 opacity-0 transition-opacity group-hover:opacity-100" />
+                    <ArrowUpRight className="size-3.5 shrink-0 text-foreground/30 opacity-0 transition-opacity group-hover:opacity-100" />
                   </button>
                 ))}
               </div>
@@ -559,31 +561,31 @@ export function GithubView({ initialQuery, onBack }: GithubViewProps) {
       </div>
 
       {/* Footer */}
-      <footer className="github-footer flex h-11 shrink-0 items-center justify-between border-t border-white/[0.05] px-5">
-        <div className="flex items-center gap-3 text-[11px] text-white/35">
+      <footer className="github-footer flex h-11 shrink-0 items-center justify-between border-t border-[var(--footer-border)] px-5">
+        <div className="flex items-center gap-3 text-[11px] text-foreground/35">
           <div className="flex items-center gap-1.5">
-            <div className="flex size-5 items-center justify-center rounded-md bg-white/[0.08]">
-              <CircleDot className="size-3 text-white/50" />
+            <div className="flex size-5 items-center justify-center rounded-md bg-[var(--launcher-card-selected-bg)]">
+              <CircleDot className="size-3 text-foreground/50" />
             </div>
             <span className="font-medium">Issues</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="flex size-5 items-center justify-center rounded-md bg-white/[0.08]">
-              <GitPullRequest className="size-3 text-white/50" />
+            <div className="flex size-5 items-center justify-center rounded-md bg-[var(--launcher-card-selected-bg)]">
+              <GitPullRequest className="size-3 text-foreground/50" />
             </div>
             <span className="font-medium">Pull Requests</span>
           </div>
         </div>
 
-        <div className="flex items-center gap-3 text-[11px] text-white/25">
+        <div className="flex items-center gap-3 text-[11px] text-foreground/25">
           <span className="flex items-center gap-1.5">
-            <kbd className="rounded-md bg-white/[0.06] px-1.5 py-0.5 font-mono text-[10px] text-white/40">
+            <kbd className="rounded-md bg-[var(--launcher-chip-bg)] px-1.5 py-0.5 font-mono text-[10px] text-foreground/40">
               Enter
             </kbd>
             Search
           </span>
           <span className="flex items-center gap-1.5">
-            <kbd className="rounded-md bg-white/[0.06] px-1.5 py-0.5 font-mono text-[10px] text-white/40">
+            <kbd className="rounded-md bg-[var(--launcher-chip-bg)] px-1.5 py-0.5 font-mono text-[10px] text-foreground/40">
               Esc
             </kbd>
             Back

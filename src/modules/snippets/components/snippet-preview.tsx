@@ -50,7 +50,7 @@ export function SnippetPreview({
         <div className="mb-4 size-12 rounded-xl bg-gradient-to-br from-violet-500/15 to-purple-500/15 p-2.5">
           <FileText className="size-full text-violet-400/40" />
         </div>
-        <p className="text-[13px] text-white/40">Select a snippet to preview</p>
+        <p className="text-[13px] text-foreground/40">Select a snippet to preview</p>
       </section>
     );
   }
@@ -59,12 +59,12 @@ export function SnippetPreview({
     <section className="snippet-preview-enter flex min-h-0 flex-1 flex-col">
       <div className="list-area custom-scrollbar min-h-0 flex-1 overflow-y-auto p-4">
         {/* Snippet Content Card */}
-        <article className="rounded-xl bg-white/[0.03] p-4 ring-1 ring-white/[0.06]">
+        <article className="rounded-xl bg-[var(--launcher-card-bg)] p-4 ring-1 ring-[var(--launcher-card-border)]">
           <div className="mb-3 flex items-center gap-2">
             <div className="size-6 rounded-lg bg-gradient-to-br from-violet-500/25 to-purple-500/25 p-1">
               <FileText className="size-full text-violet-400" />
             </div>
-            <p className="text-[13px] font-medium tracking-[-0.01em] text-white/90">
+            <p className="text-[13px] font-medium tracking-[-0.01em] text-foreground/90">
               {snippet.name}
             </p>
             {!snippet.enabled && (
@@ -73,81 +73,81 @@ export function SnippetPreview({
               </span>
             )}
           </div>
-          <pre className="whitespace-pre-wrap break-words font-mono text-[13px] leading-6 text-white/75">
+          <pre className="whitespace-pre-wrap break-words font-mono text-[13px] leading-6 text-foreground/75">
             {snippet.template}
           </pre>
         </article>
 
         {/* Information Section */}
-        <section className="mt-4 rounded-xl bg-white/[0.02] p-4 ring-1 ring-white/[0.04]">
+        <section className="mt-4 rounded-xl bg-[var(--launcher-card-bg)] p-4 ring-1 ring-[var(--launcher-card-border)]">
           <div className="mb-3 flex items-center gap-3">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-white/45">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/45">
               Information
             </span>
-            <div className="h-px flex-1 bg-white/[0.06]" />
+            <div className="h-px flex-1 bg-[var(--launcher-chip-bg)]" />
           </div>
 
           <dl className="space-y-2.5 text-[12px]">
             <div className="flex items-center justify-between gap-3">
-              <dt className="text-white/40">Keyword</dt>
-              <dd className="font-mono text-[var(--solid-accent,#4ea2ff)]">{snippet.trigger}</dd>
+              <dt className="text-foreground/40">Keyword</dt>
+              <dd className="font-mono text-[var(--ring)]">{snippet.trigger}</dd>
             </div>
-            <div className="h-px bg-white/[0.04]" />
+            <div className="h-px bg-[var(--launcher-card-hover-bg)]" />
 
             <div className="flex items-center justify-between gap-3">
-              <dt className="text-white/40">Tags</dt>
+              <dt className="text-foreground/40">Tags</dt>
               <dd className="flex flex-wrap justify-end gap-1.5">
                 {snippet.tags.length > 0 ? (
                   snippet.tags.map((tag) => (
                     <span
                       key={tag}
-                      className="rounded-full bg-white/[0.06] px-2 py-0.5 text-[10px] font-medium text-white/60"
+                      className="rounded-full bg-[var(--launcher-chip-bg)] px-2 py-0.5 text-[10px] font-medium text-foreground/60"
                     >
                       {tag}
                     </span>
                   ))
                 ) : (
-                  <span className="text-white/30">None</span>
+                  <span className="text-foreground/30">None</span>
                 )}
               </dd>
             </div>
-            <div className="h-px bg-white/[0.04]" />
+            <div className="h-px bg-[var(--launcher-card-hover-bg)]" />
 
             <div className="flex items-center justify-between gap-3">
-              <dt className="text-white/40">Content Type</dt>
-              <dd className="text-white/70">{snippet.content_type}</dd>
+              <dt className="text-foreground/40">Content Type</dt>
+              <dd className="text-foreground/70">{snippet.content_type}</dd>
             </div>
-            <div className="h-px bg-white/[0.04]" />
+            <div className="h-px bg-[var(--launcher-card-hover-bg)]" />
 
             <div className="flex items-center justify-between gap-3">
-              <dt className="text-white/40">Times Copied</dt>
-              <dd className="text-white/70">{snippet.copied_count}</dd>
+              <dt className="text-foreground/40">Times Copied</dt>
+              <dd className="text-foreground/70">{snippet.copied_count}</dd>
             </div>
-            <div className="h-px bg-white/[0.04]" />
+            <div className="h-px bg-[var(--launcher-card-hover-bg)]" />
 
             <div className="flex items-center justify-between gap-3">
-              <dt className="text-white/40">Word Count</dt>
-              <dd className="text-white/70">{snippet.word_count}</dd>
+              <dt className="text-foreground/40">Word Count</dt>
+              <dd className="text-foreground/70">{snippet.word_count}</dd>
             </div>
-            <div className="h-px bg-white/[0.04]" />
+            <div className="h-px bg-[var(--launcher-card-hover-bg)]" />
 
             <div className="flex items-center justify-between gap-3">
-              <dt className="text-white/40">Last Copied</dt>
-              <dd className="text-white/70">{formatDate(snippet.last_used_at)}</dd>
+              <dt className="text-foreground/40">Last Copied</dt>
+              <dd className="text-foreground/70">{formatDate(snippet.last_used_at)}</dd>
             </div>
           </dl>
         </section>
       </div>
 
       {/* Actions Footer */}
-      <div className="flex h-14 shrink-0 items-center justify-between border-t border-white/[0.06] px-4">
+      <div className="flex h-14 shrink-0 items-center justify-between border-t border-[var(--footer-border)] px-4">
         <button
           type="button"
           onClick={onCopyAndCount}
           disabled={isCopying}
           className={cn(
             "inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-[12px] font-medium transition-all duration-200",
-            "bg-[var(--solid-accent,#4ea2ff)]/20 text-[var(--solid-accent,#4ea2ff)] hover:bg-[var(--solid-accent,#4ea2ff)]/30",
+            "bg-[var(--ring)]/20 text-[var(--ring)] hover:bg-[var(--ring)]/30",
             "disabled:opacity-50 disabled:pointer-events-none",
           )}
         >
@@ -160,8 +160,8 @@ export function SnippetPreview({
             type="button"
             onClick={onEdit}
             className={cn(
-              "inline-flex h-8 items-center gap-1.5 rounded-lg border border-white/[0.08] px-3 text-[12px] font-medium transition-all duration-200",
-              "bg-white/[0.03] text-white/60 hover:bg-white/[0.06] hover:text-white/80",
+              "inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--launcher-card-border)] px-3 text-[12px] font-medium transition-all duration-200",
+              "bg-[var(--launcher-card-bg)] text-foreground/60 hover:bg-[var(--launcher-chip-bg)] hover:text-foreground/80",
             )}
           >
             <PenSquare className="size-3.5" />
@@ -174,8 +174,8 @@ export function SnippetPreview({
                 <button
                   type="button"
                   className={cn(
-                    "inline-flex h-8 items-center gap-1.5 rounded-lg border border-white/[0.08] px-2.5 text-[12px] font-medium transition-all duration-200",
-                    "bg-white/[0.03] text-white/60 hover:bg-white/[0.06] hover:text-white/80",
+                    "inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--launcher-card-border)] px-2.5 text-[12px] font-medium transition-all duration-200",
+                    "bg-[var(--launcher-card-bg)] text-foreground/60 hover:bg-[var(--launcher-chip-bg)] hover:text-foreground/80",
                   )}
                 />
               }

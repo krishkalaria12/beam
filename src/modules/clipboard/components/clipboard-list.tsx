@@ -50,7 +50,9 @@ const ClipboardListItem = memo(function ClipboardListItem({
       style={{ animationDelay: `${Math.min(index * 20, 150)}ms` }}
       className={cn(
         "clipboard-list-item group relative flex items-center gap-3 rounded-xl px-3 py-2.5 cursor-pointer transition-all duration-200",
-        isSelected ? "bg-white/[0.06] ring-1 ring-white/[0.12]" : "hover:bg-white/[0.04]",
+        isSelected
+          ? "bg-[var(--launcher-card-hover-bg)] ring-1 ring-[var(--launcher-card-border)]"
+          : "hover:bg-[var(--launcher-card-hover-bg)]",
       )}
     >
       {/* Left accent bar on hover/selected */}
@@ -69,7 +71,7 @@ const ClipboardListItem = memo(function ClipboardListItem({
         className={cn(
           "shrink-0 flex items-center justify-center size-9 rounded-xl bg-gradient-to-br transition-all duration-200",
           iconConfig.gradient,
-          isSelected ? "text-white/90" : "text-white/60 group-hover:text-white/80",
+          isSelected ? "text-foreground/90" : "text-foreground/60 group-hover:text-foreground/80",
         )}
       >
         {iconConfig.icon}
@@ -80,7 +82,7 @@ const ClipboardListItem = memo(function ClipboardListItem({
         <p
           className={cn(
             "truncate text-[13px] font-medium leading-tight tracking-[-0.01em] transition-colors",
-            isSelected ? "text-white/95" : "text-white/70 group-hover:text-white/85",
+            isSelected ? "text-foreground/95" : "text-foreground/70 group-hover:text-foreground/85",
           )}
         >
           {entry.content_type === ClipboardContentType.Image
@@ -88,7 +90,7 @@ const ClipboardListItem = memo(function ClipboardListItem({
             : entry.value.replace(/\s+/g, " ").trim()}
         </p>
         {entry.content_type !== ClipboardContentType.Image && (
-          <p className="mt-0.5 text-[11px] text-white/30 truncate">
+          <p className="mt-0.5 text-[11px] text-foreground/30 truncate">
             {entry.character_count} characters
           </p>
         )}
@@ -135,7 +137,7 @@ export function ClipboardList({ entries, selectedIndex, onSelect, isLoading }: C
   }, [entries]);
 
   return (
-    <div className="clipboard-list-panel flex w-[42%] flex-col border-r border-white/[0.06]">
+    <div className="clipboard-list-panel flex w-[42%] flex-col border-r border-[var(--launcher-card-border)]">
       <div className="custom-scrollbar flex-1 overflow-y-auto p-3">
         {isLoading ? (
           <div className="flex h-full items-center justify-center">
@@ -143,12 +145,12 @@ export function ClipboardList({ entries, selectedIndex, onSelect, isLoading }: C
           </div>
         ) : entries.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center gap-4 p-8">
-            <div className="flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] ring-1 ring-white/[0.06]">
-              <Clipboard className="size-6 text-white/20" />
+            <div className="flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] ring-1 ring-[var(--launcher-card-border)]">
+              <Clipboard className="size-6 text-foreground/20" />
             </div>
             <div className="text-center">
-              <p className="text-[13px] font-medium text-white/50">No entries found</p>
-              <p className="mt-1 text-[11px] text-white/25">Copy something to see it here</p>
+              <p className="text-[13px] font-medium text-foreground/50">No entries found</p>
+              <p className="mt-1 text-[11px] text-foreground/25">Copy something to see it here</p>
             </div>
           </div>
         ) : (
@@ -160,10 +162,10 @@ export function ClipboardList({ entries, selectedIndex, onSelect, isLoading }: C
                   className="clipboard-section-header flex items-center gap-3 px-3 py-1"
                   style={{ animationDelay: `${groupIndex * 50}ms` }}
                 >
-                  <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-white/40">
+                  <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/40">
                     {group.title}
                   </h3>
-                  <div className="h-px flex-1 bg-white/[0.06]" />
+                  <div className="h-px flex-1 bg-[var(--launcher-card-hover-bg)]" />
                 </div>
 
                 {/* Items */}

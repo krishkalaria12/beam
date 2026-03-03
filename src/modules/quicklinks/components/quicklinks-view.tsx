@@ -244,16 +244,16 @@ function QuicklinkCreateForm({
         <button
           type="button"
           onClick={onBack}
-          className="flex size-9 items-center justify-center rounded-lg bg-white/[0.03] text-white/40 transition-all hover:bg-white/[0.06] hover:text-white/70"
+          className="flex size-9 items-center justify-center rounded-lg bg-[var(--launcher-card-bg)] text-foreground/40 transition-all hover:bg-[var(--launcher-chip-bg)] hover:text-foreground/70"
         >
           <ArrowLeft className="size-4" />
         </button>
 
         <div className="flex-1 min-w-0">
-          <h1 className="text-[14px] font-semibold tracking-[-0.02em] text-white/90">
+          <h1 className="text-[14px] font-semibold tracking-[-0.02em] text-foreground/90">
             {isEditMode ? "Edit Quicklink" : "Create Quicklink"}
           </h1>
-          <p className="text-[11px] text-white/40">
+          <p className="text-[11px] text-foreground/40">
             Create shortcuts for links, files, and folders
           </p>
         </div>
@@ -272,18 +272,18 @@ function QuicklinkCreateForm({
           {/* Icon Preview */}
           {(isFetchingIcon || previewIcon) && (
             <div className="flex justify-center">
-              <div className="quicklinks-icon-preview relative flex size-20 items-center justify-center rounded-2xl bg-gradient-to-br from-white/[0.06] to-white/[0.02] ring-1 ring-white/[0.08]">
+              <div className="quicklinks-icon-preview relative flex size-20 items-center justify-center rounded-2xl bg-gradient-to-br from-white/[0.06] to-white/[0.02] ring-1 ring-[var(--launcher-card-selected-border)]">
                 {isFetchingIcon ? (
-                  <Loader2 className="size-7 animate-spin text-white/30" />
+                  <Loader2 className="size-7 animate-spin text-foreground/30" />
                 ) : (
                   <QuicklinkIcon
                     icon={previewIcon}
                     isFileTarget={isFileTarget}
                     className="size-12 rounded-xl object-contain"
-                    fallbackClassName="size-12 rounded-xl bg-white/[0.04]"
+                    fallbackClassName="size-12 rounded-xl bg-[var(--launcher-card-hover-bg)]"
                   />
                 )}
-                <div className="absolute -bottom-2 rounded-full bg-[#2c2c2c] px-2 py-0.5 text-[10px] font-medium text-white/50 ring-1 ring-white/[0.08]">
+                <div className="absolute -bottom-2 rounded-full bg-[var(--popover)] px-2 py-0.5 text-[10px] font-medium text-foreground/50 ring-1 ring-[var(--launcher-card-selected-border)]">
                   {isFetchingIcon ? "Fetching..." : isFileTarget ? "File" : "Auto"}
                 </div>
               </div>
@@ -295,7 +295,7 @@ function QuicklinkCreateForm({
             name="name"
             children={(field) => (
               <div className="space-y-2">
-                <label htmlFor="name" className="block text-[12px] font-medium text-white/60">
+                <label htmlFor="name" className="block text-[12px] font-medium text-foreground/60">
                   Name
                 </label>
                 <input
@@ -304,10 +304,10 @@ function QuicklinkCreateForm({
                   value={field.state.value}
                   onChange={(e) => field.handleChange(e.target.value)}
                   className={cn(
-                    "h-11 w-full rounded-xl px-4 text-[14px] font-medium tracking-[-0.01em] text-white/90",
-                    "bg-white/[0.04] ring-1 ring-white/[0.06]",
-                    "placeholder:text-white/25",
-                    "focus:outline-none focus:ring-[var(--solid-accent,#4ea2ff)]",
+                    "h-11 w-full rounded-xl px-4 text-[14px] font-medium tracking-[-0.01em] text-foreground/90",
+                    "bg-[var(--launcher-card-hover-bg)] ring-1 ring-[var(--launcher-card-border)]",
+                    "placeholder:text-foreground/25",
+                    "focus:outline-none focus:ring-[var(--ring)]",
                     "transition-all",
                     field.state.meta.errors.length > 0 && "ring-red-500/50",
                   )}
@@ -331,11 +331,14 @@ function QuicklinkCreateForm({
             name="keyword"
             children={(field) => (
               <div className="space-y-2">
-                <label htmlFor="keyword" className="block text-[12px] font-medium text-white/60">
+                <label
+                  htmlFor="keyword"
+                  className="block text-[12px] font-medium text-foreground/60"
+                >
                   Keyword
                 </label>
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[14px] font-semibold text-[var(--solid-accent,#4ea2ff)]">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[14px] font-semibold text-[var(--ring)]">
                     !
                   </span>
                   <input
@@ -344,10 +347,10 @@ function QuicklinkCreateForm({
                     value={field.state.value}
                     onChange={(e) => field.handleChange(e.target.value.toLowerCase())}
                     className={cn(
-                      "h-11 w-full rounded-xl pl-8 pr-4 font-mono text-[14px] font-medium text-white/90",
-                      "bg-white/[0.04] ring-1 ring-white/[0.06]",
-                      "placeholder:text-white/25",
-                      "focus:outline-none focus:ring-[var(--solid-accent,#4ea2ff)]",
+                      "h-11 w-full rounded-xl pl-8 pr-4 font-mono text-[14px] font-medium text-foreground/90",
+                      "bg-[var(--launcher-card-hover-bg)] ring-1 ring-[var(--launcher-card-border)]",
+                      "placeholder:text-foreground/25",
+                      "focus:outline-none focus:ring-[var(--ring)]",
                       "transition-all",
                       field.state.meta.errors.length > 0 && "ring-red-500/50",
                     )}
@@ -372,7 +375,7 @@ function QuicklinkCreateForm({
             name="url"
             children={(field) => (
               <div className="space-y-2">
-                <label htmlFor="url" className="block text-[12px] font-medium text-white/60">
+                <label htmlFor="url" className="block text-[12px] font-medium text-foreground/60">
                   Target
                 </label>
                 <div className="relative">
@@ -385,32 +388,32 @@ function QuicklinkCreateForm({
                       handleUrlChange(e);
                     }}
                     className={cn(
-                      "h-11 w-full rounded-xl px-4 pr-12 font-mono text-[12px] text-white/80",
-                      "bg-white/[0.04] ring-1 ring-white/[0.06]",
-                      "placeholder:text-white/25",
-                      "focus:outline-none focus:ring-[var(--solid-accent,#4ea2ff)]",
+                      "h-11 w-full rounded-xl px-4 pr-12 font-mono text-[12px] text-foreground/80",
+                      "bg-[var(--launcher-card-hover-bg)] ring-1 ring-[var(--launcher-card-border)]",
+                      "placeholder:text-foreground/25",
+                      "focus:outline-none focus:ring-[var(--ring)]",
                       "transition-all",
                       field.state.meta.errors.length > 0 && "ring-red-500/50",
                     )}
                   />
                   <DropdownMenu>
-                    <DropdownMenuTrigger className="absolute right-2 top-1/2 -translate-y-1/2 flex size-7 items-center justify-center rounded-lg text-white/40 transition-colors hover:bg-white/[0.06] hover:text-white/70">
+                    <DropdownMenuTrigger className="absolute right-2 top-1/2 -translate-y-1/2 flex size-7 items-center justify-center rounded-lg text-foreground/40 transition-colors hover:bg-[var(--launcher-chip-bg)] hover:text-foreground/70">
                       <Folder className="size-4" />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
                       align="end"
-                      className="w-40 rounded-xl border border-white/[0.08] bg-[#2c2c2c] p-1.5 shadow-xl"
+                      className="w-40 rounded-xl border border-[var(--launcher-card-border)] bg-[var(--popover)] p-1.5 shadow-xl"
                     >
                       <DropdownMenuItem
                         onClick={handlePickFile}
-                        className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-[12px] font-medium text-white/70 transition-colors hover:bg-white/[0.06] hover:text-white/90 cursor-pointer"
+                        className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-[12px] font-medium text-foreground/70 transition-colors hover:bg-[var(--launcher-chip-bg)] hover:text-foreground/90 cursor-pointer"
                       >
                         <File className="size-4" />
                         Pick File
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={handlePickFolder}
-                        className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-[12px] font-medium text-white/70 transition-colors hover:bg-white/[0.06] hover:text-white/90 cursor-pointer"
+                        className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-[12px] font-medium text-foreground/70 transition-colors hover:bg-[var(--launcher-chip-bg)] hover:text-foreground/90 cursor-pointer"
                       >
                         <FolderOpen className="size-4" />
                         Pick Folder
@@ -428,12 +431,9 @@ function QuicklinkCreateForm({
                     })()}
                   </p>
                 )}
-                <p className="text-[11px] text-white/30 leading-relaxed">
+                <p className="text-[11px] text-foreground/30 leading-relaxed">
                   Web links must include{" "}
-                  <span className="font-semibold text-[var(--solid-accent,#4ea2ff)]">
-                    {"{query}"}
-                  </span>{" "}
-                  placeholder.
+                  <span className="font-semibold text-[var(--ring)]">{"{query}"}</span> placeholder.
                 </p>
               </div>
             )}
@@ -449,8 +449,8 @@ function QuicklinkCreateForm({
       </div>
 
       {/* Footer */}
-      <div className="quicklinks-footer flex h-14 shrink-0 items-center justify-between border-t border-white/[0.04] px-5">
-        <div className="flex items-center gap-2 text-[11px] text-white/30">
+      <div className="quicklinks-footer flex h-14 shrink-0 items-center justify-between border-t border-[var(--footer-border)] px-5">
+        <div className="flex items-center gap-2 text-[11px] text-foreground/30">
           <Zap className="size-3.5" />
           <span className="font-medium tracking-[-0.01em]">
             {isEditMode ? "Edit Quicklink" : "New Quicklink"}
@@ -461,7 +461,7 @@ function QuicklinkCreateForm({
           <button
             type="button"
             onClick={onBack}
-            className="flex h-8 items-center rounded-lg px-3 text-[12px] font-medium text-white/50 transition-colors hover:bg-white/[0.04] hover:text-white/70"
+            className="flex h-8 items-center rounded-lg px-3 text-[12px] font-medium text-foreground/50 transition-colors hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground/70"
           >
             Cancel
           </button>
@@ -471,8 +471,8 @@ function QuicklinkCreateForm({
             disabled={isSubmitting}
             className={cn(
               "flex h-8 items-center gap-2 rounded-lg px-4 text-[12px] font-medium transition-all",
-              "bg-[var(--solid-accent,#4ea2ff)]/20 text-[var(--solid-accent,#4ea2ff)]",
-              "hover:bg-[var(--solid-accent,#4ea2ff)]/30",
+              "bg-[var(--ring)]/20 text-[var(--ring)]",
+              "hover:bg-[var(--ring)]/30",
               isSubmitting && "opacity-50 cursor-not-allowed",
             )}
           >
@@ -514,14 +514,16 @@ function QuicklinksManageView({ onBack, onCreate, onEdit }: QuicklinksManageView
         <button
           type="button"
           onClick={onBack}
-          className="flex size-9 items-center justify-center rounded-lg bg-white/[0.03] text-white/40 transition-all hover:bg-white/[0.06] hover:text-white/70"
+          className="flex size-9 items-center justify-center rounded-lg bg-[var(--launcher-card-bg)] text-foreground/40 transition-all hover:bg-[var(--launcher-chip-bg)] hover:text-foreground/70"
         >
           <ArrowLeft className="size-4" />
         </button>
 
         <div className="flex-1 min-w-0">
-          <h1 className="text-[14px] font-semibold tracking-[-0.02em] text-white/90">Quicklinks</h1>
-          <p className="text-[11px] text-white/40">Manage your custom shortcuts</p>
+          <h1 className="text-[14px] font-semibold tracking-[-0.02em] text-foreground/90">
+            Quicklinks
+          </h1>
+          <p className="text-[11px] text-foreground/40">Manage your custom shortcuts</p>
         </div>
 
         <button
@@ -529,9 +531,9 @@ function QuicklinksManageView({ onBack, onCreate, onEdit }: QuicklinksManageView
           onClick={onCreate}
           className={cn(
             "flex h-9 items-center gap-2 rounded-xl px-4 text-[12px] font-medium transition-all",
-            "bg-[var(--solid-accent,#4ea2ff)]/15 text-[var(--solid-accent,#4ea2ff)]",
-            "ring-1 ring-[var(--solid-accent,#4ea2ff)]/20",
-            "hover:bg-[var(--solid-accent,#4ea2ff)]/25",
+            "bg-[var(--ring)]/15 text-[var(--ring)]",
+            "ring-1 ring-[var(--ring)]/20",
+            "hover:bg-[var(--ring)]/25",
           )}
         >
           <Plus className="size-4" />
@@ -543,7 +545,7 @@ function QuicklinksManageView({ onBack, onCreate, onEdit }: QuicklinksManageView
       <div className="quicklinks-content custom-scrollbar flex-1 overflow-y-auto px-5 py-3">
         {isLoading && (
           <div className="flex h-40 items-center justify-center">
-            <Loader2 className="size-6 animate-spin text-white/30" />
+            <Loader2 className="size-6 animate-spin text-foreground/30" />
           </div>
         )}
 
@@ -555,12 +557,12 @@ function QuicklinksManageView({ onBack, onCreate, onEdit }: QuicklinksManageView
 
         {!isLoading && !error && quicklinks?.length === 0 && (
           <div className="flex h-full flex-col items-center justify-center gap-4 py-16">
-            <div className="flex size-16 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500/20 to-orange-500/10 ring-1 ring-white/[0.06]">
+            <div className="flex size-16 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500/20 to-orange-500/10 ring-1 ring-[var(--launcher-card-border)]">
               <Link2 className="size-7 text-amber-400" />
             </div>
             <div className="text-center">
-              <p className="text-[13px] font-medium text-white/50">No quicklinks yet</p>
-              <p className="mt-1 text-[11px] text-white/25">
+              <p className="text-[13px] font-medium text-foreground/50">No quicklinks yet</p>
+              <p className="mt-1 text-[11px] text-foreground/25">
                 Add your first shortcut to get started
               </p>
             </div>
@@ -569,8 +571,8 @@ function QuicklinksManageView({ onBack, onCreate, onEdit }: QuicklinksManageView
               onClick={onCreate}
               className={cn(
                 "flex h-9 items-center gap-2 rounded-xl px-4 text-[12px] font-medium transition-all",
-                "bg-white/[0.04] text-white/60 ring-1 ring-white/[0.06]",
-                "hover:bg-white/[0.06] hover:text-white/80",
+                "bg-[var(--launcher-card-hover-bg)] text-foreground/60 ring-1 ring-[var(--launcher-card-border)]",
+                "hover:bg-[var(--launcher-chip-bg)] hover:text-foreground/80",
               )}
             >
               <Plus className="size-4" />
@@ -584,7 +586,7 @@ function QuicklinksManageView({ onBack, onCreate, onEdit }: QuicklinksManageView
             {quicklinks.map((ql, index) => (
               <div
                 key={ql.keyword}
-                className="quicklinks-item group relative flex items-center gap-3.5 rounded-xl bg-white/[0.03] p-3.5 transition-all duration-200 hover:bg-white/[0.05]"
+                className="quicklinks-item group relative flex items-center gap-3.5 rounded-xl bg-[var(--launcher-card-bg)] p-3.5 transition-all duration-200 hover:bg-[var(--launcher-card-hover-bg)]"
                 style={{ animationDelay: `${index * 30}ms` }}
               >
                 {/* Left accent bar */}
@@ -602,12 +604,10 @@ function QuicklinksManageView({ onBack, onCreate, onEdit }: QuicklinksManageView
 
                 {/* Info */}
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-medium tracking-[-0.01em] text-white/85 truncate">
+                  <p className="text-[13px] font-medium tracking-[-0.01em] text-foreground/85 truncate">
                     {ql.name}
                   </p>
-                  <p className="text-[11px] font-mono text-[var(--solid-accent,#4ea2ff)]/70">
-                    !{ql.keyword}
-                  </p>
+                  <p className="text-[11px] font-mono text-[var(--ring)]/70">!{ql.keyword}</p>
                 </div>
 
                 {/* Actions */}
@@ -616,7 +616,7 @@ function QuicklinksManageView({ onBack, onCreate, onEdit }: QuicklinksManageView
                     type="button"
                     onClick={() => onEdit(ql)}
                     disabled={deleteMutation.isPending}
-                    className="flex size-8 items-center justify-center rounded-lg text-white/40 transition-colors hover:bg-white/[0.06] hover:text-white/70"
+                    className="flex size-8 items-center justify-center rounded-lg text-foreground/40 transition-colors hover:bg-[var(--launcher-chip-bg)] hover:text-foreground/70"
                   >
                     <Pencil className="size-3.5" />
                   </button>
@@ -624,7 +624,7 @@ function QuicklinksManageView({ onBack, onCreate, onEdit }: QuicklinksManageView
                     type="button"
                     onClick={() => handleDelete(ql.keyword)}
                     disabled={deleteMutation.isPending}
-                    className="flex size-8 items-center justify-center rounded-lg text-white/40 transition-colors hover:bg-red-500/10 hover:text-red-400"
+                    className="flex size-8 items-center justify-center rounded-lg text-foreground/40 transition-colors hover:bg-red-500/10 hover:text-red-400"
                   >
                     {deletingKeyword === ql.keyword ? (
                       <Loader2 className="size-3.5 animate-spin" />
@@ -646,17 +646,17 @@ function QuicklinksManageView({ onBack, onCreate, onEdit }: QuicklinksManageView
       </div>
 
       {/* Footer */}
-      <div className="quicklinks-footer flex h-10 shrink-0 items-center justify-between border-t border-white/[0.04] px-5">
-        <div className="flex items-center gap-2 text-[11px] text-white/30">
+      <div className="quicklinks-footer flex h-10 shrink-0 items-center justify-between border-t border-[var(--footer-border)] px-5">
+        <div className="flex items-center gap-2 text-[11px] text-foreground/30">
           <Zap className="size-3.5 opacity-50" />
           <span className="font-medium tracking-[-0.01em]">
             {quicklinks?.length ?? 0} quicklink{(quicklinks?.length ?? 0) !== 1 ? "s" : ""}
           </span>
         </div>
 
-        <div className="flex items-center gap-4 text-[11px] text-white/25">
+        <div className="flex items-center gap-4 text-[11px] text-foreground/25">
           <div className="flex items-center gap-1.5">
-            <kbd className="flex h-5 min-w-[20px] items-center justify-center rounded bg-white/[0.06] px-1.5 font-mono text-[10px] text-white/40">
+            <kbd className="flex h-5 min-w-[20px] items-center justify-center rounded bg-[var(--launcher-chip-bg)] px-1.5 font-mono text-[10px] text-foreground/40">
               Esc
             </kbd>
             <span>Back</span>

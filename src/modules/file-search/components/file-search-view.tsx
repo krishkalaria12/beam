@@ -151,7 +151,7 @@ export function FileSearchView({ initialQuery, onBack }: FileSearchViewProps) {
         leftSlot={
           <div className="flex items-center gap-2.5">
             <div className="flex items-center gap-1.5">
-              <div className="size-1.5 rounded-full bg-[var(--solid-success,#48c78e)] animate-pulse" />
+              <div className="size-1.5 rounded-full bg-[var(--solid-success)] animate-pulse" />
               <span className="text-[12px] font-medium text-muted-foreground/80">
                 {results.length} {results.length === 1 ? "file" : "files"}
               </span>
