@@ -45,7 +45,7 @@ export function useFilteredEmojis(
     if (selectedCategory === "all" && !searchValue) {
       return filtered.slice(26);
     }
-    
+
     return filtered;
   }, [emojis, searchValue, selectedCategory]);
 }

@@ -37,9 +37,7 @@ export function EmojiGrid({
       <div className="emoji-empty flex h-48 flex-col items-center justify-center gap-3 text-white/40">
         <span className="text-4xl opacity-60">😕</span>
         <div className="flex flex-col items-center gap-0.5">
-          <span className="text-[13px] font-medium text-white/45">
-            {emptyMessage}
-          </span>
+          <span className="text-[13px] font-medium text-white/45">{emptyMessage}</span>
           <span className="text-[11px] text-white/25">Try a different search term</span>
         </div>
       </div>

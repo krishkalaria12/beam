@@ -52,7 +52,9 @@ function SpeedTestStatusBadge({ status, isPreparing }: SpeedTestStatusBadgeProps
       {isPreparing ? (
         <Loader2 className="size-3 animate-spin text-cyan-400" />
       ) : (
-        <div className={cn("size-1.5 rounded-full", dot, status === "running" && "animate-pulse")} />
+        <div
+          className={cn("size-1.5 rounded-full", dot, status === "running" && "animate-pulse")}
+        />
       )}
       <span className={cn("text-[10px] font-semibold uppercase tracking-[0.06em]", text)}>
         {isPreparing ? "Preparing" : label}
@@ -88,12 +90,8 @@ export function SpeedTestHeader({ status, isPreparing, onBack }: SpeedTestHeader
           <Wifi className="size-4 text-cyan-400" />
         </div>
         <div className="flex flex-col">
-          <h1 className="text-[14px] font-semibold tracking-[-0.02em] text-white/90">
-            Speed Test
-          </h1>
-          <p className="text-[11px] text-white/40">
-            Network diagnostics
-          </p>
+          <h1 className="text-[14px] font-semibold tracking-[-0.02em] text-white/90">Speed Test</h1>
+          <p className="text-[11px] text-white/40">Network diagnostics</p>
         </div>
       </div>
 
@@ -124,14 +122,7 @@ interface SpeedCardProps {
   index: number;
 }
 
-export function SpeedCard({
-  metric,
-  valueMbps,
-  p90Value,
-  data,
-  isRunning,
-  index,
-}: SpeedCardProps) {
+export function SpeedCard({ metric, valueMbps, p90Value, data, isRunning, index }: SpeedCardProps) {
   const isDownload = metric === "download";
   const label = isDownload ? "Download" : "Upload";
   const color = isDownload ? "#22d3ee" : "#a78bfa"; // cyan-400 / violet-400
@@ -145,17 +136,21 @@ export function SpeedCard({
       className={cn(
         "speedtest-card group relative flex flex-col overflow-hidden rounded-2xl bg-white/[0.025] p-4 ring-1 ring-white/[0.04] transition-all",
         "hover:bg-white/[0.035]",
-        isRunning && ringColor
+        isRunning && ringColor,
       )}
       style={{ animationDelay: `${index * 40}ms` }}
     >
       {/* Header row */}
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <div className={cn(
-            "flex size-8 items-center justify-center rounded-xl bg-gradient-to-br ring-1",
-            gradientFrom, gradientTo, ringColor
-          )}>
+          <div
+            className={cn(
+              "flex size-8 items-center justify-center rounded-xl bg-gradient-to-br ring-1",
+              gradientFrom,
+              gradientTo,
+              ringColor,
+            )}
+          >
             {isDownload ? (
               <ArrowDown className={cn("size-4", iconColor)} />
             ) : (
@@ -176,10 +171,12 @@ export function SpeedCard({
 
       {/* Speed value */}
       <div className="mb-4 flex items-baseline gap-1.5">
-        <span className={cn(
-          "font-mono text-[40px] font-bold leading-none tracking-[-0.03em] text-white/95",
-          isRunning && valueMbps === null && "animate-pulse"
-        )}>
+        <span
+          className={cn(
+            "font-mono text-[40px] font-bold leading-none tracking-[-0.03em] text-white/95",
+            isRunning && valueMbps === null && "animate-pulse",
+          )}
+        >
           {formatMetricValue(valueMbps, 1)}
         </span>
         <span className="font-mono text-[14px] font-medium text-white/40">Mbps</span>
@@ -215,11 +212,11 @@ export function SpeedCard({
                   key={i}
                   className={cn(
                     "w-1 rounded-full transition-all",
-                    isRunning ? "speedtest-sample-bar" : "bg-white/[0.06]"
+                    isRunning ? "speedtest-sample-bar" : "bg-white/[0.06]",
                   )}
-                  style={{ 
+                  style={{
                     height: `${12 + Math.random() * 32}px`,
-                    animationDelay: `${i * 60}ms`
+                    animationDelay: `${i * 60}ms`,
                   }}
                 />
               ))}
@@ -258,15 +255,23 @@ export function MetricCard({
     <div
       className={cn(
         "speedtest-card group rounded-2xl bg-white/[0.025] p-4 ring-1 ring-white/[0.04] transition-all",
-        "hover:bg-white/[0.035]"
+        "hover:bg-white/[0.035]",
       )}
       style={{ animationDelay: `${index * 40}ms` }}
     >
       <div className="mb-3 flex items-center gap-2.5">
-        <div className={cn("flex size-8 items-center justify-center rounded-xl ring-1", gradient, ringColor)}>
+        <div
+          className={cn(
+            "flex size-8 items-center justify-center rounded-xl ring-1",
+            gradient,
+            ringColor,
+          )}
+        >
           {icon}
         </div>
-        <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-white/45">{label}</span>
+        <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-white/45">
+          {label}
+        </span>
       </div>
       <div className="flex items-baseline gap-1">
         <span className="font-mono text-[32px] font-bold tracking-[-0.02em] text-white/90">
@@ -332,7 +337,7 @@ export function SpeedTestFooter({
               "flex items-center gap-2 rounded-lg px-3 py-1.5 text-[11px] font-medium transition-all",
               "bg-white/[0.04] text-white/60 ring-1 ring-white/[0.06]",
               "hover:bg-white/[0.07] hover:text-white/80",
-              "disabled:opacity-50 disabled:cursor-not-allowed"
+              "disabled:opacity-50 disabled:cursor-not-allowed",
             )}
           >
             {isRunning ? (
@@ -359,7 +364,7 @@ export function SpeedTestFooter({
               "flex items-center gap-2 rounded-lg px-3 py-1.5 text-[11px] font-medium transition-all",
               "bg-cyan-500/15 text-cyan-400 ring-1 ring-cyan-500/20",
               "hover:bg-cyan-500/25 hover:text-cyan-300",
-              "disabled:opacity-50 disabled:cursor-not-allowed"
+              "disabled:opacity-50 disabled:cursor-not-allowed",
             )}
           >
             <RotateCcw className="size-3" />
@@ -378,11 +383,15 @@ export function SpeedTestFooter({
       {/* Right side - keyboard hints */}
       <div className="flex items-center gap-4 text-[11px] text-white/25">
         <span className="flex items-center gap-1.5">
-          <kbd className="rounded-md bg-white/[0.06] px-1.5 py-0.5 font-mono text-[10px] text-white/40">Enter</kbd>
+          <kbd className="rounded-md bg-white/[0.06] px-1.5 py-0.5 font-mono text-[10px] text-white/40">
+            Enter
+          </kbd>
           <span className="text-white/35">{hasStarted ? "Restart" : "Start"}</span>
         </span>
         <span className="flex items-center gap-1.5">
-          <kbd className="rounded-md bg-white/[0.06] px-1.5 py-0.5 font-mono text-[10px] text-white/40">Esc</kbd>
+          <kbd className="rounded-md bg-white/[0.06] px-1.5 py-0.5 font-mono text-[10px] text-white/40">
+            Esc
+          </kbd>
           <span className="text-white/35">Back</span>
         </span>
       </div>

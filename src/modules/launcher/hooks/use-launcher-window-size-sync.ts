@@ -2,8 +2,12 @@ import { useEffect } from "react";
 
 import { setLauncherCompactMode } from "@/modules/settings/api/set-launcher-compact-mode";
 
-export function useLauncherWindowSizeSync(shouldCollapseToInputOnly: boolean) {
+export function useLauncherWindowSizeSync(shouldSync: boolean, shouldCollapseToInputOnly: boolean) {
   useEffect(() => {
+    if (!shouldSync) {
+      return;
+    }
+
     const syncWindowSize = async () => {
       try {
         const inputWrapper = document.querySelector<HTMLElement>(
@@ -26,5 +30,5 @@ export function useLauncherWindowSizeSync(shouldCollapseToInputOnly: boolean) {
     return () => {
       window.cancelAnimationFrame(frame);
     };
-  }, [shouldCollapseToInputOnly]);
+  }, [shouldSync, shouldCollapseToInputOnly]);
 }

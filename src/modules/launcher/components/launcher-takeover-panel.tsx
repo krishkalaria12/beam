@@ -10,6 +10,7 @@ import type { QuicklinksView } from "@/store/use-launcher-ui-store";
 const ClipboardCommandGroup = lazy(
   () => import("@/modules/clipboard/components/clipboard-command-group"),
 );
+const AiCommandGroup = lazy(() => import("@/modules/ai/components/ai-command-group"));
 const TodoCommandGroup = lazy(() => import("@/modules/todo/components/todo-command-group"));
 const SnippetsCommandGroup = lazy(
   () => import("@/modules/snippets/components/snippets-command-group"),
@@ -77,6 +78,7 @@ interface TakeoverPanelRendererInput {
   openQuicklinks: () => void;
   openSpeedTest: () => void;
   openClipboard: () => void;
+  openAi: () => void;
   openTodo: () => void;
   openSnippets: () => void;
   openExtensions: () => void;
@@ -113,6 +115,7 @@ export function LauncherTakeoverPanel({
   openQuicklinks,
   openSpeedTest,
   openClipboard,
+  openAi,
   openTodo,
   openSnippets,
   openExtensions,
@@ -127,6 +130,8 @@ export function LauncherTakeoverPanel({
 
   if (activePanel === COMMAND_PANELS.TODO) {
     content = <TodoCommandGroup isOpen onOpen={openTodo} onBack={backToCommands} />;
+  } else if (activePanel === COMMAND_PANELS.AI) {
+    content = <AiCommandGroup isOpen onOpen={openAi} onBack={backToCommands} />;
   } else if (activePanel === COMMAND_PANELS.SNIPPETS) {
     content = <SnippetsCommandGroup isOpen onOpen={openSnippets} onBack={backToCommands} />;
   } else if (activePanel === COMMAND_PANELS.FILE_SEARCH) {

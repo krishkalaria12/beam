@@ -208,6 +208,7 @@ function createSyntheticTiming(
     requestStart,
     responseStart: safeResponseStart,
     responseEnd: safeResponseEnd,
+    responseStatus: 200,
     transferSize: safeTransferSize,
     encodedBodySize: safeTransferSize,
     decodedBodySize: safeTransferSize,
@@ -226,7 +227,7 @@ function createSyntheticTiming(
         transferSize: safeTransferSize,
       };
     },
-  } as PerformanceResourceTiming;
+  } as unknown as PerformanceResourceTiming;
 }
 
 function pushSyntheticTiming(url: string, timing: PerformanceResourceTiming): void {
@@ -245,7 +246,11 @@ function patchCloudflareSpeedtestRuntime(): void {
     return;
   }
 
-  if (typeof window === "undefined" || typeof fetch !== "function" || typeof performance === "undefined") {
+  if (
+    typeof window === "undefined" ||
+    typeof fetch !== "function" ||
+    typeof performance === "undefined"
+  ) {
     return;
   }
 

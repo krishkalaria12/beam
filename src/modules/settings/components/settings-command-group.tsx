@@ -25,6 +25,10 @@ type SettingsCommandGroupProps = {
   pinnedCommandIds: readonly string[];
   onSetPinned: (commandId: string, pinned: boolean) => void;
   onMovePinned: (commandId: string, direction: "up" | "down") => void;
+  fallbackEnabled?: boolean;
+  fallbackCommandIds?: readonly string[];
+  onSetFallbackEnabled?: (enabled: boolean) => void;
+  onSetFallbackCommandIds?: (fallbackCommandIds: readonly string[]) => void;
 };
 
 const SETTINGS_KEYWORDS = [

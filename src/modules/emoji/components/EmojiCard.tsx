@@ -11,7 +11,14 @@ interface EmojiCardProps {
   isRecent?: boolean;
 }
 
-export function EmojiCard({ emoji, onClick, className, style, isSelected, isRecent }: EmojiCardProps) {
+export function EmojiCard({
+  emoji,
+  onClick,
+  className,
+  style,
+  isSelected,
+  isRecent,
+}: EmojiCardProps) {
   return (
     <button
       type="button"
@@ -24,7 +31,8 @@ export function EmojiCard({ emoji, onClick, className, style, isSelected, isRece
         "hover:bg-white/[0.08] hover:ring-white/[0.12]",
         "focus:outline-none focus:ring-2 focus:ring-[var(--solid-accent,#4ea2ff)]/60",
         "active:scale-95 active:duration-75",
-        (isSelected || isRecent) && "ring-2 ring-[var(--solid-accent,#4ea2ff)]/50 bg-[var(--solid-accent,#4ea2ff)]/[0.08]",
+        (isSelected || isRecent) &&
+          "ring-2 ring-[var(--solid-accent,#4ea2ff)]/50 bg-[var(--solid-accent,#4ea2ff)]/[0.08]",
         className,
       )}
     >

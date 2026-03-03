@@ -6,6 +6,7 @@ export type QuicklinksView = "create" | "manage";
 
 const TAKEOVER_PANELS = new Set<CommandPanel>([
   "todo",
+  "ai",
   "snippets",
   "file-search",
   "dictionary",

@@ -10,10 +10,7 @@ import {
   useState,
 } from "react";
 
-import {
-  createSpeedTestInstance,
-  type SpeedTestInstance,
-} from "../lib/cloudflare-speedtest";
+import { createSpeedTestInstance, type SpeedTestInstance } from "../lib/cloudflare-speedtest";
 import {
   EMPTY_METRICS,
   getPercentile,
@@ -64,10 +61,7 @@ export function SpeedTestView({ onBack, autoStart = true }: SpeedTestViewProps) 
   );
 
   const appendHistory = useCallback(
-    (
-      setter: Dispatch<SetStateAction<ThroughputHistoryPoint[]>>,
-      valueMbps: number | null,
-    ) => {
+    (setter: Dispatch<SetStateAction<ThroughputHistoryPoint[]>>, valueMbps: number | null) => {
       if (valueMbps === null) {
         return;
       }
@@ -322,15 +316,24 @@ export function SpeedTestView({ onBack, autoStart = true }: SpeedTestViewProps) 
     [uploadHistory],
   );
 
-  const latestDownload = downloadHistory[downloadHistory.length - 1]?.valueMbps ?? metrics.downloadMbps;
+  const latestDownload =
+    downloadHistory[downloadHistory.length - 1]?.valueMbps ?? metrics.downloadMbps;
   const latestUpload = uploadHistory[uploadHistory.length - 1]?.valueMbps ?? metrics.uploadMbps;
 
   const p90Download = useMemo(
-    () => getPercentile(downloadChartData.map((point) => point.download), 0.9),
+    () =>
+      getPercentile(
+        downloadChartData.map((point) => point.download),
+        0.9,
+      ),
     [downloadChartData],
   );
   const p90Upload = useMemo(
-    () => getPercentile(uploadChartData.map((point) => point.upload), 0.9),
+    () =>
+      getPercentile(
+        uploadChartData.map((point) => point.upload),
+        0.9,
+      ),
     [uploadChartData],
   );
 
@@ -354,7 +357,10 @@ export function SpeedTestView({ onBack, autoStart = true }: SpeedTestViewProps) 
         {/* Main grid layout - fills available space */}
         <div className="flex flex-1 flex-col gap-4">
           {/* Speed Cards Row - Download & Upload (taller cards) */}
-          <section className="speedtest-section grid flex-1 gap-4 grid-cols-2" style={{ animationDelay: "0ms" }}>
+          <section
+            className="speedtest-section grid flex-1 gap-4 grid-cols-2"
+            style={{ animationDelay: "0ms" }}
+          >
             <SpeedCard
               metric="download"
               valueMbps={latestDownload}
@@ -374,7 +380,10 @@ export function SpeedTestView({ onBack, autoStart = true }: SpeedTestViewProps) 
           </section>
 
           {/* Metrics Row - Latency, Jitter, Packet Loss */}
-          <section className="speedtest-section grid gap-4 grid-cols-3" style={{ animationDelay: "60ms" }}>
+          <section
+            className="speedtest-section grid gap-4 grid-cols-3"
+            style={{ animationDelay: "60ms" }}
+          >
             <MetricCard
               icon={<Clock className="size-4 text-amber-400" />}
               gradient="bg-gradient-to-br from-amber-500/20 to-orange-500/20"

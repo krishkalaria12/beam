@@ -47,9 +47,7 @@ export function EmojiPicker({
       >
         <div className="space-y-6 pb-6">
           {/* Only show recent emojis when not searching */}
-          {!searchValue && (
-            <RecentlyUsed emojis={recentEmojis} onEmojiClick={onEmojiClick} />
-          )}
+          {!searchValue && <RecentlyUsed emojis={recentEmojis} onEmojiClick={onEmojiClick} />}
 
           <EmojiGrid emojis={emojis} onEmojiClick={onEmojiClick} />
         </div>

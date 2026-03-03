@@ -49,7 +49,7 @@ export async function setLauncherCompactMode(
   try {
     await applyWindowSize(compact, targetHeight);
     setTimeout(() => {
-      void applyWindowSize(compact, targetHeight);
+      void applyWindowSize(compact, targetHeight).catch(() => undefined);
     }, 60);
   } catch {
     // Backend path already attempted; ignore fallback errors.

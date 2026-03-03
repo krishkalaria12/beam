@@ -1996,3 +1996,355 @@
     transform: translateY(0);
   }
 }
+
+/* ai module styles */
+
+/* AI view container - entrance animation */
+.ai-view-enter {
+  animation: ai-view-enter 250ms ease-out both;
+}
+
+@keyframes ai-view-enter {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* AI setup view entrance */
+.ai-setup-enter {
+  animation: ai-setup-enter 250ms ease-out both;
+}
+
+@keyframes ai-setup-enter {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* AI setup hero section */
+.ai-hero-enter {
+  animation: ai-hero-enter 300ms ease-out both;
+  animation-delay: 50ms;
+}
+
+@keyframes ai-hero-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* AI provider card */
+.ai-provider-card {
+  animation: ai-provider-card-enter 200ms ease-out both;
+}
+
+@keyframes ai-provider-card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* AI sidebar entrance */
+.ai-sidebar-enter {
+  animation: ai-sidebar-enter 220ms ease-out both;
+}
+
+@keyframes ai-sidebar-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* AI chat item in sidebar */
+.ai-chat-item {
+  animation: ai-chat-item-enter 180ms ease-out both;
+}
+
+@keyframes ai-chat-item-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* AI toolbar entrance */
+.ai-toolbar-enter {
+  animation: ai-toolbar-enter 200ms ease-out both;
+  animation-delay: 30ms;
+}
+
+@keyframes ai-toolbar-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* AI messages area entrance */
+.ai-messages-enter {
+  animation: ai-messages-enter 220ms ease-out both;
+  animation-delay: 50ms;
+}
+
+@keyframes ai-messages-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* AI message item */
+.ai-message-item {
+  animation: ai-message-item-enter 200ms ease-out both;
+}
+
+@keyframes ai-message-item-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* AI empty state */
+.ai-empty-state {
+  animation: ai-empty-state-enter 300ms ease-out both;
+  animation-delay: 100ms;
+}
+
+@keyframes ai-empty-state-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* AI input area entrance */
+.ai-input-enter {
+  animation: ai-input-enter 200ms ease-out both;
+  animation-delay: 100ms;
+}
+
+@keyframes ai-input-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* AI file preview */
+.ai-file-preview {
+  animation: ai-file-preview-enter 150ms ease-out both;
+}
+
+@keyframes ai-file-preview-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* AI response text animation (for streaming) */
+.ai-response {
+  animation: ai-response-fade 150ms ease-out both;
+}
+
+@keyframes ai-response-fade {
+  from {
+    opacity: 0.7;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* AI prose styling for markdown content */
+.ai-prose {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 13px;
+  line-height: 1.65;
+  letter-spacing: -0.01em;
+}
+
+.ai-prose p {
+  margin-bottom: 0.75em;
+}
+
+.ai-prose p:last-child {
+  margin-bottom: 0;
+}
+
+.ai-prose strong {
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: 600;
+}
+
+.ai-prose em {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.ai-prose code {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  padding: 0.15em 0.35em;
+  font-size: 0.9em;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  color: var(--solid-accent, #4ea2ff);
+}
+
+.ai-prose pre {
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 8px;
+  padding: 0.875rem 1rem;
+  margin: 0.75em 0;
+  overflow-x: auto;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.ai-prose pre code {
+  background: transparent;
+  padding: 0;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.ai-prose ul,
+.ai-prose ol {
+  margin: 0.5em 0;
+  padding-left: 1.25em;
+}
+
+.ai-prose li {
+  margin-bottom: 0.25em;
+}
+
+.ai-prose li::marker {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.ai-prose a {
+  color: var(--solid-accent, #4ea2ff);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(78, 162, 255, 0.3);
+  transition: border-color 150ms ease;
+}
+
+.ai-prose a:hover {
+  border-color: var(--solid-accent, #4ea2ff);
+}
+
+.ai-prose blockquote {
+  border-left: 2px solid rgba(255, 255, 255, 0.15);
+  padding-left: 1em;
+  margin: 0.75em 0;
+  color: rgba(255, 255, 255, 0.6);
+  font-style: italic;
+}
+
+.ai-prose h1,
+.ai-prose h2,
+.ai-prose h3,
+.ai-prose h4,
+.ai-prose h5,
+.ai-prose h6 {
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin-top: 1.25em;
+  margin-bottom: 0.5em;
+}
+
+.ai-prose h1:first-child,
+.ai-prose h2:first-child,
+.ai-prose h3:first-child {
+  margin-top: 0;
+}
+
+.ai-prose h1 {
+  font-size: 1.35em;
+}
+
+.ai-prose h2 {
+  font-size: 1.2em;
+}
+
+.ai-prose h3 {
+  font-size: 1.1em;
+}
+
+.ai-prose hr {
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  margin: 1.25em 0;
+}
+
+.ai-prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.75em 0;
+  font-size: 12px;
+}
+
+.ai-prose th,
+.ai-prose td {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.5em 0.75em;
+  text-align: left;
+}
+
+.ai-prose th {
+  background: rgba(255, 255, 255, 0.05);
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+}

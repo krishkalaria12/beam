@@ -483,7 +483,7 @@ export default function LauncherCommand() {
 
   const shouldShowFooter = !shouldCollapseToInputOnly && !isLauncherFooterHidden(activePanel);
 
-  useLauncherWindowSizeSync(shouldCollapseToInputOnly);
+  useLauncherWindowSizeSync(activePanel === "commands", shouldCollapseToInputOnly);
 
   useEffect(() => {
     let cancelled = false;
@@ -569,6 +569,9 @@ export default function LauncherCommand() {
             }}
             openClipboard={() => {
               openPanel("clipboard", true);
+            }}
+            openAi={() => {
+              openPanel("ai", true);
             }}
             openTodo={() => {
               openPanel("todo", true);

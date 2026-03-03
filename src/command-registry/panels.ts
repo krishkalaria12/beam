@@ -5,6 +5,7 @@ export const COMMAND_PANELS = {
   CLIPBOARD: "clipboard",
   EMOJI: "emoji",
   SETTINGS: "settings",
+  AI: "ai",
   CALCULATOR_HISTORY: "calculator-history",
   FILE_SEARCH: "file-search",
   DICTIONARY: "dictionary",
@@ -32,6 +33,7 @@ export function isCommandPanel(value: unknown): value is CommandPanelValue {
 
 export const TAKEOVER_COMMAND_PANELS = [
   COMMAND_PANELS.TODO,
+  COMMAND_PANELS.AI,
   COMMAND_PANELS.SNIPPETS,
   COMMAND_PANELS.FILE_SEARCH,
   COMMAND_PANELS.DICTIONARY,

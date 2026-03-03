@@ -28,6 +28,7 @@ export default defineConfig({
   build: {
     target: "esnext",
     minify: "esbuild",
+    cssMinify: "lightningcss",
     chunkSizeWarningLimit: 850,
     rollupOptions: {
       output: {

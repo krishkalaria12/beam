@@ -171,6 +171,20 @@ export const STATIC_COMMANDS: CommandDescriptor[] = [
     },
   },
   {
+    id: "ai.panel.open",
+    title: "ai chat",
+    subtitle: "Native Beam AI assistant",
+    keywords: ["ai", "chat", "assistant", "openai", "anthropic", "gemini", "openrouter"],
+    endText: "open",
+    icon: "sparkles",
+    kind: "panel",
+    scope: SCOPE_NORMAL_COMPRESSED,
+    action: {
+      type: "OPEN_PANEL",
+      payload: { panel: "ai" },
+    },
+  },
+  {
     id: "snippets.panel.open",
     title: "snippets",
     subtitle: "Text expansion and quick paste",

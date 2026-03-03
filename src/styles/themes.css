@@ -2,46 +2,46 @@
 
 .sc-solid {
   /* === CORE SURFACE PALETTE (fully opaque hex colors) === */
-  --solid-bg-base: #2c2c2c;           /* Primary background */
-  --solid-bg-elevated: #323232;       /* Cards, elevated surfaces */
-  --solid-bg-recessed: #262626;       /* Inset areas, inputs */
-  --solid-bg-overlay: #383838;        /* Dropdowns, popovers, menus */
-  --solid-bg-header: #2c2c2c;         /* Header background */
-  --solid-bg-footer: #282828;         /* Footer - slightly darker */
+  --solid-bg-base: #2c2c2c; /* Primary background */
+  --solid-bg-elevated: #323232; /* Cards, elevated surfaces */
+  --solid-bg-recessed: #262626; /* Inset areas, inputs */
+  --solid-bg-overlay: #383838; /* Dropdowns, popovers, menus */
+  --solid-bg-header: #2c2c2c; /* Header background */
+  --solid-bg-footer: #282828; /* Footer - slightly darker */
 
   /* === INTERACTIVE STATES (fully opaque) === */
-  --solid-hover-bg: #3a3a3a;          /* Item hover */
-  --solid-selected-bg: #404040;       /* Item selected/active */
-  --solid-active-bg: #464646;         /* Item pressed */
-  --solid-focus-ring: #4ea2ff;        /* Focus ring color */
+  --solid-hover-bg: #3a3a3a; /* Item hover */
+  --solid-selected-bg: #404040; /* Item selected/active */
+  --solid-active-bg: #464646; /* Item pressed */
+  --solid-focus-ring: #4ea2ff; /* Focus ring color */
 
   /* === BORDER SYSTEM (fully opaque) === */
-  --solid-border-subtle: #3a3a3a;     /* Subtle separators */
-  --solid-border-default: #444444;    /* Default borders */
-  --solid-border-strong: #505050;     /* Emphasized borders */
-  --solid-border-muted: #333333;      /* Very subtle borders */
+  --solid-border-subtle: #3a3a3a; /* Subtle separators */
+  --solid-border-default: #444444; /* Default borders */
+  --solid-border-strong: #505050; /* Emphasized borders */
+  --solid-border-muted: #333333; /* Very subtle borders */
 
   /* === TEXT HIERARCHY (fully opaque) === */
-  --solid-text-primary: #f0f2f6;      /* Primary text - high contrast */
-  --solid-text-secondary: #b8bcc4;    /* Secondary text */
-  --solid-text-muted: #808590;        /* Muted/hint text */
-  --solid-text-subtle: #666a72;       /* Very subtle text */
-  --solid-text-disabled: #4a4d52;     /* Disabled text */
+  --solid-text-primary: #f0f2f6; /* Primary text - high contrast */
+  --solid-text-secondary: #b8bcc4; /* Secondary text */
+  --solid-text-muted: #808590; /* Muted/hint text */
+  --solid-text-subtle: #666a72; /* Very subtle text */
+  --solid-text-disabled: #4a4d52; /* Disabled text */
 
   /* === ACCENT COLORS === */
-  --solid-accent: #4ea2ff;            /* Primary accent (blue) */
-  --solid-accent-hover: #6bb4ff;      /* Accent hover */
-  --solid-accent-muted: #3d7ecc;      /* Muted accent */
-  --solid-success: #48c78e;           /* Success green */
-  --solid-success-muted: #2d7a56;     /* Muted success */
-  --solid-danger: #ff6363;            /* Danger red */
-  --solid-danger-muted: #993c3c;      /* Muted danger */
-  --solid-warning: #f5a623;           /* Warning orange */
+  --solid-accent: #4ea2ff; /* Primary accent (blue) */
+  --solid-accent-hover: #6bb4ff; /* Accent hover */
+  --solid-accent-muted: #3d7ecc; /* Muted accent */
+  --solid-success: #48c78e; /* Success green */
+  --solid-success-muted: #2d7a56; /* Muted success */
+  --solid-danger: #ff6363; /* Danger red */
+  --solid-danger-muted: #993c3c; /* Muted danger */
+  --solid-warning: #f5a623; /* Warning orange */
 
   /* === KBD/BADGE SYSTEM === */
-  --solid-kbd-bg: #3a3a3a;            /* Keyboard badge background */
-  --solid-kbd-border: #484848;        /* Keyboard badge border */
-  --solid-kbd-text: #a0a4ac;          /* Keyboard badge text */
+  --solid-kbd-bg: #3a3a3a; /* Keyboard badge background */
+  --solid-kbd-border: #484848; /* Keyboard badge border */
+  --solid-kbd-text: #a0a4ac; /* Keyboard badge text */
 
   /* === SCROLLBAR === */
   --solid-scrollbar-track: #2a2a2a;

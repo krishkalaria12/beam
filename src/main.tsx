@@ -1,11 +1,13 @@
 import { RouterProvider, createRouter } from "@tanstack/react-router";
 import ReactDOM from "react-dom/client";
 
+import "streamdown/styles.css";
 import { CommandLoadingState } from "./components/command/command-loading-state";
-import { Toaster } from "./components/ui/sonner";
-import { QueryProvider } from "./providers/query-provider";
 import { ThemeProvider } from "./components/theme-provider";
 import { UiStyleProvider } from "./components/ui-style-provider";
+import { Toaster } from "./components/ui/sonner";
+import { TooltipProvider } from "./components/ui/tooltip";
+import { QueryProvider } from "./providers/query-provider";
 import { routeTree } from "./routeTree.gen";
 
 const router = createRouter({
@@ -33,8 +35,10 @@ if (!rootElement.innerHTML) {
     <QueryProvider>
       <ThemeProvider>
         <UiStyleProvider>
-          <RouterProvider router={router} />
-          <Toaster position="top-right" richColors />
+          <TooltipProvider>
+            <RouterProvider router={router} />
+            <Toaster position="top-right" richColors />
+          </TooltipProvider>
         </UiStyleProvider>
       </ThemeProvider>
     </QueryProvider>,
