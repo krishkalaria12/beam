@@ -60,8 +60,8 @@ export function EmojiGrid({
             <div className="h-px flex-1 bg-[var(--ui-divider)]" />
           </div>
 
-          {/* 8-column emoji grid */}
-          <div className="grid grid-cols-8 gap-2">
+          {/* Fixed 8-column layout using full row width */}
+          <div className="grid w-full grid-cols-8 gap-2.5">
             {groupEmojis.map((emoji, idx) => (
               <EmojiCard
                 key={`${emoji.hexcode}-${idx}`}

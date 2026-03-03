@@ -45,10 +45,10 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
           value={value}
           onChange={(e) => onChange(e.target.value)}
           className={cn(
-            "h-full w-full bg-transparent",
+            "h-full w-full bg-transparent dark:bg-transparent",
             "text-[14px] font-medium tracking-[-0.01em] text-foreground",
             "placeholder:text-muted-foreground/40 placeholder:font-normal",
-            "outline-none border-none",
+            "outline-none border-none focus-visible:ring-0 focus-visible:border-0 focus-visible:border-transparent",
             leftIcon ? "pl-9" : "pl-3.5",
             rightSlot ? "pr-9" : "pr-3.5",
             className,
