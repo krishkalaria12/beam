@@ -15,7 +15,7 @@ function ToastIcon({ style }: { style?: ExtensionToast["style"] }) {
   }
 
   if (style === "SUCCESS") {
-    return <CheckCircle2 className="size-4 text-emerald-500" />;
+    return <CheckCircle2 className="size-4 text-[var(--icon-green-fg)]" />;
   }
 
   if (style === "FAILURE") {

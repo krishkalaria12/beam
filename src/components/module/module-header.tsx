@@ -1,8 +1,8 @@
-import type { ReactNode } from "react";
 import { ArrowLeft } from "lucide-react";
+import type { ReactNode } from "react";
 
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface ModuleHeaderProps {
   /** Back button handler */
@@ -21,31 +21,6 @@ interface ModuleHeaderProps {
   className?: string;
 }
 
-/**
- * Standardised module header with back button, icon, title/subtitle, and optional badge.
- *
- * Uses only CSS variables so it responds to any active theme.
- *
- * @example
- * // Before (snippets-view.tsx):
- * <header className="snippets-header-enter flex h-14 shrink-0 items-center gap-3 border-b border-[var(--launcher-card-border)] px-4">
- *   <button ...> <ArrowLeft /> </button>
- *   <div className="size-8 rounded-xl bg-gradient-to-br from-amber-500/25 to-orange-500/25 p-1.5">
- *     <NotebookTabs className="size-full text-amber-400" />
- *   </div>
- *   <h1>Snippets</h1>
- *   ...
- * </header>
- *
- * // After:
- * <ModuleHeader
- *   onBack={onBack}
- *   icon={<IconChip variant="orange" size="md"><NotebookTabs /></IconChip>}
- *   title="Snippets"
- *   subtitle="Create, preview, and paste text snippets"
- *   badge={<ModuleHeader.Badge>{snippets.length} snippets</ModuleHeader.Badge>}
- * />
- */
 export function ModuleHeader({
   onBack,
   icon,
@@ -104,18 +79,11 @@ export function ModuleHeader({
   );
 }
 
-// ---------------------------------------------------------------------------
-// Compound sub-components
-// ---------------------------------------------------------------------------
-
 interface BadgeProps {
   children: ReactNode;
   className?: string;
 }
 
-/**
- * Small count/label chip shown in the header right area.
- */
 function Badge({ children, className }: BadgeProps) {
   return (
     <span

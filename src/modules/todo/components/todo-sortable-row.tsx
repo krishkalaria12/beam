@@ -9,6 +9,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import type { TodoWithSubTodos } from "@/modules/todo/types";
 
@@ -80,20 +82,24 @@ export function TodoSortableRow({
       />
 
       {/* Drag handle */}
-      <button
+      <Button
         type="button"
-        className="flex size-6 shrink-0 items-center justify-center rounded-md text-foreground/30 transition-colors hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground/50"
+        variant="ghost"
+        size="icon-xs"
+        className="flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-[var(--launcher-card-hover-bg)] hover:text-muted-foreground"
         aria-label="Reorder todo"
         onClick={(event) => event.stopPropagation()}
         {...attributes}
         {...listeners}
       >
         <GripVertical className="size-3.5" />
-      </button>
+      </Button>
 
       {/* Custom checkbox */}
-      <button
+      <Button
         type="button"
+        variant="ghost"
+        size="icon-xs"
         onClick={(event) => {
           event.stopPropagation();
           onToggle(todo);
@@ -107,12 +113,12 @@ export function TodoSortableRow({
         aria-label={todo.completed ? "Mark incomplete" : "Mark complete"}
       >
         {todo.completed && <Check className="size-3 text-foreground" strokeWidth={3} />}
-      </button>
+      </Button>
 
       {/* Content */}
       <div className="min-w-0 flex-1" onClick={(event) => event.stopPropagation()}>
         {isEditing ? (
-          <input
+          <Input
             autoFocus
             value={editingTitle}
             disabled={isBusy}
@@ -127,14 +133,14 @@ export function TodoSortableRow({
                 onCancelEdit();
               }
             }}
-            className="w-full bg-transparent text-[13px] font-medium tracking-[-0.01em] text-foreground/90 outline-none placeholder:text-foreground/30"
+            className="w-full bg-transparent text-[13px] font-medium tracking-[-0.01em] text-foreground outline-none placeholder:text-muted-foreground"
           />
         ) : (
           <div>
             <p
               className={cn(
                 "truncate text-[13px] font-medium tracking-[-0.01em] transition-colors",
-                todo.completed ? "text-foreground/40 line-through" : "text-foreground/90",
+                todo.completed ? "text-muted-foreground line-through" : "text-foreground",
               )}
               onDoubleClick={() => onStartEdit(todo)}
               title="Double-click to rename"
@@ -142,7 +148,7 @@ export function TodoSortableRow({
               {todo.title}
             </p>
             <div className="mt-1 flex items-center gap-2">
-              <span className="text-[11px] text-foreground/40">
+              <span className="text-[11px] text-muted-foreground">
                 {subTodoCompleted}/{todo.sub_todos.length} subtasks
               </span>
               {todo.sub_todos.length > 0 && (
@@ -162,14 +168,16 @@ export function TodoSortableRow({
       <DropdownMenu>
         <DropdownMenuTrigger
           render={
-            <button
+            <Button
               type="button"
-              className="flex size-7 items-center justify-center rounded-lg text-foreground/30 opacity-0 transition-all hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground/50 group-hover:opacity-100"
+              variant="ghost"
+              size="icon-sm"
+              className="flex size-7 items-center justify-center rounded-lg text-muted-foreground opacity-0 transition-all hover:bg-[var(--launcher-card-hover-bg)] hover:text-muted-foreground group-hover:opacity-100"
               onClick={(event) => event.stopPropagation()}
               aria-label="Todo actions"
             >
               <MoreHorizontal className="size-4" />
-            </button>
+            </Button>
           }
         />
         <DropdownMenuContent align="end" className="w-44">

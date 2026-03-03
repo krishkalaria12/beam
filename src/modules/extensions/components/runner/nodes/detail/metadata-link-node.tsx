@@ -1,4 +1,5 @@
 import { asString } from "@/modules/extensions/components/runner/utils";
+import { Button } from "@/components/ui/button";
 import type { RunnerNodeComponentProps } from "@/modules/extensions/components/runner/nodes/types";
 
 export function MetadataLinkNode({ nodeId, state }: RunnerNodeComponentProps) {
@@ -15,15 +16,17 @@ export function MetadataLinkNode({ nodeId, state }: RunnerNodeComponentProps) {
     <div className="flex items-start justify-between gap-3 text-sm">
       <span className="text-muted-foreground">{title || "Link"}</span>
       {target ? (
-        <button
+        <Button
           type="button"
+          variant="link"
+          size="xs"
           className="truncate text-right text-primary underline-offset-4 hover:underline"
           onClick={() => {
             window.open(target, "_blank", "noopener,noreferrer");
           }}
         >
           {text}
-        </button>
+        </Button>
       ) : (
         <span className="text-right">{text || "-"}</span>
       )}

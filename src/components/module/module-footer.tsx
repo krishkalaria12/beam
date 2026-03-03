@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
-import { cn } from "@/lib/utils";
 import { Kbd } from "@/components/module/kbd";
+import { cn } from "@/lib/utils";
 
 export interface FooterShortcut {
   /** Key(s) to display, e.g. ["Ctrl", "N"] or ["↵"] */
@@ -20,36 +20,6 @@ interface ModuleFooterProps {
   className?: string;
 }
 
-/**
- * Standardised module footer with left status slot, keyboard shortcut hints,
- * and right action buttons.
- *
- * Uses `--footer-border`, `--kbd-bg`, and `text-muted-foreground` so it
- * responds to every theme the same way the launcher footer does.
- *
- * @example
- * // Before (snippets-view.tsx):
- * <footer className="snippets-footer-enter flex h-12 shrink-0 items-center justify-between border-t border-[var(--footer-border)] px-4">
- *   <div className="flex items-center gap-2 text-[12px] text-foreground/40">
- *     <CircleDot className="size-3.5" />
- *     <span>{filteredSnippets.length} visible</span>
- *   </div>
- *   <div className="flex items-center gap-2">
- *     <span><kbd ...>Ctrl+N</kbd> New</span>
- *     ...
- *   </div>
- * </footer>
- *
- * // After:
- * <ModuleFooter
- *   leftSlot={<span>{filteredSnippets.length} visible</span>}
- *   shortcuts={[
- *     { keys: ["Ctrl", "N"], label: "New" },
- *     { keys: ["Ctrl", "E"], label: "Edit" },
- *   ]}
- *   actions={<Button size="sm">New</Button>}
- * />
- */
 export function ModuleFooter({ leftSlot, shortcuts, actions, className }: ModuleFooterProps) {
   return (
     <footer

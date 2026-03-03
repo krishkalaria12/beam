@@ -19,9 +19,9 @@ export function ScriptCommandsOutput({
     return (
       <div className="scripts-output-empty flex h-full flex-col items-center justify-center gap-3 p-6">
         <div className="flex size-14 items-center justify-center rounded-2xl bg-[var(--launcher-card-hover-bg)]">
-          <Terminal className="size-6 text-foreground/20" />
+          <Terminal className="size-6 text-muted-foreground" />
         </div>
-        <p className="text-[13px] text-foreground/40">Select a script to see details and output</p>
+        <p className="text-[13px] text-muted-foreground">Select a script to see details and output</p>
       </div>
     );
   }
@@ -30,14 +30,14 @@ export function ScriptCommandsOutput({
     <div className="scripts-output-enter custom-scrollbar h-full overflow-y-auto p-4">
       {/* Script info card */}
       <div className="rounded-xl bg-[var(--launcher-card-hover-bg)] p-4 ring-1 ring-[var(--launcher-card-border)]">
-        <p className="text-[14px] font-medium text-foreground/90 tracking-[-0.01em]">
+        <p className="text-[14px] font-medium text-foreground tracking-[-0.01em]">
           {selectedScript.title}
         </p>
-        <p className="mt-1.5 truncate font-mono text-[11px] text-foreground/40">
+        <p className="mt-1.5 truncate font-mono text-[11px] text-muted-foreground">
           {selectedScript.scriptPath}
         </p>
         {selectedScript.argumentDefinitions.length > 0 && (
-          <p className="mt-2 text-[12px] text-amber-400/80">
+          <p className="mt-2 text-[12px] text-[var(--icon-orange-fg)]">
             Arguments: {selectedScript.argumentDefinitions.length}
             {selectedScript.requiredArgumentCount > 0
               ? ` (${selectedScript.requiredArgumentCount} required)`
@@ -56,9 +56,9 @@ export function ScriptCommandsOutput({
 
       {/* Error message */}
       {runErrorMessage && (
-        <div className="mt-3 flex items-center gap-2.5 rounded-xl bg-red-500/10 px-4 py-3 ring-1 ring-red-500/20">
-          <AlertTriangle className="size-4 text-red-400" />
-          <span className="text-[12px] text-red-300">{runErrorMessage}</span>
+        <div className="mt-3 flex items-center gap-2.5 rounded-xl bg-[var(--icon-red-bg)] px-4 py-3 ring-1 ring-[var(--icon-red-bg)]">
+          <AlertTriangle className="size-4 text-[var(--icon-red-fg)]" />
+          <span className="text-[12px] text-[var(--icon-red-fg)]">{runErrorMessage}</span>
         </div>
       )}
 
@@ -68,28 +68,28 @@ export function ScriptCommandsOutput({
           {/* Exit status */}
           <div className="flex items-center gap-2">
             {executionResult.exitCode === 0 ? (
-              <span className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500/15 px-2.5 py-1.5 text-[12px] font-medium text-emerald-400">
+              <span className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--icon-green-bg)] px-2.5 py-1.5 text-[12px] font-medium text-[var(--icon-green-fg)]">
                 <CheckCircle2 className="size-3.5" />
                 Exit {executionResult.exitCode}
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1.5 rounded-lg bg-red-500/15 px-2.5 py-1.5 text-[12px] font-medium text-red-400">
+              <span className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--icon-red-bg)] px-2.5 py-1.5 text-[12px] font-medium text-[var(--icon-red-fg)]">
                 <AlertTriangle className="size-3.5" />
                 Exit {executionResult.exitCode}
               </span>
             )}
-            <span className="text-[12px] text-foreground/50">{executionResult.message}</span>
+            <span className="text-[12px] text-muted-foreground">{executionResult.message}</span>
           </div>
 
           {/* Stdout section */}
           <section>
             <div className="mb-2 flex items-center gap-3">
-              <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/45">
+              <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
                 Stdout
               </h3>
               <div className="h-px flex-1 bg-[var(--launcher-card-hover-bg)]" />
             </div>
-            <pre className="max-h-44 overflow-auto rounded-xl bg-[var(--launcher-card-hover-bg)] p-3 font-mono text-[11px] leading-relaxed text-foreground/80 ring-1 ring-[var(--launcher-card-border)]">
+            <pre className="max-h-44 overflow-auto rounded-xl bg-[var(--launcher-card-hover-bg)] p-3 font-mono text-[11px] leading-relaxed text-muted-foreground ring-1 ring-[var(--launcher-card-border)]">
               {executionResult.stdout || "(empty)"}
             </pre>
           </section>
@@ -97,20 +97,20 @@ export function ScriptCommandsOutput({
           {/* Stderr section */}
           <section>
             <div className="mb-2 flex items-center gap-3">
-              <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/45">
+              <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
                 Stderr
               </h3>
               <div className="h-px flex-1 bg-[var(--launcher-card-hover-bg)]" />
             </div>
-            <pre className="max-h-44 overflow-auto rounded-xl bg-[var(--launcher-card-hover-bg)] p-3 font-mono text-[11px] leading-relaxed text-foreground/80 ring-1 ring-[var(--launcher-card-border)]">
+            <pre className="max-h-44 overflow-auto rounded-xl bg-[var(--launcher-card-hover-bg)] p-3 font-mono text-[11px] leading-relaxed text-muted-foreground ring-1 ring-[var(--launcher-card-border)]">
               {executionResult.stderr || "(empty)"}
             </pre>
           </section>
         </div>
       ) : (
         <div className="mt-4 flex h-32 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-[var(--launcher-card-border)] bg-[var(--launcher-card-hover-bg)]">
-          <Terminal className="size-5 text-foreground/20" />
-          <span className="text-[12px] text-foreground/40">Run the script to see output</span>
+          <Terminal className="size-5 text-muted-foreground" />
+          <span className="text-[12px] text-muted-foreground">Run the script to see output</span>
         </div>
       )}
     </div>

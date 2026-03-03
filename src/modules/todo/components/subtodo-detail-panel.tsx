@@ -24,12 +24,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { SearchInput } from "@/components/module";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { SubTodoSortableRow } from "@/modules/todo/components/subtodo-sortable-row";
 import { countCompleted, normalizeTitle } from "@/modules/todo/components/todo-view-utils";
 import type { SubTodo, TodoWithSubTodos } from "@/modules/todo/types";
 
-interface SubTodoDetailPanelProps {
+interface SubTodoDetailPanellProps {
   isBusy: boolean;
   sensors: SensorDescriptor<SensorOptions>[];
   selectedTodo: TodoWithSubTodos | null;
@@ -54,7 +56,7 @@ interface SubTodoDetailPanelProps {
   onCancelSubTodoEdit: () => void;
 }
 
-export function SubTodoDetailPanel({
+export function SubTodoDetailPanell({
   isBusy,
   sensors,
   selectedTodo,
@@ -77,15 +79,15 @@ export function SubTodoDetailPanel({
   onSubTodoEditingTitleChange,
   onSubmitSubTodoEdit,
   onCancelSubTodoEdit,
-}: SubTodoDetailPanelProps) {
+}: SubTodoDetailPanellProps) {
   if (!selectedTodo) {
     return (
       <section className="todo-detail-enter flex min-w-0 flex-1 flex-col items-center justify-center">
-        <div className="size-14 rounded-2xl bg-gradient-to-br from-rose-500/15 to-pink-500/15 p-3.5 mb-4">
-          <ListChecks className="size-full text-rose-400/60" />
+        <div className="size-14 rounded-2xl bg-[var(--launcher-card-bg)] p-3.5 mb-4">
+          <ListChecks className="size-full text-[var(--icon-red-fg)]" />
         </div>
-        <p className="text-[13px] text-foreground/50 mb-1">Select a todo</p>
-        <p className="text-[11px] text-foreground/30">to manage its subtasks</p>
+        <p className="text-[13px] text-muted-foreground mb-1">Select a todo</p>
+        <p className="text-[11px] text-muted-foreground">to manage its subtasks</p>
       </section>
     );
   }
@@ -104,8 +106,10 @@ export function SubTodoDetailPanel({
           <div className="min-w-0 flex-1">
             {/* Todo title */}
             <div className="flex items-center gap-2 mb-2">
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon-xs"
                 onClick={() => {
                   void onToggleTodo(selectedTodo);
                 }}
@@ -120,11 +124,11 @@ export function SubTodoDetailPanel({
                 {selectedTodo.completed && (
                   <Check className="size-3 text-foreground" strokeWidth={3} />
                 )}
-              </button>
+              </Button>
               <p
                 className={cn(
                   "flex-1 truncate text-[14px] font-semibold tracking-[-0.01em]",
-                  selectedTodo.completed ? "text-foreground/45 line-through" : "text-foreground/90",
+                  selectedTodo.completed ? "text-muted-foreground line-through" : "text-foreground",
                 )}
                 onDoubleClick={() => onStartTodoEdit(selectedTodo)}
                 title="Double-click to rename"
@@ -141,7 +145,7 @@ export function SubTodoDetailPanel({
                   style={{ width: `${progress}%` }}
                 />
               </div>
-              <span className="text-[11px] text-foreground/40">
+              <span className="text-[11px] text-muted-foreground">
                 {completedSubTodoCount}/{selectedTodo.sub_todos.length} subtasks
               </span>
             </div>
@@ -151,18 +155,20 @@ export function SubTodoDetailPanel({
           <DropdownMenu>
             <DropdownMenuTrigger
               render={
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="sm"
                   className={cn(
                     "flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12px] font-medium transition-all",
-                    "bg-[var(--launcher-card-hover-bg)] text-foreground/60 ring-1 ring-[var(--launcher-card-border)]",
-                    "hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground/80",
+                    "bg-[var(--launcher-card-hover-bg)] text-muted-foreground ring-1 ring-[var(--launcher-card-border)]",
+                    "hover:bg-[var(--launcher-card-hover-bg)] hover:text-muted-foreground",
                   )}
                 >
                   <MoreHorizontal className="size-3.5" />
                   Actions
-                  <ChevronDown className="size-3 text-foreground/40" />
-                </button>
+                  <ChevronDown className="size-3 text-muted-foreground" />
+                </Button>
               }
             />
             <DropdownMenuContent align="end" className="w-52">
@@ -212,55 +218,51 @@ export function SubTodoDetailPanel({
 
       {/* Add subtask input */}
       <div className="border-b border-[var(--launcher-card-border)] p-3">
-        <div className="flex items-center gap-2">
-          <div className="relative flex-1">
-            <input
-              value={newSubTodoTitle}
-              onChange={(event) => onNewSubTodoTitleChange(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  event.preventDefault();
-                  void onCreateSubTodo();
-                }
-              }}
-              placeholder="Add a subtask..."
-              disabled={isBusy}
-              className={cn(
-                "h-9 w-full rounded-lg bg-[var(--launcher-card-hover-bg)] px-3 text-[12px] text-foreground/80 outline-none transition-all",
-                "ring-1 ring-[var(--launcher-card-border)] placeholder:text-foreground/30",
-                "focus:bg-[var(--launcher-card-hover-bg)] focus:ring-[var(--ring)]",
-                "disabled:opacity-50",
-              )}
-            />
-          </div>
-          <button
-            type="button"
-            disabled={isBusy || !normalizeTitle(newSubTodoTitle)}
-            onClick={() => {
+        <SearchInput
+          value={newSubTodoTitle}
+          onChange={onNewSubTodoTitleChange}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
               void onCreateSubTodo();
-            }}
-            className={cn(
-              "flex size-9 items-center justify-center rounded-lg transition-all",
-              "bg-[var(--ring)]/15 text-[var(--ring)]",
-              "hover:bg-[var(--ring)]/25",
-              "disabled:opacity-40 disabled:cursor-not-allowed",
-            )}
-            aria-label="Add subtask"
-          >
-            <Plus className="size-4" />
-          </button>
-        </div>
+            }
+          }}
+          placeholder="Add a subtask..."
+          disabled={isBusy}
+          containerClassName="h-9 rounded-lg"
+          className="text-[12px] placeholder:text-muted-foreground/70"
+          rightSlot={
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-xs"
+              disabled={isBusy || !normalizeTitle(newSubTodoTitle)}
+              onClick={() => {
+                void onCreateSubTodo();
+              }}
+              className={cn(
+                "flex size-7 items-center justify-center rounded-md transition-all",
+                "bg-[var(--ring)]/15 text-[var(--ring)]",
+                "hover:bg-[var(--ring)]/25",
+                "disabled:cursor-not-allowed disabled:opacity-40",
+              )}
+              aria-label="Add subtask"
+            >
+              <Plus className="size-3.5" />
+            </Button>
+          }
+        />
       </div>
 
       {/* Subtasks list */}
       <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto p-2">
         {orderedSubTodos.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 text-center">
-            <div className="size-10 rounded-xl bg-gradient-to-br from-rose-500/15 to-pink-500/15 p-2.5 mb-3">
-              <ListChecks className="size-full text-rose-400/60" />
+            <div className="size-10 rounded-xl bg-[var(--launcher-card-bg)] p-2.5 mb-3">
+              <ListChecks className="size-full text-[var(--icon-red-fg)]" />
             </div>
-            <p className="text-[12px] text-foreground/45 mb-0.5">No subtasks yet</p>
-            <p className="text-[11px] text-foreground/30">Add your first subtask above</p>
+            <p className="text-[12px] text-muted-foreground mb-0.5">No subtasks yet</p>
+            <p className="text-[11px] text-muted-foreground">Add your first subtask above</p>
           </div>
         ) : (
           <DndContext

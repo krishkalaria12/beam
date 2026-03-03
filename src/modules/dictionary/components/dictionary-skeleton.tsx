@@ -6,11 +6,11 @@ export function DictionarySkeleton() {
       {/* Header */}
       <header className="flex h-14 shrink-0 items-center gap-3 border-b border-[var(--launcher-card-border)] px-4">
         <div className="flex size-9 items-center justify-center rounded-lg bg-[var(--launcher-card-hover-bg)]">
-          <ArrowLeft className="size-4 text-foreground/20" />
+          <ArrowLeft className="size-4 text-muted-foreground" />
         </div>
 
         <div className="relative flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-foreground/20" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <div className="h-10 w-full animate-pulse rounded-xl bg-[var(--launcher-card-hover-bg)]" />
         </div>
       </header>

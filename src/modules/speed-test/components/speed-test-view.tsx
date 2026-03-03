@@ -385,27 +385,27 @@ export function SpeedTestView({ onBack, autoStart = true }: SpeedTestViewProps) 
             style={{ animationDelay: "60ms" }}
           >
             <MetricCard
-              icon={<Clock className="size-4 text-amber-400" />}
-              gradient="bg-gradient-to-br from-amber-500/20 to-orange-500/20"
-              ringColor="ring-amber-500/15"
+              icon={<Clock className="size-4 text-[var(--icon-orange-fg)]" />}
+              gradient="bg-[var(--launcher-card-bg)]"
+              ringColor="ring-[var(--icon-orange-bg)]"
               label="Latency"
               unit="ms"
               value={metrics.unloadedLatencyMs}
               index={0}
             />
             <MetricCard
-              icon={<Zap className="size-4 text-emerald-400" />}
-              gradient="bg-gradient-to-br from-emerald-500/20 to-teal-500/20"
-              ringColor="ring-emerald-500/15"
+              icon={<Zap className="size-4 text-[var(--icon-green-fg)]" />}
+              gradient="bg-[var(--launcher-card-bg)]"
+              ringColor="ring-[var(--icon-green-bg)]"
               label="Jitter"
               unit="ms"
               value={metrics.unloadedJitterMs}
               index={1}
             />
             <MetricCard
-              icon={<Signal className="size-4 text-rose-400" />}
-              gradient="bg-gradient-to-br from-rose-500/20 to-red-500/20"
-              ringColor="ring-rose-500/15"
+              icon={<Signal className="size-4 text-[var(--icon-red-fg)]" />}
+              gradient="bg-[var(--launcher-card-bg)]"
+              ringColor="ring-[var(--icon-red-bg)]"
               label="Packet Loss"
               unit="%"
               value={metrics.packetLoss}

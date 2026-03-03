@@ -18,20 +18,20 @@ const getEntryIconConfig = (type: ClipboardContentType) => {
     case ClipboardContentType.Image:
       return {
         icon: <ImageIcon className="size-4" />,
-        gradient: "from-amber-500/25 to-orange-500/25",
-        accentColor: "bg-amber-400",
+        gradient: "bg-[var(--icon-orange-bg)]",
+        accentColor: "bg-[var(--icon-orange-bg)]",
       };
     case ClipboardContentType.Link:
       return {
         icon: <Link className="size-4" />,
-        gradient: "from-emerald-500/25 to-teal-500/25",
-        accentColor: "bg-emerald-400",
+        gradient: "bg-[var(--icon-green-bg)]",
+        accentColor: "bg-[var(--icon-green-bg)]",
       };
     default:
       return {
         icon: <FileText className="size-4" />,
-        gradient: "from-blue-500/25 to-cyan-500/25",
-        accentColor: "bg-blue-400",
+        gradient: "bg-[var(--icon-primary-bg)]",
+        accentColor: "bg-[var(--icon-primary-bg)]",
       };
   }
 };
@@ -69,9 +69,9 @@ const ClipboardListItem = memo(function ClipboardListItem({
       {/* Icon with gradient background */}
       <div
         className={cn(
-          "shrink-0 flex items-center justify-center size-9 rounded-xl bg-gradient-to-br transition-all duration-200",
+          "shrink-0 flex items-center justify-center size-9 rounded-xl bg-[var(--launcher-card-bg)] transition-all duration-200",
           iconConfig.gradient,
-          isSelected ? "text-foreground/90" : "text-foreground/60 group-hover:text-foreground/80",
+          isSelected ? "text-foreground" : "text-muted-foreground group-hover:text-muted-foreground",
         )}
       >
         {iconConfig.icon}
@@ -82,7 +82,7 @@ const ClipboardListItem = memo(function ClipboardListItem({
         <p
           className={cn(
             "truncate text-[13px] font-medium leading-tight tracking-[-0.01em] transition-colors",
-            isSelected ? "text-foreground/95" : "text-foreground/70 group-hover:text-foreground/85",
+            isSelected ? "text-foreground" : "text-muted-foreground group-hover:text-foreground",
           )}
         >
           {entry.content_type === ClipboardContentType.Image
@@ -90,7 +90,7 @@ const ClipboardListItem = memo(function ClipboardListItem({
             : entry.value.replace(/\s+/g, " ").trim()}
         </p>
         {entry.content_type !== ClipboardContentType.Image && (
-          <p className="mt-0.5 text-[11px] text-foreground/30 truncate">
+          <p className="mt-0.5 text-[11px] text-muted-foreground truncate">
             {entry.character_count} characters
           </p>
         )}
@@ -145,12 +145,12 @@ export function ClipboardList({ entries, selectedIndex, onSelect, isLoading }: C
           </div>
         ) : entries.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center gap-4 p-8">
-            <div className="flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] ring-1 ring-[var(--launcher-card-border)]">
-              <Clipboard className="size-6 text-foreground/20" />
+            <div className="flex size-14 items-center justify-center rounded-2xl bg-[var(--launcher-card-bg)] ring-1 ring-[var(--launcher-card-border)]">
+              <Clipboard className="size-6 text-muted-foreground" />
             </div>
             <div className="text-center">
-              <p className="text-[13px] font-medium text-foreground/50">No entries found</p>
-              <p className="mt-1 text-[11px] text-foreground/25">Copy something to see it here</p>
+              <p className="text-[13px] font-medium text-muted-foreground">No entries found</p>
+              <p className="mt-1 text-[11px] text-muted-foreground">Copy something to see it here</p>
             </div>
           </div>
         ) : (
@@ -162,7 +162,7 @@ export function ClipboardList({ entries, selectedIndex, onSelect, isLoading }: C
                   className="clipboard-section-header flex items-center gap-3 px-3 py-1"
                   style={{ animationDelay: `${groupIndex * 50}ms` }}
                 >
-                  <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/40">
+                  <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
                     {group.title}
                   </h3>
                   <div className="h-px flex-1 bg-[var(--launcher-card-hover-bg)]" />

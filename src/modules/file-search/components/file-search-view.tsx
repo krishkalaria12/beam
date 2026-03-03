@@ -3,6 +3,8 @@ import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import debounce from "@/lib/debounce";
 
 import { CommandFooterBar } from "@/components/command/command-footer-bar";
+import { DetailPanel, SearchInput } from "@/components/module";
+import { Button } from "@/components/ui/button";
 import { useFileSearch } from "../hooks/use-file-search";
 import { useOpenFile } from "../hooks/use-open-file";
 import { FileList } from "./file-list";
@@ -70,8 +72,7 @@ export function FileSearchView({ initialQuery, onBack }: FileSearchViewProps) {
     [results.length, selectedFile, openFile, onBack],
   );
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
+  const handleChange = (value: string) => {
     setQuery(value);
     updateDebouncedQuery(value);
   };
@@ -86,7 +87,10 @@ export function FileSearchView({ initialQuery, onBack }: FileSearchViewProps) {
       {/* Header - Refined minimal design */}
       <header className="file-search-header flex items-center gap-4 px-4 h-14 border-b border-[var(--ui-divider)] flex-shrink-0">
         {/* Back button - subtle but clear */}
-        <button
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
           onClick={onBack}
           className="group flex size-8 items-center justify-center rounded-lg 
             text-muted-foreground/70 hover:text-foreground
@@ -95,12 +99,12 @@ export function FileSearchView({ initialQuery, onBack }: FileSearchViewProps) {
           aria-label="Go back"
         >
           <ArrowLeft className="size-[18px] transition-transform group-hover:-translate-x-0.5" />
-        </button>
+        </Button>
 
         {/* Search input - clean and focused */}
         <div className="relative flex-1 min-w-0">
           <Search className="absolute left-0 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/40 pointer-events-none" />
-          <input
+          <SearchInput
             ref={inputRef}
             value={query}
             onChange={handleChange}
@@ -141,9 +145,9 @@ export function FileSearchView({ initialQuery, onBack }: FileSearchViewProps) {
         </div>
 
         {/* Right: Details Panel */}
-        <div className="file-search-detail-pane flex-1 overflow-hidden bg-[var(--solid-bg-recessed,transparent)]">
+        <DetailPanel className="file-search-detail-pane">
           <FileDetails selectedFile={selectedFile} />
-        </div>
+        </DetailPanel>
       </div>
 
       {/* Footer - Clean action bar */}

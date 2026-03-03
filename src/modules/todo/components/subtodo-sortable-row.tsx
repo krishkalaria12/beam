@@ -9,6 +9,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import type { SubTodo } from "@/modules/todo/types";
 
@@ -61,19 +63,23 @@ export function SubTodoSortableRow({
       <div className="absolute left-0 top-1/2 h-4 w-[2px] -translate-y-1/2 rounded-full bg-[var(--launcher-card-hover-bg)] opacity-0 transition-all duration-200 group-hover:opacity-100" />
 
       {/* Drag handle */}
-      <button
+      <Button
         type="button"
-        className="flex size-5 shrink-0 items-center justify-center rounded text-foreground/25 transition-colors hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground/45"
+        variant="ghost"
+        size="icon-xs"
+        className="flex size-5 shrink-0 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-[var(--launcher-card-hover-bg)] hover:text-muted-foreground"
         aria-label="Reorder subtask"
         {...attributes}
         {...listeners}
       >
         <GripVertical className="size-3" />
-      </button>
+      </Button>
 
       {/* Custom checkbox - smaller for subtasks */}
-      <button
+      <Button
         type="button"
+        variant="ghost"
+        size="icon-xs"
         onClick={() => onToggle(subTodo)}
         className={cn(
           "flex size-4 shrink-0 items-center justify-center rounded transition-all duration-200",
@@ -84,12 +90,12 @@ export function SubTodoSortableRow({
         aria-label={subTodo.completed ? "Mark incomplete" : "Mark complete"}
       >
         {subTodo.completed && <Check className="size-2.5 text-foreground" strokeWidth={3} />}
-      </button>
+      </Button>
 
       {/* Content */}
       <div className="min-w-0 flex-1">
         {isEditing ? (
-          <input
+          <Input
             autoFocus
             value={editingTitle}
             disabled={isBusy}
@@ -104,13 +110,13 @@ export function SubTodoSortableRow({
                 onCancelEdit();
               }
             }}
-            className="w-full bg-transparent text-[12px] text-foreground/80 outline-none placeholder:text-foreground/30"
+            className="w-full bg-transparent text-[12px] text-muted-foreground outline-none placeholder:text-muted-foreground"
           />
         ) : (
           <p
             className={cn(
               "truncate text-[12px] transition-colors",
-              subTodo.completed ? "text-foreground/35 line-through" : "text-foreground/70",
+              subTodo.completed ? "text-muted-foreground line-through" : "text-muted-foreground",
             )}
             onDoubleClick={() => onStartEdit(subTodo)}
             title="Double-click to rename"
@@ -124,13 +130,15 @@ export function SubTodoSortableRow({
       <DropdownMenu>
         <DropdownMenuTrigger
           render={
-            <button
+            <Button
               type="button"
-              className="flex size-6 items-center justify-center rounded-md text-foreground/25 opacity-0 transition-all hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground/45 group-hover:opacity-100"
+              variant="ghost"
+              size="icon-xs"
+              className="flex size-6 items-center justify-center rounded-md text-muted-foreground opacity-0 transition-all hover:bg-[var(--launcher-card-hover-bg)] hover:text-muted-foreground group-hover:opacity-100"
               aria-label="Subtask actions"
             >
               <MoreHorizontal className="size-3.5" />
-            </button>
+            </Button>
           }
         />
         <DropdownMenuContent align="end" className="w-40">

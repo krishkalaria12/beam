@@ -323,7 +323,7 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
                 variant="ghost"
                 size="icon"
                 onClick={handleClearSearch}
-                className="size-5 rounded-full p-0 text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
+                className="size-5 rounded-full p-0 text-muted-foreground hover:bg-[var(--launcher-card-bg)] hover:text-foreground"
               >
                 <X className="size-3" />
               </Button>
@@ -334,7 +334,7 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
 
       <div className="relative custom-scrollbar list-area min-h-0 flex-1 overflow-y-auto p-4">
         {extensionsUi.actionError ? (
-          <div className="mb-4 rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-xs text-red-200">
+          <div className="mb-4 rounded-lg border border-[var(--icon-red-bg)] bg-[var(--icon-red-bg)] p-3 text-xs text-[var(--icon-red-fg)]">
             <span className="inline-flex items-center gap-2">
               <AlertTriangle className="size-3.5" />
               {extensionsUi.actionError}

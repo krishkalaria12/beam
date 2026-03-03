@@ -1,6 +1,7 @@
 import { Focus, X } from "lucide-react";
 
 import { UnifiedIcon } from "@/components/icons/unified-icon";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { WindowEntry } from "@/modules/window-switcher/types";
 
@@ -25,10 +26,12 @@ export function WindowSwitcherList({
     return (
       <div className="windows-content-enter flex flex-1 flex-col items-center justify-center gap-3 p-8">
         <div className="flex size-12 items-center justify-center rounded-xl bg-[var(--launcher-card-hover-bg)]">
-          <Focus className="size-5 text-foreground/30" />
+          <Focus className="size-5 text-muted-foreground" />
         </div>
-        <p className="text-[13px] font-medium tracking-[-0.01em] text-foreground/50">No windows found</p>
-        <p className="text-[12px] tracking-[-0.01em] text-foreground/35">
+        <p className="text-[13px] font-medium tracking-[-0.01em] text-muted-foreground">
+          No windows found
+        </p>
+        <p className="text-[12px] tracking-[-0.01em] text-muted-foreground">
           No windows match your current search.
         </p>
       </div>
@@ -41,11 +44,12 @@ export function WindowSwitcherList({
         const isSelected = selectedWindowId === windowEntry.id;
 
         return (
-          <button
+          <Button
             key={windowEntry.id}
             type="button"
+            variant="ghost"
             className={cn(
-              "windows-list-item group relative rounded-xl px-3 py-2.5 text-left transition-all",
+              "windows-list-item group relative h-auto w-full items-start justify-start rounded-xl px-3 py-2.5 text-left transition-all",
               isSelected
                 ? "bg-[var(--launcher-card-hover-bg)] ring-1 ring-[var(--launcher-card-border)]"
                 : "bg-transparent hover:bg-[var(--launcher-card-hover-bg)]",
@@ -67,33 +71,33 @@ export function WindowSwitcherList({
               )}
             />
 
-            <div className="flex items-center gap-3">
+            <div className="flex w-full items-center gap-3">
               {/* App Icon */}
               <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[var(--launcher-card-hover-bg)]">
                 <UnifiedIcon
                   icon={windowEntry.appIcon || "appwindowgrid2x2"}
-                  className="size-5 text-foreground/60"
+                  className="size-5 text-muted-foreground"
                 />
               </div>
 
               {/* Title & App Name */}
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="truncate text-[13px] font-medium tracking-[-0.01em] text-foreground/85">
+                  <span className="truncate text-[13px] font-medium tracking-[-0.01em] text-foreground">
                     {windowEntry.title || windowEntry.appName || "Untitled window"}
                   </span>
                   {windowEntry.isFocused && (
-                    <span className="shrink-0 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium tracking-[-0.01em] text-emerald-400">
+                    <span className="shrink-0 rounded-full bg-[var(--icon-green-bg)] px-2 py-0.5 text-[10px] font-medium tracking-[-0.01em] text-[var(--icon-green-fg)]">
                       focused
                     </span>
                   )}
                 </div>
-                <div className="mt-0.5 flex items-center gap-2 text-[11px] tracking-[-0.01em] text-foreground/40">
+                <div className="mt-0.5 flex items-center gap-2 text-[11px] tracking-[-0.01em] text-muted-foreground">
                   <span className="truncate">{windowEntry.appName || "Unknown app"}</span>
                   {windowEntry.workspace && (
                     <>
-                      <span className="text-foreground/20">·</span>
-                      <span className="shrink-0 font-mono text-[10px] uppercase tracking-wide text-foreground/30">
+                      <span className="text-muted-foreground">·</span>
+                      <span className="shrink-0 font-mono text-[10px] uppercase tracking-wide text-muted-foreground">
                         {windowEntry.workspace}
                       </span>
                     </>
@@ -104,12 +108,14 @@ export function WindowSwitcherList({
               {/* Action Buttons */}
               <div
                 className={cn(
-                  "flex items-center gap-1 transition-opacity duration-150",
+                  "flex shrink-0 items-center gap-1 transition-opacity duration-150",
                   isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100",
                 )}
               >
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="sm"
                   className="flex h-7 items-center gap-1.5 rounded-lg bg-[var(--ring)]/15 px-2.5 text-[11px] font-medium tracking-[-0.01em] text-[var(--ring)] transition-colors hover:bg-[var(--ring)]/25"
                   onClick={(event) => {
                     event.preventDefault();
@@ -120,11 +126,13 @@ export function WindowSwitcherList({
                 >
                   <Focus className="size-3.5" />
                   Focus
-                </button>
+                </Button>
 
-                <button
+                <Button
                   type="button"
-                  className="flex size-7 items-center justify-center rounded-lg bg-[var(--launcher-card-hover-bg)] text-foreground/40 transition-colors hover:bg-red-500/15 hover:text-red-400"
+                  variant="ghost"
+                  size="icon-sm"
+                  className="flex size-7 items-center justify-center rounded-lg bg-[var(--launcher-card-hover-bg)] text-muted-foreground transition-colors hover:bg-[var(--icon-red-bg)] hover:text-[var(--icon-red-fg)]"
                   onClick={(event) => {
                     event.preventDefault();
                     event.stopPropagation();
@@ -134,10 +142,10 @@ export function WindowSwitcherList({
                   aria-label="Close window"
                 >
                   <X className="size-3.5" />
-                </button>
+                </Button>
               </div>
             </div>
-          </button>
+          </Button>
         );
       })}
     </div>

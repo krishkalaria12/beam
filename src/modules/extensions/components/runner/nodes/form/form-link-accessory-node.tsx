@@ -1,4 +1,5 @@
 import { asString } from "@/modules/extensions/components/runner/utils";
+import { Button } from "@/components/ui/button";
 import type { RunnerNodeComponentProps } from "@/modules/extensions/components/runner/nodes/types";
 
 export function FormLinkAccessoryNode({ nodeId, state }: RunnerNodeComponentProps) {
@@ -15,14 +16,16 @@ export function FormLinkAccessoryNode({ nodeId, state }: RunnerNodeComponentProp
   }
 
   return (
-    <button
+    <Button
       type="button"
+      variant="link"
+      size="xs"
       className="w-fit text-xs text-primary underline-offset-4 hover:underline"
       onClick={() => {
         window.open(target, "_blank", "noopener,noreferrer");
       }}
     >
       {text}
-    </button>
+    </Button>
   );
 }

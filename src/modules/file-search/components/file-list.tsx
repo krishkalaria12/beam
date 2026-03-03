@@ -1,6 +1,7 @@
 import { File, FileText, FileCode, FileJson, Image, Search, Loader2, Sparkles } from "lucide-react";
 import { useEffect, useRef, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { Kbd } from "@/components/module";
 import type { SearchResult } from "../types";
 
 interface FileListProps {
@@ -31,194 +32,194 @@ function getFileTypeInfo(name: string): FileTypeInfo {
     ts: {
       category: "code",
       icon: <FileCode className="size-4" />,
-      color: "text-blue-400",
-      bgColor: "bg-blue-500/15",
+      color: "text-[var(--icon-primary-fg)]",
+      bgColor: "bg-[var(--icon-primary-bg)]",
       label: "TS",
     },
     tsx: {
       category: "code",
       icon: <FileCode className="size-4" />,
-      color: "text-blue-400",
-      bgColor: "bg-blue-500/15",
+      color: "text-[var(--icon-primary-fg)]",
+      bgColor: "bg-[var(--icon-primary-bg)]",
       label: "TSX",
     },
     js: {
       category: "code",
       icon: <FileCode className="size-4" />,
-      color: "text-yellow-400",
-      bgColor: "bg-yellow-500/15",
+      color: "text-[var(--icon-orange-fg)]",
+      bgColor: "bg-[var(--icon-orange-bg)]",
       label: "JS",
     },
     jsx: {
       category: "code",
       icon: <FileCode className="size-4" />,
-      color: "text-yellow-400",
-      bgColor: "bg-yellow-500/15",
+      color: "text-[var(--icon-orange-fg)]",
+      bgColor: "bg-[var(--icon-orange-bg)]",
       label: "JSX",
     },
     // Other languages
     py: {
       category: "code",
       icon: <FileCode className="size-4" />,
-      color: "text-green-400",
-      bgColor: "bg-green-500/15",
+      color: "text-[var(--icon-green-fg)]",
+      bgColor: "bg-[var(--icon-green-bg)]",
       label: "PY",
     },
     rs: {
       category: "code",
       icon: <FileCode className="size-4" />,
-      color: "text-orange-400",
-      bgColor: "bg-orange-500/15",
+      color: "text-[var(--icon-orange-fg)]",
+      bgColor: "bg-[var(--icon-orange-bg)]",
       label: "RS",
     },
     go: {
       category: "code",
       icon: <FileCode className="size-4" />,
-      color: "text-cyan-400",
-      bgColor: "bg-cyan-500/15",
+      color: "text-[var(--icon-cyan-fg)]",
+      bgColor: "bg-[var(--icon-cyan-bg)]",
       label: "GO",
     },
     java: {
       category: "code",
       icon: <FileCode className="size-4" />,
-      color: "text-red-400",
-      bgColor: "bg-red-500/15",
+      color: "text-[var(--icon-red-fg)]",
+      bgColor: "bg-[var(--icon-red-bg)]",
       label: "JAVA",
     },
     cpp: {
       category: "code",
       icon: <FileCode className="size-4" />,
-      color: "text-purple-400",
-      bgColor: "bg-purple-500/15",
+      color: "text-[var(--icon-purple-fg)]",
+      bgColor: "bg-[var(--icon-purple-bg)]",
       label: "C++",
     },
     c: {
       category: "code",
       icon: <FileCode className="size-4" />,
-      color: "text-slate-400",
-      bgColor: "bg-slate-500/15",
+      color: "text-muted-foreground",
+      bgColor: "bg-[var(--icon-neutral-bg)]",
       label: "C",
     },
     css: {
       category: "code",
       icon: <FileCode className="size-4" />,
-      color: "text-pink-400",
-      bgColor: "bg-pink-500/15",
+      color: "text-[var(--icon-purple-fg)]",
+      bgColor: "bg-[var(--icon-purple-bg)]",
       label: "CSS",
     },
     html: {
       category: "code",
       icon: <FileCode className="size-4" />,
-      color: "text-orange-400",
-      bgColor: "bg-orange-500/15",
+      color: "text-[var(--icon-orange-fg)]",
+      bgColor: "bg-[var(--icon-orange-bg)]",
       label: "HTML",
     },
     // Config
     json: {
       category: "config",
       icon: <FileJson className="size-4" />,
-      color: "text-yellow-300",
-      bgColor: "bg-yellow-500/15",
+      color: "text-[var(--icon-orange-fg)]",
+      bgColor: "bg-[var(--icon-orange-bg)]",
       label: "JSON",
     },
     yaml: {
       category: "config",
       icon: <FileText className="size-4" />,
-      color: "text-pink-400",
-      bgColor: "bg-pink-500/15",
+      color: "text-[var(--icon-purple-fg)]",
+      bgColor: "bg-[var(--icon-purple-bg)]",
       label: "YAML",
     },
     yml: {
       category: "config",
       icon: <FileText className="size-4" />,
-      color: "text-pink-400",
-      bgColor: "bg-pink-500/15",
+      color: "text-[var(--icon-purple-fg)]",
+      bgColor: "bg-[var(--icon-purple-bg)]",
       label: "YML",
     },
     toml: {
       category: "config",
       icon: <FileText className="size-4" />,
-      color: "text-orange-300",
-      bgColor: "bg-orange-500/15",
+      color: "text-[var(--icon-orange-fg)]",
+      bgColor: "bg-[var(--icon-orange-bg)]",
       label: "TOML",
     },
     xml: {
       category: "config",
       icon: <FileText className="size-4" />,
-      color: "text-green-400",
-      bgColor: "bg-green-500/15",
+      color: "text-[var(--icon-green-fg)]",
+      bgColor: "bg-[var(--icon-green-bg)]",
       label: "XML",
     },
     env: {
       category: "config",
       icon: <FileText className="size-4" />,
-      color: "text-emerald-400",
-      bgColor: "bg-emerald-500/15",
+      color: "text-[var(--icon-green-fg)]",
+      bgColor: "bg-[var(--icon-green-bg)]",
       label: "ENV",
     },
     // Docs
     md: {
       category: "doc",
       icon: <FileText className="size-4" />,
-      color: "text-slate-300",
-      bgColor: "bg-slate-500/15",
+      color: "text-muted-foreground",
+      bgColor: "bg-[var(--icon-neutral-bg)]",
       label: "MD",
     },
     txt: {
       category: "doc",
       icon: <FileText className="size-4" />,
-      color: "text-slate-400",
-      bgColor: "bg-slate-500/15",
+      color: "text-muted-foreground",
+      bgColor: "bg-[var(--icon-neutral-bg)]",
       label: "TXT",
     },
     pdf: {
       category: "doc",
       icon: <FileText className="size-4" />,
-      color: "text-red-400",
-      bgColor: "bg-red-500/15",
+      color: "text-[var(--icon-red-fg)]",
+      bgColor: "bg-[var(--icon-red-bg)]",
       label: "PDF",
     },
     // Images
     png: {
       category: "image",
       icon: <Image className="size-4" />,
-      color: "text-purple-400",
-      bgColor: "bg-purple-500/15",
+      color: "text-[var(--icon-purple-fg)]",
+      bgColor: "bg-[var(--icon-purple-bg)]",
       label: "PNG",
     },
     jpg: {
       category: "image",
       icon: <Image className="size-4" />,
-      color: "text-purple-400",
-      bgColor: "bg-purple-500/15",
+      color: "text-[var(--icon-purple-fg)]",
+      bgColor: "bg-[var(--icon-purple-bg)]",
       label: "JPG",
     },
     jpeg: {
       category: "image",
       icon: <Image className="size-4" />,
-      color: "text-purple-400",
-      bgColor: "bg-purple-500/15",
+      color: "text-[var(--icon-purple-fg)]",
+      bgColor: "bg-[var(--icon-purple-bg)]",
       label: "JPEG",
     },
     svg: {
       category: "image",
       icon: <Image className="size-4" />,
-      color: "text-orange-400",
-      bgColor: "bg-orange-500/15",
+      color: "text-[var(--icon-orange-fg)]",
+      bgColor: "bg-[var(--icon-orange-bg)]",
       label: "SVG",
     },
     gif: {
       category: "image",
       icon: <Image className="size-4" />,
-      color: "text-pink-400",
-      bgColor: "bg-pink-500/15",
+      color: "text-[var(--icon-purple-fg)]",
+      bgColor: "bg-[var(--icon-purple-bg)]",
       label: "GIF",
     },
     webp: {
       category: "image",
       icon: <Image className="size-4" />,
-      color: "text-blue-400",
-      bgColor: "bg-blue-500/15",
+      color: "text-[var(--icon-primary-fg)]",
+      bgColor: "bg-[var(--icon-primary-bg)]",
       label: "WEBP",
     },
   };
@@ -239,16 +240,6 @@ function getParentFolder(path: string): string {
   const parts = path.split("/").filter(Boolean);
   if (parts.length < 2) return "/";
   return parts[parts.length - 2] || "";
-}
-
-// Truncate path showing start and end
-function smartPath(path: string): string {
-  const parts = path.split("/").filter(Boolean);
-  if (parts.length <= 3) return path;
-
-  const start = parts[0];
-  const end = parts.slice(-2).join("/");
-  return `${start}/.../${end}`;
 }
 
 export function FileList({
@@ -295,14 +286,14 @@ export function FileList({
           </div>
           <div
             className="relative flex size-14 items-center justify-center rounded-2xl 
-            bg-gradient-to-br from-[var(--ring)]/20 to-[var(--ring)]/5
+            bg-[var(--launcher-card-bg)]
             border border-[var(--ring)]/20"
           >
             <Loader2 className="size-6 animate-spin text-[var(--ring)]" />
           </div>
         </div>
         <div className="text-center">
-          <p className="text-[13px] font-semibold text-foreground/80">Searching...</p>
+          <p className="text-[13px] font-semibold text-muted-foreground">Searching...</p>
           <p className="mt-1 text-[11px] text-muted-foreground/60">Scanning local files</p>
         </div>
       </div>
@@ -314,17 +305,17 @@ export function FileList({
     return (
       <div className="flex h-full flex-col items-center justify-center gap-4 p-8">
         <div className="relative">
-          <div className="absolute -inset-3 rounded-3xl bg-gradient-to-br from-[var(--ring)]/10 to-transparent blur-xl" />
+          <div className="absolute -inset-3 rounded-3xl bg-[var(--launcher-card-bg)] blur-xl" />
           <div
             className="relative flex size-16 items-center justify-center rounded-2xl 
-            bg-gradient-to-br from-[var(--command-item-hover-bg)] to-[var(--command-item-selected-bg)]
+            bg-[var(--launcher-card-bg)]
             border border-[var(--ui-divider)]"
           >
             <Search className="size-6 text-muted-foreground/40" />
           </div>
         </div>
         <div className="text-center max-w-[180px]">
-          <p className="text-[13px] font-semibold text-foreground/80">Search your files</p>
+          <p className="text-[13px] font-semibold text-muted-foreground">Search your files</p>
           <p className="mt-1.5 text-[11px] text-muted-foreground/60 leading-relaxed">
             Type a filename or path to get started
           </p>
@@ -340,14 +331,14 @@ export function FileList({
         <div className="relative">
           <div
             className="flex size-16 items-center justify-center rounded-2xl 
-            bg-gradient-to-br from-[var(--command-item-hover-bg)] to-[var(--command-item-selected-bg)]
+            bg-[var(--launcher-card-bg)]
             border border-[var(--ui-divider)]"
           >
             <File className="size-6 text-muted-foreground/30" />
           </div>
         </div>
         <div className="text-center max-w-[200px]">
-          <p className="text-[13px] font-semibold text-foreground/80">No matches found</p>
+          <p className="text-[13px] font-semibold text-muted-foreground">No matches found</p>
           <p className="mt-1.5 text-[11px] text-muted-foreground/60 leading-relaxed">
             Try different keywords or check the spelling
           </p>
@@ -361,7 +352,7 @@ export function FileList({
       {/* Section header - refined */}
       <div
         className="sticky top-0 z-10 flex items-center justify-between px-3 py-2.5
-        bg-[var(--solid-bg-base,var(--background))]/95 backdrop-blur-sm
+        bg-[var(--launcher-card-bg)]/95 backdrop-blur-sm
         border-b border-[var(--ui-divider)]"
       >
         <div className="flex items-center gap-2">
@@ -427,7 +418,7 @@ export function FileList({
                   <span
                     className={cn(
                       "absolute -bottom-0.5 -right-0.5 px-1 py-px rounded text-[7px] font-bold",
-                      "bg-[var(--solid-bg-base,var(--background))] border border-[var(--ui-divider)]",
+                      "bg-[var(--launcher-card-bg)] border border-[var(--ui-divider)]",
                       typeInfo.color,
                       "uppercase tracking-wide",
                     )}
@@ -443,7 +434,7 @@ export function FileList({
                 <span
                   className={cn(
                     "truncate text-[13px] font-semibold leading-tight tracking-[-0.01em]",
-                    isSelected ? "text-foreground" : "text-foreground/85",
+                    isSelected ? "text-secondary-foreground" : "text-foreground",
                   )}
                 >
                   {result.entry.name}
@@ -454,10 +445,10 @@ export function FileList({
                   className={cn(
                     "truncate text-[11px] leading-tight mt-0.5",
                     "flex items-center gap-1",
-                    isSelected ? "text-muted-foreground/80" : "text-muted-foreground/50",
+                    isSelected ? "text-secondary-foreground/80" : "text-muted-foreground/50",
                   )}
                 >
-                  <span className="text-muted-foreground/40">in</span>
+                  <span className={isSelected ? "text-secondary-foreground/60" : "text-muted-foreground/40"}>in</span>
                   <span className="font-medium">{parentFolder || "/"}</span>
                 </span>
               </div>
@@ -465,12 +456,12 @@ export function FileList({
               {/* Right side - keyboard hint on selected */}
               {isSelected && (
                 <div className="flex items-center gap-1 opacity-60">
-                  <kbd
-                    className="flex size-5 items-center justify-center rounded bg-[var(--solid-kbd-bg,var(--kbd-bg))] 
-                    text-[10px] font-medium text-muted-foreground border border-[var(--solid-kbd-border,transparent)]"
+                  <Kbd
+                    className="flex size-5 items-center justify-center rounded
+                    text-[10px] font-medium text-secondary-foreground/70"
                   >
                     ↵
-                  </kbd>
+                  </Kbd>
                 </div>
               )}
             </div>

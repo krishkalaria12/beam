@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { ClipboardContentType, type ClipboardHistoryEntry } from "../types";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 interface ClipboardDetailsProps {
   entry: ClipboardHistoryEntry | null;
@@ -24,19 +25,19 @@ const getEntryIconConfig = (type: ClipboardContentType) => {
     case ClipboardContentType.Image:
       return {
         icon: <ImageIcon className="size-4" />,
-        gradient: "from-amber-500/25 to-orange-500/25",
+        gradient: "bg-[var(--icon-orange-bg)]",
         label: "Image",
       };
     case ClipboardContentType.Link:
       return {
         icon: <Link className="size-4" />,
-        gradient: "from-emerald-500/25 to-teal-500/25",
+        gradient: "bg-[var(--icon-green-bg)]",
         label: "Link",
       };
     default:
       return {
         icon: <FileText className="size-4" />,
-        gradient: "from-blue-500/25 to-cyan-500/25",
+        gradient: "bg-[var(--icon-primary-bg)]",
         label: "Text",
       };
   }
@@ -46,14 +47,14 @@ export function ClipboardDetails({ entry, isCopied, copyError, onCopy }: Clipboa
   if (!entry) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-4 p-8">
-        <div className="flex size-16 items-center justify-center rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.02] ring-1 ring-[var(--launcher-card-border)]">
-          <Clipboard className="size-7 text-foreground/15" />
+        <div className="flex size-16 items-center justify-center rounded-2xl bg-[var(--launcher-card-bg)] ring-1 ring-[var(--launcher-card-border)]">
+          <Clipboard className="size-7 text-muted-foreground" />
         </div>
         <div className="text-center">
-          <p className="text-[13px] font-medium tracking-[-0.01em] text-foreground/40">
+          <p className="text-[13px] font-medium tracking-[-0.01em] text-muted-foreground">
             Select an entry
           </p>
-          <p className="mt-1 text-[11px] text-foreground/20">View details and copy to clipboard</p>
+          <p className="mt-1 text-[11px] text-muted-foreground">View details and copy to clipboard</p>
         </div>
       </div>
     );
@@ -76,7 +77,7 @@ export function ClipboardDetails({ entry, isCopied, copyError, onCopy }: Clipboa
             </div>
           </div>
         ) : (
-          <div className="w-full text-[14px] font-normal leading-relaxed tracking-[-0.01em] text-foreground/75 whitespace-pre-wrap break-words">
+          <div className="w-full text-[14px] font-normal leading-relaxed tracking-[-0.01em] text-muted-foreground whitespace-pre-wrap break-words">
             {entry.value}
           </div>
         )}
@@ -89,28 +90,30 @@ export function ClipboardDetails({ entry, isCopied, copyError, onCopy }: Clipboa
           <div className="flex items-center gap-2">
             <div
               className={cn(
-                "flex size-8 items-center justify-center rounded-lg bg-gradient-to-br text-foreground/70",
+                "flex size-8 items-center justify-center rounded-lg bg-[var(--launcher-card-bg)] text-muted-foreground",
                 iconConfig.gradient,
               )}
             >
               {iconConfig.icon}
             </div>
             <div>
-              <p className="text-[12px] font-semibold text-foreground/80 capitalize">
+              <p className="text-[12px] font-semibold text-muted-foreground capitalize">
                 {entry.content_type}
               </p>
-              <p className="text-[11px] text-foreground/35">
+              <p className="text-[11px] text-muted-foreground">
                 {formatDistanceToNow(new Date(entry.copied_at), { addSuffix: true })}
               </p>
             </div>
           </div>
 
-          <button
+          <Button
             onClick={onCopy}
+            variant="ghost"
+            size="sm"
             className={cn(
               "flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-medium transition-all duration-200",
               isCopied
-                ? "bg-emerald-500/20 text-emerald-400 ring-1 ring-emerald-500/30"
+                ? "bg-[var(--icon-green-bg)] text-[var(--icon-green-fg)] ring-1 ring-[var(--icon-green-bg)]"
                 : "bg-[var(--ring)]/15 text-[var(--ring)] ring-1 ring-[var(--ring)]/20 hover:bg-[var(--ring)]/25",
             )}
           >
@@ -125,12 +128,12 @@ export function ClipboardDetails({ entry, isCopied, copyError, onCopy }: Clipboa
                 <span>Copy</span>
               </>
             )}
-          </button>
+          </Button>
         </div>
 
         {/* Status Messages */}
         {copyError && (
-          <div className="mb-4 rounded-lg bg-red-500/10 px-3 py-2 text-[11px] font-medium text-red-400 ring-1 ring-red-500/20">
+          <div className="mb-4 rounded-lg bg-[var(--icon-red-bg)] px-3 py-2 text-[11px] font-medium text-[var(--icon-red-fg)] ring-1 ring-[var(--icon-red-bg)]">
             {copyError}
           </div>
         )}
@@ -139,7 +142,7 @@ export function ClipboardDetails({ entry, isCopied, copyError, onCopy }: Clipboa
         <div className="space-y-3">
           {/* Divider with label */}
           <div className="flex items-center gap-3">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-foreground/30">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
               Details
             </span>
             <div className="h-px flex-1 bg-[var(--launcher-card-hover-bg)]" />
@@ -148,9 +151,9 @@ export function ClipboardDetails({ entry, isCopied, copyError, onCopy }: Clipboa
           {/* Metadata rows */}
           <div className="grid gap-2">
             <div className="flex items-center justify-between">
-              <span className="text-[12px] text-foreground/40">Copied</span>
-              <span className="flex items-center gap-1.5 text-[12px] font-medium text-foreground/70">
-                <Clock className="size-3 text-foreground/30" />
+              <span className="text-[12px] text-muted-foreground">Copied</span>
+              <span className="flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground">
+                <Clock className="size-3 text-muted-foreground" />
                 {formatDistanceToNow(new Date(entry.copied_at), { addSuffix: true })}
               </span>
             </div>
@@ -158,14 +161,14 @@ export function ClipboardDetails({ entry, isCopied, copyError, onCopy }: Clipboa
             {entry.content_type !== ClipboardContentType.Image && (
               <>
                 <div className="flex items-center justify-between">
-                  <span className="text-[12px] text-foreground/40">Characters</span>
-                  <span className="text-[12px] font-mono font-medium text-foreground/70">
+                  <span className="text-[12px] text-muted-foreground">Characters</span>
+                  <span className="text-[12px] font-mono font-medium text-muted-foreground">
                     {entry.character_count.toLocaleString()}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[12px] text-foreground/40">Words</span>
-                  <span className="text-[12px] font-mono font-medium text-foreground/70">
+                  <span className="text-[12px] text-muted-foreground">Words</span>
+                  <span className="text-[12px] font-mono font-medium text-muted-foreground">
                     {entry.word_count.toLocaleString()}
                   </span>
                 </div>
@@ -174,7 +177,7 @@ export function ClipboardDetails({ entry, isCopied, copyError, onCopy }: Clipboa
 
             {entry.content_type === ClipboardContentType.Link && (
               <div className="flex items-center justify-between pt-2 border-t border-[var(--launcher-card-border)]">
-                <span className="text-[12px] text-foreground/40">Action</span>
+                <span className="text-[12px] text-muted-foreground">Action</span>
                 <a
                   href={entry.value}
                   target="_blank"

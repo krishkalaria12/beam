@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { IconChip } from "@/components/module";
+import { Button } from "@/components/ui/button";
 import { staticCommandRegistry } from "@/command-registry/registry";
 import type { CommandDescriptor } from "@/command-registry/types";
 import { cn } from "@/lib/utils";
@@ -241,7 +243,7 @@ export default function HotkeysSettings() {
         setSettings((previous) => ({
           globalShortcut: previous?.globalShortcut ?? "SUPER+Space",
           commandHotkeys: {
-            ...(previous?.commandHotkeys ?? {}),
+            ...previous?.commandHotkeys,
             [normalizedCommandId]: normalizedHotkey,
           },
         }));
@@ -268,41 +270,43 @@ export default function HotkeysSettings() {
       <section className="space-y-3">
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-3">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/45">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
               Hotkey Backend
             </span>
             <div className="h-px flex-1 bg-[var(--launcher-chip-bg)]" />
           </div>
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="sm"
             onClick={() => {
               void refresh();
             }}
             className={cn(
               "flex items-center gap-1.5 rounded-lg px-2.5 py-1.5",
-              "text-[11px] font-medium text-foreground/50",
+              "text-[11px] font-medium text-muted-foreground",
               "bg-[var(--launcher-card-bg)] hover:bg-[var(--launcher-chip-bg)]",
               "transition-all duration-150",
-              "hover:text-foreground/70",
+              "hover:text-foreground",
             )}
             aria-label="Refresh hotkey status"
           >
             <RefreshCw className={cn("size-3.5", isLoading && "animate-spin")} />
             <span>Refresh</span>
-          </button>
+          </Button>
         </div>
 
         <div className="rounded-xl bg-[var(--launcher-card-bg)] p-4">
           <div className="flex items-center gap-3.5">
-            <div className="flex size-11 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500/20 to-fuchsia-500/10">
-              <Keyboard className="size-5 text-violet-400" />
-            </div>
+            <IconChip variant="purple" size="lg" className="size-11 rounded-xl">
+              <Keyboard className="size-5" />
+            </IconChip>
             <div className="flex-1 min-w-0">
-              <p className="text-[14px] font-medium tracking-[-0.02em] text-foreground/90 capitalize">
+              <p className="text-[14px] font-medium tracking-[-0.02em] text-foreground capitalize">
                 {capabilitySummary}
               </p>
               {capabilities?.notes?.length ? (
-                <p className="mt-0.5 text-[12px] text-foreground/40 leading-relaxed truncate">
+                <p className="mt-0.5 truncate text-[12px] leading-relaxed text-muted-foreground">
                   {capabilities.notes[0]}
                 </p>
               ) : null}
@@ -311,7 +315,7 @@ export default function HotkeysSettings() {
           {capabilities?.notes && capabilities.notes.length > 1 && (
             <ul className="mt-3 space-y-1 border-t border-[var(--launcher-card-border)] pt-3">
               {capabilities.notes.slice(1).map((note) => (
-                <li key={note} className="text-[12px] text-foreground/35 leading-relaxed">
+                <li key={note} className="text-[12px] leading-relaxed text-muted-foreground">
                   {note}
                 </li>
               ))}
@@ -323,7 +327,7 @@ export default function HotkeysSettings() {
       {/* Launcher Hotkey Section */}
       <section className="space-y-3">
         <div className="flex items-center gap-3 px-1">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/45">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
             Launcher Hotkey
           </span>
           <div className="h-px flex-1 bg-[var(--launcher-chip-bg)]" />
@@ -331,11 +335,11 @@ export default function HotkeysSettings() {
 
         <div className="rounded-xl bg-[var(--launcher-card-bg)] p-4">
           <div className="flex items-center gap-3.5">
-            <div className="flex size-11 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/10">
-              <Rocket className="size-5 text-blue-400" />
-            </div>
+            <IconChip variant="cyan" size="lg" className="size-11 rounded-xl">
+              <Rocket className="size-5" />
+            </IconChip>
             <div className="flex-1 min-w-0">
-              <p className="text-[13px] font-medium text-foreground/70 mb-2">
+              <p className="mb-2 text-[13px] font-medium text-muted-foreground">
                 Global shortcut to open Beam
               </p>
               <HotkeyRecorder
@@ -353,13 +357,13 @@ export default function HotkeysSettings() {
       {/* Command Hotkeys Section */}
       <section className="space-y-3">
         <div className="flex items-center gap-3 px-1">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/45">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
             Command Hotkeys
           </span>
           <div className="h-px flex-1 bg-[var(--launcher-chip-bg)]" />
         </div>
 
-        <p className="px-1 text-[12px] text-foreground/35 leading-relaxed">
+        <p className="px-1 text-[12px] leading-relaxed text-muted-foreground">
           Assign global hotkeys to commands. On Wayland, configure these through your compositor.
         </p>
 
@@ -377,10 +381,10 @@ export default function HotkeysSettings() {
               style={{ animationDelay: `${index * 15}ms` }}
             >
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[13px] font-medium tracking-[-0.01em] text-foreground/80">
+                <p className="truncate text-[13px] font-medium tracking-[-0.01em] text-foreground">
                   {command.title}
                 </p>
-                <p className="truncate text-[11px] font-mono text-foreground/30">{command.id}</p>
+                <p className="truncate text-[11px] font-mono text-muted-foreground">{command.id}</p>
               </div>
               <HotkeyRecorder
                 value={commandHotkeys[command.id] ?? ""}
@@ -399,7 +403,7 @@ export default function HotkeysSettings() {
       {bindings ? (
         <section className="space-y-3">
           <div className="flex items-center gap-3 px-1">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/45">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
               Compositor Snippets
             </span>
             <div className="h-px flex-1 bg-[var(--launcher-chip-bg)]" />
@@ -407,10 +411,10 @@ export default function HotkeysSettings() {
 
           <div className="rounded-xl bg-[var(--launcher-card-bg)] p-4 space-y-3">
             <div className="flex items-center gap-2.5 mb-3">
-              <div className="flex size-9 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500/20 to-teal-500/10">
-                <Terminal className="size-4 text-emerald-400" />
-              </div>
-              <p className="text-[12px] text-foreground/50">
+              <IconChip variant="green" size="lg" className="size-9 rounded-lg">
+                <Terminal className="size-4" />
+              </IconChip>
+              <p className="text-[12px] text-muted-foreground">
                 Example bindings for your compositor config
               </p>
             </div>
@@ -421,7 +425,7 @@ export default function HotkeysSettings() {
                   key={entry}
                   className={cn(
                     "overflow-x-auto rounded-lg px-3 py-2",
-                    "bg-[var(--launcher-card-bg)] text-[11px] font-mono text-foreground/50",
+                    "bg-[var(--launcher-card-bg)] text-[11px] font-mono text-muted-foreground",
                     "ring-1 ring-[var(--launcher-card-border)]",
                   )}
                   style={{ animationDelay: `${index * 30}ms` }}
@@ -434,7 +438,7 @@ export default function HotkeysSettings() {
                   key={entry}
                   className={cn(
                     "overflow-x-auto rounded-lg px-3 py-2",
-                    "bg-[var(--launcher-card-bg)] text-[11px] font-mono text-foreground/50",
+                    "bg-[var(--launcher-card-bg)] text-[11px] font-mono text-muted-foreground",
                     "ring-1 ring-[var(--launcher-card-border)]",
                   )}
                   style={{
@@ -457,8 +461,8 @@ export default function HotkeysSettings() {
             "text-[12px] font-medium",
             "animate-in fade-in slide-in-from-bottom-2 duration-200",
             status.type === "error"
-              ? "bg-red-500/10 text-red-300 ring-1 ring-red-500/20"
-              : "bg-emerald-500/10 text-emerald-300 ring-1 ring-emerald-500/20",
+              ? "bg-destructive/10 text-destructive ring-1 ring-destructive/20"
+              : "bg-[var(--icon-green-bg)] text-[var(--icon-green-fg)] ring-1 ring-[var(--launcher-card-border)]",
           )}
         >
           {status.type === "error" ? (
@@ -472,7 +476,7 @@ export default function HotkeysSettings() {
 
       {/* Loading State */}
       {isLoading && (
-        <div className="flex items-center justify-center gap-2 py-4 text-[12px] text-foreground/40">
+        <div className="flex items-center justify-center gap-2 py-4 text-[12px] text-muted-foreground">
           <Loader2 className="size-4 animate-spin" />
           <span>Loading hotkey settings...</span>
         </div>
@@ -480,8 +484,8 @@ export default function HotkeysSettings() {
 
       {/* Browser Warning */}
       {!isTauri() && (
-        <div className="rounded-xl bg-amber-500/10 px-4 py-3 ring-1 ring-amber-500/20">
-          <p className="text-[12px] text-amber-300/80 leading-relaxed">
+        <div className="rounded-xl border border-[var(--icon-orange-bg)] bg-[var(--icon-orange-bg)] px-4 py-3">
+          <p className="text-[12px] leading-relaxed text-[var(--icon-orange-fg)]">
             Running without desktop runtime. Changes are stored locally for this browser profile.
           </p>
         </div>

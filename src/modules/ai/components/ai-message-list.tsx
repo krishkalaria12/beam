@@ -33,7 +33,7 @@ export function AiMessageList({
         <div className="flex h-full items-center justify-center">
           <div className="flex flex-col items-center gap-3">
             <Loader2 className="size-6 animate-spin text-[var(--ring)]/70" />
-            <span className="text-[12px] tracking-[-0.01em] text-foreground/40">
+            <span className="text-[12px] tracking-[-0.01em] text-muted-foreground">
               Loading conversation...
             </span>
           </div>
@@ -41,13 +41,13 @@ export function AiMessageList({
       ) : messages.length === 0 ? (
         <div className="flex h-full items-center justify-center">
           <div className="ai-empty-state flex max-w-sm flex-col items-center text-center">
-            <div className="mb-5 flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[var(--ring)]/15 to-[var(--ring)]/5 ring-1 ring-[var(--launcher-card-border)] shadow-lg shadow-[var(--ring)]/10">
+            <div className="mb-5 flex size-14 items-center justify-center rounded-2xl bg-[var(--launcher-card-bg)] ring-1 ring-[var(--launcher-card-border)] shadow-lg shadow-[var(--ring)]/10">
               <Sparkles className="size-6 text-[var(--ring)]/80" />
             </div>
-            <h3 className="text-[15px] font-semibold tracking-[-0.02em] text-foreground/85">
+            <h3 className="text-[15px] font-semibold tracking-[-0.02em] text-foreground">
               Start a conversation
             </h3>
-            <p className="mx-auto mt-2.5 max-w-[280px] text-[13px] leading-[1.6] tracking-[-0.01em] text-foreground/40">
+            <p className="mx-auto mt-2.5 max-w-[280px] text-[13px] leading-[1.6] tracking-[-0.01em] text-muted-foreground">
               Ask anything, attach images or documents, and let AI assist you.
             </p>
           </div>
@@ -69,7 +69,7 @@ export function AiMessageList({
                 {/* AI Avatar - only show for assistant */}
                 {!isUser && (
                   <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-[var(--launcher-card-hover-bg)] ring-1 ring-[var(--launcher-card-border)]">
-                    <Bot className="size-4 text-foreground/50" />
+                    <Bot className="size-4 text-muted-foreground" />
                   </div>
                 )}
 
@@ -128,10 +128,10 @@ export function AiMessageList({
                                     <FileText className="size-4 text-foreground" />
                                   </div>
                                   <div className="min-w-0 flex-1">
-                                    <p className="truncate text-[13px] font-medium tracking-[-0.01em] text-foreground/90">
+                                    <p className="truncate text-[13px] font-medium tracking-[-0.01em] text-foreground">
                                       {file.name}
                                     </p>
-                                    <p className="text-[11px] tracking-[-0.01em] text-foreground/40">
+                                    <p className="text-[11px] tracking-[-0.01em] text-muted-foreground">
                                       {getFileTypeLabel(file)}
                                     </p>
                                   </div>
@@ -161,12 +161,12 @@ export function AiMessageList({
                           {message.content}
                         </p>
                       ) : extractedError ? (
-                        <p className="whitespace-pre-wrap break-words text-[14px] leading-[1.65] tracking-[-0.01em] text-red-400">
+                        <p className="whitespace-pre-wrap break-words text-[14px] leading-[1.65] tracking-[-0.01em] text-[var(--icon-red-fg)]">
                           {extractedError}
                         </p>
                       ) : (
                         <MessageResponse
-                          className="ai-prose prose prose-sm prose-invert max-w-none break-words text-[14px] leading-[1.7] tracking-[-0.01em] text-foreground/90 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0"
+                          className="ai-prose prose prose-sm prose-invert max-w-none break-words text-[14px] leading-[1.7] tracking-[-0.01em] text-foreground [&>*:first-child]:mt-0 [&>*:last-child]:mb-0"
                           isAnimating={isActiveAssistantMessage}
                         >
                           {message.content}

@@ -10,9 +10,11 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, CheckCircle2, ListTodo, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
+import { Kbd } from "@/components/module";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useLauncherPanelBackHandler } from "@/modules/launcher/lib/back-navigation";
-import { SubTodoDetailPanel } from "@/modules/todo/components/subtodo-detail-panel";
+import { SubTodoDetailPanell } from "@/modules/todo/components/subtodo-detail-panel";
 import { TodoListPanel } from "@/modules/todo/components/todo-list-panel";
 import {
   buildSubTodoReorderUpdates,
@@ -410,38 +412,40 @@ export function TodoView({ onBack }: TodoViewProps) {
       {/* Header */}
       <header className="todo-header-enter flex items-center gap-3 border-b border-[var(--launcher-card-border)] px-4 py-3">
         {/* Back button */}
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="icon-sm"
           onClick={onBack}
           className={cn(
             "flex size-9 items-center justify-center rounded-lg transition-all",
-            "bg-[var(--launcher-card-hover-bg)] text-foreground/40",
-            "hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground/70",
+            "bg-[var(--launcher-card-hover-bg)] text-muted-foreground",
+            "hover:bg-[var(--launcher-card-hover-bg)] hover:text-muted-foreground",
           )}
           aria-label="Back"
         >
           <ArrowLeft className="size-4" />
-        </button>
+        </Button>
 
         {/* Icon */}
-        <div className="size-9 rounded-xl bg-gradient-to-br from-rose-500/25 to-pink-500/25 p-2">
-          <ListTodo className="size-full text-rose-400" />
+        <div className="size-9 rounded-xl bg-[var(--launcher-card-bg)] p-2">
+          <ListTodo className="size-full text-[var(--icon-red-fg)]" />
         </div>
 
         {/* Title block */}
         <div className="flex-1 min-w-0">
-          <h1 className="text-[14px] font-semibold tracking-[-0.01em] text-foreground/90">Todos</h1>
-          <p className="text-[11px] text-foreground/40">
+          <h1 className="text-[14px] font-semibold tracking-[-0.01em] text-foreground">Todos</h1>
+          <p className="text-[11px] text-muted-foreground">
             {completedTodoCount}/{orderedTodos.length} completed
           </p>
         </div>
 
         {/* Loading indicator */}
-        {isFetching && <Loader2 className="size-4 animate-spin text-foreground/30" />}
+        {isFetching && <Loader2 className="size-4 animate-spin text-muted-foreground" />}
 
         {/* Completion badge */}
         {orderedTodos.length > 0 && completedTodoCount === orderedTodos.length && (
-          <div className="flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-2.5 py-1 text-emerald-400">
+          <div className="flex items-center gap-1.5 rounded-full bg-[var(--icon-green-bg)] px-2.5 py-1 text-[var(--icon-green-fg)]">
             <CheckCircle2 className="size-3.5" />
             <span className="text-[11px] font-medium">All done!</span>
           </div>
@@ -472,7 +476,7 @@ export function TodoView({ onBack }: TodoViewProps) {
           onCancelTodoEdit={handleCancelTodoEdit}
         />
 
-        <SubTodoDetailPanel
+        <SubTodoDetailPanell
           isBusy={isBusy}
           sensors={sensors}
           selectedTodo={selectedTodo}
@@ -500,20 +504,20 @@ export function TodoView({ onBack }: TodoViewProps) {
 
       {/* Minimal footer */}
       <footer className="todo-footer-enter flex items-center justify-between border-t border-[var(--launcher-card-border)] px-4 py-2">
-        <span className="text-[11px] text-foreground/30">
+        <span className="text-[11px] text-muted-foreground">
           {orderedTodos.length} {orderedTodos.length === 1 ? "todo" : "todos"}
         </span>
         <div className="flex items-center gap-3">
-          <span className="text-[10px] text-foreground/25">
-            <kbd className="rounded bg-[var(--launcher-card-hover-bg)] px-1.5 py-0.5 font-mono text-[9px]">
+          <span className="text-[10px] text-muted-foreground">
+            <Kbd className="rounded px-1.5 py-0.5 text-[9px]">
               Enter
-            </kbd>
+            </Kbd>
             <span className="ml-1">Create</span>
           </span>
-          <span className="text-[10px] text-foreground/25">
-            <kbd className="rounded bg-[var(--launcher-card-hover-bg)] px-1.5 py-0.5 font-mono text-[9px]">
+          <span className="text-[10px] text-muted-foreground">
+            <Kbd className="rounded px-1.5 py-0.5 text-[9px]">
               Esc
-            </kbd>
+            </Kbd>
             <span className="ml-1">Back</span>
           </span>
         </div>

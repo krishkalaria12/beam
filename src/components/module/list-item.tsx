@@ -20,33 +20,6 @@ interface ListItemProps {
   children: ReactNode;
 }
 
-/**
- * A theme-aware, selectable list item for module list panels.
- *
- * - Selected state uses `--launcher-card-selected-bg` / `--launcher-card-selected-border`
- * - Hover state uses `--launcher-card-hover-bg`
- * - Left accent bar uses `--ring` when selected
- * - All colours respond to the active theme (default/solid/glassy/custom)
- *
- * @example
- * // Before (snippet-list.tsx):
- * <button
- *   className={cn(
- *     "group relative mb-1.5 flex w-full items-center gap-3 rounded-xl p-3 text-left transition-all duration-200",
- *     isSelected
- *       ? "bg-[var(--launcher-chip-bg)] ring-1 ring-[var(--launcher-card-selected-border)]"
- *       : "hover:bg-[var(--launcher-card-hover-bg)]",
- *   )}
- * >
- *   {children}
- * </button>
- *
- * // After:
- * <ListItem selected={isSelected} onSelect={() => onSelectSnippet(snippet.id)} leftSlot={<IconChip ...>}>
- *   <ListItem.Title>{snippet.name}</ListItem.Title>
- *   <ListItem.Description>{snippet.trigger}</ListItem.Description>
- * </ListItem>
- */
 export function ListItem({
   selected = false,
   onSelect,
@@ -95,10 +68,6 @@ export function ListItem({
   );
 }
 
-// ---------------------------------------------------------------------------
-// Compound sub-components
-// ---------------------------------------------------------------------------
-
 interface TitleProps {
   children: ReactNode;
   className?: string;
@@ -123,9 +92,7 @@ interface DescriptionProps {
 }
 
 function Description({ children, className }: DescriptionProps) {
-  return (
-    <p className={cn("truncate text-[11px] text-muted-foreground", className)}>{children}</p>
-  );
+  return <p className={cn("truncate text-[11px] text-muted-foreground", className)}>{children}</p>;
 }
 
 ListItem.Title = Title;

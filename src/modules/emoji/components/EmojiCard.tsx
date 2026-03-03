@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import type { EmojiData } from "../types";
 import type { CSSProperties } from "react";
 
@@ -20,8 +21,10 @@ export function EmojiCard({
   isRecent,
 }: EmojiCardProps) {
   return (
-    <button
+    <Button
       type="button"
+      variant="ghost"
+      size="icon-lg"
       onClick={() => onClick(emoji)}
       style={style}
       className={cn(
@@ -39,6 +42,6 @@ export function EmojiCard({
       <span className="text-[1.75rem] leading-none select-none transition-transform duration-150 group-hover:scale-110">
         {emoji.emoji}
       </span>
-    </button>
+    </Button>
   );
 }

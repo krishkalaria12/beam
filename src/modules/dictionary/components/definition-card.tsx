@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import type { Sense } from "../types";
 
 interface SenseCardProps {
@@ -6,6 +7,7 @@ interface SenseCardProps {
   senseNumber: number;
   entryNumber: number;
   isSelected: boolean;
+  onSelect: () => void;
   onSynonymClick: (word: string) => void;
 }
 
@@ -14,25 +16,25 @@ export function SenseCard({
   senseNumber,
   entryNumber,
   isSelected,
+  onSelect,
   onSynonymClick,
 }: SenseCardProps) {
   return (
     <div
       data-selected={isSelected}
+      onClick={onSelect}
       className={cn(
-        "dictionary-sense-card group relative rounded-xl p-4 transition-all duration-200",
+        "dictionary-sense-card group relative cursor-pointer rounded-xl p-4 transition-all duration-200",
         isSelected
-          ? "bg-[var(--launcher-card-hover-bg)] ring-1 ring-[var(--launcher-card-border)]"
-          : "bg-[var(--launcher-card-hover-bg)] hover:bg-[var(--launcher-card-hover-bg)]",
+          ? "bg-[var(--launcher-card-selected-bg)] ring-1 ring-[var(--launcher-card-selected-border)]"
+          : "bg-[var(--launcher-card-bg)] hover:bg-[var(--launcher-card-hover-bg)]",
       )}
     >
       {/* Left Accent Bar */}
       <div
         className={cn(
           "absolute left-0 top-1/2 h-8 w-0.5 -translate-y-1/2 rounded-full transition-all duration-200",
-          isSelected
-            ? "bg-[var(--ring)]"
-            : "bg-transparent group-hover:bg-[var(--launcher-card-hover-bg)]",
+          isSelected ? "bg-[var(--ring)]" : "bg-transparent",
         )}
       />
 
@@ -44,7 +46,7 @@ export function SenseCard({
             "mt-0.5 flex h-5 shrink-0 items-center justify-center rounded px-1.5 font-mono text-[10px] font-semibold transition-colors duration-200",
             isSelected
               ? "bg-[var(--ring)]/20 text-[var(--ring)]"
-              : "bg-[var(--launcher-card-hover-bg)] text-foreground/40",
+              : "bg-[var(--launcher-chip-bg)] text-muted-foreground",
           )}
         >
           {entryNumber}.{senseNumber}
@@ -55,7 +57,7 @@ export function SenseCard({
           <p
             className={cn(
               "text-[13px] leading-relaxed transition-colors duration-200",
-              isSelected ? "text-foreground/90" : "text-foreground/70",
+              isSelected ? "text-foreground" : "text-muted-foreground",
             )}
           >
             {sense.definition}
@@ -65,7 +67,7 @@ export function SenseCard({
           {sense.examples && sense.examples.length > 0 && (
             <div className="space-y-1.5 border-l-2 border-[var(--launcher-card-border)] pl-3">
               {sense.examples.map((example, idx) => (
-                <p key={idx} className="text-[12px] italic text-foreground/40 leading-snug">
+                <p key={idx} className="text-[12px] italic text-muted-foreground leading-snug">
                   "{example}"
                 </p>
               ))}
@@ -77,21 +79,28 @@ export function SenseCard({
             <div className="flex flex-wrap gap-4 pt-1">
               {sense.synonyms.length > 0 && (
                 <div className="space-y-1.5">
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.06em] text-foreground/30">
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
                     Synonyms
                   </span>
                   <div className="flex flex-wrap gap-1.5">
                     {sense.synonyms.map((synonym, idx) => (
-                      <button
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="xs"
                         key={idx}
-                        onClick={() => onSynonymClick(synonym)}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          onSynonymClick(synonym);
+                        }}
                         className={cn(
                           "rounded-full px-2 py-0.5 text-[10px] font-medium transition-all duration-200",
-                          "bg-emerald-500/10 text-emerald-400/80 hover:bg-emerald-500/20 hover:text-emerald-400",
+                          "bg-[var(--icon-green-bg)] text-[var(--icon-green-fg)]",
+                          "hover:brightness-110",
                         )}
                       >
                         {synonym}
-                      </button>
+                      </Button>
                     ))}
                   </div>
                 </div>
@@ -99,21 +108,28 @@ export function SenseCard({
 
               {sense.antonyms.length > 0 && (
                 <div className="space-y-1.5">
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.06em] text-foreground/30">
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
                     Antonyms
                   </span>
                   <div className="flex flex-wrap gap-1.5">
                     {sense.antonyms.map((antonym, idx) => (
-                      <button
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="xs"
                         key={idx}
-                        onClick={() => onSynonymClick(antonym)}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          onSynonymClick(antonym);
+                        }}
                         className={cn(
                           "rounded-full px-2 py-0.5 text-[10px] font-medium transition-all duration-200",
-                          "bg-rose-500/10 text-rose-400/80 hover:bg-rose-500/20 hover:text-rose-400",
+                          "bg-[var(--icon-red-bg)] text-[var(--icon-red-fg)]",
+                          "hover:brightness-110",
                         )}
                       >
                         {antonym}
-                      </button>
+                      </Button>
                     ))}
                   </div>
                 </div>

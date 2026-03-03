@@ -19,6 +19,9 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
+import { Kbd } from "@/components/module";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -239,14 +242,16 @@ export function SpotifyView({ initialQuery, onBack }: SpotifyViewProps) {
       {/* Custom Header */}
       <header className="spotify-header flex h-14 shrink-0 items-center gap-3 border-b border-[var(--launcher-card-border)] px-5">
         {/* Back button */}
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="icon-sm"
           onClick={onBack}
-          className="flex size-9 items-center justify-center rounded-lg bg-[var(--launcher-card-bg)] text-foreground/40 transition-all duration-200 hover:bg-[var(--launcher-chip-bg)] hover:text-foreground/70"
+          className="flex size-9 items-center justify-center rounded-lg bg-[var(--launcher-card-bg)] text-muted-foreground transition-all duration-200 hover:bg-[var(--launcher-chip-bg)] hover:text-muted-foreground"
           aria-label="Back"
         >
           <ChevronLeft className="size-4" />
-        </button>
+        </Button>
 
         {/* Title block */}
         <div className="flex items-center gap-3">
@@ -254,10 +259,10 @@ export function SpotifyView({ initialQuery, onBack }: SpotifyViewProps) {
             <Music className="size-4 text-[var(--ring)]" />
           </div>
           <div className="flex flex-col">
-            <h1 className="text-[14px] font-semibold tracking-[-0.02em] text-foreground/90">
+            <h1 className="text-[14px] font-semibold tracking-[-0.02em] text-foreground">
               Spotify
             </h1>
-            <p className="text-[11px] text-foreground/40">
+            <p className="text-[11px] text-muted-foreground">
               Now playing, playback controls & search
             </p>
           </div>
@@ -293,25 +298,29 @@ export function SpotifyView({ initialQuery, onBack }: SpotifyViewProps) {
             <div className="mb-4 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="flex size-6 items-center justify-center rounded-lg bg-[var(--launcher-chip-bg)]">
-                  <Radio className="size-3 text-foreground/50" />
+                  <Radio className="size-3 text-muted-foreground" />
                 </div>
-                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/45">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
                   Connection
                 </span>
               </div>
 
               {isConnected ? (
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="sm"
                   onClick={handleDisconnect}
-                  className="flex items-center gap-1.5 rounded-lg bg-[var(--launcher-card-hover-bg)] px-3 py-1.5 text-[12px] font-medium text-foreground/60 ring-1 ring-[var(--launcher-card-border)] transition-all hover:bg-[var(--launcher-chip-bg)] hover:text-foreground/80"
+                  className="flex items-center gap-1.5 rounded-lg bg-[var(--launcher-card-hover-bg)] px-3 py-1.5 text-[12px] font-medium text-muted-foreground ring-1 ring-[var(--launcher-card-border)] transition-all hover:bg-[var(--launcher-chip-bg)] hover:text-muted-foreground"
                 >
                   <Unplug className="size-3.5" />
                   Disconnect
-                </button>
+                </Button>
               ) : (
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="sm"
                   onClick={handleConnect}
                   disabled={isAuthorizing || !clientId.trim()}
                   className="flex items-center gap-1.5 rounded-lg bg-[var(--launcher-card-selected-bg)] px-3 py-1.5 text-[12px] font-medium text-[var(--ring)] ring-1 ring-[var(--launcher-card-selected-border)] transition-all hover:bg-[var(--command-item-selected-bg)] disabled:opacity-50"
@@ -322,12 +331,12 @@ export function SpotifyView({ initialQuery, onBack }: SpotifyViewProps) {
                     <Music className="size-3.5" />
                   )}
                   Connect Spotify
-                </button>
+                </Button>
               )}
             </div>
 
             <div className="space-y-3">
-              <input
+              <Input
                 ref={clientIdInputRef}
                 value={clientId}
                 onChange={(event) => {
@@ -335,11 +344,11 @@ export function SpotifyView({ initialQuery, onBack }: SpotifyViewProps) {
                   setStoredSpotifyClientId(event.target.value);
                 }}
                 placeholder="Spotify Client ID"
-                className="h-10 w-full rounded-xl bg-[var(--launcher-card-hover-bg)] px-4 text-[13px] text-foreground/90 placeholder:text-foreground/30 ring-1 ring-[var(--launcher-card-border)] transition-all focus:outline-none focus:ring-[var(--ring)]"
+                className="h-10 w-full rounded-xl bg-[var(--launcher-card-hover-bg)] px-4 text-[13px] text-foreground placeholder:text-muted-foreground ring-1 ring-[var(--launcher-card-border)] transition-all focus:outline-none focus:ring-[var(--ring)]"
               />
-              <p className="text-[11px] text-foreground/35">
+              <p className="text-[11px] text-muted-foreground">
                 Create a Spotify app and add{" "}
-                <code className="rounded bg-[var(--launcher-chip-bg)] px-1.5 py-0.5 font-mono text-[10px] text-foreground/50">
+                <code className="rounded bg-[var(--launcher-chip-bg)] px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
                   beam://oauth
                 </code>{" "}
                 as redirect URI.
@@ -352,11 +361,11 @@ export function SpotifyView({ initialQuery, onBack }: SpotifyViewProps) {
                   <Music className="size-3.5" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-[12px] font-medium text-foreground/80">
+                  <span className="text-[12px] font-medium text-muted-foreground">
                     {user.display_name || user.id}
                   </span>
                   {user.email && (
-                    <span className="text-[11px] text-foreground/40">{user.email}</span>
+                    <span className="text-[11px] text-muted-foreground">{user.email}</span>
                   )}
                 </div>
               </div>
@@ -371,34 +380,38 @@ export function SpotifyView({ initialQuery, onBack }: SpotifyViewProps) {
             <div className="mb-4 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="flex size-6 items-center justify-center rounded-lg bg-[var(--launcher-chip-bg)]">
-                  <Disc3 className="size-3 text-foreground/50" />
+                  <Disc3 className="size-3 text-muted-foreground" />
                 </div>
-                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/45">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
                   Now Playing
                 </span>
               </div>
 
               <div className="flex items-center gap-1">
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="sm"
                   onClick={() => {
                     void refreshPlayback();
                     void refreshUserProfile();
                   }}
                   disabled={!isConnected || isLoadingPlayback}
-                  className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-foreground/50 transition-all hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground/70 disabled:opacity-50"
+                  className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-muted-foreground transition-all hover:bg-[var(--launcher-card-hover-bg)] hover:text-muted-foreground disabled:opacity-50"
                 >
                   <RefreshCw className={cn("size-3", isLoadingPlayback && "animate-spin")} />
                   Refresh
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="sm"
                   onClick={() => void openUrl("https://open.spotify.com/")}
-                  className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-foreground/50 transition-all hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground/70"
+                  className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-muted-foreground transition-all hover:bg-[var(--launcher-card-hover-bg)] hover:text-muted-foreground"
                 >
                   <ExternalLink className="size-3" />
                   Web Player
-                </button>
+                </Button>
               </div>
             </div>
 
@@ -412,7 +425,7 @@ export function SpotifyView({ initialQuery, onBack }: SpotifyViewProps) {
                     className="h-full w-full object-cover"
                   />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center text-foreground/30">
+                  <div className="flex h-full w-full items-center justify-center text-muted-foreground">
                     <Disc3 className="size-6" />
                   </div>
                 )}
@@ -441,12 +454,12 @@ export function SpotifyView({ initialQuery, onBack }: SpotifyViewProps) {
               </div>
 
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[14px] font-medium tracking-[-0.01em] text-foreground/90">
+                <p className="truncate text-[14px] font-medium tracking-[-0.01em] text-foreground">
                   {nowPlaying?.name ||
                     (isConnected ? "Nothing playing" : "Connect Spotify to view playback")}
                 </p>
-                <p className="truncate text-[12px] text-foreground/50">{nowPlayingArtists}</p>
-                <p className="mt-1 text-[11px] text-foreground/30">
+                <p className="truncate text-[12px] text-muted-foreground">{nowPlayingArtists}</p>
+                <p className="mt-1 text-[11px] text-muted-foreground">
                   {nowPlaying ? formatDuration(nowPlaying.duration_ms) : "--:--"}
                 </p>
               </div>
@@ -455,8 +468,8 @@ export function SpotifyView({ initialQuery, onBack }: SpotifyViewProps) {
             {/* Device selector */}
             <div className="mt-4 space-y-2">
               <div className="flex items-center gap-2">
-                <Volume2 className="size-3 text-foreground/40" />
-                <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-foreground/35">
+                <Volume2 className="size-3 text-muted-foreground" />
+                <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
                   Playback Device
                 </span>
               </div>
@@ -467,9 +480,9 @@ export function SpotifyView({ initialQuery, onBack }: SpotifyViewProps) {
                   setSelectedDeviceId(value);
                 }}
               >
-                <SelectTrigger className="h-10 w-full rounded-xl border-0 bg-[var(--launcher-card-hover-bg)] text-[12px] font-medium text-foreground/70 ring-1 ring-[var(--launcher-card-border)] hover:bg-[var(--launcher-chip-bg)] focus:ring-[var(--ring)]">
+                <SelectTrigger className="h-10 w-full rounded-xl border-0 bg-[var(--launcher-card-hover-bg)] text-[12px] font-medium text-muted-foreground ring-1 ring-[var(--launcher-card-border)] hover:bg-[var(--launcher-chip-bg)] focus:ring-[var(--ring)]">
                   <div className="flex items-center gap-2">
-                    <Radio className="size-3.5 text-foreground/40" />
+                    <Radio className="size-3.5 text-muted-foreground" />
                     <SelectValue>
                       {selectedDevice?.name || playback?.device?.name || "Select device"}
                     </SelectValue>
@@ -480,7 +493,7 @@ export function SpotifyView({ initialQuery, onBack }: SpotifyViewProps) {
                     <SelectItem
                       key={device.id}
                       value={device.id}
-                      className="rounded-lg text-[12px] text-foreground/70 focus:bg-[var(--launcher-chip-bg)] focus:text-foreground"
+                      className="rounded-lg text-[12px] text-muted-foreground focus:bg-[var(--launcher-chip-bg)] focus:text-foreground"
                     >
                       {device.name}
                     </SelectItem>
@@ -488,9 +501,9 @@ export function SpotifyView({ initialQuery, onBack }: SpotifyViewProps) {
                 </SelectContent>
               </Select>
               {isLoadingDevices ? (
-                <p className="text-[11px] text-foreground/30">Loading devices…</p>
+                <p className="text-[11px] text-muted-foreground">Loading devices…</p>
               ) : devices.length === 0 ? (
-                <p className="text-[11px] text-foreground/30">
+                <p className="text-[11px] text-muted-foreground">
                   No active devices. Open Spotify on a device first.
                 </p>
               ) : null}
@@ -498,17 +511,21 @@ export function SpotifyView({ initialQuery, onBack }: SpotifyViewProps) {
 
             {/* Playback controls */}
             <div className="mt-4 flex items-center justify-center gap-3">
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
                 onClick={() => void runPlaybackAction("previous")}
                 disabled={!isConnected || isActionPending}
-                className="flex size-10 items-center justify-center rounded-xl bg-[var(--launcher-card-hover-bg)] text-foreground/60 ring-1 ring-[var(--launcher-card-border)] transition-all hover:bg-[var(--launcher-card-selected-bg)] hover:text-foreground disabled:opacity-40"
+                className="flex size-10 items-center justify-center rounded-xl bg-[var(--launcher-card-hover-bg)] text-muted-foreground ring-1 ring-[var(--launcher-card-border)] transition-all hover:bg-[var(--launcher-card-selected-bg)] hover:text-foreground disabled:opacity-40"
               >
                 <SkipBack className="size-4" />
-              </button>
+              </Button>
 
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon-lg"
                 onClick={() => void runPlaybackAction(playback?.is_playing ? "pause" : "play")}
                 disabled={!isConnected || isActionPending}
                 className="flex size-12 items-center justify-center rounded-2xl bg-[var(--launcher-card-selected-bg)] text-[var(--ring)] ring-1 ring-[var(--launcher-card-selected-border)] transition-all hover:bg-[var(--command-item-selected-bg)] hover:scale-105 disabled:opacity-40"
@@ -518,16 +535,18 @@ export function SpotifyView({ initialQuery, onBack }: SpotifyViewProps) {
                 ) : (
                   <Play className="size-5 ml-0.5" />
                 )}
-              </button>
+              </Button>
 
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
                 onClick={() => void runPlaybackAction("next")}
                 disabled={!isConnected || isActionPending}
-                className="flex size-10 items-center justify-center rounded-xl bg-[var(--launcher-card-hover-bg)] text-foreground/60 ring-1 ring-[var(--launcher-card-border)] transition-all hover:bg-[var(--launcher-card-selected-bg)] hover:text-foreground disabled:opacity-40"
+                className="flex size-10 items-center justify-center rounded-xl bg-[var(--launcher-card-hover-bg)] text-muted-foreground ring-1 ring-[var(--launcher-card-border)] transition-all hover:bg-[var(--launcher-card-selected-bg)] hover:text-foreground disabled:opacity-40"
               >
                 <SkipForward className="size-4" />
-              </button>
+              </Button>
             </div>
           </section>
 
@@ -538,17 +557,17 @@ export function SpotifyView({ initialQuery, onBack }: SpotifyViewProps) {
           >
             <div className="mb-4 flex items-center gap-2">
               <div className="flex size-6 items-center justify-center rounded-lg bg-[var(--launcher-chip-bg)]">
-                <Search className="size-3 text-foreground/50" />
+                <Search className="size-3 text-muted-foreground" />
               </div>
-              <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/45">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
                 Search Tracks
               </span>
             </div>
 
             <div className="flex items-center gap-2">
               <div className="flex h-10 flex-1 items-center gap-2.5 rounded-xl bg-[var(--launcher-card-hover-bg)] px-3.5 ring-1 ring-[var(--launcher-card-border)] transition-all focus-within:ring-[var(--ring)]">
-                <Search className="size-4 shrink-0 text-foreground/30" />
-                <input
+                <Search className="size-4 shrink-0 text-muted-foreground" />
+                <Input
                   type="text"
                   value={searchInput}
                   onChange={(event) => setSearchInput(event.target.value)}
@@ -558,13 +577,15 @@ export function SpotifyView({ initialQuery, onBack }: SpotifyViewProps) {
                       void runSearch();
                     }
                   }}
-                  className="h-full w-full border-none bg-transparent text-[13px] text-foreground/90 placeholder:text-foreground/30 focus:outline-none"
+                  className="h-full w-full border-none bg-transparent text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none"
                   placeholder="Search tracks, artists, albums..."
                 />
               </div>
 
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
                 onClick={() => void runSearch()}
                 disabled={!isConnected || isSearching || !searchInput.trim()}
                 className="flex size-10 items-center justify-center rounded-xl bg-[var(--launcher-card-selected-bg)] text-[var(--ring)] ring-1 ring-[var(--launcher-card-selected-border)] transition-all hover:bg-[var(--command-item-selected-bg)] disabled:opacity-40"
@@ -574,22 +595,24 @@ export function SpotifyView({ initialQuery, onBack }: SpotifyViewProps) {
                 ) : (
                   <Search className="size-4" />
                 )}
-              </button>
+              </Button>
             </div>
 
             {/* Search results */}
             <div className="mt-4 space-y-2">
               {searchResults.length === 0 ? (
-                <p className="text-[12px] text-foreground/35">
+                <p className="text-[12px] text-muted-foreground">
                   {isConnected
                     ? "Search for a song to see results."
                     : "Connect Spotify first, then search tracks."}
                 </p>
               ) : (
                 searchResults.map((track, idx) => (
-                  <button
+                  <Button
                     key={track.id}
                     type="button"
+                    variant="ghost"
+                    size="sm"
                     onClick={() =>
                       track.external_urls?.spotify && void openUrl(track.external_urls.spotify)
                     }
@@ -608,21 +631,21 @@ export function SpotifyView({ initialQuery, onBack }: SpotifyViewProps) {
                           className="h-full w-full object-cover"
                         />
                       ) : (
-                        <div className="flex h-full w-full items-center justify-center text-foreground/30">
+                        <div className="flex h-full w-full items-center justify-center text-muted-foreground">
                           <Disc3 className="size-4" />
                         </div>
                       )}
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-[13px] font-medium text-foreground/80">
+                      <p className="truncate text-[13px] font-medium text-muted-foreground">
                         {track.name}
                       </p>
-                      <p className="truncate text-[11px] text-foreground/40">{toArtists(track)}</p>
+                      <p className="truncate text-[11px] text-muted-foreground">{toArtists(track)}</p>
                     </div>
 
-                    <ExternalLink className="size-3.5 shrink-0 text-foreground/30 opacity-0 transition-opacity group-hover:opacity-100" />
-                  </button>
+                    <ExternalLink className="size-3.5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+                  </Button>
                 ))
               )}
             </div>
@@ -639,30 +662,30 @@ export function SpotifyView({ initialQuery, onBack }: SpotifyViewProps) {
 
       {/* Footer */}
       <footer className="spotify-footer flex h-11 shrink-0 items-center justify-between border-t border-[var(--footer-border)] px-5">
-        <div className="flex items-center gap-2 text-[11px] text-foreground/35">
+        <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
           <div className="flex size-5 items-center justify-center rounded-md bg-[var(--launcher-chip-bg)]">
             <Music className="size-3 text-[var(--ring)]" />
           </div>
           <span className="font-medium">Spotify</span>
           {isConnected && user && (
             <>
-              <span className="text-foreground/20">·</span>
+              <span className="text-muted-foreground">·</span>
               <span>{user.display_name || user.id}</span>
             </>
           )}
         </div>
 
-        <div className="flex items-center gap-3 text-[11px] text-foreground/25">
+        <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
           <span className="flex items-center gap-1.5">
-            <kbd className="rounded-md bg-[var(--launcher-chip-bg)] px-1.5 py-0.5 font-mono text-[10px] text-foreground/40">
+            <Kbd className="rounded-md px-1.5 py-0.5 text-[10px] text-muted-foreground">
               Enter
-            </kbd>
+            </Kbd>
             Search
           </span>
           <span className="flex items-center gap-1.5">
-            <kbd className="rounded-md bg-[var(--launcher-chip-bg)] px-1.5 py-0.5 font-mono text-[10px] text-foreground/40">
+            <Kbd className="rounded-md px-1.5 py-0.5 text-[10px] text-muted-foreground">
               Esc
-            </kbd>
+            </Kbd>
             Back
           </span>
         </div>

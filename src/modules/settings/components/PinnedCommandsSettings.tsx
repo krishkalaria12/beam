@@ -1,6 +1,8 @@
 import { ArrowDown, ArrowUp, GripVertical, Pin, PinOff } from "lucide-react";
 import { useMemo } from "react";
 
+import { IconChip } from "@/components/module";
+import { Button } from "@/components/ui/button";
 import { staticCommandRegistry } from "@/command-registry/registry";
 import { cn } from "@/lib/utils";
 
@@ -43,11 +45,11 @@ export function PinnedCommandsSettings({
     <div className="settings-panel px-4 py-6 space-y-5">
       {/* Section header */}
       <div className="flex items-center gap-3 px-1">
-        <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/45">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
           Pinned Commands
         </span>
         <div className="h-px flex-1 bg-[var(--launcher-chip-bg)]" />
-        <span className="text-[11px] text-foreground/35 tabular-nums">
+        <span className="text-[11px] tabular-nums text-muted-foreground">
           {pinnedCommands.length} {pinnedCommands.length === 1 ? "item" : "items"}
         </span>
       </div>
@@ -55,14 +57,11 @@ export function PinnedCommandsSettings({
       {pinnedCommands.length === 0 ? (
         // Empty state
         <div className="flex flex-col items-center justify-center py-14 text-center">
-          <div
-            className="flex size-14 items-center justify-center rounded-2xl 
-            bg-gradient-to-br from-amber-500/10 to-orange-500/10 mb-4"
-          >
-            <Pin className="size-6 text-amber-500/60" />
-          </div>
-          <p className="text-[14px] font-medium text-foreground/70 mb-1.5">No pinned commands</p>
-          <p className="text-[12px] text-foreground/40 max-w-[220px] leading-relaxed">
+          <IconChip variant="orange" size="lg" className="mb-4 size-14 rounded-2xl">
+            <Pin className="size-6" />
+          </IconChip>
+          <p className="mb-1.5 text-[14px] font-medium text-muted-foreground">No pinned commands</p>
+          <p className="max-w-[220px] text-[12px] leading-relaxed text-muted-foreground">
             Pin commands from the main launcher to access them quickly
           </p>
         </div>
@@ -77,31 +76,33 @@ export function PinnedCommandsSettings({
               style={{ animationDelay: `${index * 30}ms` }}
             >
               {/* Drag handle */}
-              <div className="text-foreground/20 group-hover:text-foreground/40 transition-colors">
+              <div className="text-muted-foreground transition-colors group-hover:text-foreground">
                 <GripVertical className="size-4" />
               </div>
 
               {/* Order number */}
               <div
                 className="flex size-7 items-center justify-center rounded-lg 
-                bg-gradient-to-br from-amber-500/15 to-orange-500/15 
-                text-[11px] font-bold text-amber-500/80 tabular-nums"
+                bg-[var(--icon-orange-bg)] text-[var(--icon-orange-fg)]
+                text-[11px] font-bold tabular-nums"
               >
                 {index + 1}
               </div>
 
               {/* Content */}
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-medium text-foreground/90 truncate tracking-[-0.01em]">
+                <p className="truncate text-[13px] font-medium tracking-[-0.01em] text-foreground">
                   {entry.title}
                 </p>
-                <p className="text-[11px] text-foreground/40 truncate">{entry.subtitle}</p>
+                <p className="truncate text-[11px] text-muted-foreground">{entry.subtitle}</p>
               </div>
 
               {/* Actions */}
               <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button
+                <Button
                   type="button"
+                  size="icon-sm"
+                  variant="ghost"
                   onMouseDown={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
@@ -112,16 +113,18 @@ export function PinnedCommandsSettings({
                     onMovePinned(entry.commandId, "up");
                   }}
                   className={cn(
-                    "flex size-8 items-center justify-center rounded-lg transition-all duration-150",
-                    "text-foreground/40 hover:text-foreground hover:bg-[var(--launcher-chip-bg)]",
+                    "size-8 rounded-lg transition-all duration-150",
+                    "text-muted-foreground hover:text-foreground hover:bg-[var(--launcher-chip-bg)]",
                     !entry.canMoveUp && "pointer-events-none opacity-30",
                   )}
                   aria-label="Move up"
                 >
                   <ArrowUp className="size-4" />
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  size="icon-sm"
+                  variant="ghost"
                   onMouseDown={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
@@ -132,16 +135,18 @@ export function PinnedCommandsSettings({
                     onMovePinned(entry.commandId, "down");
                   }}
                   className={cn(
-                    "flex size-8 items-center justify-center rounded-lg transition-all duration-150",
-                    "text-foreground/40 hover:text-foreground hover:bg-[var(--launcher-chip-bg)]",
+                    "size-8 rounded-lg transition-all duration-150",
+                    "text-muted-foreground hover:text-foreground hover:bg-[var(--launcher-chip-bg)]",
                     !entry.canMoveDown && "pointer-events-none opacity-30",
                   )}
                   aria-label="Move down"
                 >
                   <ArrowDown className="size-4" />
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  size="icon-sm"
+                  variant="ghost"
                   onMouseDown={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
@@ -151,12 +156,11 @@ export function PinnedCommandsSettings({
                     e.stopPropagation();
                     onSetPinned(entry.commandId, false);
                   }}
-                  className="flex size-8 items-center justify-center rounded-lg transition-all duration-150
-                    text-foreground/40 hover:text-rose-400 hover:bg-rose-500/10"
+                  className="size-8 rounded-lg transition-all duration-150 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                   aria-label="Unpin"
                 >
                   <PinOff className="size-4" />
-                </button>
+                </Button>
               </div>
             </div>
           ))}
@@ -164,7 +168,7 @@ export function PinnedCommandsSettings({
       )}
 
       {/* Hint */}
-      <p className="text-[12px] text-foreground/35 px-1 leading-relaxed">
+      <p className="px-1 text-[12px] leading-relaxed text-muted-foreground">
         Pinned commands appear at the top of your launcher. Drag or use arrows to reorder.
       </p>
     </div>

@@ -1,5 +1,6 @@
 import { CommandFooterBar } from "@/components/command/command-footer-bar";
 import { CommandKeyHint } from "@/components/command/command-key-hint";
+import { Kbd } from "@/components/module";
 import { Button } from "@/components/ui/button";
 import { RunnerToast } from "@/modules/extensions/components/runner/runner-toast";
 import type { FlattenedAction } from "@/modules/extensions/components/runner/types";
@@ -56,12 +57,12 @@ export function RunnerActionBar({
               {action.shortcut ? (
                 <div className="ml-0.5 flex items-center gap-1">
                   {parseShortcut(action.shortcut).map((shortcutKey) => (
-                    <kbd
+                    <Kbd
                       key={`${action.nodeId}:${shortcutKey}`}
-                      className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded bg-[var(--kbd-bg)] px-1 font-mono text-[10px] text-muted-foreground"
+                      className="h-[18px] min-w-[18px] rounded px-1 text-[10px] text-muted-foreground"
                     >
                       {shortcutKey}
-                    </kbd>
+                    </Kbd>
                   ))}
                 </div>
               ) : null}

@@ -2,15 +2,6 @@ import type { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 
-/**
- * Semantic color variants that map to CSS variable pairs:
- * --icon-{variant}-bg / --icon-{variant}-fg
- *
- * All variants are defined in tokens.css (default & dark) and fully
- * overridden in themes.css (.sc-solid) and any user theme
- * (e.g. .theme-user-neo-brutalism). This means IconChip always
- * inherits the active theme's palette without any hardcoded colors.
- */
 export type IconChipVariant =
   | "neutral"
   | "primary"
@@ -46,21 +37,6 @@ const variantStyles: Record<IconChipVariant, string> = {
   green: "bg-[var(--icon-green-bg)] text-[var(--icon-green-fg)]",
 };
 
-/**
- * A square icon container that uses theme-aware CSS variable color pairs.
- * Replaces hardcoded gradient backgrounds like `bg-gradient-to-br from-amber-500/25`.
- *
- * @example
- * // Before:
- * <div className="size-9 rounded-xl bg-gradient-to-br from-amber-500/25 to-orange-500/25 p-2">
- *   <ListTodo className="size-full text-amber-400" />
- * </div>
- *
- * // After:
- * <IconChip variant="orange" size="lg">
- *   <ListTodo />
- * </IconChip>
- */
 export function IconChip({ variant = "neutral", size = "md", className, children }: IconChipProps) {
   return (
     <div

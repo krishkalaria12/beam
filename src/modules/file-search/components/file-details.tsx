@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import type { FileEntry } from "../types";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 interface FileDetailsProps {
   selectedFile: FileEntry | null;
@@ -66,137 +67,137 @@ function getFileDisplayInfo(name: string): {
     ts: {
       type: "TypeScript",
       icon: <FileCode className="size-8" />,
-      color: "text-blue-400",
-      bgColor: "from-blue-500/20 to-blue-500/5",
+      color: "text-[var(--icon-primary-fg)]",
+      bgColor: "bg-[var(--icon-primary-bg)]",
     },
     tsx: {
       type: "TypeScript React",
       icon: <FileCode className="size-8" />,
-      color: "text-blue-400",
-      bgColor: "from-blue-500/20 to-blue-500/5",
+      color: "text-[var(--icon-primary-fg)]",
+      bgColor: "bg-[var(--icon-primary-bg)]",
     },
     js: {
       type: "JavaScript",
       icon: <FileCode className="size-8" />,
-      color: "text-yellow-400",
-      bgColor: "from-yellow-500/20 to-yellow-500/5",
+      color: "text-[var(--icon-orange-fg)]",
+      bgColor: "bg-[var(--icon-orange-bg)]",
     },
     jsx: {
       type: "JavaScript React",
       icon: <FileCode className="size-8" />,
-      color: "text-yellow-400",
-      bgColor: "from-yellow-500/20 to-yellow-500/5",
+      color: "text-[var(--icon-orange-fg)]",
+      bgColor: "bg-[var(--icon-orange-bg)]",
     },
     py: {
       type: "Python",
       icon: <FileCode className="size-8" />,
-      color: "text-green-400",
-      bgColor: "from-green-500/20 to-green-500/5",
+      color: "text-[var(--icon-green-fg)]",
+      bgColor: "bg-[var(--icon-green-bg)]",
     },
     rs: {
       type: "Rust",
       icon: <FileCode className="size-8" />,
-      color: "text-orange-400",
-      bgColor: "from-orange-500/20 to-orange-500/5",
+      color: "text-[var(--icon-orange-fg)]",
+      bgColor: "bg-[var(--icon-orange-bg)]",
     },
     go: {
       type: "Go",
       icon: <FileCode className="size-8" />,
-      color: "text-cyan-400",
-      bgColor: "from-cyan-500/20 to-cyan-500/5",
+      color: "text-[var(--icon-cyan-fg)]",
+      bgColor: "bg-[var(--icon-cyan-bg)]",
     },
     css: {
       type: "Stylesheet",
       icon: <FileCode className="size-8" />,
-      color: "text-pink-400",
-      bgColor: "from-pink-500/20 to-pink-500/5",
+      color: "text-[var(--icon-purple-fg)]",
+      bgColor: "bg-[var(--icon-purple-bg)]",
     },
     html: {
       type: "HTML",
       icon: <FileCode className="size-8" />,
-      color: "text-orange-400",
-      bgColor: "from-orange-500/20 to-orange-500/5",
+      color: "text-[var(--icon-orange-fg)]",
+      bgColor: "bg-[var(--icon-orange-bg)]",
     },
     // Config
     json: {
       type: "JSON",
       icon: <FileJson className="size-8" />,
-      color: "text-yellow-300",
-      bgColor: "from-yellow-500/20 to-yellow-500/5",
+      color: "text-[var(--icon-orange-fg)]",
+      bgColor: "bg-[var(--icon-orange-bg)]",
     },
     yaml: {
       type: "YAML",
       icon: <FileText className="size-8" />,
-      color: "text-pink-400",
-      bgColor: "from-pink-500/20 to-pink-500/5",
+      color: "text-[var(--icon-purple-fg)]",
+      bgColor: "bg-[var(--icon-purple-bg)]",
     },
     yml: {
       type: "YAML",
       icon: <FileText className="size-8" />,
-      color: "text-pink-400",
-      bgColor: "from-pink-500/20 to-pink-500/5",
+      color: "text-[var(--icon-purple-fg)]",
+      bgColor: "bg-[var(--icon-purple-bg)]",
     },
     toml: {
       type: "TOML",
       icon: <FileText className="size-8" />,
-      color: "text-orange-300",
-      bgColor: "from-orange-500/20 to-orange-500/5",
+      color: "text-[var(--icon-orange-fg)]",
+      bgColor: "bg-[var(--icon-orange-bg)]",
     },
     // Docs
     md: {
       type: "Markdown",
       icon: <FileText className="size-8" />,
-      color: "text-slate-300",
-      bgColor: "from-slate-500/20 to-slate-500/5",
+      color: "text-muted-foreground",
+      bgColor: "bg-[var(--icon-neutral-bg)]",
     },
     txt: {
       type: "Plain Text",
       icon: <FileText className="size-8" />,
-      color: "text-slate-400",
-      bgColor: "from-slate-500/20 to-slate-500/5",
+      color: "text-muted-foreground",
+      bgColor: "bg-[var(--icon-neutral-bg)]",
     },
     pdf: {
       type: "PDF Document",
       icon: <FileText className="size-8" />,
-      color: "text-red-400",
-      bgColor: "from-red-500/20 to-red-500/5",
+      color: "text-[var(--icon-red-fg)]",
+      bgColor: "bg-[var(--icon-red-bg)]",
     },
     // Images
     png: {
       type: "PNG Image",
       icon: <Image className="size-8" />,
-      color: "text-purple-400",
-      bgColor: "from-purple-500/20 to-purple-500/5",
+      color: "text-[var(--icon-purple-fg)]",
+      bgColor: "bg-[var(--icon-purple-bg)]",
     },
     jpg: {
       type: "JPEG Image",
       icon: <Image className="size-8" />,
-      color: "text-purple-400",
-      bgColor: "from-purple-500/20 to-purple-500/5",
+      color: "text-[var(--icon-purple-fg)]",
+      bgColor: "bg-[var(--icon-purple-bg)]",
     },
     jpeg: {
       type: "JPEG Image",
       icon: <Image className="size-8" />,
-      color: "text-purple-400",
-      bgColor: "from-purple-500/20 to-purple-500/5",
+      color: "text-[var(--icon-purple-fg)]",
+      bgColor: "bg-[var(--icon-purple-bg)]",
     },
     svg: {
       type: "SVG Image",
       icon: <Image className="size-8" />,
-      color: "text-orange-400",
-      bgColor: "from-orange-500/20 to-orange-500/5",
+      color: "text-[var(--icon-orange-fg)]",
+      bgColor: "bg-[var(--icon-orange-bg)]",
     },
     gif: {
       type: "GIF Image",
       icon: <Image className="size-8" />,
-      color: "text-pink-400",
-      bgColor: "from-pink-500/20 to-pink-500/5",
+      color: "text-[var(--icon-purple-fg)]",
+      bgColor: "bg-[var(--icon-purple-bg)]",
     },
     webp: {
       type: "WebP Image",
       icon: <Image className="size-8" />,
-      color: "text-blue-400",
-      bgColor: "from-blue-500/20 to-blue-500/5",
+      color: "text-[var(--icon-primary-fg)]",
+      bgColor: "bg-[var(--icon-primary-bg)]",
     },
   };
 
@@ -205,7 +206,7 @@ function getFileDisplayInfo(name: string): {
       type: ext ? `${ext.toUpperCase()} File` : "File",
       icon: <FileIcon className="size-8" />,
       color: "text-muted-foreground",
-      bgColor: "from-slate-500/20 to-slate-500/5",
+      bgColor: "bg-[var(--icon-neutral-bg)]",
     }
   );
 }
@@ -223,17 +224,17 @@ export function FileDetails({ selectedFile }: FileDetailsProps) {
     return (
       <div className="flex h-full w-full flex-col items-center justify-center p-8">
         <div className="relative">
-          <div className="absolute -inset-6 rounded-full bg-gradient-radial from-muted/20 to-transparent blur-2xl" />
+          <div className="absolute -inset-6 rounded-full bg-gradient-radial blur-2xl" />
           <div
             className="relative flex size-20 items-center justify-center rounded-2xl 
-            bg-gradient-to-br from-[var(--command-item-hover-bg)] to-[var(--command-item-selected-bg)]
+            bg-[var(--launcher-card-bg)]
             border border-[var(--ui-divider)]"
           >
             <FileIcon className="size-8 text-muted-foreground/25" />
           </div>
         </div>
         <div className="mt-5 text-center max-w-[200px]">
-          <p className="text-[13px] font-semibold text-foreground/70">No file selected</p>
+          <p className="text-[13px] font-semibold text-muted-foreground">No file selected</p>
           <p className="mt-1.5 text-[11px] text-muted-foreground/50 leading-relaxed">
             Select a file from the list to view its details
           </p>
@@ -249,13 +250,13 @@ export function FileDetails({ selectedFile }: FileDetailsProps) {
     <div className="flex h-full w-full flex-col overflow-y-auto scrollbar-hidden-until-hover">
       {/* Hero section - file preview */}
       <div className="flex flex-col items-center justify-center px-6 pt-8 pb-6">
-        {/* Large file icon with gradient background */}
+        {/* Large file icon preview */}
         <div className="relative mb-5">
           {/* Glow effect */}
           <div
             className={cn(
               "absolute -inset-4 rounded-3xl blur-2xl opacity-40",
-              `bg-gradient-to-br ${fileInfo.bgColor}`,
+              `bg-[var(--launcher-card-bg)] ${fileInfo.bgColor}`,
             )}
           />
 
@@ -263,7 +264,7 @@ export function FileDetails({ selectedFile }: FileDetailsProps) {
           <div
             className={cn(
               "relative flex size-24 items-center justify-center rounded-2xl",
-              `bg-gradient-to-br ${fileInfo.bgColor}`,
+              `bg-[var(--launcher-card-bg)] ${fileInfo.bgColor}`,
               "border border-[var(--launcher-card-border)]",
               "shadow-lg shadow-black/20",
             )}
@@ -286,7 +287,7 @@ export function FileDetails({ selectedFile }: FileDetailsProps) {
             className={cn(
               "px-2.5 py-1 rounded-lg text-[11px] font-semibold",
               "bg-[var(--command-item-hover-bg)] border border-[var(--ui-divider)]",
-              fileInfo.color,
+              "text-foreground",
             )}
           >
             {fileInfo.type}
@@ -298,7 +299,7 @@ export function FileDetails({ selectedFile }: FileDetailsProps) {
       </div>
 
       {/* Divider */}
-      <div className="mx-5 h-px bg-gradient-to-r from-transparent via-[var(--ui-divider)] to-transparent" />
+      <div className="mx-5 h-px bg-[var(--launcher-card-bg)]" />
 
       {/* Metadata section */}
       <div className="flex-1 p-5 space-y-4">
@@ -311,7 +312,7 @@ export function FileDetails({ selectedFile }: FileDetailsProps) {
                 Size
               </span>
             </div>
-            <p className="text-[14px] font-bold text-foreground/90">
+            <p className="text-[14px] font-bold text-foreground">
               {formatBytes(selectedFile.size)}
             </p>
           </div>
@@ -323,7 +324,7 @@ export function FileDetails({ selectedFile }: FileDetailsProps) {
                 Modified
               </span>
             </div>
-            <p className="text-[13px] font-semibold text-foreground/90">
+            <p className="text-[13px] font-semibold text-foreground">
               {formatDate(selectedFile.modified)}
             </p>
           </div>
@@ -337,18 +338,21 @@ export function FileDetails({ selectedFile }: FileDetailsProps) {
               Location
             </span>
           </div>
-          <p className="text-[12px] font-medium text-foreground/80 break-all leading-relaxed">
+          <p className="text-[12px] font-medium text-muted-foreground break-all leading-relaxed">
             {directory}
           </p>
         </div>
 
         {/* Full path - expandable */}
-        <div className="rounded-xl bg-[var(--solid-bg-base,var(--background))]/50 p-3 border border-[var(--ui-divider)]">
+        <div className="rounded-xl bg-[var(--launcher-card-bg)]/50 p-3 border border-[var(--ui-divider)]">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/50">
               Full Path
             </span>
-            <button
+            <Button
+              type="button"
+              variant="ghost"
+              size="xs"
               className="flex items-center gap-1 px-1.5 py-0.5 rounded 
               text-[10px] font-medium text-muted-foreground/60 
               hover:bg-[var(--command-item-hover-bg)] hover:text-foreground
@@ -356,7 +360,7 @@ export function FileDetails({ selectedFile }: FileDetailsProps) {
             >
               <Copy className="size-3" />
               Copy
-            </button>
+            </Button>
           </div>
           <code
             className="block text-[11px] font-mono text-muted-foreground/70 break-all leading-relaxed
@@ -368,7 +372,10 @@ export function FileDetails({ selectedFile }: FileDetailsProps) {
 
         {/* Quick actions */}
         <div className="flex gap-2">
-          <button
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
             className="flex-1 flex items-center justify-center gap-2 
             h-9 rounded-xl border border-[var(--ui-divider)]
             bg-[var(--command-item-hover-bg)]/50
@@ -378,7 +385,7 @@ export function FileDetails({ selectedFile }: FileDetailsProps) {
           >
             <ExternalLink className="size-3.5" />
             Reveal in Finder
-          </button>
+          </Button>
         </div>
       </div>
     </div>

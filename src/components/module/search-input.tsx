@@ -1,8 +1,9 @@
 import * as React from "react";
 
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
-interface SearchInputProps extends Omit<React.ComponentProps<"input">, "onChange"> {
+interface SearchInputProps extends Omit<React.ComponentProps<typeof Input>, "onChange"> {
   /** Controlled value */
   value: string;
   /** Change handler receives the string directly, not a SyntheticEvent */
@@ -15,30 +16,6 @@ interface SearchInputProps extends Omit<React.ComponentProps<"input">, "onChange
   containerClassName?: string;
 }
 
-/**
- * A theme-aware search input that uses CSS variables for all color states.
- * Replaces ad-hoc raw `<input>` elements with hardcoded Tailwind color classes.
- *
- * All background, border, text, placeholder, ring, and focus colors are driven
- * by CSS variables, so they respond correctly to any user-defined theme.
- *
- * @example
- * // Before:
- * <input
- *   className="h-10 w-full rounded-xl bg-[var(--launcher-card-hover-bg)] pl-10 pr-4
- *              text-[14px] font-medium text-foreground/90 outline-none ring-1
- *              ring-[var(--launcher-card-border)] focus:ring-[var(--ring)]"
- *   placeholder="Search clipboard history..."
- * />
- *
- * // After:
- * <SearchInput
- *   value={query}
- *   onChange={setQuery}
- *   leftIcon={<Search />}
- *   placeholder="Search clipboard history..."
- * />
- */
 export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
   function SearchInput(
     { value, onChange, leftIcon, rightSlot, className, containerClassName, ...props },
@@ -63,7 +40,7 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
           </div>
         )}
 
-        <input
+        <Input
           ref={ref}
           value={value}
           onChange={(e) => onChange(e.target.value)}
@@ -80,9 +57,7 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
         />
 
         {/* Right slot */}
-        {rightSlot && (
-          <div className="absolute right-2 flex items-center">{rightSlot}</div>
-        )}
+        {rightSlot && <div className="absolute right-2 flex items-center">{rightSlot}</div>}
       </div>
     );
   },

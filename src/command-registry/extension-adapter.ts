@@ -100,7 +100,7 @@ export function toExtensionCommandDescriptor(
     action: {
       type: "CUSTOM",
       payload: {
-        ...(metadata.payload ?? {}),
+        ...metadata.payload,
         extensionId: metadata.extensionId.trim(),
         extensionCommandId: metadata.commandId.trim(),
         requiresDesktopRuntime: Boolean(metadata.execution?.requiresDesktopRuntime),

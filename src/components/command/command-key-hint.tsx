@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
+import { Kbd } from "@/components/module/kbd";
 
 interface CommandKeyHintProps {
   keyLabel: ReactNode | ReactNode[];
@@ -23,16 +24,15 @@ export function CommandKeyHint({
   const keycaps = (
     <div className="flex items-center gap-1">
       {keyLabels.map((entry, index) => (
-        <kbd
+        <Kbd
           key={`key:${index}`}
           className={cn(
-            "inline-flex h-[22px] min-w-[22px] items-center justify-center rounded px-1.5 font-mono text-[11px] font-medium text-muted-foreground",
-            "bg-[var(--kbd-bg)]",
+            "h-[22px] min-w-[22px] px-1.5 text-[11px] font-medium text-muted-foreground",
             keyClassName,
           )}
         >
           {entry}
-        </kbd>
+        </Kbd>
       ))}
     </div>
   );

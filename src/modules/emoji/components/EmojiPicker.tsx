@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import { Smile, Sparkles } from "lucide-react";
+import { IconChip, ModuleFooter } from "@/components/module";
 import { type EmojiData } from "../types";
 import { EmojiGrid } from "./EmojiGrid";
 import { RecentlyUsed } from "./RecentlyUsed";
@@ -53,39 +54,30 @@ export function EmojiPicker({
         </div>
       </div>
 
-      {/* Footer - refined and minimal */}
-      <footer className="emoji-footer-enter flex h-11 shrink-0 items-center justify-between border-t border-[var(--launcher-card-border)] px-5">
-        <div className="flex items-center gap-2 text-[11px] text-foreground/35">
-          <div className="flex size-5 items-center justify-center rounded-md bg-[var(--launcher-card-hover-bg)]">
-            <Smile className="size-3" />
-          </div>
-          <span className="font-medium">{emojis.length.toLocaleString()} emojis</span>
-          {recentEmojis.length > 0 && (
-            <>
-              <span className="text-foreground/20">·</span>
-              <span className="flex items-center gap-1">
-                <Sparkles className="size-2.5" />
-                {recentEmojis.length} recent
-              </span>
-            </>
-          )}
-        </div>
-
-        <div className="flex items-center gap-3 text-[11px] text-foreground/25">
-          <span className="flex items-center gap-1.5">
-            <kbd className="rounded-md bg-[var(--launcher-card-hover-bg)] px-1.5 py-0.5 font-mono text-[10px] text-foreground/40">
-              Enter
-            </kbd>
-            Copy
-          </span>
-          <span className="flex items-center gap-1.5">
-            <kbd className="rounded-md bg-[var(--launcher-card-hover-bg)] px-1.5 py-0.5 font-mono text-[10px] text-foreground/40">
-              Esc
-            </kbd>
-            Back
-          </span>
-        </div>
-      </footer>
+      <ModuleFooter
+        className="emoji-footer-enter h-11 px-5"
+        leftSlot={
+          <>
+            <IconChip variant="neutral" size="xs">
+              <Smile className="size-3" />
+            </IconChip>
+            <span className="font-medium">{emojis.length.toLocaleString()} emojis</span>
+            {recentEmojis.length > 0 && (
+              <>
+                <span className="text-muted-foreground">·</span>
+                <span className="flex items-center gap-1">
+                  <Sparkles className="size-2.5" />
+                  {recentEmojis.length} recent
+                </span>
+              </>
+            )}
+          </>
+        }
+        shortcuts={[
+          { keys: ["Enter"], label: "Copy" },
+          { keys: ["Esc"], label: "Back" },
+        ]}
+      />
     </div>
   );
 }

@@ -2,6 +2,9 @@ import { useForm } from "@tanstack/react-form";
 import { AlertTriangle, ChevronLeft, Loader2, Play, Terminal } from "lucide-react";
 import { useMemo, useState, type KeyboardEvent } from "react";
 
+import { Kbd } from "@/components/module";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -101,24 +104,26 @@ export function ScriptCommandArgumentsForm({
     <div className="scripts-args-enter flex h-full w-full flex-col overflow-hidden text-foreground">
       {/* Header */}
       <header className="scripts-header-enter flex h-14 shrink-0 items-center gap-3 border-b border-[var(--launcher-card-border)] px-4">
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="icon-sm"
           onClick={onBack}
-          className="flex size-9 items-center justify-center rounded-lg bg-[var(--launcher-card-hover-bg)] text-foreground/40 transition-all duration-200 hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground/70"
+          className="flex size-9 items-center justify-center rounded-lg bg-[var(--launcher-card-hover-bg)] text-muted-foreground transition-all duration-200 hover:bg-[var(--launcher-card-hover-bg)] hover:text-muted-foreground"
           aria-label="Back"
         >
           <ChevronLeft className="size-4" />
-        </button>
+        </Button>
 
-        <div className="flex size-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20">
-          <Play className="size-5 text-amber-400" />
+        <div className="flex size-10 items-center justify-center rounded-xl bg-[var(--launcher-card-bg)]">
+          <Play className="size-5 text-[var(--icon-orange-fg)]" />
         </div>
 
         <div className="flex-1 min-w-0">
-          <h1 className="text-[14px] font-semibold tracking-[-0.02em] text-foreground/90">
+          <h1 className="text-[14px] font-semibold tracking-[-0.02em] text-foreground">
             Run {script.title}
           </h1>
-          <p className="text-[12px] text-foreground/40 tracking-[-0.01em]">
+          <p className="text-[12px] text-muted-foreground tracking-[-0.01em]">
             Provide arguments before execution
           </p>
         </div>
@@ -129,11 +134,11 @@ export function ScriptCommandArgumentsForm({
         <div className="mx-auto w-full max-w-2xl space-y-4">
           {/* Script info */}
           <div className="rounded-xl bg-[var(--launcher-card-hover-bg)] p-4 ring-1 ring-[var(--launcher-card-border)]">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/45">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
               Script
             </p>
-            <p className="mt-1.5 text-[14px] font-medium text-foreground/90">{script.title}</p>
-            <p className="mt-1 break-all font-mono text-[11px] text-foreground/40">
+            <p className="mt-1.5 text-[14px] font-medium text-foreground">{script.title}</p>
+            <p className="mt-1 break-all font-mono text-[11px] text-muted-foreground">
               {script.scriptPath}
             </p>
           </div>
@@ -162,10 +167,10 @@ export function ScriptCommandArgumentsForm({
                     >
                       <Label
                         htmlFor={`script-argument-${argument.name}`}
-                        className="text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/45"
+                        className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground"
                       >
                         {label}
-                        {argument.required && <span className="ml-1 text-red-400">*</span>}
+                        {argument.required && <span className="ml-1 text-[var(--icon-red-fg)]">*</span>}
                       </Label>
 
                       <div className="mt-2">
@@ -180,7 +185,7 @@ export function ScriptCommandArgumentsForm({
                             <SelectTrigger
                               id={`script-argument-${argument.name}`}
                               onKeyDown={stopFieldKeyPropagation}
-                              className="h-10 rounded-xl border-0 bg-[var(--launcher-card-hover-bg)] ring-1 ring-[var(--launcher-card-border)] text-[13px] text-foreground/80 focus:ring-[var(--ring)]"
+                              className="h-10 rounded-xl border-0 bg-[var(--launcher-card-hover-bg)] ring-1 ring-[var(--launcher-card-border)] text-[13px] text-muted-foreground focus:ring-[var(--ring)]"
                             >
                               <SelectValue placeholder={argument.placeholder || "Select value"} />
                             </SelectTrigger>
@@ -192,7 +197,7 @@ export function ScriptCommandArgumentsForm({
                                   <SelectItem
                                     key={`${argument.name}:${idx}:${value}`}
                                     value={value}
-                                    className="text-[12px] text-foreground/70 focus:bg-[var(--launcher-card-hover-bg)] focus:text-foreground"
+                                    className="text-[12px] text-muted-foreground focus:bg-[var(--launcher-card-hover-bg)] focus:text-foreground"
                                   >
                                     {title}
                                   </SelectItem>
@@ -201,7 +206,7 @@ export function ScriptCommandArgumentsForm({
                             </SelectContent>
                           </Select>
                         ) : (
-                          <input
+                          <Input
                             id={`script-argument-${argument.name}`}
                             type={argument.type === "password" ? "password" : "text"}
                             value={fieldApi.state.value ?? ""}
@@ -212,7 +217,7 @@ export function ScriptCommandArgumentsForm({
                             onKeyDown={stopFieldKeyPropagation}
                             onKeyDownCapture={stopFieldKeyPropagation}
                             placeholder={argument.placeholder || argument.name}
-                            className="h-10 w-full rounded-xl bg-[var(--launcher-card-hover-bg)] px-4 font-mono text-[13px] text-foreground/90 placeholder:text-foreground/30 ring-1 ring-[var(--launcher-card-border)] transition-all duration-200 focus:outline-none focus:ring-[var(--ring)]"
+                            className="h-10 w-full rounded-xl bg-[var(--launcher-card-hover-bg)] px-4 font-mono text-[13px] text-foreground placeholder:text-muted-foreground ring-1 ring-[var(--launcher-card-border)] transition-all duration-200 focus:outline-none focus:ring-[var(--ring)]"
                             autoFocus={argument.index === 1}
                           />
                         )}
@@ -225,9 +230,9 @@ export function ScriptCommandArgumentsForm({
 
             {/* Error message */}
             {(validationError || errorMessage) && (
-              <div className="flex items-center gap-2.5 rounded-xl bg-red-500/10 px-4 py-3 ring-1 ring-red-500/20">
-                <AlertTriangle className="size-4 text-red-400" />
-                <span className="text-[12px] text-red-300">{validationError ?? errorMessage}</span>
+              <div className="flex items-center gap-2.5 rounded-xl bg-[var(--icon-red-bg)] px-4 py-3 ring-1 ring-[var(--icon-red-bg)]">
+                <AlertTriangle className="size-4 text-[var(--icon-red-fg)]" />
+                <span className="text-[12px] text-[var(--icon-red-fg)]">{validationError ?? errorMessage}</span>
               </div>
             )}
           </form>
@@ -236,7 +241,7 @@ export function ScriptCommandArgumentsForm({
 
       {/* Footer */}
       <footer className="scripts-footer-enter flex h-12 shrink-0 items-center justify-between border-t border-[var(--launcher-card-border)] px-4">
-        <div className="flex items-center gap-2 text-[12px] text-foreground/40">
+        <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
           <Terminal className="size-3.5" />
           <span>
             {script.requiredArgumentCount > 0
@@ -246,20 +251,22 @@ export function ScriptCommandArgumentsForm({
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 text-[11px] text-foreground/30">
-            <kbd className="rounded bg-[var(--launcher-card-hover-bg)] px-1.5 py-0.5 font-mono text-[10px]">
+          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            <Kbd className="rounded px-1.5 py-0.5 text-[10px]">
               Esc
-            </kbd>
+            </Kbd>
             <span>Back</span>
           </div>
-          <div className="flex items-center gap-1.5 text-[11px] text-foreground/30">
-            <kbd className="rounded bg-[var(--launcher-card-hover-bg)] px-1.5 py-0.5 font-mono text-[10px]">
+          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            <Kbd className="rounded px-1.5 py-0.5 text-[10px]">
               ⌘↵
-            </kbd>
+            </Kbd>
             <span>Run</span>
           </div>
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="sm"
             onClick={() => void form.handleSubmit()}
             disabled={isSubmitting}
             className="flex h-8 items-center gap-1.5 rounded-lg bg-[var(--ring)]/20 px-3.5 text-[12px] font-medium text-[var(--ring)] transition-all duration-200 hover:bg-[var(--ring)]/30 disabled:opacity-40 disabled:cursor-not-allowed"
@@ -270,7 +277,7 @@ export function ScriptCommandArgumentsForm({
               <Play className="size-3.5" />
             )}
             Run Script
-          </button>
+          </Button>
         </div>
       </footer>
     </div>

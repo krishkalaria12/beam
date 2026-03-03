@@ -2,19 +2,18 @@ import {
   ArrowDown,
   ArrowUp,
   ChevronLeft,
-  Clock,
   Loader2,
   Pause,
   Play,
   RotateCcw,
-  Signal,
   TriangleAlert,
   Wifi,
-  Zap,
 } from "lucide-react";
 import { Area, AreaChart, ResponsiveContainer } from "recharts";
 
 import { cn } from "@/lib/utils";
+import { Kbd } from "@/components/module";
+import { Button } from "@/components/ui/button";
 import { formatMetricValue, type SpeedTestStatus } from "./speed-test-shared";
 
 /* =============================================================================
@@ -28,21 +27,26 @@ interface SpeedTestStatusBadgeProps {
 
 function SpeedTestStatusBadge({ status, isPreparing }: SpeedTestStatusBadgeProps) {
   const config = {
-    idle: { label: "Ready", bg: "bg-[var(--launcher-card-hover-bg)]", text: "text-foreground/50", dot: "bg-[var(--launcher-card-hover-bg)]" },
+    idle: {
+      label: "Ready",
+      bg: "bg-[var(--launcher-card-hover-bg)]",
+      text: "text-muted-foreground",
+      dot: "bg-[var(--launcher-card-hover-bg)]",
+    },
     running: {
       label: "Testing",
-      bg: "bg-cyan-500/15",
-      text: "text-cyan-400",
-      dot: "bg-cyan-400",
+      bg: "bg-[var(--icon-cyan-bg)]",
+      text: "text-[var(--icon-cyan-fg)]",
+      dot: "bg-[var(--icon-cyan-bg)]",
     },
-    paused: { label: "Paused", bg: "bg-amber-500/15", text: "text-amber-400", dot: "bg-amber-400" },
+    paused: { label: "Paused", bg: "bg-[var(--icon-orange-bg)]", text: "text-[var(--icon-orange-fg)]", dot: "bg-[var(--icon-orange-bg)]" },
     finished: {
       label: "Complete",
-      bg: "bg-emerald-500/15",
-      text: "text-emerald-400",
-      dot: "bg-emerald-400",
+      bg: "bg-[var(--icon-green-bg)]",
+      text: "text-[var(--icon-green-fg)]",
+      dot: "bg-[var(--icon-green-bg)]",
     },
-    error: { label: "Error", bg: "bg-red-500/15", text: "text-red-400", dot: "bg-red-400" },
+    error: { label: "Error", bg: "bg-[var(--icon-red-bg)]", text: "text-[var(--icon-red-fg)]", dot: "bg-[var(--icon-red-bg)]" },
   };
 
   const { label, bg, text, dot } = config[status];
@@ -50,7 +54,7 @@ function SpeedTestStatusBadge({ status, isPreparing }: SpeedTestStatusBadgeProps
   return (
     <div className={cn("flex items-center gap-2 rounded-full px-3 py-1.5", bg)}>
       {isPreparing ? (
-        <Loader2 className="size-3 animate-spin text-cyan-400" />
+        <Loader2 className="size-3 animate-spin text-[var(--icon-cyan-fg)]" />
       ) : (
         <div
           className={cn("size-1.5 rounded-full", dot, status === "running" && "animate-pulse")}
@@ -76,22 +80,26 @@ interface SpeedTestHeaderProps {
 export function SpeedTestHeader({ status, isPreparing, onBack }: SpeedTestHeaderProps) {
   return (
     <header className="speedtest-header flex h-14 shrink-0 items-center gap-3 border-b border-[var(--launcher-card-border)] px-5">
-      <button
+      <Button
         type="button"
+        variant="ghost"
+        size="icon-sm"
         onClick={onBack}
-        className="flex size-9 items-center justify-center rounded-lg bg-[var(--launcher-card-hover-bg)] text-foreground/40 transition-all hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground/70"
+        className="flex size-9 items-center justify-center rounded-lg bg-[var(--launcher-card-hover-bg)] text-muted-foreground transition-all hover:bg-[var(--launcher-card-hover-bg)] hover:text-muted-foreground"
         aria-label="Back"
       >
         <ChevronLeft className="size-4" />
-      </button>
+      </Button>
 
       <div className="flex items-center gap-3">
-        <div className="flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500/25 to-sky-500/25 ring-1 ring-cyan-500/20">
-          <Wifi className="size-4 text-cyan-400" />
+        <div className="flex size-9 items-center justify-center rounded-xl bg-[var(--launcher-card-bg)] ring-1 ring-[var(--icon-cyan-bg)]">
+          <Wifi className="size-4 text-[var(--icon-cyan-fg)]" />
         </div>
         <div className="flex flex-col">
-          <h1 className="text-[14px] font-semibold tracking-[-0.02em] text-foreground/90">Speed Test</h1>
-          <p className="text-[11px] text-foreground/40">Network diagnostics</p>
+          <h1 className="text-[14px] font-semibold tracking-[-0.02em] text-foreground">
+            Speed Test
+          </h1>
+          <p className="text-[11px] text-muted-foreground">Network diagnostics</p>
         </div>
       </div>
 
@@ -126,10 +134,9 @@ export function SpeedCard({ metric, valueMbps, p90Value, data, isRunning, index 
   const isDownload = metric === "download";
   const label = isDownload ? "Download" : "Upload";
   const color = isDownload ? "var(--icon-cyan-fg)" : "var(--icon-purple-fg)";
-  const gradientFrom = isDownload ? "from-cyan-500/20" : "from-violet-500/20";
-  const gradientTo = isDownload ? "to-sky-500/20" : "to-purple-500/20";
-  const iconColor = isDownload ? "text-cyan-400" : "text-violet-400";
-  const ringColor = isDownload ? "ring-cyan-500/15" : "ring-violet-500/15";
+  const iconBg = isDownload ? "bg-[var(--icon-cyan-bg)]" : "bg-[var(--icon-purple-bg)]";
+  const iconColor = isDownload ? "text-[var(--icon-cyan-fg)]" : "text-[var(--icon-purple-fg)]";
+  const ringColor = isDownload ? "ring-[var(--icon-cyan-bg)]" : "ring-[var(--icon-purple-bg)]";
 
   return (
     <div
@@ -145,26 +152,26 @@ export function SpeedCard({ metric, valueMbps, p90Value, data, isRunning, index 
         <div className="flex items-center gap-2.5">
           <div
             className={cn(
-              "flex size-8 items-center justify-center rounded-xl bg-gradient-to-br ring-1",
-              gradientFrom,
-              gradientTo,
-              ringColor,
-            )}
-          >
+            "flex size-8 items-center justify-center rounded-xl bg-[var(--launcher-card-bg)] ring-1",
+            iconBg,
+            ringColor,
+          )}
+        >
             {isDownload ? (
               <ArrowDown className={cn("size-4", iconColor)} />
             ) : (
               <ArrowUp className={cn("size-4", iconColor)} />
             )}
           </div>
-          <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-foreground/45">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
             {label}
           </span>
         </div>
 
         {p90Value !== null && (
-          <span className="text-[10px] text-foreground/25">
-            P90: <span className="font-mono text-foreground/40">{formatMetricValue(p90Value, 0)}</span>
+          <span className="text-[10px] text-muted-foreground">
+            P90:{" "}
+            <span className="font-mono text-muted-foreground">{formatMetricValue(p90Value, 0)}</span>
           </span>
         )}
       </div>
@@ -173,13 +180,13 @@ export function SpeedCard({ metric, valueMbps, p90Value, data, isRunning, index 
       <div className="mb-4 flex items-baseline gap-1.5">
         <span
           className={cn(
-            "font-mono text-[40px] font-bold leading-none tracking-[-0.03em] text-foreground/95",
+            "font-mono text-[40px] font-bold leading-none tracking-[-0.03em] text-foreground",
             isRunning && valueMbps === null && "animate-pulse",
           )}
         >
           {formatMetricValue(valueMbps, 1)}
         </span>
-        <span className="font-mono text-[14px] font-medium text-foreground/40">Mbps</span>
+        <span className="font-mono text-[14px] font-medium text-muted-foreground">Mbps</span>
       </div>
 
       {/* Mini chart - takes remaining space */}
@@ -269,15 +276,15 @@ export function MetricCard({
         >
           {icon}
         </div>
-        <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-foreground/45">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
           {label}
         </span>
       </div>
       <div className="flex items-baseline gap-1">
-        <span className="font-mono text-[32px] font-bold tracking-[-0.02em] text-foreground/90">
+        <span className="font-mono text-[32px] font-bold tracking-[-0.02em] text-foreground">
           {formatMetricValue(value, 1)}
         </span>
-        <span className="font-mono text-[13px] font-medium text-foreground/35">{unit}</span>
+        <span className="font-mono text-[13px] font-medium text-muted-foreground">{unit}</span>
       </div>
     </div>
   );
@@ -293,9 +300,9 @@ interface ErrorBannerProps {
 
 export function ErrorBanner({ message }: ErrorBannerProps) {
   return (
-    <div className="speedtest-error flex items-start gap-3 rounded-xl bg-red-500/10 px-4 py-3 ring-1 ring-red-500/20">
-      <TriangleAlert className="mt-0.5 size-4 shrink-0 text-red-400" />
-      <p className="text-[12px] leading-relaxed text-red-300/90">{message}</p>
+    <div className="speedtest-error flex items-start gap-3 rounded-xl bg-[var(--icon-red-bg)] px-4 py-3 ring-1 ring-[var(--icon-red-bg)]">
+      <TriangleAlert className="mt-0.5 size-4 shrink-0 text-[var(--icon-red-fg)]" />
+      <p className="text-[12px] leading-relaxed text-[var(--icon-red-fg)]">{message}</p>
     </div>
   );
 }
@@ -329,14 +336,16 @@ export function SpeedTestFooter({
       <div className="flex items-center gap-3">
         {/* Pause/Resume button - only show when running or paused */}
         {hasStarted && !isFinished && (
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="sm"
             onClick={onPauseResume}
             disabled={isPreparing}
             className={cn(
               "flex items-center gap-2 rounded-lg px-3 py-1.5 text-[11px] font-medium transition-all",
-              "bg-[var(--launcher-card-hover-bg)] text-foreground/60 ring-1 ring-[var(--launcher-card-border)]",
-              "hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground/80",
+              "bg-[var(--launcher-card-hover-bg)] text-muted-foreground ring-1 ring-[var(--launcher-card-border)]",
+              "hover:bg-[var(--launcher-card-hover-bg)] hover:text-muted-foreground",
               "disabled:opacity-50 disabled:cursor-not-allowed",
             )}
           >
@@ -351,48 +360,50 @@ export function SpeedTestFooter({
                 Resume
               </>
             )}
-          </button>
+          </Button>
         )}
 
         {/* Restart button - show when finished or paused */}
         {hasStarted && (isFinished || isPaused) && (
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="sm"
             onClick={onRestart}
             disabled={isPreparing}
             className={cn(
               "flex items-center gap-2 rounded-lg px-3 py-1.5 text-[11px] font-medium transition-all",
-              "bg-cyan-500/15 text-cyan-400 ring-1 ring-cyan-500/20",
-              "hover:bg-cyan-500/25 hover:text-cyan-300",
+              "bg-[var(--icon-cyan-bg)] text-[var(--icon-cyan-fg)] ring-1 ring-[var(--icon-cyan-bg)]",
+              "hover:bg-[var(--icon-cyan-bg)] hover:text-[var(--icon-cyan-fg)]",
               "disabled:opacity-50 disabled:cursor-not-allowed",
             )}
           >
             <RotateCcw className="size-3" />
             Restart
-          </button>
+          </Button>
         )}
 
         {/* Status text when no buttons */}
         {(!hasStarted || (isRunning && !isPaused)) && (
-          <span className="text-[11px] font-medium text-foreground/35">
+          <span className="text-[11px] font-medium text-muted-foreground">
             {isPreparing ? "Preparing..." : isRunning ? "Testing..." : "Ready"}
           </span>
         )}
       </div>
 
       {/* Right side - keyboard hints */}
-      <div className="flex items-center gap-4 text-[11px] text-foreground/25">
+      <div className="flex items-center gap-4 text-[11px] text-muted-foreground">
         <span className="flex items-center gap-1.5">
-          <kbd className="rounded-md bg-[var(--launcher-card-hover-bg)] px-1.5 py-0.5 font-mono text-[10px] text-foreground/40">
+          <Kbd className="rounded-md px-1.5 py-0.5 text-[10px] text-muted-foreground">
             Enter
-          </kbd>
-          <span className="text-foreground/35">{hasStarted ? "Restart" : "Start"}</span>
+          </Kbd>
+          <span className="text-muted-foreground">{hasStarted ? "Restart" : "Start"}</span>
         </span>
         <span className="flex items-center gap-1.5">
-          <kbd className="rounded-md bg-[var(--launcher-card-hover-bg)] px-1.5 py-0.5 font-mono text-[10px] text-foreground/40">
+          <Kbd className="rounded-md px-1.5 py-0.5 text-[10px] text-muted-foreground">
             Esc
-          </kbd>
-          <span className="text-foreground/35">Back</span>
+          </Kbd>
+          <span className="text-muted-foreground">Back</span>
         </span>
       </div>
     </footer>

@@ -83,13 +83,13 @@ export function CalculatorResultItem({
       >
         {/* Header */}
         <div className="flex items-center justify-center gap-3 mb-5">
-          <div className="size-6 rounded-lg bg-gradient-to-br from-orange-500/25 to-amber-500/25 p-1">
-            <Calculator className="size-full text-orange-400" />
+          <div className="size-6 rounded-lg bg-[var(--launcher-card-bg)] p-1">
+            <Calculator className="size-full text-[var(--icon-orange-fg)]" />
           </div>
-          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground/50">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
             Calculator
           </span>
-          <span className="text-[10px] font-medium uppercase tracking-[0.06em] text-foreground/30">
+          <span className="text-[10px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
             {shortcutText}
           </span>
         </div>
@@ -98,19 +98,19 @@ export function CalculatorResultItem({
         <div className="flex items-center justify-center gap-4 mb-5">
           {/* Expression */}
           <div className="min-w-0 max-w-[40%]">
-            <p className="truncate text-center font-mono text-[18px] font-medium tracking-[-0.01em] text-foreground/70">
+            <p className="truncate text-center font-mono text-[18px] font-medium tracking-[-0.01em] text-muted-foreground">
               {calculatorQuery || "Expression"}
             </p>
           </div>
 
           {/* Equals sign */}
           <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-[var(--launcher-card-hover-bg)]">
-            <Equal className="size-4 text-foreground/40" />
+            <Equal className="size-4 text-muted-foreground" />
           </div>
 
           {/* Result */}
           <div className="min-w-0 max-w-[40%]">
-            <p className="truncate text-center font-mono text-[32px] font-bold tracking-[-0.02em] text-foreground/95">
+            <p className="truncate text-center font-mono text-[32px] font-bold tracking-[-0.02em] text-foreground">
               {calculatorResult}
             </p>
           </div>
@@ -119,13 +119,13 @@ export function CalculatorResultItem({
         {/* Tags */}
         <div className="flex items-center justify-center gap-2">
           {/* Calculation kind tag */}
-          <span className="inline-flex items-center rounded-full bg-orange-500/10 px-2.5 py-1 text-[10px] font-medium text-orange-300/80">
+          <span className="inline-flex items-center rounded-full bg-[var(--icon-orange-bg)] px-2.5 py-1 text-[10px] font-medium text-[var(--icon-orange-fg)]">
             {calculationKind}
           </span>
 
           {/* Text representation tag */}
           {textRepresentation && (
-            <span className="inline-flex max-w-[200px] items-center truncate rounded-full bg-[var(--launcher-card-hover-bg)] px-2.5 py-1 text-[10px] font-medium text-foreground/50">
+            <span className="inline-flex max-w-[200px] items-center truncate rounded-full bg-[var(--launcher-card-hover-bg)] px-2.5 py-1 text-[10px] font-medium text-muted-foreground">
               {textRepresentation}
             </span>
           )}

@@ -8,6 +8,8 @@ import {
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { ListTodo, Plus } from "lucide-react";
 
+import { SearchInput } from "@/components/module";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { countCompleted, normalizeTitle } from "@/modules/todo/components/todo-view-utils";
 import { TodoSortableRow } from "@/modules/todo/components/todo-sortable-row";
@@ -60,62 +62,57 @@ export function TodoListPanel({
     <section className="todo-panel-enter flex w-[42%] min-w-[280px] flex-col border-r border-[var(--launcher-card-border)]">
       {/* Add todo input */}
       <div className="border-b border-[var(--launcher-card-border)] p-3">
-        <div className="flex items-center gap-2">
-          <div className="relative flex-1">
-            <input
-              value={newTodoTitle}
-              onChange={(event) => onNewTodoTitleChange(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  event.preventDefault();
-                  void onCreateTodo();
-                }
-              }}
-              placeholder="Add a new todo..."
-              disabled={isBusy}
-              className={cn(
-                "h-10 w-full rounded-xl bg-[var(--launcher-card-hover-bg)] px-4 text-[13px] text-foreground/90 outline-none transition-all",
-                "ring-1 ring-[var(--launcher-card-border)] placeholder:text-foreground/30",
-                "focus:bg-[var(--launcher-card-hover-bg)] focus:ring-[var(--ring)]",
-                "disabled:opacity-50",
-              )}
-            />
-          </div>
-          <button
-            type="button"
-            disabled={isBusy || !normalizeTitle(newTodoTitle)}
-            onClick={() => {
+        <SearchInput
+          value={newTodoTitle}
+          onChange={onNewTodoTitleChange}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
               void onCreateTodo();
-            }}
-            className={cn(
-              "flex size-10 items-center justify-center rounded-xl transition-all",
-              "bg-[var(--ring)]/20 text-[var(--ring)]",
-              "hover:bg-[var(--ring)]/30",
-              "disabled:opacity-40 disabled:cursor-not-allowed",
-            )}
-            aria-label="Add todo"
-          >
-            <Plus className="size-5" />
-          </button>
-        </div>
+            }
+          }}
+          placeholder="Add a new todo..."
+          disabled={isBusy}
+          className="text-[13px] placeholder:text-muted-foreground/70"
+          rightSlot={
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-xs"
+              disabled={isBusy || !normalizeTitle(newTodoTitle)}
+              onClick={() => {
+                void onCreateTodo();
+              }}
+              className={cn(
+                "flex size-7 items-center justify-center rounded-md transition-all",
+                "bg-[var(--ring)]/15 text-[var(--ring)]",
+                "hover:bg-[var(--ring)]/25",
+                "disabled:cursor-not-allowed disabled:opacity-40",
+              )}
+              aria-label="Add todo"
+            >
+              <Plus className="size-3.5" />
+            </Button>
+          }
+        />
       </div>
 
       {/* Todo list */}
       <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto p-2">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
-            <div className="size-10 rounded-xl bg-gradient-to-br from-rose-500/20 to-pink-500/20 p-2.5 mb-3">
-              <ListTodo className="size-full text-rose-400" />
+            <div className="size-10 rounded-xl bg-[var(--launcher-card-bg)] p-2.5 mb-3">
+              <ListTodo className="size-full text-[var(--icon-red-fg)]" />
             </div>
-            <p className="text-[12px] text-foreground/40">Loading todos...</p>
+            <p className="text-[12px] text-muted-foreground">Loading todos...</p>
           </div>
         ) : todos.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
-            <div className="size-12 rounded-xl bg-gradient-to-br from-rose-500/20 to-pink-500/20 p-3 mb-3">
-              <ListTodo className="size-full text-rose-400" />
+            <div className="size-12 rounded-xl bg-[var(--launcher-card-bg)] p-3 mb-3">
+              <ListTodo className="size-full text-[var(--icon-red-fg)]" />
             </div>
-            <p className="text-[13px] font-medium text-foreground/60 mb-1">No todos yet</p>
-            <p className="text-[11px] text-foreground/35">Create your first todo above</p>
+            <p className="text-[13px] font-medium text-muted-foreground mb-1">No todos yet</p>
+            <p className="text-[11px] text-muted-foreground">Create your first todo above</p>
           </div>
         ) : (
           <DndContext
