@@ -13,9 +13,9 @@ interface CommandStatusChipProps {
 
 const STATUS_TONE_CLASSNAMES: Record<StatusTone, string> = {
   neutral: "border-border/60 bg-muted/20 text-muted-foreground/75",
-  info: "border-sky-500/40 bg-sky-500/10 text-sky-500",
-  success: "border-emerald-500/40 bg-emerald-500/10 text-emerald-500",
-  warning: "border-amber-500/40 bg-amber-500/10 text-amber-500",
+  info: "border-[var(--icon-primary-bg)] bg-[var(--icon-primary-bg)] text-[var(--icon-primary-fg)]",
+  success: "border-[var(--icon-green-bg)] bg-[var(--icon-green-bg)] text-[var(--icon-green-fg)]",
+  warning: "border-[var(--icon-orange-bg)] bg-[var(--icon-orange-bg)] text-[var(--icon-orange-fg)]",
   error: "border-destructive/40 bg-destructive/10 text-destructive",
 };
 
@@ -37,9 +37,9 @@ export function CommandStatusChip({
         <span
           className={cn(
             "size-1.5 rounded-full",
-            tone === "success" && "bg-emerald-500 animate-pulse",
-            tone === "warning" && "bg-amber-500 animate-pulse",
-            tone === "info" && "bg-sky-500 animate-pulse",
+            tone === "success" && "bg-[var(--icon-green-bg)] animate-pulse",
+            tone === "warning" && "bg-[var(--icon-orange-bg)] animate-pulse",
+            tone === "info" && "bg-[var(--icon-primary-bg)] animate-pulse",
             tone === "error" && "bg-destructive animate-pulse",
             tone === "neutral" && "bg-muted-foreground/50",
           )}

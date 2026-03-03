@@ -1,0 +1,198 @@
+.theme-user-neo-brutalism {
+  --background: #ffffff;
+  --foreground: #000000;
+  --card: #ffffff;
+  --card-foreground: #000000;
+  --popover: #ffffff;
+  --popover-foreground: #000000;
+  --primary: #ff3333;
+  --primary-foreground: #ffffff;
+  --secondary: #ffff00;
+  --secondary-foreground: #000000;
+  --muted: #f0f0f0;
+  --muted-foreground: #333333;
+  --accent: #0066ff;
+  --accent-foreground: #ffffff;
+  --destructive: #000000;
+  --destructive-foreground: #ffffff;
+  --border: #000000;
+  --input: #000000;
+  --ring: #ff3333;
+  --chart-1: #ff3333;
+  --chart-2: #ffff00;
+  --chart-3: #0066ff;
+  --chart-4: #00cc00;
+  --chart-5: #cc00cc;
+  --sidebar: #f0f0f0;
+  --sidebar-foreground: #000000;
+  --sidebar-primary: #ff3333;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #0066ff;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #000000;
+  --sidebar-ring: #ff3333;
+
+  --font-sans: DM Sans, sans-serif;
+  --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-mono: "Space Mono", monospace;
+  --radius: 0px;
+
+  --shadow-x: 4px;
+  --shadow-y: 4px;
+  --shadow-blur: 0px;
+  --shadow-spread: 0px;
+  --shadow-opacity: 1;
+  --shadow-color: hsl(0 0% 0%);
+  --shadow-2xs: 4px 4px 0px 0px hsl(0 0% 0% / 0.5);
+  --shadow-xs: 4px 4px 0px 0px hsl(0 0% 0% / 0.5);
+  --shadow-sm: 4px 4px 0px 0px hsl(0 0% 0% / 1), 4px 1px 2px -1px hsl(0 0% 0% / 1);
+  --shadow: 4px 4px 0px 0px hsl(0 0% 0% / 1), 4px 1px 2px -1px hsl(0 0% 0% / 1);
+  --shadow-md: 4px 4px 0px 0px hsl(0 0% 0% / 1), 4px 2px 4px -1px hsl(0 0% 0% / 1);
+  --shadow-lg: 4px 4px 0px 0px hsl(0 0% 0% / 1), 4px 4px 6px -1px hsl(0 0% 0% / 1);
+  --shadow-xl: 4px 4px 0px 0px hsl(0 0% 0% / 1), 4px 8px 10px -1px hsl(0 0% 0% / 1);
+  --shadow-2xl: 4px 4px 0px 0px hsl(0 0% 0% / 2.5);
+  --tracking-normal: 0em;
+  --spacing: 0.25rem;
+
+  /* Beam launcher/module tokens mapped from the same palette */
+  --icon-neutral-bg: var(--muted);
+  --icon-neutral-fg: var(--muted-foreground);
+  --icon-primary-bg: var(--primary);
+  --icon-primary-fg: var(--primary-foreground);
+  --icon-orange-bg: var(--secondary);
+  --icon-orange-fg: var(--secondary-foreground);
+  --icon-cyan-bg: var(--accent);
+  --icon-cyan-fg: var(--accent-foreground);
+  --icon-purple-bg: var(--chart-5);
+  --icon-purple-fg: var(--primary-foreground);
+  --icon-red-bg: var(--destructive);
+  --icon-red-fg: var(--destructive-foreground);
+  --icon-green-bg: var(--chart-4);
+  --icon-green-fg: var(--secondary-foreground);
+  --icon-chip-border: var(--border);
+  --icon-chip-gloss: transparent;
+  --icon-chip-shadow: transparent;
+
+  --glass-outline: var(--border);
+  --ui-divider: var(--border);
+  --command-item-hover-bg: var(--muted);
+  --command-item-hover-border: var(--border);
+  --command-item-selected-bg: var(--secondary);
+  --command-item-selected-border: var(--primary);
+  --launcher-card-bg: var(--card);
+  --launcher-card-border: var(--border);
+  --launcher-card-hover-bg: var(--muted);
+  --launcher-card-selected-bg: var(--secondary);
+  --launcher-card-selected-border: var(--primary);
+  --launcher-chip-bg: var(--muted);
+  --launcher-chip-border: var(--border);
+  --kbd-bg: var(--muted);
+  --footer-border: var(--border);
+  --scrollbar-track: var(--muted);
+  --scrollbar-thumb: var(--accent);
+  --scrollbar-thumb-hover: var(--primary);
+
+  /* Compatibility vars used by some module components */
+  --solid-bg-base: var(--background);
+  --solid-bg-elevated: var(--card);
+  --solid-bg-recessed: var(--muted);
+  --solid-bg-overlay: var(--popover);
+  --solid-bg-header: var(--background);
+  --solid-bg-footer: var(--card);
+  --solid-hover-bg: var(--muted);
+  --solid-selected-bg: var(--secondary);
+  --solid-active-bg: var(--secondary);
+  --solid-focus-ring: var(--ring);
+  --solid-border-subtle: var(--border);
+  --solid-border-default: var(--border);
+  --solid-border-strong: var(--primary);
+  --solid-border-muted: var(--border);
+  --solid-text-primary: var(--foreground);
+  --solid-text-secondary: var(--muted-foreground);
+  --solid-text-muted: var(--muted-foreground);
+  --solid-text-subtle: var(--muted-foreground);
+  --solid-text-disabled: var(--muted-foreground);
+  --solid-accent: var(--accent);
+  --solid-accent-hover: var(--primary);
+  --solid-accent-muted: var(--accent);
+  --solid-success: var(--chart-4);
+  --solid-success-muted: var(--chart-4);
+  --solid-danger: var(--destructive);
+  --solid-danger-muted: var(--destructive);
+  --solid-warning: var(--secondary);
+  --solid-kbd-bg: var(--muted);
+  --solid-kbd-border: var(--border);
+  --solid-kbd-text: var(--foreground);
+  --solid-scrollbar-track: var(--muted);
+  --solid-scrollbar-thumb: var(--accent);
+  --solid-scrollbar-thumb-hover: var(--primary);
+}
+
+.theme-user-neo-brutalism.dark,
+.dark .theme-user-neo-brutalism {
+  --background: #000000;
+  --foreground: #ffffff;
+  --card: #333333;
+  --card-foreground: #ffffff;
+  --popover: #333333;
+  --popover-foreground: #ffffff;
+  --primary: #ff6666;
+  --primary-foreground: #000000;
+  --secondary: #ffff33;
+  --secondary-foreground: #000000;
+  --muted: #1a1a1a;
+  --muted-foreground: #cccccc;
+  --accent: #3399ff;
+  --accent-foreground: #000000;
+  --destructive: #ffffff;
+  --destructive-foreground: #000000;
+  --border: #ffffff;
+  --input: #ffffff;
+  --ring: #ff6666;
+  --chart-1: #ff6666;
+  --chart-2: #ffff33;
+  --chart-3: #3399ff;
+  --chart-4: #33cc33;
+  --chart-5: #cc33cc;
+  --sidebar: #000000;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #ff6666;
+  --sidebar-primary-foreground: #000000;
+  --sidebar-accent: #3399ff;
+  --sidebar-accent-foreground: #000000;
+  --sidebar-border: #ffffff;
+  --sidebar-ring: #ff6666;
+
+  --font-sans: DM Sans, sans-serif;
+  --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-mono: "Space Mono", monospace;
+  --radius: 0px;
+
+  --shadow-x: 4px;
+  --shadow-y: 4px;
+  --shadow-blur: 0px;
+  --shadow-spread: 0px;
+  --shadow-opacity: 1;
+  --shadow-color: hsl(0 0% 0%);
+  --shadow-2xs: 4px 4px 0px 0px hsl(0 0% 0% / 0.5);
+  --shadow-xs: 4px 4px 0px 0px hsl(0 0% 0% / 0.5);
+  --shadow-sm: 4px 4px 0px 0px hsl(0 0% 0% / 1), 4px 1px 2px -1px hsl(0 0% 0% / 1);
+  --shadow: 4px 4px 0px 0px hsl(0 0% 0% / 1), 4px 1px 2px -1px hsl(0 0% 0% / 1);
+  --shadow-md: 4px 4px 0px 0px hsl(0 0% 0% / 1), 4px 2px 4px -1px hsl(0 0% 0% / 1);
+  --shadow-lg: 4px 4px 0px 0px hsl(0 0% 0% / 1), 4px 4px 6px -1px hsl(0 0% 0% / 1);
+  --shadow-xl: 4px 4px 0px 0px hsl(0 0% 0% / 1), 4px 8px 10px -1px hsl(0 0% 0% / 1);
+  --shadow-2xl: 4px 4px 0px 0px hsl(0 0% 0% / 2.5);
+  --tracking-normal: 0em;
+  --spacing: 0.25rem;
+}
+
+/* Ensure selected command row text uses the selected surface foreground (black in this palette). */
+.theme-user-neo-brutalism .command-item[data-selected="true"],
+.theme-user-neo-brutalism .command-item.selected {
+  color: var(--secondary-foreground);
+}
+
+.theme-user-neo-brutalism .command-item[data-selected="true"] *,
+.theme-user-neo-brutalism .command-item.selected * {
+  color: inherit !important;
+}

@@ -11,7 +11,7 @@ export default function ApplicationsCommandGroup() {
   const searchInput = useCommandState((state) => state.search);
   const query = searchInput.trim();
 
-  const { data, isLoading, isError, isFetching } = useApplicationSearch(query);
+  const { data, isLoading, isError } = useApplicationSearch(query);
   const { launchApplication, launchingExecPath, launchError } = useOpenApplication();
   const applications = data ?? [];
 
@@ -28,14 +28,14 @@ export default function ApplicationsCommandGroup() {
       {isLoading && (
         <CommandItem disabled className="opacity-60">
           <Search className="size-4 text-muted-foreground/40" />
-          <p className="truncate text-foreground/80">Searching applications...</p>
+          <p className="truncate text-muted-foreground">Searching applications...</p>
         </CommandItem>
       )}
 
       {isError && (
         <CommandItem disabled className="opacity-60">
           <AlertTriangle className="size-4 text-destructive/60" />
-          <p className="truncate text-foreground/80">Could not load applications</p>
+          <p className="truncate text-muted-foreground">Could not load applications</p>
         </CommandItem>
       )}
 

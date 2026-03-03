@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { RunnerIcon } from "@/modules/extensions/components/runner/nodes/shared/runner-icon";
 import { asString } from "@/modules/extensions/components/runner/utils";
 import type { RunnerNodeComponentProps } from "@/modules/extensions/components/runner/nodes/types";
@@ -145,8 +146,10 @@ export function ListItemNode({ nodeId, state, renderContext }: RunnerNodeCompone
   const isSelected = Boolean(renderContext?.selected);
 
   return (
-    <button
+    <Button
       type="button"
+      variant="ghost"
+      size="sm"
       className={cn(
         "flex h-12 w-full items-center gap-3 rounded-md border border-transparent px-2 text-left transition-colors",
         isSelected ? "bg-accent" : "hover:bg-accent/50",
@@ -181,6 +184,6 @@ export function ListItemNode({ nodeId, state, renderContext }: RunnerNodeCompone
           ))}
         </div>
       ) : null}
-    </button>
+    </Button>
   );
 }

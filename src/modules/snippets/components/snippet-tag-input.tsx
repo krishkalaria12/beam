@@ -1,6 +1,8 @@
 import { Check, Plus, X } from "lucide-react";
 import { useState, type KeyboardEvent } from "react";
 
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 interface SnippetTagInputProps {
@@ -97,61 +99,67 @@ export function SnippetTagInput({ value, suggestions, onChange, className }: Sni
       {value.length > 0 && (
         <div className="flex flex-wrap items-center gap-1.5">
           {value.map((tag) => (
-            <button
+            <Button
               key={tag}
               type="button"
+              variant="ghost"
+              size="xs"
               onClick={() => removeTag(tag)}
-              className="group inline-flex h-6 items-center gap-1 rounded-full bg-white/[0.06] px-2 text-[11px] font-medium text-white/70 transition-all hover:bg-white/[0.08] hover:text-white/90"
+              className="group inline-flex h-6 items-center gap-1 rounded-full bg-[var(--launcher-chip-bg)] px-2 text-[11px] font-medium text-muted-foreground transition-all hover:bg-[var(--launcher-card-selected-bg)] hover:text-foreground"
             >
               <span>{tag}</span>
-              <X className="size-3 text-white/40 transition-colors group-hover:text-white/70" />
-            </button>
+              <X className="size-3 text-muted-foreground transition-colors group-hover:text-muted-foreground" />
+            </Button>
           ))}
         </div>
       )}
 
       {/* Input */}
-      <input
+      <Input
         type="text"
         value={draftTag}
         onChange={(event) => setDraftTag(event.target.value)}
         onKeyDown={handleDraftTagKeyDown}
         placeholder="Add tag"
         className={cn(
-          "h-10 w-full rounded-xl bg-white/[0.04] px-3 text-[13px] text-white/90 placeholder:text-white/30",
-          "ring-1 ring-white/[0.06] transition-all duration-200",
-          "focus:outline-none focus:ring-[var(--solid-accent,#4ea2ff)]",
+          "h-10 w-full rounded-xl bg-[var(--launcher-card-hover-bg)] px-3 text-[13px] text-foreground placeholder:text-muted-foreground",
+          "ring-1 ring-[var(--launcher-card-border)] transition-all duration-200",
+          "focus:outline-none focus:ring-[var(--ring)]",
         )}
       />
 
       {/* Suggestions */}
       {(canCreateDraftTag || filteredSuggestions.length > 0) && (
-        <div className="rounded-xl bg-white/[0.02] ring-1 ring-white/[0.06]">
+        <div className="rounded-xl bg-[var(--launcher-card-bg)] ring-1 ring-[var(--launcher-card-border)]">
           {canCreateDraftTag && (
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={() => addTag(draftTag)}
-              className="flex w-full items-center gap-2 rounded-t-xl px-3 py-2 text-[12px] text-white/70 transition-colors hover:bg-white/[0.04] hover:text-white/90"
+              className="flex w-full items-center gap-2 rounded-t-xl px-3 py-2 text-[12px] text-muted-foreground transition-colors hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground"
             >
-              <Plus className="size-3.5 text-white/40" />
+              <Plus className="size-3.5 text-muted-foreground" />
               <span className="truncate">Create: {normalizedDraftTag}</span>
-            </button>
+            </Button>
           )}
 
           {filteredSuggestions.map((tag, index) => (
-            <button
+            <Button
               key={tag}
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={() => addTag(tag)}
               className={cn(
-                "flex w-full items-center gap-2 px-3 py-2 text-[12px] text-white/70 transition-colors hover:bg-white/[0.04] hover:text-white/90",
+                "flex w-full items-center gap-2 px-3 py-2 text-[12px] text-muted-foreground transition-colors hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground",
                 index === filteredSuggestions.length - 1 && !canCreateDraftTag && "rounded-b-xl",
                 index === 0 && !canCreateDraftTag && "rounded-t-xl",
               )}
             >
-              <Check className="size-3.5 text-white/40" />
+              <Check className="size-3.5 text-muted-foreground" />
               <span className="truncate">{tag}</span>
-            </button>
+            </Button>
           ))}
         </div>
       )}

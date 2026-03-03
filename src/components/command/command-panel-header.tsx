@@ -2,6 +2,7 @@ import { ArrowLeft, X } from "lucide-react";
 import type { ButtonHTMLAttributes, HTMLAttributes, ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 interface CommandPanelHeaderProps extends Omit<HTMLAttributes<HTMLElement>, "title"> {
   /** Show back button */
@@ -45,13 +46,15 @@ export function CommandPanelHeader({
     >
       {/* Back Button */}
       {showBack && (
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="icon-sm"
           onClick={onBack}
           className={cn("btn-icon -ml-1", "text-muted-foreground/65 hover:text-foreground")}
         >
           <ArrowLeft className="size-4" />
-        </button>
+        </Button>
       )}
 
       {/* Title Block */}
@@ -70,13 +73,15 @@ export function CommandPanelHeader({
 
       {/* Close Button */}
       {showClose && (
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="icon-sm"
           onClick={onClose}
           className={cn("btn-icon", "text-muted-foreground/50 hover:text-foreground")}
         >
           <X className="size-4" />
-        </button>
+        </Button>
       )}
     </header>
   );
@@ -93,8 +98,10 @@ export function CommandPanelBackButton({
   ...props
 }: CommandPanelBackButtonProps) {
   return (
-    <button
+    <Button
       type={type}
+      variant="ghost"
+      size="icon-sm"
       className={cn(
         "btn-icon -ml-1",
         "text-muted-foreground/65 hover:text-foreground",
@@ -104,7 +111,7 @@ export function CommandPanelBackButton({
       {...props}
     >
       <ArrowLeft className={cn("size-4", iconClassName)} />
-    </button>
+    </Button>
   );
 }
 
@@ -143,12 +150,14 @@ export function CommandPanelCloseButton({
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & { iconClassName?: string }) {
   return (
-    <button
+    <Button
       type={type}
+      variant="ghost"
+      size="icon-sm"
       className={cn("btn-icon", "text-muted-foreground/50 hover:text-foreground", className)}
       {...props}
     >
       <X className={cn("size-4", iconClassName)} />
-    </button>
+    </Button>
   );
 }

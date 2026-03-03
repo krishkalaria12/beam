@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { RunnerIcon } from "@/modules/extensions/components/runner/nodes/shared/runner-icon";
 import { asString } from "@/modules/extensions/components/runner/utils";
 import type { RunnerNodeComponentProps } from "@/modules/extensions/components/runner/nodes/types";
@@ -67,8 +68,10 @@ export function GridItemNode({ nodeId, state, renderContext }: RunnerNodeCompone
   const insetClass = toInsetClass(entry?.gridInset ?? node.props.inset);
 
   return (
-    <button
+    <Button
       type="button"
+      variant="ghost"
+      size="sm"
       className={cn("flex w-full flex-col text-left focus:outline-none", insetClass)}
       onMouseEnter={renderContext?.onSelect}
       onClick={renderContext?.onSelect}
@@ -77,7 +80,7 @@ export function GridItemNode({ nodeId, state, renderContext }: RunnerNodeCompone
       <div
         className={cn(
           "mb-1 w-full overflow-hidden rounded-md border-2 bg-muted",
-          selected ? "border-foreground" : "border-transparent hover:border-foreground/50",
+          selected ? "border-foreground" : "border-transparent hover:border-[var(--launcher-card-border)]",
         )}
         style={{ aspectRatio }}
         title={asString((contentValue as { tooltip?: unknown })?.tooltip).trim() || undefined}
@@ -106,6 +109,6 @@ export function GridItemNode({ nodeId, state, renderContext }: RunnerNodeCompone
           ) : null}
         </div>
       ) : null}
-    </button>
+    </Button>
   );
 }

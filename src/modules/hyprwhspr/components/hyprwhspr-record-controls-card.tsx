@@ -1,5 +1,6 @@
 import { Activity, Loader2, Mic, MicOff, RefreshCw, Square, X } from "lucide-react";
 
+import { Kbd } from "@/components/module";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -31,21 +32,21 @@ export function HyprWhsprRecordControlsCard({
           className={cn(
             "flex size-12 items-center justify-center rounded-lg border",
             isRecording
-              ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-500"
+              ? "border-[var(--icon-green-bg)] bg-[var(--icon-green-bg)] text-[var(--icon-green-fg)]"
               : "border-border/40 bg-background/50 text-muted-foreground",
           )}
         >
           {isRecording ? <Mic className="size-5" /> : <MicOff className="size-5" />}
         </div>
         <div className="flex flex-col min-w-0 flex-1">
-          <p className="text-sm font-medium text-foreground/90">
+          <p className="text-sm font-medium text-foreground">
             {isRecording ? "Recording in progress" : "Ready to dictate"}
           </p>
           <p className="text-xs text-muted-foreground">
             Hold{" "}
-            <kbd className="rounded bg-muted/40 px-1 py-0.5 font-mono text-[10px] font-medium border border-border/40">
+            <Kbd className="rounded px-1 py-0.5 text-[10px] font-medium border border-border/40">
               Space
-            </kbd>{" "}
+            </Kbd>{" "}
             to speak, release to stop.
           </p>
         </div>

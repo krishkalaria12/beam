@@ -4,6 +4,9 @@ import { useForm } from "@tanstack/react-form";
 import { ArrowUp, Paperclip, X, FileText } from "lucide-react";
 import { useRef, useState } from "react";
 
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   AI_ATTACHMENT_INPUT_ACCEPT,
   detectSupportedAttachmentMimeType,
@@ -20,7 +23,7 @@ function FieldInfo({ field }: { field: AnyFieldApi }) {
   return (
     <>
       {field.state.meta.isTouched && field.state.meta.errors.length > 0 ? (
-        <div className="px-4 text-[11px] tracking-[-0.01em] text-red-400/90">
+        <div className="px-4 text-[11px] tracking-[-0.01em] text-[var(--icon-red-fg)]">
           {field.state.meta.errors.map((error, i) => (
             <p key={i}>{error}</p>
           ))}
@@ -100,7 +103,7 @@ export function ChatInput({ onSubmit, isLoading, supportsFiles = true }: ChatInp
   };
 
   return (
-    <div className="ai-input-enter shrink-0 border-t border-white/[0.06] px-3 py-4">
+    <div className="ai-input-enter shrink-0 border-t border-[var(--launcher-card-border)] px-3 py-4">
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -116,36 +119,38 @@ export function ChatInput({ onSubmit, isLoading, supportsFiles = true }: ChatInp
               {attachedFiles.map((file, index) => (
                 <div
                   key={file.id}
-                  className="ai-file-preview group relative overflow-hidden rounded-xl ring-1 ring-white/[0.1] transition-all duration-200 hover:ring-white/[0.2]"
+                  className="ai-file-preview group relative overflow-hidden rounded-xl ring-1 ring-[var(--launcher-card-border)] transition-all duration-200 hover:ring-[var(--launcher-card-border)]"
                   style={{ animationDelay: `${index * 40}ms` }}
                 >
                   {isImageFile(file) ? (
                     <img src={file.preview} alt={file.name} className="h-16 w-16 object-cover" />
                   ) : (
-                    <div className="flex h-16 w-16 flex-col items-center justify-center gap-1 bg-white/[0.04] p-2">
-                      <FileText className="size-5 text-white/35" />
-                      <span className="w-full truncate text-center text-[9px] font-medium tracking-tight text-white/45">
+                    <div className="flex h-16 w-16 flex-col items-center justify-center gap-1 bg-[var(--launcher-card-hover-bg)] p-2">
+                      <FileText className="size-5 text-muted-foreground" />
+                      <span className="w-full truncate text-center text-[9px] font-medium tracking-tight text-muted-foreground">
                         {file.name.split(".").pop()?.toUpperCase()}
                       </span>
                     </div>
                   )}
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="icon-xs"
                     onClick={() => setAttachedFiles((prev) => prev.filter((f) => f.id !== file.id))}
-                    className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-red-500 text-white opacity-0 shadow-md transition-opacity group-hover:opacity-100"
+                    className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-[var(--icon-red-bg)] text-foreground opacity-0 shadow-md transition-opacity group-hover:opacity-100"
                   >
                     <X className="size-3" />
-                  </button>
+                  </Button>
                 </div>
               ))}
             </div>
           )}
 
           {/* Input container - refined with better focus states */}
-          <div className="flex items-center gap-2 rounded-2xl bg-white/[0.04] px-2 py-2 ring-1 ring-white/[0.08] transition-all duration-200 focus-within:ring-2 focus-within:ring-[var(--solid-accent,#4ea2ff)]/50 focus-within:bg-white/[0.05]">
+          <div className="flex items-center gap-2 rounded-2xl bg-[var(--launcher-card-hover-bg)] px-2 py-2 ring-1 ring-[var(--launcher-card-border)] transition-all duration-200 focus-within:ring-2 focus-within:ring-[var(--ring)]/50 focus-within:bg-[var(--launcher-card-hover-bg)]">
             {/* File attach button */}
             <div className="shrink-0">
-              <input
+              <Input
                 ref={fileInputRef}
                 type="file"
                 accept={AI_ATTACHMENT_INPUT_ACCEPT}
@@ -154,15 +159,17 @@ export function ChatInput({ onSubmit, isLoading, supportsFiles = true }: ChatInp
                 onChange={handleFileSelect}
                 disabled={!supportsFiles}
               />
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon-sm"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={!supportsFiles}
-                className="flex size-8 items-center justify-center rounded-lg text-white/40 transition-all duration-200 hover:bg-white/[0.08] hover:text-white/60 disabled:opacity-30 disabled:cursor-not-allowed"
+                className="flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-all duration-200 hover:bg-[var(--launcher-card-hover-bg)] hover:text-muted-foreground disabled:opacity-30 disabled:cursor-not-allowed"
                 title={supportsFiles ? "Attach files" : "This model doesn't support files"}
               >
                 <Paperclip className="size-[18px]" />
-              </button>
+              </Button>
             </div>
 
             {/* Textarea - improved typography */}
@@ -179,13 +186,13 @@ export function ChatInput({ onSubmit, isLoading, supportsFiles = true }: ChatInp
                 }}
               >
                 {(field) => (
-                  <textarea
+                  <Textarea
                     value={field.state.value}
                     onChange={(e) => field.handleChange(e.target.value)}
                     onBlur={field.handleBlur}
                     onKeyDown={handleKeyDown}
                     placeholder="Type a message..."
-                    className="w-full resize-none bg-transparent text-[14px] leading-[1.5] tracking-[-0.01em] text-white/90 placeholder:text-white/35 focus:outline-none min-h-[24px] max-h-[140px] py-1"
+                    className="w-full resize-none bg-transparent text-[14px] leading-[1.5] tracking-[-0.01em] text-foreground placeholder:text-muted-foreground focus:outline-none min-h-[24px] max-h-[140px] py-1"
                     rows={1}
                     disabled={isLoading}
                   />
@@ -201,13 +208,15 @@ export function ChatInput({ onSubmit, isLoading, supportsFiles = true }: ChatInp
               })}
             >
               {(state) => (
-                <button
+                <Button
                   type="submit"
+                  variant="ghost"
+                  size="icon-sm"
                   disabled={isLoading || !state.canSubmit || state.isSubmitting}
-                  className="shrink-0 flex size-8 items-center justify-center rounded-lg bg-[var(--solid-accent,#4ea2ff)] text-white shadow-lg shadow-[var(--solid-accent,#4ea2ff)]/25 transition-all duration-200 hover:shadow-xl hover:shadow-[var(--solid-accent,#4ea2ff)]/35 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
+                  className="shrink-0 flex size-8 items-center justify-center rounded-lg bg-[var(--ring)] text-foreground shadow-lg shadow-[var(--ring)]/25 transition-all duration-200 hover:shadow-xl hover:shadow-[var(--ring)]/35 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
                 >
                   <ArrowUp className="size-[18px]" strokeWidth={2.5} />
-                </button>
+                </Button>
               )}
             </form.Subscribe>
           </div>

@@ -30,15 +30,15 @@ export const speedTestChartConfig = {
   download: {
     label: "Download",
     theme: {
-      light: "#f97316",
-      dark: "#fb923c",
+      light: "var(--icon-orange-fg)",
+      dark: "var(--icon-orange-fg)",
     },
   },
   upload: {
     label: "Upload",
     theme: {
-      light: "#38bdf8",
-      dark: "#60a5fa",
+      light: "var(--icon-cyan-fg)",
+      dark: "var(--icon-cyan-fg)",
     },
   },
 } satisfies ChartConfig;

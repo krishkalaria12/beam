@@ -1,6 +1,6 @@
 import { useCommandState } from "cmdk";
 import { useEffect, useState } from "react";
-import { Calculator, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 import { OpenModuleCommandRow } from "@/components/command/open-module-command-row";
 import { CommandIcon } from "@/components/icons/command-icon";
@@ -89,10 +89,10 @@ export default function CalculatorHistoryCommandGroup({
       {isLoading && (
         <CommandItem disabled className="calc-history-loading px-4 py-6">
           <div className="flex flex-col items-center justify-center w-full text-center">
-            <div className="size-10 rounded-xl bg-gradient-to-br from-orange-500/15 to-amber-500/15 p-2.5 mb-3">
-              <Loader2 className="size-full text-orange-400 animate-spin" />
+            <div className="size-10 rounded-xl bg-[var(--launcher-card-bg)] p-2.5 mb-3">
+              <Loader2 className="size-full text-[var(--icon-orange-fg)] animate-spin" />
             </div>
-            <p className="text-[12px] text-white/50">Loading history...</p>
+            <p className="text-[12px] text-muted-foreground">Loading history...</p>
           </div>
         </CommandItem>
       )}

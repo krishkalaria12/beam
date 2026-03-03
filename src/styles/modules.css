@@ -7,7 +7,7 @@
 
 /* File search input - refined focus states */
 .file-search-input {
-  caret-color: var(--solid-accent, #4ea2ff);
+  caret-color: var(--ring);
 }
 
 .file-search-input::placeholder {
@@ -27,7 +27,7 @@
   transform: translateY(-50%);
   width: 3px;
   height: 0;
-  background: var(--solid-accent, #4ea2ff);
+  background: var(--ring);
   border-radius: 0 2px 2px 0;
   transition: height 150ms ease;
 }
@@ -46,12 +46,7 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: linear-gradient(
-    135deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.05) 50%,
-    transparent 100%
-  );
+  background: linear-gradient(135deg, transparent 0%, var(--icon-chip-gloss) 50%, transparent 100%);
   pointer-events: none;
 }
 
@@ -70,23 +65,23 @@
 
 /* File type badge colors */
 .file-badge-code {
-  background: rgba(59, 130, 246, 0.15);
-  color: #60a5fa;
+  background: var(--icon-primary-bg);
+  color: var(--icon-primary-fg);
 }
 
 .file-badge-image {
-  background: rgba(168, 85, 247, 0.15);
-  color: #c084fc;
+  background: var(--icon-purple-bg);
+  color: var(--icon-purple-fg);
 }
 
 .file-badge-doc {
-  background: rgba(34, 197, 94, 0.15);
-  color: #4ade80;
+  background: var(--icon-green-bg);
+  color: var(--icon-green-fg);
 }
 
 .file-badge-config {
-  background: rgba(251, 191, 36, 0.15);
-  color: #fbbf24;
+  background: var(--icon-orange-bg);
+  color: var(--icon-orange-fg);
 }
 
 /* Solid theme specific overrides */
@@ -102,7 +97,7 @@
 
 .sc-solid .file-search-input:focus {
   border-color: var(--solid-accent);
-  box-shadow: 0 0 0 3px rgba(78, 162, 255, 0.15);
+  box-shadow: 0 0 0 3px var(--launcher-card-selected-border);
 }
 
 .sc-solid .file-list-item[data-selected="true"] {
@@ -120,7 +115,7 @@
 
 /* File details pane background */
 .file-search-detail-pane {
-  background: var(--solid-bg-recessed, rgba(0, 0, 0, 0.1));
+  background: var(--solid-bg-recessed, var(--launcher-card-bg));
 }
 
 /* Radial gradient utility for glow effects */
@@ -211,7 +206,7 @@
 /* Settings content area */
 .settings-content {
   scrollbar-width: thin;
-  scrollbar-color: var(--solid-border-subtle, rgba(255, 255, 255, 0.1)) transparent;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
 }
 
 .settings-content::-webkit-scrollbar {
@@ -223,12 +218,12 @@
 }
 
 .settings-content::-webkit-scrollbar-thumb {
-  background: var(--solid-border-subtle, rgba(255, 255, 255, 0.1));
+  background: var(--scrollbar-thumb);
   border-radius: 3px;
 }
 
 .settings-content::-webkit-scrollbar-thumb:hover {
-  background: var(--solid-border-subtle, rgba(255, 255, 255, 0.2));
+  background: var(--scrollbar-thumb-hover);
 }
 
 /* Settings panel spacing */
@@ -1228,7 +1223,7 @@
 
 /* Speed test sample bars - placeholder animation when no data */
 .speedtest-sample-bar {
-  background: rgba(34, 211, 238, 0.25);
+  background: var(--icon-cyan-bg);
   animation: speedtest-sample-wave 1.2s ease-in-out infinite;
 }
 
@@ -2210,7 +2205,7 @@
 
 /* AI prose styling for markdown content */
 .ai-prose {
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--foreground);
   font-size: 13px;
   line-height: 1.65;
   letter-spacing: -0.01em;
@@ -2225,36 +2220,36 @@
 }
 
 .ai-prose strong {
-  color: rgba(255, 255, 255, 0.95);
+  color: var(--foreground);
   font-weight: 600;
 }
 
 .ai-prose em {
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--muted-foreground);
 }
 
 .ai-prose code {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--launcher-chip-bg);
   border-radius: 4px;
   padding: 0.15em 0.35em;
   font-size: 0.9em;
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
-  color: var(--solid-accent, #4ea2ff);
+  color: var(--ring);
 }
 
 .ai-prose pre {
-  background: rgba(0, 0, 0, 0.25);
+  background: var(--launcher-card-bg);
   border-radius: 8px;
   padding: 0.875rem 1rem;
   margin: 0.75em 0;
   overflow-x: auto;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--launcher-card-border);
 }
 
 .ai-prose pre code {
   background: transparent;
   padding: 0;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--foreground);
   font-size: 12px;
   line-height: 1.5;
 }
@@ -2270,25 +2265,25 @@
 }
 
 .ai-prose li::marker {
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--muted-foreground);
 }
 
 .ai-prose a {
-  color: var(--solid-accent, #4ea2ff);
+  color: var(--ring);
   text-decoration: none;
-  border-bottom: 1px solid rgba(78, 162, 255, 0.3);
+  border-bottom: 1px solid var(--launcher-card-selected-border);
   transition: border-color 150ms ease;
 }
 
 .ai-prose a:hover {
-  border-color: var(--solid-accent, #4ea2ff);
+  border-color: var(--ring);
 }
 
 .ai-prose blockquote {
-  border-left: 2px solid rgba(255, 255, 255, 0.15);
+  border-left: 2px solid var(--launcher-card-selected-border);
   padding-left: 1em;
   margin: 0.75em 0;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--muted-foreground);
   font-style: italic;
 }
 
@@ -2298,7 +2293,7 @@
 .ai-prose h4,
 .ai-prose h5,
 .ai-prose h6 {
-  color: rgba(255, 255, 255, 0.95);
+  color: var(--foreground);
   font-weight: 600;
   letter-spacing: -0.02em;
   margin-top: 1.25em;
@@ -2325,7 +2320,7 @@
 
 .ai-prose hr {
   border: none;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid var(--launcher-card-border);
   margin: 1.25em 0;
 }
 
@@ -2338,13 +2333,13 @@
 
 .ai-prose th,
 .ai-prose td {
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--launcher-card-border);
   padding: 0.5em 0.75em;
   text-align: left;
 }
 
 .ai-prose th {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--launcher-card-hover-bg);
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--foreground);
 }

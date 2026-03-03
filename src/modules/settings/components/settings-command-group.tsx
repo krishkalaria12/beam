@@ -33,6 +33,9 @@ type SettingsCommandGroupProps = {
 
 const SETTINGS_KEYWORDS = [
   "settings",
+  "theme",
+  "themes",
+  "custom",
   "style",
   "layout",
   "density",

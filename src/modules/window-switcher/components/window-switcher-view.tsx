@@ -2,6 +2,9 @@ import { AppWindow, ChevronLeft, RefreshCcw, Search } from "lucide-react";
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
+import { Kbd } from "@/components/module";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useLauncherPanelBackHandler } from "@/modules/launcher/lib/back-navigation";
 import { WindowSwitcherList } from "@/modules/window-switcher/components/window-switcher-list";
 import { useCloseWindowMutation } from "@/modules/window-switcher/hooks/use-close-window-mutation";
@@ -156,25 +159,27 @@ export function WindowSwitcherView({ onBack }: WindowSwitcherViewProps) {
       {/* Header */}
       <div className="windows-header-enter flex h-14 shrink-0 items-center gap-3 px-4">
         {/* Back Button */}
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="icon-sm"
           onClick={onBack}
-          className="flex size-9 items-center justify-center rounded-lg bg-white/[0.03] text-white/40 transition-colors hover:bg-white/[0.06] hover:text-white/70"
+          className="flex size-9 items-center justify-center rounded-lg bg-[var(--launcher-card-hover-bg)] text-muted-foreground transition-colors hover:bg-[var(--launcher-card-hover-bg)] hover:text-muted-foreground"
           aria-label="Back"
         >
           <ChevronLeft className="size-[18px]" />
-        </button>
+        </Button>
 
         {/* Icon + Title */}
         <div className="flex items-center gap-3">
-          <div className="flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-sky-500/20 to-blue-500/20">
-            <AppWindow className="size-[18px] text-sky-400" />
+          <div className="flex size-9 items-center justify-center rounded-xl bg-[var(--launcher-card-bg)]">
+            <AppWindow className="size-[18px] text-[var(--icon-primary-fg)]" />
           </div>
           <div className="flex flex-col">
-            <h1 className="text-[14px] font-semibold tracking-[-0.02em] text-white/90">
+            <h1 className="text-[14px] font-semibold tracking-[-0.02em] text-foreground">
               Window Switcher
             </h1>
-            <p className="text-[12px] tracking-[-0.01em] text-white/45">
+            <p className="text-[12px] tracking-[-0.01em] text-muted-foreground">
               Focus or close open windows
             </p>
           </div>
@@ -183,15 +188,15 @@ export function WindowSwitcherView({ onBack }: WindowSwitcherViewProps) {
         {/* Status Badge */}
         <div className="ml-auto flex items-center gap-2">
           {(windowsQuery.isLoading || windowsQuery.isRefetching) && (
-            <div className="flex items-center gap-1.5 rounded-full bg-white/[0.04] px-2.5 py-1">
-              <div className="size-1.5 animate-pulse rounded-full bg-[var(--solid-accent,#4ea2ff)]" />
-              <span className="text-[11px] font-medium tracking-[-0.01em] text-white/50">
+            <div className="flex items-center gap-1.5 rounded-full bg-[var(--launcher-card-hover-bg)] px-2.5 py-1">
+              <div className="size-1.5 animate-pulse rounded-full bg-[var(--ring)]" />
+              <span className="text-[11px] font-medium tracking-[-0.01em] text-muted-foreground">
                 {windowsQuery.isLoading ? "Loading" : "Refreshing"}
               </span>
             </div>
           )}
           {!windowsQuery.isLoading && !windowsQuery.isRefetching && (
-            <span className="text-[11px] font-medium tracking-[-0.01em] text-white/40">
+            <span className="text-[11px] font-medium tracking-[-0.01em] text-muted-foreground">
               {filteredWindows.length} {filteredWindows.length === 1 ? "window" : "windows"}
             </span>
           )}
@@ -199,43 +204,45 @@ export function WindowSwitcherView({ onBack }: WindowSwitcherViewProps) {
       </div>
 
       {/* Toolbar / Search */}
-      <div className="windows-toolbar-enter flex items-center gap-2 border-b border-white/[0.06] px-4 pb-3">
+      <div className="windows-toolbar-enter flex items-center gap-2 border-b border-[var(--launcher-card-border)] px-4 pb-3">
         <div className="relative flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-white/30" />
-          <input
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
             type="text"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search open windows..."
-            className="h-10 w-full rounded-xl bg-white/[0.04] pl-10 pr-4 text-[13px] tracking-[-0.01em] text-white/90 ring-1 ring-white/[0.06] transition-all placeholder:text-white/30 focus:outline-none focus:ring-[var(--solid-accent,#4ea2ff)]"
+            className="h-10 w-full rounded-xl bg-[var(--launcher-card-hover-bg)] pl-10 pr-4 text-[13px] tracking-[-0.01em] text-foreground ring-1 ring-[var(--launcher-card-border)] transition-all placeholder:text-muted-foreground focus:outline-none focus:ring-[var(--ring)]"
             autoFocus
           />
         </div>
 
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="icon"
           onClick={() => {
             void windowsQuery.refetch();
           }}
           disabled={windowsQuery.isFetching}
-          className="flex size-10 items-center justify-center rounded-xl bg-white/[0.04] text-white/40 ring-1 ring-white/[0.06] transition-all hover:bg-white/[0.06] hover:text-white/70 disabled:opacity-50"
+          className="flex size-10 items-center justify-center rounded-xl bg-[var(--launcher-card-hover-bg)] text-muted-foreground ring-1 ring-[var(--launcher-card-border)] transition-all hover:bg-[var(--launcher-card-hover-bg)] hover:text-muted-foreground disabled:opacity-50"
           aria-label="Refresh window list"
         >
           <RefreshCcw className={`size-4 ${windowsQuery.isFetching ? "animate-spin" : ""}`} />
-        </button>
+        </Button>
       </div>
 
       {/* Content */}
       {windowsQuery.isError ? (
         <div className="windows-content-enter flex flex-1 items-center justify-center p-6">
           <div className="flex flex-col items-center gap-3 text-center">
-            <div className="flex size-12 items-center justify-center rounded-xl bg-red-500/10">
-              <AppWindow className="size-6 text-red-400" />
+            <div className="flex size-12 items-center justify-center rounded-xl bg-[var(--icon-red-bg)]">
+              <AppWindow className="size-6 text-[var(--icon-red-fg)]" />
             </div>
-            <p className="text-[13px] font-medium tracking-[-0.01em] text-white/70">
+            <p className="text-[13px] font-medium tracking-[-0.01em] text-muted-foreground">
               Failed to load windows
             </p>
-            <p className="max-w-xs text-[12px] tracking-[-0.01em] text-white/40">
+            <p className="max-w-xs text-[12px] tracking-[-0.01em] text-muted-foreground">
               {windowsQuery.error instanceof Error
                 ? windowsQuery.error.message
                 : "An error occurred while fetching open windows."}
@@ -254,27 +261,27 @@ export function WindowSwitcherView({ onBack }: WindowSwitcherViewProps) {
       )}
 
       {/* Footer */}
-      <div className="windows-footer-enter flex h-12 shrink-0 items-center justify-between border-t border-white/[0.06] px-4">
-        <div className="flex items-center gap-1 text-[11px] tracking-[-0.01em] text-white/35">
+      <div className="windows-footer-enter flex h-12 shrink-0 items-center justify-between border-t border-[var(--launcher-card-border)] px-4">
+        <div className="flex items-center gap-1 text-[11px] tracking-[-0.01em] text-muted-foreground">
           {windowsQuery.isError && (
-            <span className="text-red-400/70">Window switcher backend error</span>
+            <span className="text-[var(--icon-red-fg)]">Window switcher backend error</span>
           )}
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5">
-            <kbd className="flex h-5 min-w-[20px] items-center justify-center rounded bg-white/[0.06] px-1.5 font-mono text-[10px] text-white/40">
+            <Kbd className="flex h-5 min-w-[20px] items-center justify-center rounded px-1.5 text-[10px] text-muted-foreground">
               Enter
-            </kbd>
-            <span className="text-[11px] text-white/35">Focus</span>
+            </Kbd>
+            <span className="text-[11px] text-muted-foreground">Focus</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <kbd className="flex h-5 min-w-[20px] items-center justify-center rounded bg-white/[0.06] px-1.5 font-mono text-[10px] text-white/40">
+            <Kbd className="flex h-5 min-w-[20px] items-center justify-center rounded px-1.5 text-[10px] text-muted-foreground">
               Shift
-            </kbd>
-            <kbd className="flex h-5 min-w-[20px] items-center justify-center rounded bg-white/[0.06] px-1.5 font-mono text-[10px] text-white/40">
+            </Kbd>
+            <Kbd className="flex h-5 min-w-[20px] items-center justify-center rounded px-1.5 text-[10px] text-muted-foreground">
               Enter
-            </kbd>
-            <span className="text-[11px] text-white/35">Close</span>
+            </Kbd>
+            <span className="text-[11px] text-muted-foreground">Close</span>
           </div>
         </div>
       </div>

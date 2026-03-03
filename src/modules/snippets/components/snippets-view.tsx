@@ -2,6 +2,8 @@ import { ArrowLeft, CircleDot, FilePlus2, Loader2, NotebookTabs } from "lucide-r
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
+import { Kbd } from "@/components/module";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useLauncherPanelBackHandler } from "@/modules/launcher/lib/back-navigation";
 import { SnippetEditor } from "@/modules/snippets/components/snippet-editor";
@@ -308,11 +310,13 @@ export function SnippetsView({ onBack }: SnippetsViewProps) {
     deleteSnippetMutation.isPending;
 
   return (
-    <div className="snippets-view-enter relative flex h-full w-full flex-col overflow-hidden text-white">
+    <div className="snippets-view-enter relative flex h-full w-full flex-col overflow-hidden text-foreground">
       {/* Header */}
-      <header className="snippets-header-enter flex h-14 shrink-0 items-center gap-3 border-b border-white/[0.06] px-4">
-        <button
+      <header className="snippets-header-enter flex h-14 shrink-0 items-center gap-3 border-b border-[var(--launcher-card-border)] px-4">
+        <Button
           type="button"
+          variant="ghost"
+          size="icon-sm"
           onClick={() => {
             if (viewMode === "create" || viewMode === "edit") {
               setViewMode("view");
@@ -320,27 +324,31 @@ export function SnippetsView({ onBack }: SnippetsViewProps) {
             }
             onBack();
           }}
-          className="flex size-9 items-center justify-center rounded-lg bg-white/[0.03] text-white/40 transition-all duration-200 hover:bg-white/[0.06] hover:text-white/70"
+          className="flex size-9 items-center justify-center rounded-lg bg-[var(--launcher-card-bg)] text-muted-foreground transition-all duration-200 hover:bg-[var(--launcher-chip-bg)] hover:text-muted-foreground"
           aria-label="Back"
         >
           <ArrowLeft className="size-4" />
-        </button>
+        </Button>
 
         <div className="flex flex-1 items-center gap-3">
-          <div className="size-8 rounded-xl bg-gradient-to-br from-amber-500/25 to-orange-500/25 p-1.5">
-            <NotebookTabs className="size-full text-amber-400" />
+          <div className="size-8 rounded-xl bg-[var(--launcher-card-bg)] p-1.5">
+            <NotebookTabs className="size-full text-[var(--icon-orange-fg)]" />
           </div>
           <div className="min-w-0 flex-1">
-            <h1 className="text-[14px] font-semibold tracking-[-0.02em] text-white/90">Snippets</h1>
-            <p className="text-[12px] tracking-[-0.01em] text-white/45">
+            <h1 className="text-[14px] font-semibold tracking-[-0.02em] text-foreground">
+              Snippets
+            </h1>
+            <p className="text-[12px] tracking-[-0.01em] text-muted-foreground">
               Create, preview, and paste text snippets
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          {snippetsQuery.isFetching && <Loader2 className="size-3.5 animate-spin text-white/40" />}
-          <span className="rounded-full bg-white/[0.06] px-2.5 py-1 text-[11px] font-medium text-white/50">
+          {snippetsQuery.isFetching && (
+            <Loader2 className="size-3.5 animate-spin text-muted-foreground" />
+          )}
+          <span className="rounded-full bg-[var(--launcher-chip-bg)] px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
             {snippets.length} {snippets.length === 1 ? "snippet" : "snippets"}
           </span>
         </div>
@@ -393,55 +401,59 @@ export function SnippetsView({ onBack }: SnippetsViewProps) {
       )}
 
       {viewMode === "view" && (
-        <footer className="snippets-footer-enter flex h-12 shrink-0 items-center justify-between border-t border-white/[0.06] px-4">
-          <div className="flex items-center gap-2 text-[12px] text-white/40">
+        <footer className="snippets-footer-enter flex h-12 shrink-0 items-center justify-between border-t border-[var(--footer-border)] px-4">
+          <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
             <CircleDot className="size-3.5" />
             <span>{filteredSnippets.length} visible</span>
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="hidden items-center gap-3 pr-3 text-[11px] text-white/30 sm:flex">
+            <div className="hidden items-center gap-3 pr-3 text-[11px] text-muted-foreground sm:flex">
               <span>
-                <kbd className="rounded bg-white/[0.08] px-1.5 py-0.5 font-mono text-[10px]">
+                <Kbd className="rounded px-1.5 py-0.5 text-[10px]">
                   Ctrl+N
-                </kbd>{" "}
+                </Kbd>{" "}
                 New
               </span>
               <span>
-                <kbd className="rounded bg-white/[0.08] px-1.5 py-0.5 font-mono text-[10px]">
+                <Kbd className="rounded px-1.5 py-0.5 text-[10px]">
                   Ctrl+E
-                </kbd>{" "}
+                </Kbd>{" "}
                 Edit
               </span>
             </div>
 
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={openCreateView}
               className={cn(
                 "inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-[12px] font-medium transition-all duration-200",
-                "bg-[var(--solid-accent,#4ea2ff)]/20 text-[var(--solid-accent,#4ea2ff)] hover:bg-[var(--solid-accent,#4ea2ff)]/30",
+                "bg-[var(--ring)]/20 text-[var(--ring)] hover:bg-[var(--ring)]/30",
               )}
             >
               <FilePlus2 className="size-3.5" />
               New
-            </button>
+            </Button>
 
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={() => {
                 void handleCopyAndCount();
               }}
               disabled={!selectedSnippet || incrementCopiedCountMutation.isPending}
               className={cn(
-                "inline-flex h-8 items-center gap-1.5 rounded-lg border border-white/[0.08] px-3 text-[12px] font-medium transition-all duration-200",
-                "bg-white/[0.03] text-white/60 hover:bg-white/[0.06] hover:text-white/80",
+                "inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--launcher-card-border)] px-3 text-[12px] font-medium transition-all duration-200",
+                "bg-[var(--launcher-card-bg)] text-muted-foreground hover:bg-[var(--launcher-chip-bg)] hover:text-muted-foreground",
                 "disabled:opacity-40 disabled:pointer-events-none",
               )}
             >
               <NotebookTabs className="size-3.5" />
               Paste
-            </button>
+            </Button>
           </div>
         </footer>
       )}

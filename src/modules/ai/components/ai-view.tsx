@@ -8,9 +8,7 @@ import {
   askAiStream,
   clearAiApiKey,
   clearAiChatHistory,
-  getAiSettings,
   setAiApiKey,
-  setAiSettings,
 } from "../api/ai";
 import { useAiChatBootstrap } from "../hooks/use-ai-chat-bootstrap";
 import { useAiStreamListeners } from "../hooks/use-ai-stream-listeners";
@@ -60,8 +58,6 @@ export function AiView({ onBack }: AiViewProps) {
   const setActiveConversationId = useAiChatStore((state) => state.setActiveConversationId);
   const setMessages = useAiChatStore((state) => state.setMessages);
   const updateMessages = useAiChatStore((state) => state.updateMessages);
-  const setEnabled = useAiChatStore((state) => state.setEnabled);
-  const setIsSavingEnabled = useAiChatStore((state) => state.setIsSavingEnabled);
   const setApiKeyInput = useAiChatStore((state) => state.setApiKeyInput);
   const setIsSavingApiKey = useAiChatStore((state) => state.setIsSavingApiKey);
   const setIsClearingChat = useAiChatStore((state) => state.setIsClearingChat);
@@ -103,29 +99,6 @@ export function AiView({ onBack }: AiViewProps) {
   const { refreshApiKeyStatus, refreshConversations } = useAiChatBootstrap();
   useAiStreamListeners({ refreshConversations });
   useAiWindowSizer(); // Window stays at 1100×750
-
-  const handleToggleEnabled = useCallback(async () => {
-    if (!isTauri()) {
-      toast.error("AI chat requires desktop runtime.");
-      return;
-    }
-
-    const nextEnabled = !isEnabled;
-    setIsSavingEnabled(true);
-    try {
-      const currentSettings = await getAiSettings();
-      await setAiSettings({
-        enabled: nextEnabled,
-        modelAssociations: currentSettings.modelAssociations ?? {},
-      });
-      setEnabled(nextEnabled);
-      toast.success(nextEnabled ? "AI chat enabled" : "AI chat disabled");
-    } catch (error) {
-      toast.error(toErrorMessage(error, "Failed to update AI settings."));
-    } finally {
-      setIsSavingEnabled(false);
-    }
-  }, [isEnabled, setEnabled, setIsSavingEnabled]);
 
   const handleSaveApiKey = useCallback(async () => {
     const normalizedApiKey = apiKeyInput.trim();
@@ -307,7 +280,7 @@ export function AiView({ onBack }: AiViewProps) {
   }
 
   return (
-    <div className="ai-view-enter flex h-full w-full overflow-hidden text-white">
+    <div className="ai-view-enter flex h-full w-full overflow-hidden text-foreground">
       {/* Sidebar */}
       <AiChatSidebar
         activeConversationId={activeConversationId}

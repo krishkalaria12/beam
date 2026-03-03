@@ -1,5 +1,7 @@
 import { Check, Maximize2, Minimize2 } from "lucide-react";
 
+import { IconChip } from "@/components/module";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useUiLayout } from "../hooks/use-ui-layout";
 
@@ -35,10 +37,10 @@ export function LayoutSettings() {
     <div className="settings-panel px-4 py-6 space-y-5">
       {/* Section header */}
       <div className="flex items-center gap-3 px-1">
-        <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-white/45">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
           Density
         </span>
-        <div className="h-px flex-1 bg-white/[0.06]" />
+        <div className="h-px flex-1 bg-[var(--launcher-chip-bg)]" />
       </div>
 
       {/* Options */}
@@ -48,46 +50,51 @@ export function LayoutSettings() {
           const Icon = option.icon;
 
           return (
-            <button
+            <Button
               key={option.id}
               type="button"
+              variant="ghost"
+              data-selected={isSelected}
               onClick={() => setMode(option.id)}
               className={cn(
-                "layout-option-card group relative w-full flex items-start gap-4",
-                "p-4 rounded-xl text-left",
+                "layout-option-card group relative h-auto min-h-[108px] w-full items-start justify-start gap-4",
+                "rounded-xl p-4 text-left",
                 "transition-all duration-200",
                 isSelected
-                  ? "bg-white/[0.08] ring-1 ring-white/20"
-                  : "bg-white/[0.02] hover:bg-white/[0.05]",
+                  ? "bg-[var(--launcher-card-selected-bg)] ring-1 ring-[var(--launcher-card-selected-border)]"
+                  : "bg-[var(--launcher-card-bg)] hover:bg-[var(--launcher-card-hover-bg)]",
               )}
             >
               {/* Icon */}
-              <div
+              <IconChip
+                variant={option.id === "expanded" ? "primary" : "cyan"}
+                size="lg"
                 className={cn(
-                  "flex size-11 items-center justify-center rounded-xl shrink-0",
-                  "transition-all duration-200",
-                  isSelected ? "bg-[var(--solid-accent,#4ea2ff)]/20" : "bg-white/[0.04]",
+                  "size-11 rounded-xl shrink-0 transition-all duration-200",
+                  !isSelected && "opacity-70",
                 )}
               >
-                <Icon
-                  className={cn(
-                    "size-5 transition-colors",
-                    isSelected ? "text-[var(--solid-accent,#4ea2ff)]" : "text-white/50",
-                  )}
-                />
-              </div>
+                <Icon className="size-5 transition-colors" />
+              </IconChip>
 
               {/* Content */}
               <div className="flex-1 min-w-0">
                 <p
                   className={cn(
                     "text-[14px] font-semibold tracking-[-0.02em]",
-                    isSelected ? "text-white" : "text-white/80",
+                    isSelected ? "text-secondary-foreground" : "text-foreground",
                   )}
                 >
                   {option.title}
                 </p>
-                <p className="text-[12px] text-white/40 mt-0.5">{option.description}</p>
+                <p
+                  className={cn(
+                    "mt-0.5 text-[12px]",
+                    isSelected ? "text-secondary-foreground/80" : "text-muted-foreground",
+                  )}
+                >
+                  {option.description}
+                </p>
 
                 {/* Visual preview */}
                 <div
@@ -97,7 +104,10 @@ export function LayoutSettings() {
                     <div
                       key={i}
                       className={cn(
-                        "h-1.5 rounded-full bg-white/10",
+                        "h-1.5 rounded-full",
+                        isSelected
+                          ? "bg-secondary-foreground/35"
+                          : "bg-[var(--launcher-chip-bg)]",
                         option.id === "compressed" ? "h-1" : "",
                       )}
                       style={{ width: `${40 + ((i * 15) % 40)}%` }}
@@ -110,19 +120,19 @@ export function LayoutSettings() {
               {isSelected && (
                 <div
                   className="absolute top-3.5 right-3.5 size-5 rounded-full 
-                  bg-[var(--solid-accent,#4ea2ff)] flex items-center justify-center
-                  shadow-lg shadow-[var(--solid-accent,#4ea2ff)]/30"
+                  bg-[var(--ring)] flex items-center justify-center
+                  shadow-lg shadow-[var(--ring)]/30"
                 >
-                  <Check className="size-3 text-white" strokeWidth={3} />
+                  <Check className="size-3 text-background" strokeWidth={3} />
                 </div>
               )}
-            </button>
+            </Button>
           );
         })}
       </div>
 
       {/* Info */}
-      <p className="text-[12px] text-white/35 px-1 leading-relaxed">
+      <p className="px-1 text-[12px] leading-relaxed text-muted-foreground">
         Changes how much content fits on screen. Choose expanded for readability or compressed to
         see more items at once.
       </p>

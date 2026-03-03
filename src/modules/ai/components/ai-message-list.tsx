@@ -32,8 +32,8 @@ export function AiMessageList({
       {isLoadingHistory ? (
         <div className="flex h-full items-center justify-center">
           <div className="flex flex-col items-center gap-3">
-            <Loader2 className="size-6 animate-spin text-[var(--solid-accent,#4ea2ff)]/70" />
-            <span className="text-[12px] tracking-[-0.01em] text-white/40">
+            <Loader2 className="size-6 animate-spin text-[var(--ring)]/70" />
+            <span className="text-[12px] tracking-[-0.01em] text-muted-foreground">
               Loading conversation...
             </span>
           </div>
@@ -41,13 +41,13 @@ export function AiMessageList({
       ) : messages.length === 0 ? (
         <div className="flex h-full items-center justify-center">
           <div className="ai-empty-state flex max-w-sm flex-col items-center text-center">
-            <div className="mb-5 flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[var(--solid-accent,#4ea2ff)]/15 to-[var(--solid-accent,#4ea2ff)]/5 ring-1 ring-white/[0.08] shadow-lg shadow-[var(--solid-accent,#4ea2ff)]/10">
-              <Sparkles className="size-6 text-[var(--solid-accent,#4ea2ff)]/80" />
+            <div className="mb-5 flex size-14 items-center justify-center rounded-2xl bg-[var(--launcher-card-bg)] ring-1 ring-[var(--launcher-card-border)] shadow-lg shadow-[var(--ring)]/10">
+              <Sparkles className="size-6 text-[var(--ring)]/80" />
             </div>
-            <h3 className="text-[15px] font-semibold tracking-[-0.02em] text-white/85">
+            <h3 className="text-[15px] font-semibold tracking-[-0.02em] text-foreground">
               Start a conversation
             </h3>
-            <p className="mx-auto mt-2.5 max-w-[280px] text-[13px] leading-[1.6] tracking-[-0.01em] text-white/40">
+            <p className="mx-auto mt-2.5 max-w-[280px] text-[13px] leading-[1.6] tracking-[-0.01em] text-muted-foreground">
               Ask anything, attach images or documents, and let AI assist you.
             </p>
           </div>
@@ -68,8 +68,8 @@ export function AiMessageList({
               >
                 {/* AI Avatar - only show for assistant */}
                 {!isUser && (
-                  <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-white/[0.06] ring-1 ring-white/[0.08]">
-                    <Bot className="size-4 text-white/50" />
+                  <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-[var(--launcher-card-hover-bg)] ring-1 ring-[var(--launcher-card-border)]">
+                    <Bot className="size-4 text-muted-foreground" />
                   </div>
                 )}
 
@@ -99,7 +99,7 @@ export function AiMessageList({
                                 <div
                                   key={file.id}
                                   className={`
-                                  relative overflow-hidden rounded-2xl ring-1 ring-white/[0.1]
+                                  relative overflow-hidden rounded-2xl ring-1 ring-[var(--launcher-card-border)]
                                   ${imageFiles.length === 1 ? "max-w-[280px]" : ""}
                                   ${imageFiles.length === 3 && fileIdx === 0 ? "col-span-2" : ""}
                                 `}
@@ -120,18 +120,18 @@ export function AiMessageList({
                               {docFiles.map((file) => (
                                 <div
                                   key={file.id}
-                                  className="flex items-center gap-3 rounded-xl bg-white/[0.06] px-3 py-2.5 ring-1 ring-white/[0.08]"
+                                  className="flex items-center gap-3 rounded-xl bg-[var(--launcher-card-hover-bg)] px-3 py-2.5 ring-1 ring-[var(--launcher-card-border)]"
                                 >
                                   <div
                                     className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${getFileTypeColor(file)}`}
                                   >
-                                    <FileText className="size-4 text-white" />
+                                    <FileText className="size-4 text-foreground" />
                                   </div>
                                   <div className="min-w-0 flex-1">
-                                    <p className="truncate text-[13px] font-medium tracking-[-0.01em] text-white/90">
+                                    <p className="truncate text-[13px] font-medium tracking-[-0.01em] text-foreground">
                                       {file.name}
                                     </p>
-                                    <p className="text-[11px] tracking-[-0.01em] text-white/40">
+                                    <p className="text-[11px] tracking-[-0.01em] text-muted-foreground">
                                       {getFileTypeLabel(file)}
                                     </p>
                                   </div>
@@ -149,24 +149,24 @@ export function AiMessageList({
                     group relative min-w-0 rounded-2xl px-4 py-3
                     ${
                       isUser
-                        ? "bg-[var(--solid-accent,#4ea2ff)] shadow-lg shadow-[var(--solid-accent,#4ea2ff)]/20"
-                        : "bg-white/[0.04] ring-1 ring-white/[0.07]"
+                        ? "bg-[var(--ring)] shadow-lg shadow-[var(--ring)]/20"
+                        : "bg-[var(--launcher-card-hover-bg)] ring-1 ring-[var(--launcher-card-border)]"
                     }
                   `}
                   >
                     {/* Content */}
                     {message.content ? (
                       isUser ? (
-                        <p className="whitespace-pre-wrap break-words text-[14px] leading-[1.65] tracking-[-0.01em] text-white">
+                        <p className="whitespace-pre-wrap break-words text-[14px] leading-[1.65] tracking-[-0.01em] text-foreground">
                           {message.content}
                         </p>
                       ) : extractedError ? (
-                        <p className="whitespace-pre-wrap break-words text-[14px] leading-[1.65] tracking-[-0.01em] text-red-400">
+                        <p className="whitespace-pre-wrap break-words text-[14px] leading-[1.65] tracking-[-0.01em] text-[var(--icon-red-fg)]">
                           {extractedError}
                         </p>
                       ) : (
                         <MessageResponse
-                          className="ai-prose prose prose-sm prose-invert max-w-none break-words text-[14px] leading-[1.7] tracking-[-0.01em] text-white/90 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0"
+                          className="ai-prose prose prose-sm prose-invert max-w-none break-words text-[14px] leading-[1.7] tracking-[-0.01em] text-foreground [&>*:first-child]:mt-0 [&>*:last-child]:mb-0"
                           isAnimating={isActiveAssistantMessage}
                         >
                           {message.content}
@@ -179,8 +179,8 @@ export function AiMessageList({
                           duration={1.5}
                           repeatDelay={0.3}
                           spread={1.5}
-                          color="rgba(255,255,255,0.35)"
-                          shimmerColor="rgba(255,255,255,0.7)"
+                          color="var(--muted-foreground)"
+                          shimmerColor="var(--foreground)"
                           className="text-[13px] tracking-[-0.01em]"
                           startOnView={false}
                         />
@@ -191,8 +191,8 @@ export function AiMessageList({
 
                 {/* User Avatar - only show for user */}
                 {isUser && (
-                  <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-[var(--solid-accent,#4ea2ff)]/20 ring-1 ring-[var(--solid-accent,#4ea2ff)]/30">
-                    <User className="size-4 text-[var(--solid-accent,#4ea2ff)]" />
+                  <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-[var(--ring)]/20 ring-1 ring-[var(--ring)]/30">
+                    <User className="size-4 text-[var(--ring)]" />
                   </div>
                 )}
               </div>

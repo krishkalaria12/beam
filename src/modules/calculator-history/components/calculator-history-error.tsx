@@ -12,14 +12,14 @@ export function CalculatorHistoryError({
     <CommandItem disabled className="calc-history-error px-4 py-4">
       <div className="flex items-center gap-3 w-full">
         {/* Icon */}
-        <div className="size-9 shrink-0 rounded-lg bg-red-500/15 p-2">
-          <AlertTriangle className="size-full text-red-400" />
+        <div className="size-9 shrink-0 rounded-lg bg-[var(--icon-red-bg)] p-2">
+          <AlertTriangle className="size-full text-[var(--icon-red-fg)]" />
         </div>
 
         {/* Text */}
         <div className="min-w-0 flex-1">
-          <p className="text-[13px] font-medium text-red-300/90 truncate">{message}</p>
-          <p className="text-[11px] text-white/35">Please try again later</p>
+          <p className="text-[13px] font-medium text-[var(--icon-red-fg)] truncate">{message}</p>
+          <p className="text-[11px] text-muted-foreground">Please try again later</p>
         </div>
       </div>
     </CommandItem>

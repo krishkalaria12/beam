@@ -23,15 +23,6 @@ interface ImageLikeObject {
   mask?: "circle" | "roundedRectangle";
 }
 
-function isThemeableValue(value: unknown): value is ThemeableValue {
-  return Boolean(
-    value &&
-    typeof value === "object" &&
-    typeof (value as ThemeableValue).light === "string" &&
-    typeof (value as ThemeableValue).dark === "string",
-  );
-}
-
 function resolveThemeableValue(value: string | ThemeableValue | undefined): string {
   if (!value) {
     return "";

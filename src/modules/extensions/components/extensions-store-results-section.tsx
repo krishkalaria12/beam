@@ -66,7 +66,7 @@ export function ExtensionsStoreResultsSection({
           <Skeleton className="h-24 rounded-xl bg-background/20" />
         </div>
       ) : isError ? (
-        <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-xs text-red-200">
+        <div className="rounded-lg border border-[var(--icon-red-bg)] bg-[var(--icon-red-bg)] p-3 text-xs text-[var(--icon-red-fg)]">
           {errorMessage?.trim() || "Could not search Raycast store. Please try again."}
         </div>
       ) : results.length > 0 ? (
@@ -121,7 +121,7 @@ export function ExtensionsStoreResultsSection({
                     className={cn(
                       "h-7 gap-1.5 rounded-md px-3 text-xs font-medium",
                       isInstalled
-                        ? "text-red-400 hover:bg-red-500/10 hover:text-red-300"
+                        ? "text-[var(--icon-red-fg)] hover:bg-[var(--icon-red-bg)] hover:text-[var(--icon-red-fg)]"
                         : "bg-primary/10 text-primary hover:bg-primary/20",
                     )}
                   >

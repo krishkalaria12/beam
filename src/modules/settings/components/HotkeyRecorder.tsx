@@ -1,6 +1,7 @@
 import { Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 interface HotkeyRecorderProps {
@@ -207,8 +208,10 @@ export default function HotkeyRecorder({
       </div>
 
       {value && !disabled ? (
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="icon-sm"
           onMouseDown={(event) => {
             event.preventDefault();
             event.stopPropagation();
@@ -224,7 +227,7 @@ export default function HotkeyRecorder({
           title="Clear hotkey"
         >
           <Trash2 className="size-3.5" />
-        </button>
+        </Button>
       ) : null}
     </div>
   );

@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
+import { Kbd } from "@/components/module/kbd";
+import { Button } from "@/components/ui/button";
 
 /** Individual footer action configuration */
 export interface FooterAction {
@@ -41,8 +43,10 @@ function ActionButton({
   const shortcuts = action.shortcut || [];
 
   return (
-    <button
+    <Button
       type="button"
+      variant="ghost"
+      size="xs"
       onClick={() => {
         if (!action.disabled && action.onClick) {
           void Promise.resolve(action.onClick());
@@ -50,10 +54,11 @@ function ActionButton({
       }}
       disabled={action.disabled}
       className={cn(
-        "flex items-center gap-1.5 transition-colors",
+        "h-auto px-0 py-0 transition-colors",
+        "flex items-center gap-1.5",
         isPrimary
           ? "text-foreground hover:text-muted-foreground"
-          : "text-muted-foreground hover:text-foreground/80",
+          : "text-muted-foreground hover:text-muted-foreground",
         action.disabled && "opacity-50 cursor-not-allowed",
       )}
     >
@@ -63,11 +68,11 @@ function ActionButton({
         {action.label}
       </span>
       {shortcuts.map((key) => (
-        <kbd key={`${action.label}-${key}`} className={KEY_CLASS}>
+        <Kbd key={`${action.label}-${key}`} className={KEY_CLASS}>
           {key}
-        </kbd>
+        </Kbd>
       ))}
-    </button>
+    </Button>
   );
 }
 

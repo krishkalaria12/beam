@@ -45,6 +45,8 @@
   --icon-purple-fg: rgba(126, 34, 206, 0.9);
   --icon-red-bg: rgba(220, 38, 38, 0.14);
   --icon-red-fg: rgba(185, 28, 28, 0.9);
+  --icon-green-bg: rgba(22, 163, 74, 0.13);
+  --icon-green-fg: rgba(21, 128, 61, 0.9);
   --icon-chip-border: transparent;
   --icon-chip-gloss: transparent;
   --icon-chip-shadow: transparent;
@@ -115,6 +117,8 @@
   --icon-purple-fg: rgba(233, 213, 255, 0.95);
   --icon-red-bg: rgba(239, 68, 68, 0.22);
   --icon-red-fg: rgba(254, 202, 202, 0.95);
+  --icon-green-bg: rgba(34, 197, 94, 0.2);
+  --icon-green-fg: rgba(187, 247, 208, 0.95);
   --icon-chip-border: transparent;
   --icon-chip-gloss: transparent;
   --icon-chip-shadow: transparent;

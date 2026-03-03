@@ -41,7 +41,7 @@ export function HyprWhsprOutputCard({
             <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/50">
               Action Result
             </p>
-            <div className="rounded-lg bg-muted/10 p-3 font-mono text-foreground/80 border border-border/20 whitespace-pre-wrap">
+            <div className="rounded-lg bg-muted/10 p-3 font-mono text-muted-foreground border border-border/20 whitespace-pre-wrap">
               {lastActionOutput}
             </div>
           </div>
