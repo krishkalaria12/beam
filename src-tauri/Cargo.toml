@@ -66,7 +66,11 @@ hyprland = "0.4.0-beta.3"
 swayipc = "4.0.0"
 
 # Security & Cryptography
-keyring = { version = "3.6.3", features = ["apple-native", "windows-native", "linux-native-sync-persistent"] }
+keyring = { version = "3.6.3", features = [
+  "apple-native",
+  "windows-native",
+  "linux-native-sync-persistent",
+] }
 aes-gcm = "0.10.3"
 sha2 = "0.10.9"
 rand = "0.9.2"

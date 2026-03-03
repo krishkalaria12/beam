@@ -8,13 +8,6 @@ import {
   OauthSetTokensMessageSchema,
   OpenMessageSchema,
 } from "./api";
-import {
-  AiAskStreamMessageSchema,
-  AiCanAccessMessageSchema,
-  AiStreamChunkMessageSchema,
-  AiStreamEndMessageSchema,
-  AiStreamErrorMessageSchema,
-} from "./ai";
 import { CommandSchema } from "./command";
 import { ShowHudMessageSchema } from "./hud";
 import { GoBackToPluginListSchema, PluginListSchema, PreferenceValuesSchema } from "./plugin";
@@ -59,11 +52,6 @@ export const SidecarMessageWithPluginsSchema = z
     OauthGetTokensMessageSchema,
     OauthSetTokensMessageSchema,
     OauthRemoveTokensMessageSchema,
-    AiAskStreamMessageSchema,
-    AiStreamChunkMessageSchema,
-    AiStreamEndMessageSchema,
-    AiStreamErrorMessageSchema,
-    AiCanAccessMessageSchema,
     FocusElementMessageSchema,
     ResetElementMessageSchema,
   ])

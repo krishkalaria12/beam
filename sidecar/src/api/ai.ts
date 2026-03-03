@@ -1,6 +1,3 @@
-import { EventEmitter } from "events";
-import { writeOutput } from "../io";
-
 export type Creativity = "none" | "low" | "medium" | "high" | "maximum" | number;
 
 export enum Model {
@@ -48,6 +45,8 @@ export enum Model {
 export interface AskOptions {
   creativity?: Creativity;
   model?: string;
+  provider?: "openrouter" | "openai" | "anthropic" | "gemini";
+  modelMappings?: Record<string, string>;
   signal?: AbortSignal;
 }
 
@@ -60,99 +59,17 @@ interface AskResult extends Promise<string> {
   off(event: "error", listener: (error: Error) => void): this;
 }
 
-const pendingRequests = new Map<string, EventEmitter>();
-
-export function handleAiStreamChunk(data: { requestId: string; text: string }) {
-  const emitter = pendingRequests.get(data.requestId);
-  if (emitter) {
-    emitter.emit("data", data.text);
-  }
+function unsupportedError(): Error {
+  return new Error(
+    "AI is a native Beam feature and is not available through the extension sidecar runtime.",
+  );
 }
 
-export function handleAiStreamEnd(data: { requestId: string; full_text: string }) {
-  const emitter = pendingRequests.get(data.requestId);
-  if (emitter) {
-    emitter.emit("end", data.full_text);
-    pendingRequests.delete(data.requestId);
-  }
-}
-
-export function handleAiStreamError(data: { requestId: string; error: string }) {
-  const emitter = pendingRequests.get(data.requestId);
-  if (emitter) {
-    emitter.emit("error", new Error(data.error));
-    pendingRequests.delete(data.requestId);
-  }
-}
-
-export function ask(prompt: string, options: AskOptions = {}): AskResult {
-  const emitter = new EventEmitter();
-  const requestId = crypto.randomUUID();
-
-  let fullText = "";
-  let isResolved = false;
-
-  pendingRequests.set(requestId, emitter);
-
-  const promise = new Promise<string>((resolve, reject) => {
-    const handleChunk = (chunk: string) => {
-      fullText += chunk;
-    };
-
-    const handleEnd = (finalText: string) => {
-      if (!isResolved) {
-        isResolved = true;
-        fullText = finalText;
-        resolve(fullText);
-      }
-    };
-
-    const handleError = (error: Error) => {
-      if (!isResolved) {
-        isResolved = true;
-        reject(error);
-      }
-    };
-
-    emitter.on("data", handleChunk);
-    emitter.on("end", handleEnd);
-    emitter.on("error", handleError);
-
-    if (options.signal) {
-      options.signal.addEventListener("abort", () => {
-        if (!isResolved) {
-          isResolved = true;
-          const error = new Error("Request aborted");
-          emitter.emit("error", error);
-          pendingRequests.delete(requestId);
-        }
-      });
-    }
-
-    writeOutput({
-      type: "ai-ask-stream",
-      payload: {
-        requestId,
-        prompt,
-        options: {
-          model: options.model,
-          creativity: options.creativity,
-        },
-      },
-    });
-  });
-
-  const result = promise as AskResult;
-  result.on = ((event, listener) => {
-    emitter.on(event, listener);
-    return result;
-  }) as AskResult["on"];
-  result.off = ((event, listener) => {
-    emitter.off(event, listener);
-    return result;
-  }) as AskResult["off"];
-
-  return result;
+export function ask(_prompt: string, _options: AskOptions = {}): AskResult {
+  const promise = Promise.reject(unsupportedError()) as AskResult;
+  promise.on = (() => promise) as AskResult["on"];
+  promise.off = (() => promise) as AskResult["off"];
+  return promise;
 }
 
 export const AI = {
