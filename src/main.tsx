@@ -1,13 +1,16 @@
 import { RouterProvider, createRouter } from "@tanstack/react-router";
 import ReactDOM from "react-dom/client";
 
+import "katex/dist/katex.min.css";
 import "streamdown/styles.css";
+
 import { CommandLoadingState } from "./components/command/command-loading-state";
-import { ThemeProvider } from "./components/theme-provider";
-import { UiStyleProvider } from "./components/ui-style-provider";
 import { Toaster } from "./components/ui/sonner";
 import { TooltipProvider } from "./components/ui/tooltip";
+import { LauncherThemeProvider } from "./providers/launcher-theme-provider";
 import { QueryProvider } from "./providers/query-provider";
+import { ThemeProvider } from "./providers/theme-provider";
+import { UiStyleProvider } from "./providers/ui-style-provider";
 import { routeTree } from "./routeTree.gen";
 
 const router = createRouter({
@@ -35,10 +38,12 @@ if (!rootElement.innerHTML) {
     <QueryProvider>
       <ThemeProvider>
         <UiStyleProvider>
-          <TooltipProvider>
-            <RouterProvider router={router} />
-            <Toaster position="top-right" richColors />
-          </TooltipProvider>
+          <LauncherThemeProvider>
+            <TooltipProvider>
+              <RouterProvider router={router} />
+              <Toaster position="top-right" richColors />
+            </TooltipProvider>
+          </LauncherThemeProvider>
         </UiStyleProvider>
       </ThemeProvider>
     </QueryProvider>,

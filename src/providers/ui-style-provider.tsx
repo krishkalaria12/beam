@@ -20,6 +20,7 @@ type UiStyleProviderProps = {
 const DEFAULT_BASE_COLOR = "#101113";
 const DEFAULT_STYLE_STORAGE_KEY = "beam-ui-style";
 const DEFAULT_BASE_COLOR_STORAGE_KEY = "beam-ui-base-color";
+const STYLE_CLASS_PREFIX = "theme-style-";
 
 const initialState: UiStyleProviderState = {
   uiStyle: "glassy",
@@ -68,9 +69,31 @@ function applyUiStyle(uiStyle: UiStylePreference): void {
   const root = document.documentElement;
   const body = document.body;
 
+  const removeStyleClasses = (element: Element | null) => {
+    if (!element) {
+      return;
+    }
+
+    const classesToRemove: string[] = [];
+    for (const className of element.classList) {
+      if (className.startsWith(STYLE_CLASS_PREFIX)) {
+        classesToRemove.push(className);
+      }
+    }
+    if (classesToRemove.length > 0) {
+      element.classList.remove(...classesToRemove);
+    }
+  };
+
   // Remove all style classes first
   root.classList.remove("sc-glassy", "sc-solid");
   body?.classList.remove("sc-glassy", "sc-solid");
+  removeStyleClasses(root);
+  removeStyleClasses(body);
+
+  const styleClass = `${STYLE_CLASS_PREFIX}${uiStyle}`;
+  root.classList.add(styleClass);
+  body?.classList.add(styleClass);
 
   // Apply the selected style
   if (uiStyle === "glassy") {

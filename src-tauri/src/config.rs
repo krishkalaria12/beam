@@ -195,6 +195,13 @@ pub struct Config {
 
     // -- Window Switcher
     pub WINDOW_SWITCHER_PROCESS_CACHE_REFRESH_MS: u64,
+
+    // -- Launcher Theme
+    pub LAUNCHER_THEME_DIR_NAME: &'static str,
+    pub LAUNCHER_THEME_MANIFEST_FILE_NAME: &'static str,
+    pub LAUNCHER_THEME_STYLESHEET_FILE_NAME: &'static str,
+    pub LAUNCHER_THEME_SELECTED_KEY: &'static str,
+    pub LAUNCHER_THEME_MAX_CSS_BYTES: usize,
 }
 
 impl Config {
@@ -401,6 +408,12 @@ impl Config {
             SNIPPETS_MAX_MAX_BUFFER_LEN: 512,
 
             WINDOW_SWITCHER_PROCESS_CACHE_REFRESH_MS: 2_000,
+
+            LAUNCHER_THEME_DIR_NAME: "themes",
+            LAUNCHER_THEME_MANIFEST_FILE_NAME: "theme.json",
+            LAUNCHER_THEME_STYLESHEET_FILE_NAME: "theme.css",
+            LAUNCHER_THEME_SELECTED_KEY: "launcher_theme_id",
+            LAUNCHER_THEME_MAX_CSS_BYTES: 512 * 1024,
         })
     }
 }
