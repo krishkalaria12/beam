@@ -17,7 +17,14 @@ type UiStyleProviderProps = {
   baseColorStorageKey?: string;
 };
 
-const DEFAULT_BASE_COLOR = "#101113";
+const DEFAULT_BASE_COLOR_RGB: [number, number, number] = [16, 17, 19];
+
+function rgbTupleToHex([r, g, b]: readonly [number, number, number]): string {
+  const toHex = (value: number) => value.toString(16).padStart(2, "0");
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
+const DEFAULT_BASE_COLOR = rgbTupleToHex(DEFAULT_BASE_COLOR_RGB);
 const DEFAULT_STYLE_STORAGE_KEY = "beam-ui-style";
 const DEFAULT_BASE_COLOR_STORAGE_KEY = "beam-ui-base-color";
 const STYLE_CLASS_PREFIX = "theme-style-";
