@@ -134,8 +134,27 @@ Push-to-talk voice dictation via the `hyprwhspr` CLI (Linux only).
 
 - **Three visual styles**: Default, Glassy (blur + transparency), Solid
 - **Two layout modes**: Expanded (full list) and Compressed (input-only when idle)
+- **Custom launcher themes** from filesystem (`theme.json` + `theme.css`)
 - **System theme support** — follows light/dark OS preference
 - Transparent, borderless, always-on-top overlay window (800 × 580 px)
+
+### Custom Launcher Themes
+
+Beam discovers external themes from:
+
+- `<app-config-dir>/themes/<theme-id>/theme.json`
+- `<app-config-dir>/themes/<theme-id>/theme.css`
+
+Use **Settings → Visual Style → Custom Themes** to select one.
+
+Starter examples:
+
+- `examples/themes/base`
+- `examples/themes/neo-brutalism`
+
+Theme authoring contract:
+
+- `docs/theme-contract.md`
 
 ---
 

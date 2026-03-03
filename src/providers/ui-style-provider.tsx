@@ -1,5 +1,10 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
+import {
+  LAUNCHER_THEME_CHANGE_EVENT,
+  getSelectedLauncherThemeId,
+} from "@/modules/settings/api/launcher-theme";
+
 export type UiStylePreference = "default" | "glassy" | "solid";
 
 type UiStyleProviderState = {
@@ -28,6 +33,8 @@ const DEFAULT_BASE_COLOR = rgbTupleToHex(DEFAULT_BASE_COLOR_RGB);
 const DEFAULT_STYLE_STORAGE_KEY = "beam-ui-style";
 const DEFAULT_BASE_COLOR_STORAGE_KEY = "beam-ui-base-color";
 const STYLE_CLASS_PREFIX = "theme-style-";
+const USER_THEME_CLASS_PREFIX = "theme-user-";
+const CUSTOM_THEME_ACTIVE_CLASS = "theme-custom-active";
 
 const initialState: UiStyleProviderState = {
   uiStyle: "glassy",
@@ -68,7 +75,36 @@ function hexToRgb(hexColor: string): [number, number, number] {
   return [(value >> 16) & 0xff, (value >> 8) & 0xff, value & 0xff];
 }
 
-function applyUiStyle(uiStyle: UiStylePreference): void {
+function removeClassesByPrefix(element: Element | null, classPrefix: string): void {
+  if (!element) {
+    return;
+  }
+
+  const classesToRemove: string[] = [];
+  for (const className of element.classList) {
+    if (className.startsWith(classPrefix)) {
+      classesToRemove.push(className);
+    }
+  }
+  if (classesToRemove.length > 0) {
+    element.classList.remove(...classesToRemove);
+  }
+}
+
+function hasClassByPrefix(element: Element | null, classPrefix: string): boolean {
+  if (!element) {
+    return false;
+  }
+
+  for (const className of element.classList) {
+    if (className.startsWith(classPrefix)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function applyUiStyle(uiStyle: UiStylePreference, customThemeActive: boolean): void {
   if (typeof document === "undefined") {
     return;
   }
@@ -76,33 +112,26 @@ function applyUiStyle(uiStyle: UiStylePreference): void {
   const root = document.documentElement;
   const body = document.body;
 
-  const removeStyleClasses = (element: Element | null) => {
-    if (!element) {
-      return;
-    }
-
-    const classesToRemove: string[] = [];
-    for (const className of element.classList) {
-      if (className.startsWith(STYLE_CLASS_PREFIX)) {
-        classesToRemove.push(className);
-      }
-    }
-    if (classesToRemove.length > 0) {
-      element.classList.remove(...classesToRemove);
-    }
-  };
-
   // Remove all style classes first
   root.classList.remove("sc-glassy", "sc-solid");
   body?.classList.remove("sc-glassy", "sc-solid");
-  removeStyleClasses(root);
-  removeStyleClasses(body);
+  removeClassesByPrefix(root, STYLE_CLASS_PREFIX);
+  removeClassesByPrefix(body, STYLE_CLASS_PREFIX);
 
+  if (customThemeActive) {
+    root.classList.add(CUSTOM_THEME_ACTIVE_CLASS);
+    body?.classList.add(CUSTOM_THEME_ACTIVE_CLASS);
+    return;
+  }
+
+  root.classList.remove(CUSTOM_THEME_ACTIVE_CLASS);
+  body?.classList.remove(CUSTOM_THEME_ACTIVE_CLASS);
+
+  // Apply the selected style
   const styleClass = `${STYLE_CLASS_PREFIX}${uiStyle}`;
   root.classList.add(styleClass);
   body?.classList.add(styleClass);
 
-  // Apply the selected style
   if (uiStyle === "glassy") {
     root.classList.add("sc-glassy");
     body?.classList.add("sc-glassy");
@@ -134,14 +163,55 @@ export function UiStyleProvider({
   const [baseColor, setBaseColorState] = useState<string>(() =>
     normalizeBaseColor(localStorage.getItem(baseColorStorageKey) || defaultBaseColor),
   );
+  const [customThemeActive, setCustomThemeActive] = useState<boolean>(false);
 
   useEffect(() => {
-    applyUiStyle(uiStyle);
-  }, [uiStyle]);
+    let mounted = true;
+
+    const syncCustomThemeState = async () => {
+      try {
+        const selectedThemeId = await getSelectedLauncherThemeId();
+        if (!mounted) {
+          return;
+        }
+        setCustomThemeActive(Boolean(selectedThemeId));
+      } catch {
+        if (!mounted) {
+          return;
+        }
+
+        const rootHasThemeClass = hasClassByPrefix(
+          document.documentElement,
+          USER_THEME_CLASS_PREFIX,
+        );
+        const bodyHasThemeClass = hasClassByPrefix(document.body, USER_THEME_CLASS_PREFIX);
+        setCustomThemeActive(rootHasThemeClass || bodyHasThemeClass);
+      }
+    };
+
+    void syncCustomThemeState();
+    const onLauncherThemeChanged = () => {
+      void syncCustomThemeState();
+    };
+
+    window.addEventListener(LAUNCHER_THEME_CHANGE_EVENT, onLauncherThemeChanged);
+    return () => {
+      mounted = false;
+      window.removeEventListener(LAUNCHER_THEME_CHANGE_EVENT, onLauncherThemeChanged);
+    };
+  }, []);
 
   useEffect(() => {
+    applyUiStyle(uiStyle, customThemeActive);
+  }, [uiStyle, customThemeActive]);
+
+  useEffect(() => {
+    if (customThemeActive) {
+      document.documentElement.style.removeProperty("--sc-base-rgb");
+      return;
+    }
     applyBaseColor(baseColor);
-  }, [baseColor]);
+  }, [baseColor, customThemeActive]);
 
   const setUiStyle = (style: UiStylePreference) => {
     localStorage.setItem(styleStorageKey, style);

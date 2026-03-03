@@ -250,8 +250,8 @@ export function SpotifyView({ initialQuery, onBack }: SpotifyViewProps) {
 
         {/* Title block */}
         <div className="flex items-center gap-3">
-          <div className="flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-green-500/25 to-emerald-500/25 ring-1 ring-green-500/20">
-            <Music className="size-4 text-green-400" />
+          <div className="flex size-9 items-center justify-center rounded-xl bg-[var(--launcher-chip-bg)] ring-1 ring-[var(--launcher-card-selected-border)]">
+            <Music className="size-4 text-[var(--ring)]" />
           </div>
           <div className="flex flex-col">
             <h1 className="text-[14px] font-semibold tracking-[-0.02em] text-foreground/90">
@@ -268,9 +268,10 @@ export function SpotifyView({ initialQuery, onBack }: SpotifyViewProps) {
           <div
             className={cn(
               "flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.06em]",
-              statusTone === "success" && "bg-green-500/15 text-green-400",
-              statusTone === "info" && "bg-blue-500/15 text-blue-400",
-              statusTone === "warning" && "bg-amber-500/15 text-amber-400",
+              statusTone === "success" &&
+                "bg-[var(--launcher-card-selected-bg)] text-[var(--ring)]",
+              statusTone === "info" && "bg-[var(--icon-cyan-bg)] text-[var(--icon-cyan-fg)]",
+              statusTone === "warning" && "bg-[var(--icon-orange-bg)] text-[var(--icon-orange-fg)]",
             )}
           >
             {(statusLabel === "authorizing" || statusLabel === "refreshing") && (
@@ -313,7 +314,7 @@ export function SpotifyView({ initialQuery, onBack }: SpotifyViewProps) {
                   type="button"
                   onClick={handleConnect}
                   disabled={isAuthorizing || !clientId.trim()}
-                  className="flex items-center gap-1.5 rounded-lg bg-green-500/20 px-3 py-1.5 text-[12px] font-medium text-green-400 ring-1 ring-green-500/30 transition-all hover:bg-green-500/25 disabled:opacity-50"
+                  className="flex items-center gap-1.5 rounded-lg bg-[var(--launcher-card-selected-bg)] px-3 py-1.5 text-[12px] font-medium text-[var(--ring)] ring-1 ring-[var(--launcher-card-selected-border)] transition-all hover:bg-[var(--command-item-selected-bg)] disabled:opacity-50"
                 >
                   {isAuthorizing ? (
                     <Loader2 className="size-3.5 animate-spin" />
@@ -334,7 +335,7 @@ export function SpotifyView({ initialQuery, onBack }: SpotifyViewProps) {
                   setStoredSpotifyClientId(event.target.value);
                 }}
                 placeholder="Spotify Client ID"
-                className="h-10 w-full rounded-xl bg-[var(--launcher-card-hover-bg)] px-4 text-[13px] text-foreground/90 placeholder:text-foreground/30 ring-1 ring-[var(--launcher-card-border)] transition-all focus:outline-none focus:ring-green-500/50"
+                className="h-10 w-full rounded-xl bg-[var(--launcher-card-hover-bg)] px-4 text-[13px] text-foreground/90 placeholder:text-foreground/30 ring-1 ring-[var(--launcher-card-border)] transition-all focus:outline-none focus:ring-[var(--ring)]"
               />
               <p className="text-[11px] text-foreground/35">
                 Create a Spotify app and add{" "}
@@ -346,8 +347,8 @@ export function SpotifyView({ initialQuery, onBack }: SpotifyViewProps) {
             </div>
 
             {user && (
-              <div className="mt-4 flex items-center gap-3 rounded-xl bg-green-500/[0.08] px-3.5 py-2.5 ring-1 ring-green-500/15">
-                <div className="flex size-8 items-center justify-center rounded-full bg-green-500/20 text-green-400">
+              <div className="mt-4 flex items-center gap-3 rounded-xl bg-[var(--launcher-card-hover-bg)] px-3.5 py-2.5 ring-1 ring-[var(--launcher-card-selected-border)]">
+                <div className="flex size-8 items-center justify-center rounded-full bg-[var(--launcher-chip-bg)] text-[var(--ring)]">
                   <Music className="size-3.5" />
                 </div>
                 <div className="flex flex-col">
@@ -416,22 +417,22 @@ export function SpotifyView({ initialQuery, onBack }: SpotifyViewProps) {
                   </div>
                 )}
                 {playback?.is_playing && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                  <div className="absolute inset-0 flex items-center justify-center bg-[var(--command-item-selected-bg)]">
                     <div className="flex items-end gap-0.5">
                       <span
-                        className="w-0.5 animate-pulse bg-green-400"
+                        className="w-0.5 animate-pulse bg-[var(--ring)]"
                         style={{ height: "8px", animationDelay: "0ms" }}
                       />
                       <span
-                        className="w-0.5 animate-pulse bg-green-400"
+                        className="w-0.5 animate-pulse bg-[var(--ring)]"
                         style={{ height: "12px", animationDelay: "150ms" }}
                       />
                       <span
-                        className="w-0.5 animate-pulse bg-green-400"
+                        className="w-0.5 animate-pulse bg-[var(--ring)]"
                         style={{ height: "6px", animationDelay: "300ms" }}
                       />
                       <span
-                        className="w-0.5 animate-pulse bg-green-400"
+                        className="w-0.5 animate-pulse bg-[var(--ring)]"
                         style={{ height: "10px", animationDelay: "450ms" }}
                       />
                     </div>
@@ -466,7 +467,7 @@ export function SpotifyView({ initialQuery, onBack }: SpotifyViewProps) {
                   setSelectedDeviceId(value);
                 }}
               >
-                <SelectTrigger className="h-10 w-full rounded-xl border-0 bg-[var(--launcher-card-hover-bg)] text-[12px] font-medium text-foreground/70 ring-1 ring-[var(--launcher-card-border)] hover:bg-[var(--launcher-chip-bg)] focus:ring-green-500/50">
+                <SelectTrigger className="h-10 w-full rounded-xl border-0 bg-[var(--launcher-card-hover-bg)] text-[12px] font-medium text-foreground/70 ring-1 ring-[var(--launcher-card-border)] hover:bg-[var(--launcher-chip-bg)] focus:ring-[var(--ring)]">
                   <div className="flex items-center gap-2">
                     <Radio className="size-3.5 text-foreground/40" />
                     <SelectValue>
@@ -510,7 +511,7 @@ export function SpotifyView({ initialQuery, onBack }: SpotifyViewProps) {
                 type="button"
                 onClick={() => void runPlaybackAction(playback?.is_playing ? "pause" : "play")}
                 disabled={!isConnected || isActionPending}
-                className="flex size-12 items-center justify-center rounded-2xl bg-green-500/25 text-green-400 ring-1 ring-green-500/30 transition-all hover:bg-green-500/35 hover:scale-105 disabled:opacity-40"
+                className="flex size-12 items-center justify-center rounded-2xl bg-[var(--launcher-card-selected-bg)] text-[var(--ring)] ring-1 ring-[var(--launcher-card-selected-border)] transition-all hover:bg-[var(--command-item-selected-bg)] hover:scale-105 disabled:opacity-40"
               >
                 {playback?.is_playing ? (
                   <Pause className="size-5" />
@@ -545,7 +546,7 @@ export function SpotifyView({ initialQuery, onBack }: SpotifyViewProps) {
             </div>
 
             <div className="flex items-center gap-2">
-              <div className="flex flex-1 items-center gap-2.5 rounded-xl bg-[var(--launcher-card-hover-bg)] px-3.5 h-10 ring-1 ring-[var(--launcher-card-border)] transition-all focus-within:ring-green-500/50">
+              <div className="flex h-10 flex-1 items-center gap-2.5 rounded-xl bg-[var(--launcher-card-hover-bg)] px-3.5 ring-1 ring-[var(--launcher-card-border)] transition-all focus-within:ring-[var(--ring)]">
                 <Search className="size-4 shrink-0 text-foreground/30" />
                 <input
                   type="text"
@@ -566,7 +567,7 @@ export function SpotifyView({ initialQuery, onBack }: SpotifyViewProps) {
                 type="button"
                 onClick={() => void runSearch()}
                 disabled={!isConnected || isSearching || !searchInput.trim()}
-                className="flex size-10 items-center justify-center rounded-xl bg-green-500/20 text-green-400 ring-1 ring-green-500/30 transition-all hover:bg-green-500/25 disabled:opacity-40"
+                className="flex size-10 items-center justify-center rounded-xl bg-[var(--launcher-card-selected-bg)] text-[var(--ring)] ring-1 ring-[var(--launcher-card-selected-border)] transition-all hover:bg-[var(--command-item-selected-bg)] disabled:opacity-40"
               >
                 {isSearching ? (
                   <Loader2 className="size-4 animate-spin" />
@@ -596,7 +597,7 @@ export function SpotifyView({ initialQuery, onBack }: SpotifyViewProps) {
                     style={{ animationDelay: `${idx * 30}ms` }}
                   >
                     {/* Left accent bar */}
-                    <div className="absolute left-0 top-1/2 h-6 w-[2px] -translate-y-1/2 rounded-full bg-green-500 opacity-0 transition-opacity group-hover:opacity-100" />
+                    <div className="absolute left-0 top-1/2 h-6 w-[2px] -translate-y-1/2 rounded-full bg-[var(--ring)] opacity-0 transition-opacity group-hover:opacity-100" />
 
                     {/* Track thumbnail */}
                     <div className="size-10 shrink-0 overflow-hidden rounded-lg bg-[var(--launcher-card-hover-bg)]">
@@ -629,7 +630,7 @@ export function SpotifyView({ initialQuery, onBack }: SpotifyViewProps) {
 
           {/* Error display */}
           {mergedError && (
-            <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-[12px] text-red-300">
+            <div className="rounded-xl border border-[var(--destructive)] bg-[var(--command-item-selected-bg)] px-4 py-3 text-[12px] text-[var(--destructive)]">
               {mergedError}
             </div>
           )}
@@ -639,8 +640,8 @@ export function SpotifyView({ initialQuery, onBack }: SpotifyViewProps) {
       {/* Footer */}
       <footer className="spotify-footer flex h-11 shrink-0 items-center justify-between border-t border-[var(--footer-border)] px-5">
         <div className="flex items-center gap-2 text-[11px] text-foreground/35">
-          <div className="flex size-5 items-center justify-center rounded-md bg-green-500/15">
-            <Music className="size-3 text-green-400" />
+          <div className="flex size-5 items-center justify-center rounded-md bg-[var(--launcher-chip-bg)]">
+            <Music className="size-3 text-[var(--ring)]" />
           </div>
           <span className="font-medium">Spotify</span>
           {isConnected && user && (
