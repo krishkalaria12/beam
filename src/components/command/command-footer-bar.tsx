@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
+import { requestLauncherActionsToggle } from "@/lib/launcher-actions";
 import { Kbd } from "@/components/module/kbd";
 import { Button } from "@/components/ui/button";
 
@@ -21,6 +22,8 @@ interface CommandFooterBarProps {
   secondaryActions?: FooterAction[];
   /** Actions button (opens action panel, shown last with divider) */
   actionsButton?: FooterAction;
+  /** Show default Cmd+K actions button when `actionsButton` is not supplied */
+  showDefaultActionsButton?: boolean;
   /** Legacy: right slot for custom content */
   rightSlot?: ReactNode;
   /** Optional anchored overlay rendered above the footer (e.g. actions panel) */
@@ -86,14 +89,25 @@ export function CommandFooterBar({
   primaryAction,
   secondaryActions,
   actionsButton,
+  showDefaultActionsButton = true,
   rightSlot,
   overlay,
   className,
   leftSlotClassName,
   rightSlotClassName,
 }: CommandFooterBarProps) {
-  const hasActions = primaryAction || secondaryActions?.length || actionsButton;
-  const showDivider = (primaryAction || secondaryActions?.length) && actionsButton;
+  const resolvedActionsButton =
+    actionsButton ??
+    (showDefaultActionsButton
+      ? {
+          label: "Actions",
+          shortcut: ["⌘ + K"],
+          onClick: requestLauncherActionsToggle,
+        }
+      : undefined);
+
+  const hasActions = primaryAction || secondaryActions?.length || resolvedActionsButton;
+  const showDivider = (primaryAction || secondaryActions?.length) && resolvedActionsButton;
 
   return (
     <div
@@ -128,8 +142,11 @@ export function CommandFooterBar({
             {showDivider && <span className="h-5 w-px bg-[var(--ui-divider)] mx-0.5" />}
 
             {/* Actions button */}
-            {actionsButton && (
-              <ActionButton action={actionsButton} dataSlot="command-footer-actions-button" />
+            {resolvedActionsButton && (
+              <ActionButton
+                action={resolvedActionsButton}
+                dataSlot="command-footer-actions-button"
+              />
             )}
           </>
         ) : (

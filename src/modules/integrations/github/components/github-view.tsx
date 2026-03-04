@@ -15,7 +15,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
-import { Kbd } from "@/components/module";
+import { ModuleFooter } from "@/components/module";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -268,9 +268,7 @@ export function GithubView({ initialQuery, onBack }: GithubViewProps) {
             <Github className="size-4 text-muted-foreground" />
           </div>
           <div className="flex flex-col">
-            <h1 className="text-[14px] font-semibold tracking-[-0.02em] text-foreground">
-              GitHub
-            </h1>
+            <h1 className="text-[14px] font-semibold tracking-[-0.02em] text-foreground">GitHub</h1>
             <p className="text-[11px] text-muted-foreground">Issues, pull requests & search</p>
           </div>
         </div>
@@ -367,8 +365,12 @@ export function GithubView({ initialQuery, onBack }: GithubViewProps) {
                   <User className="size-3.5" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-[12px] font-medium text-muted-foreground">{user.login}</span>
-                  {user.name && <span className="text-[11px] text-muted-foreground">{user.name}</span>}
+                  <span className="text-[12px] font-medium text-muted-foreground">
+                    {user.login}
+                  </span>
+                  {user.name && (
+                    <span className="text-[11px] text-muted-foreground">{user.name}</span>
+                  )}
                 </div>
               </div>
             )}
@@ -577,38 +579,29 @@ export function GithubView({ initialQuery, onBack }: GithubViewProps) {
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className="github-footer flex h-11 shrink-0 items-center justify-between border-t border-[var(--footer-border)] px-5">
-        <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
-          <div className="flex items-center gap-1.5">
-            <div className="flex size-5 items-center justify-center rounded-md bg-[var(--launcher-card-selected-bg)]">
-              <CircleDot className="size-3 text-muted-foreground" />
+      <ModuleFooter
+        className="github-footer h-11 border-[var(--footer-border)] px-5"
+        leftSlot={
+          <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+            <div className="flex items-center gap-1.5">
+              <div className="flex size-5 items-center justify-center rounded-md bg-[var(--launcher-card-selected-bg)]">
+                <CircleDot className="size-3 text-muted-foreground" />
+              </div>
+              <span className="font-medium">Issues</span>
             </div>
-            <span className="font-medium">Issues</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <div className="flex size-5 items-center justify-center rounded-md bg-[var(--launcher-card-selected-bg)]">
-              <GitPullRequest className="size-3 text-muted-foreground" />
+            <div className="flex items-center gap-1.5">
+              <div className="flex size-5 items-center justify-center rounded-md bg-[var(--launcher-card-selected-bg)]">
+                <GitPullRequest className="size-3 text-muted-foreground" />
+              </div>
+              <span className="font-medium">Pull Requests</span>
             </div>
-            <span className="font-medium">Pull Requests</span>
           </div>
-        </div>
-
-        <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
-          <span className="flex items-center gap-1.5">
-            <Kbd className="rounded-md px-1.5 py-0.5 text-[10px] text-muted-foreground">
-              Enter
-            </Kbd>
-            Search
-          </span>
-          <span className="flex items-center gap-1.5">
-            <Kbd className="rounded-md px-1.5 py-0.5 text-[10px] text-muted-foreground">
-              Esc
-            </Kbd>
-            Back
-          </span>
-        </div>
-      </footer>
+        }
+        shortcuts={[
+          { keys: ["Enter"], label: "Search" },
+          { keys: ["Esc"], label: "Back" },
+        ]}
+      />
     </div>
   );
 }

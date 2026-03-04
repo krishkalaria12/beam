@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import debounce from "@/lib/debounce";
-import { LauncherActionsPanel } from "@/modules/launcher/components/launcher-actions-panel";
 import { copyToClipboard } from "../api/copy-to-clipboard";
 import { useClipboardHistory } from "../hooks/use-clipboard-history";
 import {
@@ -9,26 +8,24 @@ import {
   type ClipboardHistoryEntry,
   type ClipboardTypeFilter,
 } from "../types";
-import { ClipboardDetails } from "./clipboard-details";
-import { buildClipboardActionItems } from "./clipboard-action-items";
 import { ClipboardFooter } from "./clipboard-footer";
 import { ClipboardHeader } from "./clipboard-header";
+import { ClipboardDetails } from "./clipboard-details";
 import { ClipboardList } from "./clipboard-list";
 
 interface ClipboardViewProps {
   onBack: () => void;
+  onToggleActions: () => void;
 }
 
-export function ClipboardView({ onBack }: ClipboardViewProps) {
+export function ClipboardView({ onBack, onToggleActions }: ClipboardViewProps) {
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<ClipboardTypeFilter>("all");
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [copiedEntryIndex, setCopiedEntryIndex] = useState<number | null>(null);
   const [copyError, setCopyError] = useState<string | null>(null);
-  const [actionsOpen, setActionsOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const actionsPreviousFocusRef = useRef<HTMLElement | null>(null);
 
   const { data: history = [], isLoading } = useClipboardHistory(true);
 
@@ -97,42 +94,7 @@ export function ClipboardView({ onBack }: ClipboardViewProps) {
     }
   };
 
-  const handleActionsOpenChange = (nextOpen: boolean) => {
-    if (nextOpen) {
-      const currentActiveElement = document.activeElement;
-      actionsPreviousFocusRef.current =
-        currentActiveElement instanceof HTMLElement ? currentActiveElement : null;
-      setActionsOpen(true);
-      return;
-    }
-
-    setActionsOpen(false);
-    window.requestAnimationFrame(() => {
-      const previousFocusElement = actionsPreviousFocusRef.current;
-      if (previousFocusElement && previousFocusElement.isConnected) {
-        previousFocusElement.focus({ preventScroll: true });
-        return;
-      }
-
-      inputRef.current?.focus({ preventScroll: true });
-    });
-  };
-
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    const isActionShortcut =
-      e.key.toLowerCase() === "k" && (e.metaKey || e.ctrlKey) && !e.altKey && !e.shiftKey;
-
-    if (isActionShortcut) {
-      e.preventDefault();
-      e.stopPropagation();
-      handleActionsOpenChange(!actionsOpen);
-      return;
-    }
-
-    if (actionsOpen) {
-      return;
-    }
-
     if (e.key === "ArrowDown") {
       e.preventDefault();
       e.stopPropagation();
@@ -166,14 +128,6 @@ export function ClipboardView({ onBack }: ClipboardViewProps) {
     setQuery(value);
     updateDebouncedQuery(value);
   };
-
-  const clipboardActionItems = buildClipboardActionItems({
-    selectedEntry,
-    selectedIndex,
-    onCopy: (entry, index) => {
-      void handleCopy(entry, index);
-    },
-  });
 
   return (
     <div
@@ -232,19 +186,9 @@ export function ClipboardView({ onBack }: ClipboardViewProps) {
           }
         }}
         onToggleActions={() => {
-          handleActionsOpenChange(!actionsOpen);
+          inputRef.current?.focus({ preventScroll: true });
+          onToggleActions();
         }}
-      />
-
-      <LauncherActionsPanel
-        open={actionsOpen}
-        onOpenChange={handleActionsOpenChange}
-        rootTitle="Clipboard History Actions..."
-        rootSearchPlaceholder="Search for actions..."
-        rootItems={clipboardActionItems}
-        targetCommandId="clipboard.panel.open"
-        targetCommandTitle="Clipboard History"
-        containerClassName="bottom-14 right-4"
       />
     </div>
   );

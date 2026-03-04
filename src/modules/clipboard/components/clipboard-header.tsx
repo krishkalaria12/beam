@@ -80,7 +80,9 @@ export function ClipboardHeader({
           className="flex h-10 items-center gap-2 rounded-xl bg-[var(--launcher-card-hover-bg)] px-3.5 text-[12px] font-medium tracking-[-0.01em] text-muted-foreground ring-1 ring-[var(--launcher-card-border)] transition-all hover:bg-[var(--launcher-card-hover-bg)] hover:text-muted-foreground"
           onKeyDown={(event) => event.stopPropagation()}
         >
-          {currentFilter?.icon && <span className="text-muted-foreground">{currentFilter.icon}</span>}
+          {currentFilter?.icon && (
+            <span className="text-muted-foreground">{currentFilter.icon}</span>
+          )}
           <span>{currentFilter?.label || "All Types"}</span>
           <ChevronDown className="size-3.5 text-muted-foreground" />
         </DropdownMenuTrigger>

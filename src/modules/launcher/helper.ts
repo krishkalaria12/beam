@@ -227,3 +227,52 @@ export function buildAliasAvailability({
     text: `"${aliasValue.trim()}" is available.`,
   };
 }
+
+export function dispatchEnterToTarget(target: HTMLElement | null): void {
+  const keydownEvent = new KeyboardEvent("keydown", {
+    key: "Enter",
+    bubbles: true,
+    cancelable: true,
+  });
+
+  if (target && target.isConnected) {
+    target.dispatchEvent(keydownEvent);
+  }
+
+  window.dispatchEvent(
+    new KeyboardEvent("keydown", {
+      key: "Enter",
+      bubbles: true,
+      cancelable: true,
+    }),
+  );
+}
+
+export function dispatchKeyboardShortcutToTarget(
+  target: HTMLElement | null,
+  options: {
+    key: string;
+    code?: string;
+    metaKey?: boolean;
+    ctrlKey?: boolean;
+    altKey?: boolean;
+    shiftKey?: boolean;
+  },
+): void {
+  const eventInit: KeyboardEventInit = {
+    key: options.key,
+    code: options.code,
+    metaKey: options.metaKey ?? false,
+    ctrlKey: options.ctrlKey ?? false,
+    altKey: options.altKey ?? false,
+    shiftKey: options.shiftKey ?? false,
+    bubbles: true,
+    cancelable: true,
+  };
+
+  if (target && target.isConnected) {
+    target.dispatchEvent(new KeyboardEvent("keydown", eventInit));
+  }
+
+  window.dispatchEvent(new KeyboardEvent("keydown", eventInit));
+}

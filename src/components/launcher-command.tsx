@@ -20,6 +20,7 @@ import { QUICKLINK_TRIGGER_MODE } from "@/command-registry/trigger-registry";
 import type { CommandDescriptor } from "@/command-registry/types";
 import { useCommandPreferences } from "@/command-registry/use-command-preferences";
 import { Command, CommandInput, CommandList } from "@/components/ui/command";
+import { isLauncherActionsHotkey, requestLauncherActionsToggle } from "@/lib/launcher-actions";
 import { cn } from "@/lib/utils";
 
 import { saveCalculatorHistory } from "@/modules/calculator-history/api/save-calculator-history";
@@ -427,6 +428,13 @@ export default function LauncherCommand() {
 
   const handleKeyDown = async (e: React.KeyboardEvent) => {
     if (e.defaultPrevented) {
+      return;
+    }
+
+    if (isLauncherActionsHotkey(e)) {
+      e.preventDefault();
+      e.stopPropagation();
+      requestLauncherActionsToggle();
       return;
     }
 

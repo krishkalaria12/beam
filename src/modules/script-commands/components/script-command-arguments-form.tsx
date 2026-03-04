@@ -2,7 +2,7 @@ import { useForm } from "@tanstack/react-form";
 import { AlertTriangle, ChevronLeft, Loader2, Play, Terminal } from "lucide-react";
 import { useMemo, useState, type KeyboardEvent } from "react";
 
-import { Kbd } from "@/components/module";
+import { ModuleFooter } from "@/components/module";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -170,7 +170,9 @@ export function ScriptCommandArgumentsForm({
                         className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground"
                       >
                         {label}
-                        {argument.required && <span className="ml-1 text-[var(--icon-red-fg)]">*</span>}
+                        {argument.required && (
+                          <span className="ml-1 text-[var(--icon-red-fg)]">*</span>
+                        )}
                       </Label>
 
                       <div className="mt-2">
@@ -232,37 +234,32 @@ export function ScriptCommandArgumentsForm({
             {(validationError || errorMessage) && (
               <div className="flex items-center gap-2.5 rounded-xl bg-[var(--icon-red-bg)] px-4 py-3 ring-1 ring-[var(--icon-red-bg)]">
                 <AlertTriangle className="size-4 text-[var(--icon-red-fg)]" />
-                <span className="text-[12px] text-[var(--icon-red-fg)]">{validationError ?? errorMessage}</span>
+                <span className="text-[12px] text-[var(--icon-red-fg)]">
+                  {validationError ?? errorMessage}
+                </span>
               </div>
             )}
           </form>
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className="scripts-footer-enter flex h-12 shrink-0 items-center justify-between border-t border-[var(--launcher-card-border)] px-4">
-        <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
-          <Terminal className="size-3.5" />
-          <span>
-            {script.requiredArgumentCount > 0
-              ? `${script.requiredArgumentCount} required argument(s)`
-              : "All arguments are optional"}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-            <Kbd className="rounded px-1.5 py-0.5 text-[10px]">
-              Esc
-            </Kbd>
-            <span>Back</span>
-          </div>
-          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-            <Kbd className="rounded px-1.5 py-0.5 text-[10px]">
-              ⌘↵
-            </Kbd>
-            <span>Run</span>
-          </div>
+      <ModuleFooter
+        className="scripts-footer-enter border-[var(--launcher-card-border)]"
+        leftSlot={
+          <>
+            <Terminal className="size-3.5" />
+            <span>
+              {script.requiredArgumentCount > 0
+                ? `${script.requiredArgumentCount} required argument(s)`
+                : "All arguments are optional"}
+            </span>
+          </>
+        }
+        shortcuts={[
+          { keys: ["Esc"], label: "Back" },
+          { keys: ["⌘↵"], label: "Run" },
+        ]}
+        actions={
           <Button
             type="button"
             variant="ghost"
@@ -278,8 +275,8 @@ export function ScriptCommandArgumentsForm({
             )}
             Run Script
           </Button>
-        </div>
-      </footer>
+        }
+      />
     </div>
   );
 }

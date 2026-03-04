@@ -2,31 +2,25 @@ import { useEffect, useState } from "react";
 
 import { CommandFooterBar } from "@/components/command/command-footer-bar";
 import { LauncherActionsPanel } from "@/modules/launcher/components/launcher-actions-panel";
+import { isLauncherActionsHotkey } from "@/lib/launcher-actions";
 
 export function LauncherFooter() {
   const [actionsOpen, setActionsOpen] = useState(false);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.defaultPrevented) {
+      if (!isLauncherActionsHotkey(event)) {
         return;
       }
 
-      if (
-        (event.metaKey || event.ctrlKey) &&
-        !event.shiftKey &&
-        !event.altKey &&
-        event.key.toLowerCase() === "k"
-      ) {
-        event.preventDefault();
-        event.stopPropagation();
-        setActionsOpen((previous) => !previous);
-      }
+      event.preventDefault();
+      event.stopPropagation();
+      setActionsOpen((previous) => !previous);
     };
 
-    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown, true);
     return () => {
-      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keydown", handleKeyDown, true);
     };
   }, []);
 

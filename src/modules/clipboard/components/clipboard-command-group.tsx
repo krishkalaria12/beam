@@ -17,6 +17,7 @@ type ClipboardCommandGroupProps = {
   isOpen: boolean;
   onOpen: () => void;
   onBack: () => void;
+  onToggleActions: () => void;
 };
 
 const CLIPBOARD_KEYWORDS = ["clipboard", "clipboard history"] as const;
@@ -25,6 +26,7 @@ export default function ClipboardCommandGroup({
   isOpen,
   onOpen,
   onBack,
+  onToggleActions,
 }: ClipboardCommandGroupProps) {
   const queryClient = useQueryClient();
   const searchInput = useCommandState((state) => state.search);
@@ -41,7 +43,7 @@ export default function ClipboardCommandGroup({
   if (isOpen) {
     return (
       <LauncherTakeoverSurface>
-        <ClipboardView onBack={onBack} />
+        <ClipboardView onBack={onBack} onToggleActions={onToggleActions} />
       </LauncherTakeoverSurface>
     );
   }

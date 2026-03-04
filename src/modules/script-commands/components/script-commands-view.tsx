@@ -2,7 +2,7 @@ import { ChevronLeft, FolderOpen, Play, Plus, Search, Terminal } from "lucide-re
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
-import { Kbd } from "@/components/module";
+import { ModuleFooter } from "@/components/module";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useLauncherPanelBackHandler } from "@/modules/launcher/lib/back-navigation";
@@ -359,26 +359,22 @@ export function ScriptCommandsView({ onBack }: ScriptCommandsViewProps) {
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className="scripts-footer-enter flex h-12 shrink-0 items-center justify-between border-t border-[var(--launcher-card-border)] px-4">
-        <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
-          <Terminal className="size-3.5" />
-          <span>{filteredScripts.length} visible</span>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-            <Kbd className="rounded px-1.5 py-0.5 text-[10px]">
-              Enter
-            </Kbd>
-            <span>{selectedScriptNeedsArguments ? "Args & Run" : "Run Selected"}</span>
-          </div>
-          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-            <Kbd className="rounded px-1.5 py-0.5 text-[10px]">
-              ⌘N
-            </Kbd>
-            <span>New Script</span>
-          </div>
+      <ModuleFooter
+        className="scripts-footer-enter border-[var(--launcher-card-border)]"
+        leftSlot={
+          <>
+            <Terminal className="size-3.5" />
+            <span>{filteredScripts.length} visible</span>
+          </>
+        }
+        shortcuts={[
+          {
+            keys: ["Enter"],
+            label: selectedScriptNeedsArguments ? "Args & Run" : "Run Selected",
+          },
+          { keys: ["⌘N"], label: "New Script" },
+        ]}
+        actions={
           <Button
             type="button"
             variant="ghost"
@@ -390,8 +386,8 @@ export function ScriptCommandsView({ onBack }: ScriptCommandsViewProps) {
             <Play className="size-3.5" />
             {selectedScriptNeedsArguments ? "Args & Run" : "Run"}
           </Button>
-        </div>
-      </footer>
+        }
+      />
     </div>
   );
 }

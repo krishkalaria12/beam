@@ -21,7 +21,9 @@ export function ScriptCommandsOutput({
         <div className="flex size-14 items-center justify-center rounded-2xl bg-[var(--launcher-card-hover-bg)]">
           <Terminal className="size-6 text-muted-foreground" />
         </div>
-        <p className="text-[13px] text-muted-foreground">Select a script to see details and output</p>
+        <p className="text-[13px] text-muted-foreground">
+          Select a script to see details and output
+        </p>
       </div>
     );
   }

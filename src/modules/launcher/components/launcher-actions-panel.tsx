@@ -447,7 +447,7 @@ export function LauncherActionsPanel({
       data-slot="launcher-actions-panel"
       className={cn(
         "sc-actions-panel",
-        "absolute bottom-[calc(100%+10px)] right-3 z-40",
+        "absolute bottom-[calc(100%+10px)] right-3 z-[60]",
         "w-[335px] overflow-hidden rounded-2xl",
         containerClassName,
       )}
@@ -524,28 +524,30 @@ export function LauncherActionsPanel({
           }
         }}
       >
-        <div className="border-b border-[var(--ui-divider)] px-3.5 py-3">
-          <div className="flex items-center gap-2">
-            {pageStack.length > 1 ? (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-sm"
-                className="size-7 rounded-md text-muted-foreground/75 hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground"
-                onClick={goBack}
-              >
-                <ChevronLeft className="size-4" />
-                <span className="sr-only">Back</span>
-              </Button>
-            ) : null}
-            <div className="min-w-0">
-              <p className="truncate text-[13px] font-medium text-foreground">{panelTitle}</p>
-              {panelSubtitle ? (
-                <p className="truncate text-[11px] text-muted-foreground">{panelSubtitle}</p>
+        {currentPageId !== "root" ? (
+          <div className="border-b border-[var(--ui-divider)] px-3.5 py-3">
+            <div className="flex items-center gap-2">
+              {pageStack.length > 1 ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  className="size-7 rounded-md text-muted-foreground/75 hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground"
+                  onClick={goBack}
+                >
+                  <ChevronLeft className="size-4" />
+                  <span className="sr-only">Back</span>
+                </Button>
               ) : null}
+              <div className="min-w-0">
+                <p className="truncate text-[13px] font-medium text-foreground">{panelTitle}</p>
+                {panelSubtitle ? (
+                  <p className="truncate text-[11px] text-muted-foreground">{panelSubtitle}</p>
+                ) : null}
+              </div>
             </div>
           </div>
-        </div>
+        ) : null}
 
         {currentPageId === "root" ? (
           <LauncherActionsRootPage

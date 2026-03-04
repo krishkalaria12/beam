@@ -11,7 +11,7 @@ import {
 import type { KeyboardEvent } from "react";
 import { z } from "zod";
 
-import { Kbd } from "@/components/module";
+import { ModuleFooter } from "@/components/module";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -333,26 +333,19 @@ export function ScriptCommandCreateForm({
         </form>
       </div>
 
-      {/* Footer */}
-      <footer className="scripts-footer-enter flex h-12 shrink-0 items-center justify-between border-t border-[var(--launcher-card-border)] px-4">
-        <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
-          <Terminal className="size-3.5" />
-          <span>Script file will be created in your commands directory.</span>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-            <Kbd className="rounded px-1.5 py-0.5 text-[10px]">
-              Esc
-            </Kbd>
-            <span>Back</span>
-          </div>
-          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-            <Kbd className="rounded px-1.5 py-0.5 text-[10px]">
-              ⌘↵
-            </Kbd>
-            <span>Create</span>
-          </div>
+      <ModuleFooter
+        className="scripts-footer-enter border-[var(--launcher-card-border)]"
+        leftSlot={
+          <>
+            <Terminal className="size-3.5" />
+            <span>Script file will be created in your commands directory.</span>
+          </>
+        }
+        shortcuts={[
+          { keys: ["Esc"], label: "Back" },
+          { keys: ["⌘↵"], label: "Create" },
+        ]}
+        actions={
           <Button
             type="button"
             variant="ghost"
@@ -368,8 +361,8 @@ export function ScriptCommandCreateForm({
             )}
             Create Script
           </Button>
-        </div>
-      </footer>
+        }
+      />
     </div>
   );
 }

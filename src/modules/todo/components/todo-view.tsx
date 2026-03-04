@@ -10,7 +10,7 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, CheckCircle2, ListTodo, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { Kbd } from "@/components/module";
+import { ModuleFooter } from "@/components/module";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useLauncherPanelBackHandler } from "@/modules/launcher/lib/back-navigation";
@@ -502,26 +502,18 @@ export function TodoView({ onBack }: TodoViewProps) {
         />
       </div>
 
-      {/* Minimal footer */}
-      <footer className="todo-footer-enter flex items-center justify-between border-t border-[var(--launcher-card-border)] px-4 py-2">
-        <span className="text-[11px] text-muted-foreground">
-          {orderedTodos.length} {orderedTodos.length === 1 ? "todo" : "todos"}
-        </span>
-        <div className="flex items-center gap-3">
-          <span className="text-[10px] text-muted-foreground">
-            <Kbd className="rounded px-1.5 py-0.5 text-[9px]">
-              Enter
-            </Kbd>
-            <span className="ml-1">Create</span>
+      <ModuleFooter
+        className="todo-footer-enter border-[var(--launcher-card-border)] py-2"
+        leftSlot={
+          <span className="text-[11px] text-muted-foreground">
+            {orderedTodos.length} {orderedTodos.length === 1 ? "todo" : "todos"}
           </span>
-          <span className="text-[10px] text-muted-foreground">
-            <Kbd className="rounded px-1.5 py-0.5 text-[9px]">
-              Esc
-            </Kbd>
-            <span className="ml-1">Back</span>
-          </span>
-        </div>
-      </footer>
+        }
+        shortcuts={[
+          { keys: ["Enter"], label: "Create" },
+          { keys: ["Esc"], label: "Back" },
+        ]}
+      />
     </div>
   );
 }

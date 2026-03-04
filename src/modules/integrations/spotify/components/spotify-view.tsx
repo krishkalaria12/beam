@@ -19,7 +19,7 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
-import { Kbd } from "@/components/module";
+import { ModuleFooter } from "@/components/module";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -641,7 +641,9 @@ export function SpotifyView({ initialQuery, onBack }: SpotifyViewProps) {
                       <p className="truncate text-[13px] font-medium text-muted-foreground">
                         {track.name}
                       </p>
-                      <p className="truncate text-[11px] text-muted-foreground">{toArtists(track)}</p>
+                      <p className="truncate text-[11px] text-muted-foreground">
+                        {toArtists(track)}
+                      </p>
                     </div>
 
                     <ExternalLink className="size-3.5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
@@ -660,36 +662,27 @@ export function SpotifyView({ initialQuery, onBack }: SpotifyViewProps) {
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className="spotify-footer flex h-11 shrink-0 items-center justify-between border-t border-[var(--footer-border)] px-5">
-        <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-          <div className="flex size-5 items-center justify-center rounded-md bg-[var(--launcher-chip-bg)]">
-            <Music className="size-3 text-[var(--ring)]" />
+      <ModuleFooter
+        className="spotify-footer h-11 border-[var(--footer-border)] px-5"
+        leftSlot={
+          <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+            <div className="flex size-5 items-center justify-center rounded-md bg-[var(--launcher-chip-bg)]">
+              <Music className="size-3 text-[var(--ring)]" />
+            </div>
+            <span className="font-medium">Spotify</span>
+            {isConnected && user && (
+              <>
+                <span className="text-muted-foreground">·</span>
+                <span>{user.display_name || user.id}</span>
+              </>
+            )}
           </div>
-          <span className="font-medium">Spotify</span>
-          {isConnected && user && (
-            <>
-              <span className="text-muted-foreground">·</span>
-              <span>{user.display_name || user.id}</span>
-            </>
-          )}
-        </div>
-
-        <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
-          <span className="flex items-center gap-1.5">
-            <Kbd className="rounded-md px-1.5 py-0.5 text-[10px] text-muted-foreground">
-              Enter
-            </Kbd>
-            Search
-          </span>
-          <span className="flex items-center gap-1.5">
-            <Kbd className="rounded-md px-1.5 py-0.5 text-[10px] text-muted-foreground">
-              Esc
-            </Kbd>
-            Back
-          </span>
-        </div>
-      </footer>
+        }
+        shortcuts={[
+          { keys: ["Enter"], label: "Search" },
+          { keys: ["Esc"], label: "Back" },
+        ]}
+      />
     </div>
   );
 }
