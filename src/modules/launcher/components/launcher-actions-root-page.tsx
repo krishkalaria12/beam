@@ -68,11 +68,10 @@ export function LauncherActionsRootPage({
       </CommandList>
 
       <div className="border-t border-[var(--ui-divider)] px-3 py-2.5">
-        <div className="flex items-center gap-2 rounded-lg bg-[var(--launcher-card-hover-bg)] px-2.5 py-1.5 ring-1 ring-[var(--launcher-card-border)] focus-within:ring-[var(--ring)]">
+        <div className="flex items-center gap-2">
           <Label htmlFor={inputId} className="sr-only">
             Search actions
           </Label>
-          <Search className="size-4 text-muted-foreground/60" />
           <Input
             ref={inputRef}
             id={inputId}
@@ -81,7 +80,9 @@ export function LauncherActionsRootPage({
               onQueryChange(event.target.value);
             }}
             placeholder={searchPlaceholder}
-            className="h-7 border-none bg-transparent px-0 py-0 text-[12px] focus-visible:ring-0"
+            minimal
+            leftIcon={<Search className="size-4" />}
+            className="h-7 border-none bg-transparent px-0 py-0 text-[12px]"
           />
         </div>
       </div>

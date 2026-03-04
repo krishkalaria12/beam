@@ -49,8 +49,9 @@ export function LauncherActionsAliasPage({
               onAliasChange(event.target.value);
             }}
             placeholder="Type alias..."
+            minimal
             aria-invalid={(feedback ?? availability).tone === "error"}
-            className="h-8 rounded-lg border-[var(--launcher-card-border)] bg-[var(--launcher-card-hover-bg)] text-[12px] focus-visible:ring-[var(--ring)]"
+            className="h-8 text-[12px]"
           />
         </div>
 

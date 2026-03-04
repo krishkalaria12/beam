@@ -13,6 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { SearchIcon, CheckIcon } from "lucide-react";
+import beamLogo from "@/assets/beam-logo.png";
 
 function Command({ className, ...props }: React.ComponentProps<typeof CommandPrimitive>) {
   return (
@@ -60,18 +61,32 @@ function CommandDialog({
 function CommandInput({
   className,
   showIcon = false,
+  showLogo = false,
+  minimal = false,
   ...props
 }: React.ComponentProps<typeof CommandPrimitive.Input> & {
   showIcon?: boolean;
+  showLogo?: boolean;
+  minimal?: boolean;
 }) {
   return (
     <div data-slot="command-input-wrapper" className="flex-none">
-      <CommandPanelHeader>
-        {showIcon && <SearchIcon className="size-6 shrink-0 text-muted-foreground/60" />}
+      <CommandPanelHeader className={minimal ? "border-b-0 bg-transparent" : undefined}>
+        {showLogo && (
+          <img
+            src={beamLogo}
+            alt="Beam"
+            className="size-6 shrink-0 object-contain"
+          />
+        )}
+        {showIcon && !showLogo && (
+          <SearchIcon className="size-6 shrink-0 text-muted-foreground/60" />
+        )}
         <CommandPrimitive.Input
           data-slot="command-input"
           className={cn(
             "w-full bg-transparent text-lg font-medium tracking-[0.005em] text-foreground outline-hidden placeholder:text-muted-foreground/55 disabled:cursor-not-allowed disabled:opacity-50",
+            minimal && "focus:ring-0 focus:outline-none",
             className,
           )}
           {...props}

@@ -548,6 +548,8 @@ export default function LauncherCommand() {
             value={commandSearch}
             onValueChange={setCommandSearch}
             placeholder="Search Beam..."
+            showLogo
+            minimal
             className="border-none"
           />
         )}
