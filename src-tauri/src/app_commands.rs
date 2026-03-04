@@ -1,7 +1,8 @@
 use crate::{
-    ai, applications, calculator, clipboard, dictionary, extensions, file_search, hotkeys,
-    hyprwhspr, integrations, launcher_theme, launcher_window, pinned, quicklinks, script_commands,
-    search, settings, snippets, system_actions, todo, translation, window_switcher,
+    ai, applications, calculator, clipboard, custom_config, dictionary, extensions, file_search,
+    hotkeys, hyprwhspr, integrations, launcher_theme, launcher_window, pinned, quicklinks,
+    script_commands, search, settings, snippets, system_actions, todo, translation,
+    window_switcher,
 };
 
 use tauri::ipc::Invoke;
@@ -120,5 +121,7 @@ pub fn get_handler() -> impl Fn(Invoke) -> bool {
         window_switcher::list_windows,
         window_switcher::focus_window,
         window_switcher::close_window,
+        custom_config::commands_items::get_hidden_command_ids,
+        custom_config::commands_items::set_command_hidden,
     ]
 }

@@ -202,6 +202,9 @@ pub struct Config {
     pub LAUNCHER_THEME_STYLESHEET_FILE_NAME: &'static str,
     pub LAUNCHER_THEME_SELECTED_KEY: &'static str,
     pub LAUNCHER_THEME_MAX_CSS_BYTES: usize,
+
+    // -- Custom config
+    pub COMMAND_ITEMS_CONFIG: &'static str,
 }
 
 impl Config {
@@ -414,6 +417,8 @@ impl Config {
             LAUNCHER_THEME_STYLESHEET_FILE_NAME: "theme.css",
             LAUNCHER_THEME_SELECTED_KEY: "launcher_theme_id",
             LAUNCHER_THEME_MAX_CSS_BYTES: 512 * 1024,
+
+            COMMAND_ITEMS_CONFIG: "hidden_command_ids",
         })
     }
 }

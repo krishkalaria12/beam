@@ -18,6 +18,7 @@ use super::models::{HotkeyCapabilities, HotkeySettings};
 use super::shortcuts::{build_compositor_bindings, format_portal_preferred_trigger};
 use super::store::{open_store, read_hotkey_settings};
 use crate::config::config;
+use crate::custom_config;
 
 #[derive(Debug, Clone, Serialize)]
 struct HotkeyCommandEventPayload {
@@ -132,6 +133,20 @@ pub fn dispatch_hotkey_command(app: &AppHandle, command_id: String, source: &'st
         return;
     }
 
+    if custom_config::is_command_hidden(app, &normalized_command_id) {
+        emit_hotkey_backend_status_event(
+            app,
+            "warning",
+            format!(
+                "Command '{}' is hidden and cannot be run.",
+                normalized_command_id
+            ),
+            None,
+            source,
+        );
+        return;
+    }
+
     show_launcher_window(app);
     emit_hotkey_command_event(app, normalized_command_id, source.to_string());
 }
@@ -139,6 +154,20 @@ pub fn dispatch_hotkey_command(app: &AppHandle, command_id: String, source: &'st
 pub fn dispatch_hotkey_command_startup(app: &AppHandle, command_id: String) {
     let normalized_command_id = command_id.trim().to_string();
     if normalized_command_id.is_empty() {
+        return;
+    }
+
+    if custom_config::is_command_hidden(app, &normalized_command_id) {
+        emit_hotkey_backend_status_event(
+            app,
+            "warning",
+            format!(
+                "Command '{}' is hidden and cannot be run.",
+                normalized_command_id
+            ),
+            None,
+            "startup-cli",
+        );
         return;
     }
 
@@ -453,6 +482,10 @@ async fn run_linux_wayland_hotkey_runtime(app: AppHandle, mut reload_rx: watch::
                 continue;
             }
         };
+        let mut settings = settings;
+        settings
+            .command_hotkeys
+            .retain(|command_id, _| !custom_config::is_command_hidden(&app, command_id));
 
         if let Ok(app_id) = ashpd::AppID::try_from(app.config().identifier.as_str()) {
             if let Err(err) = ashpd::register_host_app(app_id).await {

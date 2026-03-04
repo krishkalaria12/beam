@@ -4,6 +4,7 @@ pub mod applications;
 pub mod calculator;
 pub mod clipboard;
 pub mod config;
+pub mod custom_config;
 pub mod dictionary;
 pub mod error;
 pub mod extensions;

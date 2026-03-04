@@ -23,11 +23,16 @@ use self::shortcuts::{
 };
 use self::store::{open_store, read_hotkey_settings, save_command_hotkeys};
 use crate::config::config;
+use crate::custom_config;
 
 #[command]
 pub fn get_hotkey_settings(app: AppHandle) -> Result<HotkeySettings, String> {
     let store = open_store(&app)?;
-    Ok(read_hotkey_settings(&store))
+    let mut settings = read_hotkey_settings(&store);
+    settings
+        .command_hotkeys
+        .retain(|command_id, _| !custom_config::is_command_hidden(&app, command_id));
+    Ok(settings)
 }
 
 #[command]
@@ -38,7 +43,10 @@ pub fn get_hotkey_capabilities() -> HotkeyCapabilities {
 #[command]
 pub fn get_hotkey_compositor_bindings(app: AppHandle) -> Result<CompositorBindings, String> {
     let store = open_store(&app)?;
-    let settings = read_hotkey_settings(&store);
+    let mut settings = read_hotkey_settings(&store);
+    settings
+        .command_hotkeys
+        .retain(|command_id, _| !custom_config::is_command_hidden(&app, command_id));
     let capabilities = hotkey_capabilities();
     Ok(build_compositor_bindings(&settings, &capabilities))
 }
@@ -85,6 +93,13 @@ pub fn update_command_hotkey(
         return Ok(CommandHotkeyUpdateResult {
             success: false,
             error: Some("invalid-command-id".to_string()),
+            conflict_command_id: None,
+        });
+    }
+    if custom_config::is_command_hidden(&app, &normalized_command_id) {
+        return Ok(CommandHotkeyUpdateResult {
+            success: false,
+            error: Some("command-hidden".to_string()),
             conflict_command_id: None,
         });
     }
