@@ -8,6 +8,8 @@ use crate::config::config;
 use crate::custom_config::error::{CustomConfigError, Result};
 use crate::hotkeys;
 
+const NON_HIDEABLE_COMMAND_IDS: [&str; 1] = ["settings.panel.open"];
+
 fn dedupe_keep_order(values: &mut Vec<String>) {
     let mut seen = HashSet::new();
     values.retain(|entry| seen.insert(entry.clone()));
@@ -59,6 +61,12 @@ fn write_settings_object(path: &Path, settings: Map<String, Value>) -> Result<()
     fs::write(path, raw).map_err(|e| CustomConfigError::WriteError(e.to_string()))
 }
 
+fn is_non_hideable_command_id(command_id: &str) -> bool {
+    NON_HIDEABLE_COMMAND_IDS
+        .iter()
+        .any(|entry| *entry == command_id)
+}
+
 fn parse_hidden_command_ids(value: Option<&Value>) -> Vec<String> {
     let mut hidden = Vec::new();
     let Some(Value::Array(items)) = value else {
@@ -70,6 +78,9 @@ fn parse_hidden_command_ids(value: Option<&Value>) -> Vec<String> {
             continue;
         };
         if let Some(command_id) = normalize_command_id(raw_id) {
+            if is_non_hideable_command_id(&command_id) {
+                continue;
+            }
             hidden.push(command_id);
         }
     }
@@ -114,6 +125,11 @@ pub fn set_command_hidden(app: AppHandle, command_id: String, hidden: bool) -> R
     let normalized_command_id = normalize_command_id(&command_id).ok_or_else(|| {
         CustomConfigError::InvalidArguments("command_id cannot be empty".to_string())
     })?;
+    if hidden && is_non_hideable_command_id(&normalized_command_id) {
+        return Err(CustomConfigError::InvalidArguments(format!(
+            "command '{normalized_command_id}' cannot be hidden"
+        )));
+    }
 
     let path = resolve_settings_path()?;
     let mut settings = read_settings_object(&path)?;
