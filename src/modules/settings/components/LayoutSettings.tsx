@@ -105,9 +105,7 @@ export function LayoutSettings() {
                       key={i}
                       className={cn(
                         "h-1.5 rounded-full",
-                        isSelected
-                          ? "bg-secondary-foreground/35"
-                          : "bg-[var(--launcher-chip-bg)]",
+                        isSelected ? "bg-secondary-foreground/35" : "bg-[var(--launcher-chip-bg)]",
                         option.id === "compressed" ? "h-1" : "",
                       )}
                       style={{ width: `${40 + ((i * 15) % 40)}%` }}

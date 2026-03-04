@@ -17,10 +17,32 @@ interface ModuleFooterProps {
   shortcuts?: FooterShortcut[];
   /** Primary action buttons on the right */
   actions?: ReactNode;
+  /** Show Cmd+K shortcut hint */
+  showActionsShortcut?: boolean;
   className?: string;
 }
 
-export function ModuleFooter({ leftSlot, shortcuts, actions, className }: ModuleFooterProps) {
+export function ModuleFooter({
+  leftSlot,
+  shortcuts,
+  actions,
+  showActionsShortcut = true,
+  className,
+}: ModuleFooterProps) {
+  const hasActionsShortcut =
+    showActionsShortcut &&
+    (shortcuts?.some(
+      (shortcut) =>
+        shortcut.label.toLowerCase() === "actions" &&
+        shortcut.keys.join("+").toLowerCase().includes("k"),
+    ) ??
+      false);
+
+  const resolvedShortcuts =
+    showActionsShortcut && !hasActionsShortcut
+      ? [...(shortcuts ?? []), { keys: ["⌘", "K"], label: "Actions" }]
+      : shortcuts;
+
   return (
     <footer
       className={cn(
@@ -36,9 +58,9 @@ export function ModuleFooter({ leftSlot, shortcuts, actions, className }: Module
       {/* Right: shortcuts + actions */}
       <div className="flex items-center gap-3">
         {/* Keyboard shortcut hints */}
-        {shortcuts && shortcuts.length > 0 && (
+        {resolvedShortcuts && resolvedShortcuts.length > 0 && (
           <div className="hidden items-center gap-3 sm:flex">
-            {shortcuts.map((shortcut) => (
+            {resolvedShortcuts.map((shortcut) => (
               <span
                 key={shortcut.keys.join("+")}
                 className="flex items-center gap-1 text-[11px] text-muted-foreground/60"
@@ -55,7 +77,7 @@ export function ModuleFooter({ leftSlot, shortcuts, actions, className }: Module
         {/* Action buttons */}
         {actions && (
           <>
-            {shortcuts && shortcuts.length > 0 && (
+            {resolvedShortcuts && resolvedShortcuts.length > 0 && (
               <span
                 className="hidden h-4 w-px bg-[var(--ui-divider)] sm:block"
                 aria-hidden="true"

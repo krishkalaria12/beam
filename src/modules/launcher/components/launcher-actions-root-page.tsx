@@ -1,0 +1,91 @@
+import { ChevronRight, Search } from "lucide-react";
+import type React from "react";
+
+import { CommandGroup, CommandItem, CommandList, CommandShortcut } from "@/components/ui/command";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
+import type { LauncherActionItem } from "@/modules/launcher/types";
+
+interface LauncherActionsRootPageProps {
+  inputId: string;
+  inputRef: React.RefObject<HTMLInputElement | null>;
+  query: string;
+  searchPlaceholder: string;
+  items: LauncherActionItem[];
+  onQueryChange: (value: string) => void;
+  onNavigate: (item: LauncherActionItem) => void;
+}
+
+export function LauncherActionsRootPage({
+  inputId,
+  inputRef,
+  query,
+  searchPlaceholder,
+  items,
+  onQueryChange,
+  onNavigate,
+}: LauncherActionsRootPageProps) {
+  return (
+    <>
+      <CommandList className="max-h-[210px] overflow-y-auto px-2 py-2">
+        <CommandGroup>
+          {items.map((item) => (
+            <CommandItem
+              key={item.id}
+              value={item.id}
+              disabled={item.disabled}
+              className="rounded-lg px-2.5 py-2"
+              onSelect={() => {
+                onNavigate(item);
+              }}
+            >
+              <div className="mr-2 text-muted-foreground/80 [&_svg]:size-4">{item.icon}</div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[13px] font-medium text-foreground">{item.label}</p>
+                {item.description ? (
+                  <p className="truncate text-[11px] text-muted-foreground/70">
+                    {item.description}
+                  </p>
+                ) : null}
+              </div>
+              {item.shortcut ? (
+                <CommandShortcut className="ml-2 text-[10px] tracking-[0.08em] text-muted-foreground/70">
+                  {item.shortcut}
+                </CommandShortcut>
+              ) : null}
+              {item.nextPageId ? (
+                <ChevronRight className="ml-2 size-4 text-muted-foreground/50" />
+              ) : null}
+            </CommandItem>
+          ))}
+          {items.length === 0 ? (
+            <div className="px-3 py-6 text-center text-[12px] text-muted-foreground/75">
+              No actions found.
+            </div>
+          ) : null}
+        </CommandGroup>
+      </CommandList>
+
+      <div className="border-t border-[var(--ui-divider)] px-3 py-2.5">
+        <div className="flex items-center gap-2">
+          <Label htmlFor={inputId} className="sr-only">
+            Search actions
+          </Label>
+          <Input
+            ref={inputRef}
+            id={inputId}
+            value={query}
+            onChange={(event) => {
+              onQueryChange(event.target.value);
+            }}
+            placeholder={searchPlaceholder}
+            minimal
+            leftIcon={<Search className="size-4" />}
+            className="h-7 border-none bg-transparent px-0 py-0 text-[12px]"
+          />
+        </div>
+      </div>
+    </>
+  );
+}

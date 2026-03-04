@@ -147,7 +147,7 @@ export function AiChatSidebar({
                     ${
                       isActive
                         ? "bg-[var(--launcher-card-hover-bg)] ring-1 ring-[var(--launcher-card-border)]"
-                      : "hover:bg-[var(--launcher-card-hover-bg)]"
+                        : "hover:bg-[var(--launcher-card-hover-bg)]"
                     }
                   `}
                   style={{ animationDelay: `${idx * 25}ms` }}

@@ -38,7 +38,9 @@ export function ScriptCommandsList({
         </div>
         <div>
           <p className="text-[13px] font-medium text-muted-foreground">No scripts found</p>
-          <p className="mt-1 text-[12px] text-muted-foreground">Add scripts to your commands folder</p>
+          <p className="mt-1 text-[12px] text-muted-foreground">
+            Add scripts to your commands folder
+          </p>
         </div>
       </div>
     );

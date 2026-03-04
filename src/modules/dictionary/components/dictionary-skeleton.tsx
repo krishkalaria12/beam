@@ -1,4 +1,5 @@
 import { ArrowLeft, Search } from "lucide-react";
+import { ModuleFooter } from "@/components/module";
 
 export function DictionarySkeleton() {
   return (
@@ -69,15 +70,20 @@ export function DictionarySkeleton() {
         ))}
       </div>
 
-      {/* Footer */}
-      <footer className="flex h-12 shrink-0 items-center justify-between border-t border-[var(--launcher-card-border)] px-4">
-        <div className="h-4 w-28 animate-pulse rounded bg-[var(--launcher-card-hover-bg)]" />
-        <div className="flex gap-4">
-          <div className="h-5 w-14 animate-pulse rounded bg-[var(--launcher-card-hover-bg)]" />
-          <div className="h-5 w-14 animate-pulse rounded bg-[var(--launcher-card-hover-bg)]" />
-          <div className="h-5 w-14 animate-pulse rounded bg-[var(--launcher-card-hover-bg)]" />
-        </div>
-      </footer>
+      <ModuleFooter
+        className="border-[var(--launcher-card-border)]"
+        showActionsShortcut={false}
+        leftSlot={
+          <div className="h-4 w-28 animate-pulse rounded bg-[var(--launcher-card-hover-bg)]" />
+        }
+        actions={
+          <div className="flex gap-4">
+            <div className="h-5 w-14 animate-pulse rounded bg-[var(--launcher-card-hover-bg)]" />
+            <div className="h-5 w-14 animate-pulse rounded bg-[var(--launcher-card-hover-bg)]" />
+            <div className="h-5 w-14 animate-pulse rounded bg-[var(--launcher-card-hover-bg)]" />
+          </div>
+        }
+      />
     </div>
   );
 }

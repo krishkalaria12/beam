@@ -12,7 +12,7 @@ import {
 import { Area, AreaChart, ResponsiveContainer } from "recharts";
 
 import { cn } from "@/lib/utils";
-import { Kbd } from "@/components/module";
+import { ModuleFooter } from "@/components/module";
 import { Button } from "@/components/ui/button";
 import { formatMetricValue, type SpeedTestStatus } from "./speed-test-shared";
 
@@ -39,14 +39,24 @@ function SpeedTestStatusBadge({ status, isPreparing }: SpeedTestStatusBadgeProps
       text: "text-[var(--icon-cyan-fg)]",
       dot: "bg-[var(--icon-cyan-bg)]",
     },
-    paused: { label: "Paused", bg: "bg-[var(--icon-orange-bg)]", text: "text-[var(--icon-orange-fg)]", dot: "bg-[var(--icon-orange-bg)]" },
+    paused: {
+      label: "Paused",
+      bg: "bg-[var(--icon-orange-bg)]",
+      text: "text-[var(--icon-orange-fg)]",
+      dot: "bg-[var(--icon-orange-bg)]",
+    },
     finished: {
       label: "Complete",
       bg: "bg-[var(--icon-green-bg)]",
       text: "text-[var(--icon-green-fg)]",
       dot: "bg-[var(--icon-green-bg)]",
     },
-    error: { label: "Error", bg: "bg-[var(--icon-red-bg)]", text: "text-[var(--icon-red-fg)]", dot: "bg-[var(--icon-red-bg)]" },
+    error: {
+      label: "Error",
+      bg: "bg-[var(--icon-red-bg)]",
+      text: "text-[var(--icon-red-fg)]",
+      dot: "bg-[var(--icon-red-bg)]",
+    },
   };
 
   const { label, bg, text, dot } = config[status];
@@ -152,11 +162,11 @@ export function SpeedCard({ metric, valueMbps, p90Value, data, isRunning, index 
         <div className="flex items-center gap-2.5">
           <div
             className={cn(
-            "flex size-8 items-center justify-center rounded-xl bg-[var(--launcher-card-bg)] ring-1",
-            iconBg,
-            ringColor,
-          )}
-        >
+              "flex size-8 items-center justify-center rounded-xl bg-[var(--launcher-card-bg)] ring-1",
+              iconBg,
+              ringColor,
+            )}
+          >
             {isDownload ? (
               <ArrowDown className={cn("size-4", iconColor)} />
             ) : (
@@ -171,7 +181,9 @@ export function SpeedCard({ metric, valueMbps, p90Value, data, isRunning, index 
         {p90Value !== null && (
           <span className="text-[10px] text-muted-foreground">
             P90:{" "}
-            <span className="font-mono text-muted-foreground">{formatMetricValue(p90Value, 0)}</span>
+            <span className="font-mono text-muted-foreground">
+              {formatMetricValue(p90Value, 0)}
+            </span>
           </span>
         )}
       </div>
@@ -331,81 +343,66 @@ export function SpeedTestFooter({
   onRestart,
 }: SpeedTestFooterProps) {
   return (
-    <footer className="speedtest-footer flex h-12 shrink-0 items-center justify-between border-t border-[var(--launcher-card-border)] px-5">
-      {/* Left side - status and action buttons */}
-      <div className="flex items-center gap-3">
-        {/* Pause/Resume button - only show when running or paused */}
-        {hasStarted && !isFinished && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={onPauseResume}
-            disabled={isPreparing}
-            className={cn(
-              "flex items-center gap-2 rounded-lg px-3 py-1.5 text-[11px] font-medium transition-all",
-              "bg-[var(--launcher-card-hover-bg)] text-muted-foreground ring-1 ring-[var(--launcher-card-border)]",
-              "hover:bg-[var(--launcher-card-hover-bg)] hover:text-muted-foreground",
-              "disabled:opacity-50 disabled:cursor-not-allowed",
-            )}
-          >
-            {isRunning ? (
-              <>
-                <Pause className="size-3" />
-                Pause
-              </>
-            ) : (
-              <>
-                <Play className="size-3" />
-                Resume
-              </>
-            )}
-          </Button>
-        )}
-
-        {/* Restart button - show when finished or paused */}
-        {hasStarted && (isFinished || isPaused) && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={onRestart}
-            disabled={isPreparing}
-            className={cn(
-              "flex items-center gap-2 rounded-lg px-3 py-1.5 text-[11px] font-medium transition-all",
-              "bg-[var(--icon-cyan-bg)] text-[var(--icon-cyan-fg)] ring-1 ring-[var(--icon-cyan-bg)]",
-              "hover:bg-[var(--icon-cyan-bg)] hover:text-[var(--icon-cyan-fg)]",
-              "disabled:opacity-50 disabled:cursor-not-allowed",
-            )}
-          >
-            <RotateCcw className="size-3" />
-            Restart
-          </Button>
-        )}
-
-        {/* Status text when no buttons */}
-        {(!hasStarted || (isRunning && !isPaused)) && (
-          <span className="text-[11px] font-medium text-muted-foreground">
-            {isPreparing ? "Preparing..." : isRunning ? "Testing..." : "Ready"}
-          </span>
-        )}
-      </div>
-
-      {/* Right side - keyboard hints */}
-      <div className="flex items-center gap-4 text-[11px] text-muted-foreground">
-        <span className="flex items-center gap-1.5">
-          <Kbd className="rounded-md px-1.5 py-0.5 text-[10px] text-muted-foreground">
-            Enter
-          </Kbd>
-          <span className="text-muted-foreground">{hasStarted ? "Restart" : "Start"}</span>
-        </span>
-        <span className="flex items-center gap-1.5">
-          <Kbd className="rounded-md px-1.5 py-0.5 text-[10px] text-muted-foreground">
-            Esc
-          </Kbd>
-          <span className="text-muted-foreground">Back</span>
-        </span>
-      </div>
-    </footer>
+    <ModuleFooter
+      className="speedtest-footer border-[var(--launcher-card-border)] px-5"
+      leftSlot={
+        <div className="flex items-center gap-3">
+          {hasStarted && !isFinished && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={onPauseResume}
+              disabled={isPreparing}
+              className={cn(
+                "flex items-center gap-2 rounded-lg px-3 py-1.5 text-[11px] font-medium transition-all",
+                "bg-[var(--launcher-card-hover-bg)] text-muted-foreground ring-1 ring-[var(--launcher-card-border)]",
+                "hover:bg-[var(--launcher-card-hover-bg)] hover:text-muted-foreground",
+                "disabled:opacity-50 disabled:cursor-not-allowed",
+              )}
+            >
+              {isRunning ? (
+                <>
+                  <Pause className="size-3" />
+                  Pause
+                </>
+              ) : (
+                <>
+                  <Play className="size-3" />
+                  Resume
+                </>
+              )}
+            </Button>
+          )}
+          {hasStarted && (isFinished || isPaused) && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={onRestart}
+              disabled={isPreparing}
+              className={cn(
+                "flex items-center gap-2 rounded-lg px-3 py-1.5 text-[11px] font-medium transition-all",
+                "bg-[var(--icon-cyan-bg)] text-[var(--icon-cyan-fg)] ring-1 ring-[var(--icon-cyan-bg)]",
+                "hover:bg-[var(--icon-cyan-bg)] hover:text-[var(--icon-cyan-fg)]",
+                "disabled:opacity-50 disabled:cursor-not-allowed",
+              )}
+            >
+              <RotateCcw className="size-3" />
+              Restart
+            </Button>
+          )}
+          {(!hasStarted || (isRunning && !isPaused)) && (
+            <span className="text-[11px] font-medium text-muted-foreground">
+              {isPreparing ? "Preparing..." : isRunning ? "Testing..." : "Ready"}
+            </span>
+          )}
+        </div>
+      }
+      shortcuts={[
+        { keys: ["Enter"], label: hasStarted ? "Restart" : "Start" },
+        { keys: ["Esc"], label: "Back" },
+      ]}
+    />
   );
 }

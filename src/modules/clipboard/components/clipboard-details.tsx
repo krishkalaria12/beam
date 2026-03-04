@@ -1,6 +1,10 @@
+import { CommandLoadingState } from "@/components/command/command-loading-state";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import {
   ArrowUpRight,
+  Loader2,
   Check,
   Clock,
   Copy,
@@ -9,15 +13,16 @@ import {
   Link,
   Clipboard,
 } from "lucide-react";
+import { useEffect, useState } from "react";
+
 import { ClipboardContentType, type ClipboardHistoryEntry } from "../types";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 
 interface ClipboardDetailsProps {
   entry: ClipboardHistoryEntry | null;
   isCopied: boolean;
   copyError: string | null;
   onCopy: () => void;
+  isLoading?: boolean;
 }
 
 const getEntryIconConfig = (type: ClipboardContentType) => {
@@ -26,25 +31,47 @@ const getEntryIconConfig = (type: ClipboardContentType) => {
       return {
         icon: <ImageIcon className="size-4" />,
         gradient: "bg-[var(--icon-orange-bg)]",
-        label: "Image",
       };
     case ClipboardContentType.Link:
       return {
         icon: <Link className="size-4" />,
         gradient: "bg-[var(--icon-green-bg)]",
-        label: "Link",
       };
     default:
       return {
         icon: <FileText className="size-4" />,
         gradient: "bg-[var(--icon-primary-bg)]",
-        label: "Text",
       };
   }
 };
 
-export function ClipboardDetails({ entry, isCopied, copyError, onCopy }: ClipboardDetailsProps) {
-  if (!entry) {
+export function ClipboardDetails({
+  entry,
+  isCopied,
+  copyError,
+  onCopy,
+  isLoading = false,
+}: ClipboardDetailsProps) {
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
+
+  useEffect(() => {
+    if (!entry || entry.content_type !== ClipboardContentType.Image) {
+      setIsImageLoaded(false);
+      return;
+    }
+
+    setIsImageLoaded(false);
+  }, [entry]);
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-1 items-center justify-center border-l border-[var(--launcher-card-border)]">
+        <CommandLoadingState label="Loading details..." withSpinner />
+      </div>
+    );
+  }
+
+  if (entry === null) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-4 p-8">
         <div className="flex size-16 items-center justify-center rounded-2xl bg-[var(--launcher-card-bg)] ring-1 ring-[var(--launcher-card-border)]">
@@ -54,25 +81,43 @@ export function ClipboardDetails({ entry, isCopied, copyError, onCopy }: Clipboa
           <p className="text-[13px] font-medium tracking-[-0.01em] text-muted-foreground">
             Select an entry
           </p>
-          <p className="mt-1 text-[11px] text-muted-foreground">View details and copy to clipboard</p>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            View details and copy to clipboard
+          </p>
         </div>
       </div>
     );
   }
+
+  const isImageEntry = entry.content_type === ClipboardContentType.Image;
+  const isPreviewLoading = isImageEntry && !isImageLoaded;
+
+  const copiedAtLabel = formatDistanceToNow(new Date(entry.copied_at), { addSuffix: true });
 
   const iconConfig = getEntryIconConfig(entry.content_type);
 
   return (
     <div className="clipboard-details-panel flex flex-1 flex-col min-w-0 h-full">
       {/* Content Preview - Scrollable */}
-      <div className="flex-1 overflow-y-auto p-6">
-        {entry.content_type === ClipboardContentType.Image ? (
+      <div className="flex-1 overflow-y-auto p-6 [content-visibility:auto]">
+        {isImageEntry ? (
           <div className="flex w-full justify-center">
             <div className="relative max-w-full overflow-hidden rounded-xl ring-1 ring-[var(--launcher-card-border)] shadow-2xl">
+              {isPreviewLoading && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-[var(--launcher-card-bg)]/75">
+                  <Loader2 className="size-5 animate-spin text-muted-foreground" />
+                </div>
+              )}
               <img
                 src={entry.value}
                 alt="Preview"
-                className="max-w-full object-contain block h-auto"
+                loading="lazy"
+                decoding="async"
+                onLoad={() => setIsImageLoaded(true)}
+                className={cn(
+                  "block h-auto max-w-full object-contain transition-opacity duration-150",
+                  isImageLoaded ? "opacity-100" : "opacity-0",
+                )}
               />
             </div>
           </div>
@@ -100,9 +145,7 @@ export function ClipboardDetails({ entry, isCopied, copyError, onCopy }: Clipboa
               <p className="text-[12px] font-semibold text-muted-foreground capitalize">
                 {entry.content_type}
               </p>
-              <p className="text-[11px] text-muted-foreground">
-                {formatDistanceToNow(new Date(entry.copied_at), { addSuffix: true })}
-              </p>
+              <p className="text-[11px] text-muted-foreground">{copiedAtLabel}</p>
             </div>
           </div>
 
@@ -154,7 +197,7 @@ export function ClipboardDetails({ entry, isCopied, copyError, onCopy }: Clipboa
               <span className="text-[12px] text-muted-foreground">Copied</span>
               <span className="flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground">
                 <Clock className="size-3 text-muted-foreground" />
-                {formatDistanceToNow(new Date(entry.copied_at), { addSuffix: true })}
+                {copiedAtLabel}
               </span>
             </div>
 

@@ -17,3 +17,4 @@ export * from "@/command-registry/matcher";
 export * from "@/command-registry/ranker";
 export * from "@/command-registry/ranked-candidates";
 export * from "@/command-registry/registry";
+export * from "@/command-registry/panel-actions-registry";

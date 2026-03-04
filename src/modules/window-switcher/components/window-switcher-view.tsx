@@ -2,7 +2,7 @@ import { AppWindow, ChevronLeft, RefreshCcw, Search } from "lucide-react";
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
-import { Kbd } from "@/components/module";
+import { ModuleFooter } from "@/components/module";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useLauncherPanelBackHandler } from "@/modules/launcher/lib/back-navigation";
@@ -260,31 +260,20 @@ export function WindowSwitcherView({ onBack }: WindowSwitcherViewProps) {
         />
       )}
 
-      {/* Footer */}
-      <div className="windows-footer-enter flex h-12 shrink-0 items-center justify-between border-t border-[var(--launcher-card-border)] px-4">
-        <div className="flex items-center gap-1 text-[11px] tracking-[-0.01em] text-muted-foreground">
-          {windowsQuery.isError && (
-            <span className="text-[var(--icon-red-fg)]">Window switcher backend error</span>
-          )}
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5">
-            <Kbd className="flex h-5 min-w-[20px] items-center justify-center rounded px-1.5 text-[10px] text-muted-foreground">
-              Enter
-            </Kbd>
-            <span className="text-[11px] text-muted-foreground">Focus</span>
+      <ModuleFooter
+        className="windows-footer-enter border-[var(--launcher-card-border)]"
+        leftSlot={
+          <div className="flex items-center gap-1 text-[11px] tracking-[-0.01em] text-muted-foreground">
+            {windowsQuery.isError && (
+              <span className="text-[var(--icon-red-fg)]">Window switcher backend error</span>
+            )}
           </div>
-          <div className="flex items-center gap-1.5">
-            <Kbd className="flex h-5 min-w-[20px] items-center justify-center rounded px-1.5 text-[10px] text-muted-foreground">
-              Shift
-            </Kbd>
-            <Kbd className="flex h-5 min-w-[20px] items-center justify-center rounded px-1.5 text-[10px] text-muted-foreground">
-              Enter
-            </Kbd>
-            <span className="text-[11px] text-muted-foreground">Close</span>
-          </div>
-        </div>
-      </div>
+        }
+        shortcuts={[
+          { keys: ["Enter"], label: "Focus" },
+          { keys: ["Shift", "Enter"], label: "Close" },
+        ]}
+      />
     </div>
   );
 }

@@ -4,12 +4,7 @@ import { toast } from "sonner";
 
 import { AI_DEFAULT_CONVERSATION_ID, getProviderDefinition } from "@/modules/ai/constants";
 
-import {
-  askAiStream,
-  clearAiApiKey,
-  clearAiChatHistory,
-  setAiApiKey,
-} from "../api/ai";
+import { askAiStream, clearAiApiKey, clearAiChatHistory, setAiApiKey } from "../api/ai";
 import { useAiChatBootstrap } from "../hooks/use-ai-chat-bootstrap";
 import { useAiStreamListeners } from "../hooks/use-ai-stream-listeners";
 import { useAiWindowSizer } from "../hooks/use-ai-window-sizer";

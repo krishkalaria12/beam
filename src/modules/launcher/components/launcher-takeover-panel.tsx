@@ -1,9 +1,30 @@
-import { lazy, Suspense, type ReactNode } from "react";
+import {
+  ArrowLeft,
+  AtSign,
+  CornerDownLeft,
+  FilePlus2,
+  Keyboard,
+  List,
+  Pencil,
+  Plus,
+  RefreshCw,
+  Search,
+  X,
+} from "lucide-react";
+import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
 
 import { COMMAND_PANELS, TAKEOVER_COMMAND_PANELS } from "@/command-registry/panels";
+import {
+  getPanelCommandRegistration,
+  getPanelPrimaryActionLabel,
+} from "@/command-registry/panel-actions-registry";
 import type { CommandPanel } from "@/command-registry/types";
 import { CommandLoadingState } from "@/components/command/command-loading-state";
+import { isLauncherActionsHotkey, listenLauncherActionsToggle } from "@/lib/launcher-actions";
+import type { LauncherActionItem } from "@/modules/launcher/components/launcher-actions-panel";
+import { LauncherActionsPanel } from "@/modules/launcher/components/launcher-actions-panel";
 import { LauncherTakeoverSurface } from "@/modules/launcher/components/launcher-takeover-surface";
+import { dispatchKeyboardShortcutToTarget, dispatchEnterToTarget } from "@/modules/launcher/helper";
 
 import type { QuicklinksView } from "@/store/use-launcher-ui-store";
 
@@ -98,6 +119,14 @@ function TakeoverPanelFallback() {
   );
 }
 
+function getPrimaryShortcutLabel(panel: CommandPanel): string {
+  if (panel === COMMAND_PANELS.TRANSLATION) {
+    return "Ctrl+↩";
+  }
+
+  return "↩";
+}
+
 export function LauncherTakeoverPanel({
   activePanel,
   fileSearchQuery,
@@ -122,9 +151,239 @@ export function LauncherTakeoverPanel({
   openScriptCommands,
   backToCommands,
 }: LauncherTakeoverPanelProps) {
-  if (!isTakeoverPanel(activePanel)) {
-    return null;
+  const takeoverPanelIsOpen = isTakeoverPanel(activePanel);
+
+  const [actionsOpen, setActionsOpen] = useState(false);
+  const actionsPreviousFocusRef = useRef<HTMLElement | null>(null);
+  const shouldUseSharedActions = takeoverPanelIsOpen;
+  const panelRegistration = getPanelCommandRegistration(activePanel, quicklinksView);
+  const primaryActionLabel = getPanelPrimaryActionLabel(activePanel);
+
+  function handleActionsOpenChange(nextOpen: boolean) {
+    if (nextOpen) {
+      const currentActiveElement = document.activeElement;
+      actionsPreviousFocusRef.current =
+        currentActiveElement instanceof HTMLElement ? currentActiveElement : null;
+      setActionsOpen(true);
+      return;
+    }
+
+    setActionsOpen(false);
+    window.requestAnimationFrame(() => {
+      const previousFocusElement = actionsPreviousFocusRef.current;
+      if (previousFocusElement && previousFocusElement.isConnected) {
+        previousFocusElement.focus({ preventScroll: true });
+      }
+    });
   }
+
+  useEffect(() => {
+    setActionsOpen(false);
+  }, [activePanel]);
+
+  useEffect(() => {
+    if (!shouldUseSharedActions) {
+      return;
+    }
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!isLauncherActionsHotkey(event)) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+      handleActionsOpenChange(!actionsOpen);
+    };
+
+    window.addEventListener("keydown", onKeyDown, true);
+    const unsubscribeToggle = listenLauncherActionsToggle(() => {
+      handleActionsOpenChange(!actionsOpen);
+    });
+
+    return () => {
+      window.removeEventListener("keydown", onKeyDown, true);
+      unsubscribeToggle();
+    };
+  }, [actionsOpen, shouldUseSharedActions]);
+
+  function dispatchShortcut(options: {
+    key: string;
+    code?: string;
+    metaKey?: boolean;
+    ctrlKey?: boolean;
+    altKey?: boolean;
+    shiftKey?: boolean;
+  }) {
+    const previousFocusElement = actionsPreviousFocusRef.current;
+    if (previousFocusElement && previousFocusElement.isConnected) {
+      previousFocusElement.focus({ preventScroll: true });
+      dispatchKeyboardShortcutToTarget(previousFocusElement, options);
+      return;
+    }
+
+    const activeElement =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    dispatchKeyboardShortcutToTarget(activeElement, options);
+  }
+
+  const panelSpecificRootItems: LauncherActionItem[] = [];
+  if (activePanel === COMMAND_PANELS.TRANSLATION) {
+    panelSpecificRootItems.push({
+      id: "translation-translate-now",
+      label: "Translate Now",
+      icon: <Search className="size-4" />,
+      shortcut: "Ctrl+↩",
+      keywords: ["translate", "now", "submit", "translation"],
+      onSelect: () => {
+        dispatchShortcut({ key: "Enter", code: "Enter", ctrlKey: true });
+      },
+    });
+  } else if (activePanel === COMMAND_PANELS.QUICKLINKS) {
+    panelSpecificRootItems.push(
+      {
+        id: "quicklinks-create",
+        label: "Create Quicklink",
+        icon: <Plus className="size-4" />,
+        keywords: ["quicklink", "create", "new"],
+        onSelect: () => {
+          setQuicklinksView("create");
+          openQuicklinks();
+        },
+      },
+      {
+        id: "quicklinks-manage",
+        label: "Manage Quicklinks",
+        icon: <List className="size-4" />,
+        keywords: ["quicklink", "manage", "list"],
+        onSelect: () => {
+          setQuicklinksView("manage");
+          openQuicklinks();
+        },
+      },
+    );
+  } else if (activePanel === COMMAND_PANELS.SNIPPETS) {
+    panelSpecificRootItems.push(
+      {
+        id: "snippets-new",
+        label: "New Snippet",
+        icon: <FilePlus2 className="size-4" />,
+        shortcut: "Ctrl+N",
+        keywords: ["snippet", "new", "create"],
+        onSelect: () => {
+          dispatchShortcut({ key: "n", code: "KeyN", ctrlKey: true });
+        },
+      },
+      {
+        id: "snippets-edit",
+        label: "Edit Selected Snippet",
+        icon: <Pencil className="size-4" />,
+        shortcut: "Ctrl+E",
+        keywords: ["snippet", "edit", "selected"],
+        onSelect: () => {
+          dispatchShortcut({ key: "e", code: "KeyE", ctrlKey: true });
+        },
+      },
+    );
+  } else if (activePanel === COMMAND_PANELS.SCRIPT_COMMANDS) {
+    panelSpecificRootItems.push({
+      id: "script-commands-new",
+      label: "New Script",
+      icon: <FilePlus2 className="size-4" />,
+      shortcut: "Ctrl+N",
+      keywords: ["script", "new", "create"],
+      onSelect: () => {
+        dispatchShortcut({ key: "n", code: "KeyN", ctrlKey: true });
+      },
+    });
+  } else if (activePanel === COMMAND_PANELS.WINDOW_SWITCHER) {
+    panelSpecificRootItems.push({
+      id: "window-switcher-close-selected",
+      label: "Close Selected Window",
+      icon: <X className="size-4" />,
+      shortcut: "Shift+↩",
+      keywords: ["window", "close", "selected"],
+      onSelect: () => {
+        dispatchShortcut({ key: "Enter", code: "Enter", shiftKey: true });
+      },
+    });
+  } else if (activePanel === COMMAND_PANELS.HYPRWHSPR) {
+    panelSpecificRootItems.push(
+      {
+        id: "hyprwhspr-toggle-recording",
+        label: "Toggle Recording",
+        icon: <CornerDownLeft className="size-4" />,
+        shortcut: "↩",
+        keywords: ["hyprwhspr", "recording", "toggle"],
+        onSelect: () => {
+          dispatchShortcut({ key: "Enter", code: "Enter" });
+        },
+      },
+      {
+        id: "hyprwhspr-refresh-status",
+        label: "Refresh Status",
+        icon: <RefreshCw className="size-4" />,
+        shortcut: "R",
+        keywords: ["hyprwhspr", "refresh", "status"],
+        onSelect: () => {
+          dispatchShortcut({ key: "r", code: "KeyR" });
+        },
+      },
+    );
+  }
+
+  const sharedRootItems: LauncherActionItem[] = shouldUseSharedActions
+    ? [
+        {
+          id: `${activePanel}-primary-action`,
+          label: primaryActionLabel,
+          icon: <CornerDownLeft className="size-4" />,
+          shortcut: getPrimaryShortcutLabel(activePanel),
+          keywords: ["primary", "default", "action", "enter", activePanel],
+          onSelect: () => {
+            if (activePanel === COMMAND_PANELS.TRANSLATION) {
+              dispatchShortcut({ key: "Enter", code: "Enter", ctrlKey: true });
+            } else {
+              const previousFocusElement = actionsPreviousFocusRef.current;
+              if (previousFocusElement && previousFocusElement.isConnected) {
+                previousFocusElement.focus({ preventScroll: true });
+                dispatchEnterToTarget(previousFocusElement);
+                return;
+              }
+
+              const activeElement =
+                document.activeElement instanceof HTMLElement ? document.activeElement : null;
+              dispatchEnterToTarget(activeElement);
+            }
+          },
+        },
+        ...panelSpecificRootItems,
+        {
+          id: `${activePanel}-back`,
+          label: "Back",
+          icon: <ArrowLeft className="size-4" />,
+          shortcut: "Esc",
+          keywords: ["back", "close", "exit", activePanel],
+          onSelect: backToCommands,
+        },
+        {
+          id: `${activePanel}-set-hotkey`,
+          label: "Set Hotkey...",
+          icon: <Keyboard className="size-4" />,
+          keywords: ["shortcut", "keys", "binding", activePanel],
+          nextPageId: "hotkey",
+          closeOnSelect: false,
+        },
+        {
+          id: `${activePanel}-set-alias`,
+          label: "Set Alias...",
+          icon: <AtSign className="size-4" />,
+          keywords: ["alias", "keyword", "trigger", activePanel],
+          nextPageId: "alias",
+          closeOnSelect: false,
+        },
+      ]
+    : [];
 
   let content: ReactNode = null;
 
@@ -187,7 +446,16 @@ export function LauncherTakeoverPanel({
   } else if (activePanel === COMMAND_PANELS.SPEED_TEST) {
     content = <SpeedTestCommandGroup isOpen onOpen={openSpeedTest} onBack={backToCommands} />;
   } else if (activePanel === COMMAND_PANELS.CLIPBOARD) {
-    content = <ClipboardCommandGroup isOpen onOpen={openClipboard} onBack={backToCommands} />;
+    content = (
+      <ClipboardCommandGroup
+        isOpen
+        onOpen={openClipboard}
+        onBack={backToCommands}
+        onToggleActions={() => {
+          handleActionsOpenChange(!actionsOpen);
+        }}
+      />
+    );
   } else if (activePanel === COMMAND_PANELS.EXTENSIONS) {
     content = <ExtensionsCommandGroup isOpen onOpen={openExtensions} onBack={backToCommands} />;
   } else if (activePanel === COMMAND_PANELS.WINDOW_SWITCHER) {
@@ -210,5 +478,25 @@ export function LauncherTakeoverPanel({
     );
   }
 
-  return <Suspense fallback={<TakeoverPanelFallback />}>{content}</Suspense>;
+  if (!takeoverPanelIsOpen) {
+    return null;
+  }
+
+  return (
+    <div className="relative h-full w-full">
+      <Suspense fallback={<TakeoverPanelFallback />}>{content}</Suspense>
+      {shouldUseSharedActions ? (
+        <LauncherActionsPanel
+          open={actionsOpen}
+          onOpenChange={handleActionsOpenChange}
+          rootTitle={`${panelRegistration?.title ?? "Module"} Actions...`}
+          rootSearchPlaceholder="Search for actions..."
+          rootItems={sharedRootItems}
+          targetCommandId={panelRegistration?.id}
+          targetCommandTitle={panelRegistration?.title}
+          containerClassName="bottom-14 right-4"
+        />
+      ) : null}
+    </div>
+  );
 }

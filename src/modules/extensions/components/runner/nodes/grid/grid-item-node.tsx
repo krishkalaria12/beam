@@ -80,7 +80,9 @@ export function GridItemNode({ nodeId, state, renderContext }: RunnerNodeCompone
       <div
         className={cn(
           "mb-1 w-full overflow-hidden rounded-md border-2 bg-muted",
-          selected ? "border-foreground" : "border-transparent hover:border-[var(--launcher-card-border)]",
+          selected
+            ? "border-foreground"
+            : "border-transparent hover:border-[var(--launcher-card-border)]",
         )}
         style={{ aspectRatio }}
         title={asString((contentValue as { tooltip?: unknown })?.tooltip).trim() || undefined}

@@ -448,7 +448,13 @@ export function FileList({
                     isSelected ? "text-secondary-foreground/80" : "text-muted-foreground/50",
                   )}
                 >
-                  <span className={isSelected ? "text-secondary-foreground/60" : "text-muted-foreground/40"}>in</span>
+                  <span
+                    className={
+                      isSelected ? "text-secondary-foreground/60" : "text-muted-foreground/40"
+                    }
+                  >
+                    in
+                  </span>
                   <span className="font-medium">{parentFolder || "/"}</span>
                 </span>
               </div>

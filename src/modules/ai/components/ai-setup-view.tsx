@@ -1,4 +1,5 @@
 import { ChevronLeft, Key, Loader2, Check, ExternalLink, Sparkles } from "lucide-react";
+import { ModuleFooter } from "@/components/module";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AI_PROVIDERS, type AiProviderDefinition, type AiProviderId } from "@/modules/ai/constants";
@@ -25,13 +26,21 @@ const PROVIDER_STYLES: Record<AiProviderId, { gradient: string; icon: string; co
     icon: "OR",
     color: "text-[var(--icon-purple-fg)]",
   },
-  openai: { gradient: "bg-[var(--icon-green-bg)]", icon: "AI", color: "text-[var(--icon-green-fg)]" },
+  openai: {
+    gradient: "bg-[var(--icon-green-bg)]",
+    icon: "AI",
+    color: "text-[var(--icon-green-fg)]",
+  },
   anthropic: {
     gradient: "bg-[var(--icon-orange-bg)]",
     icon: "A",
     color: "text-[var(--icon-orange-fg)]",
   },
-  gemini: { gradient: "bg-[var(--icon-primary-bg)]", icon: "G", color: "text-[var(--icon-primary-fg)]" },
+  gemini: {
+    gradient: "bg-[var(--icon-primary-bg)]",
+    icon: "G",
+    color: "text-[var(--icon-primary-fg)]",
+  },
 };
 
 export function AiSetupView({
@@ -64,9 +73,7 @@ export function AiSetupView({
           <ChevronLeft className="size-4" />
         </Button>
         <div className="flex flex-col gap-0.5">
-          <h1 className="text-[13px] font-semibold tracking-[-0.01em] text-foreground">
-            AI Setup
-          </h1>
+          <h1 className="text-[13px] font-semibold tracking-[-0.01em] text-foreground">AI Setup</h1>
           <p className="text-[11px] tracking-[-0.01em] text-muted-foreground">
             Configure your AI provider
           </p>
@@ -228,39 +235,42 @@ export function AiSetupView({
         </div>
       </div>
 
-      {/* Footer - refined */}
-      <footer className="flex h-14 shrink-0 items-center justify-between border-t border-[var(--launcher-card-border)] px-5">
-        <div className="flex items-center gap-2 text-[11px] tracking-[-0.01em] text-muted-foreground">
-          {isCheckingApiKey ? (
-            <>
-              <Loader2 className="size-3.5 animate-spin text-muted-foreground" />
-              <span>Checking key...</span>
-            </>
-          ) : isApiKeySetForProvider ? (
-            <>
-              <Check className="size-3.5 text-[var(--icon-green-fg)]" strokeWidth={2.5} />
-              <span className="text-muted-foreground">Ready to chat</span>
-            </>
-          ) : (
-            <>
-              <Key className="size-3.5 text-muted-foreground" />
-              <span>API key required</span>
-            </>
-          )}
-        </div>
-
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={onContinue}
-          disabled={!canContinue}
-          className="flex h-9 items-center gap-2 rounded-xl bg-[var(--ring)] px-5 text-[12px] font-semibold tracking-[-0.01em] text-foreground shadow-lg shadow-[var(--ring)]/25 transition-all duration-200 hover:shadow-xl hover:shadow-[var(--ring)]/35 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
-        >
-          Continue to Chat
-          <ChevronLeft className="size-4 rotate-180" />
-        </Button>
-      </footer>
+      <ModuleFooter
+        className="h-14 border-[var(--launcher-card-border)] px-5"
+        leftSlot={
+          <div className="flex items-center gap-2 text-[11px] tracking-[-0.01em] text-muted-foreground">
+            {isCheckingApiKey ? (
+              <>
+                <Loader2 className="size-3.5 animate-spin text-muted-foreground" />
+                <span>Checking key...</span>
+              </>
+            ) : isApiKeySetForProvider ? (
+              <>
+                <Check className="size-3.5 text-[var(--icon-green-fg)]" strokeWidth={2.5} />
+                <span className="text-muted-foreground">Ready to chat</span>
+              </>
+            ) : (
+              <>
+                <Key className="size-3.5 text-muted-foreground" />
+                <span>API key required</span>
+              </>
+            )}
+          </div>
+        }
+        actions={
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={onContinue}
+            disabled={!canContinue}
+            className="flex h-9 items-center gap-2 rounded-xl bg-[var(--ring)] px-5 text-[12px] font-semibold tracking-[-0.01em] text-foreground shadow-lg shadow-[var(--ring)]/25 transition-all duration-200 hover:shadow-xl hover:shadow-[var(--ring)]/35 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
+          >
+            Continue to Chat
+            <ChevronLeft className="size-4 rotate-180" />
+          </Button>
+        }
+      />
     </div>
   );
 }

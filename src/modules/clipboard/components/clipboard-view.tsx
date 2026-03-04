@@ -8,16 +8,17 @@ import {
   type ClipboardHistoryEntry,
   type ClipboardTypeFilter,
 } from "../types";
-import { ClipboardDetails } from "./clipboard-details";
 import { ClipboardFooter } from "./clipboard-footer";
 import { ClipboardHeader } from "./clipboard-header";
+import { ClipboardDetails } from "./clipboard-details";
 import { ClipboardList } from "./clipboard-list";
 
 interface ClipboardViewProps {
   onBack: () => void;
+  onToggleActions: () => void;
 }
 
-export function ClipboardView({ onBack }: ClipboardViewProps) {
+export function ClipboardView({ onBack, onToggleActions }: ClipboardViewProps) {
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<ClipboardTypeFilter>("all");
@@ -44,18 +45,19 @@ export function ClipboardView({ onBack }: ClipboardViewProps) {
 
     return filteredByType.filter((entry) => {
       if (entry.content_type === ClipboardContentType.Image) {
-        return (
-          "image screenshot clipboard".includes(lowerQuery) ||
-          "image".includes(lowerQuery) ||
-          entry.value.toLowerCase().includes(lowerQuery)
-        );
+        return "image screenshot clipboard".includes(lowerQuery);
       }
 
-      return entry.value.toLowerCase().includes(lowerQuery);
+      const searchableValue =
+        entry.value.length > 4096
+          ? entry.value.slice(0, 4096).toLowerCase()
+          : entry.value.toLowerCase();
+      return searchableValue.includes(lowerQuery);
     });
   }, [history, debouncedQuery, typeFilter]);
 
   const selectedEntry = filteredHistory[selectedIndex] || null;
+  const isInitialLoading = isLoading && history.length === 0;
 
   // Auto-focus input
   useEffect(() => {
@@ -119,11 +121,6 @@ export function ClipboardView({ onBack }: ClipboardViewProps) {
       } else {
         onBack();
       }
-    } else if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
-      e.preventDefault();
-      e.stopPropagation();
-      // Open actions menu - placeholder for now
-      console.log("Open actions menu");
     }
   };
 
@@ -134,8 +131,17 @@ export function ClipboardView({ onBack }: ClipboardViewProps) {
 
   return (
     <div
-      className="clipboard-view flex h-full w-full flex-col outline-none"
-      onClick={() => inputRef.current?.focus()}
+      className="clipboard-view relative flex h-full w-full flex-col outline-none"
+      onClick={(event) => {
+        const target = event.target;
+        if (
+          target instanceof HTMLElement &&
+          target.closest('[data-slot="launcher-actions-panel"]')
+        ) {
+          return;
+        }
+        inputRef.current?.focus();
+      }}
       onKeyDown={handleKeyDown}
     >
       <ClipboardHeader
@@ -153,12 +159,13 @@ export function ClipboardView({ onBack }: ClipboardViewProps) {
           entries={filteredHistory}
           selectedIndex={selectedIndex}
           onSelect={setSelectedIndex}
-          isLoading={isLoading}
+          isLoading={isInitialLoading}
         />
         <ClipboardDetails
           entry={selectedEntry}
           isCopied={copiedEntryIndex === selectedIndex && !copyError}
           copyError={copyError}
+          isLoading={isInitialLoading}
           onCopy={() => {
             if (selectedEntry) {
               void handleCopy(selectedEntry, selectedIndex);
@@ -171,6 +178,17 @@ export function ClipboardView({ onBack }: ClipboardViewProps) {
         copiedEntryIndex={copiedEntryIndex}
         selectedIndex={selectedIndex}
         copyError={copyError}
+        canCopy={Boolean(selectedEntry)}
+        onBack={onBack}
+        onCopySelected={() => {
+          if (selectedEntry) {
+            void handleCopy(selectedEntry, selectedIndex);
+          }
+        }}
+        onToggleActions={() => {
+          inputRef.current?.focus({ preventScroll: true });
+          onToggleActions();
+        }}
       />
     </div>
   );

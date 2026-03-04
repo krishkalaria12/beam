@@ -2,7 +2,7 @@ import { ArrowLeft, CircleDot, FilePlus2, Loader2, NotebookTabs } from "lucide-r
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { Kbd } from "@/components/module";
+import { ModuleFooter } from "@/components/module";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useLauncherPanelBackHandler } from "@/modules/launcher/lib/back-navigation";
@@ -401,61 +401,54 @@ export function SnippetsView({ onBack }: SnippetsViewProps) {
       )}
 
       {viewMode === "view" && (
-        <footer className="snippets-footer-enter flex h-12 shrink-0 items-center justify-between border-t border-[var(--footer-border)] px-4">
-          <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
-            <CircleDot className="size-3.5" />
-            <span>{filteredSnippets.length} visible</span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <div className="hidden items-center gap-3 pr-3 text-[11px] text-muted-foreground sm:flex">
-              <span>
-                <Kbd className="rounded px-1.5 py-0.5 text-[10px]">
-                  Ctrl+N
-                </Kbd>{" "}
+        <ModuleFooter
+          className="snippets-footer-enter border-[var(--footer-border)]"
+          leftSlot={
+            <>
+              <CircleDot className="size-3.5" />
+              <span>{filteredSnippets.length} visible</span>
+            </>
+          }
+          shortcuts={[
+            { keys: ["Ctrl+N"], label: "New" },
+            { keys: ["Ctrl+E"], label: "Edit" },
+          ]}
+          actions={
+            <>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={openCreateView}
+                className={cn(
+                  "inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-[12px] font-medium transition-all duration-200",
+                  "bg-[var(--ring)]/20 text-[var(--ring)] hover:bg-[var(--ring)]/30",
+                )}
+              >
+                <FilePlus2 className="size-3.5" />
                 New
-              </span>
-              <span>
-                <Kbd className="rounded px-1.5 py-0.5 text-[10px]">
-                  Ctrl+E
-                </Kbd>{" "}
-                Edit
-              </span>
-            </div>
+              </Button>
 
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={openCreateView}
-              className={cn(
-                "inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-[12px] font-medium transition-all duration-200",
-                "bg-[var(--ring)]/20 text-[var(--ring)] hover:bg-[var(--ring)]/30",
-              )}
-            >
-              <FilePlus2 className="size-3.5" />
-              New
-            </Button>
-
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                void handleCopyAndCount();
-              }}
-              disabled={!selectedSnippet || incrementCopiedCountMutation.isPending}
-              className={cn(
-                "inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--launcher-card-border)] px-3 text-[12px] font-medium transition-all duration-200",
-                "bg-[var(--launcher-card-bg)] text-muted-foreground hover:bg-[var(--launcher-chip-bg)] hover:text-muted-foreground",
-                "disabled:opacity-40 disabled:pointer-events-none",
-              )}
-            >
-              <NotebookTabs className="size-3.5" />
-              Paste
-            </Button>
-          </div>
-        </footer>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  void handleCopyAndCount();
+                }}
+                disabled={!selectedSnippet || incrementCopiedCountMutation.isPending}
+                className={cn(
+                  "inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--launcher-card-border)] px-3 text-[12px] font-medium transition-all duration-200",
+                  "bg-[var(--launcher-card-bg)] text-muted-foreground hover:bg-[var(--launcher-chip-bg)] hover:text-muted-foreground",
+                  "disabled:opacity-40 disabled:pointer-events-none",
+                )}
+              >
+                <NotebookTabs className="size-3.5" />
+                Paste
+              </Button>
+            </>
+          }
+        />
       )}
     </div>
   );

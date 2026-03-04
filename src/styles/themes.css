@@ -98,6 +98,11 @@
   --scrollbar-thumb: #484848;
   --scrollbar-thumb-hover: #585858;
 
+  /* Actions panel - fully opaque */
+  --actions-panel-bg: #323232;
+  --actions-panel-border: #444444;
+  --actions-panel-shadow: rgba(0, 0, 0, 0.45);
+
   /* === ICON CHIP COLORS (fully opaque backgrounds) === */
   --icon-neutral-bg: #3e3e3e;
   --icon-neutral-fg: #c8ccd4;
@@ -155,8 +160,7 @@
 .sc-glass-footer {
   border-top: 1px solid var(--footer-border);
   background:
-    linear-gradient(180deg, rgb(255 255 255 / 0.07), rgb(255 255 255 / 0.02)),
-    var(--card);
+    linear-gradient(180deg, rgb(255 255 255 / 0.07), rgb(255 255 255 / 0.02)), var(--card);
   -webkit-backdrop-filter: blur(48px) saturate(170%);
   backdrop-filter: blur(48px) saturate(170%);
 }
@@ -285,4 +289,73 @@
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: var(--scrollbar-thumb-hover);
+}
+
+/* Actions Panel - floating overlay */
+.sc-actions-panel {
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.06), rgb(255 255 255 / 0.02)),
+    var(--actions-panel-bg);
+  border: 1px solid var(--actions-panel-border);
+  box-shadow:
+    0 24px 48px -12px var(--actions-panel-shadow),
+    0 12px 24px -8px var(--actions-panel-shadow),
+    inset 0 1px 0 rgb(255 255 255 / 0.08);
+  -webkit-backdrop-filter: blur(32px) saturate(160%);
+  backdrop-filter: blur(32px) saturate(160%);
+}
+
+/* Glassy mode - enhanced blur and translucency */
+.sc-glassy .sc-actions-panel {
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.1), rgb(255 255 255 / 0.04)),
+    var(--actions-panel-bg);
+  border: 1px solid var(--actions-panel-border);
+  box-shadow:
+    0 32px 64px -16px var(--actions-panel-shadow),
+    0 16px 32px -8px var(--actions-panel-shadow),
+    inset 0 1px 0 rgb(255 255 255 / 0.14),
+    inset 0 0 0 0.5px rgb(255 255 255 / 0.08);
+  -webkit-backdrop-filter: blur(64px) saturate(180%);
+  backdrop-filter: blur(64px) saturate(180%);
+}
+
+/* Solid mode - fully opaque, no blur */
+.sc-solid .sc-actions-panel {
+  background: var(--actions-panel-bg) !important;
+  border: 1px solid var(--actions-panel-border) !important;
+  box-shadow:
+    0 20px 40px -10px var(--actions-panel-shadow),
+    0 8px 16px -4px var(--actions-panel-shadow) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+/* Custom theme support */
+.theme-custom-active .sc-actions-panel {
+  background: var(--actions-panel-bg, var(--popover));
+  border: 1px solid var(--actions-panel-border, var(--border));
+  box-shadow: 0 16px 32px -8px var(--actions-panel-shadow, rgba(0, 0, 0, 0.3));
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* Actions Panel Footer */
+.sc-actions-panel-footer {
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.04), rgb(255 255 255 / 0.01)), var(--card);
+}
+
+.sc-glassy .sc-actions-panel-footer {
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.06), rgb(255 255 255 / 0.02)),
+    rgb(var(--sc-base-rgb) / 0.4);
+}
+
+.sc-solid .sc-actions-panel-footer {
+  background: var(--solid-bg-footer) !important;
+}
+
+.theme-custom-active .sc-actions-panel-footer {
+  background: var(--card);
 }
