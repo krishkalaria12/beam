@@ -23,6 +23,8 @@ interface CommandFooterBarProps {
   actionsButton?: FooterAction;
   /** Legacy: right slot for custom content */
   rightSlot?: ReactNode;
+  /** Optional anchored overlay rendered above the footer (e.g. actions panel) */
+  overlay?: ReactNode;
   className?: string;
   leftSlotClassName?: string;
   rightSlotClassName?: string;
@@ -36,9 +38,11 @@ const KEY_CLASS = cn(
 function ActionButton({
   action,
   isPrimary = false,
+  dataSlot,
 }: {
   action: FooterAction;
   isPrimary?: boolean;
+  dataSlot?: string;
 }) {
   const shortcuts = action.shortcut || [];
 
@@ -47,6 +51,7 @@ function ActionButton({
       type="button"
       variant="ghost"
       size="xs"
+      data-slot={dataSlot}
       onClick={() => {
         if (!action.disabled && action.onClick) {
           void Promise.resolve(action.onClick());
@@ -82,6 +87,7 @@ export function CommandFooterBar({
   secondaryActions,
   actionsButton,
   rightSlot,
+  overlay,
   className,
   leftSlotClassName,
   rightSlotClassName,
@@ -92,7 +98,7 @@ export function CommandFooterBar({
   return (
     <div
       className={cn(
-        "sc-glass-footer flex h-[42px] shrink-0 items-center justify-between px-4 py-2.5",
+        "sc-glass-footer relative flex h-[42px] shrink-0 items-center justify-between px-4 py-2.5",
         className,
       )}
     >
@@ -122,12 +128,16 @@ export function CommandFooterBar({
             {showDivider && <span className="h-5 w-px bg-[var(--ui-divider)] mx-0.5" />}
 
             {/* Actions button */}
-            {actionsButton && <ActionButton action={actionsButton} />}
+            {actionsButton && (
+              <ActionButton action={actionsButton} dataSlot="command-footer-actions-button" />
+            )}
           </>
         ) : (
           rightSlot
         )}
       </div>
+
+      {overlay}
     </div>
   );
 }
