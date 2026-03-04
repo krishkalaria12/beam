@@ -2,6 +2,7 @@ import { Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Kbd } from "@/components/module/kbd";
 import { cn } from "@/lib/utils";
 
 interface HotkeyRecorderProps {
@@ -9,6 +10,7 @@ interface HotkeyRecorderProps {
   onChange: (nextHotkey: string) => void;
   disabled?: boolean;
   className?: string;
+  autoRecord?: boolean;
 }
 
 type KeyboardLikeEvent = Pick<
@@ -121,10 +123,18 @@ export default function HotkeyRecorder({
   onChange,
   disabled = false,
   className,
+  autoRecord = false,
 }: HotkeyRecorderProps) {
   const [isRecording, setIsRecording] = useState(false);
   const isRecordingRef = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!autoRecord || disabled) {
+      return;
+    }
+    setIsRecording(true);
+  }, [autoRecord, disabled]);
 
   useEffect(() => {
     isRecordingRef.current = isRecording;
@@ -179,6 +189,8 @@ export default function HotkeyRecorder({
     };
   }, [disabled, isRecording, onChange]);
 
+  const hotkeyParts = value ? formatHotkeyLabel(value).split(" + ") : [];
+
   return (
     <div className={cn("inline-flex items-center gap-2", className)}>
       <div
@@ -194,17 +206,29 @@ export default function HotkeyRecorder({
           setIsRecording(false);
         }}
         className={cn(
-          "inline-flex min-h-8 min-w-32 items-center justify-center rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors outline-none",
+          "inline-flex min-h-10 min-w-36 items-center justify-center gap-1.5 rounded-xl px-4 py-2 text-sm font-medium transition-all duration-150 outline-none",
           disabled
-            ? "cursor-not-allowed border-border/30 bg-muted/20 text-muted-foreground/60"
+            ? "cursor-not-allowed bg-[var(--launcher-card-bg)] text-muted-foreground/50"
             : isRecording
-              ? "border-primary bg-primary/10 text-primary"
+              ? "bg-[var(--command-item-selected-bg)] text-foreground ring-2 ring-[var(--ring)]"
               : value
-                ? "cursor-pointer border-border/50 bg-background/20 text-foreground hover:border-border"
-                : "cursor-pointer border-dashed border-border/50 bg-muted/20 text-muted-foreground hover:border-border",
+                ? "cursor-pointer bg-[var(--launcher-card-hover-bg)] text-foreground hover:bg-[var(--command-item-hover-bg)]"
+                : "cursor-pointer bg-[var(--launcher-card-bg)] text-muted-foreground hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground",
         )}
       >
-        {isRecording ? "Press keys..." : formatHotkeyLabel(value)}
+        {isRecording ? (
+          <span className="text-muted-foreground/80">Press keys...</span>
+        ) : value ? (
+          <span className="flex items-center gap-1.5">
+            {hotkeyParts.map((part, index) => (
+              <Kbd key={index} className="min-w-7 h-6 px-2 text-xs text-foreground">
+                {part}
+              </Kbd>
+            ))}
+          </span>
+        ) : (
+          <span className="text-muted-foreground/70">Click to record</span>
+        )}
       </div>
 
       {value && !disabled ? (

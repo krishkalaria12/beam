@@ -92,6 +92,11 @@
   --scrollbar-thumb: var(--accent);
   --scrollbar-thumb-hover: var(--primary);
 
+  /* Actions panel overlay */
+  --actions-panel-bg: var(--popover);
+  --actions-panel-border: var(--border);
+  --actions-panel-shadow: rgba(0, 0, 0, 0.25);
+
   /* Compatibility vars used by some module components */
   --solid-bg-base: var(--background);
   --solid-bg-elevated: var(--card);

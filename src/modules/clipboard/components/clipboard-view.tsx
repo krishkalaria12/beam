@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import debounce from "@/lib/debounce";
+import { LauncherActionsPanel } from "@/modules/launcher/components/launcher-actions-panel";
 import { copyToClipboard } from "../api/copy-to-clipboard";
 import { useClipboardHistory } from "../hooks/use-clipboard-history";
 import {
@@ -9,6 +10,7 @@ import {
   type ClipboardTypeFilter,
 } from "../types";
 import { ClipboardDetails } from "./clipboard-details";
+import { buildClipboardActionItems } from "./clipboard-action-items";
 import { ClipboardFooter } from "./clipboard-footer";
 import { ClipboardHeader } from "./clipboard-header";
 import { ClipboardList } from "./clipboard-list";
@@ -24,7 +26,9 @@ export function ClipboardView({ onBack }: ClipboardViewProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [copiedEntryIndex, setCopiedEntryIndex] = useState<number | null>(null);
   const [copyError, setCopyError] = useState<string | null>(null);
+  const [actionsOpen, setActionsOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const actionsPreviousFocusRef = useRef<HTMLElement | null>(null);
 
   const { data: history = [], isLoading } = useClipboardHistory(true);
 
@@ -44,18 +48,19 @@ export function ClipboardView({ onBack }: ClipboardViewProps) {
 
     return filteredByType.filter((entry) => {
       if (entry.content_type === ClipboardContentType.Image) {
-        return (
-          "image screenshot clipboard".includes(lowerQuery) ||
-          "image".includes(lowerQuery) ||
-          entry.value.toLowerCase().includes(lowerQuery)
-        );
+        return "image screenshot clipboard".includes(lowerQuery);
       }
 
-      return entry.value.toLowerCase().includes(lowerQuery);
+      const searchableValue =
+        entry.value.length > 4096
+          ? entry.value.slice(0, 4096).toLowerCase()
+          : entry.value.toLowerCase();
+      return searchableValue.includes(lowerQuery);
     });
   }, [history, debouncedQuery, typeFilter]);
 
   const selectedEntry = filteredHistory[selectedIndex] || null;
+  const isInitialLoading = isLoading && history.length === 0;
 
   // Auto-focus input
   useEffect(() => {
@@ -92,7 +97,42 @@ export function ClipboardView({ onBack }: ClipboardViewProps) {
     }
   };
 
+  const handleActionsOpenChange = (nextOpen: boolean) => {
+    if (nextOpen) {
+      const currentActiveElement = document.activeElement;
+      actionsPreviousFocusRef.current =
+        currentActiveElement instanceof HTMLElement ? currentActiveElement : null;
+      setActionsOpen(true);
+      return;
+    }
+
+    setActionsOpen(false);
+    window.requestAnimationFrame(() => {
+      const previousFocusElement = actionsPreviousFocusRef.current;
+      if (previousFocusElement && previousFocusElement.isConnected) {
+        previousFocusElement.focus({ preventScroll: true });
+        return;
+      }
+
+      inputRef.current?.focus({ preventScroll: true });
+    });
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    const isActionShortcut =
+      e.key.toLowerCase() === "k" && (e.metaKey || e.ctrlKey) && !e.altKey && !e.shiftKey;
+
+    if (isActionShortcut) {
+      e.preventDefault();
+      e.stopPropagation();
+      handleActionsOpenChange(!actionsOpen);
+      return;
+    }
+
+    if (actionsOpen) {
+      return;
+    }
+
     if (e.key === "ArrowDown") {
       e.preventDefault();
       e.stopPropagation();
@@ -119,11 +159,6 @@ export function ClipboardView({ onBack }: ClipboardViewProps) {
       } else {
         onBack();
       }
-    } else if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
-      e.preventDefault();
-      e.stopPropagation();
-      // Open actions menu - placeholder for now
-      console.log("Open actions menu");
     }
   };
 
@@ -132,10 +167,27 @@ export function ClipboardView({ onBack }: ClipboardViewProps) {
     updateDebouncedQuery(value);
   };
 
+  const clipboardActionItems = buildClipboardActionItems({
+    selectedEntry,
+    selectedIndex,
+    onCopy: (entry, index) => {
+      void handleCopy(entry, index);
+    },
+  });
+
   return (
     <div
-      className="clipboard-view flex h-full w-full flex-col outline-none"
-      onClick={() => inputRef.current?.focus()}
+      className="clipboard-view relative flex h-full w-full flex-col outline-none"
+      onClick={(event) => {
+        const target = event.target;
+        if (
+          target instanceof HTMLElement &&
+          target.closest('[data-slot="launcher-actions-panel"]')
+        ) {
+          return;
+        }
+        inputRef.current?.focus();
+      }}
       onKeyDown={handleKeyDown}
     >
       <ClipboardHeader
@@ -153,12 +205,13 @@ export function ClipboardView({ onBack }: ClipboardViewProps) {
           entries={filteredHistory}
           selectedIndex={selectedIndex}
           onSelect={setSelectedIndex}
-          isLoading={isLoading}
+          isLoading={isInitialLoading}
         />
         <ClipboardDetails
           entry={selectedEntry}
           isCopied={copiedEntryIndex === selectedIndex && !copyError}
           copyError={copyError}
+          isLoading={isInitialLoading}
           onCopy={() => {
             if (selectedEntry) {
               void handleCopy(selectedEntry, selectedIndex);
@@ -171,6 +224,27 @@ export function ClipboardView({ onBack }: ClipboardViewProps) {
         copiedEntryIndex={copiedEntryIndex}
         selectedIndex={selectedIndex}
         copyError={copyError}
+        canCopy={Boolean(selectedEntry)}
+        onBack={onBack}
+        onCopySelected={() => {
+          if (selectedEntry) {
+            void handleCopy(selectedEntry, selectedIndex);
+          }
+        }}
+        onToggleActions={() => {
+          handleActionsOpenChange(!actionsOpen);
+        }}
+      />
+
+      <LauncherActionsPanel
+        open={actionsOpen}
+        onOpenChange={handleActionsOpenChange}
+        rootTitle="Clipboard History Actions..."
+        rootSearchPlaceholder="Search for actions..."
+        rootItems={clipboardActionItems}
+        targetCommandId="clipboard.panel.open"
+        targetCommandTitle="Clipboard History"
+        containerClassName="bottom-14 right-4"
       />
     </div>
   );

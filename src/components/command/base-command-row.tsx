@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { FocusEventHandler, PointerEventHandler, ReactNode } from "react";
 
 import { CommandItem, CommandShortcut } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
@@ -7,6 +7,8 @@ interface BaseCommandRowProps {
   value: string;
   disabled?: boolean;
   onSelect?: () => void;
+  onPointerEnter?: PointerEventHandler<HTMLDivElement>;
+  onFocus?: FocusEventHandler<HTMLDivElement>;
   icon?: ReactNode;
   title: ReactNode;
   subtitle?: ReactNode;
@@ -21,6 +23,8 @@ export function BaseCommandRow({
   value,
   disabled,
   onSelect,
+  onPointerEnter,
+  onFocus,
   icon,
   title,
   subtitle,
@@ -35,6 +39,8 @@ export function BaseCommandRow({
       value={value}
       disabled={disabled}
       onSelect={onSelect}
+      onPointerEnter={onPointerEnter}
+      onFocus={onFocus}
       className={cn("py-2.5", className)}
     >
       {icon ?? null}

@@ -65,6 +65,9 @@
   --launcher-chip-border: rgba(118, 130, 149, 0.18);
   --kbd-bg: rgba(118, 130, 149, 0.14);
   --footer-border: rgba(156, 164, 178, 0.22);
+  --actions-panel-bg: rgba(255, 255, 255, 0.92);
+  --actions-panel-border: rgba(118, 130, 149, 0.18);
+  --actions-panel-shadow: rgba(0, 0, 0, 0.12);
   --scrollbar-track: rgba(118, 130, 149, 0.12);
   --scrollbar-thumb: rgba(118, 130, 149, 0.26);
   --scrollbar-thumb-hover: rgba(118, 130, 149, 0.34);
@@ -137,6 +140,9 @@
   --launcher-chip-border: rgba(255, 255, 255, 0.12);
   --kbd-bg: rgba(255, 255, 255, 0.08);
   --footer-border: rgba(255, 255, 255, 0.05);
+  --actions-panel-bg: rgba(28, 30, 34, 0.94);
+  --actions-panel-border: rgba(255, 255, 255, 0.1);
+  --actions-panel-shadow: rgba(0, 0, 0, 0.5);
   --scrollbar-track: rgba(255, 255, 255, 0.06);
   --scrollbar-thumb: rgba(255, 255, 255, 0.22);
   --scrollbar-thumb-hover: rgba(255, 255, 255, 0.32);
@@ -229,6 +235,9 @@
   --launcher-chip-border: rgba(86, 98, 118, 0.16);
   --kbd-bg: rgba(86, 98, 118, 0.14);
   --footer-border: rgba(156, 164, 178, 0.3);
+  --actions-panel-bg: rgba(255, 255, 255, 0.78);
+  --actions-panel-border: rgba(86, 98, 118, 0.2);
+  --actions-panel-shadow: rgba(0, 0, 0, 0.16);
   --scrollbar-track: rgba(118, 130, 149, 0.14);
   --scrollbar-thumb: rgba(118, 130, 149, 0.3);
   --scrollbar-thumb-hover: rgba(118, 130, 149, 0.38);
@@ -273,6 +282,9 @@
   --launcher-chip-border: rgba(255, 255, 255, 0.16);
   --kbd-bg: rgba(255, 255, 255, 0.13);
   --footer-border: rgba(255, 255, 255, 0.14);
+  --actions-panel-bg: rgba(18, 20, 24, 0.82);
+  --actions-panel-border: rgba(255, 255, 255, 0.14);
+  --actions-panel-shadow: rgba(0, 0, 0, 0.55);
   --scrollbar-track: rgba(255, 255, 255, 0.08);
   --scrollbar-thumb: rgba(255, 255, 255, 0.24);
   --scrollbar-thumb-hover: rgba(255, 255, 255, 0.34);
@@ -291,6 +303,9 @@
   --launcher-card-selected-border: rgba(86, 98, 118, 0.24);
   --glass-outline: rgba(184, 190, 198, 0.24);
   --footer-border: rgba(156, 164, 178, 0.3);
+  --actions-panel-bg: rgba(255, 255, 255, 0.72);
+  --actions-panel-border: rgba(86, 98, 118, 0.22);
+  --actions-panel-shadow: rgba(0, 0, 0, 0.2);
 }
 
 .dark.sc-glassy {
@@ -304,4 +319,7 @@
   --launcher-card-hover-bg: rgba(255, 255, 255, 0.2);
   --launcher-card-selected-bg: rgba(255, 255, 255, 0.26);
   --launcher-card-selected-border: rgba(255, 255, 255, 0.22);
+  --actions-panel-bg: rgba(18, 20, 24, 0.78);
+  --actions-panel-border: rgba(255, 255, 255, 0.16);
+  --actions-panel-shadow: rgba(0, 0, 0, 0.6);
 }

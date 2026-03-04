@@ -1,185 +1,326 @@
-import {
-  AtSign,
-  ChevronLeft,
-  ChevronRight,
-  Command as CommandIcon,
-  Keyboard,
-  Search,
-  Settings2,
-} from "lucide-react";
+import { AtSign, ChevronLeft, Keyboard, Settings2 } from "lucide-react";
 import * as React from "react";
 import { toast } from "sonner";
 
+import {
+  readCommandPreferences,
+  setCommandAliases,
+  setCommandHotkey,
+  writeCommandPreferences,
+} from "@/command-registry/command-preferences";
 import { Button } from "@/components/ui/button";
-import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Command } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
+import {
+  getHotkeySettings,
+  removeCommandHotkey,
+  updateCommandHotkey,
+} from "@/modules/settings/api/hotkeys";
 
-interface LauncherActionsPanelProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+import { LauncherActionsAliasPage } from "./launcher-actions-alias-page";
+import { LauncherActionsHotkeyPage } from "./launcher-actions-hotkey-page";
+import {
+  buildAliasAvailability,
+  buildHotkeyAvailability,
+  filterActionItems,
+  findAliasConflictCommandId,
+  findHotkeyConflictCommandId,
+  formatCommandName,
+} from "@/modules/launcher/helper";
+import { LauncherActionsRootPage } from "./launcher-actions-root-page";
+import type {
+  ActionPageId,
+  LauncherActionItem,
+  LauncherActionsPanelProps,
+  SaveFeedback,
+} from "@/modules/launcher/types";
+
+export type { LauncherActionItem } from "@/modules/launcher/types";
+
+function buildDefaultRootItems(): LauncherActionItem[] {
+  return [
+    {
+      id: "open-command-settings",
+      label: "Open Command Settings",
+      icon: <Settings2 />,
+      keywords: ["settings", "preferences", "config"],
+      onSelect: () => {
+        toast.info("Command settings integration can be wired next.");
+      },
+    },
+    {
+      id: "set-hotkey",
+      label: "Set Hotkey...",
+      icon: <Keyboard />,
+      keywords: ["shortcut", "keys", "binding"],
+      nextPageId: "hotkey",
+      closeOnSelect: false,
+    },
+    {
+      id: "set-alias",
+      label: "Set Alias...",
+      icon: <AtSign />,
+      keywords: ["alias", "keyword", "trigger"],
+      nextPageId: "alias",
+      closeOnSelect: false,
+    },
+  ];
 }
 
-interface ActionItem {
-  id: string;
-  label: string;
-  description?: string;
-  icon: React.ReactNode;
-  keywords?: string[];
-  nextPageId?: "hotkey" | "alias";
-  closeOnSelect?: boolean;
-  onSelect?: () => void;
-}
-
-type ActionPageId = "root" | "hotkey" | "alias";
-
-interface ActionPage {
-  id: ActionPageId;
-  title: string;
-  subtitle?: string;
-  searchPlaceholder: string;
-  items: ActionItem[];
-}
-
-function filterItems(items: ActionItem[], query: string): ActionItem[] {
-  const normalized = query.trim().toLowerCase();
-  if (normalized.length === 0) {
-    return items;
-  }
-
-  return items.filter((item) => {
-    const searchable = [item.label, item.description ?? "", ...(item.keywords ?? [])]
-      .join(" ")
-      .toLowerCase();
-    return searchable.includes(normalized);
-  });
-}
-
-export function LauncherActionsPanel({ open, onOpenChange }: LauncherActionsPanelProps) {
-  const panelRef = React.useRef<HTMLDivElement | null>(null);
-  const inputRef = React.useRef<HTMLInputElement | null>(null);
-  const inputId = React.useId();
-
-  const [pageStack, setPageStack] = React.useState<ActionPageId[]>(["root"]);
-  const [queries, setQueries] = React.useState<Record<ActionPageId, string>>({
+function createEmptySelectionByPage(): Record<ActionPageId, string> {
+  return {
     root: "",
     hotkey: "",
     alias: "",
-  });
+  };
+}
+
+export function LauncherActionsPanel({
+  open,
+  onOpenChange,
+  containerClassName,
+  rootTitle,
+  rootSearchPlaceholder,
+  rootItems,
+  targetCommandId,
+  targetCommandTitle,
+}: LauncherActionsPanelProps) {
+  const panelRef = React.useRef<HTMLDivElement | null>(null);
+  const inputRef = React.useRef<HTMLInputElement>(null);
+  const aliasInputRef = React.useRef<HTMLInputElement>(null);
+  const inputId = React.useId();
+  const aliasInputId = React.useId();
+
+  const [pageStack, setPageStack] = React.useState<ActionPageId[]>(["root"]);
+  const [rootQuery, setRootQuery] = React.useState("");
+  const [hotkeyValue, setHotkeyValue] = React.useState("");
+  const [aliasValue, setAliasValue] = React.useState("");
+  const [hotkeyMap, setHotkeyMap] = React.useState<Record<string, string>>({});
+  const [aliasesById, setAliasesById] = React.useState<Record<string, string[]>>({});
+  const [savingPage, setSavingPage] = React.useState<"hotkey" | "alias" | null>(null);
+  const [hotkeyFeedback, setHotkeyFeedback] = React.useState<SaveFeedback | null>(null);
+  const [aliasFeedback, setAliasFeedback] = React.useState<SaveFeedback | null>(null);
+  const [selectedItemId, setSelectedItemId] = React.useState("");
+  const [selectedItemByPage, setSelectedItemByPage] = React.useState<Record<ActionPageId, string>>(
+    createEmptySelectionByPage,
+  );
 
   const currentPageId = pageStack[pageStack.length - 1] ?? "root";
-  const query = queries[currentPageId] ?? "";
+  const resolvedRootItems = rootItems ?? buildDefaultRootItems();
+  const filteredRootItems = filterActionItems(resolvedRootItems, rootQuery);
 
-  const pages = React.useMemo<Record<ActionPageId, ActionPage>>(
-    () => ({
-      root: {
-        id: "root",
-        title: "Configure Application...",
-        searchPlaceholder: "Search actions...",
-        items: [
-          {
-            id: "open-command-settings",
-            label: "Open Command Settings",
-            icon: <Settings2 />,
-            keywords: ["settings", "preferences", "config"],
-            onSelect: () => {
-              toast.info("Command settings integration can be wired next.");
-            },
-          },
-          {
-            id: "set-hotkey",
-            label: "Set Hotkey...",
-            icon: <Keyboard />,
-            keywords: ["shortcut", "keys", "binding"],
-            nextPageId: "hotkey",
-            closeOnSelect: false,
-          },
-          {
-            id: "set-alias",
-            label: "Set Alias...",
-            icon: <AtSign />,
-            keywords: ["alias", "keyword", "trigger"],
-            nextPageId: "alias",
-            closeOnSelect: false,
-          },
-        ],
-      },
-      hotkey: {
-        id: "hotkey",
-        title: "Set Hotkey",
-        subtitle: "Assign quick keyboard shortcuts.",
-        searchPlaceholder: "Search hotkey actions...",
-        items: [
-          {
-            id: "record-hotkey",
-            label: "Record New Shortcut",
-            icon: <CommandIcon />,
-            keywords: ["record", "new", "shortcut"],
-            onSelect: () => {
-              toast.info("Hotkey recorder can be connected next.");
-            },
-          },
-          {
-            id: "remove-hotkey",
-            label: "Remove Existing Shortcut",
-            icon: <Keyboard />,
-            keywords: ["remove", "clear", "delete"],
-            onSelect: () => {
-              toast.info("Shortcut removed.");
-            },
-          },
-        ],
-      },
-      alias: {
-        id: "alias",
-        title: "Set Alias",
-        subtitle: "Create quick trigger phrases.",
-        searchPlaceholder: "Search alias actions...",
-        items: [
-          {
-            id: "create-alias",
-            label: "Create Alias",
-            icon: <AtSign />,
-            keywords: ["add", "new", "alias"],
-            onSelect: () => {
-              toast.info("Alias editor can be connected next.");
-            },
-          },
-          {
-            id: "clear-alias",
-            label: "Clear Alias",
-            icon: <AtSign />,
-            keywords: ["remove", "delete", "alias"],
-            onSelect: () => {
-              toast.info("Alias cleared.");
-            },
-          },
-        ],
-      },
-    }),
-    [],
-  );
+  const hotkeyConflictCommandId = targetCommandId
+    ? findHotkeyConflictCommandId(hotkeyMap, targetCommandId, hotkeyValue)
+    : null;
+  const aliasConflictCommandId = targetCommandId
+    ? findAliasConflictCommandId(aliasesById, targetCommandId, aliasValue)
+    : null;
 
-  const currentPage = pages[currentPageId];
-  const filteredItems = React.useMemo(
-    () => filterItems(currentPage.items, query),
-    [currentPage, query],
-  );
+  const hotkeyAvailability = buildHotkeyAvailability({
+    targetCommandId,
+    targetCommandTitle,
+    hotkeyValue,
+    hotkeyConflictCommandId,
+  });
 
-  const goBack = React.useCallback(() => {
+  const aliasAvailability = buildAliasAvailability({
+    targetCommandId,
+    targetCommandTitle,
+    aliasValue,
+    aliasConflictCommandId,
+  });
+
+  const panelTitle =
+    currentPageId === "hotkey"
+      ? "Set Hotkey"
+      : currentPageId === "alias"
+        ? "Set Alias"
+        : (rootTitle ?? "Configure Application...");
+
+  const panelSubtitle =
+    currentPageId === "hotkey"
+      ? (targetCommandTitle ?? "Assign quick keyboard shortcuts.")
+      : currentPageId === "alias"
+        ? (targetCommandTitle ?? "Create quick trigger phrases.")
+        : undefined;
+
+  function resetState() {
+    setPageStack(["root"]);
+    setRootQuery("");
+    setHotkeyValue("");
+    setAliasValue("");
+    setHotkeyMap({});
+    setAliasesById({});
+    setSavingPage(null);
+    setHotkeyFeedback(null);
+    setAliasFeedback(null);
+    setSelectedItemId("");
+    setSelectedItemByPage(createEmptySelectionByPage());
+  }
+
+  function goBack() {
     setPageStack((previous) => {
       if (previous.length <= 1) {
         return previous;
       }
       return previous.slice(0, -1);
     });
-  }, []);
+  }
 
-  const resetState = React.useCallback(() => {
-    setPageStack(["root"]);
-    setQueries({ root: "", hotkey: "", alias: "" });
-  }, []);
+  function openNextPage(nextPageId: ActionPageId) {
+    setPageStack((previous) => [...previous, nextPageId]);
+  }
+
+  async function saveHotkey() {
+    if (savingPage) {
+      return;
+    }
+
+    if (!targetCommandId) {
+      setHotkeyFeedback({
+        tone: "error",
+        text: "No command selected for hotkey registration.",
+      });
+      return;
+    }
+
+    if (hotkeyConflictCommandId) {
+      setHotkeyFeedback({
+        tone: "error",
+        text: `"${hotkeyValue}" is already used by ${formatCommandName(
+          hotkeyConflictCommandId,
+          targetCommandTitle,
+          targetCommandId,
+        )}.`,
+      });
+      return;
+    }
+
+    const normalizedHotkey = hotkeyValue.trim();
+    setSavingPage("hotkey");
+
+    try {
+      if (!normalizedHotkey) {
+        const removeResult = await removeCommandHotkey(targetCommandId);
+        if (!removeResult.success) {
+          setHotkeyFeedback({
+            tone: "error",
+            text: "Failed to remove shortcut.",
+          });
+          return;
+        }
+
+        setHotkeyMap((previous) => {
+          const next = { ...previous };
+          delete next[targetCommandId];
+          return next;
+        });
+
+        const currentPreferences = readCommandPreferences();
+        writeCommandPreferences(setCommandHotkey(currentPreferences, targetCommandId, undefined));
+
+        setHotkeyFeedback({
+          tone: "success",
+          text: "Shortcut removed.",
+        });
+        return;
+      }
+
+      const updateResult = await updateCommandHotkey(targetCommandId, normalizedHotkey);
+      if (!updateResult.success) {
+        if (updateResult.error === "duplicate") {
+          const conflictId = updateResult.conflictCommandId;
+          setHotkeyFeedback({
+            tone: "error",
+            text: conflictId
+              ? `"${normalizedHotkey}" is already used by ${formatCommandName(
+                  conflictId,
+                  targetCommandTitle,
+                  targetCommandId,
+                )}.`
+              : "Shortcut is already in use.",
+          });
+          return;
+        }
+
+        setHotkeyFeedback({
+          tone: "error",
+          text: "Could not save this shortcut.",
+        });
+        return;
+      }
+
+      setHotkeyMap((previous) => ({
+        ...previous,
+        [targetCommandId]: normalizedHotkey,
+      }));
+
+      const currentPreferences = readCommandPreferences();
+      writeCommandPreferences(
+        setCommandHotkey(currentPreferences, targetCommandId, normalizedHotkey),
+      );
+
+      setHotkeyFeedback({
+        tone: "success",
+        text: "Shortcut saved.",
+      });
+    } catch {
+      setHotkeyFeedback({
+        tone: "error",
+        text: "Could not save this shortcut.",
+      });
+    } finally {
+      setSavingPage((previous) => (previous === "hotkey" ? null : previous));
+    }
+  }
+
+  async function saveAlias() {
+    if (savingPage) {
+      return;
+    }
+
+    if (!targetCommandId) {
+      setAliasFeedback({
+        tone: "error",
+        text: "No command selected for alias registration.",
+      });
+      return;
+    }
+
+    if (aliasConflictCommandId) {
+      setAliasFeedback({
+        tone: "error",
+        text: `"${aliasValue.trim()}" is already used by ${formatCommandName(
+          aliasConflictCommandId,
+          targetCommandTitle,
+          targetCommandId,
+        )}.`,
+      });
+      return;
+    }
+
+    setSavingPage("alias");
+    try {
+      const normalizedAlias = aliasValue.trim();
+      const nextAliases = normalizedAlias ? [normalizedAlias] : [];
+      const currentPreferences = readCommandPreferences();
+      const nextPreferences = setCommandAliases(currentPreferences, targetCommandId, nextAliases);
+      writeCommandPreferences(nextPreferences);
+      setAliasesById(nextPreferences.aliasesById);
+
+      setAliasFeedback({
+        tone: "success",
+        text: normalizedAlias ? "Alias saved." : "Alias removed.",
+      });
+    } catch {
+      setAliasFeedback({
+        tone: "error",
+        text: "Could not save this alias.",
+      });
+    } finally {
+      setSavingPage((previous) => (previous === "alias" ? null : previous));
+    }
+  }
 
   React.useEffect(() => {
     if (!open) {
@@ -187,13 +328,41 @@ export function LauncherActionsPanel({ open, onOpenChange }: LauncherActionsPane
       return;
     }
 
-    const frameId = window.requestAnimationFrame(() => {
-      inputRef.current?.focus();
-    });
+    const commandPreferences = readCommandPreferences();
+    setAliasesById(commandPreferences.aliasesById);
+    setAliasValue(
+      targetCommandId ? (commandPreferences.aliasesById[targetCommandId]?.[0] ?? "") : "",
+    );
+    setAliasFeedback(null);
+    setHotkeyFeedback(null);
+
+    let isCancelled = false;
+    void getHotkeySettings()
+      .then((settings) => {
+        if (isCancelled) {
+          return;
+        }
+
+        setHotkeyMap(settings.commandHotkeys);
+        setHotkeyValue(targetCommandId ? (settings.commandHotkeys[targetCommandId] ?? "") : "");
+      })
+      .catch(() => {
+        if (isCancelled) {
+          return;
+        }
+
+        setHotkeyMap({});
+        setHotkeyValue("");
+        setHotkeyFeedback({
+          tone: "error",
+          text: "Unable to load existing shortcuts.",
+        });
+      });
+
     return () => {
-      window.cancelAnimationFrame(frameId);
+      isCancelled = true;
     };
-  }, [open, resetState]);
+  }, [open, targetCommandId]);
 
   React.useEffect(() => {
     if (!open) {
@@ -223,6 +392,51 @@ export function LauncherActionsPanel({ open, onOpenChange }: LauncherActionsPane
     };
   }, [onOpenChange, open]);
 
+  React.useEffect(() => {
+    if (!open || currentPageId !== "root") {
+      return;
+    }
+
+    const preferredId = selectedItemByPage.root;
+    const hasPreferred = filteredRootItems.some(
+      (item) => item.id === preferredId && !item.disabled,
+    );
+    const nextSelection = hasPreferred
+      ? preferredId
+      : (filteredRootItems.find((item) => !item.disabled)?.id ?? "");
+
+    setSelectedItemId((previous) => (previous === nextSelection ? previous : nextSelection));
+    setSelectedItemByPage((previous) =>
+      previous.root === nextSelection
+        ? previous
+        : {
+            ...previous,
+            root: nextSelection,
+          },
+    );
+  }, [currentPageId, filteredRootItems, open, selectedItemByPage.root]);
+
+  React.useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    const frameId = window.requestAnimationFrame(() => {
+      if (currentPageId === "root") {
+        inputRef.current?.focus({ preventScroll: true });
+        return;
+      }
+
+      if (currentPageId === "alias") {
+        aliasInputRef.current?.focus({ preventScroll: true });
+      }
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+    };
+  }, [currentPageId, open]);
+
   if (!open) {
     return null;
   }
@@ -232,14 +446,30 @@ export function LauncherActionsPanel({ open, onOpenChange }: LauncherActionsPane
       ref={panelRef}
       data-slot="launcher-actions-panel"
       className={cn(
+        "sc-actions-panel",
         "absolute bottom-[calc(100%+10px)] right-3 z-40",
-        "w-[335px] overflow-hidden rounded-2xl border border-[var(--launcher-card-border)]",
-        "bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02)),var(--popover)]",
-        "shadow-2xl shadow-black/45 backdrop-blur-xl",
+        "w-[335px] overflow-hidden rounded-2xl",
+        containerClassName,
       )}
     >
       <Command
         shouldFilter={false}
+        value={selectedItemId}
+        onValueChange={(value) => {
+          if (currentPageId !== "root") {
+            return;
+          }
+
+          setSelectedItemId(value);
+          setSelectedItemByPage((previous) =>
+            previous.root === value
+              ? previous
+              : {
+                  ...previous,
+                  root: value,
+                },
+          );
+        }}
         className="h-full bg-transparent"
         onKeyDown={(event) => {
           if (event.defaultPrevented) {
@@ -259,8 +489,9 @@ export function LauncherActionsPanel({ open, onOpenChange }: LauncherActionsPane
 
           if (
             event.key === "Backspace" &&
-            query.length === 0 &&
+            rootQuery.length === 0 &&
             pageStack.length > 1 &&
+            currentPageId === "root" &&
             event.target instanceof HTMLElement &&
             (event.target instanceof HTMLInputElement ||
               event.target instanceof HTMLTextAreaElement)
@@ -268,6 +499,28 @@ export function LauncherActionsPanel({ open, onOpenChange }: LauncherActionsPane
             event.preventDefault();
             event.stopPropagation();
             goBack();
+            return;
+          }
+
+          if (
+            event.key === "Enter" &&
+            !event.metaKey &&
+            !event.ctrlKey &&
+            !event.altKey &&
+            !event.shiftKey
+          ) {
+            if (currentPageId === "hotkey") {
+              event.preventDefault();
+              event.stopPropagation();
+              void saveHotkey();
+              return;
+            }
+
+            if (currentPageId === "alias") {
+              event.preventDefault();
+              event.stopPropagation();
+              void saveAlias();
+            }
           }
         }}
       >
@@ -286,76 +539,85 @@ export function LauncherActionsPanel({ open, onOpenChange }: LauncherActionsPane
               </Button>
             ) : null}
             <div className="min-w-0">
-              <p className="truncate text-[13px] font-medium text-foreground">
-                {currentPage.title}
-              </p>
-              {currentPage.subtitle ? (
-                <p className="truncate text-[11px] text-muted-foreground">{currentPage.subtitle}</p>
+              <p className="truncate text-[13px] font-medium text-foreground">{panelTitle}</p>
+              {panelSubtitle ? (
+                <p className="truncate text-[11px] text-muted-foreground">{panelSubtitle}</p>
               ) : null}
             </div>
           </div>
         </div>
 
-        <CommandList className="max-h-[240px] overflow-y-auto px-2 py-2">
-          <CommandGroup>
-            {filteredItems.map((item) => (
-              <CommandItem
-                key={item.id}
-                value={[item.label, ...(item.keywords ?? [])].join(" ")}
-                className="rounded-lg px-2.5 py-2"
-                onSelect={() => {
-                  const nextPageId = item.nextPageId;
-                  if (nextPageId) {
-                    setPageStack((previous) => [...previous, nextPageId]);
-                    return;
-                  }
-                  item.onSelect?.();
-                  if (item.closeOnSelect ?? true) {
-                    onOpenChange(false);
-                  }
-                }}
-              >
-                <div className="mr-2 text-muted-foreground/80 [&_svg]:size-4">{item.icon}</div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-[13px] font-medium text-foreground">{item.label}</p>
-                  {item.description ? (
-                    <p className="truncate text-[11px] text-muted-foreground/70">
-                      {item.description}
-                    </p>
-                  ) : null}
-                </div>
-                {item.nextPageId ? (
-                  <ChevronRight className="ml-2 size-4 text-muted-foreground/50" />
-                ) : null}
-              </CommandItem>
-            ))}
-            {filteredItems.length === 0 ? (
-              <div className="px-3 py-6 text-center text-[12px] text-muted-foreground/75">
-                No actions found.
-              </div>
-            ) : null}
-          </CommandGroup>
-        </CommandList>
+        {currentPageId === "root" ? (
+          <LauncherActionsRootPage
+            inputId={inputId}
+            inputRef={inputRef}
+            query={rootQuery}
+            searchPlaceholder={rootSearchPlaceholder ?? "Search actions..."}
+            items={filteredRootItems}
+            onQueryChange={setRootQuery}
+            onNavigate={(item) => {
+              if (item.nextPageId) {
+                setSelectedItemByPage((previous) =>
+                  previous.root === item.id
+                    ? previous
+                    : {
+                        ...previous,
+                        root: item.id,
+                      },
+                );
+                openNextPage(item.nextPageId);
+                return;
+              }
 
-        <div className="border-t border-[var(--ui-divider)] px-3 py-2.5">
-          <div className="flex items-center gap-2 rounded-lg bg-[var(--launcher-card-hover-bg)] px-2.5 py-1.5 ring-1 ring-[var(--launcher-card-border)] focus-within:ring-[var(--ring)]">
-            <Label htmlFor={inputId} className="sr-only">
-              Search actions
-            </Label>
-            <Search className="size-4 text-muted-foreground/60" />
-            <Input
-              ref={inputRef}
-              id={inputId}
-              value={query}
-              onChange={(event) => {
-                const nextValue = event.target.value;
-                setQueries((previous) => ({ ...previous, [currentPageId]: nextValue }));
-              }}
-              placeholder={currentPage.searchPlaceholder}
-              className="h-7 border-none bg-transparent px-0 py-0 text-[12px] focus-visible:ring-0"
-            />
-          </div>
-        </div>
+              item.onSelect?.();
+              if (item.closeOnSelect ?? true) {
+                onOpenChange(false);
+              }
+            }}
+          />
+        ) : currentPageId === "hotkey" ? (
+          <LauncherActionsHotkeyPage
+            hotkeyValue={hotkeyValue}
+            saving={savingPage === "hotkey"}
+            canSave={
+              savingPage !== "hotkey" &&
+              Boolean(targetCommandId) &&
+              (hotkeyFeedback ?? hotkeyAvailability).tone !== "error"
+            }
+            feedback={hotkeyFeedback}
+            availability={hotkeyAvailability}
+            onHotkeyChange={(value) => {
+              setHotkeyValue(value);
+              setHotkeyFeedback(null);
+            }}
+            onSave={() => {
+              void saveHotkey();
+            }}
+            onBack={goBack}
+          />
+        ) : (
+          <LauncherActionsAliasPage
+            aliasInputId={aliasInputId}
+            aliasInputRef={aliasInputRef}
+            aliasValue={aliasValue}
+            saving={savingPage === "alias"}
+            canSave={
+              savingPage !== "alias" &&
+              Boolean(targetCommandId) &&
+              (aliasFeedback ?? aliasAvailability).tone !== "error"
+            }
+            feedback={aliasFeedback}
+            availability={aliasAvailability}
+            onAliasChange={(value) => {
+              setAliasValue(value);
+              setAliasFeedback(null);
+            }}
+            onSave={() => {
+              void saveAlias();
+            }}
+            onBack={goBack}
+          />
+        )}
       </Command>
     </div>
   );
