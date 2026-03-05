@@ -1,0 +1,14 @@
+{
+  "name": "fixture-react-require",
+  "title": "Fixture React Require",
+  "description": "Ensures extensions that declare const React=require('react') still run",
+  "owner": "beam",
+  "commands": [
+    {
+      "name": "react-require-check",
+      "title": "Fixture: React Require Check",
+      "mode": "no-view",
+      "description": "Validates plugin loader compatibility for classic React require patterns"
+    }
+  ]
+}

@@ -25,7 +25,7 @@ export const AI = { name: "AI" };
 export const environment = {
   appearance: "dark" as const,
   assetsPath: config.assetsDir,
-  commandMode: "view" as const,
+  commandMode: "view" as "view" | "no-view",
   commandName: "index",
   extensionName: "my-extension",
   isDevelopment: true,
@@ -71,24 +71,139 @@ export async function open(target: string, application?: Application | string): 
   });
 }
 
+type RawApplication = {
+  name?: unknown;
+  path?: unknown;
+  execPath?: unknown;
+  exec_path?: unknown;
+  bundleId?: unknown;
+  bundle_id?: unknown;
+  localizedName?: unknown;
+  localized_name?: unknown;
+  windowsAppId?: unknown;
+  windows_app_id?: unknown;
+};
+
+const DEFAULT_APPLICATION_PATH = "xdg-open";
+
+function toRecord(value: unknown): Record<string, unknown> {
+  if (!value || typeof value !== "object") {
+    return {};
+  }
+  return value as Record<string, unknown>;
+}
+
+function normalizeApplication(raw: unknown): Application {
+  const candidate = raw as RawApplication;
+  const name =
+    typeof candidate?.name === "string" && candidate.name.trim().length > 0
+      ? candidate.name
+      : "Application";
+
+  const path =
+    typeof candidate?.path === "string" && candidate.path.trim().length > 0
+      ? candidate.path
+      : typeof candidate?.execPath === "string" && candidate.execPath.trim().length > 0
+        ? candidate.execPath
+        : typeof candidate?.exec_path === "string" && candidate.exec_path.trim().length > 0
+          ? candidate.exec_path
+          : DEFAULT_APPLICATION_PATH;
+
+  const bundleId =
+    typeof candidate?.bundleId === "string" && candidate.bundleId.trim().length > 0
+      ? candidate.bundleId
+      : typeof candidate?.bundle_id === "string" && candidate.bundle_id.trim().length > 0
+        ? candidate.bundle_id
+        : typeof candidate?.windowsAppId === "string" && candidate.windowsAppId.trim().length > 0
+          ? candidate.windowsAppId
+          : typeof candidate?.windows_app_id === "string" &&
+              candidate.windows_app_id.trim().length > 0
+            ? candidate.windows_app_id
+            : undefined;
+
+  const localizedName =
+    typeof candidate?.localizedName === "string" && candidate.localizedName.trim().length > 0
+      ? candidate.localizedName
+      : typeof candidate?.localized_name === "string" && candidate.localized_name.trim().length > 0
+        ? candidate.localized_name
+        : undefined;
+
+  return {
+    name,
+    path,
+    bundleId,
+    localizedName,
+  };
+}
+
+async function invokeWithFallback<T>(
+  command: string,
+  params: Record<string, unknown>,
+  fallback: () => Promise<T>,
+): Promise<T> {
+  try {
+    return await invokeCommand<T>(command, params);
+  } catch {
+    return fallback();
+  }
+}
+
 export async function getApplications(path?: fs.PathLike): Promise<Application[]> {
-  const pathString = path ? path.toString() : undefined;
-  return invokeCommand<Application[]>("get_applications", { path: pathString });
+  const rawApps = await invokeCommand<unknown[]>("get_applications", {});
+  if (!Array.isArray(rawApps)) {
+    return [];
+  }
+  const normalized = rawApps.map((entry) => normalizeApplication(entry));
+  if (path) {
+    return normalized;
+  }
+  return normalized;
 }
 
 export async function getDefaultApplication(path: fs.PathLike): Promise<Application> {
-  return invokeCommand<Application>("get_default_application", { path: path.toString() });
+  return invokeWithFallback(
+    "get_default_application",
+    { path: path.toString() },
+    async () => normalizeApplication({ name: "Default Application", path: DEFAULT_APPLICATION_PATH }),
+  ).then((application) => normalizeApplication(application));
 }
 
 export async function getFrontmostApplication(): Promise<Application> {
-  return invokeCommand<Application>("get_frontmost_application");
+  return invokeWithFallback(
+    "get_frontmost_application",
+    {},
+    async () =>
+      normalizeApplication({
+        name: "Beam",
+        path: process.execPath || DEFAULT_APPLICATION_PATH,
+      }),
+  ).then((application) => normalizeApplication(application));
 }
 
 export async function showInFinder(path: fs.PathLike): Promise<void> {
-  return invokeCommand<void>("show_in_finder", { path: path.toString() });
+  const target = path.toString();
+  try {
+    await invokeCommand<void>("show_in_finder", { path: target });
+  } catch {
+    await open(target);
+  }
 }
 
 export async function trash(path: fs.PathLike | fs.PathLike[]): Promise<void> {
   const paths = (Array.isArray(path) ? path : [path]).map((p) => p.toString());
-  return invokeCommand<void>("trash", { paths });
+  await invokeWithFallback(
+    "trash",
+    { paths },
+    async () => {
+      writeOutput({
+        type: "log",
+        payload: {
+          tag: "sidecar-rpc-request-failure",
+          operation: "trash",
+          message: "Trash command unavailable; fallback no-op applied",
+          params: toRecord({ paths }),
+        },
+      });
+    },
+  );
 }

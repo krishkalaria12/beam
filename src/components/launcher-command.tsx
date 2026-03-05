@@ -119,6 +119,9 @@ export default function LauncherCommand() {
   const openSpotify = useLauncherUiStore((state) => state.openSpotify);
   const openGithub = useLauncherUiStore((state) => state.openGithub);
   const backToCommands = useLauncherUiStore((state) => state.backToCommands);
+  const openExtensions = useCallback(() => {
+    openPanel("extensions", true);
+  }, [openPanel]);
 
   const { data: quicklinks = [] } = useQuicklinks();
   const { isCompressed } = useUiLayout();
@@ -134,7 +137,7 @@ export default function LauncherCommand() {
     setFallbackCommandIds,
   } = useCommandPreferences();
   useLauncherDeepLinks({ openPanel, backToCommands });
-  useExtensionSidecarEvents({ backToCommands });
+  useExtensionSidecarEvents({ backToCommands, openExtensions });
   useLauncherPanelPrefetch();
 
   const commandContext = useMemo(
@@ -217,6 +220,27 @@ export default function LauncherCommand() {
           const pluginPath =
             typeof request.payload.pluginPath === "string" ? request.payload.pluginPath.trim() : "";
           const pluginMode = request.payload.pluginMode === "no-view" ? "no-view" : "view";
+          const launchArguments =
+            request.payload.arguments && typeof request.payload.arguments === "object"
+              ? (request.payload.arguments as Record<string, unknown>)
+              : {};
+          const launchContextFromPayload =
+            request.payload.launchContext && typeof request.payload.launchContext === "object"
+              ? (request.payload.launchContext as Record<string, unknown>)
+              : request.payload.context && typeof request.payload.context === "object"
+                ? (request.payload.context as Record<string, unknown>)
+                : undefined;
+          const launchContext =
+            launchContextFromPayload ??
+            (request.query
+              ? {
+                  query: request.query,
+                }
+              : undefined);
+          const launchType =
+            typeof request.payload.launchType === "string"
+              ? request.payload.launchType
+              : "userInitiated";
 
           if (!pluginPath) {
             throw new Error("Extension command payload is missing pluginPath.");
@@ -238,6 +262,9 @@ export default function LauncherCommand() {
               pluginPath,
               mode: pluginMode,
               aiAccessStatus: false,
+              arguments: launchArguments,
+              launchContext,
+              launchType,
             });
           } catch (error) {
             useExtensionRuntimeStore.getState().resetRuntime();

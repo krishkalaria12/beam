@@ -53,6 +53,7 @@ interface ExtensionRuntimeState {
   upsertToast: (toast: ExtensionToast) => void;
   updateToast: (toastId: number, partial: Partial<ExtensionToast>) => void;
   hideToast: (toastId: number) => void;
+  updateRunningSessionMetadata: (metadata: { subtitle?: string | null }) => void;
 }
 
 interface PropTemplate {
@@ -352,5 +353,19 @@ export const useExtensionRuntimeStore = create<ExtensionRuntimeState>((set, get)
     set((state) => ({
       toasts: state.toasts.filter((toast) => toast.id !== toastId),
     }));
+  },
+  updateRunningSessionMetadata: ({ subtitle }) => {
+    set((state) => {
+      if (!state.runningSession) {
+        return state;
+      }
+
+      return {
+        runningSession: {
+          ...state.runningSession,
+          subtitle: subtitle ?? undefined,
+        },
+      };
+    });
   },
 }));

@@ -6,9 +6,13 @@ import { useExtensionRuntimeStore } from "@/modules/extensions/runtime/store";
 
 interface UseExtensionSidecarEventsInput {
   backToCommands: () => void;
+  openExtensions?: () => void;
 }
 
-export function useExtensionSidecarEvents({ backToCommands }: UseExtensionSidecarEventsInput) {
+export function useExtensionSidecarEvents({
+  backToCommands,
+  openExtensions,
+}: UseExtensionSidecarEventsInput) {
   useEffect(() => {
     const unsubscribe = extensionSidecarService.subscribe((event) => {
       if (event.type === "go-back-to-plugin-list") {
@@ -19,6 +23,22 @@ export function useExtensionSidecarEvents({ backToCommands }: UseExtensionSideca
 
       if (event.type === "show-hud") {
         toast.message(event.title);
+        return;
+      }
+
+      if (event.type === "update-command-metadata") {
+        useExtensionRuntimeStore.getState().updateRunningSessionMetadata({
+          subtitle: event.subtitle,
+        });
+        return;
+      }
+
+      if (event.type === "open-extension-preferences" || event.type === "open-command-preferences") {
+        if (openExtensions) {
+          openExtensions();
+        } else {
+          backToCommands();
+        }
       }
     });
 
@@ -27,5 +47,5 @@ export function useExtensionSidecarEvents({ backToCommands }: UseExtensionSideca
       extensionSidecarService.stop();
       useExtensionRuntimeStore.getState().resetRuntime();
     };
-  }, [backToCommands]);
+  }, [backToCommands, openExtensions]);
 }

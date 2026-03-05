@@ -1,0 +1,14 @@
+{
+  "name": "fixture-oauth",
+  "title": "Fixture OAuth",
+  "description": "OAuth authorize/token lifecycle compatibility fixture",
+  "owner": "beam",
+  "commands": [
+    {
+      "name": "oauth-check",
+      "title": "Fixture: OAuth Check",
+      "mode": "no-view",
+      "description": "Runs OAuth authorize + set/get/remove token flow"
+    }
+  ]
+}

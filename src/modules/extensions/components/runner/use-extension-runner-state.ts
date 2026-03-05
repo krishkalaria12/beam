@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { invoke } from "@tauri-apps/api/core";
 
 import { extensionSidecarService } from "@/modules/extensions/sidecar-service";
 import {
@@ -311,8 +312,17 @@ export function useExtensionRunnerState({
       if (event.type === "reset-element") {
         setResetElementId(event.elementId);
       }
+      if (event.type === "clear-search-bar") {
+        setSearchText("");
+        if (
+          (rootNode?.type === "List" || rootNode?.type === "Grid") &&
+          asBoolean(rootNode.props.onSearchTextChange)
+        ) {
+          extensionSidecarService.dispatchEvent(rootNode.id, "onSearchTextChange", [""]);
+        }
+      }
     });
-  }, []);
+  }, [rootNode?.id, rootNode?.props, rootNode?.type]);
 
   useEffect(() => {
     if (!focusElementId) {
@@ -354,10 +364,53 @@ export function useExtensionRunnerState({
           if (action.hasOnAction) {
             extensionSidecarService.dispatchEvent(action.nodeId, "onAction", [target]);
           } else {
-            window.open(target, "_blank", "noopener,noreferrer");
+            extensionSidecarService.open(target);
           }
           return;
         }
+      }
+
+      if (action.type === "Action.Open") {
+        const target = asString(action.props.target, asString(action.props.url));
+        if (target) {
+          if (action.hasOnAction) {
+            extensionSidecarService.dispatchEvent(action.nodeId, "onAction", [target]);
+          } else {
+            const application = asString(action.props.application);
+            extensionSidecarService.open(target, application || undefined);
+          }
+          return;
+        }
+      }
+
+      if (action.type === "Action.ShowInFinder") {
+        const target = asString(action.props.path, asString(action.props.target));
+        if (target) {
+          if (action.hasOnAction) {
+            extensionSidecarService.dispatchEvent(action.nodeId, "onAction", [target]);
+          } else {
+            await invoke("show_in_finder", { path: target });
+          }
+          return;
+        }
+      }
+
+      if (action.type === "Action.RunInTerminal") {
+        if (action.hasOnAction) {
+          extensionSidecarService.dispatchEvent(action.nodeId, "onAction");
+        } else {
+          console.warn("[extensions-runner] Action.RunInTerminal is unsupported without onAction");
+        }
+        return;
+      }
+
+      if (action.type === "Action.CreateQuicklink") {
+        if (action.hasOnAction) {
+          extensionSidecarService.dispatchEvent(action.nodeId, "onAction");
+        } else {
+          console.warn("[extensions-runner] Action.CreateQuicklink is unsupported without onAction");
+        }
+        return;
       }
 
       if (action.type === "Action.CopyToClipboard") {

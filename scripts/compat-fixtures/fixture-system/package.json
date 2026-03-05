@@ -1,0 +1,14 @@
+{
+  "name": "fixture-system",
+  "title": "Fixture System",
+  "description": "Phase 0 system/app compatibility fixture",
+  "owner": "beam",
+  "commands": [
+    {
+      "name": "system-check",
+      "title": "Fixture: System Check",
+      "mode": "no-view",
+      "description": "Runs app API checks and captures failures"
+    }
+  ]
+}

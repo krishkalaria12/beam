@@ -8,23 +8,77 @@ type Tab = {
   title?: string;
 };
 
-type RawTab = {
-  tabId: number;
-  url: string;
-  title?: string;
-  favicon?: string;
-  active: boolean;
-};
-
-const sendBrowserRequest = <T>(method: string, params: unknown) => {
-  return sendRequest<T>("browser-extension-request", { method, params });
-};
-
 type ContentOptions = {
   cssSelector?: string;
   tabId?: number;
   format?: "html" | "text" | "markdown";
 };
+
+function toErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return String(error);
+}
+
+function browserError(method: string, message: string): Error {
+  return new Error(`[BrowserExtension.${method}] ${message}`);
+}
+
+async function sendBrowserRequest<T>(method: string, params: unknown): Promise<T> {
+  try {
+    return await sendRequest<T>("browser-extension-request", { method, params });
+  } catch (error) {
+    throw browserError(method, toErrorMessage(error));
+  }
+}
+
+function toRecord(value: unknown): Record<string, unknown> {
+  if (!value || typeof value !== "object") {
+    return {};
+  }
+  return value as Record<string, unknown>;
+}
+
+function extractValue<T>(method: string, response: unknown): T {
+  const payload = toRecord(response);
+  if (!Object.prototype.hasOwnProperty.call(payload, "value")) {
+    throw browserError(method, "invalid response payload: missing \"value\" field");
+  }
+  return payload.value as T;
+}
+
+function normalizeTab(method: string, raw: unknown): Tab {
+  const entry = toRecord(raw);
+  const id = typeof entry.tabId === "number" && Number.isFinite(entry.tabId) ? entry.tabId : undefined;
+  const url = typeof entry.url === "string" ? entry.url.trim() : "";
+
+  if (id === undefined || url.length === 0) {
+    throw browserError(method, "invalid tab payload returned by browser bridge");
+  }
+
+  return {
+    id,
+    url,
+    active: typeof entry.active === "boolean" ? entry.active : false,
+    title: typeof entry.title === "string" ? entry.title : undefined,
+    favicon: typeof entry.favicon === "string" ? entry.favicon : undefined,
+  };
+}
+
+function normalizeTabs(method: string, raw: unknown): Tab[] {
+  if (!Array.isArray(raw)) {
+    throw browserError(method, "invalid response payload: expected an array of tabs");
+  }
+  return raw.map((entry) => normalizeTab(method, entry));
+}
+
+function combineFallbackError(method: string, primaryError: unknown, fallbackError: unknown): Error {
+  return browserError(
+    method,
+    `primary request failed: ${toErrorMessage(primaryError)}; fallback failed: ${toErrorMessage(fallbackError)}`,
+  );
+}
 
 function buildContentParams(options?: ContentOptions): {
   field: string;
@@ -33,7 +87,10 @@ function buildContentParams(options?: ContentOptions): {
 } {
   const format = options?.format ?? "markdown";
   if (options?.cssSelector && format === "markdown") {
-    throw new Error("When using a CSS selector, the `format` option can not be `markdown`.");
+    throw browserError(
+      "getContent",
+      "when using a CSS selector, the `format` option cannot be `markdown`",
+    );
   }
 
   const params: { field: string; selector?: string; tabId?: number } = {
@@ -44,100 +101,109 @@ function buildContentParams(options?: ContentOptions): {
     params.selector = options.cssSelector;
   }
 
-  if (options?.tabId) {
+  if (typeof options?.tabId === "number") {
     params.tabId = options.tabId;
   }
 
   return params;
 }
 
-export const BrowserExtensionAPI = {
-  async getTabs(): Promise<Tab[]> {
-    const result = await sendBrowserRequest<{ value: RawTab[] }>("getTabs", {});
-    return result.value.map((tab) => ({
-      id: tab.tabId,
-      url: tab.url,
-      title: tab.title,
-      favicon: tab.favicon,
-      active: tab.active,
-    }));
-  },
-  async getContent(options?: ContentOptions): Promise<string> {
-    const params = buildContentParams(options);
-    const result = await sendBrowserRequest<{ value: string }>("getTab", params);
-    return result.value;
-  },
-  async getActiveTab(): Promise<Tab | null> {
-    try {
-      const result = await sendBrowserRequest<{ value: RawTab | null }>("getActiveTab", {});
-      const tab = result.value;
-      if (!tab) {
-        return null;
-      }
-      return {
-        id: tab.tabId,
-        url: tab.url,
-        title: tab.title,
-        favicon: tab.favicon,
-        active: tab.active,
-      };
-    } catch {
-      const tabs = await this.getTabs();
-      return tabs.find((tab) => tab.active) ?? tabs[0] ?? null;
-    }
-  },
-  async getTabById(tabId: number): Promise<Tab | null> {
-    try {
-      const result = await sendBrowserRequest<{ value: RawTab | null }>("getTabById", { tabId });
-      const tab = result.value;
-      if (!tab) {
-        return null;
-      }
-      return {
-        id: tab.tabId,
-        url: tab.url,
-        title: tab.title,
-        favicon: tab.favicon,
-        active: tab.active,
-      };
-    } catch {
-      const tabs = await this.getTabs();
-      return tabs.find((tab) => tab.id === tabId) ?? null;
-    }
-  },
-  async searchTabs(query: string): Promise<Tab[]> {
-    try {
-      const result = await sendBrowserRequest<{ value: RawTab[] }>("searchTabs", { query });
-      return result.value.map((tab) => ({
-        id: tab.tabId,
-        url: tab.url,
-        title: tab.title,
-        favicon: tab.favicon,
-        active: tab.active,
-      }));
-    } catch {
-      const normalizedQuery = query.trim().toLowerCase();
-      if (!normalizedQuery) {
-        return this.getTabs();
-      }
+async function getTabs(): Promise<Tab[]> {
+  const response = await sendBrowserRequest<unknown>("getTabs", {});
+  const value = extractValue<unknown>("getTabs", response);
+  return normalizeTabs("getTabs", value);
+}
 
-      const tabs = await this.getTabs();
+async function getContent(options?: ContentOptions): Promise<string> {
+  const params = buildContentParams(options);
+  const response = await sendBrowserRequest<unknown>("getContent", params);
+  const value = extractValue<unknown>("getContent", response);
+
+  if (typeof value !== "string") {
+    throw browserError("getContent", "invalid response payload: expected string content");
+  }
+
+  return value;
+}
+
+async function getActiveTab(): Promise<Tab | null> {
+  try {
+    const response = await sendBrowserRequest<unknown>("getActiveTab", {});
+    const value = extractValue<unknown>("getActiveTab", response);
+    if (value == null) {
+      return null;
+    }
+    return normalizeTab("getActiveTab", value);
+  } catch (primaryError) {
+    try {
+      const tabs = await getTabs();
+      return tabs.find((tab) => tab.active) ?? tabs[0] ?? null;
+    } catch (fallbackError) {
+      throw combineFallbackError("getActiveTab", primaryError, fallbackError);
+    }
+  }
+}
+
+async function getTabById(tabId: number): Promise<Tab | null> {
+  try {
+    const response = await sendBrowserRequest<unknown>("getTabById", { tabId });
+    const value = extractValue<unknown>("getTabById", response);
+    if (value == null) {
+      return null;
+    }
+    return normalizeTab("getTabById", value);
+  } catch (primaryError) {
+    try {
+      const tabs = await getTabs();
+      return tabs.find((tab) => tab.id === tabId) ?? null;
+    } catch (fallbackError) {
+      throw combineFallbackError("getTabById", primaryError, fallbackError);
+    }
+  }
+}
+
+async function searchTabs(query: string): Promise<Tab[]> {
+  try {
+    const response = await sendBrowserRequest<unknown>("searchTabs", { query });
+    const value = extractValue<unknown>("searchTabs", response);
+    return normalizeTabs("searchTabs", value);
+  } catch (primaryError) {
+    try {
+      const normalizedQuery = query.trim().toLowerCase();
+      const tabs = await getTabs();
+      if (!normalizedQuery) {
+        return tabs;
+      }
       return tabs.filter(
         (tab) =>
           tab.url.toLowerCase().includes(normalizedQuery) ||
           (tab.title ?? "").toLowerCase().includes(normalizedQuery),
       );
+    } catch (fallbackError) {
+      throw combineFallbackError("searchTabs", primaryError, fallbackError);
     }
-  },
-  async getActiveTabContent(options?: Omit<ContentOptions, "tabId">): Promise<string> {
-    const activeTab = await this.getActiveTab();
-    if (!activeTab) {
-      return "";
-    }
+  }
+}
 
-    return this.getContent({ ...options, tabId: activeTab.id });
-  },
-  async getTabContent(tabId: number, options?: Omit<ContentOptions, "tabId">): Promise<string> {
-    return this.getContent({ ...options, tabId });
-  },
+async function getActiveTabContent(options?: Omit<ContentOptions, "tabId">): Promise<string> {
+  const activeTab = await getActiveTab();
+  if (!activeTab) {
+    return "";
+  }
+
+  return getContent({ ...options, tabId: activeTab.id });
+}
+
+async function getTabContent(tabId: number, options?: Omit<ContentOptions, "tabId">): Promise<string> {
+  return getContent({ ...options, tabId });
+}
+
+export const BrowserExtensionAPI = {
+  getTabs,
+  getContent,
+  getActiveTab,
+  getTabById,
+  searchTabs,
+  getActiveTabContent,
+  getTabContent,
 };

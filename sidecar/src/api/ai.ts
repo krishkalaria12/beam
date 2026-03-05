@@ -1,3 +1,6 @@
+import * as crypto from "crypto";
+import { sendRequest } from "./rpc";
+
 export type Creativity = "none" | "low" | "medium" | "high" | "maximum" | number;
 
 export enum Model {
@@ -59,17 +62,173 @@ interface AskResult extends Promise<string> {
   off(event: "error", listener: (error: Error) => void): this;
 }
 
-function unsupportedError(): Error {
-  return new Error(
-    "AI is a native Beam feature and is not available through the extension sidecar runtime.",
-  );
+type AskDataListener = (chunk: string) => void;
+type AskEndListener = (fullText: string) => void;
+type AskErrorListener = (error: Error) => void;
+
+type PendingAsk = {
+  dataListeners: Set<AskDataListener>;
+  endListeners: Set<AskEndListener>;
+  errorListeners: Set<AskErrorListener>;
+  ended: boolean;
+};
+
+const pendingAsks = new Map<string, PendingAsk>();
+const AI_REQUEST_TIMEOUT_MS = 5 * 60 * 1000;
+
+function normalizeError(error: unknown): Error {
+  if (error instanceof Error) {
+    return error;
+  }
+  return new Error(String(error));
 }
 
-export function ask(_prompt: string, _options: AskOptions = {}): AskResult {
-  const promise = Promise.reject(unsupportedError()) as AskResult;
-  promise.on = (() => promise) as AskResult["on"];
-  promise.off = (() => promise) as AskResult["off"];
-  return promise;
+function getPendingAsk(streamRequestId: string): PendingAsk | undefined {
+  return pendingAsks.get(streamRequestId);
+}
+
+function emitData(streamRequestId: string, chunk: string): void {
+  const pending = getPendingAsk(streamRequestId);
+  if (!pending) {
+    return;
+  }
+
+  for (const listener of pending.dataListeners) {
+    listener(chunk);
+  }
+}
+
+function emitEnd(streamRequestId: string, fullText: string): void {
+  const pending = getPendingAsk(streamRequestId);
+  if (!pending || pending.ended) {
+    return;
+  }
+
+  pending.ended = true;
+  for (const listener of pending.endListeners) {
+    listener(fullText);
+  }
+}
+
+function emitError(streamRequestId: string, error: Error): void {
+  const pending = getPendingAsk(streamRequestId);
+  if (!pending) {
+    return;
+  }
+
+  for (const listener of pending.errorListeners) {
+    listener(error);
+  }
+}
+
+function cleanup(streamRequestId: string): void {
+  pendingAsks.delete(streamRequestId);
+}
+
+function createAbortError(): Error {
+  return new Error("The AI request was aborted.");
+}
+
+function withListeners(promise: Promise<string>, pending: PendingAsk): AskResult {
+  const result = promise as AskResult;
+
+  result.on = ((event: "data" | "end" | "error", listener: unknown) => {
+    if (event === "data") {
+      pending.dataListeners.add(listener as AskDataListener);
+    } else if (event === "end") {
+      pending.endListeners.add(listener as AskEndListener);
+    } else {
+      pending.errorListeners.add(listener as AskErrorListener);
+    }
+    return result;
+  }) as AskResult["on"];
+
+  result.off = ((event: "data" | "end" | "error", listener: unknown) => {
+    if (event === "data") {
+      pending.dataListeners.delete(listener as AskDataListener);
+    } else if (event === "end") {
+      pending.endListeners.delete(listener as AskEndListener);
+    } else {
+      pending.errorListeners.delete(listener as AskErrorListener);
+    }
+    return result;
+  }) as AskResult["off"];
+
+  return result;
+}
+
+export function handleAskStreamChunk(streamRequestId: string, chunk: string): void {
+  emitData(streamRequestId, chunk);
+}
+
+export function handleAskStreamEnd(streamRequestId: string, fullText: string): void {
+  emitEnd(streamRequestId, fullText);
+}
+
+export function handleAskStreamError(streamRequestId: string, message: string): void {
+  emitError(streamRequestId, new Error(message));
+}
+
+export function ask(prompt: string, options: AskOptions = {}): AskResult {
+  const streamRequestId = crypto.randomUUID();
+  const pending: PendingAsk = {
+    dataListeners: new Set<AskDataListener>(),
+    endListeners: new Set<AskEndListener>(),
+    errorListeners: new Set<AskErrorListener>(),
+    ended: false,
+  };
+  pendingAsks.set(streamRequestId, pending);
+
+  const startRequest = async (): Promise<string> => {
+    if (options.signal?.aborted) {
+      throw createAbortError();
+    }
+
+    const { signal, ...requestOptions } = options;
+    const abortErrorPromise =
+      signal &&
+      new Promise<string>((_, reject) => {
+        signal.addEventListener(
+          "abort",
+          () => {
+            reject(createAbortError());
+          },
+          { once: true },
+        );
+      });
+
+    const requestPromise = sendRequest<{ fullText?: string }>(
+      "ai-ask",
+      {
+        streamRequestId,
+        prompt,
+        options: requestOptions,
+      },
+      { timeoutMs: AI_REQUEST_TIMEOUT_MS },
+    ).then((result) => {
+      const fullText = typeof result?.fullText === "string" ? result.fullText : "";
+      emitEnd(streamRequestId, fullText);
+      return fullText;
+    });
+
+    if (!abortErrorPromise) {
+      return requestPromise;
+    }
+
+    return Promise.race([requestPromise, abortErrorPromise]);
+  };
+
+  const operation = startRequest()
+    .catch((error) => {
+      const normalized = normalizeError(error);
+      emitError(streamRequestId, normalized);
+      throw normalized;
+    })
+    .finally(() => {
+      cleanup(streamRequestId);
+    });
+
+  return withListeners(operation, pending);
 }
 
 export const AI = {

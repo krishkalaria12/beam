@@ -1,0 +1,14 @@
+{
+  "name": "fixture-browser-extension",
+  "title": "Fixture Browser Extension",
+  "description": "Phase 0 browser bridge compatibility fixture",
+  "owner": "beam",
+  "commands": [
+    {
+      "name": "browser-check",
+      "title": "Fixture: Browser Bridge Check",
+      "mode": "no-view",
+      "description": "Runs browser extension API checks"
+    }
+  ]
+}

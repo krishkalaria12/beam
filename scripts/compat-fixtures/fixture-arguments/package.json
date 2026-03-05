@@ -1,0 +1,14 @@
+{
+  "name": "fixture-arguments",
+  "title": "Fixture Arguments",
+  "description": "Phase 0 launch argument compatibility fixture",
+  "owner": "beam",
+  "commands": [
+    {
+      "name": "arguments-check",
+      "title": "Fixture: Arguments Check",
+      "mode": "no-view",
+      "description": "Captures launch props and stores them"
+    }
+  ]
+}

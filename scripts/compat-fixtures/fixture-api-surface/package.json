@@ -1,0 +1,14 @@
+{
+  "name": "fixture-api-surface",
+  "title": "Fixture API Surface",
+  "description": "Compatibility API surface and alias checks",
+  "owner": "beam",
+  "commands": [
+    {
+      "name": "api-surface-check",
+      "title": "Fixture: API Surface Check",
+      "mode": "no-view",
+      "description": "Validates key Raycast compatibility exports"
+    }
+  ]
+}

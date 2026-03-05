@@ -1,5 +1,7 @@
 import * as crypto from "crypto";
 import { writeOutput, writeLog } from "../io";
+import { environment } from "./environment";
+import { currentPluginName } from "../state";
 
 export enum RedirectMethod {
   Web = "web",
@@ -76,21 +78,38 @@ const pendingTokenRequests = new Map<
 >();
 
 export function handleOAuthResponse(
-  _requestId: string,
-  code: string,
-  state: string,
+  state?: string,
+  code?: string,
   error?: string,
 ) {
-  const promise = pendingAuthorizationRequests.get(state);
+  const fallbackState =
+    pendingAuthorizationRequests.size === 1
+      ? pendingAuthorizationRequests.keys().next().value
+      : undefined;
+  const resolvedState =
+    typeof state === "string" && pendingAuthorizationRequests.has(state)
+      ? state
+      : fallbackState;
+  const promise = resolvedState ? pendingAuthorizationRequests.get(resolvedState) : undefined;
+
   if (promise) {
+    const stateKey = resolvedState as string;
     if (error) {
       promise.reject(new Error(error));
-    } else {
+    } else if (code) {
       promise.resolve({ authorizationCode: code });
+    } else {
+      promise.reject(new Error("OAuth authorization response did not include a code."));
     }
-    pendingAuthorizationRequests.delete(state);
+    pendingAuthorizationRequests.delete(stateKey);
   } else {
-    writeLog(`OAuth state mismatch. Request ID (state): ${state} not found in pending requests.`);
+    writeLog({
+      tag: "sidecar-rpc-request-failure",
+      operation: "oauth-authorize-response",
+      message: "OAuth response did not match any pending authorization request",
+      state,
+      pendingStates: Array.from(pendingAuthorizationRequests.keys()),
+    });
   }
 }
 
@@ -103,7 +122,16 @@ export function handleTokenResponse(requestId: string, result: unknown, error?: 
       promise.resolve(result);
     }
     pendingTokenRequests.delete(requestId);
+    return;
   }
+
+  writeLog({
+    tag: "sidecar-rpc-request-failure",
+    requestId,
+    operation: "oauth-token-response",
+    message: "Received OAuth token response for unknown requestId",
+    error,
+  });
 }
 
 function sendTokenRequest<T>(type: string, payload: object): Promise<T> {
@@ -117,7 +145,14 @@ function sendTokenRequest<T>(type: string, payload: object): Promise<T> {
     setTimeout(() => {
       if (pendingTokenRequests.has(requestId)) {
         pendingTokenRequests.delete(requestId);
-        reject(new Error(`Token request for ${type} timed out`));
+        const message = `Token request for ${type} timed out`;
+        writeLog({
+          tag: "sidecar-rpc-request-failure",
+          requestId,
+          operation: type,
+          message,
+        });
+        reject(new Error(message));
       }
     }, 5000);
   });
@@ -134,8 +169,32 @@ export class PKCEClient {
     this.options = options;
   }
 
+  private normalizeIdentifier(value: string): string {
+    return value
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 64);
+  }
+
+  private getPackageName(): string {
+    const pluginName =
+      (typeof currentPluginName === "string" && currentPluginName.trim().length > 0
+        ? currentPluginName
+        : environment.extensionName) || "beam-extension";
+    const normalized = this.normalizeIdentifier(pluginName);
+    return normalized.length > 0 ? normalized : "beam-extension";
+  }
+
   private getProviderId(): string {
-    return this.options.providerId ?? this.options.providerName.toLowerCase().replace(/\s/g, "-");
+    if (this.options.providerId && this.options.providerId.trim().length > 0) {
+      return this.options.providerId.trim();
+    }
+
+    const provider = this.normalizeIdentifier(this.options.providerName);
+    const packageName = this.getPackageName();
+    return `${packageName}.${provider || "oauth"}`;
   }
 
   async authorizationRequest(options: AuthorizationRequestOptions): Promise<AuthorizationRequest> {
@@ -148,16 +207,16 @@ export class PKCEClient {
     });
 
     let redirectURI: string;
-    const packageName = "Extension"; // TODO: what does this mean, and is it always the same?
+    const packageName = this.getPackageName();
     switch (this.options.redirectMethod) {
       case RedirectMethod.Web:
-        redirectURI = `https://raycast.com/redirect?packageName=${packageName}`;
+        redirectURI = `https://raycast.com/redirect?packageName=${encodeURIComponent(packageName)}`;
         break;
       case RedirectMethod.App:
-        redirectURI = `beam://oauth?package_name=${packageName}`;
+        redirectURI = `beam://oauth?package_name=${encodeURIComponent(packageName)}`;
         break;
       case RedirectMethod.AppURI:
-        redirectURI = `com.raycast:/oauth?package_name=${packageName}`;
+        redirectURI = `raycast://oauth?package_name=${encodeURIComponent(packageName)}`;
         break;
     }
 
@@ -213,6 +272,12 @@ export class PKCEClient {
         () => {
           if (pendingAuthorizationRequests.has(state)) {
             pendingAuthorizationRequests.delete(state);
+            writeLog({
+              tag: "sidecar-rpc-request-failure",
+              requestId: state,
+              operation: "oauth-authorize",
+              message: "OAuth authorization timed out",
+            });
             reject(new Error("OAuth authorization timed out"));
           }
         },

@@ -1,5 +1,6 @@
 import { isTauri } from "@tauri-apps/api/core";
 import { invoke } from "@tauri-apps/api/core";
+import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { appCacheDir, appLocalDataDir } from "@tauri-apps/api/path";
 import { Command, open as shellOpen, type Child } from "@tauri-apps/plugin-shell";
 import { SidecarMessageWithPluginsSchema, type Command as ProtocolCommand } from "@flare/protocol";
@@ -7,6 +8,7 @@ import { Unpackr } from "msgpackr";
 import { inflate } from "pako";
 import { EXTENSIONS_PREFERENCE_REQUEST_TIMEOUT_MS } from "@/modules/extensions/constants";
 import {
+  parseAiAskRequest,
   parseConfirmAlertRequest,
   parseLaunchCommandRequest,
 } from "@/modules/extensions/sidecar/custom-message";
@@ -24,6 +26,9 @@ interface RunPluginPayload {
   pluginPath: string;
   mode: ExtensionMode;
   aiAccessStatus: boolean;
+  arguments?: Record<string, unknown>;
+  launchContext?: Record<string, unknown>;
+  launchType?: string;
 }
 
 interface SidecarEvent {
@@ -37,6 +42,10 @@ export type ExtensionSidecarMessageEvent =
   | { type: "focus-element"; elementId: number }
   | { type: "reset-element"; elementId: number }
   | { type: "show-hud"; title: string }
+  | { type: "clear-search-bar" }
+  | { type: "update-command-metadata"; subtitle?: string }
+  | { type: "open-extension-preferences"; extensionName?: string }
+  | { type: "open-command-preferences"; extensionName?: string; commandName?: string }
   | { type: "log"; payload: unknown };
 
 type SidecarEventListener = (event: ExtensionSidecarMessageEvent) => void;
@@ -44,6 +53,31 @@ interface PendingPreferenceRequest {
   resolve: (values: Record<string, unknown>) => void;
   reject: (error: Error) => void;
   timeoutId: ReturnType<typeof setTimeout>;
+}
+
+interface SidecarRequestFailureLog {
+  tag: "extensions-sidecar-request-failure";
+  channel:
+    | "launch-command"
+    | "invoke_command"
+    | "oauth-get-tokens"
+    | "oauth-set-tokens"
+    | "oauth-remove-tokens"
+    | "browser-extension-request"
+    | "open-target"
+    | "show-hud";
+  requestId?: string;
+  operation: string;
+  message: string;
+  metadata?: Record<string, unknown>;
+}
+
+function toRecord(value: unknown): Record<string, unknown> | undefined {
+  if (!value || typeof value !== "object") {
+    return undefined;
+  }
+
+  return value as Record<string, unknown>;
 }
 
 class ExtensionSidecarService {
@@ -56,6 +90,15 @@ class ExtensionSidecarService {
   private browserExtensionStatusPollId: ReturnType<typeof setInterval> | null = null;
   private pendingOauthStates = new Set<string>();
   private pendingPreferenceResolvers = new Map<string, PendingPreferenceRequest[]>();
+
+  private toErrorMessage(error: unknown): string {
+    return error instanceof Error ? error.message : String(error);
+  }
+
+  private logRequestFailure(log: SidecarRequestFailureLog): void {
+    console.error(`[extensions-sidecar][request-failure] ${JSON.stringify(log)}`);
+    this.emit({ type: "log", payload: log });
+  }
 
   subscribe(listener: SidecarEventListener): () => void {
     this.listeners.add(listener);
@@ -145,6 +188,10 @@ class ExtensionSidecarService {
     });
   }
 
+  open(target: string, application?: string): void {
+    this.openTarget(target, application);
+  }
+
   private emit(event: ExtensionSidecarMessageEvent): void {
     for (const listener of this.listeners) {
       listener(event);
@@ -231,6 +278,7 @@ class ExtensionSidecarService {
     name: string;
     type?: string;
     context?: Record<string, unknown>;
+    arguments?: Record<string, unknown>;
     extensionName?: string;
   }): Promise<void> {
     try {
@@ -272,6 +320,9 @@ class ExtensionSidecarService {
         pluginPath: command.pluginPath,
         mode: command.mode,
         aiAccessStatus: false,
+        arguments: toRecord(payload.arguments),
+        launchContext: toRecord(payload.context),
+        launchType: payload.type,
       });
 
       this.sendResponse("launch-command-response", {
@@ -279,7 +330,20 @@ class ExtensionSidecarService {
         result: true,
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = this.toErrorMessage(error);
+      this.logRequestFailure({
+        tag: "extensions-sidecar-request-failure",
+        channel: "launch-command",
+        requestId: payload.requestId,
+        operation: payload.name,
+        message,
+        metadata: {
+          extensionName: payload.extensionName,
+          type: payload.type,
+          hasArguments: Boolean(payload.arguments),
+          hasContext: Boolean(payload.context),
+        },
+      });
       this.sendResponse("launch-command-response", {
         requestId: payload.requestId,
         error: message,
@@ -312,7 +376,14 @@ class ExtensionSidecarService {
       const result = await invoke(payload.command, payload.params ?? {});
       this.sendInvokeCommandResponse(payload.requestId, result);
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = this.toErrorMessage(error);
+      this.logRequestFailure({
+        tag: "extensions-sidecar-request-failure",
+        channel: "invoke_command",
+        requestId: payload.requestId,
+        operation: payload.command,
+        message,
+      });
       this.sendInvokeCommandResponse(payload.requestId, undefined, message);
     }
   }
@@ -352,11 +423,18 @@ class ExtensionSidecarService {
       return true;
     }
 
-    if (parsed.state) {
-      this.pendingOauthStates.delete(parsed.state);
+    let resolvedState = parsed.state;
+    if (resolvedState) {
+      this.pendingOauthStates.delete(resolvedState);
+    } else if (this.pendingOauthStates.size === 1) {
+      resolvedState = this.pendingOauthStates.values().next().value as string | undefined;
+      if (resolvedState) {
+        this.pendingOauthStates.delete(resolvedState);
+      }
     }
+
     this.sendResponse("oauth-authorize-response", {
-      state: parsed.state,
+      state: resolvedState,
       error: parsed.error,
     });
     return true;
@@ -371,7 +449,18 @@ class ExtensionSidecarService {
       this.sendOauthResponse("oauth-get-tokens-response", payload.requestId, cached);
     } catch (error) {
       const fallback = this.oauthTokenStore.get(payload.providerId);
-      const message = error instanceof Error ? error.message : String(error);
+      const message = this.toErrorMessage(error);
+      this.logRequestFailure({
+        tag: "extensions-sidecar-request-failure",
+        channel: "oauth-get-tokens",
+        requestId: payload.requestId,
+        operation: "oauth_get_tokens",
+        message,
+        metadata: {
+          providerId: payload.providerId,
+          fallbackUsed: Boolean(fallback),
+        },
+      });
       this.sendOauthResponse("oauth-get-tokens-response", payload.requestId, fallback, message);
     }
   }
@@ -389,7 +478,18 @@ class ExtensionSidecarService {
       this.sendOauthResponse("oauth-set-tokens-response", payload.requestId, true);
     } catch (error) {
       this.oauthTokenStore.set(payload.providerId, payload.tokens);
-      const message = error instanceof Error ? error.message : String(error);
+      const message = this.toErrorMessage(error);
+      this.logRequestFailure({
+        tag: "extensions-sidecar-request-failure",
+        channel: "oauth-set-tokens",
+        requestId: payload.requestId,
+        operation: "oauth_set_tokens",
+        message,
+        metadata: {
+          providerId: payload.providerId,
+          fallbackUsed: true,
+        },
+      });
       this.sendOauthResponse("oauth-set-tokens-response", payload.requestId, true, message);
     }
   }
@@ -403,7 +503,18 @@ class ExtensionSidecarService {
       this.sendOauthResponse("oauth-remove-tokens-response", payload.requestId, true);
     } catch (error) {
       this.oauthTokenStore.delete(payload.providerId);
-      const message = error instanceof Error ? error.message : String(error);
+      const message = this.toErrorMessage(error);
+      this.logRequestFailure({
+        tag: "extensions-sidecar-request-failure",
+        channel: "oauth-remove-tokens",
+        requestId: payload.requestId,
+        operation: "oauth_remove_tokens",
+        message,
+        metadata: {
+          providerId: payload.providerId,
+          fallbackUsed: true,
+        },
+      });
       this.sendOauthResponse("oauth-remove-tokens-response", payload.requestId, true, message);
     }
   }
@@ -423,13 +534,135 @@ class ExtensionSidecarService {
         result,
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = this.toErrorMessage(error);
+      this.logRequestFailure({
+        tag: "extensions-sidecar-request-failure",
+        channel: "browser-extension-request",
+        requestId: payload.requestId,
+        operation: payload.method,
+        message,
+      });
       this.sendResponse("browser-extension-response", {
         requestId: payload.requestId,
         error: message,
       });
     } finally {
       void this.refreshBrowserExtensionConnectionStatus();
+    }
+  }
+
+  private async handleAiAsk(payload: {
+    requestId: string;
+    streamRequestId: string;
+    prompt: string;
+    options?: Record<string, unknown>;
+  }): Promise<void> {
+    let settled = false;
+    const unlisteners: UnlistenFn[] = [];
+
+    const cleanup = () => {
+      while (unlisteners.length > 0) {
+        const unlisten = unlisteners.pop();
+        if (unlisten) {
+          unlisten();
+        }
+      }
+    };
+
+    const resolveOnce = (fullText: string) => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      cleanup();
+      this.sendResponse("ai-ask-response", {
+        requestId: payload.requestId,
+        result: { fullText },
+      });
+    };
+
+    const rejectOnce = (errorMessage: string) => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      cleanup();
+      this.sendResponse("ai-ask-error", {
+        streamRequestId: payload.streamRequestId,
+        error: errorMessage,
+      });
+      this.sendResponse("ai-ask-response", {
+        requestId: payload.requestId,
+        error: errorMessage,
+      });
+    };
+
+    try {
+      unlisteners.push(
+        await listen<{ requestId?: string; text?: string }>("ai-stream-chunk", (event) => {
+          if (event.payload.requestId !== payload.streamRequestId) {
+            return;
+          }
+
+          this.sendResponse("ai-ask-chunk", {
+            streamRequestId: payload.streamRequestId,
+            chunk: typeof event.payload.text === "string" ? event.payload.text : "",
+          });
+        }),
+      );
+
+      unlisteners.push(
+        await listen<{ requestId?: string; fullText?: string }>("ai-stream-end", (event) => {
+          if (event.payload.requestId !== payload.streamRequestId) {
+            return;
+          }
+
+          const fullText =
+            typeof event.payload.fullText === "string" ? event.payload.fullText : "";
+          this.sendResponse("ai-ask-end", {
+            streamRequestId: payload.streamRequestId,
+            fullText,
+          });
+          resolveOnce(fullText);
+        }),
+      );
+
+      unlisteners.push(
+        await listen<{ requestId?: string; error?: string }>("ai-stream-error", (event) => {
+          if (event.payload.requestId !== payload.streamRequestId) {
+            return;
+          }
+
+          const errorMessage =
+            typeof event.payload.error === "string" && event.payload.error.length > 0
+              ? event.payload.error
+              : "AI request failed.";
+          rejectOnce(errorMessage);
+        }),
+      );
+
+      await invoke("ai_ask_stream", {
+        requestId: payload.streamRequestId,
+        prompt: payload.prompt,
+        options: payload.options ?? {},
+      });
+
+      if (!settled) {
+        resolveOnce("");
+      }
+    } catch (error) {
+      const message = this.toErrorMessage(error);
+      this.logRequestFailure({
+        tag: "extensions-sidecar-request-failure",
+        channel: "invoke_command",
+        requestId: payload.requestId,
+        operation: "ai_ask_stream",
+        message,
+        metadata: {
+          streamRequestId: payload.streamRequestId,
+        },
+      });
+      rejectOnce(message);
     }
   }
 
@@ -442,7 +675,16 @@ class ExtensionSidecarService {
       ) {
         window.open(target, "_blank", "noopener,noreferrer");
       }
-      console.error("[extensions-sidecar] failed to open target:", error);
+      this.logRequestFailure({
+        tag: "extensions-sidecar-request-failure",
+        channel: "open-target",
+        operation: "shellOpen",
+        message: this.toErrorMessage(error),
+        metadata: {
+          target,
+          application,
+        },
+      });
     });
   }
 
@@ -457,6 +699,48 @@ class ExtensionSidecarService {
     if (launchCommandRequest) {
       void this.handleLaunchCommand(launchCommandRequest);
       return;
+    }
+
+    const aiAskRequest = parseAiAskRequest(raw);
+    if (aiAskRequest) {
+      void this.handleAiAsk(aiAskRequest);
+      return;
+    }
+
+    if (raw && typeof raw === "object" && "type" in raw) {
+      const message = raw as { type?: unknown; payload?: unknown };
+      if (message.type === "clear-search-bar") {
+        this.emit({ type: "clear-search-bar" });
+        return;
+      }
+      if (message.type === "update-command-metadata") {
+        const payload = message.payload as { subtitle?: unknown } | undefined;
+        const subtitle =
+          typeof payload?.subtitle === "string"
+            ? payload.subtitle
+            : payload?.subtitle === null
+              ? undefined
+              : undefined;
+        this.emit({ type: "update-command-metadata", subtitle });
+        return;
+      }
+      if (message.type === "open-extension-preferences") {
+        const payload = message.payload as { extensionName?: unknown } | undefined;
+        this.emit({
+          type: "open-extension-preferences",
+          extensionName: typeof payload?.extensionName === "string" ? payload.extensionName : undefined,
+        });
+        return;
+      }
+      if (message.type === "open-command-preferences") {
+        const payload = message.payload as { extensionName?: unknown; commandName?: unknown } | undefined;
+        this.emit({
+          type: "open-command-preferences",
+          extensionName: typeof payload?.extensionName === "string" ? payload.extensionName : undefined,
+          commandName: typeof payload?.commandName === "string" ? payload.commandName : undefined,
+        });
+        return;
+      }
     }
 
     if (
@@ -525,8 +809,16 @@ class ExtensionSidecarService {
         return;
       case "SHOW_HUD":
         this.emit({ type: "show-hud", title: message.payload.title });
-        void invoke("show_hud", { title: message.payload.title }).catch(() => {
-          // Keep renderer resilient when HUD API is unavailable.
+        this.emit({
+          type: "log",
+          payload: {
+            tag: "extensions-sidecar-hud-fallback",
+            operation: "show_hud",
+            message: "Handled via frontend HUD fallback",
+            metadata: {
+              title: message.payload.title,
+            },
+          },
         });
         return;
       case "FOCUS_ELEMENT":

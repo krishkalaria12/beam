@@ -10,6 +10,10 @@ use tauri::ipc::Invoke;
 pub fn get_handler() -> impl Fn(Invoke) -> bool {
     tauri::generate_handler![
         applications::find_app::get_applications,
+        applications::raycast_compat::get_default_application,
+        applications::raycast_compat::get_frontmost_application,
+        applications::raycast_compat::show_in_finder,
+        applications::raycast_compat::trash,
         applications::search::search_applications,
         applications::open_app::open_application,
         search::search_with_browser,

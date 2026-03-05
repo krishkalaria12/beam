@@ -8,6 +8,10 @@ const Action = createWrapperComponent("Action");
 const ActionPanel = createWrapperComponent("ActionPanel");
 const ActionPanelSection = createWrapperComponent("ActionPanel.Section");
 const ActionPanelSubmenu = createWrapperComponent("ActionPanel.Submenu");
+const ActionOpen = createWrapperComponent("Action.Open");
+const ActionShowInFinder = createWrapperComponent("Action.ShowInFinder");
+const ActionRunInTerminal = createWrapperComponent("Action.RunInTerminal");
+const ActionCreateQuicklink = createWrapperComponent("Action.CreateQuicklink");
 const ActionPaste = createWrapperComponent("Action.Paste");
 const ActionCopy = createWrapperComponent("Action.CopyToClipboard");
 const ActionOpenInBrowser = createWrapperComponent("Action.OpenInBrowser");
@@ -40,6 +44,10 @@ const Style = {
 } as const;
 
 Object.assign(Action, {
+  Open: ActionOpen,
+  ShowInFinder: ActionShowInFinder,
+  RunInTerminal: ActionRunInTerminal,
+  CreateQuicklink: ActionCreateQuicklink,
   Paste: ActionPaste,
   CopyToClipboard: ActionCopy,
   OpenInBrowser: ActionOpenInBrowser,
@@ -50,6 +58,7 @@ Object.assign(Action, {
 Object.assign(ActionPanel, {
   Section: ActionPanelSection,
   Submenu: ActionPanelSubmenu,
+  Item: Action,
 });
 
 export { Action, ActionPanel };

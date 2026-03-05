@@ -19,3 +19,13 @@ export const useNavigation = () => {
 
   return { push, pop };
 };
+
+export const popToRootView = (): void => {
+  const rootElement = navigationStack[0];
+  if (!rootElement) {
+    return;
+  }
+
+  navigationStack.length = 0;
+  updateContainer(rootElement);
+};

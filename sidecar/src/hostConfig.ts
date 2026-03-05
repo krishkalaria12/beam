@@ -309,34 +309,26 @@ export const hostConfig: HostConfig<
   NotPendingTransition: null,
   HostTransitionContext: React.createContext(null) as unknown as ReactContext<null>,
 
-  resetFormInstance: function (): void {
-    throw new Error("Function not implemented.");
+  resetFormInstance() {},
+  requestPostPaintCallback(callback: (time: number) => void) {
+    setTimeout(() => callback(Date.now()), 0);
   },
-  requestPostPaintCallback: function (): void {
-    throw new Error("Function not implemented.");
+  shouldAttemptEagerTransition() {
+    return false;
   },
-  shouldAttemptEagerTransition: function (): boolean {
-    throw new Error("Function not implemented.");
+  trackSchedulerEvent() {},
+  resolveEventType() {
+    return null;
   },
-  trackSchedulerEvent: function (): void {
-    throw new Error("Function not implemented.");
+  resolveEventTimeStamp() {
+    return Date.now();
   },
-  resolveEventType: function (): null | string {
-    throw new Error("Function not implemented.");
+  preloadInstance() {
+    return false;
   },
-  resolveEventTimeStamp: function (): number {
-    throw new Error("Function not implemented.");
-  },
-  preloadInstance: function (): boolean {
-    throw new Error("Function not implemented.");
-  },
-  startSuspendingCommit: function (): void {
-    throw new Error("Function not implemented.");
-  },
-  suspendInstance: function (): void {
-    throw new Error("Function not implemented.");
-  },
-  waitForCommitToBeReady: function () {
-    throw new Error("Function not implemented.");
+  startSuspendingCommit() {},
+  suspendInstance() {},
+  waitForCommitToBeReady() {
+    return null;
   },
 };

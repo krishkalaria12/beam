@@ -7,6 +7,7 @@ import { preferencesStore } from "./preferences";
 import type { FlareInstance } from "./types";
 import { handleResponse } from "./api/rpc";
 import { handleOAuthResponse, handleTokenResponse } from "./api/oauth";
+import { handleAskStreamChunk, handleAskStreamEnd, handleAskStreamError } from "./api/ai";
 
 process.on("unhandledRejection", (reason: unknown) => {
   writeLog(`--- UNHANDLED PROMISE REJECTION ---`);
@@ -22,19 +23,27 @@ rl.on("line", (line) => {
       const command: { action: string; payload: unknown } = JSON.parse(line);
 
       if (command.action.endsWith("-response")) {
-        const { requestId, result, error, state, code } = command.payload as {
-          requestId: string;
+        if (command.action === "oauth-authorize-response") {
+          const { state, code, error } = command.payload as {
+            state?: string;
+            code?: string;
+            error?: string;
+          };
+          handleOAuthResponse(state, code, error);
+          return;
+        }
+
+        const { requestId, result, error } = command.payload as {
+          requestId?: string;
           result?: unknown;
           error?: string;
-          state?: string;
-          code?: string;
         };
+        if (!requestId) {
+          writeLog(`Missing requestId for response action: ${command.action}`);
+          return;
+        }
 
-        if (command.action === "oauth-authorize-response") {
-          if (state && code) {
-            handleOAuthResponse(requestId, code, state, error);
-          }
-        } else if (command.action.startsWith("oauth-")) {
+        if (command.action.startsWith("oauth-")) {
           handleTokenResponse(requestId, result, error);
         } else {
           handleResponse(requestId, result, error);
@@ -44,13 +53,17 @@ rl.on("line", (line) => {
 
       switch (command.action) {
         case "run-plugin": {
-          const { pluginPath, mode, aiAccessStatus } = command.payload as {
+          const { pluginPath, mode, aiAccessStatus, arguments: launchArguments, launchContext, launchType } =
+            command.payload as {
             pluginPath?: string;
             commandName?: string;
             mode?: "view" | "no-view";
             aiAccessStatus: boolean;
+            arguments?: Record<string, unknown>;
+            launchContext?: Record<string, unknown>;
+            launchType?: string;
           };
-          runPlugin(pluginPath, mode, aiAccessStatus);
+          runPlugin(pluginPath, mode, aiAccessStatus, launchArguments, launchContext, launchType);
           break;
         }
         case "get-preferences": {
@@ -136,6 +149,36 @@ rl.on("line", (line) => {
         case "browser-extension-connection-status": {
           const { isConnected } = command.payload as { isConnected: boolean };
           browserExtensionState.isConnected = isConnected;
+          break;
+        }
+        case "ai-ask-chunk": {
+          const { streamRequestId, chunk } = command.payload as {
+            streamRequestId?: unknown;
+            chunk?: unknown;
+          };
+          if (typeof streamRequestId === "string" && typeof chunk === "string") {
+            handleAskStreamChunk(streamRequestId, chunk);
+          }
+          break;
+        }
+        case "ai-ask-end": {
+          const { streamRequestId, fullText } = command.payload as {
+            streamRequestId?: unknown;
+            fullText?: unknown;
+          };
+          if (typeof streamRequestId === "string" && typeof fullText === "string") {
+            handleAskStreamEnd(streamRequestId, fullText);
+          }
+          break;
+        }
+        case "ai-ask-error": {
+          const { streamRequestId, error } = command.payload as {
+            streamRequestId?: unknown;
+            error?: unknown;
+          };
+          if (typeof streamRequestId === "string" && typeof error === "string") {
+            handleAskStreamError(streamRequestId, error);
+          }
           break;
         }
         default:

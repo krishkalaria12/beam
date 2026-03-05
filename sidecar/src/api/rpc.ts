@@ -6,7 +6,17 @@ const pendingRequests = new Map<
   { resolve: (value: unknown) => void; reject: (reason?: unknown) => void }
 >();
 
-export function sendRequest<T>(type: string, payload: object = {}): Promise<T> {
+interface SendRequestOptions {
+  timeoutMs?: number;
+}
+
+const DEFAULT_REQUEST_TIMEOUT_MS = 5000;
+
+export function sendRequest<T>(
+  type: string,
+  payload: object = {},
+  options: SendRequestOptions = {},
+): Promise<T> {
   return new Promise((resolve, reject) => {
     const requestId = crypto.randomUUID();
     pendingRequests.set(requestId, { resolve: resolve as (value: unknown) => void, reject });
@@ -16,12 +26,23 @@ export function sendRequest<T>(type: string, payload: object = {}): Promise<T> {
       payload: { requestId, ...payload },
     });
 
+    const timeoutMs = options.timeoutMs ?? DEFAULT_REQUEST_TIMEOUT_MS;
     setTimeout(() => {
       if (pendingRequests.has(requestId)) {
         pendingRequests.delete(requestId);
-        reject(new Error(`Request for ${type} timed out`));
+        const message = `Request for ${type} timed out`;
+        writeOutput({
+          type: "log",
+          payload: {
+            tag: "sidecar-rpc-request-failure",
+            requestId,
+            operation: type,
+            message,
+          },
+        });
+        reject(new Error(message));
       }
-    }, 5000);
+    }, timeoutMs);
   });
 }
 
@@ -38,5 +59,17 @@ export function handleResponse(requestId: string, result: unknown, error?: strin
       promise.resolve(result);
     }
     pendingRequests.delete(requestId);
+    return;
   }
+
+  writeOutput({
+    type: "log",
+    payload: {
+      tag: "sidecar-rpc-request-failure",
+      requestId,
+      operation: "response",
+      message: "Received response for unknown requestId",
+      error,
+    },
+  });
 }

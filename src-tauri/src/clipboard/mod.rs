@@ -76,7 +76,9 @@ pub async fn get_selected_text() -> std::result::Result<String, String> {
 
 #[command]
 pub async fn get_selected_finder_items() -> std::result::Result<Vec<SelectedFinderItem>, String> {
-    Ok(Vec::new())
+    Err(
+        "get_selected_finder_items is not supported on this platform in Beam yet".to_string(),
+    )
 }
 
 #[command]

@@ -3,6 +3,7 @@ import { updateContainer } from "./reconciler";
 import { writeLog, writeOutput } from "./io";
 import { getRaycastApi } from "./api";
 import { inspect } from "util";
+import Module from "module";
 import * as fs from "fs";
 import * as path from "path";
 import type { PluginInfo, Preference } from "@flare/protocol";
@@ -10,6 +11,7 @@ import { environment } from "./api/environment";
 import { config } from "./config";
 import * as ReactJsxRuntime from "react/jsx-runtime";
 import { aiContext, setCurrentPlugin } from "./state";
+import { LaunchType } from "./api/types";
 
 type CompatKey = string | number;
 
@@ -71,9 +73,10 @@ const createCompatElementDev = (
   });
 };
 
-const createPluginRequire =
-  () =>
-  (moduleName: string): unknown => {
+const createPluginRequire = (pluginPath: string) => {
+  const pluginRequire = Module.createRequire(pluginPath);
+
+  return (moduleName: string): unknown => {
     if (moduleName === "react") {
       return React;
     }
@@ -97,8 +100,9 @@ const createPluginRequire =
       };
     }
 
-    return require(moduleName);
+    return pluginRequire(moduleName);
   };
+};
 
 export const loadPlugin = (pluginPath: string): string => {
   try {
@@ -114,13 +118,32 @@ export const loadPlugin = (pluginPath: string): string => {
 
 interface LaunchProps {
   arguments: Record<string, unknown>;
+  launchContext?: Record<string, unknown>;
   launchType: typeof environment.launchType;
 }
+
+const toRecord = (value: unknown): Record<string, unknown> => {
+  if (!value || typeof value !== "object") {
+    return {};
+  }
+
+  return value as Record<string, unknown>;
+};
+
+const normalizeLaunchType = (value: unknown): typeof environment.launchType => {
+  if (value === LaunchType.Background) {
+    return LaunchType.Background;
+  }
+  return LaunchType.UserInitiated;
+};
 
 export const runPlugin = (
   pluginPath?: string,
   mode: "view" | "no-view" = "view",
   aiAccessStatus = false,
+  launchArguments?: Record<string, unknown>,
+  launchContext?: Record<string, unknown>,
+  launchType?: string,
 ): void => {
   let pluginName = "unknown";
   let preferences: Preference[] = [];
@@ -164,7 +187,6 @@ export const runPlugin = (
     "require",
     "module",
     "exports",
-    "React",
     "console",
     "_jsx",
     "_jsxs",
@@ -186,18 +208,30 @@ export const runPlugin = (
     },
   };
 
-  scriptFunction(
-    createPluginRequire(),
-    pluginModule,
-    pluginModule.exports,
-    React,
-    mockConsole,
-    createCompatElement,
-    createCompatElement,
-    React.Fragment,
-    ReactJsxRuntime.Fragment,
-    createCompatElementDev,
-  );
+  const globalWithReact = globalThis as Record<string, unknown>;
+  const hadGlobalReact = Object.prototype.hasOwnProperty.call(globalWithReact, "React");
+  const previousGlobalReact = globalWithReact.React;
+  globalWithReact.React = React;
+
+  try {
+    scriptFunction(
+      createPluginRequire(pluginPath),
+      pluginModule,
+      pluginModule.exports,
+      mockConsole,
+      createCompatElement,
+      createCompatElement,
+      React.Fragment,
+      ReactJsxRuntime.Fragment,
+      createCompatElementDev,
+    );
+  } finally {
+    if (hadGlobalReact) {
+      globalWithReact.React = previousGlobalReact;
+    } else {
+      delete globalWithReact.React;
+    }
+  }
 
   const PluginRoot = pluginModule.exports.default;
 
@@ -205,8 +239,12 @@ export const runPlugin = (
     throw new Error("Plugin did not export a default component.");
   }
 
+  environment.launchType = normalizeLaunchType(launchType);
+  environment.commandMode = mode;
+
   const launchProps: LaunchProps = {
-    arguments: {},
+    arguments: toRecord(launchArguments),
+    launchContext: launchContext ? toRecord(launchContext) : undefined,
     launchType: environment.launchType,
   };
 
