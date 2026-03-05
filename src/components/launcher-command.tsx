@@ -128,6 +128,7 @@ export default function LauncherCommand() {
     hiddenCommandIds,
     markUsed,
     setPinned,
+    setHidden,
     movePinned,
     setFallbackActionsEnabled,
     setFallbackCommandIds,
@@ -646,9 +647,11 @@ export default function LauncherCommand() {
               }}
               onBack={backToCommands}
               pinnedCommandIds={commandPreferences.pinnedCommandIds}
+              hiddenCommandIds={hiddenCommandIds}
               fallbackEnabled={commandPreferences.fallbackEnabled}
               fallbackCommandIds={commandPreferences.fallbackCommandIds}
               onSetPinned={setPinned}
+              onSetHidden={setHidden}
               onMovePinned={movePinned}
               onSetFallbackEnabled={setFallbackActionsEnabled}
               onSetFallbackCommandIds={setFallbackCommandIds}

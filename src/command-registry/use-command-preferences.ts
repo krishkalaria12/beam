@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   createDefaultCommandPreferencesState,
   replaceFallbackCommandIds,
+  replaceHiddenCommandIds,
   replacePinnedCommandIds,
   readCommandPreferences,
   recordCommandUsage,
@@ -19,6 +20,11 @@ import {
   type CommandPreferencesState,
 } from "@/command-registry/command-preferences";
 import { getPinnedCommandIds, setPinnedCommand } from "@/command-registry/pinned-commands-api";
+import {
+  getHiddenCommandIds,
+  isNonHideableCommandId,
+  setCommandHidden as persistCommandHidden,
+} from "@/modules/settings/api/command-items";
 
 type CommandPreferencesUpdater = (previous: CommandPreferencesState) => CommandPreferencesState;
 
@@ -57,6 +63,14 @@ export function useCommandPreferences() {
     });
   }, []);
 
+  const applyHiddenIds = useCallback((hiddenCommandIds: readonly string[]) => {
+    setState((previous) => {
+      const next = replaceHiddenCommandIds(previous, hiddenCommandIds);
+      writeCommandPreferences(next);
+      return next;
+    });
+  }, []);
+
   const syncPinnedFromBackend = useCallback(async () => {
     if (!isTauri()) {
       return;
@@ -70,6 +84,21 @@ export function useCommandPreferences() {
       // Keep local preferences if backend sync fails.
     });
   }, [syncPinnedFromBackend]);
+
+  const syncHiddenFromBackend = useCallback(async () => {
+    if (!isTauri()) {
+      return;
+    }
+
+    const hiddenCommandIds = await getHiddenCommandIds();
+    applyHiddenIds(hiddenCommandIds);
+  }, [applyHiddenIds]);
+
+  useEffect(() => {
+    void syncHiddenFromBackend().catch(() => {
+      // Keep local preferences if backend sync fails.
+    });
+  }, [syncHiddenFromBackend]);
 
   const reset = useCallback(() => {
     const defaults = createDefaultCommandPreferencesState();
@@ -184,9 +213,27 @@ export function useCommandPreferences() {
 
   const setHidden = useCallback(
     (commandId: string, isHidden: boolean) => {
+      if (isHidden && isNonHideableCommandId(commandId)) {
+        return;
+      }
+
       updateState((previous) => setCommandHidden(previous, commandId, isHidden));
+
+      if (!isTauri()) {
+        return;
+      }
+
+      void persistCommandHidden(commandId, isHidden)
+        .then((hiddenCommandIds) => {
+          applyHiddenIds(hiddenCommandIds);
+        })
+        .catch(() => {
+          void syncHiddenFromBackend().catch(() => {
+            // Keep optimistic local state if reconciliation fails.
+          });
+        });
     },
-    [updateState],
+    [applyHiddenIds, syncHiddenFromBackend, updateState],
   );
 
   const setAliases = useCallback(

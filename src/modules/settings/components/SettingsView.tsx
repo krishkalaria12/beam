@@ -1,36 +1,26 @@
-import { useCallback, useRef } from "react";
+import { useRef } from "react";
 
-import type { SettingsView as SettingsViewType } from "../constants";
-
-interface SettingsViewProps {
-  view: SettingsViewType;
-  onBack: () => void;
-  onNavigateToMain: () => void;
-  children: React.ReactNode;
-}
+import type { SettingsViewWrapperProps } from "@/modules/settings/types";
 
 export function SettingsViewWrapper({
   view,
   onBack,
   onNavigateToMain,
   children,
-}: SettingsViewProps) {
+}: SettingsViewWrapperProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        // If in sub-view, go to main settings; otherwise close settings entirely
-        if (view !== "main") {
-          onNavigateToMain();
-        } else {
-          onBack();
-        }
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === "Escape") {
+      e.preventDefault();
+      // If in sub-view, go to main settings; otherwise close settings entirely
+      if (view !== "main") {
+        onNavigateToMain();
+      } else {
+        onBack();
       }
-    },
-    [view, onBack, onNavigateToMain],
-  );
+    }
+  }
 
   return (
     <div

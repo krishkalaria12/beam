@@ -34,9 +34,11 @@ interface SecondaryPanelRendererInput {
   onOpenSettings: () => void;
   onBack: () => void;
   pinnedCommandIds: readonly string[];
+  hiddenCommandIds: ReadonlySet<string>;
   fallbackEnabled: boolean;
   fallbackCommandIds: readonly string[];
   onSetPinned: (commandId: string, pinned: boolean) => void;
+  onSetHidden: (commandId: string, hidden: boolean) => void;
   onMovePinned: (commandId: string, direction: "up" | "down") => void;
   onSetFallbackEnabled: (enabled: boolean) => void;
   onSetFallbackCommandIds: (fallbackCommandIds: readonly string[]) => void;
@@ -57,9 +59,11 @@ export function LauncherSecondaryPanel({
   onOpenSettings,
   onBack,
   pinnedCommandIds,
+  hiddenCommandIds,
   fallbackEnabled,
   fallbackCommandIds,
   onSetPinned,
+  onSetHidden,
   onMovePinned,
   onSetFallbackEnabled,
   onSetFallbackCommandIds,
@@ -220,9 +224,11 @@ export function LauncherSecondaryPanel({
         onOpen={onOpenSettings}
         onBack={onBack}
         pinnedCommandIds={pinnedCommandIds}
+        hiddenCommandIds={hiddenCommandIds}
         fallbackEnabled={fallbackEnabled}
         fallbackCommandIds={fallbackCommandIds}
         onSetPinned={onSetPinned}
+        onSetHidden={onSetHidden}
         onMovePinned={onMovePinned}
         onSetFallbackEnabled={onSetFallbackEnabled}
         onSetFallbackCommandIds={onSetFallbackCommandIds}

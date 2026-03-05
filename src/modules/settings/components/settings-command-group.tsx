@@ -1,5 +1,5 @@
 import { useCommandState } from "cmdk";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 
 import { OpenModuleCommandRow } from "@/components/command/open-module-command-row";
 import { CommandIcon } from "@/components/icons/command-icon";
@@ -9,7 +9,7 @@ import {
   matchesCommandKeywords,
   normalizeCommandQuery,
 } from "@/modules/launcher/lib/command-query";
-import type { SettingsView } from "../constants";
+import type { SettingsCommandGroupProps, SettingsView } from "@/modules/settings/types";
 import { SettingsMenu } from "./SettingsMenu";
 import { SettingsViewWrapper } from "./SettingsView";
 import { VisualStyleSettings } from "./VisualStyleSettings";
@@ -17,19 +17,7 @@ import { LayoutSettings } from "./LayoutSettings";
 import { PinnedCommandsSettings } from "./PinnedCommandsSettings";
 import HotkeysSettings from "./HotkeysSettings";
 import { TriggerSymbolsSettings } from "./TriggerSymbolsSettings";
-
-type SettingsCommandGroupProps = {
-  isOpen: boolean;
-  onOpen: () => void;
-  onBack: () => void;
-  pinnedCommandIds: readonly string[];
-  onSetPinned: (commandId: string, pinned: boolean) => void;
-  onMovePinned: (commandId: string, direction: "up" | "down") => void;
-  fallbackEnabled?: boolean;
-  fallbackCommandIds?: readonly string[];
-  onSetFallbackEnabled?: (enabled: boolean) => void;
-  onSetFallbackCommandIds?: (fallbackCommandIds: readonly string[]) => void;
-};
+import { CommandItemsSettings } from "./CommandItemsSettings";
 
 const SETTINGS_KEYWORDS = [
   "settings",
@@ -52,6 +40,11 @@ const SETTINGS_KEYWORDS = [
   "symbols",
   "trigger",
   "prefix",
+  "hide",
+  "hidden",
+  "disable",
+  "disabled",
+  "command items",
 ] as const;
 
 export default function SettingsCommandGroup({
@@ -59,24 +52,26 @@ export default function SettingsCommandGroup({
   onOpen,
   onBack,
   pinnedCommandIds,
+  hiddenCommandIds,
   onSetPinned,
+  onSetHidden,
   onMovePinned,
 }: SettingsCommandGroupProps) {
   const searchInput = useCommandState((state) => state.search);
   const query = normalizeCommandQuery(searchInput);
   const [view, setView] = useState<SettingsView>("main");
 
-  const handleBack = useCallback(() => {
+  function handleBack() {
     if (view === "main") {
       onBack();
     } else {
       setView("main");
     }
-  }, [onBack, view]);
+  }
 
-  const handleNavigateToMain = useCallback(() => {
+  function handleNavigateToMain() {
     setView("main");
-  }, []);
+  }
 
   useLauncherPanelBackHandler("settings", handleBack, isOpen);
 
@@ -117,6 +112,10 @@ export default function SettingsCommandGroup({
             onSetPinned={onSetPinned}
             onMovePinned={onMovePinned}
           />
+        );
+      case "command-items":
+        return (
+          <CommandItemsSettings hiddenCommandIds={hiddenCommandIds} onSetHidden={onSetHidden} />
         );
       case "hotkeys":
         return <HotkeysSettings />;

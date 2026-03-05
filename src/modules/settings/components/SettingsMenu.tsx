@@ -1,21 +1,9 @@
-import { AtSign, ChevronRight, Keyboard, Layers, Pin, Sparkles } from "lucide-react";
+import { AtSign, ChevronRight, EyeOff, Keyboard, Layers, Pin, Sparkles } from "lucide-react";
 
-import { IconChip, type IconChipVariant } from "@/components/module";
+import { IconChip } from "@/components/module";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { SettingsView } from "../constants";
-
-interface SettingsMenuProps {
-  setView: (view: SettingsView) => void;
-}
-
-interface SettingsMenuItem {
-  id: SettingsView;
-  icon: React.ElementType;
-  title: string;
-  description: string;
-  iconVariant: IconChipVariant;
-}
+import type { SettingsMenuItem, SettingsMenuProps } from "@/modules/settings/types";
 
 const SETTINGS_ITEMS: SettingsMenuItem[] = [
   {
@@ -38,6 +26,13 @@ const SETTINGS_ITEMS: SettingsMenuItem[] = [
     title: "Pinned Commands",
     description: "Quick access items",
     iconVariant: "orange",
+  },
+  {
+    id: "command-items",
+    icon: EyeOff,
+    title: "Command Items",
+    description: "Hide or show commands",
+    iconVariant: "neutral",
   },
   {
     id: "hotkeys",

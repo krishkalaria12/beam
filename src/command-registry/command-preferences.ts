@@ -320,6 +320,16 @@ export function setCommandHidden(
   };
 }
 
+export function replaceHiddenCommandIds(
+  state: CommandPreferencesState,
+  hiddenCommandIds: readonly string[],
+): CommandPreferencesState {
+  return {
+    ...state,
+    hiddenCommandIds: normalizeIdList(hiddenCommandIds),
+  };
+}
+
 export function setCommandAliases(
   state: CommandPreferencesState,
   commandId: string,
