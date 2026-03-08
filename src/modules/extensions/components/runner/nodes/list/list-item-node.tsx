@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { ListItem } from "@/components/module";
 import { RunnerIcon } from "@/modules/extensions/components/runner/nodes/shared/runner-icon";
 import { asString } from "@/modules/extensions/components/runner/utils";
 import type { RunnerNodeComponentProps } from "@/modules/extensions/components/runner/nodes/types";
@@ -146,44 +146,47 @@ export function ListItemNode({ nodeId, state, renderContext }: RunnerNodeCompone
   const isSelected = Boolean(renderContext?.selected);
 
   return (
-    <Button
-      type="button"
-      variant="ghost"
-      size="sm"
-      className={cn(
-        "flex h-12 w-full items-center gap-3 rounded-md border border-transparent px-2 text-left transition-colors",
-        isSelected ? "bg-accent" : "hover:bg-accent/50",
-      )}
+    <ListItem
+      selected={isSelected}
+      onSelect={renderContext?.onSelect}
       onMouseEnter={renderContext?.onSelect}
-      onClick={renderContext?.onSelect}
       onDoubleClick={renderContext?.onActivate}
+      className={cn("mb-1")}
+      showAccentBar={true}
+      leftSlot={
+        icon ? (
+          <div className="flex items-center justify-center">
+            <RunnerIcon icon={icon} className="size-[22px] shrink-0" />
+          </div>
+        ) : (
+          <span className="size-[22px] shrink-0" />
+        )
+      }
+      rightSlot={
+        accessories.length > 0 ? (
+          <div className="flex shrink-0 items-center gap-3">
+            {accessories.map((entry) => (
+              <div
+                key={entry.key}
+                className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground"
+                title={entry.tooltip}
+                style={entry.color ? { color: entry.color } : undefined}
+              >
+                {entry.icon ? <RunnerIcon icon={entry.icon} className="size-3.5 shrink-0" /> : null}
+                {entry.text ? <span className="truncate">{entry.text}</span> : null}
+              </div>
+            ))}
+          </div>
+        ) : null
+      }
     >
-      {icon ? (
-        <RunnerIcon icon={icon} className="size-[22px] shrink-0" />
-      ) : (
-        <span className="size-[22px] shrink-0" />
-      )}
-
-      <div className="flex min-w-0 flex-1 items-baseline gap-3 overflow-hidden">
-        <p className="truncate text-sm font-medium">{title}</p>
-        {subtitle ? <p className="truncate text-xs text-muted-foreground">{subtitle}</p> : null}
+      <div className="flex min-w-0 flex-1 items-baseline gap-2 overflow-hidden">
+        <ListItem.Title className="shrink-0">{title}</ListItem.Title>
+        {subtitle ? (
+          <ListItem.Description className="truncate">{subtitle}</ListItem.Description>
+        ) : null}
       </div>
-
-      {accessories.length > 0 ? (
-        <div className="ml-auto flex shrink-0 items-center gap-3">
-          {accessories.map((entry) => (
-            <div
-              key={entry.key}
-              className="flex items-center gap-1 text-xs text-muted-foreground"
-              title={entry.tooltip}
-              style={entry.color ? { color: entry.color } : undefined}
-            >
-              {entry.icon ? <RunnerIcon icon={entry.icon} className="size-3.5 shrink-0" /> : null}
-              {entry.text ? <span className="truncate">{entry.text}</span> : null}
-            </div>
-          ))}
-        </div>
-      ) : null}
-    </Button>
+    </ListItem>
   );
 }
+

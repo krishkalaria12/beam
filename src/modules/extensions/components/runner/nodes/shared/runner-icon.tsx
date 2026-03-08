@@ -16,14 +16,15 @@ export function RunnerIcon({ icon, className }: RunnerIconProps) {
       fallback={
         <span
           className={cn(
-            "inline-flex items-center justify-center rounded-sm bg-muted/40 text-muted-foreground",
+            "inline-flex items-center justify-center rounded-md bg-[var(--launcher-chip-bg)] border border-[var(--launcher-chip-border)] text-muted-foreground",
             className,
           )}
           aria-hidden
         >
-          <ImageIcon className="size-3.5" />
+          <ImageIcon className="size-3.5 opacity-50" />
         </span>
       }
     />
   );
 }
+

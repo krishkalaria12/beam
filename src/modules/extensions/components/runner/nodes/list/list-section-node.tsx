@@ -13,8 +13,9 @@ export function ListSectionNode({ nodeId, state }: RunnerNodeComponentProps) {
   }
 
   return (
-    <h3 className="px-2 pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+    <h3 className="px-2 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">
       {title}
     </h3>
   );
 }
+

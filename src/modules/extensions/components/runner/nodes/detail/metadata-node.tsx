@@ -8,10 +8,11 @@ export function MetadataNode({ nodeId, state }: RunnerNodeComponentProps) {
   }
 
   return (
-    <div className="space-y-2 rounded-md border border-border/60 bg-card p-3">
+    <div className="space-y-3 rounded-xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] p-4">
       {node.children.map((childId) => (
         <RunnerNodeRenderer key={childId} nodeId={childId} state={state} />
       ))}
     </div>
   );
 }
+

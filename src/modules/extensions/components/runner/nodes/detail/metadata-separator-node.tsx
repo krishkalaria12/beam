@@ -6,5 +6,6 @@ export function MetadataSeparatorNode({ nodeId, state }: RunnerNodeComponentProp
     return null;
   }
 
-  return <div className="h-px w-full bg-border/60" />;
+  return <div className="h-px w-full bg-[var(--ui-divider)] my-2" />;
 }
+

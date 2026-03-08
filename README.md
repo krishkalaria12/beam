@@ -59,7 +59,7 @@ The core of Beam is a registry-first command system with smart ranking, fuzzy ma
 | Panel                  | Description                                                                                                  |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------ |
 | **Application Search** | Discovers and launches installed apps via freedesktop `.desktop` files with icon resolution                  |
-| **Calculator**         | Natural language math via SoulverCore (Linux port) with expression history                                   |
+| **Calculator**         | Natural language math, conversions, time, dates, and rates via smart-calculator with expression history     |
 | **Clipboard History**  | Persistent clipboard monitor — stores up to 100 entries (text + images), AES-GCM encrypted, fuzzy searchable |
 | **File Search**        | Real-time indexed search powered by nucleo fuzzy matching and a background file watcher                      |
 | **Todo**               | Full todo list with sub-todos, ordering, and CRUD — stored in SQLite                                         |
@@ -238,7 +238,7 @@ beam/
 - Tauri system dependencies — see [Tauri prerequisites](https://tauri.app/start/prerequisites/)
 - `patchelf` (recommended on Linux, used during build)
 
-> **Note**: Beam is Linux-first. It uses freedesktop app discovery, Wayland compositor hotkey APIs, and Linux-specific Soulver library artifacts. Cross-platform support is planned but not yet complete.
+> **Note**: Beam is Linux-first. It uses freedesktop app discovery and Wayland compositor hotkey APIs. Cross-platform support is planned but not yet complete.
 
 ### Install dependencies
 

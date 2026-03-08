@@ -23,11 +23,12 @@ export function FormCheckboxNode({ nodeId, state }: RunnerNodeComponentProps) {
 
   return (
     <div className="space-y-1.5">
-      <div className="flex items-center gap-2 rounded-md border border-border/70 bg-background/40 px-3 py-2">
+      <div className="flex items-center gap-3 rounded-xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-hover-bg)] px-3 py-3 transition-colors">
         <Checkbox
           ref={(element) => {
             state.registerFieldRef(nodeId, element);
           }}
+          id={`checkbox-${nodeId}`}
           checked={Boolean(value)}
           onCheckedChange={(checked) => {
             state.handleSetFormValue(field, Boolean(checked));
@@ -37,11 +38,15 @@ export function FormCheckboxNode({ nodeId, state }: RunnerNodeComponentProps) {
           }}
           onKeyDownCapture={stopFieldKeyPropagation}
           onKeyDown={stopFieldKeyPropagation}
+          className="border-[var(--launcher-card-border)] data-[state=checked]:bg-[var(--ring)] data-[state=checked]:text-[var(--background)] data-[state=checked]:border-[var(--ring)]"
         />
-        <Label className="text-sm">{field.title}</Label>
+        <Label htmlFor={`checkbox-${nodeId}`} className="text-[13px] font-medium leading-none cursor-pointer">
+          {field.title}
+        </Label>
       </div>
-      {field.error ? <p className="text-[11px] text-destructive">{field.error}</p> : null}
+      {field.error ? <p className="text-[11px] text-[var(--icon-red-fg)]">{field.error}</p> : null}
       {field.info ? <p className="text-[11px] text-muted-foreground">{field.info}</p> : null}
     </div>
   );
 }
+

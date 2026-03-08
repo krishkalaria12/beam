@@ -32,7 +32,7 @@ export function FormFilePickerNode({ nodeId, state }: RunnerNodeComponentProps) 
 
   return (
     <div className="space-y-1.5">
-      <label className="text-xs font-medium text-muted-foreground">{field.title}</label>
+      <label className="text-[12px] font-medium text-muted-foreground">{field.title}</label>
       <Input
         ref={(element) => {
           state.registerFieldRef(nodeId, element);
@@ -49,22 +49,23 @@ export function FormFilePickerNode({ nodeId, state }: RunnerNodeComponentProps) 
         onKeyDownCapture={stopFieldKeyPropagation}
         onKeyDown={stopFieldKeyPropagation}
         aria-invalid={Boolean(field.error)}
-        className="h-9"
+        className="h-11 w-full rounded-xl bg-[var(--launcher-card-hover-bg)] text-[14px] font-medium tracking-[-0.01em] text-foreground outline-none ring-1 ring-[var(--launcher-card-border)] transition-all focus:bg-[var(--launcher-card-hover-bg)] focus:ring-[var(--ring)] border-none file:mr-4 file:h-full file:rounded-l-xl file:border-0 file:border-r file:border-[var(--launcher-card-border)] file:bg-[var(--launcher-card-bg)] file:px-4 file:text-sm file:font-medium file:text-foreground hover:file:bg-[var(--launcher-card-hover-bg)]"
       />
       {selectedFiles.length > 0 ? (
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-1.5 pt-1">
           {selectedFiles.map((fileName) => (
             <span
               key={`${nodeId}:${fileName}`}
-              className="rounded-sm border border-border/70 bg-background/70 px-1.5 py-0.5 text-[10px] text-muted-foreground"
+              className="rounded-md border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-2 py-0.5 text-[11px] font-medium text-muted-foreground"
             >
               {fileName}
             </span>
           ))}
         </div>
       ) : null}
-      {field.error ? <p className="text-[11px] text-destructive">{field.error}</p> : null}
+      {field.error ? <p className="text-[11px] text-[var(--icon-red-fg)]">{field.error}</p> : null}
       {field.info ? <p className="text-[11px] text-muted-foreground">{field.info}</p> : null}
     </div>
   );
 }
+

@@ -22,9 +22,9 @@ export function DetailRootNode({ nodeId, state }: RunnerNodeComponentProps) {
 
   return (
     <>
-      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3">
+      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4 custom-scrollbar">
         {markdown ? (
-          <pre className="whitespace-pre-wrap rounded-md border border-border/60 bg-card p-3 text-sm leading-relaxed">
+          <pre className="whitespace-pre-wrap rounded-xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] p-4 text-[13px] leading-relaxed text-foreground font-sans">
             {markdown}
           </pre>
         ) : null}
@@ -44,3 +44,4 @@ export function DetailRootNode({ nodeId, state }: RunnerNodeComponentProps) {
     </>
   );
 }
+

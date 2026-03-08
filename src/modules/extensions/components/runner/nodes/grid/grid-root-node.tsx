@@ -101,14 +101,14 @@ export function GridRootNode({ nodeId, state }: RunnerNodeComponentProps) {
 
   return (
     <>
-      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-2" onScroll={handleScroll}>
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-2 custom-scrollbar" onScroll={handleScroll}>
         {sections.length === 0 ? (
           isLoading ? (
             <CommandLoadingState label="Loading..." className="min-h-[180px]" />
           ) : emptyViewNodeId ? (
             <RunnerNodeRenderer nodeId={emptyViewNodeId} state={state} />
           ) : (
-            <div className="rounded-md border border-dashed border-border/70 bg-muted/20 p-3 text-sm text-muted-foreground">
+            <div className="rounded-xl border border-dashed border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] p-4 text-center text-[12px] text-muted-foreground/50 m-2">
               No results.
             </div>
           )
@@ -120,7 +120,7 @@ export function GridRootNode({ nodeId, state }: RunnerNodeComponentProps) {
                   <RunnerNodeRenderer nodeId={section.sectionNodeId} state={state} />
                 ) : section.title ? (
                   <div className="pt-2">
-                    <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    <h3 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">
                       {section.title}
                     </h3>
                   </div>
@@ -156,7 +156,7 @@ export function GridRootNode({ nodeId, state }: RunnerNodeComponentProps) {
                 {Array.from({ length: pageSize }).map((_, index) => (
                   <div
                     key={`placeholder:${index}`}
-                    className="aspect-square w-full animate-pulse rounded-md bg-background/20"
+                    className="aspect-square w-full animate-pulse rounded-lg bg-[var(--launcher-card-bg)] border border-[var(--launcher-card-border)]"
                   />
                 ))}
               </div>
@@ -177,3 +177,4 @@ export function GridRootNode({ nodeId, state }: RunnerNodeComponentProps) {
     </>
   );
 }
+

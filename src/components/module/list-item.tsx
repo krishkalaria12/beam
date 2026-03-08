@@ -1,8 +1,8 @@
-import type { ReactNode } from "react";
+import type { ButtonHTMLAttributes, ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 
-interface ListItemProps {
+interface ListItemProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "onSelect"> {
   /** Controlled selected state */
   selected?: boolean;
   /** Click handler */
@@ -29,6 +29,7 @@ export function ListItem({
   disabled = false,
   className,
   children,
+  ...props
 }: ListItemProps) {
   return (
     <button
@@ -44,6 +45,7 @@ export function ListItem({
           : "hover:bg-[var(--launcher-card-hover-bg)]",
         className,
       )}
+      {...props}
     >
       {/* Left accent bar */}
       {showAccentBar && (
@@ -97,3 +99,4 @@ function Description({ children, className }: DescriptionProps) {
 
 ListItem.Title = Title;
 ListItem.Description = Description;
+

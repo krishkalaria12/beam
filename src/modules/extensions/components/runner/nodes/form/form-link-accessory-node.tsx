@@ -19,8 +19,8 @@ export function FormLinkAccessoryNode({ nodeId, state }: RunnerNodeComponentProp
     <Button
       type="button"
       variant="link"
-      size="xs"
-      className="w-fit text-xs text-primary underline-offset-4 hover:underline"
+      size="sm"
+      className="h-auto p-0 text-[12px] font-medium text-[var(--ring)] underline-offset-4 hover:underline"
       onClick={() => {
         window.open(target, "_blank", "noopener,noreferrer");
       }}
@@ -29,3 +29,4 @@ export function FormLinkAccessoryNode({ nodeId, state }: RunnerNodeComponentProp
     </Button>
   );
 }
+

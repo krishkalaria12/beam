@@ -72,40 +72,43 @@ export function GridItemNode({ nodeId, state, renderContext }: RunnerNodeCompone
       type="button"
       variant="ghost"
       size="sm"
-      className={cn("flex w-full flex-col text-left focus:outline-none", insetClass)}
+      className={cn(
+        "flex h-auto w-full flex-col text-left focus:outline-none p-2 rounded-xl transition-all duration-150",
+        selected
+          ? "bg-[var(--launcher-card-selected-bg)] ring-1 ring-[var(--launcher-card-selected-border)]"
+          : "hover:bg-[var(--launcher-card-hover-bg)]"
+      )}
       onMouseEnter={renderContext?.onSelect}
       onClick={renderContext?.onSelect}
       onDoubleClick={renderContext?.onActivate}
     >
       <div
         className={cn(
-          "mb-1 w-full overflow-hidden rounded-md border-2 bg-muted",
-          selected
-            ? "border-foreground"
-            : "border-transparent hover:border-[var(--launcher-card-border)]",
+          "mb-2 w-full overflow-hidden rounded-lg bg-[var(--launcher-card-bg)] border border-[var(--launcher-card-border)] ring-1 ring-transparent",
+          insetClass
         )}
         style={{ aspectRatio }}
         title={asString((contentValue as { tooltip?: unknown })?.tooltip).trim() || undefined}
       >
         {colorContent ? (
-          <div className="h-full w-full" style={{ backgroundColor: colorContent }} />
+          <div className="h-full w-full rounded-md" style={{ backgroundColor: colorContent }} />
         ) : (
           <RunnerIcon
             icon={contentValue}
-            className={cn("h-full w-full", fit === "contain" ? "object-contain" : "object-fill")}
+            className={cn("h-full w-full", fit === "contain" ? "object-contain" : "object-cover")}
           />
         )}
       </div>
 
-      {title ? <span className="truncate text-sm font-medium">{title}</span> : null}
-      {subtitle ? <span className="truncate text-xs text-muted-foreground">{subtitle}</span> : null}
+      {title ? <span className="truncate w-full text-[13px] font-medium tracking-[-0.01em] text-foreground">{title}</span> : null}
+      {subtitle ? <span className="truncate w-full text-[11px] text-muted-foreground">{subtitle}</span> : null}
 
       {accessory ? (
         <div
-          className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground"
+          className="mt-1 w-full flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground"
           title={asString(accessory.tooltip).trim() || undefined}
         >
-          {accessory.icon ? <RunnerIcon icon={accessory.icon} className="size-3" /> : null}
+          {accessory.icon ? <RunnerIcon icon={accessory.icon} className="size-3.5" /> : null}
           {asString(accessory.text).trim() ? (
             <span className="truncate">{asString(accessory.text).trim()}</span>
           ) : null}
@@ -114,3 +117,4 @@ export function GridItemNode({ nodeId, state, renderContext }: RunnerNodeCompone
     </Button>
   );
 }
+

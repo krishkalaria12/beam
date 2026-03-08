@@ -14,9 +14,10 @@ export function MetadataLabelNode({ nodeId, state }: RunnerNodeComponentProps) {
       : asString(node.props.text).trim();
 
   return (
-    <div className="flex items-start justify-between gap-3 text-sm">
-      <span className="text-muted-foreground">{title || "Value"}</span>
-      <span className="text-right">{text || "-"}</span>
+    <div className="flex items-start justify-between gap-3 text-[13px]">
+      <span className="font-medium text-muted-foreground">{title || "Value"}</span>
+      <span className="text-right text-foreground">{text || "-"}</span>
     </div>
   );
 }
+

@@ -2,13 +2,7 @@ import { useForm } from "@tanstack/react-form";
 import { AlertTriangle, Loader2, Save } from "lucide-react";
 import { useEffect, useState, type KeyboardEvent } from "react";
 
-import { CommandFooterBar } from "@/components/command/command-footer-bar";
-import { CommandKeyHint } from "@/components/command/command-key-hint";
-import {
-  CommandPanelBackButton,
-  CommandPanelHeader,
-  CommandPanelTitleBlock,
-} from "@/components/command/command-panel-header";
+import { ModuleFooter, ModuleHeader } from "@/components/module";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -119,12 +113,12 @@ export function ExtensionSetupView({
               >
                 <SelectTrigger
                   id={field.name}
-                  className="h-9 rounded-lg border-border/40 bg-background/20 text-sm focus:ring-primary/50"
+                  className="h-10 rounded-xl bg-[var(--launcher-card-hover-bg)] text-[14px] font-medium tracking-[-0.01em] text-foreground outline-none ring-1 ring-[var(--launcher-card-border)] transition-all placeholder:text-muted-foreground/40 placeholder:font-normal focus:bg-[var(--launcher-card-hover-bg)] focus:ring-[var(--ring)] border-none"
                   onKeyDown={stopFieldKeyPropagation}
                 >
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="border-border/30 bg-background/95 backdrop-blur-xl">
+                <SelectContent className="rounded-xl border border-[var(--launcher-card-border)] bg-[var(--popover)] shadow-xl">
                   {field.options.map((option) => (
                     <SelectItem key={`${field.name}:${option.value}`} value={option.value}>
                       {option.title}
@@ -148,7 +142,7 @@ export function ExtensionSetupView({
           name={field.name}
           children={(fieldApi) => (
             <div className="space-y-1.5">
-              <div className="flex items-center gap-3 rounded-lg border border-border/30 bg-background/20 px-3 py-2.5 transition-colors hover:bg-background/30">
+              <div className="flex items-center gap-3 rounded-xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-hover-bg)] px-3 py-3 transition-colors">
                 <Checkbox
                   id={field.name}
                   checked={Boolean(fieldApi.state.value)}
@@ -157,7 +151,7 @@ export function ExtensionSetupView({
                     fieldApi.handleChange(Boolean(checked));
                   }}
                   onKeyDown={stopFieldKeyPropagation}
-                  className="border-border/40 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                  className="border-[var(--launcher-card-border)] data-[state=checked]:bg-[var(--ring)] data-[state=checked]:text-[var(--background)] data-[state=checked]:border-[var(--ring)]"
                 />
                 <Label
                   htmlFor={field.name}
@@ -194,7 +188,7 @@ export function ExtensionSetupView({
                 }}
                 onKeyDownCapture={stopFieldKeyPropagation}
                 onKeyDown={stopFieldKeyPropagation}
-                className="min-h-[100px] rounded-lg border-border/40 bg-background/20 text-sm focus:ring-primary/50"
+                className="min-h-[100px] rounded-xl bg-[var(--launcher-card-hover-bg)] text-[14px] font-medium tracking-[-0.01em] text-foreground outline-none ring-1 ring-[var(--launcher-card-border)] transition-all placeholder:text-muted-foreground/40 placeholder:font-normal focus:bg-[var(--launcher-card-hover-bg)] focus:ring-[var(--ring)] border-none p-3 resize-none"
               />
               {field.description ? (
                 <p className="text-[10px] text-muted-foreground/70">{field.description}</p>
@@ -224,7 +218,7 @@ export function ExtensionSetupView({
               }}
               onKeyDownCapture={stopFieldKeyPropagation}
               onKeyDown={stopFieldKeyPropagation}
-              className="h-9 rounded-lg border-border/40 bg-background/20 text-sm focus:ring-primary/50"
+              className="h-10 rounded-xl bg-[var(--launcher-card-hover-bg)] text-[14px] font-medium tracking-[-0.01em] text-foreground outline-none ring-1 ring-[var(--launcher-card-border)] transition-all placeholder:text-muted-foreground/40 placeholder:font-normal focus:bg-[var(--launcher-card-hover-bg)] focus:ring-[var(--ring)] border-none"
             />
             {field.description ? (
               <p className="text-[10px] text-muted-foreground/70">{field.description}</p>
@@ -237,10 +231,11 @@ export function ExtensionSetupView({
 
   return (
     <div className="glass-effect flex h-full w-full flex-col overflow-hidden text-foreground">
-      <CommandPanelHeader>
-        <CommandPanelBackButton onClick={onBack} aria-label="Back" />
-        <CommandPanelTitleBlock title="Extension Setup" subtitle={extensionTitle} />
-      </CommandPanelHeader>
+      <ModuleHeader
+        onBack={onBack}
+        title="Extension Setup"
+        subtitle={extensionTitle}
+      />
 
       <div className="relative custom-scrollbar list-area min-h-0 flex-1 overflow-y-auto p-4">
         {error || validationError ? (
@@ -253,12 +248,12 @@ export function ExtensionSetupView({
         ) : null}
 
         {isLoading ? (
-          <div className="flex items-center gap-2 rounded-lg border border-dashed border-border/40 bg-background/20 p-4 text-xs text-muted-foreground">
+          <div className="flex items-center gap-2 rounded-xl border border-dashed border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] p-4 text-[12px] text-muted-foreground m-2">
             <Loader2 className="size-3.5 animate-spin" />
             Loading extension preferences...
           </div>
         ) : fields.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-border/40 bg-background/20 p-4 text-xs text-muted-foreground">
+          <div className="rounded-xl border border-dashed border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] p-4 text-[12px] text-muted-foreground m-2">
             This extension does not expose configurable preferences.
           </div>
         ) : (
@@ -275,29 +270,27 @@ export function ExtensionSetupView({
         )}
       </div>
 
-      <CommandFooterBar
-        className="h-[52px]"
+      <ModuleFooter
         leftSlot={<span>Preferences are saved locally.</span>}
-        rightSlot={
-          <>
-            <CommandKeyHint keyLabel="ESC" label="Back" />
-            <Button
-              onClick={() => {
-                void form.handleSubmit();
-              }}
-              disabled={!canSave}
-              className="h-8 gap-1.5 rounded-lg bg-primary/90 hover:bg-primary"
-            >
-              {isSaving ? (
-                <Loader2 className="size-3.5 animate-spin" />
-              ) : (
-                <Save className="size-3.5" />
-              )}
-              Save Setup
-            </Button>
-          </>
+        shortcuts={[{ keys: ["Esc"], label: "Back" }]}
+        actions={
+          <Button
+            onClick={() => {
+              void form.handleSubmit();
+            }}
+            disabled={!canSave}
+            className="h-8 gap-1.5 rounded-lg bg-primary/90 hover:bg-primary"
+          >
+            {isSaving ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <Save className="size-3.5" />
+            )}
+            Save Setup
+          </Button>
         }
       />
     </div>
   );
 }
+

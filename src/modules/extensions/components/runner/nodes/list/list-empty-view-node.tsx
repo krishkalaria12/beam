@@ -13,8 +13,9 @@ export function ListEmptyViewNode({ nodeId, state }: RunnerNodeComponentProps) {
     "No results.";
 
   return (
-    <div className="rounded-md border border-dashed border-border/70 bg-muted/20 p-3 text-sm text-muted-foreground">
+    <div className="rounded-xl border border-dashed border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] p-4 text-center text-[12px] text-muted-foreground/50 m-2">
       {title}
     </div>
   );
 }
+

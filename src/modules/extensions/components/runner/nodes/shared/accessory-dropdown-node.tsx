@@ -118,11 +118,14 @@ export function AccessoryDropdownNode({ nodeId, state }: RunnerNodeComponentProp
       }}
     >
       <div className={isFormDropdown ? "space-y-1.5" : undefined}>
+        {isFormDropdown && formField ? (
+          <label className="text-[12px] font-medium text-muted-foreground">{formField.title}</label>
+        ) : null}
         <SelectTrigger
           className={
             isFormDropdown
-              ? "h-9 w-full rounded-md border-border/70 bg-background/60 text-xs"
-              : "h-8 min-w-[180px] max-w-[260px] rounded-md border-border/70 bg-background/60 text-xs"
+              ? "h-10 w-full rounded-xl bg-[var(--launcher-card-hover-bg)] text-[14px] font-medium tracking-[-0.01em] text-foreground outline-none ring-1 ring-[var(--launcher-card-border)] transition-all focus:ring-[var(--ring)] border-none"
+              : "h-8 min-w-[180px] max-w-[260px] rounded-lg bg-[var(--launcher-card-bg)] border border-[var(--launcher-card-border)] text-[12px] text-foreground font-medium focus:ring-[var(--ring)] hover:bg-[var(--launcher-card-hover-bg)] transition-colors"
           }
           aria-invalid={Boolean(isFormDropdown && formField?.error)}
           onBlur={() => {
@@ -133,13 +136,13 @@ export function AccessoryDropdownNode({ nodeId, state }: RunnerNodeComponentProp
         >
           <SelectValue>{displayTitle}</SelectValue>
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="rounded-xl border border-[var(--launcher-card-border)] bg-[var(--popover)] text-popover-foreground shadow-xl">
           {node.children.map((childId) => (
             <RunnerNodeRenderer key={childId} nodeId={childId} state={state} />
           ))}
         </SelectContent>
         {isFormDropdown && formField?.error ? (
-          <p className="text-[11px] text-destructive">{formField.error}</p>
+          <p className="text-[11px] text-[var(--icon-red-fg)]">{formField.error}</p>
         ) : null}
         {isFormDropdown && formField?.info ? (
           <p className="text-[11px] text-muted-foreground">{formField.info}</p>
@@ -148,3 +151,4 @@ export function AccessoryDropdownNode({ nodeId, state }: RunnerNodeComponentProp
     </Select>
   );
 }
+

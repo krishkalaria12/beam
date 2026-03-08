@@ -34,16 +34,17 @@ export function FormTagPickerNode({ nodeId, state }: RunnerNodeComponentProps) {
 
   return (
     <div className="space-y-2">
-      <label className="text-xs font-medium text-muted-foreground">{field.title}</label>
-      <div className="space-y-1.5 rounded-md border border-border/70 bg-background/40 p-2">
+      <label className="text-[12px] font-medium text-muted-foreground">{field.title}</label>
+      <div className="space-y-2 rounded-xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-hover-bg)] p-3">
         {field.options.length === 0 ? (
-          <p className="text-xs text-muted-foreground">No tags available.</p>
+          <p className="text-[12px] text-muted-foreground">No tags available.</p>
         ) : (
           field.options.map((option) => {
             const checked = selectedSet.has(option.value);
             return (
-              <div key={`${nodeId}:${option.value}`} className="flex items-center gap-2">
+              <div key={`${nodeId}:${option.value}`} className="flex items-center gap-3">
                 <Checkbox
+                  id={`tag-${nodeId}-${option.value}`}
                   checked={checked}
                   onCheckedChange={(nextChecked) => {
                     const isChecked = Boolean(nextChecked);
@@ -60,15 +61,19 @@ export function FormTagPickerNode({ nodeId, state }: RunnerNodeComponentProps) {
                   }}
                   onKeyDownCapture={stopFieldKeyPropagation}
                   onKeyDown={stopFieldKeyPropagation}
+                  className="border-[var(--launcher-card-border)] data-[state=checked]:bg-[var(--ring)] data-[state=checked]:text-[var(--background)] data-[state=checked]:border-[var(--ring)]"
                 />
-                <Label className="text-xs">{option.title}</Label>
+                <Label htmlFor={`tag-${nodeId}-${option.value}`} className="text-[13px] font-medium cursor-pointer">
+                  {option.title}
+                </Label>
               </div>
             );
           })
         )}
       </div>
-      {field.error ? <p className="text-[11px] text-destructive">{field.error}</p> : null}
+      {field.error ? <p className="text-[11px] text-[var(--icon-red-fg)]">{field.error}</p> : null}
       {field.info ? <p className="text-[11px] text-muted-foreground">{field.info}</p> : null}
     </div>
   );
 }
+

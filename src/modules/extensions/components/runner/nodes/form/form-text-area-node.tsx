@@ -23,7 +23,7 @@ export function FormTextAreaNode({ nodeId, state }: RunnerNodeComponentProps) {
 
   return (
     <div className="space-y-1.5">
-      <label className="text-xs font-medium text-muted-foreground">{field.title}</label>
+      <label className="text-[12px] font-medium text-muted-foreground">{field.title}</label>
       <Textarea
         ref={(element) => {
           state.registerFieldRef(nodeId, element);
@@ -39,10 +39,11 @@ export function FormTextAreaNode({ nodeId, state }: RunnerNodeComponentProps) {
         }}
         placeholder={field.placeholder}
         aria-invalid={Boolean(field.error)}
-        className="min-h-24"
+        className="min-h-24 w-full rounded-xl bg-[var(--launcher-card-hover-bg)] text-[14px] font-medium tracking-[-0.01em] text-foreground outline-none ring-1 ring-[var(--launcher-card-border)] transition-all placeholder:text-muted-foreground/40 placeholder:font-normal focus:bg-[var(--launcher-card-hover-bg)] focus:ring-[var(--ring)] border-none p-3 resize-none"
       />
-      {field.error ? <p className="text-[11px] text-destructive">{field.error}</p> : null}
+      {field.error ? <p className="text-[11px] text-[var(--icon-red-fg)]">{field.error}</p> : null}
       {field.info ? <p className="text-[11px] text-muted-foreground">{field.info}</p> : null}
     </div>
   );
 }
+

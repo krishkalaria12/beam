@@ -3,14 +3,8 @@ import { AlertTriangle, Loader2, Search, Sparkles, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { toast } from "sonner";
 
-import { CommandFooterBar } from "@/components/command/command-footer-bar";
-import { CommandKeyHint } from "@/components/command/command-key-hint";
-import {
-  CommandPanelBackButton,
-  CommandPanelHeader,
-} from "@/components/command/command-panel-header";
+import { ModuleFooter, ModuleHeader, SearchInput } from "@/components/module";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import debounce from "@/lib/debounce";
 import {
   EXTENSIONS_QUERY_KEY_INSTALLED,
@@ -293,46 +287,41 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
 
   return (
     <div className="glass-effect flex h-full w-full flex-col overflow-hidden text-foreground">
-      <CommandPanelHeader>
-        <CommandPanelBackButton onClick={handleBack} aria-label="Back" />
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <h2 className="text-base font-medium tracking-tight text-foreground">Extensions</h2>
-            <span className="inline-flex items-center gap-1 rounded-md border border-[var(--launcher-chip-border)] bg-[var(--launcher-chip-bg)] px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-              <Sparkles className="size-3 text-primary" />
-              {displayedInstalledExtensions.length}
-            </span>
-          </div>
-        </div>
+      <ModuleHeader
+        onBack={handleBack}
+        title="Extensions"
+        badge={
+          <ModuleHeader.Badge className="inline-flex items-center gap-1 border border-[var(--icon-purple-bg)] bg-[var(--icon-purple-bg)] px-2 py-0.5 text-[10px] font-medium text-[var(--icon-purple-fg)]">
+            <Sparkles className="size-3" />
+            {displayedInstalledExtensions.length}
+          </ModuleHeader.Badge>
+        }
+      />
 
-        <div className="relative w-full max-w-[280px]">
-          <Search className="pointer-events-none absolute left-3 top-2.5 size-4 text-muted-foreground" />
-          <Input
-            value={extensionsUi.search}
-            onChange={(event) => {
-              handleSearchChange(event.target.value);
-            }}
-            placeholder="Search extensions..."
-            className="h-9 rounded-lg border-border/40 bg-background/20 pl-9 pr-8 text-sm text-foreground shadow-none placeholder:text-muted-foreground/50 focus-visible:bg-background/30 focus-visible:ring-1 focus-visible:ring-primary/50"
-          />
-          <div className="absolute right-2 top-2 flex items-center gap-1">
-            {shouldShowStoreLoadingState ? (
+      <div className="flex-none border-b border-[var(--ui-divider)] p-3">
+        <SearchInput
+          value={extensionsUi.search}
+          onChange={handleSearchChange}
+          placeholder="Search extensions..."
+          leftIcon={<Search />}
+          rightSlot={
+            shouldShowStoreLoadingState ? (
               <Loader2 className="size-3.5 animate-spin text-muted-foreground" />
             ) : extensionsUi.search.length > 0 ? (
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={handleClearSearch}
-                className="size-5 rounded-full p-0 text-muted-foreground hover:bg-[var(--launcher-card-bg)] hover:text-foreground"
+                className="size-6 rounded-full p-0 text-muted-foreground hover:bg-[var(--launcher-card-bg)] hover:text-foreground"
               >
                 <X className="size-3" />
               </Button>
-            ) : null}
-          </div>
-        </div>
-      </CommandPanelHeader>
+            ) : null
+          }
+        />
+      </div>
 
-      <div className="relative custom-scrollbar list-area min-h-0 flex-1 overflow-y-auto p-4">
+      <div className="relative custom-scrollbar list-area min-h-0 flex-1 overflow-y-auto p-3">
         {extensionsUi.actionError ? (
           <div className="mb-4 rounded-lg border border-[var(--icon-red-bg)] bg-[var(--icon-red-bg)] p-3 text-xs text-[var(--icon-red-fg)]">
             <span className="inline-flex items-center gap-2">
@@ -384,10 +373,11 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
         </div>
       </div>
 
-      <CommandFooterBar
+      <ModuleFooter
         leftSlot={<span>{displayedInstalledExtensions.length} installed extensions</span>}
-        rightSlot={<CommandKeyHint keyLabel="ESC" label="Back" />}
+        shortcuts={[{ keys: ["Esc"], label: "Back" }]}
       />
     </div>
   );
 }
+

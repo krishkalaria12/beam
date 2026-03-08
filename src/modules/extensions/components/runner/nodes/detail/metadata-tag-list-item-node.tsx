@@ -12,5 +12,10 @@ export function MetadataTagListItemNode({ nodeId, state }: RunnerNodeComponentPr
     return null;
   }
 
-  return <span className="rounded bg-muted px-2 py-0.5 text-xs">{text}</span>;
+  return (
+    <span className="rounded-md border border-[var(--launcher-chip-border)] bg-[var(--launcher-chip-bg)] px-2.5 py-0.5 text-[11px] font-medium text-muted-foreground">
+      {text}
+    </span>
+  );
 }
+

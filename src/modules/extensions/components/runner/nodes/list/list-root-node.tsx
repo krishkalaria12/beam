@@ -57,17 +57,17 @@ export function ListRootNode({ nodeId, state }: RunnerNodeComponentProps) {
     <>
       <div className="min-h-0 flex-1 overflow-hidden">
         <div className={cn("h-full", showDetail ? "grid grid-cols-[46%_54%]" : "")}>
-          <div className="h-full overflow-y-auto p-2">
+          <div className="h-full overflow-y-auto p-2 custom-scrollbar">
             {rows.length === 0 ? (
               state.listModel?.emptyViewNodeId ? (
                 <RunnerNodeRenderer nodeId={state.listModel.emptyViewNodeId} state={state} />
               ) : (
-                <div className="rounded-md border border-dashed border-border/70 bg-muted/20 p-3 text-sm text-muted-foreground">
+                <div className="rounded-xl border border-dashed border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] p-4 text-center text-[12px] text-muted-foreground/50 m-2">
                   No results.
                 </div>
               )
             ) : (
-              <div className="space-y-1">
+              <div className="space-y-0.5">
                 {rows.map((row) => {
                   if (row.type === "section" && row.title) {
                     if (row.sectionNodeId !== undefined) {
@@ -82,7 +82,7 @@ export function ListRootNode({ nodeId, state }: RunnerNodeComponentProps) {
                     return (
                       <h3
                         key={row.key}
-                        className="px-2 pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+                        className="px-2 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70"
                       >
                         {row.title}
                       </h3>
@@ -119,11 +119,13 @@ export function ListRootNode({ nodeId, state }: RunnerNodeComponentProps) {
           </div>
 
           {showDetail ? (
-            <div className="h-full overflow-y-auto border-l border-border/50 p-3">
+            <div className="h-full overflow-y-auto border-l border-[var(--ui-divider)] bg-[var(--solid-bg-recessed,var(--launcher-card-bg))] p-3 custom-scrollbar">
               {state.selectedEntry?.detailNodeId ? (
                 <RunnerNodeRenderer nodeId={state.selectedEntry.detailNodeId} state={state} />
               ) : (
-                <div className="text-sm text-muted-foreground">No detail available.</div>
+                <div className="text-[12px] text-muted-foreground/60 flex h-full items-center justify-center">
+                  No detail available.
+                </div>
               )}
             </div>
           ) : null}
@@ -142,3 +144,4 @@ export function ListRootNode({ nodeId, state }: RunnerNodeComponentProps) {
     </>
   );
 }
+

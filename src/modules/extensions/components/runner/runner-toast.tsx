@@ -19,7 +19,7 @@ function ToastIcon({ style }: { style?: ExtensionToast["style"] }) {
   }
 
   if (style === "FAILURE") {
-    return <XCircle className="size-4 text-destructive" />;
+    return <XCircle className="size-4 text-[var(--icon-red-fg)]" />;
   }
 
   return <span className="mt-1 size-2 rounded-full bg-muted-foreground/70" />;
@@ -30,10 +30,10 @@ export function RunnerToast({ toast, onAction, onHide }: RunnerToastProps) {
   const secondaryAction = toast.secondaryAction?.onAction ? toast.secondaryAction : undefined;
 
   return (
-    <div className="flex min-w-0 items-center gap-2 rounded-md border border-border/70 bg-muted/25 px-2 py-1.5">
+    <div className="flex min-w-0 items-center gap-2 rounded-lg border border-[var(--launcher-card-border)] bg-[var(--launcher-card-hover-bg)] px-2.5 py-1.5">
       <ToastIcon style={toast.style} />
       <div className="min-w-0">
-        <p className="truncate text-xs font-medium">{toast.title}</p>
+        <p className="truncate text-[12px] font-medium text-foreground">{toast.title}</p>
         {toast.message ? (
           <p className="truncate text-[11px] text-muted-foreground">{toast.message}</p>
         ) : null}
@@ -42,7 +42,7 @@ export function RunnerToast({ toast, onAction, onHide }: RunnerToastProps) {
         <Button
           size="sm"
           variant="ghost"
-          className="h-7 text-xs"
+          className="h-7 text-[11px] px-2"
           onClick={() => onAction(toast.id, "secondary")}
         >
           {secondaryAction.title}
@@ -52,7 +52,7 @@ export function RunnerToast({ toast, onAction, onHide }: RunnerToastProps) {
         <Button
           size="sm"
           variant="outline"
-          className="h-7 text-xs"
+          className="h-7 text-[11px] px-2 bg-[var(--launcher-card-bg)] border-[var(--launcher-card-border)]"
           onClick={() => onAction(toast.id, "primary")}
         >
           {primaryAction.title}
@@ -61,7 +61,7 @@ export function RunnerToast({ toast, onAction, onHide }: RunnerToastProps) {
       <Button
         size="sm"
         variant="ghost"
-        className="h-7 px-2 text-xs"
+        className="h-7 px-2 text-[11px] text-muted-foreground"
         onClick={() => onHide(toast.id)}
       >
         Dismiss
@@ -69,3 +69,4 @@ export function RunnerToast({ toast, onAction, onHide }: RunnerToastProps) {
     </div>
   );
 }
+

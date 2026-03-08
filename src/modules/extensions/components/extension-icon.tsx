@@ -14,13 +14,13 @@ export function ExtensionIcon({ iconReference, title, className }: ExtensionIcon
     <UnifiedIcon
       icon={iconReference}
       className={cn(
-        "size-10 shrink-0 rounded-xl border border-border/60 bg-background/40 object-cover",
+        "size-10 shrink-0 rounded-xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] object-cover",
         className,
       )}
       fallback={
         <div
           className={cn(
-            "flex size-10 shrink-0 items-center justify-center rounded-xl border border-border/60 bg-background/60 text-muted-foreground",
+            "flex size-10 shrink-0 items-center justify-center rounded-xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] text-muted-foreground",
             className,
           )}
           title={`${title} icon`}
@@ -31,3 +31,4 @@ export function ExtensionIcon({ iconReference, title, className }: ExtensionIcon
     />
   );
 }
+
