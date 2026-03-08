@@ -155,10 +155,6 @@ pub fn run() {
             // Initialize File Search Backend via State
             state::init(app.handle());
 
-            if let Err(error) = calculator::initialize(&app.handle()) {
-                log::warn!("failed to initialize soulver calculator: {error}");
-            }
-
             hotkeys::initialize_hotkey_backend(&app.handle());
             ai::db::init(&app.handle());
             todo::db::init(&app.handle());

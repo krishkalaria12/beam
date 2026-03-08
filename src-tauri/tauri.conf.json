@@ -55,11 +55,6 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ],
-    "resources": [
-      "SoulverWrapper/Vendor/SoulverCore-linux/*",
-      "SoulverWrapper/Vendor/SoulverCore-linux/SoulverCore_SoulverCore.resources",
-      "SoulverWrapper/.build/release/libSoulverWrapper.so"
     ]
   },
   "plugins": {

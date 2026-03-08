@@ -5,11 +5,8 @@ pub type Result<T> = std::result::Result<T, CalculatorError>;
 
 #[derive(Debug, Clone, Error)]
 pub enum CalculatorError {
-    #[error("Configuration error: {0}")]
-    ConfigurationError(String),
-
-    #[error("Soulver evaluation failed: {0}")]
-    SoulverError(String),
+    #[error("Calculator evaluation failed: {0}")]
+    EvaluationFailed(String),
 
     #[error("Failed to open store: {0}")]
     StoreOpeningError(String),

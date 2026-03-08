@@ -1,42 +1,94 @@
 pub mod error;
 pub mod history;
-mod query_validator;
-pub mod service;
-mod soulver;
 pub mod types;
 
-use tauri::{command, AppHandle, Manager};
+use tauri::{command, AppHandle};
 
 use self::error::{CalculatorError, Result};
 use self::history::{get_history, save_to_history, CalculatorHistoryEntry};
-use self::service::CalculatorService;
-use self::types::CalculatorCommandResponse;
+use self::types::{CalculationOutput, CalculatorCommandResponse, CalculatorStatus};
+use smart_calculator::{calculate, parser::detect_intent, types::Intent};
 
-use std::cell::RefCell;
-
-thread_local! {
-    static CALCULATOR_SERVICE: RefCell<CalculatorService> = RefCell::new(CalculatorService::new());
+fn normalize_query(query: &str) -> String {
+    let lowered = query.to_lowercase();
+    let collapsed = lowered.split_whitespace().collect::<Vec<_>>().join(" ");
+    collapsed.replace(" into ", " to ")
 }
 
-pub fn initialize(app: &AppHandle) -> Result<()> {
-    let resource_dir = app.path().resource_dir().map_err(|error| {
-        CalculatorError::ConfigurationError(format!(
-            "failed to resolve app resource directory: {error}"
-        ))
-    })?;
+fn is_incomplete_query(query: &str) -> bool {
+    let trimmed = query.trim();
 
-    let soulver_core_path = resource_dir.join("SoulverWrapper/Vendor/SoulverCore-linux");
-    let soulver_core_path = soulver_core_path.to_str().ok_or_else(|| {
-        CalculatorError::ConfigurationError("failed to resolve soulver core path".to_string())
-    })?;
+    matches!(
+        trimmed,
+        "time" | "time at" | "time in" | "convert" | "what is" | "what's"
+    ) || trimmed.ends_with(" to")
+        || trimmed.ends_with(" in")
+        || trimmed.ends_with(" at")
+}
 
-    soulver::initialize(soulver_core_path);
-    Ok(())
+fn looks_like_math_query(query: &str) -> bool {
+    query.chars().any(|ch| ch.is_ascii_digit())
+        || ["+", "-", "*", "/", "%", "^", "sqrt", "log", "sin", "cos", "tan"]
+            .iter()
+            .any(|token| query.contains(token))
+}
+
+fn classify_query(query: &str) -> CalculatorStatus {
+    let normalized = query.trim();
+    if normalized.is_empty() {
+        return CalculatorStatus::Empty;
+    }
+
+    if normalized.parse::<f64>().is_ok() {
+        return CalculatorStatus::Irrelevant;
+    }
+
+    if is_incomplete_query(normalized) {
+        return CalculatorStatus::Incomplete;
+    }
+
+    match detect_intent(normalized) {
+        Intent::Math { .. } => {
+            if looks_like_math_query(normalized) {
+                CalculatorStatus::Valid
+            } else {
+                CalculatorStatus::Irrelevant
+            }
+        }
+        _ => CalculatorStatus::Valid,
+    }
 }
 
 #[command]
-pub fn calculate_expression(query: String) -> Result<CalculatorCommandResponse> {
-    CALCULATOR_SERVICE.with(|service| service.borrow_mut().calculate_expression(&query))
+pub async fn calculate_expression(query: String) -> Result<CalculatorCommandResponse> {
+    let normalized_query = normalize_query(query.trim());
+    let status = classify_query(&normalized_query);
+
+    if status != CalculatorStatus::Valid {
+        return Ok(CalculatorCommandResponse::empty(normalized_query, status));
+    }
+
+    let response = calculate(&normalized_query, None)
+        .await
+        .map_err(|error| CalculatorError::EvaluationFailed(error.to_string()))?;
+
+    let value = response.formatted.trim().to_string();
+    if value.is_empty() || value == normalized_query {
+        return Ok(CalculatorCommandResponse::empty(
+            normalized_query,
+            CalculatorStatus::Incomplete,
+        ));
+    }
+
+    Ok(CalculatorCommandResponse {
+        query: normalized_query,
+        status: CalculatorStatus::Valid,
+        outputs: vec![CalculationOutput {
+            value,
+            is_error: false,
+        }],
+        pending_requests: false,
+    })
 }
 
 #[command]
