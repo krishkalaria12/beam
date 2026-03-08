@@ -29,7 +29,7 @@ pub mod translation;
 pub mod utils;
 pub mod window_switcher;
 
-use tauri::{Emitter, Manager};
+use tauri::{Emitter, Manager, WindowEvent};
 
 use crate::settings::UiLayoutMode;
 
@@ -113,6 +113,16 @@ pub fn run() {
         .plugin(tauri_plugin_clipboard::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_deep_link::init())
+        .on_window_event(|window, event| {
+            if window.label() != "main" {
+                return;
+            }
+
+            if let WindowEvent::CloseRequested { api, .. } = event {
+                api.prevent_close();
+                let _ = window.hide();
+            }
+        })
         .invoke_handler(app_commands::get_handler());
 
     #[cfg(desktop)]
