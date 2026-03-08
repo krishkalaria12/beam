@@ -1,4 +1,4 @@
-export type ExtensionMode = "view" | "no-view";
+export type ExtensionMode = "view" | "no-view" | "menu-bar";
 
 export interface DiscoveredPluginRecord {
   title: string;
@@ -8,6 +8,7 @@ export interface DiscoveredPluginRecord {
   commandName: string;
   pluginPath: string;
   mode: ExtensionMode;
+  interval?: string;
 }
 
 export function normalizeDiscoveredPluginRecord(value: unknown): DiscoveredPluginRecord | null {
@@ -22,6 +23,7 @@ export function normalizeDiscoveredPluginRecord(value: unknown): DiscoveredPlugi
   const pluginTitleRaw = record.pluginTitle ?? record.plugin_title;
   const titleRaw = record.title;
   const modeRaw = typeof record.mode === "string" ? record.mode.trim().toLowerCase() : "view";
+  const intervalRaw = typeof record.interval === "string" ? record.interval.trim() : "";
 
   if (
     typeof pluginPathRaw !== "string" ||
@@ -38,6 +40,7 @@ export function normalizeDiscoveredPluginRecord(value: unknown): DiscoveredPlugi
     pluginTitle: typeof pluginTitleRaw === "string" ? pluginTitleRaw : pluginNameRaw,
     title: typeof titleRaw === "string" ? titleRaw : commandNameRaw,
     description: typeof record.description === "string" ? record.description : undefined,
-    mode: modeRaw === "no-view" ? "no-view" : "view",
+    mode: modeRaw === "menu-bar" ? "menu-bar" : modeRaw === "no-view" ? "no-view" : "view",
+    interval: intervalRaw.length > 0 ? intervalRaw : undefined,
   };
 }

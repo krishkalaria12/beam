@@ -34,6 +34,7 @@ export const pluginInfoSchema = z.object({
   preferences: z.array(preferenceSchema).nullish(),
   commandPreferences: z.array(preferenceSchema).nullish(),
   mode: z.string().nullish(),
+  interval: z.string().nullish(),
   author: authorSchema.nullish(),
   owner: z.string().nullish(),
 });

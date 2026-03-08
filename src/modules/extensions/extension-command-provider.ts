@@ -61,7 +61,11 @@ function toExtensionId(plugin: PluginInfo): string {
 
 function isExecutableInBeam(plugin: PluginInfo): boolean {
   const normalizedMode = plugin.mode?.trim().toLowerCase();
-  return normalizedMode === "no-view" || normalizedMode === "view";
+  return (
+    normalizedMode === "no-view" ||
+    normalizedMode === "view" ||
+    normalizedMode === "menu-bar"
+  );
 }
 
 function matchPlugin(plugin: PluginInfo, query: string): boolean {
@@ -114,6 +118,7 @@ function toCommandMetadata(plugin: PluginInfo): ExtensionCommandMetadata {
     payload: {
       pluginPath: plugin.pluginPath,
       pluginMode: plugin.mode ?? "no-view",
+      pluginInterval: plugin.interval ?? undefined,
       pluginName: plugin.pluginName,
       commandName: plugin.commandName,
     },

@@ -57,7 +57,7 @@ rl.on("line", (line) => {
             command.payload as {
             pluginPath?: string;
             commandName?: string;
-            mode?: "view" | "no-view";
+            mode?: "view" | "no-view" | "menu-bar";
             aiAccessStatus: boolean;
             arguments?: Record<string, unknown>;
             launchContext?: Record<string, unknown>;

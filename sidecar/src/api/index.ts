@@ -5,11 +5,7 @@ import { Cache } from "./cache";
 import { Icon } from "./icon";
 import { LaunchType, Toast } from "./types";
 import { popToRootView, useNavigation } from "./navigation";
-import { List } from "./components/list";
-import { Grid } from "./components/grid";
-import { Form } from "./components/form";
-import { Action, ActionPanel } from "./components/actions";
-import { Detail } from "./components/detail";
+import { Action, ActionPanel, Detail, Form, Grid, List, MenuBarExtra } from "./components";
 import {
   environment,
   getSelectedFinderItems,
@@ -57,18 +53,18 @@ const Alert = {
   },
 } as const;
 
-const MenuBarExtra = {
-  isSupported: false,
+Object.assign(MenuBarExtra, {
+  isSupported: true,
   open: async (): Promise<void> => {
     writeOutput({
       type: "log",
       payload: {
         tag: "raycast-menubar-extra",
-        message: "MenuBarExtra.open called in compatibility mode where menu bar extras are unsupported.",
+        message: "MenuBarExtra.open requested",
       },
     });
   },
-};
+});
 
 const randomId = (): string => {
   try {

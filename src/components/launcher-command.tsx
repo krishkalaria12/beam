@@ -39,6 +39,9 @@ import {
   runLauncherPanelBackHandler,
 } from "@/modules/launcher/lib/back-navigation";
 import { createCustomActionHandler } from "@/modules/launcher/lib/create-custom-action-handler";
+import { persistentExtensionRunnerManager } from "@/modules/extensions/background/persistent-runners";
+import { getDiscoveredPlugins } from "@/modules/extensions/api/get-discovered-plugins";
+import { PersistentExtensionsHost } from "@/modules/extensions/components/persistent-extensions-host";
 import { extensionSidecarService } from "@/modules/extensions/sidecar-service";
 import { ExtensionToastBridge } from "@/modules/extensions/components/extension-toast-bridge";
 import { useExtensionRuntimeStore } from "@/modules/extensions/runtime/store";
@@ -140,6 +143,113 @@ export default function LauncherCommand() {
   useExtensionSidecarEvents({ backToCommands, openExtensions });
   useLauncherPanelPrefetch();
 
+  const runExtensionPlugin = useCallback(
+    async (input: {
+      pluginPath: string;
+      pluginMode: "view" | "no-view" | "menu-bar";
+      pluginInterval?: string;
+      title: string;
+      subtitle?: string;
+      launchArguments?: Record<string, unknown>;
+      launchContext?: Record<string, unknown>;
+      launchType?: string;
+    }) => {
+      const launchType = input.launchType === "background" ? "background" : "userInitiated";
+
+      if (
+        input.pluginMode === "menu-bar" ||
+        (input.pluginMode === "no-view" && typeof input.pluginInterval === "string")
+      ) {
+        const discovered = await getDiscoveredPlugins();
+        const matched = discovered.find((plugin) => plugin.pluginPath === input.pluginPath);
+        if (!matched) {
+          throw new Error("Extension command is no longer installed.");
+        }
+
+        await persistentExtensionRunnerManager.runPlugin(matched, launchType);
+        return;
+      }
+
+      useExtensionRuntimeStore.getState().resetForNewPlugin({
+        pluginPath: input.pluginPath,
+        pluginMode: input.pluginMode,
+        title: input.title,
+        subtitle: input.subtitle,
+      });
+
+      if (input.pluginMode === "view") {
+        openPanel("extension-runner", true);
+      }
+
+      try {
+        await extensionSidecarService.runPlugin({
+          pluginPath: input.pluginPath,
+          mode: input.pluginMode,
+          aiAccessStatus: false,
+          arguments: input.launchArguments,
+          launchContext: input.launchContext,
+          launchType,
+        });
+      } catch (error) {
+        useExtensionRuntimeStore.getState().resetRuntime();
+        if (input.pluginMode === "view") {
+          backToCommands();
+        }
+        throw error;
+      }
+    },
+    [backToCommands, openPanel],
+  );
+
+  const launchExtensionCommandByName = useCallback(
+    async (request: {
+      requestId: string;
+      name: string;
+      type?: string;
+      context?: Record<string, unknown>;
+      arguments?: Record<string, unknown>;
+      extensionName?: string;
+    }) => {
+      const discovered = await getDiscoveredPlugins();
+      const requestedCommand = request.name.trim();
+      const requestedPluginName = request.extensionName?.trim();
+      const command =
+        discovered.find(
+          (entry) =>
+            entry.commandName === requestedCommand &&
+            requestedPluginName &&
+            entry.pluginName === requestedPluginName,
+        ) ?? discovered.find((entry) => entry.commandName === requestedCommand);
+
+      if (!command) {
+        throw new Error(`command "${request.name}" was not found`);
+      }
+
+      const pluginMode =
+        command.mode?.trim().toLowerCase() === "menu-bar"
+          ? "menu-bar"
+          : command.mode?.trim().toLowerCase() === "no-view"
+            ? "no-view"
+            : "view";
+      const subtitle =
+        [command.pluginTitle, command.description ?? ""]
+          .filter((part) => part.trim().length > 0)
+          .join(" - ") || undefined;
+
+      await runExtensionPlugin({
+        pluginPath: command.pluginPath,
+        pluginMode,
+        pluginInterval: command.interval ?? undefined,
+        title: command.title,
+        subtitle,
+        launchArguments: request.arguments,
+        launchContext: request.context,
+        launchType: request.type,
+      });
+    },
+    [runExtensionPlugin],
+  );
+
   const commandContext = useMemo(
     () =>
       buildCommandContext({
@@ -219,7 +329,16 @@ export default function LauncherCommand() {
         runExtensionCommand: async (request: CustomActionRequest) => {
           const pluginPath =
             typeof request.payload.pluginPath === "string" ? request.payload.pluginPath.trim() : "";
-          const pluginMode = request.payload.pluginMode === "no-view" ? "no-view" : "view";
+          const pluginMode =
+            request.payload.pluginMode === "menu-bar"
+              ? "menu-bar"
+              : request.payload.pluginMode === "no-view"
+                ? "no-view"
+                : "view";
+          const pluginInterval =
+            typeof request.payload.pluginInterval === "string"
+              ? request.payload.pluginInterval.trim()
+              : undefined;
           const launchArguments =
             request.payload.arguments && typeof request.payload.arguments === "object"
               ? (request.payload.arguments as Record<string, unknown>)
@@ -246,39 +365,22 @@ export default function LauncherCommand() {
             throw new Error("Extension command payload is missing pluginPath.");
           }
 
-          useExtensionRuntimeStore.getState().resetForNewPlugin({
+          await runExtensionPlugin({
             pluginPath,
             pluginMode,
+            pluginInterval,
             title: request.command.title,
             subtitle: request.command.subtitle,
+            launchArguments,
+            launchContext,
+            launchType,
           });
-
-          if (pluginMode === "view") {
-            openPanel("extension-runner", true);
-          }
-
-          try {
-            await extensionSidecarService.runPlugin({
-              pluginPath,
-              mode: pluginMode,
-              aiAccessStatus: false,
-              arguments: launchArguments,
-              launchContext,
-              launchType,
-            });
-          } catch (error) {
-            useExtensionRuntimeStore.getState().resetRuntime();
-            if (pluginMode === "view") {
-              backToCommands();
-            }
-            throw error;
-          }
         },
         onCalculatorHistoryChanged: () => {
           void queryClient.invalidateQueries({ queryKey: ["calculator", "history"] });
         },
       }),
-    [backToCommands, calculatorSessionId, openPanel, queryClient, setCommandSearch],
+    [calculatorSessionId, queryClient, runExtensionPlugin, setCommandSearch],
   );
 
   const handleRegistryCommandSelect = useCallback(
@@ -566,6 +668,10 @@ export default function LauncherCommand() {
   return (
     <div className="relative h-full w-full bg-transparent">
       <ExtensionToastBridge />
+      <PersistentExtensionsHost
+        launchCommand={launchExtensionCommandByName}
+        openExtensions={openExtensions}
+      />
       <Command
         shouldFilter={false}
         onKeyDown={handleKeyDown}

@@ -417,6 +417,7 @@ struct CommandInfo {
     description: Option<String>,
     icon: Option<String>,
     mode: Option<String>,
+    interval: Option<String>,
     preferences: Option<Vec<Preference>>,
 }
 
@@ -446,6 +447,7 @@ pub struct PluginInfo {
     pub preferences: Option<Vec<Preference>>,
     pub command_preferences: Option<Vec<Preference>>,
     pub mode: Option<String>,
+    pub interval: Option<String>,
     pub author: Option<Author>,
     pub owner: Option<String>,
 }
@@ -523,6 +525,7 @@ pub fn discover_plugins(app: &tauri::AppHandle) -> Result<Vec<PluginInfo>> {
                         preferences: package_json.preferences.clone(),
                         command_preferences: command.preferences,
                         mode: command.mode,
+                        interval: command.interval,
                         author: package_json.author.clone(),
                         owner: package_json.owner.clone(),
                     });

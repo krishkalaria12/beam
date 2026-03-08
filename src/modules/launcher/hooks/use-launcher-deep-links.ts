@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import type { CommandPanel } from "@/command-registry/types";
 import { getDiscoveredPlugins } from "@/modules/extensions/api/get-discovered-plugins";
+import { persistentExtensionRunnerManager } from "@/modules/extensions/background/persistent-runners";
 import { extensionSidecarService } from "@/modules/extensions/sidecar-service";
 import { parseRaycastDeepLink } from "@/modules/extensions/sidecar/deep-link";
 import { useExtensionRuntimeStore } from "@/modules/extensions/runtime/store";
@@ -67,7 +68,24 @@ export function useLauncherDeepLinks({ openPanel, backToCommands }: UseLauncherD
       }
 
       const pluginMode =
-        matchedPlugin.mode?.trim().toLowerCase() === "no-view" ? "no-view" : "view";
+        matchedPlugin.mode?.trim().toLowerCase() === "menu-bar"
+          ? "menu-bar"
+          : matchedPlugin.mode?.trim().toLowerCase() === "no-view"
+            ? "no-view"
+            : "view";
+
+      if (
+        pluginMode === "menu-bar" ||
+        (pluginMode === "no-view" && typeof matchedPlugin.interval === "string")
+      ) {
+        try {
+          await persistentExtensionRunnerManager.runPlugin(matchedPlugin, "userInitiated");
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          toast.error(`Failed to launch extension command: ${message}`);
+        }
+        return;
+      }
 
       useExtensionRuntimeStore.getState().resetForNewPlugin({
         pluginPath: matchedPlugin.pluginPath,

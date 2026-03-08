@@ -139,7 +139,7 @@ const normalizeLaunchType = (value: unknown): typeof environment.launchType => {
 
 export const runPlugin = (
   pluginPath?: string,
-  mode: "view" | "no-view" = "view",
+  mode: "view" | "no-view" | "menu-bar" = "view",
   aiAccessStatus = false,
   launchArguments?: Record<string, unknown>,
   launchContext?: Record<string, unknown>,

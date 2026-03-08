@@ -15,6 +15,7 @@ function normalizePluginInfo(value: unknown): unknown {
     commandName: record.commandName ?? record.command_name,
     pluginPath: record.pluginPath ?? record.plugin_path,
     commandPreferences: record.commandPreferences ?? record.command_preferences,
+    interval: record.interval,
   };
 }
 

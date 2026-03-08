@@ -12,6 +12,7 @@ export const PluginInfoSchema = z.object({
   preferences: z.array(PreferenceSchema).optional(),
   commandPreferences: z.array(PreferenceSchema).optional(),
   mode: z.enum(["view", "no-view", "menu-bar"]).optional(),
+  interval: z.string().optional(),
   author: z.union([z.string(), z.object({ name: z.string() })]).optional(),
   owner: z.string().optional(),
 });

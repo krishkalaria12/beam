@@ -18,6 +18,7 @@ import {
   type DiscoveredPluginRecord,
   type ExtensionMode,
 } from "@/modules/extensions/sidecar/discovery";
+import { persistentExtensionRunnerManager } from "@/modules/extensions/background/persistent-runners";
 import { isProtocolCommandType } from "@/modules/extensions/sidecar/protocol";
 import { concatChunks, decodeTextPayload, toByteChunk } from "@/modules/extensions/sidecar/stream";
 import { useExtensionRuntimeStore } from "@/modules/extensions/runtime/store";
@@ -304,6 +305,31 @@ class ExtensionSidecarService {
 
       if (!command) {
         throw new Error(`command "${payload.name}" was not found`);
+      }
+
+      if (
+        command.mode === "menu-bar" ||
+        (command.mode === "no-view" && typeof command.interval === "string")
+      ) {
+        await persistentExtensionRunnerManager.runPlugin(
+          {
+            title: command.title,
+            description: command.description,
+            pluginTitle: command.pluginTitle,
+            pluginName: command.pluginName,
+            commandName: command.commandName,
+            pluginPath: command.pluginPath,
+            mode: command.mode,
+            interval: command.interval,
+          },
+          payload.type === "background" ? "background" : "userInitiated",
+        );
+
+        this.sendResponse("launch-command-response", {
+          requestId: payload.requestId,
+          result: true,
+        });
+        return;
       }
 
       useExtensionRuntimeStore.getState().resetForNewPlugin({

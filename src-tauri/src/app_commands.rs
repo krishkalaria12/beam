@@ -1,6 +1,6 @@
 use crate::{
     ai, applications, calculator, clipboard, custom_config, dictionary, extensions, file_search,
-    hotkeys, hyprwhspr, integrations, launcher_theme, launcher_window, pinned, quicklinks,
+    hotkeys, hyprwhspr, integrations, launcher_theme, launcher_window, menu_bar, pinned, quicklinks,
     script_commands, search, settings, snippets, system_actions, todo, translation,
     window_switcher,
 };
@@ -81,6 +81,8 @@ pub fn get_handler() -> impl Fn(Invoke) -> bool {
         script_commands::run_script_command,
         launcher_window::set_launcher_compact_mode,
         launcher_window::set_launcher_window_size,
+        menu_bar::menu_bar_upsert_tray,
+        menu_bar::menu_bar_remove_tray,
         pinned::get_pinned_command_ids,
         pinned::set_command_pinned,
         settings::get_ui_layout_mode,
