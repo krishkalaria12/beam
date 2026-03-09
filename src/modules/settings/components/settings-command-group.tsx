@@ -18,6 +18,7 @@ import { PinnedCommandsSettings } from "./PinnedCommandsSettings";
 import HotkeysSettings from "./HotkeysSettings";
 import { TriggerSymbolsSettings } from "./TriggerSymbolsSettings";
 import { CommandItemsSettings } from "./CommandItemsSettings";
+import { DesktopIntegrationSettings } from "./DesktopIntegrationSettings";
 
 const SETTINGS_KEYWORDS = [
   "settings",
@@ -45,6 +46,12 @@ const SETTINGS_KEYWORDS = [
   "disable",
   "disabled",
   "command items",
+  "desktop integration",
+  "gnome",
+  "kde",
+  "x11",
+  "window backend",
+  "clipboard backend",
 ] as const;
 
 export default function SettingsCommandGroup({
@@ -117,6 +124,8 @@ export default function SettingsCommandGroup({
         return (
           <CommandItemsSettings hiddenCommandIds={hiddenCommandIds} onSetHidden={onSetHidden} />
         );
+      case "desktop-integration":
+        return <DesktopIntegrationSettings />;
       case "hotkeys":
         return <HotkeysSettings />;
       case "trigger-symbols":

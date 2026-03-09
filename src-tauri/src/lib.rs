@@ -29,6 +29,7 @@ pub mod todo;
 pub mod translation;
 pub mod utils;
 pub mod window_switcher;
+pub mod linux_desktop;
 
 use tauri::{Emitter, Manager, WindowEvent};
 

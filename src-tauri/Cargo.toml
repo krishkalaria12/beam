@@ -102,6 +102,8 @@ ashpd = "0.11.0"
 scraper = "0.25.0"
 rig-core = "0.31.0"
 smart-calculator = "1.0.2"
+zbus = "5.14.0"
+x11rb = "0.13.2"
 
 # Platform-Specific Dependencies
 [target.'cfg(any(target_os = "macos", windows, target_os = "linux"))'.dependencies]

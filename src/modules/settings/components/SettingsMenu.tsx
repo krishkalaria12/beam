@@ -1,4 +1,4 @@
-import { AtSign, ChevronRight, EyeOff, Keyboard, Layers, Pin, Sparkles } from "lucide-react";
+import { AtSign, ChevronRight, EyeOff, Keyboard, Layers, Monitor, Pin, Sparkles } from "lucide-react";
 
 import { IconChip } from "@/components/module";
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,13 @@ const SETTINGS_ITEMS: SettingsMenuItem[] = [
     title: "Command Items",
     description: "Hide or show commands",
     iconVariant: "neutral",
+  },
+  {
+    id: "desktop-integration",
+    icon: Monitor,
+    title: "Desktop Integration",
+    description: "GNOME, KDE, and X11 status",
+    iconVariant: "green",
   },
   {
     id: "hotkeys",

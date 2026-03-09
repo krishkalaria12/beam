@@ -5,6 +5,7 @@ export type SettingsView =
   | "style"
   | "layout"
   | "pinned"
+  | "desktop-integration"
   | "hotkeys"
   | "trigger-symbols"
   | "command-items";

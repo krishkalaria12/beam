@@ -1,0 +1,8 @@
+{
+  "uuid": "beam@beam-linux",
+  "name": "Beam Integration",
+  "description": "Beam desktop integration bridge for GNOME Shell.",
+  "shell-version": ["45", "46", "47", "48"],
+  "url": "https://github.com/krishkalaria12/beam",
+  "version": 1
+}

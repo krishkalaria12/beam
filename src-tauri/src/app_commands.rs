@@ -1,8 +1,8 @@
 use crate::{
     ai, applications, calculator, clipboard, custom_config, dictionary, extensions, file_search,
-    hotkeys, hyprwhspr, integrations, launcher_theme, launcher_window, menu_bar, pinned, quicklinks,
-    script_commands, search, settings, snippets, system_actions, todo, translation,
-    window_switcher,
+    hotkeys, hyprwhspr, integrations, launcher_theme, launcher_window, linux_desktop, menu_bar,
+    pinned, quicklinks, script_commands, search, settings, snippets, system_actions, todo,
+    translation, window_switcher,
 };
 
 use tauri::ipc::Invoke;
@@ -30,6 +30,10 @@ pub fn get_handler() -> impl Fn(Invoke) -> bool {
         clipboard::clipboard_copy,
         clipboard::clipboard_paste,
         clipboard::clipboard_clear,
+        linux_desktop::status::get_desktop_integration_status,
+        linux_desktop::gnome_extension::install::install_gnome_shell_extension,
+        linux_desktop::gnome_extension::install::enable_gnome_shell_extension,
+        linux_desktop::gnome_extension::install::open_gnome_shell_extension_directory,
         file_search::search_files,
         file_search::open_file,
         file_search::get_file_info,
