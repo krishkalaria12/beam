@@ -5,76 +5,193 @@ pub mod types;
 use papaya::HashMap as ConcurrentMap;
 use std::collections::HashMap;
 use std::sync::Arc;
+use std::time::Duration;
+use tokio::sync::mpsc::UnboundedSender;
 
 use self::indexer::{builder, cache, watcher};
 use self::types::{FileEntry, IndexUpdate};
 
+fn snapshot_index(index: &ConcurrentMap<String, FileEntry>) -> HashMap<String, FileEntry> {
+    let pinned = index.pin();
+    pinned
+        .iter()
+        .map(|(path, entry)| (path.clone(), entry.clone()))
+        .collect()
+}
+
+fn replace_index(index: &ConcurrentMap<String, FileEntry>, entries: HashMap<String, FileEntry>) {
+    let pinned = index.pin();
+    pinned.clear();
+
+    for (path, entry) in entries {
+        pinned.insert(path, entry);
+    }
+}
+
+fn remove_path_and_children(index: &ConcurrentMap<String, FileEntry>, path: &str) {
+    let pinned = index.pin();
+    pinned.remove(path);
+
+    let nested_prefix = format!("{path}/");
+    let nested_paths: Vec<String> = pinned
+        .iter()
+        .filter_map(|(existing_path, _)| {
+            existing_path
+                .starts_with(&nested_prefix)
+                .then_some(existing_path.clone())
+        })
+        .collect();
+
+    for nested_path in nested_paths {
+        pinned.remove(&nested_path);
+    }
+}
+
+fn persist_index_snapshot(index: &ConcurrentMap<String, FileEntry>) {
+    let snapshot = snapshot_index(index);
+    if let Err(error) = cache::save_files_to_cache(snapshot) {
+        log::error!("Failed to save file index cache: {}", error);
+    }
+}
+
+fn schedule_full_rebuild(tx: UnboundedSender<IndexUpdate>) {
+    tauri::async_runtime::spawn(async move {
+        match builder::build_file_index().await {
+            Ok(entries) => {
+                let rebuilt_index: HashMap<String, FileEntry> = entries
+                    .into_iter()
+                    .map(|entry| (entry.path.clone(), entry))
+                    .collect();
+
+                if let Err(error) = tx.send(IndexUpdate::ReplaceAll(rebuilt_index)) {
+                    log::warn!("Failed to send rebuilt file index snapshot: {}", error);
+                }
+            }
+            Err(error) => {
+                log::error!("Failed to rebuild file index: {}", error);
+                let _ = tx.send(IndexUpdate::RebuildFailed);
+            }
+        }
+    });
+}
+
 pub async fn initialize_backend(index: Arc<ConcurrentMap<String, FileEntry>>) {
-    // A. Create the Channel for the Watcher
     let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<IndexUpdate>();
 
     let maybe_index = match cache::get_cache_file() {
         Ok(Some(idx)) => Some(idx),
         Ok(None) => None,
-        Err(_) => None,
-    };
-
-    match maybe_index {
-        Some(idx) => {
-            // Populate ConcurrentMap from loaded HashMap
-            let pinned = index.pin();
-            for (path, entry) in idx.entries {
-                pinned.insert(path, entry);
-            }
-        }
-        None => {
-            match builder::build_file_index().await {
-                Ok(entries) => {
-                    // Convert Vec to HashMap for saving
-                    let map: HashMap<String, FileEntry> =
-                        entries.into_iter().map(|e| (e.path.clone(), e)).collect();
-
-                    // Save to cache
-                    if let Err(e) = cache::save_files_to_cache(map.clone()) {
-                        log::error!("Failed to save cache: {}", e);
-                    }
-
-                    // Populate ConcurrentMap
-                    let pinned = index.pin();
-                    for (path, entry) in map {
-                        pinned.insert(path, entry);
-                    }
-                }
-                Err(e) => {
-                    log::error!("Failed to build fresh index: {}", e);
-                }
-            }
-        }
-    };
-
-    // D. Start the Watcher
-    let _watcher = match watcher::start_watcher(tx.clone()) {
-        Ok(w) => Some(w),
-        Err(e) => {
-            log::error!("Failed to start watcher: {}", e);
+        Err(error) => {
+            log::warn!(
+                "Failed to load file index cache, scheduling rebuild: {}",
+                error
+            );
             None
         }
     };
 
-    // E. Event Loop (Listen for updates forever)
-    while let Some(update) = rx.recv().await {
-        let pinned = index.pin();
+    let cache_is_stale = cache::is_cache_older_than_24_hours().unwrap_or_else(|error| {
+        log::warn!("Failed to read file index cache age, rebuilding: {}", error);
+        true
+    });
+
+    let has_cache = maybe_index.is_some();
+
+    if let Some(idx) = maybe_index {
+        replace_index(&index, idx.entries);
+    }
+
+    let _watcher = match watcher::start_watcher(tx.clone()) {
+        Ok(watcher) => Some(watcher),
+        Err(error) => {
+            log::error!("Failed to start watcher: {}", error);
+            None
+        }
+    };
+
+    let mut changes_during_rebuild = false;
+    let mut rebuild_in_progress = if !has_cache {
+        log::info!("No file index cache found, building a fresh index");
+        schedule_full_rebuild(tx.clone());
+        true
+    } else {
+        if cache_is_stale {
+            log::info!("File index cache is older than 24 hours, reconciling at startup");
+        } else {
+            log::info!("Loaded file index cache, reconciling in background");
+        }
+        schedule_full_rebuild(tx.clone());
+        true
+    };
+
+    let flush_delay = Duration::from_millis(config().FILE_CACHE_FLUSH_DEBOUNCE_MS);
+    let mut cache_dirty = false;
+
+    loop {
+        let maybe_update = if cache_dirty {
+            match tokio::time::timeout(flush_delay, rx.recv()).await {
+                Ok(update) => update,
+                Err(_) => {
+                    persist_index_snapshot(&index);
+                    cache_dirty = false;
+                    continue;
+                }
+            }
+        } else {
+            rx.recv().await
+        };
+
+        let Some(update) = maybe_update else {
+            break;
+        };
+
         match update {
             IndexUpdate::Update(entry) | IndexUpdate::Create(entry) => {
+                let pinned = index.pin();
                 pinned.insert(entry.path.clone(), entry);
+                cache_dirty = true;
+                if rebuild_in_progress {
+                    changes_during_rebuild = true;
+                }
             }
             IndexUpdate::Delete(path_str) => {
-                pinned.remove(&path_str);
+                remove_path_and_children(&index, &path_str);
+                cache_dirty = true;
+                if rebuild_in_progress {
+                    changes_during_rebuild = true;
+                }
             }
             IndexUpdate::ReloadAll => {
-                log::warn!("ReloadAll event received but not implemented yet");
+                if !rebuild_in_progress {
+                    schedule_full_rebuild(tx.clone());
+                    rebuild_in_progress = true;
+                    changes_during_rebuild = false;
+                } else {
+                    changes_during_rebuild = true;
+                }
+            }
+            IndexUpdate::ReplaceAll(entries) => {
+                let needs_follow_up_rebuild = changes_during_rebuild;
+                replace_index(&index, entries);
+                persist_index_snapshot(&index);
+                cache_dirty = false;
+                rebuild_in_progress = false;
+                changes_during_rebuild = false;
+
+                if needs_follow_up_rebuild {
+                    schedule_full_rebuild(tx.clone());
+                    rebuild_in_progress = true;
+                }
+            }
+            IndexUpdate::RebuildFailed => {
+                rebuild_in_progress = false;
+                changes_during_rebuild = false;
             }
         }
+    }
+
+    if cache_dirty {
+        persist_index_snapshot(&index);
     }
 }
 

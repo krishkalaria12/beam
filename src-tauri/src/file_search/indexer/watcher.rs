@@ -9,7 +9,7 @@ use tokio::sync::mpsc::UnboundedSender;
 use super::super::types::IndexUpdate;
 use super::{
     error::{IndexerError, Result},
-    helper::{get_file_metadata, is_ignored_path},
+    helper::{get_file_metadata, is_ignored_path, normalize_path},
 };
 use crate::config::config;
 
@@ -26,6 +26,13 @@ pub fn start_watcher(tx: UnboundedSender<IndexUpdate>) -> Result<Debouncer<Recom
                     }
 
                     if path.exists() {
+                        if path.is_dir() {
+                            if let Err(e) = tx.send(IndexUpdate::ReloadAll) {
+                                error!("Failed to send reload event: {}", e);
+                            }
+                            continue;
+                        }
+
                         match get_file_metadata(&path) {
                             Ok(entry) => {
                                 if let Err(e) = tx.send(IndexUpdate::Update(entry)) {
@@ -37,7 +44,7 @@ pub fn start_watcher(tx: UnboundedSender<IndexUpdate>) -> Result<Debouncer<Recom
                             }
                         }
                     } else {
-                        let path_str = path.to_string_lossy().to_string();
+                        let path_str = normalize_path(&path);
                         if let Err(e) = tx.send(IndexUpdate::Delete(path_str)) {
                             error!("Failed to send delete event: {}", e);
                         }

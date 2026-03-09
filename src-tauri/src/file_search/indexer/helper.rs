@@ -6,6 +6,16 @@ use walkdir::DirEntry;
 use super::super::types::FileEntry;
 use crate::config::config;
 
+fn is_hidden_name(value: &str) -> bool {
+    value.starts_with('.') && value != "." && value != ".."
+}
+
+fn is_ignored_name(value: &str) -> bool {
+    config().FILE_IGNORED_FOLDERS.contains(&value)
+        || config().FILE_IGNORED_FILES.contains(&value)
+        || is_hidden_name(value)
+}
+
 pub fn get_file_time(std_time: SystemTime) -> u64 {
     Timestamp::try_from(std_time)
         .map(|t| t.as_second() as u64)
@@ -16,7 +26,7 @@ pub fn is_ignored(entry: &DirEntry) -> bool {
     entry
         .file_name()
         .to_str()
-        .map(|s| config().FILE_IGNORED_FOLDERS.contains(&s))
+        .map(is_ignored_name)
         .unwrap_or(false)
 }
 
@@ -35,15 +45,15 @@ pub fn normalize_path(path: &Path) -> String {
 
 pub fn is_ignored_path(path: &Path) -> bool {
     for component in path.components() {
-        return component
-            .as_os_str()
-            .to_str()
-            .map(|s| config().FILE_IGNORED_FOLDERS.contains(&s))
-            .unwrap_or(false);
+        if let Some(component) = component.as_os_str().to_str() {
+            if is_ignored_name(component) {
+                return true;
+            }
+        }
     }
 
     if let Some(file_name) = path.file_name().and_then(|s| s.to_str()) {
-        if file_name.starts_with('.') {
+        if config().FILE_IGNORED_FILES.contains(&file_name) {
             return true;
         }
     }

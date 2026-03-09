@@ -119,6 +119,12 @@ pub enum IndexUpdate {
     // A file was deleted or moved out.
     Delete(String),
 
-    // Used if the watcher hits a massive change (like a partition mount)
+    // Used when a watcher event requires a full rebuild.
     ReloadAll,
+
+    // Replaces the entire in-memory index with a rebuilt snapshot.
+    ReplaceAll(HashMap<String, FileEntry>),
+
+    // Signals that a background rebuild failed.
+    RebuildFailed,
 }
