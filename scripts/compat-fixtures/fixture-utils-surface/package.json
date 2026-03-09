@@ -1,0 +1,14 @@
+{
+  "name": "fixture-utils-surface",
+  "title": "Fixture Utils Surface",
+  "description": "Compatibility checks for @raycast/utils exports",
+  "owner": "beam",
+  "commands": [
+    {
+      "name": "utils-surface-check",
+      "title": "Fixture: Utils Surface Check",
+      "mode": "no-view",
+      "description": "Validates @raycast/utils helper exports"
+    }
+  ]
+}

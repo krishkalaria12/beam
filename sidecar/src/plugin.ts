@@ -1,17 +1,18 @@
-import React from "react";
-import { updateContainer } from "./reconciler";
-import { writeLog, writeOutput } from "./io";
-import { getRaycastApi } from "./api";
-import { inspect } from "util";
-import Module from "module";
+import type { Preference } from "@flare/protocol";
 import * as fs from "fs";
+import Module from "module";
 import * as path from "path";
-import type { PluginInfo, Preference } from "@flare/protocol";
-import { environment } from "./api/environment";
-import { config } from "./config";
+import React from "react";
 import * as ReactJsxRuntime from "react/jsx-runtime";
-import { aiContext, setCurrentPlugin } from "./state";
+import { inspect } from "util";
+import { getRaycastApi } from "./api";
+import { environment } from "./api/environment";
+import { getRaycastUtils } from "./api/raycastUtils";
 import { LaunchType } from "./api/types";
+import { config } from "./config";
+import { writeLog, writeOutput } from "./io";
+import { updateContainer } from "./reconciler";
+import { aiContext, setCurrentPlugin } from "./state";
 
 type CompatKey = string | number;
 
@@ -45,7 +46,7 @@ const createCompatElement = (
 
     if (shouldTreatAsKey) {
       return React.createElement(type as React.ElementType, {
-        ...(normalizedProps ?? {}),
+        ...normalizedProps,
         key: maybeKey as CompatKey,
       });
     }
@@ -83,6 +84,10 @@ const createPluginRequire = (pluginPath: string) => {
 
     if (moduleName.startsWith("@raycast/api")) {
       return getRaycastApi();
+    }
+
+    if (moduleName.startsWith("@raycast/utils")) {
+      return getRaycastUtils();
     }
 
     if (moduleName === "react/jsx-runtime") {

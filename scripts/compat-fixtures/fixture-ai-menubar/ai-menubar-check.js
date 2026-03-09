@@ -54,7 +54,7 @@ module.exports.default = async function aiMenubarCheck() {
       endMatches: endText === finalText,
     },
     menuBarExtra: {
-      isSupported: MenuBarExtra.isSupported === false,
+      isSupported: MenuBarExtra.isSupported === true,
       openOk: menuOpenOk,
       openError: menuOpenError,
     },

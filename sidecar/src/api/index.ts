@@ -32,6 +32,7 @@ import { sendRequest } from "./rpc";
 import { LocalStorage } from "./localStorage";
 import { WindowManagement } from "./windowManagement";
 import { FileSearch } from "./fileSearch";
+import { getRaycastUtils } from "./raycastUtils";
 
 const Image = {
   Mask: {
@@ -49,9 +50,20 @@ const PopToRootType = {
 const Alert = {
   ActionStyle: {
     Default: "default",
+    Cancel: "cancel",
     Destructive: "destructive",
   },
 } as const;
+
+const preferences = new Proxy({} as Record<string, unknown>, {
+  get(_target, property: string) {
+    const values =
+      currentPluginName
+        ? preferencesStore.getPreferenceValues(currentPluginName, currentPluginPreferences)
+        : {};
+    return values[property];
+  },
+});
 
 Object.assign(MenuBarExtra, {
   isSupported: true,
@@ -75,6 +87,7 @@ const randomId = (): string => {
 };
 
 export const getRaycastApi = () => {
+  const raycastUtils = getRaycastUtils();
   const clearSearchBar = async () => {
     writeOutput({ type: "clear-search-bar", payload: {} });
   };
@@ -169,6 +182,7 @@ export const getRaycastApi = () => {
   };
 
   return {
+    ...raycastUtils,
     LocalStorage,
     allLocalStorageItems: LocalStorage.allItems,
     getLocalStorageItem: LocalStorage.getItem,
@@ -207,6 +221,7 @@ export const getRaycastApi = () => {
       }
       return {};
     },
+    preferences,
     getSelectedFinderItems,
     getSelectedText,
     closeMainWindow,

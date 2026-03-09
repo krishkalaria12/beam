@@ -104,6 +104,53 @@ function keyMatchesShortcut(event: KeyboardEvent, shortcut: KeyboardShortcutDefi
   );
 }
 
+function readApplicationTarget(value: unknown): string | undefined {
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    return trimmed.length > 0 ? trimmed : undefined;
+  }
+
+  if (!value || typeof value !== "object") {
+    return undefined;
+  }
+
+  const candidate = value as { path?: unknown; name?: unknown };
+  if (typeof candidate.path === "string" && candidate.path.trim().length > 0) {
+    return candidate.path.trim();
+  }
+  if (typeof candidate.name === "string" && candidate.name.trim().length > 0) {
+    return candidate.name.trim();
+  }
+  return undefined;
+}
+
+function readClipboardText(value: unknown): string | undefined {
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    return trimmed.length > 0 ? trimmed : "";
+  }
+
+  if (typeof value === "number") {
+    return String(value);
+  }
+
+  if (!value || typeof value !== "object") {
+    return undefined;
+  }
+
+  const candidate = value as { text?: unknown; html?: unknown; file?: unknown };
+  if (typeof candidate.text === "string") {
+    return candidate.text;
+  }
+  if (typeof candidate.html === "string") {
+    return candidate.html;
+  }
+  if (typeof candidate.file === "string") {
+    return candidate.file;
+  }
+  return undefined;
+}
+
 export function useExtensionRunnerState({
   onBack,
 }: UseExtensionRunnerStateInput): UseExtensionRunnerStateResult {
@@ -376,8 +423,10 @@ export function useExtensionRunnerState({
           if (action.hasOnAction) {
             extensionSidecarService.dispatchEvent(action.nodeId, "onAction", [target]);
           } else {
-            const application = asString(action.props.application);
-            extensionSidecarService.open(target, application || undefined);
+            extensionSidecarService.open(
+              target,
+              readApplicationTarget(action.props.application),
+            );
           }
           return;
         }
@@ -414,10 +463,27 @@ export function useExtensionRunnerState({
       }
 
       if (action.type === "Action.CopyToClipboard") {
-        const content = asString(action.props.content);
-        if (content) {
+        if (action.hasOnAction) {
+          extensionSidecarService.dispatchEvent(action.nodeId, "onAction");
+          return;
+        }
+        const content = readClipboardText(action.props.content);
+        if (content !== undefined) {
           await navigator.clipboard.writeText(content);
         }
+        return;
+      }
+
+      if (action.type === "Action.Paste") {
+        if (action.hasOnAction) {
+          extensionSidecarService.dispatchEvent(action.nodeId, "onAction");
+          return;
+        }
+        const content = readClipboardText(action.props.content);
+        if (content !== undefined) {
+          await navigator.clipboard.writeText(content);
+        }
+        return;
       }
 
       if (action.type === "Action.SubmitForm") {

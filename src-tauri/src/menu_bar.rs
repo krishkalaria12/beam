@@ -56,11 +56,16 @@ fn append_menu_items<'a, M: tauri::Manager<tauri::Wry>>(
                 next = next.item(&submenu);
             }
             _ => {
-                let menu_item =
-                    MenuItem::with_id(app, item.id.clone(), item.title.as_str(), item.enabled, None::<&str>)
-                        .map_err(|err| {
-                            SerializableError::new(format!("failed to build menu item: {err}"))
-                        })?;
+                let menu_item = MenuItem::with_id(
+                    app,
+                    item.id.clone(),
+                    item.title.as_str(),
+                    item.enabled,
+                    None::<&str>,
+                )
+                .map_err(|err| {
+                    SerializableError::new(format!("failed to build menu item: {err}"))
+                })?;
                 next = next.item(&menu_item);
             }
         }
@@ -73,8 +78,8 @@ fn build_submenu<M: tauri::Manager<tauri::Wry>>(
     app: &M,
     item: &MenuBarMenuItemPayload,
 ) -> Result<tauri::menu::Submenu<tauri::Wry>, SerializableError> {
-    let builder = SubmenuBuilder::with_id(app, item.id.clone(), item.title.as_str())
-        .enabled(item.enabled);
+    let builder =
+        SubmenuBuilder::with_id(app, item.id.clone(), item.title.as_str()).enabled(item.enabled);
     let mut next = builder;
 
     for child in &item.children {
@@ -92,7 +97,9 @@ fn build_submenu<M: tauri::Manager<tauri::Wry>>(
                     child.enabled,
                     None::<&str>,
                 )
-                .map_err(|err| SerializableError::new(format!("failed to build menu item: {err}")))?;
+                .map_err(|err| {
+                    SerializableError::new(format!("failed to build menu item: {err}"))
+                })?;
                 next.item(&menu_item)
             }
         };
@@ -162,7 +169,10 @@ pub fn menu_bar_upsert_tray(
 }
 
 #[tauri::command]
-pub fn menu_bar_remove_tray(app: tauri::AppHandle, runner_id: String) -> Result<(), SerializableError> {
+pub fn menu_bar_remove_tray(
+    app: tauri::AppHandle,
+    runner_id: String,
+) -> Result<(), SerializableError> {
     let _ = app.remove_tray_by_id(&runner_id);
     Ok(())
 }

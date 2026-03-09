@@ -4,6 +4,7 @@ import { config } from "../config";
 import { writeLog } from "../io";
 import { currentPluginName } from "../state";
 import { environment } from "./environment";
+import { emitStorageChanged } from "./storageEvents";
 
 export type LocalStorageValue = string | number | boolean;
 export type LocalStorageValues = Record<string, LocalStorageValue>;
@@ -122,6 +123,7 @@ class PersistentLocalStorageStore {
 
     this.snapshot[namespace][key] = toStorageValue(value);
     this.save();
+    emitStorageChanged();
   }
 
   removeItem(key: string): void {
@@ -133,6 +135,7 @@ class PersistentLocalStorageStore {
 
     delete pluginStore[key];
     this.save();
+    emitStorageChanged();
   }
 
   clear(): void {
@@ -143,6 +146,7 @@ class PersistentLocalStorageStore {
 
     delete this.snapshot[namespace];
     this.save();
+    emitStorageChanged();
   }
 
   allItems(): LocalStorageValues {

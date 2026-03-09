@@ -220,7 +220,7 @@ function parseFixtureLog(tag, logs) {
   return null;
 }
 
-function validateFixtureResult(fixtureName, logs, sawBatchUpdate) {
+function validateFixtureResult(fixtureName, commandName, logs, sawBatchUpdate) {
   if (fixtureName === "fixture-api-surface") {
     const summary = parseFixtureLog("[fixture-api-surface]", logs);
     if (!summary) {
@@ -403,6 +403,78 @@ function validateFixtureResult(fixtureName, logs, sawBatchUpdate) {
     return null;
   }
 
+  if (fixtureName === "fixture-utils-surface") {
+    const summary = parseFixtureLog("[fixture-utils-surface]", logs);
+    if (!summary) {
+      return "fixture-utils-surface did not emit a parseable summary log";
+    }
+
+    if (!Array.isArray(summary.missing) || summary.missing.length > 0) {
+      return "fixture-utils-surface reported missing @raycast/utils exports";
+    }
+
+    if (Object.values(summary.functionChecks ?? {}).some((ok) => ok !== true)) {
+      return "fixture-utils-surface reported missing helper contracts";
+    }
+
+    const checks = summary.helperChecks ?? {};
+    if (
+      checks.faviconOk !== true ||
+      checks.avatarOk !== true ||
+      checks.progressOk !== true ||
+      checks.deeplinkOk !== true ||
+      checks.cacheOk !== true ||
+      checks.sqlOk !== true ||
+      checks.runAppleScriptIsFunction !== true ||
+      checks.showFailureToastIsFunction !== true
+    ) {
+      return "fixture-utils-surface reported helper execution failures";
+    }
+
+    return null;
+  }
+
+  if (fixtureName === "fixture-utils-hooks") {
+    const summary = parseFixtureLog("[fixture-utils-hooks]", logs);
+    if (!summary) {
+      return "fixture-utils-hooks did not emit a parseable summary log";
+    }
+
+    const checks = [
+      summary.usePromiseOk,
+      summary.useCachedPromiseOk,
+      summary.useCachedStateOk,
+      summary.useLocalStorageOk,
+      summary.useAIOk,
+      summary.useFormOk,
+    ];
+    if (checks.some((ok) => ok !== true)) {
+      return "fixture-utils-hooks reported hook runtime failures";
+    }
+
+    return null;
+  }
+
+  if (fixtureName === "fixture-rich-components") {
+    const markers = {
+      "rich-list-check": "[fixture-rich-components:list]",
+      "rich-grid-check": "[fixture-rich-components:grid]",
+      "rich-detail-check": "[fixture-rich-components:detail]",
+      "rich-form-check": "[fixture-rich-components:form]",
+    };
+    const marker = markers[commandName];
+    const summary = marker ? parseFixtureLog(marker, logs) : null;
+    if (!summary) {
+      return `fixture-rich-components/${commandName} did not emit a parseable summary log`;
+    }
+
+    if (Object.values(summary).some((ok) => ok !== true)) {
+      return `fixture-rich-components/${commandName} reported a render compatibility failure`;
+    }
+
+    return null;
+  }
+
   return null;
 }
 
@@ -462,7 +534,11 @@ async function runFixture(fixtureDir, fixtureName, commandDef) {
 
       if (type === "BATCH_UPDATE") {
         sawBatchUpdate = true;
-        if (mode === "view") {
+        if (
+          mode === "view" &&
+          fixtureName !== "fixture-utils-hooks" &&
+          fixtureName !== "fixture-rich-components"
+        ) {
           finish();
         }
         return;
@@ -483,6 +559,15 @@ async function runFixture(fixtureDir, fixtureName, commandDef) {
       if (type === "log") {
         if (typeof payload === "string") {
           logs.push(payload);
+          if (fixtureName === "fixture-utils-hooks" && payload.includes("[fixture-utils-hooks]")) {
+            finish();
+          }
+          if (
+            fixtureName === "fixture-rich-components" &&
+            payload.includes("[fixture-rich-components:")
+          ) {
+            finish();
+          }
         } else if (payload && typeof payload === "object") {
           if (payload.tag === "sidecar-rpc-request-failure") {
             requestFailures.push(JSON.stringify(payload));
@@ -663,7 +748,12 @@ async function runFixture(fixtureDir, fixtureName, commandDef) {
     };
   }
 
-  const fixtureValidationError = validateFixtureResult(fixtureName, logs, sawBatchUpdate);
+  const fixtureValidationError = validateFixtureResult(
+    fixtureName,
+    commandDef.name,
+    logs,
+    sawBatchUpdate,
+  );
   if (fixtureValidationError) {
     return {
       ok: false,

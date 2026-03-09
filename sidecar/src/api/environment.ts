@@ -25,7 +25,7 @@ export const AI = { name: "AI" };
 export const environment = {
   appearance: "dark" as const,
   assetsPath: config.assetsDir,
-  commandMode: "view" as "view" | "no-view",
+  commandMode: "view" as "view" | "no-view" | "menu-bar",
   commandName: "index",
   extensionName: "my-extension",
   isDevelopment: true,

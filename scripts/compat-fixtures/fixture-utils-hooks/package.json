@@ -1,0 +1,14 @@
+{
+  "name": "fixture-utils-hooks",
+  "title": "Fixture Utils Hooks",
+  "description": "Compatibility checks for @raycast/utils hooks",
+  "owner": "beam",
+  "commands": [
+    {
+      "name": "utils-hooks-check",
+      "title": "Fixture: Utils Hooks Check",
+      "mode": "view",
+      "description": "Validates @raycast/utils hooks inside a rendered command"
+    }
+  ]
+}
