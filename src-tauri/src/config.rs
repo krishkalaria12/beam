@@ -183,6 +183,11 @@ pub struct Config {
     pub SCRIPT_COMMANDS_DEFAULT_TIMEOUT_MS: u64,
     pub SCRIPT_COMMANDS_MAX_OUTPUT_BYTES: usize,
 
+    // -- Launcher Shell
+    pub LAUNCHER_SHELL_DEFAULT_TIMEOUT_MS: u64,
+    pub LAUNCHER_SHELL_MAX_TIMEOUT_MS: u64,
+    pub LAUNCHER_SHELL_POLL_INTERVAL_MS: u64,
+
     // -- Pinned
     pub COMMAND_PINNED_KEY: &'static str,
 
@@ -467,6 +472,10 @@ impl Config {
             SCRIPT_COMMANDS_DISCOVERY_CACHE_TTL_MS: 12_000,
             SCRIPT_COMMANDS_DEFAULT_TIMEOUT_MS: 60_000,
             SCRIPT_COMMANDS_MAX_OUTPUT_BYTES: 2 * 1024 * 1024,
+
+            LAUNCHER_SHELL_DEFAULT_TIMEOUT_MS: 15_000,
+            LAUNCHER_SHELL_MAX_TIMEOUT_MS: 120_000,
+            LAUNCHER_SHELL_POLL_INTERVAL_MS: 25,
 
             COMMAND_PINNED_KEY: "command_pinned_ids",
 

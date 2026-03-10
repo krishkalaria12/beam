@@ -4,6 +4,7 @@ export const COMMAND_MODE_VALUES = [
   "quicklink-trigger",
   "system-trigger",
   "script-trigger",
+  "shell-trigger",
 ] as const;
 
 export type CommandModeValue = (typeof COMMAND_MODE_VALUES)[number];

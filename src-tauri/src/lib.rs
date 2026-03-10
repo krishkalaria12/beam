@@ -15,6 +15,7 @@ pub mod hotkeys;
 pub mod http;
 pub mod hyprwhspr;
 pub mod integrations;
+pub mod launcher_shell;
 pub mod launcher_theme;
 pub mod launcher_window;
 pub mod linux_desktop;

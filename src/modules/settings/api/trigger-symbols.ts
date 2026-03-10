@@ -1,4 +1,4 @@
-export type TriggerSymbolTarget = "quicklink" | "system" | "script";
+export type TriggerSymbolTarget = "quicklink" | "system" | "script" | "shell";
 
 export interface CustomTriggerBinding {
   symbol: string;
@@ -9,6 +9,7 @@ export interface TriggerSymbols {
   quicklink: string;
   system: string;
   script: string;
+  shell: string;
   customBindings: CustomTriggerBinding[];
 }
 
@@ -19,6 +20,7 @@ export const DEFAULT_TRIGGER_SYMBOLS: TriggerSymbols = Object.freeze({
   quicklink: "!",
   system: "$",
   script: ">",
+  shell: "~",
   customBindings: [],
 });
 
@@ -81,11 +83,17 @@ function hasUniqueSymbols(symbols: {
   quicklink: string;
   system: string;
   script: string;
+  shell: string;
   customBindings: readonly CustomTriggerBinding[];
 }): boolean {
-  const used = new Set<string>([symbols.quicklink, symbols.system, symbols.script]);
+  const used = new Set<string>([
+    symbols.quicklink,
+    symbols.system,
+    symbols.script,
+    symbols.shell,
+  ]);
 
-  if (used.size !== 3) {
+  if (used.size !== 4) {
     return false;
   }
 
@@ -110,6 +118,7 @@ function normalizeSymbols(input: unknown): TriggerSymbols {
     quicklink: sanitizeSymbol(source.quicklink, DEFAULT_TRIGGER_SYMBOLS.quicklink),
     system: sanitizeSymbol(source.system, DEFAULT_TRIGGER_SYMBOLS.system),
     script: sanitizeSymbol(source.script, DEFAULT_TRIGGER_SYMBOLS.script),
+    shell: sanitizeSymbol(source.shell, DEFAULT_TRIGGER_SYMBOLS.shell),
     customBindings: normalizeCustomBindings(source.customBindings),
   };
 

@@ -1,8 +1,8 @@
 use crate::{
     ai, applications, calculator, cli, clipboard, custom_config, dictionary, extensions,
-    file_search, hotkeys, hyprwhspr, integrations, launcher_theme, launcher_window, linux_desktop,
-    menu_bar, notes, pinned, quicklinks, script_commands, search, settings, snippets,
-    system_actions, todo, translation, window_switcher,
+    file_search, hotkeys, hyprwhspr, integrations, launcher_shell, launcher_theme, launcher_window,
+    linux_desktop, menu_bar, notes, pinned, quicklinks, script_commands, search, settings,
+    snippets, system_actions, todo, translation, window_switcher,
 };
 
 use tauri::ipc::Invoke;
@@ -89,6 +89,7 @@ pub fn get_handler() -> impl Fn(Invoke) -> bool {
         script_commands::run_script_command,
         launcher_window::set_launcher_compact_mode,
         launcher_window::set_launcher_window_size,
+        launcher_shell::execute_shell_command,
         menu_bar::menu_bar_upsert_tray,
         menu_bar::menu_bar_remove_tray,
         pinned::get_pinned_command_ids,

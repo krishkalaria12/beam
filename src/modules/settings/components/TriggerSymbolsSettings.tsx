@@ -1,6 +1,16 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Check, ChevronDown, Hash, Plus, RotateCcw, Sparkles, Trash2, Zap } from "lucide-react";
+import {
+  Check,
+  ChevronDown,
+  Hash,
+  Plus,
+  RotateCcw,
+  Sparkles,
+  Terminal,
+  Trash2,
+  Zap,
+} from "lucide-react";
 
 import { staticCommandRegistry } from "@/command-registry/registry";
 import { IconChip, type IconChipVariant } from "@/components/module";
@@ -54,6 +64,13 @@ const TRIGGER_SYMBOL_ROWS: readonly TriggerSymbolRow[] = [
     description: "Prefix script commands",
     icon: Hash,
     iconVariant: "green",
+  },
+  {
+    key: "shell",
+    title: "Shell Commands",
+    description: "Prefix inline shell execution",
+    icon: Terminal,
+    iconVariant: "cyan",
   },
 ];
 

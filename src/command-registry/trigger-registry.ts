@@ -4,11 +4,13 @@ import { getTriggerSymbols } from "@/modules/settings/api/trigger-symbols";
 export const QUICKLINK_TRIGGER_MODE = "quicklink-trigger" as const;
 export const SYSTEM_TRIGGER_MODE = "system-trigger" as const;
 export const SCRIPT_TRIGGER_MODE = "script-trigger" as const;
+export const SHELL_TRIGGER_MODE = "shell-trigger" as const;
 
 export type TriggerMode =
   | typeof QUICKLINK_TRIGGER_MODE
   | typeof SYSTEM_TRIGGER_MODE
-  | typeof SCRIPT_TRIGGER_MODE;
+  | typeof SCRIPT_TRIGGER_MODE
+  | typeof SHELL_TRIGGER_MODE;
 
 interface TriggerParseResult {
   query: string;
@@ -57,6 +59,7 @@ function getTriggerDefinitions(symbols: {
   quicklink: string;
   system: string;
   script: string;
+  shell: string;
 }): readonly TriggerDefinition[] {
   return [
     {
@@ -70,6 +73,10 @@ function getTriggerDefinitions(symbols: {
     {
       mode: SCRIPT_TRIGGER_MODE,
       symbol: symbols.script,
+    },
+    {
+      mode: SHELL_TRIGGER_MODE,
+      symbol: symbols.shell,
     },
   ];
 }
@@ -86,6 +93,10 @@ export function getTriggerSymbol(mode: CommandMode): string | null {
 
   if (mode === SCRIPT_TRIGGER_MODE) {
     return symbols.script;
+  }
+
+  if (mode === SHELL_TRIGGER_MODE) {
+    return symbols.shell;
   }
 
   return null;
@@ -144,6 +155,10 @@ export function matchesTriggerConstraints(command: CommandDescriptor, mode: Comm
 
   if (mode === SCRIPT_TRIGGER_MODE) {
     return command.id.startsWith("script_commands.");
+  }
+
+  if (mode === SHELL_TRIGGER_MODE) {
+    return false;
   }
 
   return true;

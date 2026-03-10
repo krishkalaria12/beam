@@ -1,10 +1,18 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
-import { CommandFooterBar } from "@/components/command/command-footer-bar";
+import {
+  CommandFooterBar,
+  type FooterAction,
+} from "@/components/command/command-footer-bar";
 import { LauncherActionsPanel } from "@/modules/launcher/components/launcher-actions-panel";
 import { isLauncherActionsHotkey } from "@/lib/launcher-actions";
 
-export function LauncherFooter() {
+interface LauncherFooterProps {
+  leftSlot?: ReactNode;
+  primaryAction?: FooterAction;
+}
+
+export function LauncherFooter({ leftSlot, primaryAction }: LauncherFooterProps) {
   const [actionsOpen, setActionsOpen] = useState(false);
 
   useEffect(() => {
@@ -26,11 +34,13 @@ export function LauncherFooter() {
 
   return (
     <CommandFooterBar
-      leftSlot={<span>Beam</span>}
-      primaryAction={{
-        label: "Open",
-        shortcut: ["↩"],
-      }}
+      leftSlot={leftSlot ?? <span>Beam</span>}
+      primaryAction={
+        primaryAction ?? {
+          label: "Open",
+          shortcut: ["↩"],
+        }
+      }
       secondaryActions={[
         {
           label: "Back",

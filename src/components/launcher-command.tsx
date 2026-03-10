@@ -16,7 +16,10 @@ import type { CustomActionRequest } from "@/command-registry/dispatcher";
 import { staticCommandRegistry } from "@/command-registry/registry";
 import { createStaticCommandRegistryStore } from "@/command-registry/static-registry";
 import { logDispatchFailure } from "@/command-registry/telemetry";
-import { QUICKLINK_TRIGGER_MODE } from "@/command-registry/trigger-registry";
+import {
+  QUICKLINK_TRIGGER_MODE,
+  SHELL_TRIGGER_MODE,
+} from "@/command-registry/trigger-registry";
 import type { CommandDescriptor } from "@/command-registry/types";
 import { useCommandPreferences } from "@/command-registry/use-command-preferences";
 import { Command, CommandInput, CommandList } from "@/components/ui/command";
@@ -40,6 +43,9 @@ import {
   runLauncherPanelBackHandler,
 } from "@/modules/launcher/lib/back-navigation";
 import { createCustomActionHandler } from "@/modules/launcher/lib/create-custom-action-handler";
+import { ShellCommandPanel } from "@/modules/shell/components/shell-command-panel";
+import { useRunShellCommandMutation } from "@/modules/shell/hooks/use-run-shell-command-mutation";
+import type { ShellExecutionEntry } from "@/modules/shell/types";
 import { persistentExtensionRunnerManager } from "@/modules/extensions/background/persistent-runners";
 import { getDiscoveredPlugins } from "@/modules/extensions/api/get-discovered-plugins";
 import { PersistentExtensionsHost } from "@/modules/extensions/components/persistent-extensions-host";
@@ -49,6 +55,7 @@ import { useExtensionRuntimeStore } from "@/modules/extensions/runtime/store";
 import { findQuicklinkByKeyword } from "@/modules/quicklinks/api/quicklinks";
 import { useQuicklinks } from "@/modules/quicklinks/hooks/use-quicklinks";
 import { HOTKEY_BACKEND_STATUS_EVENT, HOTKEY_COMMAND_EVENT } from "@/modules/settings/api/hotkeys";
+import { useTriggerSymbols } from "@/modules/settings/hooks/use-trigger-symbols";
 import { useUiLayout } from "@/modules/settings/hooks/use-ui-layout";
 import { useAwakeStore } from "@/modules/system-actions/store/awake-store";
 import {
@@ -129,6 +136,9 @@ export default function LauncherCommand() {
 
   const { data: quicklinks = [] } = useQuicklinks();
   const { isCompressed } = useUiLayout();
+  const { symbols: triggerSymbols } = useTriggerSymbols();
+  const runShellCommandMutation = useRunShellCommandMutation();
+  const [shellHistory, setShellHistory] = useState<ShellExecutionEntry[]>([]);
   const {
     state: commandPreferences,
     rankingSignals,
@@ -265,8 +275,10 @@ export default function LauncherCommand() {
 
   const trimmedCommandSearch = commandContext.rawQuery;
   const isQuicklinkTrigger = commandContext.mode === QUICKLINK_TRIGGER_MODE;
+  const isShellTrigger = commandContext.mode === SHELL_TRIGGER_MODE;
   const quicklinkKeyword = commandContext.quicklinkKeyword;
   const quicklinkQuery = commandContext.query;
+  const shellCommand = commandContext.query.trim();
   const matchedQuicklink = quicklinkKeyword
     ? findQuicklinkByKeyword(quicklinks, quicklinkKeyword)
     : undefined;
@@ -284,6 +296,58 @@ export default function LauncherCommand() {
       setCalculatorSessionId(crypto.randomUUID());
     }
   }, [trimmedCommandSearch]);
+
+  const handleRunShellCommand = useCallback(async () => {
+    if (!isShellTrigger || shellCommand.length === 0 || runShellCommandMutation.isPending) {
+      return;
+    }
+
+    const entryId = crypto.randomUUID();
+    setShellHistory((previous) => [
+      ...previous.slice(Math.max(0, previous.length - 19)),
+      {
+        id: entryId,
+        command: shellCommand,
+        startedAt: Date.now(),
+        status: "running",
+        result: null,
+        errorMessage: null,
+      },
+    ]);
+
+    try {
+      const result = await runShellCommandMutation.mutateAsync({
+        command: shellCommand,
+      });
+      setShellHistory((previous) =>
+        previous.map((entry) =>
+          entry.id === entryId
+            ? {
+                ...entry,
+                status: "completed",
+                result,
+              }
+            : entry,
+        ),
+      );
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error && error.message.trim().length > 0
+          ? error.message
+          : "Shell command failed.";
+      setShellHistory((previous) =>
+        previous.map((entry) =>
+          entry.id === entryId
+            ? {
+                ...entry,
+                status: "error",
+                errorMessage,
+              }
+            : entry,
+        ),
+      );
+    }
+  }, [isShellTrigger, runShellCommandMutation, shellCommand]);
 
   const calculatorPreview = useMemo(() => {
     const calculatorCommand = rankedRegistryCommands.find(
@@ -584,6 +648,12 @@ export default function LauncherCommand() {
       return;
     }
 
+    if (e.key === "Enter" && isShellTrigger) {
+      e.preventDefault();
+      await handleRunShellCommand();
+      return;
+    }
+
     if (e.key === "Enter" && isQuicklinkTrigger && matchedQuicklink) {
       e.preventDefault();
       await handleQuicklinkExecute(matchedQuicklink.keyword, quicklinkQuery);
@@ -621,7 +691,20 @@ export default function LauncherCommand() {
   const hasTakeoverPanel = isLauncherTakeoverPanel(activePanel);
   const isCommandListExpandedPanel = isLauncherCommandListExpandedPanel(activePanel);
 
-  const shouldShowFooter = !shouldCollapseToInputOnly && !isLauncherFooterHidden(activePanel);
+  const shouldShowFooter =
+    !isShellTrigger && !shouldCollapseToInputOnly && !isLauncherFooterHidden(activePanel);
+  const footerPrimaryAction = useMemo(
+    () =>
+      isShellTrigger
+        ? {
+            label: runShellCommandMutation.isPending ? "Running" : "Run",
+            shortcut: ["↩"],
+            onClick: handleRunShellCommand,
+            disabled: shellCommand.length === 0 || runShellCommandMutation.isPending,
+          }
+        : undefined,
+    [handleRunShellCommand, isShellTrigger, runShellCommandMutation.isPending, shellCommand.length],
+  );
 
   useLauncherWindowSizeSync(activePanel === "commands", shouldCollapseToInputOnly);
 
@@ -683,7 +766,7 @@ export default function LauncherCommand() {
           <CommandInput
             value={commandSearch}
             onValueChange={setCommandSearch}
-            placeholder="Search Beam..."
+            placeholder={isShellTrigger ? "Run shell command..." : "Search Beam..."}
             showLogo
             minimal
             className="border-none"
@@ -738,10 +821,20 @@ export default function LauncherCommand() {
           />
         )}
 
-        {hasTakeoverPanel || shouldCollapseToInputOnly ? null : (
+        {hasTakeoverPanel || shouldCollapseToInputOnly ? null : activePanel === "commands" &&
+          isShellTrigger ? (
+          <div className="min-h-0 flex-1 overflow-hidden">
+            <ShellCommandPanel
+              shellSymbol={triggerSymbols.shell}
+              currentCommand={shellCommand}
+              history={shellHistory}
+            />
+          </div>
+        ) : (
           <CommandList
             className={cn(
-              "list-area custom-scrollbar flex-1 px-1.5 transition-all duration-300",
+              "list-area flex-1 transition-all duration-300",
+              "custom-scrollbar px-1.5",
               isCommandListExpandedPanel
                 ? "min-h-0 flex flex-col h-full"
                 : "max-h-none overflow-y-auto",
@@ -794,7 +887,12 @@ export default function LauncherCommand() {
           </CommandList>
         )}
 
-        {shouldShowFooter && <LauncherFooter />}
+        {shouldShowFooter && (
+          <LauncherFooter
+            leftSlot={isShellTrigger ? <span>Beam Shell</span> : undefined}
+            primaryAction={footerPrimaryAction}
+          />
+        )}
       </Command>
     </div>
   );
