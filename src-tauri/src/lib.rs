@@ -19,6 +19,7 @@ pub mod launcher_theme;
 pub mod launcher_window;
 pub mod linux_desktop;
 pub mod menu_bar;
+pub mod notes;
 pub mod pinned;
 pub mod quicklinks;
 pub mod script_commands;
@@ -195,6 +196,7 @@ pub fn run(startup_args: Vec<String>) {
 
             hotkeys::initialize_hotkey_backend(&app.handle());
             ai::db::init(&app.handle());
+            notes::db::init(&app.handle());
             todo::db::init(&app.handle());
             snippets::db::init(&app.handle());
             extensions::browser_extension::start_bridge_server(&app.handle());

@@ -190,6 +190,10 @@ pub struct Config {
     pub TODO_DIRECTORY: &'static str,
     pub TODO_DATABASE_FILE: &'static str,
 
+    // -- Notes
+    pub NOTES_DIRECTORY: &'static str,
+    pub NOTES_DATABASE_FILE: &'static str,
+
     // -- Snippets
     pub SNIPPETS_DIRECTORY: &'static str,
     pub SNIPPETS_DATABASE_FILE: &'static str,
@@ -200,6 +204,17 @@ pub struct Config {
 
     // -- Window Switcher
     pub WINDOW_SWITCHER_PROCESS_CACHE_REFRESH_MS: u64,
+
+    // -- Linux Desktop
+    pub LINUX_DESKTOP_GNOME_DBUS_DEST: &'static str,
+    pub LINUX_DESKTOP_GNOME_DBUS_PATH: &'static str,
+    pub LINUX_DESKTOP_GNOME_DBUS_INTERFACE: &'static str,
+    pub LINUX_DESKTOP_GNOME_EXTENSION_ID: &'static str,
+    pub LINUX_DESKTOP_GNOME_EXTENSION_METADATA_JSON: &'static str,
+    pub LINUX_DESKTOP_GNOME_EXTENSION_JS: &'static str,
+    pub LINUX_DESKTOP_GNOME_EXTENSION_STYLESHEET_CSS: &'static str,
+    pub LINUX_DESKTOP_HYPR_WINDOW_ID_PREFIX: &'static str,
+    pub LINUX_DESKTOP_SWAY_WINDOW_ID_PREFIX: &'static str,
 
     // -- Launcher Theme
     pub LAUNCHER_THEME_DIR_NAME: &'static str,
@@ -458,6 +473,9 @@ impl Config {
             TODO_DIRECTORY: "todo",
             TODO_DATABASE_FILE: "todo.sqlite3",
 
+            NOTES_DIRECTORY: "notes",
+            NOTES_DATABASE_FILE: "notes.sqlite3",
+
             SNIPPETS_DIRECTORY: "snippets",
             SNIPPETS_DATABASE_FILE: "snippets.sqlite3",
             SNIPPETS_DEFAULT_COOLDOWN_MS: 120,
@@ -466,6 +484,25 @@ impl Config {
             SNIPPETS_MAX_MAX_BUFFER_LEN: 512,
 
             WINDOW_SWITCHER_PROCESS_CACHE_REFRESH_MS: 2_000,
+
+            LINUX_DESKTOP_GNOME_DBUS_DEST: "org.gnome.Shell",
+            LINUX_DESKTOP_GNOME_DBUS_PATH: "/org/gnome/Shell/Extensions/Beam",
+            LINUX_DESKTOP_GNOME_DBUS_INTERFACE: "org.gnome.Shell.Extensions.Beam",
+            LINUX_DESKTOP_GNOME_EXTENSION_ID: "beam@beam-linux",
+            LINUX_DESKTOP_GNOME_EXTENSION_METADATA_JSON: include_str!(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/../desktop-integrations/gnome-shell/beam@beam-linux/metadata.json"
+            )),
+            LINUX_DESKTOP_GNOME_EXTENSION_JS: include_str!(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/../desktop-integrations/gnome-shell/beam@beam-linux/extension.js"
+            )),
+            LINUX_DESKTOP_GNOME_EXTENSION_STYLESHEET_CSS: include_str!(concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/../desktop-integrations/gnome-shell/beam@beam-linux/stylesheet.css"
+            )),
+            LINUX_DESKTOP_HYPR_WINDOW_ID_PREFIX: "hypr:",
+            LINUX_DESKTOP_SWAY_WINDOW_ID_PREFIX: "sway:",
 
             LAUNCHER_THEME_DIR_NAME: "themes",
             LAUNCHER_THEME_MANIFEST_FILE_NAME: "theme.json",

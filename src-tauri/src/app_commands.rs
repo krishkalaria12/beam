@@ -1,8 +1,8 @@
 use crate::{
     ai, applications, calculator, cli, clipboard, custom_config, dictionary, extensions,
     file_search, hotkeys, hyprwhspr, integrations, launcher_theme, launcher_window, linux_desktop,
-    menu_bar, pinned, quicklinks, script_commands, search, settings, snippets, system_actions,
-    todo, translation, window_switcher,
+    menu_bar, notes, pinned, quicklinks, script_commands, search, settings, snippets,
+    system_actions, todo, translation, window_switcher,
 };
 
 use tauri::ipc::Invoke;
@@ -78,6 +78,10 @@ pub fn get_handler() -> impl Fn(Invoke) -> bool {
         snippets::increment_snippet_copied_count,
         snippets::get_snippet_runtime_settings,
         snippets::update_snippet_runtime_settings,
+        notes::get_notes,
+        notes::create_note,
+        notes::update_note,
+        notes::delete_note,
         script_commands::get_script_commands_directory,
         script_commands::get_script_commands,
         script_commands::create_script_command,
