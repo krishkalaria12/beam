@@ -3,9 +3,7 @@ use std::time::{Duration, Instant};
 
 use x11rb::atom_manager;
 use x11rb::connection::Connection;
-use x11rb::protocol::xproto::{
-    AtomEnum, ConnectionExt, CreateWindowAux, EventMask, WindowClass,
-};
+use x11rb::protocol::xproto::{AtomEnum, ConnectionExt, CreateWindowAux, EventMask, WindowClass};
 use x11rb::protocol::Event;
 use x11rb::rust_connection::RustConnection;
 use x11rb::{COPY_DEPTH_FROM_PARENT, CURRENT_TIME, NONE};
@@ -58,7 +56,13 @@ fn request_selection(
         .map_err(|error| format!("failed to create X11 selection window: {error}"))?;
 
     connection
-        .convert_selection(window, AtomEnum::PRIMARY.into(), target, property, CURRENT_TIME)
+        .convert_selection(
+            window,
+            AtomEnum::PRIMARY.into(),
+            target,
+            property,
+            CURRENT_TIME,
+        )
         .map_err(|error| format!("failed to request X11 PRIMARY selection: {error}"))?;
     connection
         .flush()
@@ -78,9 +82,13 @@ fn request_selection(
 
                     let reply = connection
                         .get_property(false, window, property, AtomEnum::ANY, 0, u32::MAX)
-                        .map_err(|error| format!("failed to fetch X11 selection property: {error}"))?
+                        .map_err(|error| {
+                            format!("failed to fetch X11 selection property: {error}")
+                        })?
                         .reply()
-                        .map_err(|error| format!("failed to read X11 selection property: {error}"))?;
+                        .map_err(|error| {
+                            format!("failed to read X11 selection property: {error}")
+                        })?;
 
                     let text = String::from_utf8_lossy(&reply.value)
                         .trim_matches('\0')

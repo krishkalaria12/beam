@@ -161,13 +161,9 @@ impl WindowProvider for KdeWindowProvider {
     }
 
     fn frontmost_window(&self, state: &AppState) -> Result<Option<FocusedWindowInfo>, String> {
-        let active_id = call_qdbus(&[
-            "org.kde.KWin",
-            "/KWin",
-            "org.kde.KWin.activeWindow",
-        ])
-        .ok()
-        .and_then(|output| extract_active_window_id(&output));
+        let active_id = call_qdbus(&["org.kde.KWin", "/KWin", "org.kde.KWin.activeWindow"])
+            .ok()
+            .and_then(|output| extract_active_window_id(&output));
 
         let mut windows = self
             .list_windows(state)?

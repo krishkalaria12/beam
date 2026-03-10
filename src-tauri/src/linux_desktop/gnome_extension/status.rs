@@ -74,7 +74,9 @@ pub fn get_status() -> Option<GnomeExtensionStatus> {
         version: installed_version.clone().or(bundled_version.clone()),
         path: installed.then(|| path.display().to_string()),
         dbus_reachable: dbus::ping(),
-        update_required: installed && bundled_version.is_some() && bundled_version != installed_version,
+        update_required: installed
+            && bundled_version.is_some()
+            && bundled_version != installed_version,
     })
 }
 

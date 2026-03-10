@@ -173,10 +173,8 @@ mod tests {
 
     #[test]
     fn x11_session_defaults_to_x11_desktop_kind() {
-        let compositor = detect_compositor_from(
-            &DesktopEnvironmentKind::X11,
-            Some("xfce".to_string()),
-        );
+        let compositor =
+            detect_compositor_from(&DesktopEnvironmentKind::X11, Some("xfce".to_string()));
         assert_eq!(compositor, "x11");
     }
 }

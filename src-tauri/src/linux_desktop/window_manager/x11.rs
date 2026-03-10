@@ -71,14 +71,24 @@ fn read_property_u32(
         .map_err(|error| format!("failed to read X11 property {property}: {error}"))?
         .reply()
         .map_err(|error| format!("failed to read X11 property reply {property}: {error}"))?;
-    Ok(reply.value32().map(|items| items.collect()).unwrap_or_default())
+    Ok(reply
+        .value32()
+        .map(|items| items.collect())
+        .unwrap_or_default())
 }
 
 fn parse_title(connection: &RustConnection, atoms: &Atoms, window: Window) -> String {
     read_property_bytes(connection, window, atoms._NET_WM_NAME, atoms.UTF8_STRING)
-        .or_else(|_| read_property_bytes(connection, window, atoms.WM_NAME, AtomEnum::STRING.into()))
+        .or_else(|_| {
+            read_property_bytes(connection, window, atoms.WM_NAME, AtomEnum::STRING.into())
+        })
         .ok()
-        .map(|bytes| String::from_utf8_lossy(&bytes).trim_matches('\0').trim().to_string())
+        .map(|bytes| {
+            String::from_utf8_lossy(&bytes)
+                .trim_matches('\0')
+                .trim()
+                .to_string()
+        })
         .unwrap_or_default()
 }
 
@@ -99,25 +109,35 @@ fn parse_class_name(connection: &RustConnection, atoms: &Atoms, window: Window) 
 }
 
 fn parse_pid(connection: &RustConnection, atoms: &Atoms, window: Window) -> u32 {
-    read_property_u32(connection, window, atoms._NET_WM_PID, AtomEnum::CARDINAL.into())
-        .ok()
-        .and_then(|values| values.into_iter().next())
-        .unwrap_or(0)
+    read_property_u32(
+        connection,
+        window,
+        atoms._NET_WM_PID,
+        AtomEnum::CARDINAL.into(),
+    )
+    .ok()
+    .and_then(|values| values.into_iter().next())
+    .unwrap_or(0)
 }
 
 fn workspace_names(connection: &RustConnection, root: Window, atoms: &Atoms) -> Vec<String> {
-    read_property_bytes(connection, root, atoms._NET_DESKTOP_NAMES, atoms.UTF8_STRING)
-        .ok()
-        .map(|bytes| {
-            bytes
-                .split(|byte| *byte == 0)
-                .filter_map(|part| std::str::from_utf8(part).ok())
-                .map(str::trim)
-                .filter(|part| !part.is_empty())
-                .map(|part| part.to_string())
-                .collect()
-        })
-        .unwrap_or_default()
+    read_property_bytes(
+        connection,
+        root,
+        atoms._NET_DESKTOP_NAMES,
+        atoms.UTF8_STRING,
+    )
+    .ok()
+    .map(|bytes| {
+        bytes
+            .split(|byte| *byte == 0)
+            .filter_map(|part| std::str::from_utf8(part).ok())
+            .map(str::trim)
+            .filter(|part| !part.is_empty())
+            .map(|part| part.to_string())
+            .collect()
+    })
+    .unwrap_or_default()
 }
 
 fn workspace_name_for_window(
@@ -126,10 +146,15 @@ fn workspace_name_for_window(
     window: Window,
     workspace_names: &[String],
 ) -> String {
-    let index = read_property_u32(connection, window, atoms._NET_WM_DESKTOP, AtomEnum::CARDINAL.into())
-        .ok()
-        .and_then(|values| values.into_iter().next())
-        .unwrap_or(0) as usize;
+    let index = read_property_u32(
+        connection,
+        window,
+        atoms._NET_WM_DESKTOP,
+        AtomEnum::CARDINAL.into(),
+    )
+    .ok()
+    .and_then(|values| values.into_iter().next())
+    .unwrap_or(0) as usize;
 
     workspace_names
         .get(index)
@@ -137,12 +162,19 @@ fn workspace_name_for_window(
         .unwrap_or_else(|| index.to_string())
 }
 
-fn active_window(connection: &RustConnection, root: Window, atoms: &Atoms) -> Result<Option<Window>, String> {
-    Ok(
-        read_property_u32(connection, root, atoms._NET_ACTIVE_WINDOW, AtomEnum::WINDOW.into())?
-            .into_iter()
-            .next(),
-    )
+fn active_window(
+    connection: &RustConnection,
+    root: Window,
+    atoms: &Atoms,
+) -> Result<Option<Window>, String> {
+    Ok(read_property_u32(
+        connection,
+        root,
+        atoms._NET_ACTIVE_WINDOW,
+        AtomEnum::WINDOW.into(),
+    )?
+    .into_iter()
+    .next())
 }
 
 fn send_root_client_message(
@@ -206,7 +238,12 @@ impl WindowProvider for X11WindowProvider {
         let mut icon_resolver = IconResolver::new();
         let mut entries = Vec::new();
 
-        for window in read_property_u32(&connection, root, atoms._NET_CLIENT_LIST, AtomEnum::WINDOW.into())? {
+        for window in read_property_u32(
+            &connection,
+            root,
+            atoms._NET_CLIENT_LIST,
+            AtomEnum::WINDOW.into(),
+        )? {
             let title = parse_title(&connection, &atoms, window);
             if title.trim().is_empty() {
                 continue;

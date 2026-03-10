@@ -6,24 +6,28 @@ const GNOME_DBUS_PATH: &str = "/org/gnome/Shell/Extensions/Beam";
 const GNOME_DBUS_INTERFACE: &str = "org.gnome.Shell.Extensions.Beam";
 
 fn with_proxy<T>(f: impl FnOnce(&Proxy<'_>) -> Result<T, String>) -> Result<T, String> {
-    let connection = Connection::session().map_err(|error| {
-        format!("failed to connect to the user D-Bus session: {error}")
-    })?;
+    let connection = Connection::session()
+        .map_err(|error| format!("failed to connect to the user D-Bus session: {error}"))?;
 
-    let proxy = Proxy::new(&connection, GNOME_DBUS_DEST, GNOME_DBUS_PATH, GNOME_DBUS_INTERFACE)
-        .map_err(|error| format!("failed to create GNOME Shell D-Bus proxy: {error}"))?;
+    let proxy = Proxy::new(
+        &connection,
+        GNOME_DBUS_DEST,
+        GNOME_DBUS_PATH,
+        GNOME_DBUS_INTERFACE,
+    )
+    .map_err(|error| format!("failed to create GNOME Shell D-Bus proxy: {error}"))?;
     f(&proxy)
 }
 
 pub fn ping() -> bool {
     with_proxy(|proxy| {
-            let reply: String = proxy
-                .call("Ping", &())
-                .map_err(|error| format!("GNOME Shell Ping failed: {error}"))?;
-            Ok(reply)
-        })
-        .map(|reply| reply.trim().eq_ignore_ascii_case("ok"))
-        .unwrap_or(false)
+        let reply: String = proxy
+            .call("Ping", &())
+            .map_err(|error| format!("GNOME Shell Ping failed: {error}"))?;
+        Ok(reply)
+    })
+    .map(|reply| reply.trim().eq_ignore_ascii_case("ok"))
+    .unwrap_or(false)
 }
 
 pub fn list_windows_payload() -> Result<String, String> {

@@ -54,8 +54,9 @@ pub fn get_status() -> DesktopIntegrationStatus {
     let window_capabilities = window_manager::active_capabilities();
     let clipboard_capabilities = clipboard::active_capabilities();
 
-    let gnome_extension =
-        (environment.desktop_environment == "gnome").then(crate::linux_desktop::gnome_extension::status::get_status).flatten();
+    let gnome_extension = (environment.desktop_environment == "gnome")
+        .then(crate::linux_desktop::gnome_extension::status::get_status)
+        .flatten();
 
     let mut notes = Vec::new();
     if let Some(note) = backend_note(window_backend) {

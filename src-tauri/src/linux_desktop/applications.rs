@@ -91,7 +91,9 @@ fn find_desktop_application_by_id(desktop_id: &str) -> Option<DesktopApplication
         .find(|entry| entry.desktop_id == desktop_id)
 }
 
-fn find_desktop_application_by_window(info: &FocusedWindowInfo) -> Option<DesktopApplicationRecord> {
+fn find_desktop_application_by_window(
+    info: &FocusedWindowInfo,
+) -> Option<DesktopApplicationRecord> {
     let process_path = info
         .pid
         .and_then(|pid| fs::read_link(format!("/proc/{pid}/exe")).ok())
@@ -118,7 +120,8 @@ fn find_desktop_application_by_window(info: &FocusedWindowInfo) -> Option<Deskto
                     || name_lower.contains(&app_id_lower)
                     || exec_lower.contains(&app_id_lower)))
             || (!app_name_lower.is_empty()
-                && (name_lower.contains(&app_name_lower) || desktop_id_lower.contains(&app_name_lower)))
+                && (name_lower.contains(&app_name_lower)
+                    || desktop_id_lower.contains(&app_name_lower)))
             || process_path
                 .as_deref()
                 .map(|path| !path.is_empty() && exec_lower.contains(&path.to_lowercase()))
@@ -152,7 +155,11 @@ fn mime_type_for_target(target: &str) -> Result<String, String> {
     if let Ok(output) = gio_output {
         if output.status.success() {
             let stdout = String::from_utf8_lossy(&output.stdout);
-            if let Some(mime) = stdout.lines().find_map(|line| line.split(':').nth(1)).map(str::trim) {
+            if let Some(mime) = stdout
+                .lines()
+                .find_map(|line| line.split(':').nth(1))
+                .map(str::trim)
+            {
                 if !mime.is_empty() {
                     return Ok(mime.to_string());
                 }
@@ -173,9 +180,7 @@ fn mime_type_for_target(target: &str) -> Result<String, String> {
 fn default_desktop_id_for_target(target: &str) -> Result<String, String> {
     let mime = mime_query_target(target)?;
 
-    let gio_output = Command::new("gio")
-        .args(["mime", &mime])
-        .output();
+    let gio_output = Command::new("gio").args(["mime", &mime]).output();
     if let Ok(output) = gio_output {
         if output.status.success() {
             let stdout = String::from_utf8_lossy(&output.stdout);
@@ -194,7 +199,9 @@ fn default_desktop_id_for_target(target: &str) -> Result<String, String> {
     }
     let desktop_id = String::from_utf8_lossy(&output.stdout).trim().to_string();
     if desktop_id.is_empty() {
-        return Err(format!("no default application is registered for MIME type {mime}"));
+        return Err(format!(
+            "no default application is registered for MIME type {mime}"
+        ));
     }
     Ok(desktop_id)
 }

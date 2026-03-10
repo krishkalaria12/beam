@@ -75,9 +75,9 @@ impl WindowProvider for HyprlandWindowProvider {
                 .strip_prefix(HYPR_WINDOW_ID_PREFIX)
                 .unwrap_or(window_id)
                 .trim();
-            Dispatch::call(DispatchType::FocusWindow(HyprIdentifier::Address(Address::new(
-                address.to_string(),
-            ))))
+            Dispatch::call(DispatchType::FocusWindow(HyprIdentifier::Address(
+                Address::new(address.to_string()),
+            )))
             .map_err(|error| error.to_string())
         }
     }
@@ -96,9 +96,9 @@ impl WindowProvider for HyprlandWindowProvider {
                 .strip_prefix(HYPR_WINDOW_ID_PREFIX)
                 .unwrap_or(window_id)
                 .trim();
-            Dispatch::call(DispatchType::CloseWindow(HyprIdentifier::Address(Address::new(
-                address.to_string(),
-            ))))
+            Dispatch::call(DispatchType::CloseWindow(HyprIdentifier::Address(
+                Address::new(address.to_string()),
+            )))
             .map_err(|error| error.to_string())
         }
     }

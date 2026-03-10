@@ -1,9 +1,7 @@
 use crate::state::AppState;
 use crate::window_switcher::WindowEntry;
 
-use super::{
-    FocusedWindowInfo, WindowProvider,
-};
+use super::{FocusedWindowInfo, WindowProvider};
 use crate::linux_desktop::capabilities::{DesktopBackendKind, WindowBackendCapabilities};
 use crate::linux_desktop::environment::LinuxDesktopEnvironment;
 

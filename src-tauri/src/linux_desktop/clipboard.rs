@@ -97,7 +97,9 @@ impl ClipboardProvider for GenericClipboardProvider {
     ) -> Result<(), String> {
         let mut clipboard = Clipboard::new().map_err(|error| error.to_string())?;
         if let Some(text) = normalize_text_content(&content) {
-            clipboard.set_text(text).map_err(|error| error.to_string())?;
+            clipboard
+                .set_text(text)
+                .map_err(|error| error.to_string())?;
         }
         Ok(())
     }
@@ -217,8 +219,10 @@ impl ClipboardProvider for GnomeClipboardProvider {
 }
 
 fn select_provider(env: &LinuxDesktopEnvironment) -> Box<dyn ClipboardProvider> {
-    let candidates: Vec<Box<dyn ClipboardProvider>> =
-        vec![Box::<GnomeClipboardProvider>::default(), Box::<GenericClipboardProvider>::default()];
+    let candidates: Vec<Box<dyn ClipboardProvider>> = vec![
+        Box::<GnomeClipboardProvider>::default(),
+        Box::<GenericClipboardProvider>::default(),
+    ];
     for candidate in candidates {
         if candidate.is_activatable(env) {
             return candidate;
@@ -252,7 +256,10 @@ pub fn clipboard_read_text() -> Result<ReadResult, String> {
     select_provider(&env).clipboard_read_text()
 }
 
-pub fn clipboard_copy(content: ClipboardContent, options: Option<CopyOptions>) -> Result<(), String> {
+pub fn clipboard_copy(
+    content: ClipboardContent,
+    options: Option<CopyOptions>,
+) -> Result<(), String> {
     let env = detect_environment();
     select_provider(&env).clipboard_copy(content, options)
 }

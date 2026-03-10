@@ -81,16 +81,14 @@ pub async fn get_selected_text() -> std::result::Result<String, String> {
 
     #[cfg(not(target_os = "linux"))]
     {
-    let mut clipboard = Clipboard::new().map_err(|e| e.to_string())?;
-    Ok(clipboard.get_text().unwrap_or_default())
+        let mut clipboard = Clipboard::new().map_err(|e| e.to_string())?;
+        Ok(clipboard.get_text().unwrap_or_default())
     }
 }
 
 #[command]
 pub async fn get_selected_finder_items() -> std::result::Result<Vec<SelectedFinderItem>, String> {
-    Err(
-        "get_selected_finder_items is not supported on this platform in Beam yet".to_string(),
-    )
+    Err("get_selected_finder_items is not supported on this platform in Beam yet".to_string())
 }
 
 #[command]
@@ -102,14 +100,14 @@ pub async fn clipboard_read_text() -> std::result::Result<ReadResult, String> {
 
     #[cfg(not(target_os = "linux"))]
     {
-    let mut clipboard = Clipboard::new().map_err(|e| e.to_string())?;
-    let text = clipboard.get_text().ok();
+        let mut clipboard = Clipboard::new().map_err(|e| e.to_string())?;
+        let text = clipboard.get_text().ok();
 
-    Ok(ReadResult {
-        text,
-        html: None,
-        file: None,
-    })
+        Ok(ReadResult {
+            text,
+            html: None,
+            file: None,
+        })
     }
 }
 
@@ -122,26 +120,26 @@ pub async fn clipboard_read() -> std::result::Result<ReadResult, String> {
 
     #[cfg(not(target_os = "linux"))]
     {
-    let mut clipboard = Clipboard::new().map_err(|e| e.to_string())?;
-    let text = clipboard.get_text().ok();
+        let mut clipboard = Clipboard::new().map_err(|e| e.to_string())?;
+        let text = clipboard.get_text().ok();
 
-    let file = if let Some(ref text_content) = text {
-        if text_content.lines().count() == 1
-            && (text_content.starts_with('/') || text_content.starts_with("file://"))
-        {
-            Some(text_content.clone())
+        let file = if let Some(ref text_content) = text {
+            if text_content.lines().count() == 1
+                && (text_content.starts_with('/') || text_content.starts_with("file://"))
+            {
+                Some(text_content.clone())
+            } else {
+                None
+            }
         } else {
             None
-        }
-    } else {
-        None
-    };
+        };
 
-    Ok(ReadResult {
-        text,
-        html: None,
-        file,
-    })
+        Ok(ReadResult {
+            text,
+            html: None,
+            file,
+        })
     }
 }
 
@@ -157,24 +155,24 @@ pub async fn clipboard_copy(
 
     #[cfg(not(target_os = "linux"))]
     {
-    let mut clipboard = Clipboard::new().map_err(|e| e.to_string())?;
+        let mut clipboard = Clipboard::new().map_err(|e| e.to_string())?;
 
-    if let Some(file_path) = &content.file {
-        clipboard
-            .set_text(file_path.clone())
-            .map_err(|e| e.to_string())?;
-    } else if let Some(text) = &content.text {
-        clipboard
-            .set_text(text.clone())
-            .map_err(|e| e.to_string())?;
-    } else if let Some(html) = &content.html {
-        // arboard has no HTML channel; degrade to plain text.
-        clipboard
-            .set_text(html.clone())
-            .map_err(|e| e.to_string())?;
-    }
+        if let Some(file_path) = &content.file {
+            clipboard
+                .set_text(file_path.clone())
+                .map_err(|e| e.to_string())?;
+        } else if let Some(text) = &content.text {
+            clipboard
+                .set_text(text.clone())
+                .map_err(|e| e.to_string())?;
+        } else if let Some(html) = &content.html {
+            // arboard has no HTML channel; degrade to plain text.
+            clipboard
+                .set_text(html.clone())
+                .map_err(|e| e.to_string())?;
+        }
 
-    Ok(())
+        Ok(())
     }
 }
 
@@ -218,21 +216,21 @@ pub async fn clipboard_paste(content: ClipboardContent) -> std::result::Result<(
 
     #[cfg(not(target_os = "linux"))]
     {
-    let mut clipboard = Clipboard::new().map_err(|e| e.to_string())?;
-    let original_text = clipboard.get_text().ok();
+        let mut clipboard = Clipboard::new().map_err(|e| e.to_string())?;
+        let original_text = clipboard.get_text().ok();
 
-    clipboard_copy(content, None).await?;
-    thread::sleep(Duration::from_millis(60));
-    trigger_paste_shortcut();
-    thread::sleep(Duration::from_millis(60));
+        clipboard_copy(content, None).await?;
+        thread::sleep(Duration::from_millis(60));
+        trigger_paste_shortcut();
+        thread::sleep(Duration::from_millis(60));
 
-    if let Some(text) = original_text {
-        let _ = clipboard.set_text(text);
-    } else {
-        let _ = clipboard.clear();
-    }
+        if let Some(text) = original_text {
+            let _ = clipboard.set_text(text);
+        } else {
+            let _ = clipboard.clear();
+        }
 
-    Ok(())
+        Ok(())
     }
 }
 
@@ -245,8 +243,8 @@ pub async fn clipboard_clear() -> std::result::Result<(), String> {
 
     #[cfg(not(target_os = "linux"))]
     {
-    let mut clipboard = Clipboard::new().map_err(|e| e.to_string())?;
-    clipboard.clear().map_err(|e| e.to_string())
+        let mut clipboard = Clipboard::new().map_err(|e| e.to_string())?;
+        clipboard.clear().map_err(|e| e.to_string())
     }
 }
 

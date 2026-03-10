@@ -27,12 +27,13 @@ pub fn extension_install_dir() -> Option<PathBuf> {
 }
 
 fn write_file(path: &Path, contents: &str) -> Result<(), String> {
-    fs::write(path, contents).map_err(|error| format!("failed to write {}: {error}", path.display()))
+    fs::write(path, contents)
+        .map_err(|error| format!("failed to write {}: {error}", path.display()))
 }
 
 pub fn install_extension_files() -> Result<PathBuf, String> {
-    let install_dir =
-        extension_install_dir().ok_or_else(|| "HOME is unavailable; cannot install extension".to_string())?;
+    let install_dir = extension_install_dir()
+        .ok_or_else(|| "HOME is unavailable; cannot install extension".to_string())?;
     fs::create_dir_all(&install_dir)
         .map_err(|error| format!("failed to create extension directory: {error}"))?;
 
@@ -90,8 +91,8 @@ pub fn enable_gnome_shell_extension() -> Result<(), String> {
 }
 
 pub fn open_extension_directory() -> Result<(), String> {
-    let install_dir =
-        extension_install_dir().ok_or_else(|| "HOME is unavailable; cannot open extension directory".to_string())?;
+    let install_dir = extension_install_dir()
+        .ok_or_else(|| "HOME is unavailable; cannot open extension directory".to_string())?;
     open::that(install_dir).map_err(|error| format!("failed to open extension directory: {error}"))
 }
 

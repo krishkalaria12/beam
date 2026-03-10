@@ -15,7 +15,9 @@ pub struct RaycastCompatApplication {
 }
 
 #[tauri::command]
-pub fn get_default_application(path: String) -> std::result::Result<RaycastCompatApplication, String> {
+pub fn get_default_application(
+    path: String,
+) -> std::result::Result<RaycastCompatApplication, String> {
     #[cfg(target_os = "linux")]
     {
         return linux_desktop::applications::get_default_application(&path);
@@ -92,7 +94,9 @@ pub fn trash(paths: Vec<String>) -> std::result::Result<(), String> {
         if fallback.is_err() {
             return Err(format!(
                 "failed to trash '{trimmed}': {}; {}",
-                gio_result.err().unwrap_or_else(|| "unknown gio error".to_string()),
+                gio_result
+                    .err()
+                    .unwrap_or_else(|| "unknown gio error".to_string()),
                 fallback
                     .err()
                     .unwrap_or_else(|| "unknown trash-put error".to_string())

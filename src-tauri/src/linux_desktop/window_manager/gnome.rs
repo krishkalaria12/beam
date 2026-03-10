@@ -33,7 +33,10 @@ impl WindowProvider for GnomeWindowProvider {
     }
 
     fn is_activatable(&self, env: &LinuxDesktopEnvironment) -> bool {
-        env.desktop_environment == "gnome" && gnome_extension::status::get_status().map(|status| status.dbus_reachable).unwrap_or(false)
+        env.desktop_environment == "gnome"
+            && gnome_extension::status::get_status()
+                .map(|status| status.dbus_reachable)
+                .unwrap_or(false)
     }
 
     fn capabilities(&self) -> WindowBackendCapabilities {
@@ -56,7 +59,10 @@ impl WindowProvider for GnomeWindowProvider {
     }
 
     fn focus_window(&self, window_id: &str) -> Result<(), String> {
-        let id = window_id.trim().parse::<u32>().map_err(|_| "GNOME window id is invalid".to_string())?;
+        let id = window_id
+            .trim()
+            .parse::<u32>()
+            .map_err(|_| "GNOME window id is invalid".to_string())?;
         gnome_extension::dbus::focus_window(id).and_then(|ok| {
             if ok {
                 Ok(())
@@ -67,7 +73,10 @@ impl WindowProvider for GnomeWindowProvider {
     }
 
     fn close_window(&self, window_id: &str) -> Result<(), String> {
-        let id = window_id.trim().parse::<u32>().map_err(|_| "GNOME window id is invalid".to_string())?;
+        let id = window_id
+            .trim()
+            .parse::<u32>()
+            .map_err(|_| "GNOME window id is invalid".to_string())?;
         gnome_extension::dbus::close_window(id).and_then(|ok| {
             if ok {
                 Ok(())

@@ -69,7 +69,10 @@ fn collect_windows(
     };
 
     let class_name = node_class_name(node);
-    let pid = node.pid.and_then(|value| u32::try_from(value).ok()).unwrap_or(0);
+    let pid = node
+        .pid
+        .and_then(|value| u32::try_from(value).ok())
+        .unwrap_or(0);
     if node.id > 0 && (!class_name.is_empty() || pid > 0) {
         entries.push(build_window_entry(
             state,
@@ -93,7 +96,11 @@ fn collect_windows(
 }
 
 #[cfg(target_os = "linux")]
-fn find_focused_window(node: &Node, workspace_name: &str, state: &AppState) -> Option<FocusedWindowInfo> {
+fn find_focused_window(
+    node: &Node,
+    workspace_name: &str,
+    state: &AppState,
+) -> Option<FocusedWindowInfo> {
     let next_workspace = if node.node_type == NodeType::Workspace {
         node_title(node)
     } else {

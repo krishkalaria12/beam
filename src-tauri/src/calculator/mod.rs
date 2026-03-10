@@ -28,9 +28,11 @@ fn is_incomplete_query(query: &str) -> bool {
 
 fn looks_like_math_query(query: &str) -> bool {
     query.chars().any(|ch| ch.is_ascii_digit())
-        || ["+", "-", "*", "/", "%", "^", "sqrt", "log", "sin", "cos", "tan"]
-            .iter()
-            .any(|token| query.contains(token))
+        || [
+            "+", "-", "*", "/", "%", "^", "sqrt", "log", "sin", "cos", "tan",
+        ]
+        .iter()
+        .any(|token| query.contains(token))
 }
 
 fn classify_query(query: &str) -> CalculatorStatus {
