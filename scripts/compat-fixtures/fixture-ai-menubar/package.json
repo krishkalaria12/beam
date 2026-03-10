@@ -1,9 +1,0 @@
-{
-  "name": "fixture-ai-menubar",
-  "commands": [
-    {
-      "name": "ai-menubar-check",
-      "mode": "no-view"
-    }
-  ]
-}

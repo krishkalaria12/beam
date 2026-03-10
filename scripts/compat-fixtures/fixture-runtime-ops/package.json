@@ -1,9 +1,0 @@
-{
-  "name": "fixture-runtime-ops",
-  "commands": [
-    {
-      "name": "runtime-ops-check",
-      "mode": "no-view"
-    }
-  ]
-}

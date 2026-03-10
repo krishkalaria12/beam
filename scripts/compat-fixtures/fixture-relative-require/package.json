@@ -1,9 +1,0 @@
-{
-  "name": "fixture-relative-require",
-  "commands": [
-    {
-      "name": "relative-require-check",
-      "mode": "no-view"
-    }
-  ]
-}
