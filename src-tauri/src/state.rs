@@ -7,6 +7,7 @@ use std::time::{Duration, Instant};
 use sysinfo::{Pid, PidExt, ProcessExt, System, SystemExt};
 use tauri::{AppHandle, Manager};
 
+use crate::cli::bridge::CliBridgeRuntime;
 use crate::config::config;
 use crate::file_search::{self, types::FileEntry};
 
@@ -72,6 +73,7 @@ pub struct AppState {
     pub index: Arc<HashMap<String, FileEntry>>,
     pub awake_handle: Arc<Mutex<Option<KeepAwake>>>,
     pub process_cache: Arc<Mutex<ProcessStateCache>>,
+    pub cli_bridge: Arc<CliBridgeRuntime>,
 }
 
 impl AppState {
@@ -80,6 +82,7 @@ impl AppState {
             index: Arc::new(HashMap::new()),
             awake_handle: Arc::new(Mutex::new(None)),
             process_cache: Arc::new(Mutex::new(ProcessStateCache::new())),
+            cli_bridge: Arc::new(CliBridgeRuntime::new()),
         }
     }
 }

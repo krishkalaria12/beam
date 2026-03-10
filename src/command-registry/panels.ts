@@ -18,6 +18,7 @@ export const COMMAND_PANELS = {
   WINDOW_SWITCHER: "window-switcher",
   HYPRWHSPR: "hyprwhspr",
   SCRIPT_COMMANDS: "script-commands",
+  DMENU: "dmenu",
   EXTENSION_RUNNER: "extension-runner",
 } as const;
 
@@ -47,6 +48,7 @@ export const TAKEOVER_COMMAND_PANELS = [
   COMMAND_PANELS.WINDOW_SWITCHER,
   COMMAND_PANELS.HYPRWHSPR,
   COMMAND_PANELS.SCRIPT_COMMANDS,
+  COMMAND_PANELS.DMENU,
   COMMAND_PANELS.EXTENSION_RUNNER,
 ] as const;
 

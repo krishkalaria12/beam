@@ -30,6 +30,7 @@ import { LauncherFooter } from "@/modules/launcher/components/launcher-footer";
 import { LauncherSecondaryPanel } from "@/modules/launcher/components/launcher-secondary-panel";
 import { LauncherTakeoverPanel } from "@/modules/launcher/components/launcher-takeover-panel";
 import { useExtensionSidecarEvents } from "@/modules/launcher/hooks/use-extension-sidecar-events";
+import { useCliDmenuRequests } from "@/modules/launcher/hooks/use-cli-dmenu-requests";
 import { useLauncherDeepLinks } from "@/modules/launcher/hooks/use-launcher-deep-links";
 import { useLauncherPanelPrefetch } from "@/modules/launcher/hooks/use-launcher-panel-prefetch";
 import { useLauncherWindowSizeSync } from "@/modules/launcher/hooks/use-launcher-window-size-sync";
@@ -141,6 +142,7 @@ export default function LauncherCommand() {
   } = useCommandPreferences();
   useLauncherDeepLinks({ openPanel, backToCommands });
   useExtensionSidecarEvents({ backToCommands, openExtensions });
+  useCliDmenuRequests();
   useLauncherPanelPrefetch();
 
   const runExtensionPlugin = useCallback(

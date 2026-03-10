@@ -66,6 +66,9 @@ const WindowSwitcherCommandGroup = lazy(
 const ScriptCommandsCommandGroup = lazy(
   () => import("@/modules/script-commands/components/script-commands-command-group"),
 );
+const DmenuCommandGroup = lazy(
+  () => import("@/modules/dmenu/components/dmenu-command-group"),
+);
 const HyprWhsprView = lazy(() =>
   import("@/modules/hyprwhspr/components/hyprwhspr-view").then((mod) => ({
     default: mod.HyprWhsprView,
@@ -155,7 +158,7 @@ export function LauncherTakeoverPanel({
 
   const [actionsOpen, setActionsOpen] = useState(false);
   const actionsPreviousFocusRef = useRef<HTMLElement | null>(null);
-  const shouldUseSharedActions = takeoverPanelIsOpen;
+  const shouldUseSharedActions = takeoverPanelIsOpen && activePanel !== COMMAND_PANELS.DMENU;
   const panelRegistration = getPanelCommandRegistration(activePanel, quicklinksView);
   const primaryActionLabel = getPanelPrimaryActionLabel(activePanel);
 
@@ -463,6 +466,12 @@ export function LauncherTakeoverPanel({
   } else if (activePanel === COMMAND_PANELS.SCRIPT_COMMANDS) {
     content = (
       <ScriptCommandsCommandGroup isOpen onOpen={openScriptCommands} onBack={backToCommands} />
+    );
+  } else if (activePanel === COMMAND_PANELS.DMENU) {
+    content = (
+      <LauncherTakeoverSurface>
+        <DmenuCommandGroup />
+      </LauncherTakeoverSurface>
     );
   } else if (activePanel === COMMAND_PANELS.HYPRWHSPR) {
     content = (

@@ -2,6 +2,7 @@ pub mod ai;
 mod app_commands;
 pub mod applications;
 pub mod calculator;
+pub mod cli;
 pub mod clipboard;
 pub mod config;
 pub mod custom_config;
@@ -16,6 +17,7 @@ pub mod hyprwhspr;
 pub mod integrations;
 pub mod launcher_theme;
 pub mod launcher_window;
+pub mod linux_desktop;
 pub mod menu_bar;
 pub mod pinned;
 pub mod quicklinks;
@@ -29,7 +31,6 @@ pub mod todo;
 pub mod translation;
 pub mod utils;
 pub mod window_switcher;
-pub mod linux_desktop;
 
 use tauri::{Emitter, Manager, WindowEvent};
 
@@ -107,7 +108,33 @@ fn handle_activation_args(app: &tauri::AppHandle, args: &[String], startup: bool
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
-pub fn run() {
+pub fn entry() -> i32 {
+    let raw_args: Vec<String> = std::env::args().collect();
+    let invocation = match cli::parse_invocation(&raw_args) {
+        Ok(invocation) => invocation,
+        Err(error) => {
+            eprintln!("beam: {error}");
+            return 2;
+        }
+    };
+
+    match invocation {
+        cli::CliInvocation::LaunchApp { startup_args } => {
+            run(startup_args);
+            0
+        }
+        cli::CliInvocation::Dmenu { options } => match cli::execute_dmenu(options) {
+            Ok(code) => code,
+            Err(error) => {
+                eprintln!("beam: {error}");
+                2
+            }
+        },
+    }
+}
+
+#[cfg_attr(mobile, tauri::mobile_entry_point)]
+pub fn run(startup_args: Vec<String>) {
     let mut builder = tauri::Builder::default()
         .manage(state::AppState::new())
         .plugin(tauri_plugin_store::Builder::new().build())
@@ -135,10 +162,9 @@ pub fn run() {
     }
 
     builder
-        .setup(|app| {
+        .setup(move |app| {
             #[cfg(desktop)]
             {
-                let startup_args: Vec<String> = std::env::args().collect();
                 handle_activation_args(&app.handle(), &startup_args, true);
             }
 
@@ -172,6 +198,7 @@ pub fn run() {
             todo::db::init(&app.handle());
             snippets::db::init(&app.handle());
             extensions::browser_extension::start_bridge_server(&app.handle());
+            cli::bridge::start_cli_bridge_server(&app.handle());
 
             Ok(())
         })

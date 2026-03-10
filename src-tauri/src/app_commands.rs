@@ -1,8 +1,8 @@
 use crate::{
-    ai, applications, calculator, clipboard, custom_config, dictionary, extensions, file_search,
-    hotkeys, hyprwhspr, integrations, launcher_theme, launcher_window, linux_desktop, menu_bar,
-    pinned, quicklinks, script_commands, search, settings, snippets, system_actions, todo,
-    translation, window_switcher,
+    ai, applications, calculator, cli, clipboard, custom_config, dictionary, extensions,
+    file_search, hotkeys, hyprwhspr, integrations, launcher_theme, launcher_window, linux_desktop,
+    menu_bar, pinned, quicklinks, script_commands, search, settings, snippets, system_actions,
+    todo, translation, window_switcher,
 };
 
 use tauri::ipc::Invoke;
@@ -133,5 +133,8 @@ pub fn get_handler() -> impl Fn(Invoke) -> bool {
         window_switcher::close_window,
         custom_config::commands_items::get_hidden_command_ids,
         custom_config::commands_items::set_command_hidden,
+        cli::bridge::cli_bridge_mark_ui_ready,
+        cli::bridge::cli_bridge_complete_request,
+        cli::bridge::cli_bridge_search_request,
     ]
 }

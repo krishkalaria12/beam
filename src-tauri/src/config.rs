@@ -173,6 +173,9 @@ pub struct Config {
     pub EXTENSIONS_BROWSER_BRIDGE_STALE_SECONDS: u64,
     pub EXTENSIONS_BROWSER_BRIDGE_MAX_BODY_BYTES: usize,
     pub EXTENSIONS_BROWSER_BRIDGE_MAX_CONTENT_CHARS: usize,
+    pub CLI_BRIDGE_HOST: &'static str,
+    pub CLI_BRIDGE_PORT: u16,
+    pub CLI_DMENU_REQUEST_EVENT: &'static str,
 
     // -- Script Commands
     pub SCRIPT_COMMANDS_DIRECTORY: &'static str,
@@ -441,6 +444,9 @@ impl Config {
             EXTENSIONS_BROWSER_BRIDGE_STALE_SECONDS: 45,
             EXTENSIONS_BROWSER_BRIDGE_MAX_BODY_BYTES: 2 * 1024 * 1024,
             EXTENSIONS_BROWSER_BRIDGE_MAX_CONTENT_CHARS: 200_000,
+            CLI_BRIDGE_HOST: "127.0.0.1",
+            CLI_BRIDGE_PORT: 38958,
+            CLI_DMENU_REQUEST_EVENT: "cli-dmenu-request",
 
             SCRIPT_COMMANDS_DIRECTORY: "script-commands",
             SCRIPT_COMMANDS_DISCOVERY_CACHE_TTL_MS: 12_000,
