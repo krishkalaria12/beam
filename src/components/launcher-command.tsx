@@ -722,6 +722,9 @@ export default function LauncherCommand() {
             openTodo={() => {
               openPanel("todo", true);
             }}
+            openNotes={() => {
+              openPanel("notes", true);
+            }}
             openSnippets={() => {
               openPanel("snippets", true);
             }}
@@ -763,9 +766,6 @@ export default function LauncherCommand() {
                   void handleRegistryCommandSelect(commandId);
                 }}
                 onSetPinned={setPinned}
-                onOpenTodoPreview={() => {
-                  void handleRegistryCommandSelect("todo.panel.open");
-                }}
               />
             ) : null}
 

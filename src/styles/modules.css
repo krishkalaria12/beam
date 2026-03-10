@@ -956,6 +956,117 @@
   }
 }
 
+/* notes module styles */
+
+.notes-view-enter {
+  animation: notes-view-enter 250ms ease-out both;
+}
+
+@keyframes notes-view-enter {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.notes-header-enter {
+  animation: notes-header-enter 200ms ease-out both;
+}
+
+@keyframes notes-header-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.notes-content-enter {
+  animation: notes-content-enter 220ms ease-out both;
+  animation-delay: 50ms;
+}
+
+@keyframes notes-content-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.notes-footer-enter {
+  animation: notes-footer-enter 200ms ease-out both;
+  animation-delay: 100ms;
+}
+
+@keyframes notes-footer-enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.notes-list-item {
+  animation: notes-list-item-enter 180ms ease-out both;
+}
+
+@keyframes notes-list-item-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.note-preview-enter {
+  animation: note-preview-enter 200ms ease-out both;
+  animation-delay: 80ms;
+}
+
+@keyframes note-preview-enter {
+  from {
+    opacity: 0;
+    transform: translateX(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.note-editor-enter {
+  animation: note-editor-enter 220ms ease-out both;
+  animation-delay: 50ms;
+}
+
+@keyframes note-editor-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* dictionary module styles */
 
 /* Dictionary view container - entrance animation */

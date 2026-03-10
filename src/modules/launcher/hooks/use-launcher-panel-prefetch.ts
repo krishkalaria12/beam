@@ -16,6 +16,7 @@ const launchPanelPreloaders = [
   () => import("@/modules/clipboard/components/clipboard-command-group"),
   () => import("@/modules/ai/components/ai-command-group"),
   () => import("@/modules/todo/components/todo-command-group"),
+  () => import("@/modules/notes/components/notes-command-group"),
   () => import("@/modules/snippets/components/snippets-command-group"),
   () => import("@/modules/dictionary/components/dictionary-command-group"),
   () => import("@/modules/file-search/components/file-search-command-group"),

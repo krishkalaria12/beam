@@ -33,6 +33,7 @@ const ClipboardCommandGroup = lazy(
 );
 const AiCommandGroup = lazy(() => import("@/modules/ai/components/ai-command-group"));
 const TodoCommandGroup = lazy(() => import("@/modules/todo/components/todo-command-group"));
+const NotesCommandGroup = lazy(() => import("@/modules/notes/components/notes-command-group"));
 const SnippetsCommandGroup = lazy(
   () => import("@/modules/snippets/components/snippets-command-group"),
 );
@@ -104,6 +105,7 @@ interface TakeoverPanelRendererInput {
   openClipboard: () => void;
   openAi: () => void;
   openTodo: () => void;
+  openNotes: () => void;
   openSnippets: () => void;
   openExtensions: () => void;
   openScriptCommands: () => void;
@@ -149,6 +151,7 @@ export function LauncherTakeoverPanel({
   openClipboard,
   openAi,
   openTodo,
+  openNotes,
   openSnippets,
   openExtensions,
   openScriptCommands,
@@ -392,6 +395,8 @@ export function LauncherTakeoverPanel({
 
   if (activePanel === COMMAND_PANELS.TODO) {
     content = <TodoCommandGroup isOpen onOpen={openTodo} onBack={backToCommands} />;
+  } else if (activePanel === COMMAND_PANELS.NOTES) {
+    content = <NotesCommandGroup isOpen onOpen={openNotes} onBack={backToCommands} />;
   } else if (activePanel === COMMAND_PANELS.AI) {
     content = <AiCommandGroup isOpen onOpen={openAi} onBack={backToCommands} />;
   } else if (activePanel === COMMAND_PANELS.SNIPPETS) {
