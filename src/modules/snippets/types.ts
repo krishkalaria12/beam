@@ -32,6 +32,7 @@ export const snippetSchema = z.object({
   enabled: z.boolean(),
   case_sensitive: z.boolean(),
   word_boundary: z.boolean(),
+  instant_expand: z.boolean(),
   use_count: z.number(),
   last_used_at: z.string().nullable(),
   created_at: z.string(),

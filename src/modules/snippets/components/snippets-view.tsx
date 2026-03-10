@@ -12,7 +12,7 @@ import { SnippetPreview } from "@/modules/snippets/components/snippet-preview";
 import {
   useCreateSnippetMutation,
   useDeleteSnippetMutation,
-  useIncrementSnippetCopiedCountMutation,
+  usePasteSnippetMutation,
   useSetSnippetEnabledMutation,
   useSnippetsQuery,
   useUpdateSnippetMutation,
@@ -33,7 +33,7 @@ function buildDraftFromSnippet(snippet: Snippet): SnippetEditorDraft {
     enabled: snippet.enabled,
     caseSensitive: snippet.case_sensitive,
     wordBoundary: snippet.word_boundary,
-    instantExpand: false,
+    instantExpand: snippet.instant_expand,
   };
 }
 
@@ -115,7 +115,7 @@ export function SnippetsView({ onBack }: SnippetsViewProps) {
   const updateSnippetMutation = useUpdateSnippetMutation();
   const deleteSnippetMutation = useDeleteSnippetMutation();
   const setSnippetEnabledMutation = useSetSnippetEnabledMutation();
-  const incrementCopiedCountMutation = useIncrementSnippetCopiedCountMutation();
+  const pasteSnippetMutation = usePasteSnippetMutation();
 
   const [viewMode, setViewMode] = useState<SnippetsMode>("view");
   const [searchValue, setSearchValue] = useState("");
@@ -276,17 +276,16 @@ export function SnippetsView({ onBack }: SnippetsViewProps) {
     }
   }
 
-  async function handleCopyAndCount() {
+  async function handlePasteSnippet() {
     if (!selectedSnippet) {
       return;
     }
 
     try {
-      await navigator.clipboard.writeText(selectedSnippet.template);
-      await incrementCopiedCountMutation.mutateAsync(selectedSnippet.id);
-      toast.success("Snippet copied.");
+      await pasteSnippetMutation.mutateAsync(selectedSnippet.id);
+      toast.success("Snippet pasted.");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to copy snippet.");
+      toast.error(error instanceof Error ? error.message : "Failed to paste snippet.");
     }
   }
 
@@ -383,12 +382,12 @@ export function SnippetsView({ onBack }: SnippetsViewProps) {
           />
           <SnippetPreview
             snippet={selectedSnippet}
-            isCopying={incrementCopiedCountMutation.isPending}
+            isCopying={pasteSnippetMutation.isPending}
             isTogglingEnabled={setSnippetEnabledMutation.isPending}
             isDeleting={deleteSnippetMutation.isPending}
             onEdit={openEditView}
             onCopyAndCount={() => {
-              void handleCopyAndCount();
+              void handlePasteSnippet();
             }}
             onToggleEnabled={() => {
               void handleToggleEnabled();
@@ -434,9 +433,9 @@ export function SnippetsView({ onBack }: SnippetsViewProps) {
                 variant="ghost"
                 size="sm"
                 onClick={() => {
-                  void handleCopyAndCount();
+                  void handlePasteSnippet();
                 }}
-                disabled={!selectedSnippet || incrementCopiedCountMutation.isPending}
+                disabled={!selectedSnippet || pasteSnippetMutation.isPending}
                 className={cn(
                   "inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--launcher-card-border)] px-3 text-[12px] font-medium transition-all duration-200",
                   "bg-[var(--launcher-card-bg)] text-muted-foreground hover:bg-[var(--launcher-chip-bg)] hover:text-muted-foreground",

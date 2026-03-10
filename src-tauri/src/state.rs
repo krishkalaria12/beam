@@ -10,6 +10,7 @@ use tauri::{AppHandle, Manager};
 use crate::cli::bridge::CliBridgeRuntime;
 use crate::config::config;
 use crate::file_search::{self, types::FileEntry};
+use crate::snippets::model::SnippetsState;
 
 pub struct ProcessStateCache {
     sys: System,
@@ -74,6 +75,7 @@ pub struct AppState {
     pub awake_handle: Arc<Mutex<Option<KeepAwake>>>,
     pub process_cache: Arc<Mutex<ProcessStateCache>>,
     pub cli_bridge: Arc<CliBridgeRuntime>,
+    pub snippets: Arc<SnippetsState>,
 }
 
 impl AppState {
@@ -83,6 +85,7 @@ impl AppState {
             awake_handle: Arc::new(Mutex::new(None)),
             process_cache: Arc::new(Mutex::new(ProcessStateCache::new())),
             cli_bridge: Arc::new(CliBridgeRuntime::new()),
+            snippets: Arc::new(SnippetsState::new()),
         }
     }
 }

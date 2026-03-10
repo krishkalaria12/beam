@@ -363,18 +363,38 @@ impl SnippetsRepository {
         app: &AppHandle,
         snippet_id: &str,
     ) -> Result<()> {
+        self.record_snippet_usage(app, snippet_id, true).await
+    }
+
+    pub async fn record_snippet_usage(
+        &self,
+        app: &AppHandle,
+        snippet_id: &str,
+        copied: bool,
+    ) -> Result<()> {
         let snippet_id = normalize_required_text(snippet_id, "snippet id")?;
         let pool: SnippetDbPool = get_snippets_pool(app).await?;
         let now = now_utc_timestamp();
 
-        let result = sqlx::query(
-            "UPDATE snippets SET copied_count = copied_count + 1, last_used_at = ? WHERE id = ?",
-        )
-        .bind(now)
-        .bind(&snippet_id)
-        .execute(pool.as_ref())
-        .await
-        .map_err(|error| SnippetError::Database(error.to_string()))?;
+        let result = if copied {
+            sqlx::query(
+                "UPDATE snippets SET copied_count = copied_count + 1, use_count = use_count + 1, last_used_at = ? WHERE id = ?",
+            )
+            .bind(now)
+            .bind(&snippet_id)
+            .execute(pool.as_ref())
+            .await
+            .map_err(|error| SnippetError::Database(error.to_string()))?
+        } else {
+            sqlx::query(
+                "UPDATE snippets SET use_count = use_count + 1, last_used_at = ? WHERE id = ?",
+            )
+            .bind(now)
+            .bind(&snippet_id)
+            .execute(pool.as_ref())
+            .await
+            .map_err(|error| SnippetError::Database(error.to_string()))?
+        };
 
         if result.rows_affected() == 0 {
             return Err(SnippetError::NotFound(format!(

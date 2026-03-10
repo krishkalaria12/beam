@@ -200,6 +200,7 @@ pub fn run(startup_args: Vec<String>) {
             notes::db::init(&app.handle());
             todo::db::init(&app.handle());
             snippets::db::init(&app.handle());
+            snippets::runtime::initialize_runtime(app.handle().clone());
             extensions::browser_extension::start_bridge_server(&app.handle());
             cli::bridge::start_cli_bridge_server(&app.handle());
 

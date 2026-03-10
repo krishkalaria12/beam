@@ -4,6 +4,8 @@ use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 use tokio::sync::{watch, RwLock};
 
+use crate::config::config;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum SnippetContentType {
@@ -25,6 +27,7 @@ pub struct Snippet {
     pub enabled: bool,
     pub case_sensitive: bool,
     pub word_boundary: bool,
+    pub instant_expand: bool,
     pub use_count: i64,
     pub last_used_at: Option<String>,
     pub created_at: String,
@@ -67,6 +70,24 @@ pub struct SnippetsState {
     pub snippets_by_id: Arc<RwLock<HashMap<String, Snippet>>>,
     pub index: Arc<RwLock<TriggerIndex>>,
     pub status_tx: watch::Sender<RuntimeStatus>,
+}
+
+impl SnippetsState {
+    pub fn new() -> Self {
+        let (status_tx, _) = watch::channel(RuntimeStatus::Starting);
+
+        Self {
+            settings: Arc::new(RwLock::new(SnippetRuntimeSettings {
+                enabled: true,
+                trigger_mode: TriggerMode::Delimiter,
+                cooldown_ms: config().SNIPPETS_DEFAULT_COOLDOWN_MS,
+                max_buffer_len: config().SNIPPETS_DEFAULT_MAX_BUFFER_LEN,
+            })),
+            snippets_by_id: Arc::new(RwLock::new(HashMap::new())),
+            index: Arc::new(RwLock::new(TriggerIndex::default())),
+            status_tx,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]

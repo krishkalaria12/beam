@@ -6,6 +6,7 @@ import {
   getSnippetRuntimeSettings,
   getSnippets,
   incrementSnippetCopiedCount,
+  pasteSnippet,
   setSnippetEnabled,
   updateSnippet,
   updateSnippetRuntimeSettings,
@@ -87,6 +88,17 @@ export function useIncrementSnippetCopiedCountMutation() {
 
   return useMutation({
     mutationFn: (id: string) => incrementSnippetCopiedCount(id),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: SNIPPETS_QUERY_KEY });
+    },
+  });
+}
+
+export function usePasteSnippetMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => pasteSnippet(id),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: SNIPPETS_QUERY_KEY });
     },

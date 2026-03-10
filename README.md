@@ -254,6 +254,18 @@ bun run desktop:dev
 
 Starts Vite (on `http://localhost:3001`) and Tauri together in development mode.
 
+### Snippet Runtime Permissions
+
+Beam's Linux snippet expander reads keyboard events from `/dev/input/event*` and injects paste/backspace events through `/dev/uinput`.
+
+Install the bundled udev rules once:
+
+```bash
+sudo ./scripts/install-snippets-udev-rules.sh
+```
+
+Then log out and back in before testing global snippet expansion.
+
 ### Build
 
 ```bash

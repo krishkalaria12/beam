@@ -155,7 +155,7 @@ export function SnippetPreview({
           )}
         >
           <Copy className="size-3.5" />
-          {isCopying ? "Copying..." : "Paste"}
+          {isCopying ? "Pasting..." : "Paste"}
         </Button>
 
         <div className="flex items-center gap-2">

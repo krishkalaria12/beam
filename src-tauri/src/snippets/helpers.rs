@@ -106,6 +106,7 @@ pub fn map_row_to_snippet(row: SnippetRow, tags: Vec<String>) -> Result<Snippet>
         enabled: row.enabled == 1,
         case_sensitive: row.case_sensitive == 1,
         word_boundary: row.word_boundary == 1,
+        instant_expand: row.instant_expand == 1,
         use_count: row.use_count,
         last_used_at: row.last_used_at,
         created_at: row.created_at,

@@ -76,6 +76,7 @@ pub fn get_handler() -> impl Fn(Invoke) -> bool {
         snippets::delete_snippet,
         snippets::set_snippet_enabled,
         snippets::increment_snippet_copied_count,
+        snippets::paste_snippet,
         snippets::get_snippet_runtime_settings,
         snippets::update_snippet_runtime_settings,
         notes::get_notes,

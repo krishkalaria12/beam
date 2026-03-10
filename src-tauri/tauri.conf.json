@@ -50,7 +50,8 @@
     "targets": "all",
     "externalBin": ["binaries/app"],
     "resources": [
-      "../desktop-integrations/gnome-shell/beam@beam-linux"
+      "../desktop-integrations/gnome-shell/beam@beam-linux",
+      "../desktop-integrations/udev/70-beam-snippets.rules"
     ],
     "icon": [
       "icons/32x32.png",

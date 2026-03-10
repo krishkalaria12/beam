@@ -1,0 +1,5 @@
+# Beam snippets runtime needs access to keyboard event devices and /dev/uinput.
+# This grants the active local user access through logind uaccess tagging.
+
+SUBSYSTEM=="input", KERNEL=="event*", TAG+="uaccess"
+KERNEL=="uinput", TAG+="uaccess", OPTIONS+="static_node=uinput"

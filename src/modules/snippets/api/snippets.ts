@@ -141,6 +141,13 @@ export async function incrementSnippetCopiedCount(id: string): Promise<void> {
   await invoke("increment_snippet_copied_count", { snippetId });
 }
 
+export async function pasteSnippet(id: string): Promise<void> {
+  assertDesktopRuntime();
+
+  const snippetId = normalizeRequiredText(id, "snippet id");
+  await invoke("paste_snippet", { snippetId });
+}
+
 export async function getSnippetRuntimeSettings(): Promise<SnippetRuntimeSettings> {
   if (!isTauri()) {
     return {
