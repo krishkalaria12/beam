@@ -76,7 +76,7 @@ pub fn search_clipboard_history(
 pub async fn get_selected_text() -> std::result::Result<String, String> {
     #[cfg(target_os = "linux")]
     {
-        return linux_desktop::clipboard::selected_text();
+        return linux_desktop::clipboard::selected_text().map_err(|error| error.to_string());
     }
 
     #[cfg(not(target_os = "linux"))]
@@ -95,7 +95,7 @@ pub async fn get_selected_finder_items() -> std::result::Result<Vec<SelectedFind
 pub async fn clipboard_read_text() -> std::result::Result<ReadResult, String> {
     #[cfg(target_os = "linux")]
     {
-        return linux_desktop::clipboard::clipboard_read_text();
+        return linux_desktop::clipboard::clipboard_read_text().map_err(|error| error.to_string());
     }
 
     #[cfg(not(target_os = "linux"))]
@@ -115,7 +115,7 @@ pub async fn clipboard_read_text() -> std::result::Result<ReadResult, String> {
 pub async fn clipboard_read() -> std::result::Result<ReadResult, String> {
     #[cfg(target_os = "linux")]
     {
-        return linux_desktop::clipboard::clipboard_read();
+        return linux_desktop::clipboard::clipboard_read().map_err(|error| error.to_string());
     }
 
     #[cfg(not(target_os = "linux"))]
@@ -150,7 +150,8 @@ pub async fn clipboard_copy(
 ) -> std::result::Result<(), String> {
     #[cfg(target_os = "linux")]
     {
-        return linux_desktop::clipboard::clipboard_copy(content, options);
+        return linux_desktop::clipboard::clipboard_copy(content, options)
+            .map_err(|error| error.to_string());
     }
 
     #[cfg(not(target_os = "linux"))]
@@ -211,7 +212,8 @@ fn trigger_paste_shortcut() {
 pub async fn clipboard_paste(content: ClipboardContent) -> std::result::Result<(), String> {
     #[cfg(target_os = "linux")]
     {
-        return linux_desktop::clipboard::clipboard_paste(content);
+        return linux_desktop::clipboard::clipboard_paste(content)
+            .map_err(|error| error.to_string());
     }
 
     #[cfg(not(target_os = "linux"))]
@@ -238,7 +240,7 @@ pub async fn clipboard_paste(content: ClipboardContent) -> std::result::Result<(
 pub async fn clipboard_clear() -> std::result::Result<(), String> {
     #[cfg(target_os = "linux")]
     {
-        return linux_desktop::clipboard::clipboard_clear();
+        return linux_desktop::clipboard::clipboard_clear().map_err(|error| error.to_string());
     }
 
     #[cfg(not(target_os = "linux"))]

@@ -27,7 +27,7 @@ pub fn list_windows(state: State<'_, AppState>) -> Result<Vec<WindowEntry>> {
     #[cfg(target_os = "linux")]
     {
         linux_desktop::window_manager::list_windows(&state)
-            .map_err(WindowSwitcherError::ClientError)
+            .map_err(|error| WindowSwitcherError::ClientError(error.to_string()))
     }
 }
 
@@ -47,7 +47,7 @@ pub fn focus_window(window_id: String) -> Result<()> {
         }
 
         linux_desktop::window_manager::focus_window(normalized)
-            .map_err(WindowSwitcherError::FocusingWindowError)
+            .map_err(|error| WindowSwitcherError::FocusingWindowError(error.to_string()))
     }
 }
 
@@ -67,6 +67,6 @@ pub fn close_window(window_id: String) -> Result<()> {
         }
 
         linux_desktop::window_manager::close_window(normalized)
-            .map_err(WindowSwitcherError::ClosingWindowError)
+            .map_err(|error| WindowSwitcherError::ClosingWindowError(error.to_string()))
     }
 }

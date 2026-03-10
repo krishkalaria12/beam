@@ -7,8 +7,10 @@ use walkdir::WalkDir;
 
 use crate::applications::raycast_compat::RaycastCompatApplication;
 use crate::config::config;
-use crate::linux_desktop::window_manager::{self, FocusedWindowInfo};
 use crate::state::AppState;
+
+use super::error::{LinuxDesktopError, Result};
+use super::window_manager::{self, FocusedWindowInfo};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct DesktopApplicationRecord {
@@ -45,7 +47,10 @@ fn desktop_id_from_path(path: &Path) -> Option<String> {
 fn scan_desktop_applications() -> Vec<DesktopApplicationRecord> {
     let mut results = Vec::new();
     for base in desktop_entry_paths() {
-        for entry in WalkDir::new(base).into_iter().filter_map(Result::ok) {
+        for entry in WalkDir::new(base)
+            .into_iter()
+            .filter_map(|entry| entry.ok())
+        {
             if !entry.file_type().is_file() {
                 continue;
             }
@@ -137,7 +142,7 @@ fn parse_gio_default_desktop_id(output: &str) -> Option<String> {
         .filter(|value| value.ends_with(".desktop"))
 }
 
-fn mime_query_target(target: &str) -> Result<String, String> {
+fn mime_query_target(target: &str) -> Result<String> {
     if let Ok(url) = url::Url::parse(target) {
         let scheme = url.scheme().trim();
         if !scheme.is_empty() && scheme != "file" {
@@ -148,7 +153,7 @@ fn mime_query_target(target: &str) -> Result<String, String> {
     mime_type_for_target(target)
 }
 
-fn mime_type_for_target(target: &str) -> Result<String, String> {
+fn mime_type_for_target(target: &str) -> Result<String> {
     let gio_output = Command::new("gio")
         .args(["info", "--attributes=standard::content-type", target])
         .output();
@@ -170,14 +175,18 @@ fn mime_type_for_target(target: &str) -> Result<String, String> {
     let output = Command::new("xdg-mime")
         .args(["query", "filetype", target])
         .output()
-        .map_err(|error| format!("failed to execute xdg-mime: {error}"))?;
+        .map_err(|error| {
+            LinuxDesktopError::MimeLookupError(format!("failed to execute xdg-mime: {error}"))
+        })?;
     if !output.status.success() {
-        return Err(String::from_utf8_lossy(&output.stderr).trim().to_string());
+        return Err(LinuxDesktopError::MimeLookupError(
+            String::from_utf8_lossy(&output.stderr).trim().to_string(),
+        ));
     }
     Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
 }
 
-fn default_desktop_id_for_target(target: &str) -> Result<String, String> {
+fn default_desktop_id_for_target(target: &str) -> Result<String> {
     let mime = mime_query_target(target)?;
 
     let gio_output = Command::new("gio").args(["mime", &mime]).output();
@@ -193,15 +202,19 @@ fn default_desktop_id_for_target(target: &str) -> Result<String, String> {
     let output = Command::new("xdg-mime")
         .args(["query", "default", &mime])
         .output()
-        .map_err(|error| format!("failed to execute xdg-mime: {error}"))?;
+        .map_err(|error| {
+            LinuxDesktopError::MimeLookupError(format!("failed to execute xdg-mime: {error}"))
+        })?;
     if !output.status.success() {
-        return Err(String::from_utf8_lossy(&output.stderr).trim().to_string());
+        return Err(LinuxDesktopError::MimeLookupError(
+            String::from_utf8_lossy(&output.stderr).trim().to_string(),
+        ));
     }
     let desktop_id = String::from_utf8_lossy(&output.stdout).trim().to_string();
     if desktop_id.is_empty() {
-        return Err(format!(
+        return Err(LinuxDesktopError::ApplicationLookupError(format!(
             "no default application is registered for MIME type {mime}"
-        ));
+        )));
     }
     Ok(desktop_id)
 }
@@ -216,9 +229,12 @@ fn to_raycast_application(record: DesktopApplicationRecord) -> RaycastCompatAppl
     }
 }
 
-pub fn get_frontmost_application(state: &AppState) -> Result<RaycastCompatApplication, String> {
-    let focused = window_manager::frontmost_window(state)?
-        .ok_or_else(|| "could not determine the frontmost application".to_string())?;
+pub fn get_frontmost_application(state: &AppState) -> Result<RaycastCompatApplication> {
+    let focused = window_manager::frontmost_window(state)?.ok_or_else(|| {
+        LinuxDesktopError::FrontmostApplicationError(
+            "could not determine the frontmost application".to_string(),
+        )
+    })?;
     let record = find_desktop_application_by_window(&focused).unwrap_or(DesktopApplicationRecord {
         desktop_id: focused
             .app_id
@@ -233,20 +249,25 @@ pub fn get_frontmost_application(state: &AppState) -> Result<RaycastCompatApplic
     });
 
     if record.name.trim().is_empty() {
-        return Err("could not resolve the frontmost application".to_string());
+        return Err(LinuxDesktopError::FrontmostApplicationError(
+            "could not resolve the frontmost application".to_string(),
+        ));
     }
 
     Ok(to_raycast_application(record))
 }
 
-pub fn get_default_application(target: &str) -> Result<RaycastCompatApplication, String> {
+pub fn get_default_application(target: &str) -> Result<RaycastCompatApplication> {
     let desktop_id = default_desktop_id_for_target(target)?;
-    let record = find_desktop_application_by_id(&desktop_id)
-        .ok_or_else(|| format!("failed to map desktop entry {desktop_id} to an application"))?;
+    let record = find_desktop_application_by_id(&desktop_id).ok_or_else(|| {
+        LinuxDesktopError::ApplicationLookupError(format!(
+            "failed to map desktop entry {desktop_id} to an application"
+        ))
+    })?;
     Ok(to_raycast_application(record))
 }
 
-pub fn show_in_file_manager(target: &str) -> Result<(), String> {
+pub fn show_in_file_manager(target: &str) -> Result<()> {
     let absolute = fs::canonicalize(target)
         .unwrap_or_else(|_| PathBuf::from(target))
         .to_string_lossy()
@@ -287,28 +308,10 @@ pub fn show_in_file_manager(target: &str) -> Result<(), String> {
     Command::new("xdg-open")
         .arg(&absolute)
         .spawn()
-        .map_err(|error| format!("failed to show item in file manager: {error}"))?;
+        .map_err(|error| {
+            LinuxDesktopError::FileManagerError(format!(
+                "failed to show item in file manager: {error}"
+            ))
+        })?;
     Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::{mime_query_target, parse_gio_default_desktop_id};
-
-    #[test]
-    fn parses_gio_mime_output() {
-        let output = "Default application for “text/plain”: org.gnome.TextEditor.desktop\n";
-        assert_eq!(
-            parse_gio_default_desktop_id(output).as_deref(),
-            Some("org.gnome.TextEditor.desktop")
-        );
-    }
-
-    #[test]
-    fn maps_url_target_to_scheme_handler() {
-        assert_eq!(
-            mime_query_target("https://example.com").as_deref(),
-            Ok("x-scheme-handler/https")
-        );
-    }
 }

@@ -20,7 +20,8 @@ pub fn get_default_application(
 ) -> std::result::Result<RaycastCompatApplication, String> {
     #[cfg(target_os = "linux")]
     {
-        return linux_desktop::applications::get_default_application(&path);
+        return linux_desktop::applications::get_default_application(&path)
+            .map_err(|error| error.to_string());
     }
 
     #[cfg(not(target_os = "linux"))]
@@ -36,7 +37,8 @@ pub fn get_frontmost_application(
 ) -> std::result::Result<RaycastCompatApplication, String> {
     #[cfg(target_os = "linux")]
     {
-        return linux_desktop::applications::get_frontmost_application(&state);
+        return linux_desktop::applications::get_frontmost_application(&state)
+            .map_err(|error| error.to_string());
     }
 
     #[cfg(not(target_os = "linux"))]
@@ -50,7 +52,8 @@ pub fn get_frontmost_application(
 pub fn show_in_finder(path: String) -> std::result::Result<(), String> {
     #[cfg(target_os = "linux")]
     {
-        return linux_desktop::applications::show_in_file_manager(&path);
+        return linux_desktop::applications::show_in_file_manager(&path)
+            .map_err(|error| error.to_string());
     }
 
     #[cfg(not(target_os = "linux"))]

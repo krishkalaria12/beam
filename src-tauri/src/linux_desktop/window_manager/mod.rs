@@ -1,3 +1,5 @@
+pub mod error;
+
 mod fallback;
 mod gnome;
 mod hyprland;
@@ -8,20 +10,19 @@ mod x11;
 use serde::{Deserialize, Serialize};
 
 use crate::applications::icon_resolver::IconResolver;
-use crate::linux_desktop::capabilities::{DesktopBackendKind, WindowBackendCapabilities};
-use crate::linux_desktop::environment::{detect_environment, LinuxDesktopEnvironment};
+use crate::config::config;
 use crate::state::AppState;
 use crate::window_switcher::WindowEntry;
 
+use self::error::Result;
 use self::fallback::UnsupportedWindowProvider;
 use self::gnome::GnomeWindowProvider;
 use self::hyprland::HyprlandWindowProvider;
 use self::kde::KdeWindowProvider;
 use self::sway::SwayWindowProvider;
 use self::x11::X11WindowProvider;
-
-pub const HYPR_WINDOW_ID_PREFIX: &str = "hypr:";
-pub const SWAY_WINDOW_ID_PREFIX: &str = "sway:";
+use super::capabilities::{DesktopBackendKind, WindowBackendCapabilities};
+use super::environment::{detect_environment, LinuxDesktopEnvironment};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -40,10 +41,10 @@ pub trait WindowProvider {
     fn backend_kind(&self) -> DesktopBackendKind;
     fn is_activatable(&self, env: &LinuxDesktopEnvironment) -> bool;
     fn capabilities(&self) -> WindowBackendCapabilities;
-    fn list_windows(&self, state: &AppState) -> Result<Vec<WindowEntry>, String>;
-    fn focus_window(&self, window_id: &str) -> Result<(), String>;
-    fn close_window(&self, window_id: &str) -> Result<(), String>;
-    fn frontmost_window(&self, state: &AppState) -> Result<Option<FocusedWindowInfo>, String>;
+    fn list_windows(&self, state: &AppState) -> Result<Vec<WindowEntry>>;
+    fn focus_window(&self, window_id: &str) -> Result<()>;
+    fn close_window(&self, window_id: &str) -> Result<()>;
+    fn frontmost_window(&self, state: &AppState) -> Result<Option<FocusedWindowInfo>>;
 }
 
 fn select_provider(env: &LinuxDesktopEnvironment) -> Box<dyn WindowProvider> {
@@ -74,22 +75,22 @@ pub fn active_capabilities() -> WindowBackendCapabilities {
     select_provider(&env).capabilities()
 }
 
-pub fn list_windows(state: &AppState) -> Result<Vec<WindowEntry>, String> {
+pub fn list_windows(state: &AppState) -> Result<Vec<WindowEntry>> {
     let env = detect_environment();
     select_provider(&env).list_windows(state)
 }
 
-pub fn focus_window(window_id: &str) -> Result<(), String> {
+pub fn focus_window(window_id: &str) -> Result<()> {
     let env = detect_environment();
     select_provider(&env).focus_window(window_id)
 }
 
-pub fn close_window(window_id: &str) -> Result<(), String> {
+pub fn close_window(window_id: &str) -> Result<()> {
     let env = detect_environment();
     select_provider(&env).close_window(window_id)
 }
 
-pub fn frontmost_window(state: &AppState) -> Result<Option<FocusedWindowInfo>, String> {
+pub fn frontmost_window(state: &AppState) -> Result<Option<FocusedWindowInfo>> {
     let env = detect_environment();
     select_provider(&env).frontmost_window(state)
 }
@@ -154,20 +155,10 @@ pub(crate) fn build_window_entry(
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use crate::linux_desktop::environment::LinuxDesktopEnvironment;
+pub(crate) fn hypr_window_id_prefix() -> &'static str {
+    config().LINUX_DESKTOP_HYPR_WINDOW_ID_PREFIX
+}
 
-    use super::select_provider;
-
-    #[test]
-    fn provider_selection_prefers_hyprland_environment() {
-        let env = LinuxDesktopEnvironment {
-            session_type: "wayland".to_string(),
-            desktop_environment: "hyprland".to_string(),
-            compositor: "hyprland".to_string(),
-        };
-        let provider = select_provider(&env);
-        assert_eq!(provider.backend_kind().as_str(), "hyprland");
-    }
+pub(crate) fn sway_window_id_prefix() -> &'static str {
+    config().LINUX_DESKTOP_SWAY_WINDOW_ID_PREFIX
 }

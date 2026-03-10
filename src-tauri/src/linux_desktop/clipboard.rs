@@ -3,25 +3,24 @@ use std::{process::Command, thread, time::Duration};
 use arboard::Clipboard;
 
 use crate::clipboard::{ClipboardContent, CopyOptions, ReadResult};
-use crate::linux_desktop::capabilities::{ClipboardBackendCapabilities, DesktopBackendKind};
-use crate::linux_desktop::environment::{detect_environment, LinuxDesktopEnvironment};
-use crate::linux_desktop::gnome_extension;
-use crate::linux_desktop::selection;
+
+use super::capabilities::{ClipboardBackendCapabilities, DesktopBackendKind};
+use super::environment::{detect_environment, LinuxDesktopEnvironment};
+use super::error::{LinuxDesktopError, Result};
+use super::gnome_extension;
+use super::selection;
 
 pub trait ClipboardProvider {
     fn backend_kind(&self) -> DesktopBackendKind;
     fn is_activatable(&self, env: &LinuxDesktopEnvironment) -> bool;
     fn capabilities(&self) -> ClipboardBackendCapabilities;
-    fn clipboard_read(&self) -> Result<ReadResult, String>;
-    fn clipboard_read_text(&self) -> Result<ReadResult, String>;
-    fn clipboard_copy(
-        &self,
-        content: ClipboardContent,
-        options: Option<CopyOptions>,
-    ) -> Result<(), String>;
-    fn clipboard_paste(&self, content: ClipboardContent) -> Result<(), String>;
-    fn clipboard_clear(&self) -> Result<(), String>;
-    fn selected_text(&self) -> Result<String, String>;
+    fn clipboard_read(&self) -> Result<ReadResult>;
+    fn clipboard_read_text(&self) -> Result<ReadResult>;
+    fn clipboard_copy(&self, content: ClipboardContent, options: Option<CopyOptions>)
+        -> Result<()>;
+    fn clipboard_paste(&self, content: ClipboardContent) -> Result<()>;
+    fn clipboard_clear(&self) -> Result<()>;
+    fn selected_text(&self) -> Result<String>;
 }
 
 fn create_read_result(text: Option<String>) -> ReadResult {
@@ -81,12 +80,13 @@ impl ClipboardProvider for GenericClipboardProvider {
         }
     }
 
-    fn clipboard_read(&self) -> Result<ReadResult, String> {
-        let mut clipboard = Clipboard::new().map_err(|error| error.to_string())?;
+    fn clipboard_read(&self) -> Result<ReadResult> {
+        let mut clipboard = Clipboard::new()
+            .map_err(|error| LinuxDesktopError::ClipboardError(error.to_string()))?;
         Ok(create_read_result(clipboard.get_text().ok()))
     }
 
-    fn clipboard_read_text(&self) -> Result<ReadResult, String> {
+    fn clipboard_read_text(&self) -> Result<ReadResult> {
         self.clipboard_read()
     }
 
@@ -94,18 +94,20 @@ impl ClipboardProvider for GenericClipboardProvider {
         &self,
         content: ClipboardContent,
         _options: Option<CopyOptions>,
-    ) -> Result<(), String> {
-        let mut clipboard = Clipboard::new().map_err(|error| error.to_string())?;
+    ) -> Result<()> {
+        let mut clipboard = Clipboard::new()
+            .map_err(|error| LinuxDesktopError::ClipboardError(error.to_string()))?;
         if let Some(text) = normalize_text_content(&content) {
             clipboard
                 .set_text(text)
-                .map_err(|error| error.to_string())?;
+                .map_err(|error| LinuxDesktopError::ClipboardError(error.to_string()))?;
         }
         Ok(())
     }
 
-    fn clipboard_paste(&self, content: ClipboardContent) -> Result<(), String> {
-        let mut clipboard = Clipboard::new().map_err(|error| error.to_string())?;
+    fn clipboard_paste(&self, content: ClipboardContent) -> Result<()> {
+        let mut clipboard = Clipboard::new()
+            .map_err(|error| LinuxDesktopError::ClipboardError(error.to_string()))?;
         let previous = clipboard.get_text().ok();
         self.clipboard_copy(content, None)?;
         thread::sleep(Duration::from_millis(60));
@@ -121,13 +123,18 @@ impl ClipboardProvider for GenericClipboardProvider {
         Ok(())
     }
 
-    fn clipboard_clear(&self) -> Result<(), String> {
-        let mut clipboard = Clipboard::new().map_err(|error| error.to_string())?;
-        clipboard.clear().map_err(|error| error.to_string())
+    fn clipboard_clear(&self) -> Result<()> {
+        let mut clipboard = Clipboard::new()
+            .map_err(|error| LinuxDesktopError::ClipboardError(error.to_string()))?;
+        clipboard
+            .clear()
+            .map_err(|error| LinuxDesktopError::ClipboardError(error.to_string()))
     }
 
-    fn selected_text(&self) -> Result<String, String> {
-        Err("selected text is not available on this Linux session".to_string())
+    fn selected_text(&self) -> Result<String> {
+        Err(LinuxDesktopError::SelectedTextError(
+            "selected text is not available on this Linux session".to_string(),
+        ))
     }
 }
 
@@ -135,14 +142,18 @@ impl ClipboardProvider for GenericClipboardProvider {
 struct GnomeClipboardProvider;
 
 impl GnomeClipboardProvider {
-    fn serialize_content(content: &ClipboardContent) -> Result<String, String> {
-        serde_json::to_string(content).map_err(|error| error.to_string())
+    fn serialize_content(content: &ClipboardContent) -> Result<String> {
+        serde_json::to_string(content)
+            .map_err(|error| LinuxDesktopError::SerializationError(error.to_string()))
     }
 
-    fn read_payload() -> Result<ReadResult, String> {
+    fn read_payload() -> Result<ReadResult> {
         let payload = gnome_extension::dbus::read_clipboard_payload()?;
-        serde_json::from_str::<ReadResult>(&payload)
-            .map_err(|error| format!("failed to parse GNOME clipboard payload: {error}"))
+        serde_json::from_str::<ReadResult>(&payload).map_err(|error| {
+            LinuxDesktopError::ParseError(format!(
+                "failed to parse GNOME clipboard payload: {error}"
+            ))
+        })
     }
 }
 
@@ -168,11 +179,11 @@ impl ClipboardProvider for GnomeClipboardProvider {
         }
     }
 
-    fn clipboard_read(&self) -> Result<ReadResult, String> {
+    fn clipboard_read(&self) -> Result<ReadResult> {
         Self::read_payload()
     }
 
-    fn clipboard_read_text(&self) -> Result<ReadResult, String> {
+    fn clipboard_read_text(&self) -> Result<ReadResult> {
         Self::read_payload()
     }
 
@@ -180,29 +191,31 @@ impl ClipboardProvider for GnomeClipboardProvider {
         &self,
         content: ClipboardContent,
         _options: Option<CopyOptions>,
-    ) -> Result<(), String> {
+    ) -> Result<()> {
         let payload = Self::serialize_content(&content)?;
-        gnome_extension::dbus::write_clipboard(&payload).and_then(|ok| {
-            if ok {
-                Ok(())
-            } else {
-                Err("GNOME extension refused to write clipboard content".to_string())
-            }
-        })
+        let ok = gnome_extension::dbus::write_clipboard(&payload)?;
+        if ok {
+            Ok(())
+        } else {
+            Err(LinuxDesktopError::ClipboardError(
+                "GNOME extension refused to write clipboard content".to_string(),
+            ))
+        }
     }
 
-    fn clipboard_paste(&self, content: ClipboardContent) -> Result<(), String> {
+    fn clipboard_paste(&self, content: ClipboardContent) -> Result<()> {
         let payload = Self::serialize_content(&content)?;
-        gnome_extension::dbus::paste_clipboard(&payload).and_then(|ok| {
-            if ok {
-                Ok(())
-            } else {
-                Err("GNOME extension refused to paste clipboard content".to_string())
-            }
-        })
+        let ok = gnome_extension::dbus::paste_clipboard(&payload)?;
+        if ok {
+            Ok(())
+        } else {
+            Err(LinuxDesktopError::ClipboardError(
+                "GNOME extension refused to paste clipboard content".to_string(),
+            ))
+        }
     }
 
-    fn clipboard_clear(&self) -> Result<(), String> {
+    fn clipboard_clear(&self) -> Result<()> {
         self.clipboard_copy(
             ClipboardContent {
                 text: Some(String::new()),
@@ -213,8 +226,8 @@ impl ClipboardProvider for GnomeClipboardProvider {
         )
     }
 
-    fn selected_text(&self) -> Result<String, String> {
-        gnome_extension::dbus::selection_text()
+    fn selected_text(&self) -> Result<String> {
+        gnome_extension::dbus::selection_text().map_err(Into::into)
     }
 }
 
@@ -246,35 +259,32 @@ pub fn active_capabilities() -> ClipboardBackendCapabilities {
     capabilities
 }
 
-pub fn clipboard_read() -> Result<ReadResult, String> {
+pub fn clipboard_read() -> Result<ReadResult> {
     let env = detect_environment();
     select_provider(&env).clipboard_read()
 }
 
-pub fn clipboard_read_text() -> Result<ReadResult, String> {
+pub fn clipboard_read_text() -> Result<ReadResult> {
     let env = detect_environment();
     select_provider(&env).clipboard_read_text()
 }
 
-pub fn clipboard_copy(
-    content: ClipboardContent,
-    options: Option<CopyOptions>,
-) -> Result<(), String> {
+pub fn clipboard_copy(content: ClipboardContent, options: Option<CopyOptions>) -> Result<()> {
     let env = detect_environment();
     select_provider(&env).clipboard_copy(content, options)
 }
 
-pub fn clipboard_paste(content: ClipboardContent) -> Result<(), String> {
+pub fn clipboard_paste(content: ClipboardContent) -> Result<()> {
     let env = detect_environment();
     select_provider(&env).clipboard_paste(content)
 }
 
-pub fn clipboard_clear() -> Result<(), String> {
+pub fn clipboard_clear() -> Result<()> {
     let env = detect_environment();
     select_provider(&env).clipboard_clear()
 }
 
-pub fn selected_text() -> Result<String, String> {
+pub fn selected_text() -> Result<String> {
     let env = detect_environment();
     if env.session_type == "x11" {
         return selection::read_x11_primary_selection();

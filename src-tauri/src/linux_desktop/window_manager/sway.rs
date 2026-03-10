@@ -2,26 +2,29 @@
 use swayipc::{Connection, Node, NodeType};
 
 use crate::applications::icon_resolver::IconResolver;
-use crate::linux_desktop::capabilities::{DesktopBackendKind, WindowBackendCapabilities};
-use crate::linux_desktop::environment::LinuxDesktopEnvironment;
 use crate::state::AppState;
 use crate::window_switcher::WindowEntry;
 
-use super::{build_window_entry, FocusedWindowInfo, WindowProvider, SWAY_WINDOW_ID_PREFIX};
+use super::super::capabilities::{DesktopBackendKind, WindowBackendCapabilities};
+use super::super::environment::LinuxDesktopEnvironment;
+use super::error::{Result, WindowManagerError};
+use super::{build_window_entry, sway_window_id_prefix, FocusedWindowInfo, WindowProvider};
 
 #[derive(Default)]
 pub struct SwayWindowProvider;
 
 #[cfg(target_os = "linux")]
-fn open_connection() -> Result<Connection, String> {
-    Connection::new().map_err(|error| format!("failed to connect to sway ipc: {error}"))
+fn open_connection() -> Result<Connection> {
+    Connection::new().map_err(|error| {
+        WindowManagerError::ConnectionError(format!("failed to connect to sway ipc: {error}"))
+    })
 }
 
 #[cfg(target_os = "linux")]
-fn parse_tree() -> Result<Node, String> {
-    open_connection()?
-        .get_tree()
-        .map_err(|error| format!("failed to read sway tree: {error}"))
+fn parse_tree() -> Result<Node> {
+    open_connection()?.get_tree().map_err(|error| {
+        WindowManagerError::QueryError(format!("failed to read sway tree: {error}"))
+    })
 }
 
 #[cfg(target_os = "linux")]
@@ -77,7 +80,7 @@ fn collect_windows(
         entries.push(build_window_entry(
             state,
             icon_resolver,
-            &format!("{SWAY_WINDOW_ID_PREFIX}{}", node.id),
+            &format!("{}{}", sway_window_id_prefix(), node.id),
             &node_title(node),
             &class_name,
             node.app_id.as_deref(),
@@ -110,7 +113,7 @@ fn find_focused_window(
         let class_name = node_class_name(node);
         let pid = node.pid.and_then(|value| u32::try_from(value).ok());
         return Some(FocusedWindowInfo {
-            id: format!("{SWAY_WINDOW_ID_PREFIX}{}", node.id),
+            id: format!("{}{}", sway_window_id_prefix(), node.id),
             title: node_title(node),
             app_name: super::app_name_from_entry(state, pid.unwrap_or(0), &class_name),
             class_name: class_name.clone(),
@@ -148,11 +151,13 @@ impl WindowProvider for SwayWindowProvider {
         WindowBackendCapabilities::standard_with_close()
     }
 
-    fn list_windows(&self, state: &AppState) -> Result<Vec<WindowEntry>, String> {
+    fn list_windows(&self, state: &AppState) -> Result<Vec<WindowEntry>> {
         #[cfg(not(target_os = "linux"))]
         {
             let _ = state;
-            return Err("sway backend is only available on Linux".to_string());
+            return Err(WindowManagerError::BackendUnavailable(
+                "sway backend is only available on Linux".to_string(),
+            ));
         }
 
         #[cfg(target_os = "linux")]
@@ -165,49 +170,61 @@ impl WindowProvider for SwayWindowProvider {
         }
     }
 
-    fn focus_window(&self, window_id: &str) -> Result<(), String> {
+    fn focus_window(&self, window_id: &str) -> Result<()> {
         #[cfg(not(target_os = "linux"))]
         {
             let _ = window_id;
-            return Err("sway backend is only available on Linux".to_string());
+            return Err(WindowManagerError::BackendUnavailable(
+                "sway backend is only available on Linux".to_string(),
+            ));
         }
 
         #[cfg(target_os = "linux")]
         {
             let con_id = window_id
                 .trim()
-                .strip_prefix(SWAY_WINDOW_ID_PREFIX)
+                .strip_prefix(sway_window_id_prefix())
                 .unwrap_or(window_id)
                 .trim();
             open_connection()?
                 .run_command(&format!("[con_id={con_id}] focus"))
-                .map_err(|error| format!("failed to focus sway window: {error}"))?;
+                .map_err(|error| {
+                    WindowManagerError::CommandError(format!(
+                        "failed to focus sway window: {error}"
+                    ))
+                })?;
             Ok(())
         }
     }
 
-    fn close_window(&self, window_id: &str) -> Result<(), String> {
+    fn close_window(&self, window_id: &str) -> Result<()> {
         #[cfg(not(target_os = "linux"))]
         {
             let _ = window_id;
-            return Err("sway backend is only available on Linux".to_string());
+            return Err(WindowManagerError::BackendUnavailable(
+                "sway backend is only available on Linux".to_string(),
+            ));
         }
 
         #[cfg(target_os = "linux")]
         {
             let con_id = window_id
                 .trim()
-                .strip_prefix(SWAY_WINDOW_ID_PREFIX)
+                .strip_prefix(sway_window_id_prefix())
                 .unwrap_or(window_id)
                 .trim();
             open_connection()?
                 .run_command(&format!("[con_id={con_id}] kill"))
-                .map_err(|error| format!("failed to close sway window: {error}"))?;
+                .map_err(|error| {
+                    WindowManagerError::CommandError(format!(
+                        "failed to close sway window: {error}"
+                    ))
+                })?;
             Ok(())
         }
     }
 
-    fn frontmost_window(&self, state: &AppState) -> Result<Option<FocusedWindowInfo>, String> {
+    fn frontmost_window(&self, state: &AppState) -> Result<Option<FocusedWindowInfo>> {
         #[cfg(not(target_os = "linux"))]
         {
             let _ = state;

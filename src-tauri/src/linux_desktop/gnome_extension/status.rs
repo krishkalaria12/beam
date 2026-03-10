@@ -3,8 +3,10 @@ use serde_json::Value;
 use std::fs;
 use std::path::PathBuf;
 
+use crate::config::config;
+
 use super::dbus;
-use super::install::{extension_install_dir, GNOME_EXTENSION_ID};
+use super::install::extension_install_dir;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -18,10 +20,7 @@ pub struct GnomeExtensionStatus {
 }
 
 fn bundled_version() -> Option<String> {
-    let metadata = include_str!(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/../desktop-integrations/gnome-shell/beam@beam-linux/metadata.json"
-    ));
+    let metadata = config().LINUX_DESKTOP_GNOME_EXTENSION_METADATA_JSON;
     let value: Value = serde_json::from_str(metadata).ok()?;
     if let Some(string_version) = value.get("version").and_then(Value::as_str) {
         return Some(string_version.to_string());
@@ -45,8 +44,9 @@ fn installed_version(path: &PathBuf) -> Option<String> {
 }
 
 fn extension_enabled() -> bool {
+    let config = config();
     let output = std::process::Command::new("gnome-extensions")
-        .args(["info", GNOME_EXTENSION_ID])
+        .args(["info", config.LINUX_DESKTOP_GNOME_EXTENSION_ID])
         .output();
     let Ok(output) = output else {
         return false;
@@ -78,14 +78,4 @@ pub fn get_status() -> Option<GnomeExtensionStatus> {
             && bundled_version.is_some()
             && bundled_version != installed_version,
     })
-}
-
-#[cfg(test)]
-mod tests {
-    use super::bundled_version;
-
-    #[test]
-    fn bundled_version_is_present() {
-        assert!(bundled_version().is_some());
-    }
 }

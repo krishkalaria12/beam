@@ -1,10 +1,10 @@
 use serde::{Deserialize, Serialize};
 
-use crate::linux_desktop::capabilities::DesktopBackendKind;
-use crate::linux_desktop::clipboard;
-use crate::linux_desktop::environment::detect_environment;
-use crate::linux_desktop::gnome_extension::status::GnomeExtensionStatus;
-use crate::linux_desktop::window_manager;
+use super::capabilities::DesktopBackendKind;
+use super::clipboard;
+use super::environment::detect_environment;
+use super::gnome_extension::status::GnomeExtensionStatus;
+use super::window_manager;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -55,7 +55,7 @@ pub fn get_status() -> DesktopIntegrationStatus {
     let clipboard_capabilities = clipboard::active_capabilities();
 
     let gnome_extension = (environment.desktop_environment == "gnome")
-        .then(crate::linux_desktop::gnome_extension::status::get_status)
+        .then(super::gnome_extension::status::get_status)
         .flatten();
 
     let mut notes = Vec::new();

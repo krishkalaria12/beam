@@ -1,9 +1,10 @@
 use crate::applications::icon_resolver::IconResolver;
-use crate::linux_desktop::capabilities::{DesktopBackendKind, WindowBackendCapabilities};
-use crate::linux_desktop::environment::LinuxDesktopEnvironment;
 use crate::state::AppState;
 use crate::window_switcher::WindowEntry;
 
+use super::super::capabilities::{DesktopBackendKind, WindowBackendCapabilities};
+use super::super::environment::LinuxDesktopEnvironment;
+use super::error::{Result, WindowManagerError};
 use super::{build_window_entry, FocusedWindowInfo, WindowProvider};
 use x11rb::atom_manager;
 use x11rb::connection::Connection;
@@ -32,13 +33,18 @@ atom_manager! {
 #[derive(Default)]
 pub struct X11WindowProvider;
 
-fn open_connection() -> Result<(RustConnection, usize, Atoms), String> {
-    let (connection, screen_num) =
-        x11rb::connect(None).map_err(|error| format!("failed to connect to X11: {error}"))?;
+fn open_connection() -> Result<(RustConnection, usize, Atoms)> {
+    let (connection, screen_num) = x11rb::connect(None).map_err(|error| {
+        WindowManagerError::ConnectionError(format!("failed to connect to X11: {error}"))
+    })?;
     let atoms = Atoms::new(&connection)
-        .map_err(|error| format!("failed to request X11 atoms: {error}"))?
+        .map_err(|error| {
+            WindowManagerError::QueryError(format!("failed to request X11 atoms: {error}"))
+        })?
         .reply()
-        .map_err(|error| format!("failed to read X11 atoms: {error}"))?;
+        .map_err(|error| {
+            WindowManagerError::QueryError(format!("failed to read X11 atoms: {error}"))
+        })?;
     Ok((connection, screen_num, atoms))
 }
 
@@ -51,12 +57,20 @@ fn read_property_bytes(
     window: Window,
     property: u32,
     property_type: u32,
-) -> Result<Vec<u8>, String> {
+) -> Result<Vec<u8>> {
     connection
         .get_property(false, window, property, property_type, 0, u32::MAX)
-        .map_err(|error| format!("failed to read X11 property {property}: {error}"))?
+        .map_err(|error| {
+            WindowManagerError::QueryError(format!(
+                "failed to read X11 property {property}: {error}"
+            ))
+        })?
         .reply()
-        .map_err(|error| format!("failed to read X11 property reply {property}: {error}"))
+        .map_err(|error| {
+            WindowManagerError::QueryError(format!(
+                "failed to read X11 property reply {property}: {error}"
+            ))
+        })
         .map(|reply| reply.value)
 }
 
@@ -65,12 +79,20 @@ fn read_property_u32(
     window: Window,
     property: u32,
     property_type: u32,
-) -> Result<Vec<u32>, String> {
+) -> Result<Vec<u32>> {
     let reply = connection
         .get_property(false, window, property, property_type, 0, u32::MAX)
-        .map_err(|error| format!("failed to read X11 property {property}: {error}"))?
+        .map_err(|error| {
+            WindowManagerError::QueryError(format!(
+                "failed to read X11 property {property}: {error}"
+            ))
+        })?
         .reply()
-        .map_err(|error| format!("failed to read X11 property reply {property}: {error}"))?;
+        .map_err(|error| {
+            WindowManagerError::QueryError(format!(
+                "failed to read X11 property reply {property}: {error}"
+            ))
+        })?;
     Ok(reply
         .value32()
         .map(|items| items.collect())
@@ -166,7 +188,7 @@ fn active_window(
     connection: &RustConnection,
     root: Window,
     atoms: &Atoms,
-) -> Result<Option<Window>, String> {
+) -> Result<Option<Window>> {
     Ok(read_property_u32(
         connection,
         root,
@@ -183,7 +205,7 @@ fn send_root_client_message(
     window: Window,
     message_type: u32,
     data: [u32; 5],
-) -> Result<(), String> {
+) -> Result<()> {
     let event = ClientMessageEvent {
         response_type: CLIENT_MESSAGE_EVENT,
         format: 32,
@@ -200,20 +222,23 @@ fn send_root_client_message(
             EventMask::SUBSTRUCTURE_REDIRECT | EventMask::SUBSTRUCTURE_NOTIFY,
             event,
         )
-        .map_err(|error| format!("failed to send X11 client message: {error}"))?;
-    connection
-        .flush()
-        .map_err(|error| format!("failed to flush X11 connection: {error}"))
+        .map_err(|error| {
+            WindowManagerError::CommandError(format!("failed to send X11 client message: {error}"))
+        })?;
+    connection.flush().map_err(|error| {
+        WindowManagerError::CommandError(format!("failed to flush X11 connection: {error}"))
+    })
 }
 
-fn parse_window_id(window_id: &str) -> Result<Window, String> {
+fn parse_window_id(window_id: &str) -> Result<Window> {
     let normalized = window_id.trim();
     if let Some(hex) = normalized.strip_prefix("0x") {
-        u32::from_str_radix(hex, 16).map_err(|_| "invalid X11 window id".to_string())
+        u32::from_str_radix(hex, 16)
+            .map_err(|_| WindowManagerError::InvalidWindowId("invalid X11 window id".to_string()))
     } else {
         normalized
             .parse::<u32>()
-            .map_err(|_| "invalid X11 window id".to_string())
+            .map_err(|_| WindowManagerError::InvalidWindowId("invalid X11 window id".to_string()))
     }
 }
 
@@ -230,7 +255,7 @@ impl WindowProvider for X11WindowProvider {
         WindowBackendCapabilities::standard_with_close()
     }
 
-    fn list_windows(&self, state: &AppState) -> Result<Vec<WindowEntry>, String> {
+    fn list_windows(&self, state: &AppState) -> Result<Vec<WindowEntry>> {
         let (connection, screen_num, atoms) = open_connection()?;
         let root = root_window(&connection, screen_num);
         let active = active_window(&connection, root, &atoms)?;
@@ -269,7 +294,7 @@ impl WindowProvider for X11WindowProvider {
         Ok(entries)
     }
 
-    fn focus_window(&self, window_id: &str) -> Result<(), String> {
+    fn focus_window(&self, window_id: &str) -> Result<()> {
         let (connection, screen_num, atoms) = open_connection()?;
         let root = root_window(&connection, screen_num);
         let window = parse_window_id(window_id)?;
@@ -282,7 +307,7 @@ impl WindowProvider for X11WindowProvider {
         )
     }
 
-    fn close_window(&self, window_id: &str) -> Result<(), String> {
+    fn close_window(&self, window_id: &str) -> Result<()> {
         let (connection, screen_num, atoms) = open_connection()?;
         let root = root_window(&connection, screen_num);
         let window = parse_window_id(window_id)?;
@@ -295,7 +320,7 @@ impl WindowProvider for X11WindowProvider {
         )
     }
 
-    fn frontmost_window(&self, state: &AppState) -> Result<Option<FocusedWindowInfo>, String> {
+    fn frontmost_window(&self, state: &AppState) -> Result<Option<FocusedWindowInfo>> {
         let (connection, screen_num, atoms) = open_connection()?;
         let root = root_window(&connection, screen_num);
         let Some(window) = active_window(&connection, root, &atoms)? else {

@@ -1,11 +1,12 @@
 use std::process::Command;
 
 use crate::applications::icon_resolver::IconResolver;
-use crate::linux_desktop::capabilities::{DesktopBackendKind, WindowBackendCapabilities};
-use crate::linux_desktop::environment::LinuxDesktopEnvironment;
 use crate::state::AppState;
 use crate::window_switcher::WindowEntry;
 
+use super::super::capabilities::{DesktopBackendKind, WindowBackendCapabilities};
+use super::super::environment::LinuxDesktopEnvironment;
+use super::error::{Result, WindowManagerError};
 use super::{build_window_entry, FocusedWindowInfo, WindowProvider};
 
 #[derive(Default)]
@@ -27,15 +28,16 @@ fn qdbus_binary() -> Option<&'static str> {
     })
 }
 
-fn call_qdbus(args: &[&str]) -> Result<String, String> {
-    let binary = qdbus_binary().ok_or_else(|| "qdbus is unavailable".to_string())?;
-    let output = Command::new(binary)
-        .args(args)
-        .output()
-        .map_err(|error| format!("failed to execute {binary}: {error}"))?;
+fn call_qdbus(args: &[&str]) -> Result<String> {
+    let binary = qdbus_binary().ok_or_else(|| {
+        WindowManagerError::BackendUnavailable("qdbus is unavailable".to_string())
+    })?;
+    let output = Command::new(binary).args(args).output().map_err(|error| {
+        WindowManagerError::CommandError(format!("failed to execute {binary}: {error}"))
+    })?;
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
-        return Err(stderr.trim().to_string());
+        return Err(WindowManagerError::CommandError(stderr.trim().to_string()));
     }
     Ok(String::from_utf8_lossy(&output.stdout).to_string())
 }
@@ -109,7 +111,7 @@ impl WindowProvider for KdeWindowProvider {
         }
     }
 
-    fn list_windows(&self, state: &AppState) -> Result<Vec<WindowEntry>, String> {
+    fn list_windows(&self, state: &AppState) -> Result<Vec<WindowEntry>> {
         let output = call_qdbus(&[
             "org.kde.KWin",
             "/WindowsRunner",
@@ -136,7 +138,7 @@ impl WindowProvider for KdeWindowProvider {
             .collect())
     }
 
-    fn focus_window(&self, window_id: &str) -> Result<(), String> {
+    fn focus_window(&self, window_id: &str) -> Result<()> {
         call_qdbus(&[
             "org.kde.KWin",
             "/WindowsRunner",
@@ -147,7 +149,7 @@ impl WindowProvider for KdeWindowProvider {
         .map(|_| ())
     }
 
-    fn close_window(&self, window_id: &str) -> Result<(), String> {
+    fn close_window(&self, window_id: &str) -> Result<()> {
         call_qdbus(&[
             "org.kde.KWin",
             "/KWin",
@@ -156,11 +158,13 @@ impl WindowProvider for KdeWindowProvider {
         ])
         .map(|_| ())
         .map_err(|error| {
-            format!("KDE window close is unavailable or unsupported on this system: {error}")
+            WindowManagerError::CommandError(format!(
+                "KDE window close is unavailable or unsupported on this system: {error}"
+            ))
         })
     }
 
-    fn frontmost_window(&self, state: &AppState) -> Result<Option<FocusedWindowInfo>, String> {
+    fn frontmost_window(&self, state: &AppState) -> Result<Option<FocusedWindowInfo>> {
         let active_id = call_qdbus(&["org.kde.KWin", "/KWin", "org.kde.KWin.activeWindow"])
             .ok()
             .and_then(|output| extract_active_window_id(&output));

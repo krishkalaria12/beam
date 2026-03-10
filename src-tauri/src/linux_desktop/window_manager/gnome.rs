@@ -1,29 +1,35 @@
-use crate::linux_desktop::capabilities::{DesktopBackendKind, WindowBackendCapabilities};
-use crate::linux_desktop::environment::LinuxDesktopEnvironment;
-use crate::linux_desktop::gnome_extension;
 use crate::state::AppState;
 use crate::window_switcher::WindowEntry;
 
+use super::super::capabilities::{DesktopBackendKind, WindowBackendCapabilities};
+use super::super::environment::LinuxDesktopEnvironment;
+use super::super::gnome_extension;
+use super::error::{Result, WindowManagerError};
 use super::{FocusedWindowInfo, WindowProvider};
 
 #[derive(Default)]
 pub struct GnomeWindowProvider;
 
 impl GnomeWindowProvider {
-    fn list_windows_json() -> Result<Vec<FocusedWindowInfo>, String> {
+    fn list_windows_json() -> Result<Vec<FocusedWindowInfo>> {
         let payload = gnome_extension::dbus::list_windows_payload()?;
-        serde_json::from_str::<Vec<FocusedWindowInfo>>(&payload)
-            .map_err(|error| format!("failed to parse GNOME windows: {error}"))
+        serde_json::from_str::<Vec<FocusedWindowInfo>>(&payload).map_err(|error| {
+            WindowManagerError::ParseError(format!("failed to parse GNOME windows: {error}"))
+        })
     }
 
-    fn focused_window_json() -> Result<Option<FocusedWindowInfo>, String> {
+    fn focused_window_json() -> Result<Option<FocusedWindowInfo>> {
         let payload = gnome_extension::dbus::focused_window_payload()?;
         if payload.trim().is_empty() || payload.trim() == "{}" {
             return Ok(None);
         }
         serde_json::from_str::<FocusedWindowInfo>(&payload)
             .map(Some)
-            .map_err(|error| format!("failed to parse GNOME focused window: {error}"))
+            .map_err(|error| {
+                WindowManagerError::ParseError(format!(
+                    "failed to parse GNOME focused window: {error}"
+                ))
+            })
     }
 }
 
@@ -43,7 +49,7 @@ impl WindowProvider for GnomeWindowProvider {
         WindowBackendCapabilities::standard_with_close()
     }
 
-    fn list_windows(&self, _state: &AppState) -> Result<Vec<WindowEntry>, String> {
+    fn list_windows(&self, _state: &AppState) -> Result<Vec<WindowEntry>> {
         let windows = Self::list_windows_json()?;
         Ok(windows
             .into_iter()
@@ -58,35 +64,35 @@ impl WindowProvider for GnomeWindowProvider {
             .collect())
     }
 
-    fn focus_window(&self, window_id: &str) -> Result<(), String> {
-        let id = window_id
-            .trim()
-            .parse::<u32>()
-            .map_err(|_| "GNOME window id is invalid".to_string())?;
-        gnome_extension::dbus::focus_window(id).and_then(|ok| {
-            if ok {
-                Ok(())
-            } else {
-                Err("GNOME Shell extension refused to focus the requested window".to_string())
-            }
-        })
+    fn focus_window(&self, window_id: &str) -> Result<()> {
+        let id = window_id.trim().parse::<u32>().map_err(|_| {
+            WindowManagerError::InvalidWindowId("GNOME window id is invalid".to_string())
+        })?;
+        let ok = gnome_extension::dbus::focus_window(id)?;
+        if ok {
+            Ok(())
+        } else {
+            Err(WindowManagerError::CommandError(
+                "GNOME Shell extension refused to focus the requested window".to_string(),
+            ))
+        }
     }
 
-    fn close_window(&self, window_id: &str) -> Result<(), String> {
-        let id = window_id
-            .trim()
-            .parse::<u32>()
-            .map_err(|_| "GNOME window id is invalid".to_string())?;
-        gnome_extension::dbus::close_window(id).and_then(|ok| {
-            if ok {
-                Ok(())
-            } else {
-                Err("GNOME Shell extension refused to close the requested window".to_string())
-            }
-        })
+    fn close_window(&self, window_id: &str) -> Result<()> {
+        let id = window_id.trim().parse::<u32>().map_err(|_| {
+            WindowManagerError::InvalidWindowId("GNOME window id is invalid".to_string())
+        })?;
+        let ok = gnome_extension::dbus::close_window(id)?;
+        if ok {
+            Ok(())
+        } else {
+            Err(WindowManagerError::CommandError(
+                "GNOME Shell extension refused to close the requested window".to_string(),
+            ))
+        }
     }
 
-    fn frontmost_window(&self, _state: &AppState) -> Result<Option<FocusedWindowInfo>, String> {
+    fn frontmost_window(&self, _state: &AppState) -> Result<Option<FocusedWindowInfo>> {
         Self::focused_window_json()
     }
 }

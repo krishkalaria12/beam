@@ -1,9 +1,10 @@
 use crate::state::AppState;
 use crate::window_switcher::WindowEntry;
 
+use super::super::capabilities::{DesktopBackendKind, WindowBackendCapabilities};
+use super::super::environment::LinuxDesktopEnvironment;
+use super::error::{Result, WindowManagerError};
 use super::{FocusedWindowInfo, WindowProvider};
-use crate::linux_desktop::capabilities::{DesktopBackendKind, WindowBackendCapabilities};
-use crate::linux_desktop::environment::LinuxDesktopEnvironment;
 
 #[derive(Default)]
 pub struct UnsupportedWindowProvider;
@@ -21,19 +22,25 @@ impl WindowProvider for UnsupportedWindowProvider {
         WindowBackendCapabilities::unsupported()
     }
 
-    fn list_windows(&self, _state: &AppState) -> Result<Vec<WindowEntry>, String> {
-        Err("window management is unavailable on this desktop session".to_string())
+    fn list_windows(&self, _state: &AppState) -> Result<Vec<WindowEntry>> {
+        Err(WindowManagerError::UnsupportedSession(
+            "window management is unavailable on this desktop session".to_string(),
+        ))
     }
 
-    fn focus_window(&self, _window_id: &str) -> Result<(), String> {
-        Err("window focus is unavailable on this desktop session".to_string())
+    fn focus_window(&self, _window_id: &str) -> Result<()> {
+        Err(WindowManagerError::UnsupportedSession(
+            "window focus is unavailable on this desktop session".to_string(),
+        ))
     }
 
-    fn close_window(&self, _window_id: &str) -> Result<(), String> {
-        Err("window close is unavailable on this desktop session".to_string())
+    fn close_window(&self, _window_id: &str) -> Result<()> {
+        Err(WindowManagerError::UnsupportedSession(
+            "window close is unavailable on this desktop session".to_string(),
+        ))
     }
 
-    fn frontmost_window(&self, _state: &AppState) -> Result<Option<FocusedWindowInfo>, String> {
+    fn frontmost_window(&self, _state: &AppState) -> Result<Option<FocusedWindowInfo>> {
         Ok(None)
     }
 }
