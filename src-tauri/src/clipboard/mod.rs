@@ -6,7 +6,7 @@ use std::{
 
 #[cfg(not(target_os = "linux"))]
 use arboard::Clipboard;
-use tauri::{command, AppHandle};
+use tauri::{command, AppHandle, State};
 
 #[cfg(not(target_os = "linux"))]
 use self::convert_image::get_image_as_base64;
@@ -17,6 +17,8 @@ use self::search::search_history;
 use crate::config::config;
 #[cfg(target_os = "linux")]
 use crate::linux_desktop;
+#[cfg(target_os = "linux")]
+use crate::state::AppState;
 
 pub mod convert_image;
 pub mod error;
@@ -73,22 +75,36 @@ pub fn search_clipboard_history(
 }
 
 #[command]
-pub async fn get_selected_text() -> std::result::Result<String, String> {
+pub async fn get_selected_text(state: State<'_, AppState>) -> std::result::Result<String, String> {
     #[cfg(target_os = "linux")]
     {
-        return linux_desktop::clipboard::selected_text().map_err(|error| error.to_string());
+        let snapshot = linux_desktop::context::get_desktop_context_snapshot(&state);
+        return Ok(snapshot.selected_text.value.unwrap_or_default());
     }
 
     #[cfg(not(target_os = "linux"))]
     {
+        let _ = state;
         let mut clipboard = Clipboard::new().map_err(|e| e.to_string())?;
         Ok(clipboard.get_text().unwrap_or_default())
     }
 }
 
 #[command]
-pub async fn get_selected_finder_items() -> std::result::Result<Vec<SelectedFinderItem>, String> {
-    Err("get_selected_finder_items is not supported on this platform in Beam yet".to_string())
+pub async fn get_selected_finder_items(
+    state: State<'_, AppState>,
+) -> std::result::Result<Vec<SelectedFinderItem>, String> {
+    #[cfg(target_os = "linux")]
+    {
+        let snapshot = linux_desktop::context::get_desktop_context_snapshot(&state);
+        return Ok(snapshot.selected_files.value.unwrap_or_default());
+    }
+
+    #[cfg(not(target_os = "linux"))]
+    {
+        let _ = state;
+        Err("get_selected_finder_items is not supported on this platform in Beam yet".to_string())
+    }
 }
 
 #[command]

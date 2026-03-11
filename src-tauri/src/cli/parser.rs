@@ -13,6 +13,7 @@ use crate::cli::error::Result;
 pub enum CliInvocation {
     LaunchApp { startup_args: Vec<String> },
     Dmenu { options: DmenuOptions },
+    RunWaylandDataControlHelper,
 }
 
 #[derive(Debug, Parser)]
@@ -34,6 +35,8 @@ struct CanonicalCli {
 enum CanonicalSubcommand {
     Toggle,
     RunCommand { command_id: String },
+    #[command(name = "__wayland-data-control-helper", hide = true)]
+    WaylandDataControlHelper,
 }
 
 pub fn parse_invocation(raw_args: &[String]) -> Result<CliInvocation> {
@@ -97,6 +100,9 @@ pub fn parse_invocation(raw_args: &[String]) -> Result<CliInvocation> {
         Some(CanonicalSubcommand::RunCommand { command_id }) => Ok(CliInvocation::LaunchApp {
             startup_args: vec![argv0, format!("--run-command={}", command_id.trim())],
         }),
+        Some(CanonicalSubcommand::WaylandDataControlHelper) => {
+            Ok(CliInvocation::RunWaylandDataControlHelper)
+        }
         None => Ok(CliInvocation::LaunchApp {
             startup_args: raw_args.to_vec(),
         }),

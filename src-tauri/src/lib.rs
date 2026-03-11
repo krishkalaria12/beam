@@ -125,6 +125,15 @@ pub fn entry() -> i32 {
             run(startup_args);
             0
         }
+        cli::CliInvocation::RunWaylandDataControlHelper => {
+            match linux_desktop::wayland_helper::run_helper_main() {
+                Ok(()) => 0,
+                Err(error) => {
+                    eprintln!("beam: {error}");
+                    2
+                }
+            }
+        }
         cli::CliInvocation::Dmenu { options } => match cli::execute_dmenu(options) {
             Ok(code) => code,
             Err(error) => {

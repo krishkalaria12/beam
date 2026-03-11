@@ -229,19 +229,14 @@ fn to_raycast_application(record: DesktopApplicationRecord) -> RaycastCompatAppl
     }
 }
 
-pub fn get_frontmost_application(state: &AppState) -> Result<RaycastCompatApplication> {
-    let focused = window_manager::frontmost_window(state)?.ok_or_else(|| {
-        LinuxDesktopError::FrontmostApplicationError(
-            "could not determine the frontmost application".to_string(),
-        )
-    })?;
-    let record = find_desktop_application_by_window(&focused).unwrap_or(DesktopApplicationRecord {
-        desktop_id: focused
+pub fn resolve_application_from_window(info: &FocusedWindowInfo) -> Result<RaycastCompatApplication> {
+    let record = find_desktop_application_by_window(info).unwrap_or(DesktopApplicationRecord {
+        desktop_id: info
             .app_id
             .clone()
-            .unwrap_or_else(|| focused.class_name.clone()),
-        name: focused.app_name.clone(),
-        exec_path: focused
+            .unwrap_or_else(|| info.class_name.clone()),
+        name: info.app_name.clone(),
+        exec_path: info
             .pid
             .and_then(|pid| fs::read_link(format!("/proc/{pid}/exe")).ok())
             .map(|path| path.to_string_lossy().to_string())
@@ -255,6 +250,36 @@ pub fn get_frontmost_application(state: &AppState) -> Result<RaycastCompatApplic
     }
 
     Ok(to_raycast_application(record))
+}
+
+pub fn get_frontmost_application(state: &AppState) -> Result<RaycastCompatApplication> {
+    let focused = window_manager::frontmost_window(state)?.ok_or_else(|| {
+        LinuxDesktopError::FrontmostApplicationError(
+            "could not determine the frontmost application".to_string(),
+        )
+    })?;
+    resolve_application_from_window(&focused).or_else(|_| {
+        let record = DesktopApplicationRecord {
+        desktop_id: focused
+            .app_id
+            .clone()
+            .unwrap_or_else(|| focused.class_name.clone()),
+        name: focused.app_name.clone(),
+        exec_path: focused
+            .pid
+            .and_then(|pid| fs::read_link(format!("/proc/{pid}/exe")).ok())
+            .map(|path| path.to_string_lossy().to_string())
+            .unwrap_or_default(),
+        };
+
+        if record.name.trim().is_empty() {
+            Err(LinuxDesktopError::FrontmostApplicationError(
+                "could not resolve the frontmost application".to_string(),
+            ))
+        } else {
+            Ok(to_raycast_application(record))
+        }
+    })
 }
 
 pub fn get_default_application(target: &str) -> Result<RaycastCompatApplication> {

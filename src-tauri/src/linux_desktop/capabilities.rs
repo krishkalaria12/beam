@@ -5,8 +5,11 @@ use serde::{Deserialize, Serialize};
 pub enum DesktopBackendKind {
     Hyprland,
     Sway,
+    GenericWayland,
     GnomeShellExtension,
     KdeKwinDbus,
+    WaylandDataControl,
+    X11PrimarySelection,
     X11Ewmh,
     GenericClipboard,
     Unsupported,
@@ -17,8 +20,11 @@ impl DesktopBackendKind {
         match self {
             Self::Hyprland => "hyprland",
             Self::Sway => "sway",
+            Self::GenericWayland => "generic_wayland",
             Self::GnomeShellExtension => "gnome_shell_extension",
             Self::KdeKwinDbus => "kde_kwin_dbus",
+            Self::WaylandDataControl => "wayland_data_control",
+            Self::X11PrimarySelection => "x11_primary_selection",
             Self::X11Ewmh => "x11_ewmh",
             Self::GenericClipboard => "generic_clipboard",
             Self::Unsupported => "unsupported",

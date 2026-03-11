@@ -188,6 +188,27 @@ export function DesktopIntegrationSettings() {
               value={status?.clipboardBackend ?? "loading"}
               icon={FolderOpen}
             />
+            <SummaryCard
+              label="Selected Text"
+              value={status?.selectedTextBackend ?? "loading"}
+              icon={CheckCircle2}
+            />
+            <SummaryCard
+              label="Selected Files"
+              value={status?.selectedFilesBackend ?? "loading"}
+              icon={FolderOpen}
+            />
+            <SummaryCard
+              label="Wayland Helper"
+              value={
+                status
+                  ? status.waylandHelper.available
+                    ? status.waylandHelper.backend ?? "available"
+                    : status.waylandHelper.lastError ?? "unavailable"
+                  : "loading"
+              }
+              icon={Wrench}
+            />
           </div>
         </div>
 

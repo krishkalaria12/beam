@@ -1,10 +1,10 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::process::Command;
 use tauri::State;
 
 use crate::{linux_desktop, state::AppState};
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RaycastCompatApplication {
     pub name: String,
@@ -37,8 +37,13 @@ pub fn get_frontmost_application(
 ) -> std::result::Result<RaycastCompatApplication, String> {
     #[cfg(target_os = "linux")]
     {
-        return linux_desktop::applications::get_frontmost_application(&state)
-            .map_err(|error| error.to_string());
+        let snapshot = linux_desktop::context::get_desktop_context_snapshot(&state);
+        return snapshot.frontmost_application.value.ok_or_else(|| {
+            snapshot
+                .frontmost_application
+                .reason
+                .unwrap_or_else(|| "frontmost application is unavailable".to_string())
+        });
     }
 
     #[cfg(not(target_os = "linux"))]

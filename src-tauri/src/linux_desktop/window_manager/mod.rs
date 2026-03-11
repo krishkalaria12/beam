@@ -5,6 +5,7 @@ mod gnome;
 mod hyprland;
 mod kde;
 mod sway;
+mod wayland;
 mod x11;
 
 use serde::{Deserialize, Serialize};
@@ -20,6 +21,7 @@ use self::gnome::GnomeWindowProvider;
 use self::hyprland::HyprlandWindowProvider;
 use self::kde::KdeWindowProvider;
 use self::sway::SwayWindowProvider;
+use self::wayland::GenericWaylandWindowProvider;
 use self::x11::X11WindowProvider;
 use super::capabilities::{DesktopBackendKind, WindowBackendCapabilities};
 use super::environment::{detect_environment, LinuxDesktopEnvironment};
@@ -53,6 +55,7 @@ fn select_provider(env: &LinuxDesktopEnvironment) -> Box<dyn WindowProvider> {
         Box::<SwayWindowProvider>::default(),
         Box::<GnomeWindowProvider>::default(),
         Box::<KdeWindowProvider>::default(),
+        Box::<GenericWaylandWindowProvider>::default(),
         Box::<X11WindowProvider>::default(),
     ];
 

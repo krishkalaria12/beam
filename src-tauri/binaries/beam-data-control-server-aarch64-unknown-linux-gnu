@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_PATH="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/$(basename -- "${BASH_SOURCE[0]}")"
+SEARCH_DIR="$(dirname -- "$SCRIPT_PATH")"
+MAIN_BINARY=""
+
+while [[ "$SEARCH_DIR" != "/" ]]; do
+  for candidate_name in beam Beam app; do
+    candidate="$SEARCH_DIR/$candidate_name"
+    if [[ -x "$candidate" && "$candidate" != "$SCRIPT_PATH" ]]; then
+      MAIN_BINARY="$candidate"
+      break 2
+    fi
+  done
+  SEARCH_DIR="$(dirname -- "$SEARCH_DIR")"
+done
+
+if [[ -z "$MAIN_BINARY" ]]; then
+  echo "beam-data-control-server: could not locate bundled Beam executable from $SCRIPT_PATH" >&2
+  exit 1
+fi
+
+exec "$MAIN_BINARY" __wayland-data-control-helper "$@"

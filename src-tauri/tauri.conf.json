@@ -48,7 +48,7 @@
   "bundle": {
     "active": true,
     "targets": "all",
-    "externalBin": ["binaries/app"],
+    "externalBin": ["binaries/app", "binaries/beam-data-control-server"],
     "resources": [
       "../desktop-integrations/gnome-shell/beam@beam-linux",
       "../desktop-integrations/udev/70-beam-snippets.rules"

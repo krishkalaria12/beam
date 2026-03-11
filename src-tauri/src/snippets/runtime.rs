@@ -19,6 +19,8 @@ use tauri::{AppHandle, Manager};
 use xkbcommon::xkb;
 
 use crate::clipboard::{self, ClipboardContent, ReadResult};
+#[cfg(target_os = "linux")]
+use crate::linux_desktop;
 use crate::state::AppState;
 
 use super::error::{Result, SnippetError};
@@ -145,7 +147,20 @@ async fn resolve_placeholder_token(token: &str) -> Result<Option<String>> {
             .await
             .map(|result| result.text.unwrap_or_default())
             .unwrap_or_default(),
-        "selected" | "selected_text" => clipboard::get_selected_text().await.unwrap_or_default(),
+        "selected" | "selected_text" => {
+            #[cfg(target_os = "linux")]
+            {
+                linux_desktop::clipboard::selected_text().unwrap_or_default()
+            }
+
+            #[cfg(not(target_os = "linux"))]
+            {
+                clipboard::clipboard_read_text()
+                    .await
+                    .map(|result| result.text.unwrap_or_default())
+                    .unwrap_or_default()
+            }
+        }
         "date" | "time" | "datetime" => render_datetime_token(&key, arg),
         "timestamp" => Local::now().timestamp().to_string(),
         "uuid" => render_uuid_like_value(),

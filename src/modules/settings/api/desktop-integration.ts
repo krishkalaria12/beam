@@ -16,6 +16,14 @@ export interface DesktopIntegrationStatus {
   compositor: string;
   windowBackend: string;
   clipboardBackend: string;
+  selectedTextBackend: string;
+  selectedFilesBackend: string;
+  waylandHelper: {
+    available: boolean;
+    backend: string | null;
+    helperPath: string | null;
+    lastError: string | null;
+  };
   supportsWindowListing: boolean;
   supportsWindowFocus: boolean;
   supportsWindowClose: boolean;
@@ -63,6 +71,14 @@ function defaultStatus(): DesktopIntegrationStatus {
     compositor: "unknown",
     windowBackend: "unsupported",
     clipboardBackend: "unsupported",
+    selectedTextBackend: "unsupported",
+    selectedFilesBackend: "unsupported",
+    waylandHelper: {
+      available: false,
+      backend: null,
+      helperPath: null,
+      lastError: null,
+    },
     supportsWindowListing: false,
     supportsWindowFocus: false,
     supportsWindowClose: false,
@@ -91,6 +107,21 @@ function normalizeStatus(value: unknown): DesktopIntegrationStatus {
     compositor: toNonEmptyString(record.compositor) ?? "unknown",
     windowBackend: toNonEmptyString(record.windowBackend) ?? "unsupported",
     clipboardBackend: toNonEmptyString(record.clipboardBackend) ?? "unsupported",
+    selectedTextBackend: toNonEmptyString(record.selectedTextBackend) ?? "unsupported",
+    selectedFilesBackend: toNonEmptyString(record.selectedFilesBackend) ?? "unsupported",
+    waylandHelper:
+      record.waylandHelper && typeof record.waylandHelper === "object"
+        ? {
+            available: Boolean((record.waylandHelper as Record<string, unknown>).available),
+            backend: toNonEmptyString((record.waylandHelper as Record<string, unknown>).backend),
+            helperPath: toNonEmptyString(
+              (record.waylandHelper as Record<string, unknown>).helperPath,
+            ),
+            lastError: toNonEmptyString(
+              (record.waylandHelper as Record<string, unknown>).lastError,
+            ),
+          }
+        : defaultStatus().waylandHelper,
     supportsWindowListing: Boolean(record.supportsWindowListing),
     supportsWindowFocus: Boolean(record.supportsWindowFocus),
     supportsWindowClose: Boolean(record.supportsWindowClose),

@@ -30,6 +30,7 @@ pub fn get_handler() -> impl Fn(Invoke) -> bool {
         clipboard::clipboard_copy,
         clipboard::clipboard_paste,
         clipboard::clipboard_clear,
+        linux_desktop::context::get_desktop_context,
         linux_desktop::status::get_desktop_integration_status,
         linux_desktop::gnome_extension::install::install_gnome_shell_extension,
         linux_desktop::gnome_extension::install::enable_gnome_shell_extension,

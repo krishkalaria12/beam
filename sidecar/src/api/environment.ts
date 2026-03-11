@@ -19,6 +19,42 @@ export interface FileSystemItem {
   path: string;
 }
 
+export type DesktopContextState = "supported" | "unavailable" | "unsupported";
+
+export interface DesktopContextValue<T> {
+  state: DesktopContextState;
+  value?: T;
+  reason?: string;
+}
+
+export interface DesktopContext {
+  selectedText: DesktopContextValue<string>;
+  selectedFiles: DesktopContextValue<FileSystemItem[]>;
+  focusedWindow: DesktopContextValue<{
+    id: string;
+    title: string;
+    appName: string;
+    className: string;
+    appId?: string;
+    pid?: number;
+    workspace: string;
+    isFocused: boolean;
+  }>;
+  frontmostApplication: DesktopContextValue<Application>;
+  sources: {
+    selectedTextBackend: string;
+    selectedFilesBackend: string;
+    windowBackend: string;
+    applicationBackend: string;
+  };
+  capabilities: {
+    selectedText: boolean;
+    selectedFiles: boolean;
+    focusedWindow: boolean;
+    frontmostApplication: boolean;
+  };
+}
+
 export const BrowserExtension = { name: "BrowserExtension" };
 export const AI = { name: "AI" };
 
@@ -45,12 +81,134 @@ export const environment = {
   },
 };
 
+function normalizeContextState(value: unknown): DesktopContextState {
+  return value === "supported" || value === "unavailable" || value === "unsupported"
+    ? value
+    : "unsupported";
+}
+
+function normalizeDesktopContextValue<T>(
+  value: unknown,
+  transform: (raw: unknown) => T | undefined,
+): DesktopContextValue<T> {
+  if (!value || typeof value !== "object") {
+    return { state: "unsupported", reason: "desktop context is unavailable" };
+  }
+
+  const record = value as Record<string, unknown>;
+  return {
+    state: normalizeContextState(record.state),
+    value: transform(record.value),
+    reason: typeof record.reason === "string" ? record.reason : undefined,
+  };
+}
+
+export async function getDesktopContext(): Promise<DesktopContext> {
+  const raw = await invokeCommand<Record<string, unknown>>("get_desktop_context");
+
+  return {
+    selectedText: normalizeDesktopContextValue(raw?.selectedText, (value) =>
+      typeof value === "string" ? value : undefined,
+    ),
+    selectedFiles: normalizeDesktopContextValue(raw?.selectedFiles, (value) =>
+      Array.isArray(value)
+        ? value
+            .map((entry) =>
+              entry && typeof entry === "object" && typeof (entry as { path?: unknown }).path === "string"
+                ? { path: (entry as { path: string }).path }
+                : undefined,
+            )
+            .filter((entry): entry is FileSystemItem => Boolean(entry))
+        : undefined,
+    ),
+    focusedWindow: normalizeDesktopContextValue(raw?.focusedWindow, (value) =>
+      value && typeof value === "object"
+        ? {
+            id: typeof (value as { id?: unknown }).id === "string" ? (value as { id: string }).id : "",
+            title:
+              typeof (value as { title?: unknown }).title === "string"
+                ? (value as { title: string }).title
+                : "",
+            appName:
+              typeof (value as { appName?: unknown }).appName === "string"
+                ? (value as { appName: string }).appName
+                : "",
+            className:
+              typeof (value as { className?: unknown }).className === "string"
+                ? (value as { className: string }).className
+                : "",
+            appId:
+              typeof (value as { appId?: unknown }).appId === "string"
+                ? (value as { appId: string }).appId
+                : undefined,
+            pid:
+              typeof (value as { pid?: unknown }).pid === "number"
+                ? (value as { pid: number }).pid
+                : undefined,
+            workspace:
+              typeof (value as { workspace?: unknown }).workspace === "string"
+                ? (value as { workspace: string }).workspace
+                : "",
+            isFocused: Boolean((value as { isFocused?: unknown }).isFocused),
+          }
+        : undefined,
+    ),
+    frontmostApplication: normalizeDesktopContextValue(raw?.frontmostApplication, (value) =>
+      value ? normalizeApplication(value) : undefined,
+    ),
+    sources:
+      raw?.sources && typeof raw.sources === "object"
+        ? {
+            selectedTextBackend:
+              typeof (raw.sources as { selectedTextBackend?: unknown }).selectedTextBackend === "string"
+                ? (raw.sources as { selectedTextBackend: string }).selectedTextBackend
+                : "unsupported",
+            selectedFilesBackend:
+              typeof (raw.sources as { selectedFilesBackend?: unknown }).selectedFilesBackend === "string"
+                ? (raw.sources as { selectedFilesBackend: string }).selectedFilesBackend
+                : "unsupported",
+            windowBackend:
+              typeof (raw.sources as { windowBackend?: unknown }).windowBackend === "string"
+                ? (raw.sources as { windowBackend: string }).windowBackend
+                : "unsupported",
+            applicationBackend:
+              typeof (raw.sources as { applicationBackend?: unknown }).applicationBackend === "string"
+                ? (raw.sources as { applicationBackend: string }).applicationBackend
+                : "unsupported",
+          }
+        : {
+            selectedTextBackend: "unsupported",
+            selectedFilesBackend: "unsupported",
+            windowBackend: "unsupported",
+            applicationBackend: "unsupported",
+          },
+    capabilities:
+      raw?.capabilities && typeof raw.capabilities === "object"
+        ? {
+            selectedText: Boolean((raw.capabilities as Record<string, unknown>).selectedText),
+            selectedFiles: Boolean((raw.capabilities as Record<string, unknown>).selectedFiles),
+            focusedWindow: Boolean((raw.capabilities as Record<string, unknown>).focusedWindow),
+            frontmostApplication: Boolean(
+              (raw.capabilities as Record<string, unknown>).frontmostApplication,
+            ),
+          }
+        : {
+            selectedText: false,
+            selectedFiles: false,
+            focusedWindow: false,
+            frontmostApplication: false,
+          },
+  };
+}
+
 export async function getSelectedFinderItems(): Promise<FileSystemItem[]> {
-  return invokeCommand<FileSystemItem[]>("get_selected_finder_items");
+  const context = await getDesktopContext();
+  return context.selectedFiles.value ?? [];
 }
 
 export async function getSelectedText(): Promise<string> {
-  return invokeCommand<string>("get_selected_text");
+  const context = await getDesktopContext();
+  return context.selectedText.value ?? "";
 }
 
 export async function open(target: string, application?: Application | string): Promise<void> {
@@ -169,6 +327,15 @@ export async function getDefaultApplication(path: fs.PathLike): Promise<Applicat
 }
 
 export async function getFrontmostApplication(): Promise<Application> {
+  try {
+    const context = await getDesktopContext();
+    if (context.frontmostApplication.value) {
+      return normalizeApplication(context.frontmostApplication.value);
+    }
+  } catch {
+    // Fall through to the existing compatibility path.
+  }
+
   return invokeWithFallback(
     "get_frontmost_application",
     {},

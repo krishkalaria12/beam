@@ -108,6 +108,10 @@ x11rb = "0.13.2"
 regex = "1.12.2"
 evdev = "0.13.0"
 xkbcommon = "0.8.0"
+wayland-client = "0.31.12"
+wayland-protocols = { version = "0.32.10", features = ["client", "staging"] }
+wayland-protocols-wlr = { version = "0.3.10", features = ["client"] }
+wl-clipboard-rs = "0.9.3"
 
 # Platform-Specific Dependencies
 [target.'cfg(any(target_os = "macos", windows, target_os = "linux"))'.dependencies]

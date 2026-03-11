@@ -8,6 +8,7 @@ import { popToRootView, useNavigation } from "./navigation";
 import { Action, ActionPanel, Detail, Form, Grid, List, MenuBarExtra } from "./components";
 import {
   environment,
+  getDesktopContext,
   getSelectedFinderItems,
   getSelectedText,
   open,
@@ -212,6 +213,7 @@ export const getRaycastApi = () => {
     List,
     Clipboard,
     environment,
+    getDesktopContext,
     getApplications,
     getDefaultApplication,
     getFrontmostApplication,
