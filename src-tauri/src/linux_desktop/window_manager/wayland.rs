@@ -184,13 +184,11 @@ impl WlrSession {
         let conn = Connection::connect_to_env().map_err(|error| {
             WindowManagerError::ConnectionError(format!("failed to connect to Wayland: {error}"))
         })?;
-        let (globals, queue) = registry_queue_init::<WlrSessionState>(&conn).map_err(
-            |error| {
-                WindowManagerError::ConnectionError(format!(
-                    "failed to enumerate Wayland globals: {error}"
-                ))
-            },
-        )?;
+        let (globals, queue) = registry_queue_init::<WlrSessionState>(&conn).map_err(|error| {
+            WindowManagerError::ConnectionError(format!(
+                "failed to enumerate Wayland globals: {error}"
+            ))
+        })?;
         let qh = queue.handle();
         let manager = globals
             .bind::<ZwlrForeignToplevelManagerV1, _, _>(&qh, 1..=3, ())
@@ -414,13 +412,11 @@ impl ExtSession {
         let conn = Connection::connect_to_env().map_err(|error| {
             WindowManagerError::ConnectionError(format!("failed to connect to Wayland: {error}"))
         })?;
-        let (globals, queue) = registry_queue_init::<ExtSessionState>(&conn).map_err(
-            |error| {
-                WindowManagerError::ConnectionError(format!(
-                    "failed to enumerate Wayland globals: {error}"
-                ))
-            },
-        )?;
+        let (globals, queue) = registry_queue_init::<ExtSessionState>(&conn).map_err(|error| {
+            WindowManagerError::ConnectionError(format!(
+                "failed to enumerate Wayland globals: {error}"
+            ))
+        })?;
         let qh = queue.handle();
         let list = globals
             .bind::<ExtForeignToplevelListV1, _, _>(&qh, 1..=1, ())
@@ -451,7 +447,9 @@ impl ExtSession {
 
     fn sync(&mut self) -> Result<()> {
         self.queue.roundtrip(&mut self.state).map_err(|error| {
-            WindowManagerError::QueryError(format!("failed to query ext Wayland toplevels: {error}"))
+            WindowManagerError::QueryError(format!(
+                "failed to query ext Wayland toplevels: {error}"
+            ))
         })?;
         Ok(())
     }
@@ -479,10 +477,7 @@ impl WorkerSession {
             Ok(session) => Self::Wlr(session),
             Err(wlr_error) => match ExtSession::connect() {
                 Ok(session) => Self::Ext(session),
-                Err(ext_error) => Self::Unsupported(format!(
-                    "{}; {}",
-                    wlr_error, ext_error
-                )),
+                Err(ext_error) => Self::Unsupported(format!("{}; {}", wlr_error, ext_error)),
             },
         }
     }
@@ -588,7 +583,10 @@ impl WaylandRuntime {
         for _ in 0..2 {
             let sender = self.ensure_worker();
             let (reply_tx, reply_rx) = unbounded();
-            if sender.send(RuntimeRequest::Detect { reply: reply_tx }).is_err() {
+            if sender
+                .send(RuntimeRequest::Detect { reply: reply_tx })
+                .is_err()
+            {
                 self.sender = None;
                 continue;
             }

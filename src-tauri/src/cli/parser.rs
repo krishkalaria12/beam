@@ -34,7 +34,9 @@ struct CanonicalCli {
 #[derive(Debug, clap::Subcommand)]
 enum CanonicalSubcommand {
     Toggle,
-    RunCommand { command_id: String },
+    RunCommand {
+        command_id: String,
+    },
     #[command(name = "__wayland-data-control-helper", hide = true)]
     WaylandDataControlHelper,
 }

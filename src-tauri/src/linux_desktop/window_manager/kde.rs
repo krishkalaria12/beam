@@ -1,96 +1,98 @@
-use std::process::Command;
-
 use crate::applications::icon_resolver::IconResolver;
+use crate::linux_desktop::kde_bridge;
 use crate::state::AppState;
 use crate::window_switcher::WindowEntry;
 
 use super::super::capabilities::{DesktopBackendKind, WindowBackendCapabilities};
 use super::super::environment::LinuxDesktopEnvironment;
 use super::error::{Result, WindowManagerError};
-use super::{build_window_entry, FocusedWindowInfo, WindowProvider};
+use super::{resolve_icon_path, FocusedWindowInfo, WindowProvider};
 
 #[derive(Default)]
 pub struct KdeWindowProvider;
 
-#[derive(Debug, Clone)]
-struct KdeWindowRecord {
-    id: String,
-    title: String,
+fn normalized_kde_app_id(window: &kde_bridge::KdeWindowMetadata) -> String {
+    window
+        .desktop_file
+        .as_deref()
+        .unwrap_or(window.class_hint.as_str())
+        .trim()
+        .trim_end_matches(".desktop")
+        .to_string()
 }
 
-fn qdbus_binary() -> Option<&'static str> {
-    ["qdbus6", "qdbus"].into_iter().find(|binary| {
-        Command::new(binary)
-            .arg("--version")
-            .output()
-            .map(|output| output.status.success())
-            .unwrap_or(false)
-    })
+fn display_name_from_app_id(app_id: &str) -> String {
+    app_id
+        .split('.')
+        .next_back()
+        .unwrap_or(app_id)
+        .replace('-', " ")
+        .trim()
+        .to_string()
 }
 
-fn call_qdbus(args: &[&str]) -> Result<String> {
-    let binary = qdbus_binary().ok_or_else(|| {
-        WindowManagerError::BackendUnavailable("qdbus is unavailable".to_string())
-    })?;
-    let output = Command::new(binary).args(args).output().map_err(|error| {
-        WindowManagerError::CommandError(format!("failed to execute {binary}: {error}"))
-    })?;
-    if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        return Err(WindowManagerError::CommandError(stderr.trim().to_string()));
+fn metadata_to_window_entry(
+    state: &AppState,
+    icon_resolver: &mut IconResolver,
+    window: &kde_bridge::KdeWindowMetadata,
+) -> WindowEntry {
+    let class_name = normalized_kde_app_id(window);
+    let class_name = class_name.as_str();
+
+    let app_name = if let Some(pid) = window.pid {
+        super::app_name_from_entry(state, pid, class_name)
+    } else if !window.app_name_hint.trim().is_empty()
+        && !window.app_name_hint.trim().ends_with(".desktop")
+    {
+        window.app_name_hint.trim().to_string()
+    } else if !class_name.is_empty() {
+        display_name_from_app_id(class_name)
+    } else {
+        window.title.trim().to_string()
+    };
+
+    let app_icon = if !window.icon_hint.trim().is_empty() {
+        let resolved = icon_resolver.resolve_from_name(window.icon_hint.trim());
+        if resolved.is_empty() {
+            resolve_icon_path(icon_resolver, &app_name, class_name)
+        } else {
+            resolved
+        }
+    } else {
+        resolve_icon_path(icon_resolver, &app_name, class_name)
+    };
+
+    WindowEntry {
+        id: window.id.clone(),
+        title: window.title.clone(),
+        app_name,
+        app_icon,
+        workspace: window.workspace.trim().to_string(),
+        is_focused: window.is_active,
     }
-    Ok(String::from_utf8_lossy(&output.stdout).to_string())
 }
 
-fn parse_krunner_windows(output: &str) -> Vec<KdeWindowRecord> {
-    let mut windows = Vec::new();
-    let mut current_id: Option<String> = None;
-    let mut current_title: Option<String> = None;
-    let mut in_struct = false;
+fn metadata_to_focused_window(
+    state: &AppState,
+    icon_resolver: &mut IconResolver,
+    window: &kde_bridge::KdeWindowMetadata,
+) -> FocusedWindowInfo {
+    let entry = metadata_to_window_entry(state, icon_resolver, window);
+    let class_name = normalized_kde_app_id(window);
 
-    for raw_line in output.lines() {
-        let line = raw_line.trim();
-        if line.starts_with("struct {") {
-            in_struct = true;
-            current_id = None;
-            current_title = None;
-            continue;
-        }
-        if line == "}" && in_struct {
-            in_struct = false;
-            if let (Some(id), Some(title)) = (current_id.take(), current_title.take()) {
-                if !title.trim().is_empty() {
-                    windows.push(KdeWindowRecord { id, title });
-                }
-            }
-            continue;
-        }
-        if !in_struct {
-            continue;
-        }
-
-        if let Some(value) = line.strip_prefix("string ") {
-            let parsed = value.trim().trim_matches('"').to_string();
-            if current_id.is_none() {
-                current_id = Some(parsed);
-            } else if current_title.is_none() {
-                current_title = Some(parsed);
-            }
-        }
+    FocusedWindowInfo {
+        id: entry.id,
+        title: entry.title,
+        app_name: entry.app_name,
+        class_name: class_name.clone(),
+        app_id: window
+            .desktop_file
+            .clone()
+            .or_else(|| (!class_name.is_empty()).then_some(class_name)),
+        pid: window.pid,
+        workspace: entry.workspace,
+        is_focused: window.is_active,
     }
-
-    windows.sort_by(|left, right| left.id.cmp(&right.id));
-    windows.dedup_by(|left, right| left.id == right.id);
-    windows
-}
-
-fn extract_active_window_id(output: &str) -> Option<String> {
-    output
-        .lines()
-        .map(str::trim)
-        .find(|line| !line.is_empty())
-        .map(|line| line.trim_matches('"').to_string())
-        .filter(|line| !line.is_empty())
 }
 
 impl WindowProvider for KdeWindowProvider {
@@ -99,65 +101,43 @@ impl WindowProvider for KdeWindowProvider {
     }
 
     fn is_activatable(&self, env: &LinuxDesktopEnvironment) -> bool {
-        (env.desktop_environment == "kde" || env.compositor == "kde") && qdbus_binary().is_some()
+        (env.desktop_environment == "kde" || env.compositor == "kde") && kde_bridge::is_available()
     }
 
     fn capabilities(&self) -> WindowBackendCapabilities {
         WindowBackendCapabilities {
             supports_window_listing: true,
             supports_window_focus: true,
-            supports_window_close: false,
+            supports_window_close: kde_bridge::supports_close(),
             supports_frontmost_application: true,
         }
     }
 
     fn list_windows(&self, state: &AppState) -> Result<Vec<WindowEntry>> {
-        let output = call_qdbus(&[
-            "org.kde.KWin",
-            "/WindowsRunner",
-            "org.kde.krunner1.Match",
-            "",
-        ])?;
-
+        let windows = kde_bridge::list_windows().map_err(|error| {
+            WindowManagerError::QueryError(format!("failed to read KDE windows: {error}"))
+        })?;
         let mut icon_resolver = IconResolver::new();
-        Ok(parse_krunner_windows(&output)
-            .into_iter()
-            .map(|window| {
-                build_window_entry(
-                    state,
-                    &mut icon_resolver,
-                    &window.id,
-                    &window.title,
-                    "",
-                    None,
-                    0,
-                    "",
-                    false,
-                )
-            })
+        Ok(windows
+            .iter()
+            .map(|window| metadata_to_window_entry(state, &mut icon_resolver, window))
             .collect())
     }
 
     fn focus_window(&self, window_id: &str) -> Result<()> {
-        call_qdbus(&[
-            "org.kde.KWin",
-            "/WindowsRunner",
-            "org.kde.krunner1.Run",
-            window_id.trim(),
-            "",
-        ])
-        .map(|_| ())
+        kde_bridge::focus_window(window_id).map_err(|error| {
+            WindowManagerError::CommandError(format!("failed to focus KDE window: {error}"))
+        })
     }
 
     fn close_window(&self, window_id: &str) -> Result<()> {
-        call_qdbus(&[
-            "org.kde.KWin",
-            "/KWin",
-            "org.kde.KWin.closeWindow",
-            window_id.trim(),
-        ])
-        .map(|_| ())
-        .map_err(|error| {
+        if !kde_bridge::supports_close() {
+            return Err(WindowManagerError::BackendUnavailable(
+                "KWin does not expose closeWindow on this system".to_string(),
+            ));
+        }
+
+        kde_bridge::close_window(window_id).map_err(|error| {
             WindowManagerError::CommandError(format!(
                 "KDE window close is unavailable or unsupported on this system: {error}"
             ))
@@ -165,32 +145,15 @@ impl WindowProvider for KdeWindowProvider {
     }
 
     fn frontmost_window(&self, state: &AppState) -> Result<Option<FocusedWindowInfo>> {
-        let active_id = call_qdbus(&["org.kde.KWin", "/KWin", "org.kde.KWin.activeWindow"])
-            .ok()
-            .and_then(|output| extract_active_window_id(&output));
+        let windows = kde_bridge::list_windows().map_err(|error| {
+            WindowManagerError::QueryError(format!("failed to read KDE windows: {error}"))
+        })?;
+        let mut icon_resolver = IconResolver::new();
 
-        let mut windows = self
-            .list_windows(state)?
-            .into_iter()
-            .map(|entry| FocusedWindowInfo {
-                id: entry.id,
-                title: entry.title,
-                app_name: entry.app_name,
-                class_name: String::new(),
-                app_id: None,
-                pid: None,
-                workspace: entry.workspace,
-                is_focused: false,
-            })
-            .collect::<Vec<_>>();
-
-        if let Some(active_id) = active_id {
-            if let Some(entry) = windows.iter_mut().find(|entry| entry.id == active_id) {
-                entry.is_focused = true;
-                return Ok(Some(entry.clone()));
-            }
-        }
-
-        Ok(windows.into_iter().next())
+        Ok(windows
+            .iter()
+            .find(|window| window.is_active)
+            .or_else(|| windows.first())
+            .map(|window| metadata_to_focused_window(state, &mut icon_resolver, window)))
     }
 }

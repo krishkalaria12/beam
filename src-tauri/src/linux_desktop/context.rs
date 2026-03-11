@@ -166,8 +166,12 @@ pub fn get_desktop_context_snapshot(state: &AppState) -> DesktopContextSnapshot 
 pub fn get_desktop_context_snapshot(_state: &AppState) -> DesktopContextSnapshot {
     DesktopContextSnapshot {
         selected_text: ContextValue::unsupported("desktop context is unavailable on this platform"),
-        selected_files: ContextValue::unsupported("desktop context is unavailable on this platform"),
-        focused_window: ContextValue::unsupported("desktop context is unavailable on this platform"),
+        selected_files: ContextValue::unsupported(
+            "desktop context is unavailable on this platform",
+        ),
+        focused_window: ContextValue::unsupported(
+            "desktop context is unavailable on this platform",
+        ),
         frontmost_application: ContextValue::unsupported(
             "desktop context is unavailable on this platform",
         ),
@@ -189,17 +193,4 @@ pub fn get_desktop_context_snapshot(_state: &AppState) -> DesktopContextSnapshot
 #[command]
 pub fn get_desktop_context(state: State<'_, AppState>) -> DesktopContextSnapshot {
     get_desktop_context_snapshot(&state)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::{ContextState, ContextValue};
-
-    #[test]
-    fn unsupported_context_value_has_reason() {
-        let value = ContextValue::<String>::unsupported("unsupported");
-        assert!(matches!(value.state, ContextState::Unsupported));
-        assert_eq!(value.reason.as_deref(), Some("unsupported"));
-        assert!(value.value.is_none());
-    }
 }

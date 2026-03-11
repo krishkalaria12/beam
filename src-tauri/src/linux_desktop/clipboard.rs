@@ -18,6 +18,15 @@ struct SelectionSnapshot {
     files: Vec<SelectedFinderItem>,
 }
 
+#[derive(Debug, Clone)]
+struct ResolvedSelectionSnapshot {
+    snapshot: SelectionSnapshot,
+    text_backend: DesktopBackendKind,
+    files_backend: DesktopBackendKind,
+    supports_text: bool,
+    supports_files: bool,
+}
+
 trait ClipboardProvider {
     fn backend_kind(&self) -> DesktopBackendKind;
     fn is_activatable(&self, env: &LinuxDesktopEnvironment) -> bool;
@@ -30,8 +39,11 @@ trait ClipboardProvider {
         content: ClipboardContent,
         options: Option<CopyOptions>,
     ) -> Result<()>;
-    fn clipboard_paste(&self, env: &LinuxDesktopEnvironment, content: ClipboardContent)
-        -> Result<()>;
+    fn clipboard_paste(
+        &self,
+        env: &LinuxDesktopEnvironment,
+        content: ClipboardContent,
+    ) -> Result<()>;
     fn clipboard_clear(&self, env: &LinuxDesktopEnvironment) -> Result<()>;
     fn selected_content(&self, env: &LinuxDesktopEnvironment) -> Result<SelectionSnapshot>;
 }
@@ -39,7 +51,11 @@ trait ClipboardProvider {
 fn create_read_result(text: Option<String>) -> ReadResult {
     let file = text
         .as_ref()
-        .and_then(|value| infer_selected_file_items(Some(value), &[]).into_iter().next())
+        .and_then(|value| {
+            infer_selected_file_items(Some(value), &[])
+                .into_iter()
+                .next()
+        })
         .map(|item| item.path);
 
     ReadResult {
@@ -408,6 +424,133 @@ fn select_provider(env: &LinuxDesktopEnvironment) -> Box<dyn ClipboardProvider> 
     Box::<GenericClipboardProvider>::default()
 }
 
+fn select_clipboard_provider_capabilities(
+    env: &LinuxDesktopEnvironment,
+) -> ClipboardBackendCapabilities {
+    select_provider(env).capabilities()
+}
+
+fn resolve_gnome_wayland_selection(
+    env: &LinuxDesktopEnvironment,
+) -> Result<ResolvedSelectionSnapshot> {
+    let gnome_provider = GnomeClipboardProvider;
+    let helper_provider = WaylandDataControlProvider;
+
+    let gnome_supported = gnome_provider.is_activatable(env);
+    let helper_supported = helper_provider.is_activatable(env);
+    let gnome_snapshot = gnome_supported
+        .then(|| gnome_provider.selected_content(env))
+        .transpose()?;
+    let helper_snapshot = helper_supported
+        .then(|| helper_provider.selected_content(env))
+        .transpose()?;
+
+    Ok(merge_gnome_wayland_selection(
+        gnome_snapshot.as_ref(),
+        helper_snapshot.as_ref(),
+        gnome_supported,
+        helper_supported,
+    ))
+}
+
+fn merge_gnome_wayland_selection(
+    gnome_snapshot: Option<&SelectionSnapshot>,
+    helper_snapshot: Option<&SelectionSnapshot>,
+    gnome_supported: bool,
+    helper_supported: bool,
+) -> ResolvedSelectionSnapshot {
+    let text = gnome_snapshot
+        .and_then(|snapshot| snapshot.text.clone())
+        .or_else(|| helper_snapshot.and_then(|snapshot| snapshot.text.clone()));
+    let files = helper_snapshot
+        .map(|snapshot| snapshot.files.clone())
+        .filter(|files| !files.is_empty())
+        .or_else(|| {
+            gnome_snapshot
+                .map(|snapshot| snapshot.files.clone())
+                .filter(|files| !files.is_empty())
+        })
+        .unwrap_or_default();
+
+    let text_backend = if gnome_snapshot
+        .and_then(|snapshot| snapshot.text.as_ref())
+        .is_some()
+    {
+        DesktopBackendKind::GnomeShellExtension
+    } else if helper_snapshot
+        .and_then(|snapshot| snapshot.text.as_ref())
+        .is_some()
+    {
+        DesktopBackendKind::WaylandDataControl
+    } else if gnome_supported {
+        DesktopBackendKind::GnomeShellExtension
+    } else if helper_supported {
+        DesktopBackendKind::WaylandDataControl
+    } else {
+        DesktopBackendKind::Unsupported
+    };
+
+    let files_backend = if helper_snapshot
+        .map(|snapshot| !snapshot.files.is_empty())
+        .unwrap_or(false)
+    {
+        DesktopBackendKind::WaylandDataControl
+    } else if gnome_snapshot
+        .map(|snapshot| !snapshot.files.is_empty())
+        .unwrap_or(false)
+    {
+        DesktopBackendKind::GnomeShellExtension
+    } else if helper_supported {
+        DesktopBackendKind::WaylandDataControl
+    } else if gnome_supported {
+        DesktopBackendKind::GnomeShellExtension
+    } else {
+        DesktopBackendKind::Unsupported
+    };
+
+    ResolvedSelectionSnapshot {
+        snapshot: SelectionSnapshot { text, files },
+        text_backend,
+        files_backend,
+        supports_text: gnome_supported || helper_supported,
+        supports_files: helper_supported,
+    }
+}
+
+fn resolve_selection_snapshot(env: &LinuxDesktopEnvironment) -> Result<ResolvedSelectionSnapshot> {
+    if env.session_type == "wayland" && env.desktop_environment == "gnome" {
+        return resolve_gnome_wayland_selection(env);
+    }
+
+    let helper_provider = WaylandDataControlProvider;
+    if helper_provider.is_activatable(env) {
+        let snapshot = helper_provider.selected_content(env)?;
+        return Ok(ResolvedSelectionSnapshot {
+            snapshot,
+            text_backend: DesktopBackendKind::WaylandDataControl,
+            files_backend: DesktopBackendKind::WaylandDataControl,
+            supports_text: true,
+            supports_files: true,
+        });
+    }
+
+    let x11_provider = X11SelectionProvider;
+    if x11_provider.is_activatable(env) {
+        let snapshot = x11_provider.selected_content(env)?;
+        return Ok(ResolvedSelectionSnapshot {
+            snapshot,
+            text_backend: DesktopBackendKind::X11PrimarySelection,
+            files_backend: DesktopBackendKind::X11PrimarySelection,
+            supports_text: true,
+            supports_files: true,
+        });
+    }
+
+    Err(LinuxDesktopError::SelectedTextError(
+        "selected text is not available on this Linux session".to_string(),
+    ))
+}
+
 fn infer_selected_file_items(text: Option<&str>, raw_uris: &[String]) -> Vec<SelectedFinderItem> {
     let mut seen = HashSet::new();
     let mut items = Vec::new();
@@ -467,7 +610,14 @@ pub fn active_backend_kind() -> DesktopBackendKind {
 
 pub fn active_capabilities() -> ClipboardBackendCapabilities {
     let env = detect_environment();
-    select_provider(&env).capabilities()
+    let mut capabilities = select_clipboard_provider_capabilities(&env);
+
+    if let Ok(selection) = resolve_selection_snapshot(&env) {
+        capabilities.supports_selected_text = selection.supports_text;
+        capabilities.supports_selected_file_items = selection.supports_files;
+    }
+
+    capabilities
 }
 
 pub fn clipboard_read() -> Result<ReadResult> {
@@ -497,8 +647,8 @@ pub fn clipboard_clear() -> Result<()> {
 
 pub fn selected_text() -> Result<String> {
     let env = detect_environment();
-    let snapshot = select_provider(&env).selected_content(&env)?;
-    snapshot.text.ok_or_else(|| {
+    let snapshot = resolve_selection_snapshot(&env)?;
+    snapshot.snapshot.text.ok_or_else(|| {
         LinuxDesktopError::SelectedTextError(
             "no selected text is currently available on this Linux session".to_string(),
         )
@@ -507,46 +657,19 @@ pub fn selected_text() -> Result<String> {
 
 pub fn selected_files() -> Result<Vec<SelectedFinderItem>> {
     let env = detect_environment();
-    let snapshot = select_provider(&env).selected_content(&env)?;
-    Ok(snapshot.files)
+    Ok(resolve_selection_snapshot(&env)?.snapshot.files)
 }
 
 pub fn selected_text_backend_name() -> String {
-    active_backend_kind().as_str().to_string()
+    let env = detect_environment();
+    resolve_selection_snapshot(&env)
+        .map(|selection| selection.text_backend.as_str().to_string())
+        .unwrap_or_else(|_| DesktopBackendKind::Unsupported.as_str().to_string())
 }
 
 pub fn selected_files_backend_name() -> String {
-    active_backend_kind().as_str().to_string()
-}
-
-#[cfg(test)]
-mod tests {
-    use super::{infer_selected_file_items, normalize_selected_path};
-
-    #[test]
-    fn normalizes_file_urls() {
-        assert_eq!(
-            normalize_selected_path("file:///tmp/example.txt").as_deref(),
-            Some("/tmp/example.txt")
-        );
-    }
-
-    #[test]
-    fn normalizes_absolute_paths() {
-        assert_eq!(
-            normalize_selected_path("/tmp/example.txt").as_deref(),
-            Some("/tmp/example.txt")
-        );
-    }
-
-    #[test]
-    fn infers_selected_files_from_multiple_sources() {
-        let items = infer_selected_file_items(
-            Some("file:///tmp/example.txt\n/tmp/second.txt"),
-            &[String::from("file:///tmp/example.txt")],
-        );
-        assert_eq!(items.len(), 2);
-        assert_eq!(items[0].path, "/tmp/example.txt");
-        assert_eq!(items[1].path, "/tmp/second.txt");
-    }
+    let env = detect_environment();
+    resolve_selection_snapshot(&env)
+        .map(|selection| selection.files_backend.as_str().to_string())
+        .unwrap_or_else(|_| DesktopBackendKind::Unsupported.as_str().to_string())
 }

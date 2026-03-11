@@ -95,12 +95,9 @@ pub fn get_status() -> DesktopIntegrationStatus {
         );
     }
     if environment.session_type == "wayland" && !helper_status.available {
-        notes.push(
-            helper_status
-                .last_error
-                .clone()
-                .unwrap_or_else(|| "Wayland data-control helper is unavailable on this session.".to_string()),
-        );
+        notes.push(helper_status.last_error.clone().unwrap_or_else(|| {
+            "Wayland data-control helper is unavailable on this session.".to_string()
+        }));
     }
 
     DesktopIntegrationStatus {

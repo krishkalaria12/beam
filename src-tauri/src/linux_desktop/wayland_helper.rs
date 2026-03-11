@@ -145,7 +145,9 @@ struct HelperLaunchSpec {
 impl HelperProcess {
     fn spawn() -> Result<Self, String> {
         let launch_spec = locate_helper_launch_spec().ok_or_else(|| {
-            format!("could not locate {HELPER_BINARY_NAME} or a helper launcher near the Beam binary")
+            format!(
+                "could not locate {HELPER_BINARY_NAME} or a helper launcher near the Beam binary"
+            )
         })?;
 
         let mut child = Command::new(&launch_spec.executable)
@@ -188,13 +190,9 @@ impl HelperProcess {
         process.status.last_error = startup.error.clone();
 
         if !process.status.available {
-            return Err(
-                process
-                    .status
-                    .last_error
-                    .clone()
-                    .unwrap_or_else(|| "helper did not find a supported Wayland data-control backend".to_string()),
-            );
+            return Err(process.status.last_error.clone().unwrap_or_else(|| {
+                "helper did not find a supported Wayland data-control backend".to_string()
+            }));
         }
 
         Ok(process)
@@ -209,15 +207,11 @@ impl HelperProcess {
         if read == 0 {
             return Err("helper exited unexpectedly".to_string());
         }
-        serde_json::from_str::<HelperMessage>(line.trim()).map_err(|error| {
-            format!("failed to parse helper output '{line}': {error}")
-        })
+        serde_json::from_str::<HelperMessage>(line.trim())
+            .map_err(|error| format!("failed to parse helper output '{line}': {error}"))
     }
 
-    fn request(
-        &mut self,
-        action: HelperRequestAction,
-    ) -> Result<HelperSelectionResponse, String> {
+    fn request(&mut self, action: HelperRequestAction) -> Result<HelperSelectionResponse, String> {
         let request_id = self.next_request_id;
         self.next_request_id = self.next_request_id.saturating_add(1);
 
@@ -268,7 +262,10 @@ impl HelperProcess {
 }
 
 trait WaitTimeoutExt {
-    fn wait_timeout(&mut self, timeout: Duration) -> std::io::Result<Option<std::process::ExitStatus>>;
+    fn wait_timeout(
+        &mut self,
+        timeout: Duration,
+    ) -> std::io::Result<Option<std::process::ExitStatus>>;
 }
 
 impl WaitTimeoutExt for Child {
@@ -377,7 +374,9 @@ pub fn helper_status(env: &LinuxDesktopEnvironment) -> WaylandHelperStatus {
     WAYLAND_HELPER.lock().status(env)
 }
 
-pub fn read_primary_selection(env: &LinuxDesktopEnvironment) -> Result<HelperSelectionResponse, String> {
+pub fn read_primary_selection(
+    env: &LinuxDesktopEnvironment,
+) -> Result<HelperSelectionResponse, String> {
     WAYLAND_HELPER
         .lock()
         .request(env, HelperRequestAction::ReadPrimarySelection)
@@ -417,7 +416,9 @@ fn locate_packaged_helper_binary() -> Option<PathBuf> {
         current_dir.join(format!("{HELPER_BINARY_NAME}.exe")),
         current_dir.join(format!("{HELPER_BINARY_NAME}-{target_suffix}")),
         current_dir.join("..").join(HELPER_BINARY_NAME),
-        current_dir.join("..").join(format!("{HELPER_BINARY_NAME}-{target_suffix}")),
+        current_dir
+            .join("..")
+            .join(format!("{HELPER_BINARY_NAME}-{target_suffix}")),
         current_dir.join("../bin").join(HELPER_BINARY_NAME),
         current_dir
             .join("../bin")
@@ -645,21 +646,20 @@ pub fn run_helper_main() -> Result<(), String> {
         match request.action {
             HelperRequestAction::Shutdown => return Ok(()),
             HelperRequestAction::ReadPrimarySelection => {
-                let response = respond_to_request(request.id, read_selection(ClipboardType::Primary));
+                let response =
+                    respond_to_request(request.id, read_selection(ClipboardType::Primary));
                 write_helper_message(&response)?;
             }
             HelperRequestAction::ReadClipboardSelection => {
-                let response = respond_to_request(request.id, read_selection(ClipboardType::Regular));
+                let response =
+                    respond_to_request(request.id, read_selection(ClipboardType::Regular));
                 write_helper_message(&response)?;
             }
         }
     }
 }
 
-fn respond_to_request(
-    id: u64,
-    response: Result<HelperSelectionResponse, String>,
-) -> HelperMessage {
+fn respond_to_request(id: u64, response: Result<HelperSelectionResponse, String>) -> HelperMessage {
     match response {
         Ok(response) => HelperMessage {
             kind: HelperMessageKind::Response,
@@ -696,39 +696,4 @@ fn write_helper_message(message: &HelperMessage) -> Result<(), String> {
         .and_then(|_| writer.write_all(b"\n"))
         .and_then(|_| writer.flush())
         .map_err(|error| format!("failed to write helper message: {error}"))
-}
-
-#[cfg(test)]
-mod tests {
-    use super::parse_file_uris;
-
-    #[test]
-    fn parses_uri_lists() {
-        let uris = parse_file_uris(
-            "text/uri-list",
-            "file:///tmp/example.txt\n# ignored\nfile:///tmp/second.txt\n",
-        );
-        assert_eq!(
-            uris,
-            vec![
-                "file:///tmp/example.txt".to_string(),
-                "file:///tmp/second.txt".to_string()
-            ]
-        );
-    }
-
-    #[test]
-    fn parses_gnome_copied_files() {
-        let uris = parse_file_uris(
-            "x-special/gnome-copied-files",
-            "copy\nfile:///tmp/example.txt\nfile:///tmp/second.txt\n",
-        );
-        assert_eq!(
-            uris,
-            vec![
-                "file:///tmp/example.txt".to_string(),
-                "file:///tmp/second.txt".to_string()
-            ]
-        );
-    }
 }

@@ -96,13 +96,62 @@ fn find_desktop_application_by_id(desktop_id: &str) -> Option<DesktopApplication
         .find(|entry| entry.desktop_id == desktop_id)
 }
 
+fn desktop_id_candidates(value: &str) -> Vec<String> {
+    let normalized = value.trim().to_lowercase();
+    if normalized.is_empty() {
+        return Vec::new();
+    }
+
+    let mut candidates = vec![normalized.clone()];
+    if normalized.ends_with(".desktop") {
+        candidates.push(normalized.trim_end_matches(".desktop").to_string());
+    } else {
+        candidates.push(format!("{normalized}.desktop"));
+    }
+
+    if let Some(file_name) = Path::new(value.trim())
+        .file_name()
+        .and_then(|name| name.to_str())
+    {
+        let lowered = file_name.trim().to_lowercase();
+        if !lowered.is_empty() {
+            candidates.push(lowered.clone());
+            if lowered.ends_with(".desktop") {
+                candidates.push(lowered.trim_end_matches(".desktop").to_string());
+            }
+        }
+    }
+
+    candidates.sort();
+    candidates.dedup();
+    candidates
+}
+
+fn executable_basename(value: &str) -> Option<String> {
+    Path::new(value)
+        .file_name()
+        .and_then(|value| value.to_str())
+        .map(|value| value.trim().to_lowercase())
+        .filter(|value| !value.is_empty())
+}
+
+fn process_command_name(pid: u32) -> Option<String> {
+    fs::read_to_string(format!("/proc/{pid}/comm"))
+        .ok()
+        .map(|value| value.trim().to_lowercase())
+        .filter(|value| !value.is_empty())
+}
+
 fn find_desktop_application_by_window(
     info: &FocusedWindowInfo,
 ) -> Option<DesktopApplicationRecord> {
+    let records = scan_desktop_applications();
     let process_path = info
         .pid
         .and_then(|pid| fs::read_link(format!("/proc/{pid}/exe")).ok())
         .map(|path| path.to_string_lossy().to_string());
+    let process_basename = process_path.as_deref().and_then(executable_basename);
+    let process_command = info.pid.and_then(process_command_name);
     let class_lower = info.class_name.trim().to_lowercase();
     let app_id_lower = info
         .app_id
@@ -110,8 +159,45 @@ fn find_desktop_application_by_window(
         .map(|value| value.trim().to_lowercase())
         .unwrap_or_default();
     let app_name_lower = info.app_name.trim().to_lowercase();
+    let app_id_candidates = info
+        .app_id
+        .as_deref()
+        .map(desktop_id_candidates)
+        .unwrap_or_default();
+    let class_candidates = desktop_id_candidates(&info.class_name);
 
-    scan_desktop_applications().into_iter().find(|entry| {
+    if let Some(record) = records.iter().find(|entry| {
+        let desktop_id_lower = entry.desktop_id.to_lowercase();
+        app_id_candidates
+            .iter()
+            .chain(class_candidates.iter())
+            .any(|candidate| desktop_id_lower == *candidate)
+    }) {
+        return Some(record.clone());
+    }
+
+    if let Some(record) = records.iter().find(|entry| {
+        let exec_lower = entry.exec_path.to_lowercase();
+        let exec_base = executable_basename(&entry.exec_path);
+        process_path
+            .as_deref()
+            .map(|path| !path.is_empty() && exec_lower.contains(&path.to_lowercase()))
+            .unwrap_or(false)
+            || process_basename
+                .as_ref()
+                .zip(exec_base.as_ref())
+                .map(|(left, right)| left == right)
+                .unwrap_or(false)
+            || process_command
+                .as_ref()
+                .zip(exec_base.as_ref())
+                .map(|(left, right)| left == right)
+                .unwrap_or(false)
+    }) {
+        return Some(record.clone());
+    }
+
+    records.into_iter().find(|entry| {
         let desktop_id_lower = entry.desktop_id.to_lowercase();
         let name_lower = entry.name.to_lowercase();
         let exec_lower = entry.exec_path.to_lowercase();
@@ -124,13 +210,17 @@ fn find_desktop_application_by_window(
                 && (desktop_id_lower.contains(&app_id_lower)
                     || name_lower.contains(&app_id_lower)
                     || exec_lower.contains(&app_id_lower)))
+            || process_command
+                .as_ref()
+                .map(|command| {
+                    desktop_id_lower.contains(command)
+                        || name_lower.contains(command)
+                        || exec_lower.contains(command)
+                })
+                .unwrap_or(false)
             || (!app_name_lower.is_empty()
                 && (name_lower.contains(&app_name_lower)
                     || desktop_id_lower.contains(&app_name_lower)))
-            || process_path
-                .as_deref()
-                .map(|path| !path.is_empty() && exec_lower.contains(&path.to_lowercase()))
-                .unwrap_or(false)
     })
 }
 
@@ -229,7 +319,9 @@ fn to_raycast_application(record: DesktopApplicationRecord) -> RaycastCompatAppl
     }
 }
 
-pub fn resolve_application_from_window(info: &FocusedWindowInfo) -> Result<RaycastCompatApplication> {
+pub fn resolve_application_from_window(
+    info: &FocusedWindowInfo,
+) -> Result<RaycastCompatApplication> {
     let record = find_desktop_application_by_window(info).unwrap_or(DesktopApplicationRecord {
         desktop_id: info
             .app_id
@@ -260,16 +352,16 @@ pub fn get_frontmost_application(state: &AppState) -> Result<RaycastCompatApplic
     })?;
     resolve_application_from_window(&focused).or_else(|_| {
         let record = DesktopApplicationRecord {
-        desktop_id: focused
-            .app_id
-            .clone()
-            .unwrap_or_else(|| focused.class_name.clone()),
-        name: focused.app_name.clone(),
-        exec_path: focused
-            .pid
-            .and_then(|pid| fs::read_link(format!("/proc/{pid}/exe")).ok())
-            .map(|path| path.to_string_lossy().to_string())
-            .unwrap_or_default(),
+            desktop_id: focused
+                .app_id
+                .clone()
+                .unwrap_or_else(|| focused.class_name.clone()),
+            name: focused.app_name.clone(),
+            exec_path: focused
+                .pid
+                .and_then(|pid| fs::read_link(format!("/proc/{pid}/exe")).ok())
+                .map(|path| path.to_string_lossy().to_string())
+                .unwrap_or_default(),
         };
 
         if record.name.trim().is_empty() {
