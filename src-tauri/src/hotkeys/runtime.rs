@@ -17,8 +17,8 @@ use super::models::{HotkeyCapabilities, HotkeySettings};
 #[cfg(target_os = "linux")]
 use super::shortcuts::{build_compositor_bindings, format_portal_preferred_trigger};
 use super::store::{open_store, read_hotkey_settings};
-use crate::config::config;
 use crate::custom_config;
+use crate::hotkeys::config::CONFIG as HOTKEYS_CONFIG;
 
 #[derive(Debug, Clone, Serialize)]
 struct HotkeyCommandEventPayload {
@@ -77,7 +77,7 @@ pub fn initialize_hotkey_backend(app: &AppHandle) {
         if detect_session_type() != "wayland" {
             set_runtime_fallback(
                 app,
-                config().HOTKEY_WAYLAND_DISABLED_MESSAGE.to_string(),
+                HOTKEYS_CONFIG.wayland_disabled_message.to_string(),
                 false,
                 None,
                 false,
@@ -238,7 +238,7 @@ pub(super) fn hotkey_capabilities() -> HotkeyCapabilities {
         global_command_hotkeys_supported: false,
         launcher_only_supported: true,
         notes: vec![
-            config().HOTKEY_WAYLAND_DISABLED_MESSAGE.to_string(),
+            HOTKEYS_CONFIG.wayland_disabled_message.to_string(),
             "Launcher-only shortcuts inside the Beam window still work.".to_string(),
         ],
     }
@@ -247,7 +247,7 @@ pub(super) fn hotkey_capabilities() -> HotkeyCapabilities {
 pub(super) fn emit_settings_updated_event(app: &AppHandle) {
     if let Ok(store) = open_store(app) {
         let settings = read_hotkey_settings(&store);
-        let _ = app.emit(config().HOTKEY_SETTINGS_UPDATED_EVENT, settings);
+        let _ = app.emit(HOTKEYS_CONFIG.settings_updated_event, settings);
     }
 }
 
@@ -299,11 +299,11 @@ fn emit_hotkey_command_event(app: &AppHandle, command_id: String, source: String
     let payload = HotkeyCommandEventPayload { command_id, source };
 
     if let Some(main_window) = app.get_webview_window("main") {
-        let _ = main_window.emit(config().HOTKEY_COMMAND_EVENT, payload);
+        let _ = main_window.emit(HOTKEYS_CONFIG.command_event, payload);
         return;
     }
 
-    let _ = app.emit(config().HOTKEY_COMMAND_EVENT, payload);
+    let _ = app.emit(HOTKEYS_CONFIG.command_event, payload);
 }
 
 fn emit_hotkey_backend_status_event(
@@ -334,9 +334,9 @@ fn emit_hotkey_backend_status_event(
     };
 
     if let Some(main_window) = app.get_webview_window("main") {
-        let _ = main_window.emit(config().HOTKEY_BACKEND_STATUS_EVENT, payload.clone());
+        let _ = main_window.emit(HOTKEYS_CONFIG.backend_status_event, payload.clone());
     }
-    let _ = app.emit(config().HOTKEY_BACKEND_STATUS_EVENT, payload);
+    let _ = app.emit(HOTKEYS_CONFIG.backend_status_event, payload);
 }
 
 fn show_launcher_window(app: &AppHandle) {
@@ -441,9 +441,9 @@ fn set_runtime_fallback(
 
     let hint = settings.and_then(build_compositor_binding_hint);
     let message = if hint.is_some() {
-        config().HOTKEY_WAYLAND_FALLBACK_MESSAGE.to_string()
+        HOTKEYS_CONFIG.wayland_fallback_message.to_string()
     } else {
-        format!("{} {error}", config().HOTKEY_WAYLAND_FALLBACK_MESSAGE)
+        format!("{} {error}", HOTKEYS_CONFIG.wayland_fallback_message)
     };
 
     emit_hotkey_backend_status_event(app, "warning", message, hint, "hotkey-backend");
@@ -455,7 +455,7 @@ async fn run_linux_wayland_hotkey_runtime(app: AppHandle, mut reload_rx: watch::
         if detect_session_type() != "wayland" {
             set_runtime_fallback(
                 &app,
-                config().HOTKEY_WAYLAND_DISABLED_MESSAGE.to_string(),
+                HOTKEYS_CONFIG.wayland_disabled_message.to_string(),
                 false,
                 None,
                 false,
@@ -656,7 +656,7 @@ fn build_portal_shortcuts(
     let mut targets = HashMap::new();
 
     let mut launcher_shortcut = NewShortcut::new(
-        config().HOTKEY_PORTAL_LAUNCHER_SHORTCUT_ID,
+        HOTKEYS_CONFIG.portal_launcher_shortcut_id,
         "Toggle Beam launcher",
     );
     if let Some(trigger) = format_portal_preferred_trigger(&settings.global_shortcut) {
@@ -664,14 +664,14 @@ fn build_portal_shortcuts(
     }
     shortcuts.push(launcher_shortcut);
     targets.insert(
-        config().HOTKEY_PORTAL_LAUNCHER_SHORTCUT_ID.to_string(),
+        HOTKEYS_CONFIG.portal_launcher_shortcut_id.to_string(),
         PortalShortcutTarget::ToggleLauncher,
     );
 
     for (index, (command_id, hotkey)) in settings.command_hotkeys.iter().enumerate() {
         let shortcut_id = format!(
             "{}.{}",
-            config().HOTKEY_PORTAL_COMMAND_SHORTCUT_PREFIX,
+            HOTKEYS_CONFIG.portal_command_shortcut_prefix,
             index + 1
         );
         let description = format!("Run Beam command {}", command_id);

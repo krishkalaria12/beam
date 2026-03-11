@@ -6,7 +6,7 @@ use tauri::AppHandle;
 use super::error::Result;
 use super::history::{get_history, ClipboardContentType, ClipboardHistoryEntry};
 
-use crate::config::config;
+use crate::clipboard::config::CONFIG as CLIPBOARD_CONFIG;
 
 const MATCH_CONFIG: Config = Config::DEFAULT;
 
@@ -20,7 +20,7 @@ pub fn search_history(app: &AppHandle, query: &str) -> Result<Vec<ClipboardHisto
     Ok(fuzzy_match_history_entries(
         history,
         normalized_query,
-        config().CLIPBOARD_SEARCH_MAX_RESULTS,
+        CLIPBOARD_CONFIG.search_max_results,
     ))
 }
 
@@ -38,7 +38,7 @@ fn fuzzy_match_history_entries(
             let mut scratch = Vec::new();
 
             let value_excerpt =
-                excerpt_chars(&entry.value, config().CLIPBOARD_SEARCH_MAX_ENTRY_CHARS);
+                excerpt_chars(&entry.value, CLIPBOARD_CONFIG.search_max_entry_chars);
             let value_score =
                 pattern.score(Utf32Str::new(value_excerpt, &mut scratch), &mut matcher);
 
@@ -49,8 +49,8 @@ fn fuzzy_match_history_entries(
                 &mut matcher,
             );
 
-            let value_weight = config().CLIPBOARD_SEARCH_VALUE_WEIGHT;
-            let content_type_weight = config().CLIPBOARD_SEARCH_CONTENT_TYPE_WEIGHT;
+            let value_weight = CLIPBOARD_CONFIG.search_value_weight;
+            let content_type_weight = CLIPBOARD_CONFIG.search_content_type_weight;
 
             let combined_score = match (value_score, content_type_score) {
                 (Some(value), Some(content_type)) => Some(

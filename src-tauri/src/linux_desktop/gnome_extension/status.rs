@@ -3,7 +3,7 @@ use serde_json::Value;
 use std::fs;
 use std::path::PathBuf;
 
-use crate::config::config;
+use crate::linux_desktop::gnome_extension::config::CONFIG as GNOME_EXTENSION_CONFIG;
 
 use super::dbus;
 use super::install::extension_install_dir;
@@ -20,7 +20,7 @@ pub struct GnomeExtensionStatus {
 }
 
 fn bundled_version() -> Option<String> {
-    let metadata = config().LINUX_DESKTOP_GNOME_EXTENSION_METADATA_JSON;
+    let metadata = GNOME_EXTENSION_CONFIG.extension_metadata_json;
     let value: Value = serde_json::from_str(metadata).ok()?;
     if let Some(string_version) = value.get("version").and_then(Value::as_str) {
         return Some(string_version.to_string());
@@ -44,9 +44,9 @@ fn installed_version(path: &PathBuf) -> Option<String> {
 }
 
 fn extension_enabled() -> bool {
-    let config = config();
+    let config = GNOME_EXTENSION_CONFIG;
     let output = std::process::Command::new("gnome-extensions")
-        .args(["info", config.LINUX_DESKTOP_GNOME_EXTENSION_ID])
+        .args(["info", config.extension_id])
         .output();
     let Ok(output) = output else {
         return false;

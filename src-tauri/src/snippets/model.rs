@@ -4,7 +4,7 @@ use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 use tokio::sync::{watch, RwLock};
 
-use crate::config::config;
+use crate::snippets::config::CONFIG as SNIPPETS_CONFIG;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -80,8 +80,8 @@ impl SnippetsState {
             settings: Arc::new(RwLock::new(SnippetRuntimeSettings {
                 enabled: true,
                 trigger_mode: TriggerMode::Delimiter,
-                cooldown_ms: config().SNIPPETS_DEFAULT_COOLDOWN_MS,
-                max_buffer_len: config().SNIPPETS_DEFAULT_MAX_BUFFER_LEN,
+                cooldown_ms: SNIPPETS_CONFIG.default_cooldown_ms,
+                max_buffer_len: SNIPPETS_CONFIG.default_max_buffer_len,
             })),
             snippets_by_id: Arc::new(RwLock::new(HashMap::new())),
             index: Arc::new(RwLock::new(TriggerIndex::default())),

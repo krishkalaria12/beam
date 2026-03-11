@@ -10,6 +10,7 @@ use std::path::{Path, PathBuf};
 use tauri::{AppHandle, Emitter, Manager};
 
 use super::attachments;
+use super::config::CONFIG as AI_CONFIG;
 use super::context::{ContextCompactionRequest, ContextManager};
 use super::error::{AiError, Result};
 use super::key_store::{
@@ -21,7 +22,6 @@ use super::model::{
     AskOptions,
 };
 use super::repository::AiRepository;
-use crate::config::config;
 
 fn get_settings_path(app: &tauri::AppHandle) -> Result<PathBuf> {
     let data_dir = app
@@ -33,7 +33,7 @@ fn get_settings_path(app: &tauri::AppHandle) -> Result<PathBuf> {
         fs::create_dir_all(&data_dir)?;
     }
 
-    Ok(data_dir.join(config().AI_SETTINGS_FILE))
+    Ok(data_dir.join(AI_CONFIG.settings_file_name))
 }
 
 fn read_settings(path: &Path) -> Result<AiSettings> {
@@ -171,10 +171,10 @@ where
 }
 
 fn openai_additional_params(model_name: &str) -> Option<serde_json::Value> {
-    if model_name == config().AI_DEFAULT_OPENAI_MODEL {
+    if model_name == AI_CONFIG.default_openai_model {
         Some(serde_json::json!({
             "reasoning": {
-                "effort": config().AI_DEFAULT_OPENAI_REASONING_EFFORT
+                "effort": AI_CONFIG.default_openai_reasoning_effort
             }
         }))
     } else {
@@ -485,7 +485,7 @@ pub async fn ai_ask_stream(
         }
     };
 
-    for _ in 0..config().AI_CONTEXT_MAX_COMPACTION_PASSES {
+    for _ in 0..AI_CONFIG.context_max_compaction_passes {
         let Some(compaction_request) = context_preparation.compaction_request.take() else {
             break;
         };

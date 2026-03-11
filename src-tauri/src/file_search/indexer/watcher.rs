@@ -11,11 +11,11 @@ use super::{
     error::{IndexerError, Result},
     helper::{get_file_metadata, is_ignored_path, normalize_path},
 };
-use crate::config::config;
+use crate::file_search::config::CONFIG as FILE_SEARCH_CONFIG;
 
 pub fn start_watcher(tx: UnboundedSender<IndexUpdate>) -> Result<Debouncer<RecommendedWatcher>> {
     let mut debouncer = new_debouncer(
-        Duration::from_secs(config().FILE_WATCHER_DEBOUNCE_SEC as u64),
+        Duration::from_secs(FILE_SEARCH_CONFIG.watcher_debounce_secs as u64),
         move |res: DebounceEventResult| match res {
             Ok(events) => {
                 for event in events {

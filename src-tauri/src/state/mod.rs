@@ -1,3 +1,6 @@
+pub(crate) mod config;
+pub mod error;
+
 use keepawake::KeepAwake;
 use papaya::HashMap;
 use parking_lot::Mutex;
@@ -7,8 +10,9 @@ use std::time::{Duration, Instant};
 use sysinfo::{Pid, PidExt, ProcessExt, System, SystemExt};
 use tauri::{AppHandle, Manager};
 
+use self::config::CONFIG as STATE_CONFIG;
+use self::error::{Result, StateError};
 use crate::cli::bridge::CliBridgeRuntime;
-use crate::config::config;
 use crate::file_search::{self, types::FileEntry};
 use crate::snippets::model::SnippetsState;
 
@@ -18,18 +22,23 @@ pub struct ProcessStateCache {
     last_refresh: Option<Instant>,
 }
 
-impl ProcessStateCache {
-    pub fn new() -> Self {
+impl Default for ProcessStateCache {
+    fn default() -> Self {
         Self {
             sys: System::new_all(),
             pid_names: StdHashMap::new(),
             last_refresh: None,
         }
     }
+}
+
+impl ProcessStateCache {
+    pub fn new() -> Self {
+        Self::default()
+    }
 
     fn refresh_if_stale(&mut self) {
-        let refresh_interval =
-            Duration::from_millis(config().WINDOW_SWITCHER_PROCESS_CACHE_REFRESH_MS);
+        let refresh_interval = Duration::from_millis(STATE_CONFIG.process_cache_refresh_ms);
         let should_refresh = self
             .last_refresh
             .map(|last| last.elapsed() >= refresh_interval)
@@ -78,22 +87,33 @@ pub struct AppState {
     pub snippets: Arc<SnippetsState>,
 }
 
-impl AppState {
-    pub fn new() -> Self {
+impl Default for AppState {
+    fn default() -> Self {
         Self {
             index: Arc::new(HashMap::new()),
             awake_handle: Arc::new(Mutex::new(None)),
-            process_cache: Arc::new(Mutex::new(ProcessStateCache::new())),
+            process_cache: Arc::new(Mutex::new(ProcessStateCache::default())),
             cli_bridge: Arc::new(CliBridgeRuntime::new()),
             snippets: Arc::new(SnippetsState::new()),
         }
     }
 }
 
-pub fn init(app: &AppHandle) {
-    let state = app.state::<AppState>();
+impl AppState {
+    pub fn new() -> Self {
+        Self::default()
+    }
+}
+
+pub fn init(app: &AppHandle) -> Result<()> {
+    let state = app
+        .try_state::<AppState>()
+        .ok_or(StateError::AppStateUnavailable)?;
     let index = Arc::clone(&state.index);
+
     tauri::async_runtime::spawn(async move {
         file_search::initialize_backend(index).await;
     });
+
+    Ok(())
 }

@@ -2,7 +2,7 @@ use std::time::{Duration, Instant};
 
 use parking_lot::Mutex;
 
-use crate::config::config;
+use crate::script_commands::config::CONFIG as SCRIPT_COMMANDS_CONFIG;
 
 use super::discovery::{discover_script_commands, resolve_script_commands_directory};
 use super::error::Result;
@@ -21,7 +21,7 @@ pub(super) fn invalidate_script_commands_cache() {
 }
 
 pub(super) fn get_script_commands(app: &tauri::AppHandle) -> Result<Vec<ScriptCommandSummary>> {
-    let ttl = Duration::from_millis(config().SCRIPT_COMMANDS_DISCOVERY_CACHE_TTL_MS);
+    let ttl = Duration::from_millis(SCRIPT_COMMANDS_CONFIG.discovery_cache_ttl_ms);
 
     {
         let cache = SCRIPT_COMMANDS_CACHE.lock();

@@ -6,14 +6,14 @@ use super::{
     error::{QuicklinkError, Result},
     Quicklink,
 };
-use crate::config::config;
+use crate::quicklinks::config::CONFIG as QUICKLINKS_CONFIG;
 
 pub fn get_quicklinks_from_store(app: &AppHandle) -> Result<Vec<Quicklink>> {
     let store = app
-        .store(&config().QUICKLINK_STORE_NAME)
+        .store(&QUICKLINKS_CONFIG.store_file_name)
         .map_err(|e| QuicklinkError::StoreOpeningError(e.to_string()))?;
 
-    let json_value = match store.get(&config().QUICKLINK_VALUE_NAME) {
+    let json_value = match store.get(&QUICKLINKS_CONFIG.value_key) {
         Some(value) => value,
         None => return Ok(Vec::new()),
     };
@@ -31,14 +31,14 @@ pub fn save_quicklinks_to_store(app: &AppHandle, quicklink: &Quicklink) -> Resul
 
 pub fn save_all_quicklinks_to_store(app: &AppHandle, quicklinks: &[Quicklink]) -> Result<()> {
     let store = app
-        .store(&config().QUICKLINK_STORE_NAME)
+        .store(&QUICKLINKS_CONFIG.store_file_name)
         .map_err(|e| QuicklinkError::StoreOpeningError(e.to_string()))?;
 
     let app_json = serde_json::to_value(quicklinks).map_err(|e| {
         QuicklinkError::SerializationError(format!("failed to serialize quicklinks: {e}"))
     })?;
 
-    store.set(config().QUICKLINK_VALUE_NAME, app_json);
+    store.set(QUICKLINKS_CONFIG.value_key, app_json);
     store
         .save()
         .map_err(|e| QuicklinkError::StoreSaveError(e.to_string()))?;

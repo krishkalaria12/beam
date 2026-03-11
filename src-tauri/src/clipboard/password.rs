@@ -10,7 +10,8 @@ use sha2::{Digest, Sha256};
 
 use super::error::{ClipboardError, Result};
 
-use crate::config::config;
+use crate::clipboard::config::CONFIG as CLIPBOARD_CONFIG;
+use crate::config::CONFIG as APP_CONFIG;
 
 static ENCRYPTION_PASSWORD_CACHE: OnceCell<String> = OnceCell::new();
 
@@ -32,7 +33,7 @@ fn generate_password(length: usize) -> String {
 
 pub fn get_password_for_encrypt() -> Result<String> {
     let password = ENCRYPTION_PASSWORD_CACHE.get_or_try_init(|| {
-        let entry = Entry::new(&config().SERVICE_NAME, &config().KEYRING_NAME)
+        let entry = Entry::new(&APP_CONFIG.service_name, &CLIPBOARD_CONFIG.keyring_name)
             .map_err(|e| ClipboardError::NewEntryKeyringError(e.to_string()))?;
 
         let password = match entry.get_password() {
@@ -42,8 +43,7 @@ pub fn get_password_for_encrypt() -> Result<String> {
         };
 
         if password.is_empty() {
-            let generated_password =
-                generate_password(config().CLIPBOARD_ENCRYPTION_PASSWORD_LENGTH);
+            let generated_password = generate_password(CLIPBOARD_CONFIG.encryption_password_length);
             entry
                 .set_password(generated_password.as_str())
                 .map_err(|e| ClipboardError::SettingPasswordKeyring(e.to_string()))?;
@@ -64,7 +64,7 @@ fn get_cipher_for_password(password: &str) -> Result<Aes256Gcm> {
 }
 
 fn get_nonce_size_bytes() -> Result<usize> {
-    let nonce_size = config().CLIPBOARD_ENCRYPTION_NONCE_BYTES;
+    let nonce_size = CLIPBOARD_CONFIG.encryption_nonce_bytes;
     if nonce_size != 12 {
         return Err(ClipboardError::EncryptionCipherInitError(
             "CLIPBOARD_ENCRYPTION_NONCE_BYTES must be 12 for AES-GCM".to_string(),
@@ -92,13 +92,13 @@ fn encrypt_text_with_password(value: &str, password: &str) -> Result<String> {
 
     Ok(format!(
         "{}{}",
-        config().CLIPBOARD_ENCRYPTION_PREFIX,
+        CLIPBOARD_CONFIG.encryption_prefix,
         general_purpose::STANDARD.encode(payload)
     ))
 }
 
 fn decrypt_text_with_password(value: &str, password: &str) -> Result<String> {
-    let encrypted_value_prefix = config().CLIPBOARD_ENCRYPTION_PREFIX;
+    let encrypted_value_prefix = CLIPBOARD_CONFIG.encryption_prefix;
     if !value.starts_with(encrypted_value_prefix) {
         return Ok(value.to_string());
     }
@@ -139,7 +139,7 @@ pub fn decrypt_value(value: &str) -> Result<String> {
     match decrypt_text_with_password(value, &password) {
         Ok(decrypted_value) => Ok(decrypted_value),
         Err(_) => {
-            if !value.starts_with(config().CLIPBOARD_ENCRYPTION_PREFIX) {
+            if !value.starts_with(CLIPBOARD_CONFIG.encryption_prefix) {
                 return Ok(value.to_string());
             }
 

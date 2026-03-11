@@ -195,14 +195,23 @@ pub fn run(startup_args: Vec<String>) {
 
             clipboard::start_clipboard_listener(app.handle().clone());
 
-            if let Ok(layout_mode) = settings::get_ui_layout_mode(app.handle().clone()) {
-                let compact = matches!(layout_mode, UiLayoutMode::Compressed);
-                let _ =
-                    launcher_window::set_launcher_compact_mode(app.handle().clone(), compact, None);
+            match settings::get_ui_layout_mode(app.handle().clone()) {
+                Ok(layout_mode) => {
+                    let compact = matches!(layout_mode, UiLayoutMode::Compressed);
+                    let _ = launcher_window::set_launcher_compact_mode(
+                        app.handle().clone(),
+                        compact,
+                        None,
+                    );
+                }
+                Err(error) => {
+                    log::warn!("failed to load ui layout mode: {error}");
+                }
             }
 
             // Initialize File Search Backend via State
-            state::init(app.handle());
+            state::init(&app.handle())
+                .map_err(|error| -> Box<dyn std::error::Error> { Box::new(error) })?;
 
             hotkeys::initialize_hotkey_backend(&app.handle());
             ai::db::init(&app.handle());

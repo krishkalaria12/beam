@@ -1,8 +1,9 @@
 use serde_json::Value;
 use std::collections::HashMap;
 
-use crate::config::config;
 use crate::http;
+use crate::integrations::config::CONFIG as INTEGRATIONS_CONFIG;
+use crate::integrations::github::config::CONFIG as GITHUB_CONFIG;
 use crate::integrations::helper as integration_helper;
 
 use super::error::{GithubError, Result};
@@ -65,11 +66,11 @@ fn build_api_headers(access_token: &str) -> Vec<(String, String)> {
         ),
         (
             "X-GitHub-Api-Version".to_string(),
-            config().GITHUB_API_VERSION.to_string(),
+            GITHUB_CONFIG.api_version.to_string(),
         ),
         (
             "User-Agent".to_string(),
-            config().GITHUB_USER_AGENT.to_string(),
+            GITHUB_CONFIG.user_agent.to_string(),
         ),
         (
             "Authorization".to_string(),
@@ -154,26 +155,26 @@ fn validate_assigned_issues_request(
         .filter
         .as_deref()
         .and_then(normalize_lowercase_non_empty)
-        .unwrap_or_else(|| config().GITHUB_DEFAULT_ISSUES_FILTER.to_string());
+        .unwrap_or_else(|| GITHUB_CONFIG.default_issues_filter.to_string());
     let state = request
         .state
         .as_deref()
         .and_then(normalize_lowercase_non_empty)
-        .unwrap_or_else(|| config().GITHUB_DEFAULT_ISSUES_STATE.to_string());
+        .unwrap_or_else(|| GITHUB_CONFIG.default_issues_state.to_string());
     let sort = request
         .sort
         .as_deref()
         .and_then(normalize_lowercase_non_empty)
-        .unwrap_or_else(|| config().GITHUB_DEFAULT_ISSUES_SORT.to_string());
+        .unwrap_or_else(|| GITHUB_CONFIG.default_issues_sort.to_string());
     let direction = request
         .direction
         .as_deref()
         .and_then(normalize_lowercase_non_empty)
-        .unwrap_or_else(|| config().GITHUB_DEFAULT_ISSUES_DIRECTION.to_string());
+        .unwrap_or_else(|| GITHUB_CONFIG.default_issues_direction.to_string());
     let per_page = request
         .per_page
-        .unwrap_or(config().GITHUB_DEFAULT_ISSUES_PER_PAGE)
-        .clamp(1, config().GITHUB_MAX_ISSUES_PER_PAGE);
+        .unwrap_or(GITHUB_CONFIG.default_issues_per_page)
+        .clamp(1, GITHUB_CONFIG.max_issues_per_page);
     let page = request.page.unwrap_or(1).max(1);
 
     let valid_filters = [
@@ -236,8 +237,8 @@ fn validate_search_issues_request(
         .map_err(GithubError::InvalidInput)?;
     let per_page = request
         .per_page
-        .unwrap_or(config().GITHUB_DEFAULT_ISSUES_PER_PAGE)
-        .clamp(1, config().GITHUB_MAX_ISSUES_PER_PAGE);
+        .unwrap_or(GITHUB_CONFIG.default_issues_per_page)
+        .clamp(1, GITHUB_CONFIG.max_issues_per_page);
     let page = request.page.unwrap_or(1).max(1);
 
     let sort = request
@@ -287,13 +288,13 @@ fn validate_auth_session_request(
     let redirect_uri = integration_helper::validate_redirect_uri(&request.redirect_uri)
         .map_err(GithubError::InvalidInput)?;
     let scopes =
-        integration_helper::normalize_scopes(request.scopes, &config().GITHUB_DEFAULT_SCOPES);
+        integration_helper::normalize_scopes(request.scopes, &GITHUB_CONFIG.default_scopes);
     let state = request
         .state
         .as_deref()
         .and_then(integration_helper::normalize_scope)
         .unwrap_or_else(|| {
-            integration_helper::generate_random_token(config().INTEGRATIONS_STATE_RANDOM_BYTES)
+            integration_helper::generate_random_token(INTEGRATIONS_CONFIG.state_random_bytes)
         });
     let allow_signup = request.allow_signup.unwrap_or(false);
 
@@ -344,9 +345,9 @@ pub fn github_create_auth_session(
     let validated = validate_auth_session_request(request)?;
 
     let code_verifier =
-        integration_helper::generate_random_token(config().INTEGRATIONS_PKCE_VERIFIER_RANDOM_BYTES);
+        integration_helper::generate_random_token(INTEGRATIONS_CONFIG.pkce_verifier_random_bytes);
     let code_challenge = integration_helper::build_pkce_challenge(&code_verifier);
-    let authorize_endpoint = config().GITHUB_AUTHORIZE_URL.to_string();
+    let authorize_endpoint = GITHUB_CONFIG.authorize_url.to_string();
 
     let mut params = vec![
         ("client_id".to_string(), validated.client_id),
@@ -355,7 +356,7 @@ pub fn github_create_auth_session(
         ("code_challenge".to_string(), code_challenge.clone()),
         (
             "code_challenge_method".to_string(),
-            config().INTEGRATIONS_PKCE_CHALLENGE_METHOD.to_string(),
+            INTEGRATIONS_CONFIG.pkce_challenge_method.to_string(),
         ),
         (
             "allow_signup".to_string(),
@@ -375,7 +376,7 @@ pub fn github_create_auth_session(
         state: validated.state,
         code_verifier,
         code_challenge,
-        code_challenge_method: config().INTEGRATIONS_PKCE_CHALLENGE_METHOD.to_string(),
+        code_challenge_method: INTEGRATIONS_CONFIG.pkce_challenge_method.to_string(),
     })
 }
 
@@ -383,12 +384,12 @@ pub async fn github_exchange_code_for_tokens(
     request: GithubExchangeCodeRequest,
 ) -> Result<GithubTokenResponse> {
     let validated = validate_exchange_code_request(request)?;
-    let token_endpoint = config().GITHUB_TOKEN_URL.to_string();
+    let token_endpoint = GITHUB_CONFIG.token_url.to_string();
     let headers = vec![
         ("Accept".to_string(), "application/json".to_string()),
         (
             "User-Agent".to_string(),
-            config().GITHUB_USER_AGENT.to_string(),
+            GITHUB_CONFIG.user_agent.to_string(),
         ),
     ];
     let form = vec![
@@ -402,7 +403,7 @@ pub async fn github_exchange_code_for_tokens(
         &token_endpoint,
         &headers,
         &form,
-        config().INTEGRATIONS_HTTP_TIMEOUT_SECS,
+        INTEGRATIONS_CONFIG.http_timeout_secs,
     )
     .await
     .map_err(map_http_error)?;
@@ -414,12 +415,12 @@ pub async fn github_refresh_access_token(
     request: GithubRefreshTokenRequest,
 ) -> Result<GithubTokenResponse> {
     let validated = validate_refresh_token_request(request)?;
-    let token_endpoint = config().GITHUB_TOKEN_URL.to_string();
+    let token_endpoint = GITHUB_CONFIG.token_url.to_string();
     let headers = vec![
         ("Accept".to_string(), "application/json".to_string()),
         (
             "User-Agent".to_string(),
-            config().GITHUB_USER_AGENT.to_string(),
+            GITHUB_CONFIG.user_agent.to_string(),
         ),
     ];
     let form = vec![
@@ -432,7 +433,7 @@ pub async fn github_refresh_access_token(
         &token_endpoint,
         &headers,
         &form,
-        config().INTEGRATIONS_HTTP_TIMEOUT_SECS,
+        INTEGRATIONS_CONFIG.http_timeout_secs,
     )
     .await
     .map_err(map_http_error)?;
@@ -443,13 +444,13 @@ pub async fn github_refresh_access_token(
 pub async fn github_get_current_user(access_token: String) -> Result<Value> {
     let access_token = integration_helper::normalize_non_empty(&access_token, "access_token")
         .map_err(GithubError::InvalidInput)?;
-    let endpoint = config().GITHUB_USER_URL.to_string();
+    let endpoint = GITHUB_CONFIG.user_url.to_string();
     let headers = build_api_headers(&access_token);
 
     let body = http::get_async_with_headers_and_timeout(
         &endpoint,
         &headers,
-        config().INTEGRATIONS_HTTP_TIMEOUT_SECS,
+        INTEGRATIONS_CONFIG.http_timeout_secs,
     )
     .await
     .map_err(map_http_error)?;
@@ -459,7 +460,7 @@ pub async fn github_get_current_user(access_token: String) -> Result<Value> {
 
 pub async fn github_get_assigned_issues(request: GithubAssignedIssuesRequest) -> Result<Value> {
     let validated = validate_assigned_issues_request(request)?;
-    let endpoint = config().GITHUB_ISSUES_URL.to_string();
+    let endpoint = GITHUB_CONFIG.issues_url.to_string();
     let query_params = vec![
         ("filter".to_string(), validated.filter),
         ("state".to_string(), validated.state),
@@ -475,7 +476,7 @@ pub async fn github_get_assigned_issues(request: GithubAssignedIssuesRequest) ->
     let body = http::get_async_with_headers_and_timeout(
         &url,
         &headers,
-        config().INTEGRATIONS_HTTP_TIMEOUT_SECS,
+        INTEGRATIONS_CONFIG.http_timeout_secs,
     )
     .await
     .map_err(map_http_error)?;
@@ -487,7 +488,7 @@ pub async fn github_search_issues_and_pull_requests(
     request: GithubSearchIssuesRequest,
 ) -> Result<Value> {
     let validated = validate_search_issues_request(request)?;
-    let endpoint = config().GITHUB_SEARCH_ISSUES_URL.to_string();
+    let endpoint = GITHUB_CONFIG.search_issues_url.to_string();
 
     let mut query_params = vec![
         ("q".to_string(), validated.query),
@@ -508,7 +509,7 @@ pub async fn github_search_issues_and_pull_requests(
     let body = http::get_async_with_headers_and_timeout(
         &url,
         &headers,
-        config().INTEGRATIONS_HTTP_TIMEOUT_SECS,
+        INTEGRATIONS_CONFIG.http_timeout_secs,
     )
     .await
     .map_err(map_http_error)?;

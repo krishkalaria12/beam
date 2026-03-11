@@ -1,3 +1,4 @@
+pub(crate) mod config;
 pub mod error;
 
 pub use error::Result;
@@ -9,7 +10,8 @@ use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 use tauri_plugin_store::StoreExt;
 
-use crate::config::config;
+use self::config::CONFIG as LAUNCHER_THEME_CONFIG;
+use crate::config::CONFIG as APP_CONFIG;
 use crate::launcher_theme::error::LauncherThemeError;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -53,16 +55,16 @@ fn normalize_theme_id(raw: &str) -> Option<String> {
 }
 
 fn resolve_themes_dir(app: &AppHandle) -> Result<PathBuf> {
-    let cfg = config();
+    let cfg = LAUNCHER_THEME_CONFIG;
     let config_dir = app
         .path()
         .app_config_dir()
         .map_err(|err| LauncherThemeError::AppConfigDirUnavailable(err.to_string()))?;
-    Ok(config_dir.join(cfg.LAUNCHER_THEME_DIR_NAME))
+    Ok(config_dir.join(cfg.directory_name))
 }
 
 fn resolve_theme_manifest(theme_dir: &Path) -> Result<LauncherThemeSummary> {
-    let cfg = config();
+    let cfg = LAUNCHER_THEME_CONFIG;
     let folder_name = theme_dir
         .file_name()
         .and_then(|value| value.to_str())
@@ -70,7 +72,7 @@ fn resolve_theme_manifest(theme_dir: &Path) -> Result<LauncherThemeSummary> {
     let fallback_id = normalize_theme_id(folder_name)
         .ok_or_else(|| LauncherThemeError::InvalidFolderName(folder_name.to_string()))?;
 
-    let manifest_path = theme_dir.join(cfg.LAUNCHER_THEME_MANIFEST_FILE_NAME);
+    let manifest_path = theme_dir.join(cfg.manifest_file_name);
     let manifest_raw = fs::read_to_string(&manifest_path)
         .map_err(|_| LauncherThemeError::ManifestNotFound(manifest_path.display().to_string()))?;
     let manifest: LauncherThemeManifestFile = serde_json::from_str(&manifest_raw)
@@ -97,7 +99,7 @@ fn resolve_theme_manifest(theme_dir: &Path) -> Result<LauncherThemeSummary> {
 }
 
 fn discover_themes_with_paths(app: &AppHandle) -> Result<Vec<(LauncherThemeSummary, PathBuf)>> {
-    let cfg = config();
+    let cfg = LAUNCHER_THEME_CONFIG;
     let themes_dir = resolve_themes_dir(app)?;
     if !themes_dir.exists() {
         return Ok(Vec::new());
@@ -114,7 +116,7 @@ fn discover_themes_with_paths(app: &AppHandle) -> Result<Vec<(LauncherThemeSumma
             continue;
         }
 
-        let stylesheet_path = theme_dir.join(cfg.LAUNCHER_THEME_STYLESHEET_FILE_NAME);
+        let stylesheet_path = theme_dir.join(cfg.stylesheet_file_name);
         if !stylesheet_path.is_file() {
             continue;
         }
@@ -141,12 +143,12 @@ fn discover_themes_with_paths(app: &AppHandle) -> Result<Vec<(LauncherThemeSumma
 }
 
 fn read_selected_theme_id(app: &AppHandle) -> Result<Option<String>> {
-    let cfg = config();
+    let cfg = LAUNCHER_THEME_CONFIG;
     let store = app
-        .store(cfg.STORE_NAME)
+        .store(APP_CONFIG.store_file_name)
         .map_err(|e| LauncherThemeError::StoreUnavailable(e.to_string()))?;
 
-    let Some(value) = store.get(cfg.LAUNCHER_THEME_SELECTED_KEY) else {
+    let Some(value) = store.get(cfg.selected_theme_key) else {
         return Ok(None);
     };
 
@@ -180,7 +182,7 @@ pub fn set_selected_launcher_theme(
     app: AppHandle,
     theme_id: Option<String>,
 ) -> std::result::Result<(), String> {
-    let cfg = config();
+    let cfg = LAUNCHER_THEME_CONFIG;
     let normalized = match theme_id {
         Some(raw) => {
             Some(normalize_theme_id(&raw).ok_or_else(|| format!("invalid theme id '{raw}'"))?)
@@ -199,13 +201,10 @@ pub fn set_selected_launcher_theme(
     }
 
     let store = app
-        .store(cfg.STORE_NAME)
+        .store(APP_CONFIG.store_file_name)
         .map_err(|e| LauncherThemeError::StoreUnavailable(e.to_string()).to_string())?;
 
-    store.set(
-        cfg.LAUNCHER_THEME_SELECTED_KEY,
-        normalized.unwrap_or_default(),
-    );
+    store.set(cfg.selected_theme_key, normalized.unwrap_or_default());
     store
         .save()
         .map_err(|e| LauncherThemeError::StoreSave(e.to_string()).to_string())
@@ -216,7 +215,7 @@ pub fn get_launcher_theme_css(
     app: AppHandle,
     theme_id: String,
 ) -> std::result::Result<String, String> {
-    let cfg = config();
+    let cfg = LAUNCHER_THEME_CONFIG;
     let normalized =
         normalize_theme_id(&theme_id).ok_or_else(|| format!("invalid theme id '{theme_id}'"))?;
 
@@ -226,14 +225,14 @@ pub fn get_launcher_theme_css(
         .find(|(summary, _)| summary.id == normalized)
         .ok_or_else(|| format!("theme '{normalized}' is not available"))?;
 
-    let stylesheet_path = theme_dir.join(cfg.LAUNCHER_THEME_STYLESHEET_FILE_NAME);
+    let stylesheet_path = theme_dir.join(cfg.stylesheet_file_name);
     let metadata = fs::metadata(&stylesheet_path)
         .map_err(|e| LauncherThemeError::StylesheetMetadata(e.to_string()).to_string())?;
-    if metadata.len() as usize > cfg.LAUNCHER_THEME_MAX_CSS_BYTES {
+    if metadata.len() as usize > cfg.max_css_bytes {
         return Err(format!(
             "theme stylesheet '{}' exceeds {} bytes",
             stylesheet_path.display(),
-            cfg.LAUNCHER_THEME_MAX_CSS_BYTES
+            cfg.max_css_bytes
         ));
     }
 

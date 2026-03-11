@@ -9,7 +9,7 @@ use super::{
     icon_resolver::IconResolver,
 };
 
-use crate::config::config;
+use crate::applications::config::CONFIG as APPLICATIONS_CONFIG;
 
 fn get_application_description(entry: &DesktopEntry) -> String {
     let description = entry
@@ -61,7 +61,7 @@ fn expand_home(path: &str) -> PathBuf {
 }
 
 fn iterate_through_application_directories() -> Result<Vec<PathBuf>> {
-    let directories = &config().FILE_DIRECTORIES_APPLICATION;
+    let directories = APPLICATIONS_CONFIG.application_directories;
     let mut files = Vec::new();
 
     for directory in directories {

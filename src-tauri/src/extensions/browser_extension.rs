@@ -13,7 +13,7 @@ use serde_json::{json, Value};
 use tiny_http::{Header, Method, Request, Response, Server, StatusCode};
 
 use super::error::{ExtensionsError, Result};
-use crate::config::config;
+use crate::extensions::config::CONFIG as EXTENSIONS_CONFIG;
 
 static BRIDGE_SERVER_RUNNING: AtomicBool = AtomicBool::new(false);
 static BRIDGE_STATE: Lazy<RwLock<BrowserBridgeState>> =
@@ -115,8 +115,7 @@ enum ContentField {
 fn bridge_address() -> String {
     format!(
         "{}:{}",
-        config().EXTENSIONS_BROWSER_BRIDGE_HOST,
-        config().EXTENSIONS_BROWSER_BRIDGE_PORT
+        EXTENSIONS_CONFIG.browser_bridge.host, EXTENSIONS_CONFIG.browser_bridge.port
     )
 }
 
@@ -147,7 +146,7 @@ fn is_client_fresh(last_seen: Option<Instant>, now: Instant) -> bool {
     last_seen
         .map(|seen| {
             now.saturating_duration_since(seen)
-                <= Duration::from_secs(config().EXTENSIONS_BROWSER_BRIDGE_STALE_SECONDS)
+                <= Duration::from_secs(EXTENSIONS_CONFIG.browser_bridge.stale_seconds)
         })
         .unwrap_or(false)
 }
@@ -172,7 +171,7 @@ fn to_bridge_content(payload: BridgeTabContentInput) -> BridgeTabContent {
     let text = payload.text.unwrap_or_default();
     let html = payload.html.unwrap_or_default();
     let markdown = payload.markdown.unwrap_or_else(|| text.clone());
-    let max_chars = config().EXTENSIONS_BROWSER_BRIDGE_MAX_CONTENT_CHARS;
+    let max_chars = EXTENSIONS_CONFIG.browser_bridge.max_content_chars;
 
     BridgeTabContent {
         text: truncate_chars(text.trim(), max_chars),
@@ -220,7 +219,7 @@ fn extract_content_with_selector(
     let combined = fragments.join("\n\n");
     Some(truncate_chars(
         combined.trim(),
-        config().EXTENSIONS_BROWSER_BRIDGE_MAX_CONTENT_CHARS,
+        EXTENSIONS_CONFIG.browser_bridge.max_content_chars,
     ))
 }
 
@@ -429,7 +428,7 @@ fn parse_json_body<T: DeserializeOwned>(request: &mut Request) -> std::result::R
     let mut buffer = Vec::new();
     request
         .as_reader()
-        .take(config().EXTENSIONS_BROWSER_BRIDGE_MAX_BODY_BYTES as u64)
+        .take(EXTENSIONS_CONFIG.browser_bridge.max_body_bytes as u64)
         .read_to_end(&mut buffer)
         .map_err(|error| format!("failed to read request body: {error}"))?;
 
@@ -461,8 +460,8 @@ fn handle_bridge_http_request(mut request: Request) {
                 200,
                 json!({
                     "ok": true,
-                    "host": config().EXTENSIONS_BROWSER_BRIDGE_HOST,
-                    "port": config().EXTENSIONS_BROWSER_BRIDGE_PORT,
+                    "host": EXTENSIONS_CONFIG.browser_bridge.host,
+                    "port": EXTENSIONS_CONFIG.browser_bridge.port,
                     "connected": has_bridge_connection(),
                 }),
             );

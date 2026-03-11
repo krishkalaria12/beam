@@ -1,4 +1,5 @@
 mod cache;
+pub(crate) mod config;
 mod discovery;
 mod error;
 mod manage;

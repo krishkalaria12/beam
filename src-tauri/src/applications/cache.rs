@@ -11,12 +11,13 @@ use super::{
     error::{ApplicationsError, Result},
 };
 
-use crate::config::config;
+use crate::applications::config::CONFIG as APPLICATIONS_CONFIG;
+use crate::config::CONFIG as APP_CONFIG;
 
 static APPLICATIONS_REFRESH_IN_PROGRESS: AtomicBool = AtomicBool::new(false);
 
 fn should_use_cached_applications(store: &Store<Wry>) -> bool {
-    let Some(timestamp) = store.get(config().LAST_UPDATED_APPLICATIONS_TIMESTAMP) else {
+    let Some(timestamp) = store.get(APPLICATIONS_CONFIG.last_updated_timestamp_key) else {
         return false;
     };
 
@@ -25,13 +26,13 @@ fn should_use_cached_applications(store: &Store<Wry>) -> bool {
     };
 
     let now = Timestamp::now().as_second();
-    let diff_seconds = (config().TIMESTAMP_VALUE_DIFF as i64) * 86400;
+    let diff_seconds = (APPLICATIONS_CONFIG.timestamp_diff_days as i64) * 86400;
 
     (now - stored_time) <= diff_seconds
 }
 
 fn read_cached_applications(store: &Store<Wry>) -> Option<Vec<AppEntry>> {
-    let json_value = store.get(&config().APPLICATIONS_VALUE)?;
+    let json_value = store.get(&APPLICATIONS_CONFIG.cache_key)?;
     from_value::<Vec<AppEntry>>(json_value).ok()
 }
 
@@ -41,8 +42,8 @@ fn write_applications_cache(store: Arc<Store<Wry>>, applications: &[AppEntry]) -
     let current_time = serde_json::to_value(Timestamp::now().as_second())
         .map_err(|e| ApplicationsError::SerializationError(e.to_string()))?;
 
-    store.set(config().APPLICATIONS_VALUE, app_json);
-    store.set(config().LAST_UPDATED_APPLICATIONS_TIMESTAMP, current_time);
+    store.set(APPLICATIONS_CONFIG.cache_key, app_json);
+    store.set(APPLICATIONS_CONFIG.last_updated_timestamp_key, current_time);
     store
         .save()
         .map_err(|e| ApplicationsError::StoreSaveError(e.to_string()))?;
@@ -62,11 +63,11 @@ fn refresh_applications_cache_in_background(app: AppHandle<Wry>) {
         let refresh_result = (|| -> Result<()> {
             let applications = collect_applications()?;
             let store = app
-                .store(&config().STORE_NAME)
+                .store(&APP_CONFIG.store_file_name)
                 .map_err(|e| ApplicationsError::StoreOpeningError(e.to_string()))?;
 
             write_applications_cache(store, &applications)?;
-            let _ = app.emit(config().APPLICATIONS_CACHE_UPDATED_EVENT, ());
+            let _ = app.emit(APPLICATIONS_CONFIG.cache_updated_event, ());
             Ok(())
         })();
 
@@ -80,7 +81,7 @@ fn refresh_applications_cache_in_background(app: AppHandle<Wry>) {
 
 pub fn get_applications_with_cache(app: AppHandle<Wry>) -> Result<Vec<AppEntry>> {
     let store = app
-        .store(&config().STORE_NAME)
+        .store(&APP_CONFIG.store_file_name)
         .map_err(|e| ApplicationsError::StoreOpeningError(e.to_string()))?;
 
     let cache_is_fresh = should_use_cached_applications(&store);

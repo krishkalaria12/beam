@@ -1,3 +1,4 @@
+pub(crate) mod config;
 pub mod error;
 pub mod helper;
 pub mod model;

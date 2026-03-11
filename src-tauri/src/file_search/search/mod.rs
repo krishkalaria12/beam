@@ -7,7 +7,7 @@ use nucleo::{Config, Matcher, Utf32Str};
 use rayon::prelude::*;
 
 use super::types::{FileEntry, FileIndex, SearchResult};
-use crate::config::config;
+use crate::file_search::config::CONFIG as FILE_SEARCH_CONFIG;
 use error::{FileSearchError, Result};
 
 const MATCH_CONFIG: Config = Config::DEFAULT;
@@ -38,7 +38,7 @@ impl Default for SearchOptions {
     fn default() -> Self {
         Self {
             page: 1,
-            per_page: config().FILE_SEARCH_DEFAULT_RESULTS_PER_PAGE,
+            per_page: FILE_SEARCH_CONFIG.default_results_per_page,
         }
     }
 }
@@ -251,10 +251,10 @@ pub fn search(query: &str, index: &FileIndex, options: SearchOptions) -> Result<
         });
     }
 
-    if options.per_page == 0 || options.per_page > config().FILE_SEARCH_MAX_RESULTS_PER_PAGE {
+    if options.per_page == 0 || options.per_page > FILE_SEARCH_CONFIG.max_results_per_page {
         return Err(FileSearchError::InvalidPerPage {
             provided: options.per_page,
-            max: config().FILE_SEARCH_MAX_RESULTS_PER_PAGE,
+            max: FILE_SEARCH_CONFIG.max_results_per_page,
         });
     }
 

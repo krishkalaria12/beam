@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use tauri::Manager;
 
 use super::error::{ExtensionsError, Result};
-use crate::config::config;
+use crate::extensions::config::CONFIG as EXTENSIONS_CONFIG;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -30,7 +30,7 @@ fn get_storage_path(app: &tauri::AppHandle) -> Result<PathBuf> {
         fs::create_dir_all(&data_dir)?;
     }
 
-    Ok(data_dir.join(config().EXTENSIONS_OAUTH_TOKENS_FILE))
+    Ok(data_dir.join(EXTENSIONS_CONFIG.oauth_tokens_file_name))
 }
 
 fn read_store(path: &Path) -> Result<TokenStore> {

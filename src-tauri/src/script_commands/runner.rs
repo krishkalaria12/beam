@@ -6,7 +6,7 @@ use std::time::Duration;
 
 use tokio::process::Command;
 
-use crate::config::config;
+use crate::script_commands::config::CONFIG as SCRIPT_COMMANDS_CONFIG;
 
 use super::cache;
 use super::discovery::resolve_script_commands_directory;
@@ -195,9 +195,9 @@ pub(super) async fn run_script_command(
     let timeout_ms = request
         .timeout_ms
         .filter(|value| *value > 0)
-        .unwrap_or(config().SCRIPT_COMMANDS_DEFAULT_TIMEOUT_MS);
+        .unwrap_or(SCRIPT_COMMANDS_CONFIG.default_timeout_ms);
     let timeout = Duration::from_millis(timeout_ms);
-    let output_limit = config().SCRIPT_COMMANDS_MAX_OUTPUT_BYTES;
+    let output_limit = SCRIPT_COMMANDS_CONFIG.max_output_bytes;
 
     let script_args = normalize_script_arguments(&command, &request.arguments)?;
     let mut process = build_process(&command, &script_path, &script_args);

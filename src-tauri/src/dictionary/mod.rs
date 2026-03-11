@@ -1,3 +1,4 @@
+pub(crate) mod config;
 pub mod error;
 pub mod language;
 pub mod model;
@@ -5,7 +6,7 @@ pub mod model;
 use self::error::{DictionaryError, Result};
 use self::language::detect_language_code;
 use self::model::{ApiResponse, DictionaryResponse, Entry, Sense};
-use crate::config::config;
+use crate::dictionary::config::CONFIG as DICTIONARY_CONFIG;
 use crate::http::get_async;
 
 #[tauri::command]
@@ -17,7 +18,7 @@ pub async fn get_definition(
         Some(lang) => lang,
         None => detect_language_code(&word).unwrap_or("en").to_string(),
     };
-    let url = format!("{}/{}/{}", config().DICTIONARY_API_URL, lang, word);
+    let url = format!("{}/{}/{}", DICTIONARY_CONFIG.api_url, lang, word);
 
     let response_text = get_async(&url)
         .await

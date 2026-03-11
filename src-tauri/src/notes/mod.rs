@@ -1,3 +1,4 @@
+pub(crate) mod config;
 pub mod db;
 pub mod error;
 

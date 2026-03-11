@@ -1,4 +1,5 @@
 pub mod browser_extension;
+pub(crate) mod config;
 pub mod error;
 pub mod oauth;
 
@@ -13,7 +14,7 @@ use tauri::Manager;
 use zip::result::ZipError;
 use zip::ZipArchive;
 
-use crate::config::config;
+use crate::extensions::config::CONFIG as EXTENSIONS_CONFIG;
 
 #[derive(Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -36,12 +37,12 @@ trait IncompatibilityHeuristic {
 struct AppleScriptHeuristic;
 impl IncompatibilityHeuristic for AppleScriptHeuristic {
     fn check(&self, command_title: &str, file_content: &str) -> Option<HeuristicViolation> {
-        if file_content.contains(config().EXTENSIONS_HEURISTIC_APPLESCRIPT_SYMBOL) {
+        if file_content.contains(EXTENSIONS_CONFIG.heuristic_applescript_symbol) {
             Some(HeuristicViolation {
                 command_name: command_title.to_string(),
                 reason: format!(
                     "Possible usage of AppleScript ({})",
-                    config().EXTENSIONS_HEURISTIC_APPLESCRIPT_SYMBOL
+                    EXTENSIONS_CONFIG.heuristic_applescript_symbol
                 ),
             })
         } else {
@@ -53,7 +54,7 @@ impl IncompatibilityHeuristic for AppleScriptHeuristic {
 struct MacOSPathHeuristic;
 impl IncompatibilityHeuristic for MacOSPathHeuristic {
     fn check(&self, command_title: &str, file_content: &str) -> Option<HeuristicViolation> {
-        for path in &config().EXTENSIONS_HEURISTIC_MACOS_PATHS {
+        for path in EXTENSIONS_CONFIG.heuristic_macos_paths {
             if file_content.contains(path) {
                 return Some(HeuristicViolation {
                     command_name: command_title.to_string(),
@@ -73,7 +74,7 @@ fn get_extension_dir(app: &tauri::AppHandle, slug: &str) -> Result<PathBuf> {
         .map_err(|_| ExtensionsError::AppDataDirUnavailable)?;
 
     Ok(data_dir
-        .join(config().EXTENSIONS_PLUGINS_DIRECTORY)
+        .join(EXTENSIONS_CONFIG.plugins_directory)
         .join(slug))
 }
 
@@ -245,9 +246,9 @@ fn get_commands_from_package_json(
     prefix: &Option<PathBuf>,
 ) -> Result<Vec<(String, String)>> {
     let package_json_path = if let Some(path_prefix) = prefix {
-        path_prefix.join(config().EXTENSIONS_PACKAGE_JSON_FILE)
+        path_prefix.join(EXTENSIONS_CONFIG.package_json_file_name)
     } else {
-        PathBuf::from(config().EXTENSIONS_PACKAGE_JSON_FILE)
+        PathBuf::from(EXTENSIONS_CONFIG.package_json_file_name)
     };
 
     let mut package_file = match archive.by_name(&package_json_path.to_string_lossy()) {
@@ -472,7 +473,7 @@ pub fn discover_plugins(app: &tauri::AppHandle) -> Result<Vec<PluginInfo>> {
             .and_then(|segment| segment.to_str())
             .unwrap_or_default()
             .to_string();
-        let package_json_path = plugin_dir.join(config().EXTENSIONS_PACKAGE_JSON_FILE);
+        let package_json_path = plugin_dir.join(EXTENSIONS_CONFIG.package_json_file_name);
 
         if !package_json_path.exists() {
             eprintln!("Plugin {plugin_dir_name} has no package.json, skipping");

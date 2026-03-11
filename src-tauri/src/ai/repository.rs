@@ -7,7 +7,7 @@ use rig::completion::Usage;
 use sha2::{Digest, Sha256};
 use tauri::{AppHandle, Manager};
 
-use crate::config::config;
+use super::config::CONFIG as AI_CONFIG;
 
 use super::db::{get_ai_pool, AiDbPool};
 use super::error::{AiError, Result};
@@ -580,8 +580,8 @@ fn prepare_attachment_row(
         sanitize_path_segment(request_id),
         row_id
     );
-    let storage_path = Path::new(config().AI_DIRECTORY)
-        .join(config().AI_ATTACHMENTS_DIRECTORY)
+    let storage_path = Path::new(AI_CONFIG.directory)
+        .join(AI_CONFIG.attachments_directory)
         .join(message_segment)
         .join(file_name)
         .to_string_lossy()
@@ -681,19 +681,19 @@ fn remove_attachment_file(app: &AppHandle, relative_path: &str) -> Result<()> {
 }
 
 fn normalize_conversation_id(conversation_id: Option<&str>) -> String {
-    let raw = conversation_id.unwrap_or(config().AI_DEFAULT_CONVERSATION_ID);
+    let raw = conversation_id.unwrap_or(AI_CONFIG.default_conversation_id);
     let trimmed = raw.trim();
 
     if trimmed.is_empty() {
-        config().AI_DEFAULT_CONVERSATION_ID.to_string()
+        AI_CONFIG.default_conversation_id.to_string()
     } else {
         trimmed.to_string()
     }
 }
 
 fn normalize_history_limit(limit: Option<u32>) -> i64 {
-    let raw = limit.unwrap_or(config().AI_CHAT_HISTORY_DEFAULT_LIMIT);
-    let clamped = raw.max(1).min(config().AI_CHAT_HISTORY_MAX_LIMIT);
+    let raw = limit.unwrap_or(AI_CONFIG.chat_history_default_limit);
+    let clamped = raw.max(1).min(AI_CONFIG.chat_history_max_limit);
 
     i64::from(clamped)
 }

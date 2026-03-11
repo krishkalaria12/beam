@@ -5,7 +5,7 @@ use sqlx::SqlitePool;
 use tauri::AppHandle;
 use tokio::sync::OnceCell;
 
-use crate::config::config;
+use crate::todo::config::CONFIG as TODO_CONFIG;
 use crate::utils::sqlite::{create_sqlite_pool, get_app_database_path};
 
 use super::error::{Result, TodoError};
@@ -53,8 +53,8 @@ pub async fn get_todo_pool(app: &AppHandle) -> Result<TodoDbPool> {
 pub fn get_todo_database_path(app: &AppHandle) -> Result<PathBuf> {
     get_app_database_path(
         app,
-        config().TODO_DIRECTORY,
-        config().TODO_DATABASE_FILE,
+        TODO_CONFIG.directory,
+        TODO_CONFIG.database_file_name,
         || TodoError::AppDataDirUnavailable,
     )
 }

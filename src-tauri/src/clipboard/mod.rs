@@ -14,12 +14,13 @@ use self::error::Result;
 use self::history::{get_history, get_history_values, save_to_history, ClipboardHistoryEntry};
 use self::search::search_history;
 
-use crate::config::config;
+use crate::clipboard::config::CONFIG as CLIPBOARD_CONFIG;
 #[cfg(target_os = "linux")]
 use crate::linux_desktop;
 #[cfg(target_os = "linux")]
 use crate::state::AppState;
 
+pub(crate) mod config;
 pub mod convert_image;
 pub mod error;
 pub mod history;
@@ -281,7 +282,7 @@ pub fn start_clipboard_listener(app: AppHandle) {
 }
 
 fn run_clipboard_listener(app: AppHandle) {
-    let poll_interval = Duration::from_millis(config().CLIPBOARD_POLL_INTERVAL_MS);
+    let poll_interval = Duration::from_millis(CLIPBOARD_CONFIG.poll_interval_ms);
     #[cfg(not(target_os = "linux"))]
     let mut clipboard = match Clipboard::new() {
         Ok(clipboard) => clipboard,
@@ -317,7 +318,7 @@ fn read_clipboard_entry(clipboard: &mut Clipboard) -> Option<String> {
     if let Ok(text) = clipboard.get_text() {
         let text = text.trim();
 
-        if !text.is_empty() && text.len() <= config().CLIPBOARD_MAX_ENTRY_BYTES {
+        if !text.is_empty() && text.len() <= CLIPBOARD_CONFIG.max_entry_bytes {
             return Some(text.to_string());
         }
     }
@@ -325,7 +326,7 @@ fn read_clipboard_entry(clipboard: &mut Clipboard) -> Option<String> {
     if let Ok(image_data) = clipboard.get_image() {
         let image = get_image_as_base64(image_data)?;
 
-        if image.len() <= config().CLIPBOARD_MAX_ENTRY_BYTES {
+        if image.len() <= CLIPBOARD_CONFIG.max_entry_bytes {
             return Some(image);
         }
     }
@@ -338,7 +339,7 @@ fn read_linux_clipboard_entry() -> Option<String> {
     let read_result = linux_desktop::clipboard::clipboard_read().ok()?;
     let text = read_result.text?;
     let text = text.trim();
-    if text.is_empty() || text.len() > config().CLIPBOARD_MAX_ENTRY_BYTES {
+    if text.is_empty() || text.len() > CLIPBOARD_CONFIG.max_entry_bytes {
         return None;
     }
     Some(text.to_string())

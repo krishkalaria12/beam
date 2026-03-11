@@ -1,3 +1,4 @@
+pub(crate) mod config;
 mod models;
 mod runtime;
 mod shortcuts;
@@ -22,8 +23,8 @@ use self::shortcuts::{
     build_compositor_bindings, canonical_hotkey_for_compare, normalize_hotkey_text,
 };
 use self::store::{open_store, read_hotkey_settings, save_command_hotkeys};
-use crate::config::config;
 use crate::custom_config;
+use crate::hotkeys::config::CONFIG as HOTKEYS_CONFIG;
 
 #[command]
 pub fn get_hotkey_settings(app: AppHandle) -> Result<HotkeySettings, String> {
@@ -66,7 +67,7 @@ pub fn update_global_shortcut(
 
     let store = open_store(&app)?;
     store.set(
-        config().HOTKEY_GLOBAL_SHORTCUT_VALUE,
+        HOTKEYS_CONFIG.global_shortcut_key,
         Value::String(normalized),
     );
     store

@@ -1,4 +1,4 @@
-use crate::config::config;
+use super::config::CONFIG as AI_CONFIG;
 
 use super::error::Result;
 use super::key_store::AiProvider;
@@ -39,20 +39,20 @@ impl ContextManager {
     pub fn limits_for_provider(provider: AiProvider) -> ProviderContextLimits {
         match provider {
             AiProvider::OpenAI => ProviderContextLimits {
-                context_window_tokens: config().AI_OPENAI_CONTEXT_WINDOW_TOKENS,
-                max_output_tokens: config().AI_OPENAI_MAX_OUTPUT_TOKENS,
+                context_window_tokens: AI_CONFIG.openai_context_window_tokens,
+                max_output_tokens: AI_CONFIG.openai_max_output_tokens,
             },
             AiProvider::Gemini => ProviderContextLimits {
-                context_window_tokens: config().AI_GEMINI_CONTEXT_WINDOW_TOKENS,
-                max_output_tokens: config().AI_GEMINI_MAX_OUTPUT_TOKENS,
+                context_window_tokens: AI_CONFIG.gemini_context_window_tokens,
+                max_output_tokens: AI_CONFIG.gemini_max_output_tokens,
             },
             AiProvider::Anthropic => ProviderContextLimits {
-                context_window_tokens: config().AI_ANTHROPIC_CONTEXT_WINDOW_TOKENS,
-                max_output_tokens: config().AI_ANTHROPIC_MAX_OUTPUT_TOKENS,
+                context_window_tokens: AI_CONFIG.anthropic_context_window_tokens,
+                max_output_tokens: AI_CONFIG.anthropic_max_output_tokens,
             },
             AiProvider::OpenRouter => ProviderContextLimits {
-                context_window_tokens: config().AI_OPENROUTER_CONTEXT_WINDOW_TOKENS,
-                max_output_tokens: config().AI_OPENROUTER_MAX_OUTPUT_TOKENS,
+                context_window_tokens: AI_CONFIG.openrouter_context_window_tokens,
+                max_output_tokens: AI_CONFIG.openrouter_max_output_tokens,
             },
         }
     }
@@ -90,7 +90,7 @@ impl ContextManager {
                 app,
                 Some(&normalized_conversation_id),
                 Some(summarized_until_created_at),
-                Some(config().AI_CONTEXT_MESSAGES_LIMIT),
+                Some(AI_CONFIG.context_messages_limit),
             )
             .await?;
         messages.retain(|message| message.role == "user" || message.role == "assistant");
@@ -99,7 +99,7 @@ impl ContextManager {
         let input_budget = limits
             .context_window_tokens
             .saturating_sub(limits.max_output_tokens)
-            .saturating_sub(config().AI_CONTEXT_INPUT_HEADROOM_TOKENS);
+            .saturating_sub(AI_CONFIG.context_input_headroom_tokens);
         let total_tokens_so_far = self
             .repository
             .get_total_tokens(app, Some(&normalized_conversation_id))
@@ -118,8 +118,8 @@ impl ContextManager {
             });
         }
 
-        let keep_recent = config().AI_CONTEXT_KEEP_RECENT_MESSAGES as usize;
-        let min_compact = config().AI_CONTEXT_MIN_MESSAGES_TO_COMPACT as usize;
+        let keep_recent = AI_CONFIG.context_keep_recent_messages as usize;
+        let min_compact = AI_CONFIG.context_min_messages_to_compact as usize;
 
         if messages.len() >= keep_recent + min_compact {
             let compact_end = messages.len().saturating_sub(keep_recent);
@@ -264,13 +264,12 @@ fn estimate_prompt_tokens(
 }
 
 fn estimate_message_tokens(message: &AiPersistedMessage) -> u64 {
-    estimate_text_tokens(&message.content)
-        .saturating_add(config().AI_CONTEXT_MESSAGE_OVERHEAD_TOKENS)
+    estimate_text_tokens(&message.content).saturating_add(AI_CONFIG.context_message_overhead_tokens)
 }
 
 fn estimate_text_tokens(text: &str) -> u64 {
     let chars = text.chars().count();
-    let chars_per_token = config().AI_CONTEXT_ESTIMATED_CHARS_PER_TOKEN.max(1);
+    let chars_per_token = AI_CONFIG.context_estimated_chars_per_token.max(1);
     let tokens = chars.div_ceil(chars_per_token);
     u64::try_from(tokens).unwrap_or(u64::MAX)
 }
@@ -302,11 +301,11 @@ fn trim_messages_to_budget(
 }
 
 fn normalize_conversation_id(conversation_id: Option<&str>) -> String {
-    let raw = conversation_id.unwrap_or(config().AI_DEFAULT_CONVERSATION_ID);
+    let raw = conversation_id.unwrap_or(AI_CONFIG.default_conversation_id);
     let trimmed = raw.trim();
 
     if trimmed.is_empty() {
-        config().AI_DEFAULT_CONVERSATION_ID.to_string()
+        AI_CONFIG.default_conversation_id.to_string()
     } else {
         trimmed.to_string()
     }

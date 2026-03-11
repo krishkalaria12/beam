@@ -1,6 +1,7 @@
 pub mod app_entry;
 pub mod cache;
 pub mod collector;
+pub(crate) mod config;
 pub mod error;
 pub mod find_app;
 pub mod icon_resolver;

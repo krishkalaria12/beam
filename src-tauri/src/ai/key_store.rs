@@ -1,4 +1,4 @@
-use crate::config::config;
+use super::config::CONFIG as AI_CONFIG;
 
 use super::error::{AiError, Result};
 
@@ -32,25 +32,25 @@ impl AiProvider {
 
     pub fn default_model(self) -> &'static str {
         match self {
-            Self::OpenRouter => config().AI_DEFAULT_OPENROUTER_MODEL,
-            Self::OpenAI => config().AI_DEFAULT_OPENAI_MODEL,
-            Self::Anthropic => config().AI_DEFAULT_ANTHROPIC_MODEL,
-            Self::Gemini => config().AI_DEFAULT_GEMINI_MODEL,
+            Self::OpenRouter => AI_CONFIG.default_openrouter_model,
+            Self::OpenAI => AI_CONFIG.default_openai_model,
+            Self::Anthropic => AI_CONFIG.default_anthropic_model,
+            Self::Gemini => AI_CONFIG.default_gemini_model,
         }
     }
 
     fn keyring_username(self) -> &'static str {
         match self {
-            Self::OpenRouter => config().AI_OPENROUTER_KEYRING_USERNAME,
-            Self::OpenAI => config().AI_OPENAI_KEYRING_USERNAME,
-            Self::Anthropic => config().AI_ANTHROPIC_KEYRING_USERNAME,
-            Self::Gemini => config().AI_GEMINI_KEYRING_USERNAME,
+            Self::OpenRouter => AI_CONFIG.openrouter_keyring_username,
+            Self::OpenAI => AI_CONFIG.openai_keyring_username,
+            Self::Anthropic => AI_CONFIG.anthropic_keyring_username,
+            Self::Gemini => AI_CONFIG.gemini_keyring_username,
         }
     }
 }
 
 fn get_keyring_entry(provider: AiProvider) -> Result<keyring::Entry> {
-    keyring::Entry::new(config().AI_KEYRING_SERVICE, provider.keyring_username())
+    keyring::Entry::new(AI_CONFIG.keyring_service, provider.keyring_username())
         .map_err(AiError::from)
 }
 

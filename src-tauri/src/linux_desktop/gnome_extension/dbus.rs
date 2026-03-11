@@ -1,12 +1,12 @@
 use serde_json::Value;
 use zbus::blocking::{Connection, Proxy};
 
-use crate::config::config;
+use crate::linux_desktop::gnome_extension::config::CONFIG as GNOME_EXTENSION_CONFIG;
 
 use super::error::{GnomeExtensionError, Result};
 
 fn with_proxy<T>(f: impl FnOnce(&Proxy<'_>) -> Result<T>) -> Result<T> {
-    let config = config();
+    let config = GNOME_EXTENSION_CONFIG;
     let connection = Connection::session().map_err(|error| {
         GnomeExtensionError::DbusConnectionError(format!(
             "failed to connect to the user D-Bus session: {error}"
@@ -15,9 +15,9 @@ fn with_proxy<T>(f: impl FnOnce(&Proxy<'_>) -> Result<T>) -> Result<T> {
 
     let proxy = Proxy::new(
         &connection,
-        config.LINUX_DESKTOP_GNOME_DBUS_DEST,
-        config.LINUX_DESKTOP_GNOME_DBUS_PATH,
-        config.LINUX_DESKTOP_GNOME_DBUS_INTERFACE,
+        config.dbus_destination,
+        config.dbus_path,
+        config.dbus_interface,
     )
     .map_err(|error| {
         GnomeExtensionError::DbusProxyError(format!(

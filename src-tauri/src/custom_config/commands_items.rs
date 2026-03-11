@@ -4,7 +4,8 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use tauri::{command, AppHandle};
 
-use crate::config::config;
+use crate::config::CONFIG as APP_CONFIG;
+use crate::custom_config::config::CONFIG as CUSTOM_CONFIG;
 use crate::custom_config::error::{CustomConfigError, Result};
 use crate::hotkeys;
 
@@ -25,8 +26,8 @@ fn normalize_command_id(command_id: &str) -> Option<String> {
 
 fn resolve_settings_path() -> Result<PathBuf> {
     let base_dir = dirs::config_dir().ok_or(CustomConfigError::ConfigDirUnavailable)?;
-    let app_dir = base_dir.join(config().SERVICE_NAME);
-    Ok(app_dir.join(config().STORE_NAME))
+    let app_dir = base_dir.join(APP_CONFIG.service_name);
+    Ok(app_dir.join(APP_CONFIG.store_file_name))
 }
 
 fn ensure_parent_dir(path: &Path) -> Result<()> {
@@ -93,7 +94,7 @@ fn load_hidden_command_ids() -> Result<Vec<String>> {
     let path = resolve_settings_path()?;
     let settings = read_settings_object(&path)?;
     Ok(parse_hidden_command_ids(
-        settings.get(config().COMMAND_ITEMS_CONFIG),
+        settings.get(CUSTOM_CONFIG.hidden_command_ids_key),
     ))
 }
 
@@ -133,7 +134,7 @@ pub fn set_command_hidden(app: AppHandle, command_id: String, hidden: bool) -> R
 
     let path = resolve_settings_path()?;
     let mut settings = read_settings_object(&path)?;
-    let mut commands = parse_hidden_command_ids(settings.get(config().COMMAND_ITEMS_CONFIG));
+    let mut commands = parse_hidden_command_ids(settings.get(CUSTOM_CONFIG.hidden_command_ids_key));
     if hidden {
         commands.push(normalized_command_id.clone());
     } else {
@@ -142,7 +143,7 @@ pub fn set_command_hidden(app: AppHandle, command_id: String, hidden: bool) -> R
     dedupe_keep_order(&mut commands);
 
     settings.insert(
-        config().COMMAND_ITEMS_CONFIG.to_string(),
+        CUSTOM_CONFIG.hidden_command_ids_key.to_string(),
         Value::Array(commands.iter().cloned().map(Value::String).collect()),
     );
     write_settings_object(&path, settings)?;

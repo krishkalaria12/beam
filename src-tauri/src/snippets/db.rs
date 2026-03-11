@@ -5,7 +5,7 @@ use sqlx::SqlitePool;
 use tauri::AppHandle;
 use tokio::sync::OnceCell;
 
-use crate::config::config;
+use crate::snippets::config::CONFIG as SNIPPETS_CONFIG;
 use crate::utils::sqlite::{create_sqlite_pool, get_app_database_path};
 
 use super::error::{Result, SnippetError};
@@ -53,8 +53,8 @@ pub async fn get_snippets_pool(app: &AppHandle) -> Result<SnippetDbPool> {
 pub fn get_snippets_database_path(app: &AppHandle) -> Result<PathBuf> {
     get_app_database_path(
         app,
-        config().SNIPPETS_DIRECTORY,
-        config().SNIPPETS_DATABASE_FILE,
+        SNIPPETS_CONFIG.directory,
+        SNIPPETS_CONFIG.database_file_name,
         || SnippetError::AppDataDirUnavailable,
     )
 }

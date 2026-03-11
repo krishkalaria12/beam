@@ -5,7 +5,7 @@ use sqlx::SqlitePool;
 use tauri::AppHandle;
 use tokio::sync::OnceCell;
 
-use crate::config::config;
+use crate::notes::config::CONFIG as NOTES_CONFIG;
 use crate::utils::sqlite::{create_sqlite_pool, get_app_database_path};
 
 use super::error::{NotesError, Result};
@@ -48,8 +48,8 @@ pub async fn get_notes_pool(app: &AppHandle) -> Result<NotesDbPool> {
 pub fn get_notes_database_path(app: &AppHandle) -> Result<PathBuf> {
     get_app_database_path(
         app,
-        config().NOTES_DIRECTORY,
-        config().NOTES_DATABASE_FILE,
+        NOTES_CONFIG.directory,
+        NOTES_CONFIG.database_file_name,
         || NotesError::AppDataDirUnavailable,
     )
 }

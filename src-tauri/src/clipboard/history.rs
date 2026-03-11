@@ -9,7 +9,7 @@ use url::Url;
 use super::error::{ClipboardError, Result};
 use super::password::{decrypt_value, encrypt_value};
 
-use crate::config::config;
+use crate::clipboard::config::CONFIG as CLIPBOARD_CONFIG;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, Default)]
 #[serde(rename_all = "snake_case")]
@@ -38,7 +38,7 @@ struct StoredClipboardHistoryEntry {
 
 pub fn get_history(app: &AppHandle) -> Result<Vec<ClipboardHistoryEntry>> {
     let store = app
-        .store(&config().CLIPBOARD_STORE_NAME)
+        .store(&CLIPBOARD_CONFIG.store_file_name)
         .map_err(|e| ClipboardError::StoreOpeningError(e.to_string()))?;
 
     get_decrypted_history(&store)
@@ -51,7 +51,7 @@ pub fn get_history_values(app: &AppHandle) -> Result<Vec<String>> {
 
 pub fn save_to_history(app: &AppHandle, copy_value: String) -> Result<()> {
     let store = app
-        .store(&config().CLIPBOARD_STORE_NAME)
+        .store(&CLIPBOARD_CONFIG.store_file_name)
         .map_err(|e| ClipboardError::StoreOpeningError(e.to_string()))?;
 
     let (mut history, mut undecryptable_history) =
@@ -59,11 +59,11 @@ pub fn save_to_history(app: &AppHandle, copy_value: String) -> Result<()> {
     history.retain(|entry| entry.value != copy_value);
     history.insert(0, build_entry(copy_value));
     dedupe_keep_order(&mut history);
-    history.truncate(config().CLIPBOARD_MAX_HISTORY_ENTRIES);
+    history.truncate(CLIPBOARD_CONFIG.max_history_entries);
 
     let encrypted_history = encrypt_history_entries(&history)?;
-    let remaining_slots = config()
-        .CLIPBOARD_MAX_HISTORY_ENTRIES
+    let remaining_slots = CLIPBOARD_CONFIG
+        .max_history_entries
         .saturating_sub(encrypted_history.len());
     undecryptable_history.truncate(remaining_slots);
 
@@ -81,7 +81,7 @@ pub fn save_to_history(app: &AppHandle, copy_value: String) -> Result<()> {
 
     let app_json = Value::Array(serialized_history);
 
-    store.set(config().CLIPBOARD_HISTORY_VALUE, app_json);
+    store.set(CLIPBOARD_CONFIG.history_key, app_json);
     store
         .save()
         .map_err(|e| ClipboardError::StoreSaveError(e.to_string()))?;
@@ -90,7 +90,7 @@ pub fn save_to_history(app: &AppHandle, copy_value: String) -> Result<()> {
 }
 
 fn get_from_history(store: &Store<Wry>) -> Option<Value> {
-    store.get(&config().CLIPBOARD_HISTORY_VALUE)
+    store.get(&CLIPBOARD_CONFIG.history_key)
 }
 
 fn get_decrypted_history(store: &Store<Wry>) -> Result<Vec<ClipboardHistoryEntry>> {
@@ -119,7 +119,7 @@ fn get_decrypted_history_with_undecryptable(
             continue;
         }
 
-        if value.len() > config().CLIPBOARD_MAX_ENTRY_BYTES {
+        if value.len() > CLIPBOARD_CONFIG.max_entry_bytes {
             continue;
         }
 
@@ -129,7 +129,7 @@ fn get_decrypted_history_with_undecryptable(
     }
 
     dedupe_keep_order(&mut history);
-    history.truncate(config().CLIPBOARD_MAX_HISTORY_ENTRIES);
+    history.truncate(CLIPBOARD_CONFIG.max_history_entries);
 
     Ok((history, undecryptable_history))
 }

@@ -12,9 +12,9 @@ use serde_json::{json, Value};
 use tauri::{command, AppHandle, Emitter, Manager};
 use tiny_http::{Header, Method, Request, Response, Server, StatusCode};
 
+use crate::cli::config::CONFIG as CLI_CONFIG;
 use crate::cli::dmenu::{rank_rows, DmenuOptions, DmenuRequest, DmenuResponse};
 use crate::cli::error::{CliError, Result};
-use crate::config::config;
 
 pub struct CliBridgeRuntime {
     ui_ready: AtomicBool,
@@ -153,9 +153,9 @@ impl CliBridgeRuntime {
         };
 
         show_launcher_window(app);
-        let _ = app.emit(config().CLI_DMENU_REQUEST_EVENT, &next_request);
+        let _ = app.emit(CLI_CONFIG.dmenu_request_event, &next_request);
         if let Some(main_window) = app.get_webview_window("main") {
-            let _ = main_window.emit(config().CLI_DMENU_REQUEST_EVENT, next_request);
+            let _ = main_window.emit(CLI_CONFIG.dmenu_request_event, next_request);
         }
     }
 }
@@ -172,7 +172,7 @@ fn show_launcher_window(app: &AppHandle) {
 }
 
 fn cli_bridge_address() -> String {
-    format!("{}:{}", config().CLI_BRIDGE_HOST, config().CLI_BRIDGE_PORT)
+    format!("{}:{}", CLI_CONFIG.bridge_host, CLI_CONFIG.bridge_port)
 }
 
 fn cli_bridge_base_url() -> String {

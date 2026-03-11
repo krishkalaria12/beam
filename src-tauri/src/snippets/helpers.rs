@@ -1,7 +1,7 @@
 use chrono::{SecondsFormat, Utc};
 use std::collections::HashSet;
 
-use crate::config::config;
+use crate::snippets::config::CONFIG as SNIPPETS_CONFIG;
 
 use super::model::TriggerMode;
 use super::{
@@ -60,15 +60,15 @@ pub fn trigger_mode_to_db_value(mode: &TriggerMode) -> &'static str {
 }
 
 pub fn normalize_cooldown_ms(value: Option<u64>) -> u64 {
-    value.unwrap_or(config().SNIPPETS_DEFAULT_COOLDOWN_MS)
+    value.unwrap_or(SNIPPETS_CONFIG.default_cooldown_ms)
 }
 
 pub fn normalize_max_buffer_len(value: Option<usize>) -> usize {
     value
-        .unwrap_or(config().SNIPPETS_DEFAULT_MAX_BUFFER_LEN)
+        .unwrap_or(SNIPPETS_CONFIG.default_max_buffer_len)
         .clamp(
-            config().SNIPPETS_MIN_MAX_BUFFER_LEN,
-            config().SNIPPETS_MAX_MAX_BUFFER_LEN,
+            SNIPPETS_CONFIG.min_max_buffer_len,
+            SNIPPETS_CONFIG.max_max_buffer_len,
         )
 }
 

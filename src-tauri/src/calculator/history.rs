@@ -6,7 +6,7 @@ use tauri_plugin_store::StoreExt;
 
 use super::error::{CalculatorError, Result};
 
-use crate::config::config;
+use crate::calculator::config::CONFIG as CALCULATOR_CONFIG;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct CalculatorHistoryEntry {
@@ -18,10 +18,10 @@ pub struct CalculatorHistoryEntry {
 
 pub fn get_history(app: &AppHandle) -> Result<Vec<CalculatorHistoryEntry>> {
     let store = app
-        .store(config().CALCULATOR_STORE_NAME)
+        .store(CALCULATOR_CONFIG.store_file_name)
         .map_err(|e| CalculatorError::StoreOpeningError(e.to_string()))?;
 
-    let json_value = store.get(config().CALCULATOR_HISTORY_VALUE);
+    let json_value = store.get(CALCULATOR_CONFIG.history_key);
 
     if let Some(value) = json_value {
         let entries = from_value::<Vec<CalculatorHistoryEntry>>(value)
@@ -83,16 +83,16 @@ pub fn save_to_history(
         }
     });
 
-    history.truncate(config().CALCULATOR_MAX_HISTORY_ENTRIES);
+    history.truncate(CALCULATOR_CONFIG.max_history_entries);
 
     let store = app
-        .store(config().CALCULATOR_STORE_NAME)
+        .store(CALCULATOR_CONFIG.store_file_name)
         .map_err(|e| CalculatorError::StoreOpeningError(e.to_string()))?;
 
     let json_value = serde_json::to_value(&history)
         .map_err(|e| CalculatorError::SerializationError(e.to_string()))?;
 
-    store.set(config().CALCULATOR_HISTORY_VALUE, json_value);
+    store.set(CALCULATOR_CONFIG.history_key, json_value);
     store
         .save()
         .map_err(|e| CalculatorError::StoreSaveError(e.to_string()))?;

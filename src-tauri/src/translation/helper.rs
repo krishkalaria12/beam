@@ -1,8 +1,8 @@
 use serde_json::Value;
 use url::Url;
 
-use crate::config::config;
 use crate::http;
+use crate::translation::config::CONFIG as TRANSLATION_CONFIG;
 
 use super::error::{Result, TranslationError};
 use super::model::{
@@ -88,7 +88,7 @@ fn parse_json_from_body<T: serde::de::DeserializeOwned>(body: &str) -> Result<T>
 fn is_auto_language(language_code: &str) -> bool {
     language_code
         .trim()
-        .eq_ignore_ascii_case(config().TRANSLATION_AUTO_SOURCE_LANGUAGE)
+        .eq_ignore_ascii_case(TRANSLATION_CONFIG.auto_source_language)
 }
 
 fn normalize_language_code(language_code: &str) -> String {
@@ -98,7 +98,7 @@ fn normalize_language_code(language_code: &str) -> String {
 fn is_valid_language_code(language_code: &str) -> bool {
     let code = language_code.trim();
 
-    if code.len() < 2 || code.len() > config().TRANSLATION_MAX_LANGUAGE_CODE_LENGTH {
+    if code.len() < 2 || code.len() > TRANSLATION_CONFIG.max_language_code_length {
         return false;
     }
 
@@ -123,7 +123,7 @@ fn validate_translate_request(request: TranslateTextRequest) -> Result<Validated
         .as_deref()
         .map(normalize_language_code)
         .filter(|source| !source.is_empty())
-        .unwrap_or_else(|| config().TRANSLATION_AUTO_SOURCE_LANGUAGE.to_string());
+        .unwrap_or_else(|| TRANSLATION_CONFIG.auto_source_language.to_string());
 
     if !is_auto_language(&source) && !is_valid_language_code(&source) {
         return Err(TranslationError::InvalidInput(format!(
@@ -157,7 +157,7 @@ fn validate_translate_request(request: TranslateTextRequest) -> Result<Validated
         .as_deref()
         .map(|format| format.trim().to_ascii_lowercase())
         .filter(|format| !format.is_empty())
-        .unwrap_or_else(|| config().TRANSLATION_DEFAULT_FORMAT.to_string());
+        .unwrap_or_else(|| TRANSLATION_CONFIG.default_format.to_string());
 
     if !matches!(format.as_str(), "text" | "html") {
         return Err(TranslationError::InvalidInput(format!(
@@ -225,13 +225,13 @@ fn parse_google_translation_payload(
 
 pub async fn get_translation_languages() -> Result<Vec<TranslationLanguage>> {
     let endpoint = build_endpoint(
-        config().TRANSLATION_API_BASE_URL,
-        config().TRANSLATION_LANGUAGES_ENDPOINT,
+        TRANSLATION_CONFIG.api_base_url,
+        TRANSLATION_CONFIG.languages_endpoint,
     );
 
     let url = build_url_with_params(&endpoint, &[("client", "webapp"), ("hl", "en")])?;
 
-    let body = http::get_async_with_timeout(&url, config().TRANSLATION_HTTP_TIMEOUT_SECS)
+    let body = http::get_async_with_timeout(&url, TRANSLATION_CONFIG.http_timeout_secs)
         .await
         .map_err(map_http_error)?;
 
@@ -279,8 +279,8 @@ pub async fn translate_text(request: TranslateTextRequest) -> Result<TranslateTe
     let validated_request = validate_translate_request(request)?;
 
     let endpoint = build_endpoint(
-        config().TRANSLATION_API_BASE_URL,
-        config().TRANSLATION_TRANSLATE_ENDPOINT,
+        TRANSLATION_CONFIG.api_base_url,
+        TRANSLATION_CONFIG.translate_endpoint,
     );
 
     let url = build_url_with_params(
@@ -295,7 +295,7 @@ pub async fn translate_text(request: TranslateTextRequest) -> Result<TranslateTe
         ],
     )?;
 
-    let body = http::get_async_with_timeout(&url, config().TRANSLATION_HTTP_TIMEOUT_SECS)
+    let body = http::get_async_with_timeout(&url, TRANSLATION_CONFIG.http_timeout_secs)
         .await
         .map_err(map_http_error)?;
 

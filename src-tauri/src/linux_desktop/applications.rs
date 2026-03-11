@@ -5,8 +5,8 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use walkdir::WalkDir;
 
+use crate::applications::config::CONFIG as APPLICATIONS_CONFIG;
 use crate::applications::raycast_compat::RaycastCompatApplication;
-use crate::config::config;
 use crate::state::AppState;
 
 use super::error::{LinuxDesktopError, Result};
@@ -29,8 +29,8 @@ fn expand_home(path: &str) -> PathBuf {
 }
 
 fn desktop_entry_paths() -> Vec<PathBuf> {
-    config()
-        .FILE_DIRECTORIES_APPLICATION
+    APPLICATIONS_CONFIG
+        .application_directories
         .iter()
         .map(|entry| expand_home(entry))
         .filter(|path| path.exists())

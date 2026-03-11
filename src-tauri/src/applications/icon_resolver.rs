@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 
-use crate::config::config;
+use crate::applications::config::CONFIG as APPLICATIONS_CONFIG;
 
 fn canonicalize_path(path: &Path) -> PathBuf {
     path.canonicalize().unwrap_or_else(|_| path.to_path_buf())
@@ -50,8 +50,8 @@ pub struct IconResolver {
 
 impl IconResolver {
     pub fn new() -> Self {
-        let allowed_icon_directories = config()
-            .FILE_DIRECTORIES_ICON
+        let allowed_icon_directories = APPLICATIONS_CONFIG
+            .icon_directories
             .iter()
             .map(|path| canonicalize_path(&expand_home(path)))
             .collect();

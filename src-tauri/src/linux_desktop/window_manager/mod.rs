@@ -1,3 +1,4 @@
+pub(crate) mod config;
 pub mod error;
 
 mod fallback;
@@ -10,8 +11,8 @@ mod x11;
 
 use serde::{Deserialize, Serialize};
 
+use self::config::CONFIG as WINDOW_MANAGER_CONFIG;
 use crate::applications::icon_resolver::IconResolver;
-use crate::config::config;
 use crate::state::AppState;
 use crate::window_switcher::WindowEntry;
 
@@ -159,9 +160,9 @@ pub(crate) fn build_window_entry(
 }
 
 pub(crate) fn hypr_window_id_prefix() -> &'static str {
-    config().LINUX_DESKTOP_HYPR_WINDOW_ID_PREFIX
+    WINDOW_MANAGER_CONFIG.hypr_window_id_prefix
 }
 
 pub(crate) fn sway_window_id_prefix() -> &'static str {
-    config().LINUX_DESKTOP_SWAY_WINDOW_ID_PREFIX
+    WINDOW_MANAGER_CONFIG.sway_window_id_prefix
 }

@@ -5,7 +5,7 @@ use rig::message::{
 };
 use rig::OneOrMany;
 
-use crate::config::config;
+use super::config::CONFIG as AI_CONFIG;
 
 use super::error::{AiError, Result};
 use super::key_store::AiProvider;
@@ -108,7 +108,7 @@ fn parse_attachment(attachment: &AskAttachment, index: usize) -> Result<ParsedAt
         )));
     }
 
-    if base64_data.len() > config().AI_MAX_ATTACHMENT_BASE64_BYTES {
+    if base64_data.len() > AI_CONFIG.max_attachment_base64_bytes {
         return Err(AiError::InvalidAttachment(format!(
             "{name}: attachment exceeds maximum size"
         )));
@@ -341,10 +341,10 @@ pub fn build_prompt_message(
         return Ok(Message::user(prompt.to_string()));
     }
 
-    if attachments.len() > config().AI_MAX_ATTACHMENTS {
+    if attachments.len() > AI_CONFIG.max_attachments {
         return Err(AiError::InvalidAttachment(format!(
             "Too many attachments. Maximum allowed is {}",
-            config().AI_MAX_ATTACHMENTS
+            AI_CONFIG.max_attachments
         )));
     }
 

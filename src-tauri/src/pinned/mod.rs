@@ -1,3 +1,4 @@
+pub(crate) mod config;
 use std::collections::HashSet;
 use std::sync::Arc;
 
@@ -6,7 +7,8 @@ use serde_json::{from_value, to_value};
 use tauri::{command, AppHandle, Wry};
 use tauri_plugin_store::{Store, StoreExt};
 
-use crate::config::config;
+use crate::config::CONFIG as APP_CONFIG;
+use crate::pinned::config::CONFIG as PINNED_CONFIG;
 
 use self::error::{PinnedError, Result};
 
@@ -55,12 +57,12 @@ pub fn set_command_pinned(app: AppHandle, pinned: bool, command_id: String) -> R
 }
 
 fn open_store(app: &AppHandle) -> Result<Arc<Store<Wry>>> {
-    app.store(&config().STORE_NAME)
+    app.store(&APP_CONFIG.store_file_name)
         .map_err(|e| PinnedError::StoreOpeningError(e.to_string()))
 }
 
 fn read_pinned_command_ids(store: &Store<Wry>) -> Result<Vec<String>> {
-    let Some(value) = store.get(config().COMMAND_PINNED_KEY) else {
+    let Some(value) = store.get(PINNED_CONFIG.command_ids_key) else {
         return Ok(Vec::new());
     };
 
@@ -100,7 +102,7 @@ fn dedupe_keep_order(values: &mut Vec<String>) {
 fn save_to_store(store: &Store<Wry>, pinned_ids: &[String]) -> Result<()> {
     let app_json =
         to_value(pinned_ids).map_err(|e| PinnedError::SerializationError(e.to_string()))?;
-    store.set(config().COMMAND_PINNED_KEY, app_json);
+    store.set(PINNED_CONFIG.command_ids_key, app_json);
     store
         .save()
         .map_err(|e| PinnedError::StoreSaveError(e.to_string()))?;

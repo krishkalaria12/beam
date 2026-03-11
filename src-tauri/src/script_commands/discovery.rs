@@ -5,7 +5,7 @@ use sha2::{Digest, Sha256};
 use tauri::Manager;
 use walkdir::{DirEntry, WalkDir};
 
-use crate::config::config;
+use crate::script_commands::config::CONFIG as SCRIPT_COMMANDS_CONFIG;
 
 use super::error::{Result, ScriptCommandsError};
 use super::metadata::read_argument_definitions;
@@ -49,7 +49,7 @@ pub(super) fn resolve_script_commands_directory(app: &tauri::AppHandle) -> Resul
         .app_local_data_dir()
         .map_err(|_| ScriptCommandsError::AppDataDirUnavailable)?;
 
-    let script_directory = base_directory.join(config().SCRIPT_COMMANDS_DIRECTORY);
+    let script_directory = base_directory.join(SCRIPT_COMMANDS_CONFIG.directory);
     fs::create_dir_all(&script_directory)
         .map_err(|error| ScriptCommandsError::CreateScriptDirectoryFailed(error.to_string()))?;
 

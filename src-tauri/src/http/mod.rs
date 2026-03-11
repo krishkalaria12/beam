@@ -3,7 +3,8 @@ pub mod error;
 use std::time::Duration;
 
 use self::error::{HttpError, Result};
-use crate::config::config;
+
+const DEFAULT_HTTP_TIMEOUT_SECS: u64 = 10;
 
 fn build_client(timeout_secs: u64) -> Result<reqwest::Client> {
     reqwest::Client::builder()
@@ -22,7 +23,7 @@ fn map_request_error(error: reqwest::Error) -> HttpError {
 
 // Async HTTP GET request that returns the response body as a string
 pub async fn get_async(url: &str) -> Result<String> {
-    get_async_with_timeout(url, config().CALCULATOR_HTTP_TIMEOUT_SECS).await
+    get_async_with_timeout(url, DEFAULT_HTTP_TIMEOUT_SECS).await
 }
 
 // Async HTTP GET request with custom timeout (in seconds)

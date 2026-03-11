@@ -1,4 +1,5 @@
 pub mod bridge;
+pub(crate) mod config;
 pub mod dmenu;
 pub mod error;
 pub mod parser;

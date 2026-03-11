@@ -4,15 +4,15 @@ use jiff::Timestamp;
 use walkdir::DirEntry;
 
 use super::super::types::FileEntry;
-use crate::config::config;
+use crate::file_search::config::CONFIG as FILE_SEARCH_CONFIG;
 
 fn is_hidden_name(value: &str) -> bool {
     value.starts_with('.') && value != "." && value != ".."
 }
 
 fn is_ignored_name(value: &str) -> bool {
-    config().FILE_IGNORED_FOLDERS.contains(&value)
-        || config().FILE_IGNORED_FILES.contains(&value)
+    FILE_SEARCH_CONFIG.ignored_folders.contains(&value)
+        || FILE_SEARCH_CONFIG.ignored_files.contains(&value)
         || is_hidden_name(value)
 }
 
@@ -53,7 +53,7 @@ pub fn is_ignored_path(path: &Path) -> bool {
     }
 
     if let Some(file_name) = path.file_name().and_then(|s| s.to_str()) {
-        if config().FILE_IGNORED_FILES.contains(&file_name) {
+        if FILE_SEARCH_CONFIG.ignored_files.contains(&file_name) {
             return true;
         }
     }

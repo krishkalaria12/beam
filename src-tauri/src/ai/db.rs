@@ -5,7 +5,7 @@ use sqlx::SqlitePool;
 use tauri::AppHandle;
 use tokio::sync::OnceCell;
 
-use crate::config::config;
+use super::config::CONFIG as AI_CONFIG;
 use crate::utils::sqlite::{create_sqlite_pool, get_app_database_path};
 
 use super::error::{AiError, Result};
@@ -48,8 +48,8 @@ pub async fn get_ai_pool(app: &AppHandle) -> Result<AiDbPool> {
 pub fn get_ai_database_path(app: &AppHandle) -> Result<PathBuf> {
     get_app_database_path(
         app,
-        config().AI_DIRECTORY,
-        config().AI_DATABASE_FILE,
+        AI_CONFIG.directory,
+        AI_CONFIG.database_file_name,
         || AiError::AppDataDirUnavailable,
     )
 }

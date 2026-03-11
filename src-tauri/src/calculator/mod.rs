@@ -1,3 +1,4 @@
+pub(crate) mod config;
 pub mod error;
 pub mod history;
 pub mod types;

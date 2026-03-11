@@ -1,3 +1,4 @@
+pub(crate) mod config;
 pub mod indexer;
 pub mod search;
 pub mod types;
@@ -124,7 +125,7 @@ pub async fn initialize_backend(index: Arc<ConcurrentMap<String, FileEntry>>) {
         true
     };
 
-    let flush_delay = Duration::from_millis(config().FILE_CACHE_FLUSH_DEBOUNCE_MS);
+    let flush_delay = Duration::from_millis(FILE_SEARCH_CONFIG.cache_flush_debounce_ms);
     let mut cache_dirty = false;
 
     loop {
@@ -205,7 +206,7 @@ use self::{
     search::SearchOptions,
     types::{PaginatedSearchMetadata, PaginatedSearchResponse, SearchRequest},
 };
-use crate::config::config;
+use crate::file_search::config::CONFIG as FILE_SEARCH_CONFIG;
 use crate::state::AppState;
 
 // Searches for files in the index with pagination support
@@ -231,14 +232,14 @@ pub fn search_files(
     if request.per_page == 0 {
         return Err(FileSearchError::InvalidPerPage {
             provided: request.per_page,
-            max: config().FILE_SEARCH_MAX_RESULTS_PER_PAGE,
+            max: FILE_SEARCH_CONFIG.max_results_per_page,
         });
     }
 
-    if request.per_page > config().FILE_SEARCH_MAX_RESULTS_PER_PAGE {
+    if request.per_page > FILE_SEARCH_CONFIG.max_results_per_page {
         return Err(FileSearchError::InvalidPerPage {
             provided: request.per_page,
-            max: config().FILE_SEARCH_MAX_RESULTS_PER_PAGE,
+            max: FILE_SEARCH_CONFIG.max_results_per_page,
         });
     }
 

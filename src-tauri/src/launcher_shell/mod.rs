@@ -1,3 +1,4 @@
+pub(crate) mod config;
 mod error;
 
 use std::ffi::OsStr;
@@ -7,8 +8,8 @@ use std::time::{Duration, Instant};
 use serde::{Deserialize, Serialize};
 use tauri::command;
 
+use self::config::CONFIG as LAUNCHER_SHELL_CONFIG;
 use self::error::{LauncherShellError, Result};
-use crate::config::config;
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -32,13 +33,10 @@ pub struct ExecuteShellCommandResponse {
 }
 
 fn normalize_timeout_ms(timeout_ms: Option<u64>) -> u64 {
-    let cfg = config();
+    let cfg = LAUNCHER_SHELL_CONFIG;
     timeout_ms
-        .unwrap_or(cfg.LAUNCHER_SHELL_DEFAULT_TIMEOUT_MS)
-        .clamp(
-            cfg.LAUNCHER_SHELL_POLL_INTERVAL_MS,
-            cfg.LAUNCHER_SHELL_MAX_TIMEOUT_MS,
-        )
+        .unwrap_or(cfg.default_timeout_ms)
+        .clamp(cfg.poll_interval_ms, cfg.max_timeout_ms)
 }
 
 fn shell_name(path: &str) -> String {
@@ -108,7 +106,7 @@ fn run_shell_command(request: ExecuteShellCommandRequest) -> Result<ExecuteShell
         })?;
 
     let started_at = Instant::now();
-    let poll_interval = Duration::from_millis(config().LAUNCHER_SHELL_POLL_INTERVAL_MS);
+    let poll_interval = Duration::from_millis(LAUNCHER_SHELL_CONFIG.poll_interval_ms);
     let mut timed_out = false;
 
     loop {
