@@ -18,6 +18,8 @@ fn compile_extension_runtime_proto() -> Result<(), Box<dyn Error>> {
         "common.proto",
         "environment.proto",
         "manager.proto",
+        "output.proto",
+        "rpc.proto",
         "storage.proto",
         "ui.proto",
     ];

@@ -1,7 +1,7 @@
 import { create } from "zustand";
-import type { Command as ProtocolCommand } from "@flare/protocol";
+import type { RuntimeCommand } from "@beam/extension-protocol";
 import {
-  applyProtocolCommandsToRuntimeTree,
+  applyRuntimeCommandsToRuntimeTree,
   createEmptyRuntimeTreeSnapshot,
   type ExtensionToast,
   type ExtensionUiNode,
@@ -27,7 +27,7 @@ interface ExtensionRuntimeState {
   runningSession: RunningExtensionSession | null;
   resetForNewPlugin: (session: RunningExtensionSession) => void;
   resetRuntime: () => void;
-  applyCommands: (commands: ProtocolCommand[]) => void;
+  applyCommands: (commands: RuntimeCommand[]) => void;
   setSelectedNodeId: (nodeId?: number) => void;
   upsertToast: (toast: ExtensionToast) => void;
   updateToast: (toastId: number, partial: Partial<ExtensionToast>) => void;
@@ -59,7 +59,7 @@ export const useExtensionRuntimeStore = create<ExtensionRuntimeState>((set, get)
     }
 
     const currentState = get();
-    const nextTree = applyProtocolCommandsToRuntimeTree({
+    const nextTree = applyRuntimeCommandsToRuntimeTree({
       uiTree: currentState.uiTree,
       rootNodeId: currentState.rootNodeId,
       toasts: currentState.toasts,

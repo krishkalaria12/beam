@@ -2,12 +2,6 @@ import { isTauri } from "@tauri-apps/api/core";
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { open as shellOpen } from "@tauri-apps/plugin-shell";
-import { SidecarMessageWithPluginsSchema, type Command as ProtocolCommand } from "@flare/protocol";
-import {
-  parseAiAskRequest,
-  parseConfirmAlertRequest,
-  parseLaunchCommandRequest,
-} from "@/modules/extensions/sidecar/custom-message";
 import { parseRaycastDeepLink } from "@/modules/extensions/sidecar/deep-link";
 import {
   normalizeDiscoveredPluginRecord,
@@ -24,10 +18,14 @@ import {
   buildSetPreferencesManagerRequest,
   buildTriggerToastHideManagerRequest,
 } from "@/modules/extensions/sidecar/manager-protocol";
+import { parseRuntimeRender } from "@/modules/extensions/sidecar/runtime-render";
+import { parseRuntimeOutput } from "@/modules/extensions/sidecar/runtime-output";
+import { parseRuntimeRpc } from "@/modules/extensions/sidecar/runtime-rpc";
 import {
   FOREGROUND_EXTENSION_RUNTIME_ID,
   listenToExtensionRuntimeExit,
   listenToExtensionRuntimeMessages,
+  sendExtensionRuntimeRpc,
   listenToExtensionRuntimeStderr,
   sendExtensionRuntimeManagerRequest,
   sendExtensionRuntimeMessage,
@@ -35,9 +33,8 @@ import {
   stopExtensionRuntime,
 } from "@/modules/extensions/sidecar/runtime-bridge";
 import { persistentExtensionRunnerManager } from "@/modules/extensions/background/persistent-runners";
-import { isProtocolCommandType } from "@/modules/extensions/sidecar/protocol";
 import { useExtensionRuntimeStore } from "@/modules/extensions/runtime/store";
-import type { ManagerRequest, ManagerResponse } from "@beam/extension-protocol";
+import type { ManagerRequest, ManagerResponse, RuntimeCommand, RuntimeRpc } from "@beam/extension-protocol";
 
 interface RunPluginPayload {
   pluginPath: string;
@@ -185,14 +182,8 @@ class ExtensionSidecarService {
     }
   }
 
-  private applyProtocolCommands(commands: ProtocolCommand[]): void {
+  private applyRuntimeCommands(commands: RuntimeCommand[]): void {
     useExtensionRuntimeStore.getState().applyCommands(commands);
-  }
-
-  private sendResponse(action: string, payload: Record<string, unknown>): void {
-    void this.writeEvent({ action, payload }).catch((error) => {
-      console.error("[extensions-sidecar] response write failed:", error);
-    });
   }
 
   private setBrowserExtensionConnectionStatus(isConnected: boolean): void {
@@ -257,9 +248,14 @@ class ExtensionSidecarService {
       confirmed = window.confirm(prompt || "Continue?");
     }
 
-    this.sendResponse("confirm-alert-response", {
-      requestId: payload.requestId,
-      result: confirmed,
+    this.sendRuntimeRpc({
+      response: {
+        confirmAlert: {
+          requestId: payload.requestId,
+          confirmed,
+          error: "",
+        },
+      },
     });
   }
 
@@ -314,9 +310,14 @@ class ExtensionSidecarService {
           payload.type === "background" ? "background" : "userInitiated",
         );
 
-        this.sendResponse("launch-command-response", {
-          requestId: payload.requestId,
-          result: true,
+        this.sendRuntimeRpc({
+          response: {
+            launchCommand: {
+              requestId: payload.requestId,
+              ok: true,
+              error: "",
+            },
+          },
         });
         return;
       }
@@ -341,9 +342,14 @@ class ExtensionSidecarService {
         commandName: command.commandName,
       });
 
-      this.sendResponse("launch-command-response", {
-        requestId: payload.requestId,
-        result: true,
+      this.sendRuntimeRpc({
+        response: {
+          launchCommand: {
+            requestId: payload.requestId,
+            ok: true,
+            error: "",
+          },
+        },
       });
     } catch (error) {
       const message = this.toErrorMessage(error);
@@ -360,27 +366,71 @@ class ExtensionSidecarService {
           hasContext: Boolean(payload.context),
         },
       });
-      this.sendResponse("launch-command-response", {
-        requestId: payload.requestId,
-        error: message,
+      this.sendRuntimeRpc({
+        response: {
+          launchCommand: {
+            requestId: payload.requestId,
+            ok: false,
+            error: message,
+          },
+        },
       });
     }
   }
 
   private sendInvokeCommandResponse(requestId: string, result?: unknown, error?: string): void {
-    this.sendResponse("invoke_command-response", { requestId, result, error });
+    this.sendRuntimeRpc({
+      response: {
+        invokeCommand: {
+          requestId,
+          result,
+          error: error ?? "",
+        },
+      },
+    });
   }
 
   private sendOauthResponse(
-    action:
-      | "oauth-get-tokens-response"
-      | "oauth-set-tokens-response"
-      | "oauth-remove-tokens-response",
+    kind: "get" | "set" | "remove",
     requestId: string,
     result?: unknown,
     error?: string,
   ): void {
-    this.sendResponse(action, { requestId, result, error });
+    if (kind === "get") {
+      this.sendRuntimeRpc({
+        response: {
+          oauthGetTokens: {
+            requestId,
+            result: result && typeof result === "object" ? (result as Record<string, unknown>) : undefined,
+            error: error ?? "",
+          },
+        },
+      });
+      return;
+    }
+
+    if (kind === "set") {
+      this.sendRuntimeRpc({
+        response: {
+          oauthSetTokens: {
+            requestId,
+            ok: Boolean(result),
+            error: error ?? "",
+          },
+        },
+      });
+      return;
+    }
+
+    this.sendRuntimeRpc({
+      response: {
+        oauthRemoveTokens: {
+          requestId,
+          ok: Boolean(result),
+          error: error ?? "",
+        },
+      },
+    });
   }
 
   private async handleInvokeCommand(payload: {
@@ -432,9 +482,14 @@ class ExtensionSidecarService {
 
     if (parsed.kind === "success") {
       this.pendingOauthStates.delete(parsed.state);
-      this.sendResponse("oauth-authorize-response", {
-        state: parsed.state,
-        code: parsed.code,
+      this.sendRuntimeRpc({
+        response: {
+          oauthAuthorize: {
+            state: parsed.state,
+            code: parsed.code,
+            error: "",
+          },
+        },
       });
       return true;
     }
@@ -449,9 +504,14 @@ class ExtensionSidecarService {
       }
     }
 
-    this.sendResponse("oauth-authorize-response", {
-      state: resolvedState,
-      error: parsed.error,
+    this.sendRuntimeRpc({
+      response: {
+        oauthAuthorize: {
+          state: resolvedState ?? "",
+          code: "",
+          error: parsed.error,
+        },
+      },
     });
     return true;
   }
@@ -462,7 +522,7 @@ class ExtensionSidecarService {
   }): Promise<void> {
     try {
       const cached = await invoke("oauth_get_tokens", { providerId: payload.providerId });
-      this.sendOauthResponse("oauth-get-tokens-response", payload.requestId, cached);
+      this.sendOauthResponse("get", payload.requestId, cached);
     } catch (error) {
       const fallback = this.oauthTokenStore.get(payload.providerId);
       const message = this.toErrorMessage(error);
@@ -477,7 +537,7 @@ class ExtensionSidecarService {
           fallbackUsed: Boolean(fallback),
         },
       });
-      this.sendOauthResponse("oauth-get-tokens-response", payload.requestId, fallback, message);
+      this.sendOauthResponse("get", payload.requestId, fallback, message);
     }
   }
 
@@ -491,7 +551,7 @@ class ExtensionSidecarService {
         providerId: payload.providerId,
         tokens: payload.tokens,
       });
-      this.sendOauthResponse("oauth-set-tokens-response", payload.requestId, true);
+      this.sendOauthResponse("set", payload.requestId, true);
     } catch (error) {
       this.oauthTokenStore.set(payload.providerId, payload.tokens);
       const message = this.toErrorMessage(error);
@@ -506,7 +566,7 @@ class ExtensionSidecarService {
           fallbackUsed: true,
         },
       });
-      this.sendOauthResponse("oauth-set-tokens-response", payload.requestId, true, message);
+      this.sendOauthResponse("set", payload.requestId, true, message);
     }
   }
 
@@ -516,7 +576,7 @@ class ExtensionSidecarService {
   }): Promise<void> {
     try {
       await invoke("oauth_remove_tokens", { providerId: payload.providerId });
-      this.sendOauthResponse("oauth-remove-tokens-response", payload.requestId, true);
+      this.sendOauthResponse("remove", payload.requestId, true);
     } catch (error) {
       this.oauthTokenStore.delete(payload.providerId);
       const message = this.toErrorMessage(error);
@@ -531,7 +591,7 @@ class ExtensionSidecarService {
           fallbackUsed: true,
         },
       });
-      this.sendOauthResponse("oauth-remove-tokens-response", payload.requestId, true, message);
+      this.sendOauthResponse("remove", payload.requestId, true, message);
     }
   }
 
@@ -545,9 +605,14 @@ class ExtensionSidecarService {
         method: payload.method,
         params: payload.params,
       });
-      this.sendResponse("browser-extension-response", {
-        requestId: payload.requestId,
-        result,
+      this.sendRuntimeRpc({
+        response: {
+          browserExtension: {
+            requestId: payload.requestId,
+            result,
+            error: "",
+          },
+        },
       });
     } catch (error) {
       const message = this.toErrorMessage(error);
@@ -558,9 +623,14 @@ class ExtensionSidecarService {
         operation: payload.method,
         message,
       });
-      this.sendResponse("browser-extension-response", {
-        requestId: payload.requestId,
-        error: message,
+      this.sendRuntimeRpc({
+        response: {
+          browserExtension: {
+            requestId: payload.requestId,
+            result: undefined,
+            error: message,
+          },
+        },
       });
     } finally {
       void this.refreshBrowserExtensionConnectionStatus();
@@ -591,9 +661,14 @@ class ExtensionSidecarService {
       }
       settled = true;
       cleanup();
-      this.sendResponse("ai-ask-response", {
-        requestId: payload.requestId,
-        result: { fullText },
+      this.sendRuntimeRpc({
+        response: {
+          aiAsk: {
+            requestId: payload.requestId,
+            fullText,
+            error: "",
+          },
+        },
       });
     };
 
@@ -603,13 +678,22 @@ class ExtensionSidecarService {
       }
       settled = true;
       cleanup();
-      this.sendResponse("ai-ask-error", {
-        streamRequestId: payload.streamRequestId,
-        error: errorMessage,
+      this.sendRuntimeRpc({
+        response: {
+          aiAskError: {
+            streamRequestId: payload.streamRequestId,
+            error: errorMessage,
+          },
+        },
       });
-      this.sendResponse("ai-ask-response", {
-        requestId: payload.requestId,
-        error: errorMessage,
+      this.sendRuntimeRpc({
+        response: {
+          aiAsk: {
+            requestId: payload.requestId,
+            fullText: "",
+            error: errorMessage,
+          },
+        },
       });
     };
 
@@ -620,9 +704,13 @@ class ExtensionSidecarService {
             return;
           }
 
-          this.sendResponse("ai-ask-chunk", {
-            streamRequestId: payload.streamRequestId,
-            chunk: typeof event.payload.text === "string" ? event.payload.text : "",
+          this.sendRuntimeRpc({
+            response: {
+              aiAskChunk: {
+                streamRequestId: payload.streamRequestId,
+                chunk: typeof event.payload.text === "string" ? event.payload.text : "",
+              },
+            },
           });
         }),
       );
@@ -635,9 +723,13 @@ class ExtensionSidecarService {
 
           const fullText =
             typeof event.payload.fullText === "string" ? event.payload.fullText : "";
-          this.sendResponse("ai-ask-end", {
-            streamRequestId: payload.streamRequestId,
-            fullText,
+          this.sendRuntimeRpc({
+            response: {
+              aiAskEnd: {
+                streamRequestId: payload.streamRequestId,
+                fullText,
+              },
+            },
           });
           resolveOnce(fullText);
         }),
@@ -704,151 +796,181 @@ class ExtensionSidecarService {
     });
   }
 
+  private sendRuntimeRpc(message: RuntimeRpc): void {
+    void sendExtensionRuntimeRpc(FOREGROUND_EXTENSION_RUNTIME_ID, message).catch((error) => {
+      console.error("[extensions-sidecar] runtime rpc response write failed:", error);
+    });
+  }
+
   private handleDecodedMessage(raw: unknown): void {
-    const confirmAlertRequest = parseConfirmAlertRequest(raw);
-    if (confirmAlertRequest) {
-      this.handleConfirmAlert(confirmAlertRequest);
+    const runtimeRender = parseRuntimeRender(raw);
+    if (runtimeRender?.kind === "batch") {
+      this.applyRuntimeCommands(runtimeRender.commands);
       return;
     }
 
-    const launchCommandRequest = parseLaunchCommandRequest(raw);
-    if (launchCommandRequest) {
-      void this.handleLaunchCommand(launchCommandRequest);
+    if (runtimeRender?.kind === "command") {
+      this.applyRuntimeCommands([runtimeRender.command]);
       return;
     }
 
-    const aiAskRequest = parseAiAskRequest(raw);
-    if (aiAskRequest) {
-      void this.handleAiAsk(aiAskRequest);
+    if (runtimeRender?.kind === "log") {
+      this.emit({ type: "log", payload: runtimeRender.payload });
       return;
     }
 
-    if (raw && typeof raw === "object" && "type" in raw) {
-      const message = raw as { type?: unknown; payload?: unknown };
-      if (message.type === "clear-search-bar") {
-        this.emit({ type: "clear-search-bar" });
-        return;
-      }
-      if (message.type === "update-command-metadata") {
-        const payload = message.payload as { subtitle?: unknown } | undefined;
-        const subtitle =
-          typeof payload?.subtitle === "string"
-            ? payload.subtitle
-            : payload?.subtitle === null
-              ? undefined
-              : undefined;
-        this.emit({ type: "update-command-metadata", subtitle });
-        return;
-      }
-      if (message.type === "open-extension-preferences") {
-        const payload = message.payload as { extensionName?: unknown } | undefined;
-        this.emit({
-          type: "open-extension-preferences",
-          extensionName: typeof payload?.extensionName === "string" ? payload.extensionName : undefined,
-        });
-        return;
-      }
-      if (message.type === "open-command-preferences") {
-        const payload = message.payload as { extensionName?: unknown; commandName?: unknown } | undefined;
-        this.emit({
-          type: "open-command-preferences",
-          extensionName: typeof payload?.extensionName === "string" ? payload.extensionName : undefined,
-          commandName: typeof payload?.commandName === "string" ? payload.commandName : undefined,
-        });
-        return;
-      }
-    }
-
-    if (
-      raw &&
-      typeof raw === "object" &&
-      "type" in raw &&
-      (raw as { type?: unknown }).type === "error"
-    ) {
-      const message = (raw as { payload?: unknown }).payload;
-      console.error("[extensions-sidecar] runtime error:", message);
-      this.emit({ type: "log", payload: message });
+    if (runtimeRender?.kind === "error") {
+      console.error("[extensions-sidecar] runtime error:", runtimeRender.message, runtimeRender.stack);
+      this.emit({
+        type: "log",
+        payload: {
+          message: runtimeRender.message,
+          stack: runtimeRender.stack,
+        },
+      });
       return;
     }
 
-    const parsed = SidecarMessageWithPluginsSchema.safeParse(raw);
-    if (!parsed.success) {
-      console.error("[extensions-sidecar] invalid stdout payload:", parsed.error.issues);
+    const runtimeOutput = parseRuntimeOutput(raw);
+    if (runtimeOutput?.clearSearchBar) {
+      this.emit({ type: "clear-search-bar" });
       return;
     }
 
-    const message = parsed.data;
-
-    if (message.type === "BATCH_UPDATE") {
-      this.applyProtocolCommands(message.payload);
+    if (runtimeOutput?.updateCommandMetadata) {
+      this.emit({
+        type: "update-command-metadata",
+        subtitle: runtimeOutput.updateCommandMetadata.subtitle,
+      });
       return;
     }
 
-    if (isProtocolCommandType(message.type)) {
-      this.applyProtocolCommands([message as ProtocolCommand]);
+    if (runtimeOutput?.openExtensionPreferences) {
+      this.emit({
+        type: "open-extension-preferences",
+        extensionName: runtimeOutput.openExtensionPreferences.extensionName || undefined,
+      });
       return;
     }
 
-    switch (message.type) {
-      case "go-back-to-plugin-list":
-        this.emit({ type: "go-back-to-plugin-list" });
-        return;
-      case "open":
-        this.openTarget(message.payload.target, message.payload.application);
-        return;
-      case "invoke_command":
-        void this.handleInvokeCommand({
-          requestId: message.payload.requestId,
-          command: message.payload.command,
-          params:
-            message.payload.params && typeof message.payload.params === "object"
-              ? (message.payload.params as Record<string, unknown>)
-              : undefined,
-        });
-        return;
-      case "browser-extension-request":
-        void this.handleBrowserExtensionRequest(message.payload);
-        return;
-      case "oauth-authorize":
-        this.handleOauthAuthorize({
-          url: message.payload.url,
-        });
-        return;
-      case "oauth-get-tokens":
-        void this.handleOauthGetTokens(message.payload);
-        return;
-      case "oauth-set-tokens":
-        void this.handleOauthSetTokens(message.payload);
-        return;
-      case "oauth-remove-tokens":
-        void this.handleOauthRemoveTokens(message.payload);
-        return;
-      case "SHOW_HUD":
-        this.emit({ type: "show-hud", title: message.payload.title });
-        this.emit({
-          type: "log",
-          payload: {
-            tag: "extensions-sidecar-hud-fallback",
-            operation: "show_hud",
-            message: "Handled via frontend HUD fallback",
-            metadata: {
-              title: message.payload.title,
-            },
-          },
-        });
-        return;
-      case "FOCUS_ELEMENT":
-        this.emit({ type: "focus-element", elementId: message.payload.elementId });
-        return;
-      case "RESET_ELEMENT":
-        this.emit({ type: "reset-element", elementId: message.payload.elementId });
-        return;
-      case "log":
-        this.emit({ type: "log", payload: message.payload });
-        return;
-      default:
-        return;
+    if (runtimeOutput?.openCommandPreferences) {
+      this.emit({
+        type: "open-command-preferences",
+        extensionName: runtimeOutput.openCommandPreferences.extensionName || undefined,
+        commandName: runtimeOutput.openCommandPreferences.commandName || undefined,
+      });
+      return;
     }
+
+    if (runtimeOutput?.goBackToPluginList) {
+      this.emit({ type: "go-back-to-plugin-list" });
+      return;
+    }
+
+    if (runtimeOutput?.open) {
+      this.openTarget(runtimeOutput.open.target, runtimeOutput.open.application || undefined);
+      return;
+    }
+
+    if (runtimeOutput?.showHud) {
+      this.emit({ type: "show-hud", title: runtimeOutput.showHud.text });
+      return;
+    }
+
+    if (runtimeOutput?.focusElement) {
+      this.emit({ type: "focus-element", elementId: runtimeOutput.focusElement.elementId });
+      return;
+    }
+
+    if (runtimeOutput?.resetElement) {
+      this.emit({ type: "reset-element", elementId: runtimeOutput.resetElement.elementId });
+      return;
+    }
+
+    const runtimeRpc = parseRuntimeRpc(raw);
+    if (runtimeRpc?.request?.invokeCommand) {
+      void this.handleInvokeCommand({
+        requestId: runtimeRpc.request.invokeCommand.requestId,
+        command: runtimeRpc.request.invokeCommand.command,
+        params: toRecord(runtimeRpc.request.invokeCommand.params),
+      });
+      return;
+    }
+
+    if (runtimeRpc?.request?.browserExtension) {
+      void this.handleBrowserExtensionRequest({
+        requestId: runtimeRpc.request.browserExtension.requestId,
+        method: runtimeRpc.request.browserExtension.method,
+        params: runtimeRpc.request.browserExtension.params,
+      });
+      return;
+    }
+
+    if (runtimeRpc?.request?.oauthAuthorize) {
+      this.handleOauthAuthorize({
+        url: runtimeRpc.request.oauthAuthorize.url,
+      });
+      return;
+    }
+
+    if (runtimeRpc?.request?.oauthGetTokens) {
+      void this.handleOauthGetTokens({
+        requestId: runtimeRpc.request.oauthGetTokens.requestId,
+        providerId: runtimeRpc.request.oauthGetTokens.providerId,
+      });
+      return;
+    }
+
+    if (runtimeRpc?.request?.oauthSetTokens) {
+      void this.handleOauthSetTokens({
+        requestId: runtimeRpc.request.oauthSetTokens.requestId,
+        providerId: runtimeRpc.request.oauthSetTokens.providerId,
+        tokens: runtimeRpc.request.oauthSetTokens.tokens ?? {},
+      });
+      return;
+    }
+
+    if (runtimeRpc?.request?.oauthRemoveTokens) {
+      void this.handleOauthRemoveTokens({
+        requestId: runtimeRpc.request.oauthRemoveTokens.requestId,
+        providerId: runtimeRpc.request.oauthRemoveTokens.providerId,
+      });
+      return;
+    }
+
+    if (runtimeRpc?.request?.confirmAlert) {
+      this.handleConfirmAlert({
+        requestId: runtimeRpc.request.confirmAlert.requestId,
+        title: runtimeRpc.request.confirmAlert.title || undefined,
+        message: runtimeRpc.request.confirmAlert.message || undefined,
+        primaryActionTitle: runtimeRpc.request.confirmAlert.primaryActionTitle || undefined,
+      });
+      return;
+    }
+
+    if (runtimeRpc?.request?.launchCommand) {
+      void this.handleLaunchCommand({
+        requestId: runtimeRpc.request.launchCommand.requestId,
+        name: runtimeRpc.request.launchCommand.name,
+        type: runtimeRpc.request.launchCommand.type || undefined,
+        context: toRecord(runtimeRpc.request.launchCommand.context),
+        arguments: toRecord(runtimeRpc.request.launchCommand.arguments),
+        extensionName: runtimeRpc.request.launchCommand.extensionName || undefined,
+      });
+      return;
+    }
+
+    if (runtimeRpc?.request?.aiAsk) {
+      void this.handleAiAsk({
+        requestId: runtimeRpc.request.aiAsk.requestId,
+        streamRequestId: runtimeRpc.request.aiAsk.streamRequestId,
+        prompt: runtimeRpc.request.aiAsk.prompt,
+        options: toRecord(runtimeRpc.request.aiAsk.options),
+      });
+      return;
+    }
+
+    console.error("[extensions-sidecar] invalid stdout payload:", raw);
   }
 
   async start(): Promise<void> {

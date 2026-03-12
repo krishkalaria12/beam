@@ -1,6 +1,7 @@
 import { LaunchType } from "./types";
 import * as fs from "fs";
-import { writeOutput } from "../io";
+import { writeLog } from "../io";
+import { writeRuntimeOutput } from "../protocol/runtime-output";
 import type { Application } from "./types";
 import { config } from "../config";
 import { browserExtensionState, aiContext } from "../state";
@@ -235,11 +236,10 @@ export async function open(target: string, application?: Application | string): 
     openWith = application.path;
   }
 
-  writeOutput({
-    type: "open",
-    payload: {
+  writeRuntimeOutput({
+    open: {
       target,
-      application: openWith,
+      application: openWith ?? "",
     },
   });
 }
@@ -377,14 +377,11 @@ export async function trash(path: fs.PathLike | fs.PathLike[]): Promise<void> {
     "trash",
     { paths },
     async () => {
-      writeOutput({
-        type: "log",
-        payload: {
-          tag: "sidecar-rpc-request-failure",
-          operation: "trash",
-          message: "Trash command unavailable; fallback no-op applied",
-          params: toRecord({ paths }),
-        },
+      writeLog({
+        tag: "sidecar-rpc-request-failure",
+        operation: "trash",
+        message: "Trash command unavailable; fallback no-op applied",
+        params: toRecord({ paths }),
       });
     },
   );

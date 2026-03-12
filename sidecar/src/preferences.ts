@@ -1,8 +1,8 @@
 import * as fs from "fs";
 import * as path from "path";
 import { writeLog } from "./io";
-import type { Preference } from "@flare/protocol";
 import { config } from "./config";
+import type { Preference } from "./manifest";
 
 export class PreferencesStore {
   private preferencesPath: string;

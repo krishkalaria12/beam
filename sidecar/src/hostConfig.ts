@@ -15,7 +15,9 @@ import {
   clearCommitBuffer,
   commitBuffer,
 } from "./state";
-import { writeLog, writeOutput } from "./io";
+import { writeLog } from "./io";
+import { writeRuntimeOutput } from "./protocol/runtime-output";
+import { writeRuntimeRenderBatchMessage } from "./protocol/runtime-render";
 import { serializeProps, optimizeCommitBuffer } from "./utils";
 import React from "react";
 
@@ -144,10 +146,7 @@ export const hostConfig: HostConfig<
       const now = Date.now();
       const optimizedPayload = optimizeCommitBuffer(commitBuffer);
       writeLog(`time to optimize: ${Date.now() - now}ms`);
-      writeOutput({
-        type: "BATCH_UPDATE",
-        payload: optimizedPayload,
-      });
+      writeRuntimeRenderBatchMessage(optimizedPayload);
       clearCommitBuffer();
     }
   },
@@ -181,15 +180,13 @@ export const hostConfig: HostConfig<
     if (isImperative) {
       Object.assign(instance, {
         focus: () => {
-          writeOutput({
-            type: "FOCUS_ELEMENT",
-            payload: { elementId: instance.id },
+          writeRuntimeOutput({
+            focusElement: { elementId: instance.id },
           });
         },
         reset: () => {
-          writeOutput({
-            type: "RESET_ELEMENT",
-            payload: { elementId: instance.id },
+          writeRuntimeOutput({
+            resetElement: { elementId: instance.id },
           });
         },
       });

@@ -128,7 +128,7 @@ export interface PopViewResponse {
 }
 
 export interface UpdateCommandMetadataRequest {
-  subtitle: string;
+  subtitle?: string | undefined;
 }
 
 export interface UpdateCommandMetadataResponse {
@@ -1803,12 +1803,12 @@ export const PopViewResponse: MessageFns<PopViewResponse> = {
 };
 
 function createBaseUpdateCommandMetadataRequest(): UpdateCommandMetadataRequest {
-  return { subtitle: "" };
+  return { subtitle: undefined };
 }
 
 export const UpdateCommandMetadataRequest: MessageFns<UpdateCommandMetadataRequest> = {
   encode(message: UpdateCommandMetadataRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.subtitle !== "") {
+    if (message.subtitle !== undefined) {
       writer.uint32(10).string(message.subtitle);
     }
     return writer;
@@ -1839,12 +1839,12 @@ export const UpdateCommandMetadataRequest: MessageFns<UpdateCommandMetadataReque
   },
 
   fromJSON(object: any): UpdateCommandMetadataRequest {
-    return { subtitle: isSet(object.subtitle) ? globalThis.String(object.subtitle) : "" };
+    return { subtitle: isSet(object.subtitle) ? globalThis.String(object.subtitle) : undefined };
   },
 
   toJSON(message: UpdateCommandMetadataRequest): unknown {
     const obj: any = {};
-    if (message.subtitle !== "") {
+    if (message.subtitle !== undefined) {
       obj.subtitle = message.subtitle;
     }
     return obj;
@@ -1855,7 +1855,7 @@ export const UpdateCommandMetadataRequest: MessageFns<UpdateCommandMetadataReque
   },
   fromPartial(object: DeepPartial<UpdateCommandMetadataRequest>): UpdateCommandMetadataRequest {
     const message = createBaseUpdateCommandMetadataRequest();
-    message.subtitle = object.subtitle ?? "";
+    message.subtitle = object.subtitle ?? undefined;
     return message;
   },
 };

@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
-import type { ManagerRequest, ManagerResponse } from "@beam/extension-protocol";
+import { RuntimeRpc, type ManagerRequest, type ManagerResponse, type RuntimeRpc as RuntimeRpcMessage } from "@beam/extension-protocol";
 
 import { decodeManagerResponse, encodeManagerRequest } from "@/modules/extensions/sidecar/manager-protocol";
 
@@ -46,6 +46,15 @@ export async function sendExtensionRuntimeMessage(
     runtimeId: normalizeRuntimeId(runtimeId),
     action,
     payload,
+  });
+}
+
+export async function sendExtensionRuntimeRpc(
+  runtimeId: string | undefined,
+  message: RuntimeRpcMessage,
+): Promise<void> {
+  await sendExtensionRuntimeMessage(runtimeId, "runtime-rpc", {
+    runtimeRpc: RuntimeRpc.toJSON(message),
   });
 }
 

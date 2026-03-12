@@ -1,5 +1,5 @@
 import * as crypto from "crypto";
-import { sendRequest } from "./rpc";
+import { sendRuntimeRpcRequest } from "./rpc";
 
 export type Creativity = "none" | "low" | "medium" | "high" | "maximum" | number;
 
@@ -197,13 +197,16 @@ export function ask(prompt: string, options: AskOptions = {}): AskResult {
         );
       });
 
-    const requestPromise = sendRequest<{ fullText?: string }>(
-      "ai-ask",
+    const requestPromise = sendRuntimeRpcRequest<{ fullText?: string }>(
       {
-        streamRequestId,
-        prompt,
-        options: requestOptions,
+        aiAsk: {
+          requestId: "",
+          streamRequestId,
+          prompt,
+          options: requestOptions,
+        },
       },
+      "ai-ask",
       { timeoutMs: AI_REQUEST_TIMEOUT_MS },
     ).then((result) => {
       const fullText = typeof result?.fullText === "string" ? result.fullText : "";

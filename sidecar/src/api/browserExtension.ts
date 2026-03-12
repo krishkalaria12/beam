@@ -1,4 +1,4 @@
-import { sendRequest } from "./rpc";
+import { sendRuntimeRpcRequest } from "./rpc";
 
 type Tab = {
   active: boolean;
@@ -27,7 +27,16 @@ function browserError(method: string, message: string): Error {
 
 async function sendBrowserRequest<T>(method: string, params: unknown): Promise<T> {
   try {
-    return await sendRequest<T>("browser-extension-request", { method, params });
+    return await sendRuntimeRpcRequest<T>(
+      {
+        browserExtension: {
+          requestId: "",
+          method,
+          params,
+        },
+      },
+      "browser-extension-request",
+    );
   } catch (error) {
     throw browserError(method, toErrorMessage(error));
   }

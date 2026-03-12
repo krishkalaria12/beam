@@ -1,7 +1,9 @@
 import * as crypto from "crypto";
-import { writeOutput, writeLog } from "../io";
+import { writeLog } from "../io";
 import { environment } from "./environment";
 import { currentPluginName } from "../state";
+import { writeRuntimeRpc } from "../protocol/runtime-rpc";
+import { sendRuntimeRpcRequest } from "./rpc";
 
 export enum RedirectMethod {
   Web = "web",
@@ -72,11 +74,6 @@ const pendingAuthorizationRequests = new Map<
   { resolve: (value: AuthorizationResponse) => void; reject: (reason?: unknown) => void }
 >();
 
-const pendingTokenRequests = new Map<
-  string,
-  { resolve: (value: unknown) => void; reject: (reason?: unknown) => void }
->();
-
 export function handleOAuthResponse(
   state?: string,
   code?: string,
@@ -113,49 +110,41 @@ export function handleOAuthResponse(
   }
 }
 
-export function handleTokenResponse(requestId: string, result: unknown, error?: string) {
-  const promise = pendingTokenRequests.get(requestId);
-  if (promise) {
-    if (error) {
-      promise.reject(new Error(error));
-    } else {
-      promise.resolve(result);
-    }
-    pendingTokenRequests.delete(requestId);
-    return;
+function sendTokenRequest<T>(type: string, payload: object): Promise<T> {
+  if (type === "oauth-get-tokens") {
+    return sendRuntimeRpcRequest<T>(
+      {
+        oauthGetTokens: {
+          requestId: "",
+          providerId: (payload as { providerId: string }).providerId,
+        },
+      },
+      type,
+    );
   }
 
-  writeLog({
-    tag: "sidecar-rpc-request-failure",
-    requestId,
-    operation: "oauth-token-response",
-    message: "Received OAuth token response for unknown requestId",
-    error,
-  });
-}
-
-function sendTokenRequest<T>(type: string, payload: object): Promise<T> {
-  return new Promise((resolve, reject) => {
-    const requestId = crypto.randomUUID();
-    pendingTokenRequests.set(requestId, { resolve: resolve as (value: unknown) => void, reject });
-    writeOutput({
+  if (type === "oauth-set-tokens") {
+    return sendRuntimeRpcRequest<T>(
+      {
+        oauthSetTokens: {
+          requestId: "",
+          providerId: (payload as { providerId: string }).providerId,
+          tokens: (payload as { tokens: Record<string, unknown> }).tokens,
+        },
+      },
       type,
-      payload: { requestId, ...payload },
-    });
-    setTimeout(() => {
-      if (pendingTokenRequests.has(requestId)) {
-        pendingTokenRequests.delete(requestId);
-        const message = `Token request for ${type} timed out`;
-        writeLog({
-          tag: "sidecar-rpc-request-failure",
-          requestId,
-          operation: type,
-          message,
-        });
-        reject(new Error(message));
-      }
-    }, 5000);
-  });
+    );
+  }
+
+  return sendRuntimeRpcRequest<T>(
+    {
+      oauthRemoveTokens: {
+        requestId: "",
+        providerId: (payload as { providerId: string }).providerId,
+      },
+    },
+    type,
+  );
 }
 
 interface StoredTokenSet extends TokenSetOptions {
@@ -258,13 +247,14 @@ export class PKCEClient {
     return new Promise((resolve, reject) => {
       pendingAuthorizationRequests.set(state, { resolve, reject });
 
-      writeOutput({
-        type: "oauth-authorize",
-        payload: {
+      writeRuntimeRpc({
+        request: {
+          oauthAuthorize: {
           url: authRequest.url,
           providerName: this.options.providerName,
-          providerIcon: this.options.providerIcon,
-          description: this.options.description,
+            providerIcon: this.options.providerIcon ?? "",
+            description: this.options.description ?? "",
+          },
         },
       });
 

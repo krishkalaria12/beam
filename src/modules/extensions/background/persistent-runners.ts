@@ -1,11 +1,9 @@
 import { invoke, isTauri } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { open as shellOpen } from "@tauri-apps/plugin-shell";
-import { SidecarMessageWithPluginsSchema, type Command as ProtocolCommand } from "@flare/protocol";
 import type { ManagerRequest } from "@beam/extension-protocol";
 import { toast } from "sonner";
 
-import { parseAiAskRequest, parseConfirmAlertRequest, parseLaunchCommandRequest } from "@/modules/extensions/sidecar/custom-message";
 import {
   buildDispatchViewEventManagerRequest,
   buildLaunchPluginManagerRequest,
@@ -16,16 +14,21 @@ import {
   listenToExtensionRuntimeStderr,
   sendExtensionRuntimeManagerRequest,
   sendExtensionRuntimeMessage,
+  sendExtensionRuntimeRpc,
   startExtensionRuntime,
   stopExtensionRuntime,
 } from "@/modules/extensions/sidecar/runtime-bridge";
+import { parseRuntimeRender } from "@/modules/extensions/sidecar/runtime-render";
+import { parseRuntimeOutput } from "@/modules/extensions/sidecar/runtime-output";
+import { parseRuntimeRpc } from "@/modules/extensions/sidecar/runtime-rpc";
 import type { PluginInfo } from "@/modules/extensions/types";
 import {
-  applyProtocolCommandsToRuntimeTree,
+  applyRuntimeCommandsToRuntimeTree,
   createEmptyRuntimeTreeSnapshot,
   type ExtensionUiNode,
   type RuntimeTreeSnapshot,
 } from "@/modules/extensions/runtime/runtime-tree";
+import type { RuntimeRpc } from "@beam/extension-protocol";
 
 const MENU_BAR_EVENT = "menu-bar-menu-event";
 
@@ -346,11 +349,24 @@ class PersistentRunnerSession {
   }): Promise<void> {
     try {
       const result = await invoke(payload.command, payload.params ?? {});
-      this.sendResponse("invoke_command-response", { requestId: payload.requestId, result });
+      this.sendRuntimeRpc({
+        response: {
+          invokeCommand: {
+            requestId: payload.requestId,
+            result,
+            error: "",
+          },
+        },
+      });
     } catch (error) {
-      this.sendResponse("invoke_command-response", {
-        requestId: payload.requestId,
-        error: error instanceof Error ? error.message : String(error),
+      this.sendRuntimeRpc({
+        response: {
+          invokeCommand: {
+            requestId: payload.requestId,
+            result: undefined,
+            error: error instanceof Error ? error.message : String(error),
+          },
+        },
       });
     }
   }
@@ -365,11 +381,24 @@ class PersistentRunnerSession {
         method: payload.method,
         params: payload.params,
       });
-      this.sendResponse("browser-extension-response", { requestId: payload.requestId, result });
+      this.sendRuntimeRpc({
+        response: {
+          browserExtension: {
+            requestId: payload.requestId,
+            result,
+            error: "",
+          },
+        },
+      });
     } catch (error) {
-      this.sendResponse("browser-extension-response", {
-        requestId: payload.requestId,
-        error: error instanceof Error ? error.message : String(error),
+      this.sendRuntimeRpc({
+        response: {
+          browserExtension: {
+            requestId: payload.requestId,
+            result: undefined,
+            error: error instanceof Error ? error.message : String(error),
+          },
+        },
       });
     }
   }
@@ -377,11 +406,24 @@ class PersistentRunnerSession {
   private async handleOauthGetTokens(payload: { requestId: string; providerId: string }): Promise<void> {
     try {
       const result = await invoke("oauth_get_tokens", { providerId: payload.providerId });
-      this.sendResponse("oauth-get-tokens-response", { requestId: payload.requestId, result });
+      this.sendRuntimeRpc({
+        response: {
+          oauthGetTokens: {
+            requestId: payload.requestId,
+            result: result && typeof result === "object" ? (result as Record<string, unknown>) : undefined,
+            error: "",
+          },
+        },
+      });
     } catch (error) {
-      this.sendResponse("oauth-get-tokens-response", {
-        requestId: payload.requestId,
-        error: error instanceof Error ? error.message : String(error),
+      this.sendRuntimeRpc({
+        response: {
+          oauthGetTokens: {
+            requestId: payload.requestId,
+            result: undefined,
+            error: error instanceof Error ? error.message : String(error),
+          },
+        },
       });
     }
   }
@@ -393,11 +435,24 @@ class PersistentRunnerSession {
   }): Promise<void> {
     try {
       await invoke("oauth_set_tokens", { providerId: payload.providerId, tokens: payload.tokens });
-      this.sendResponse("oauth-set-tokens-response", { requestId: payload.requestId, result: true });
+      this.sendRuntimeRpc({
+        response: {
+          oauthSetTokens: {
+            requestId: payload.requestId,
+            ok: true,
+            error: "",
+          },
+        },
+      });
     } catch (error) {
-      this.sendResponse("oauth-set-tokens-response", {
-        requestId: payload.requestId,
-        error: error instanceof Error ? error.message : String(error),
+      this.sendRuntimeRpc({
+        response: {
+          oauthSetTokens: {
+            requestId: payload.requestId,
+            ok: false,
+            error: error instanceof Error ? error.message : String(error),
+          },
+        },
       });
     }
   }
@@ -408,11 +463,24 @@ class PersistentRunnerSession {
   }): Promise<void> {
     try {
       await invoke("oauth_remove_tokens", { providerId: payload.providerId });
-      this.sendResponse("oauth-remove-tokens-response", { requestId: payload.requestId, result: true });
+      this.sendRuntimeRpc({
+        response: {
+          oauthRemoveTokens: {
+            requestId: payload.requestId,
+            ok: true,
+            error: "",
+          },
+        },
+      });
     } catch (error) {
-      this.sendResponse("oauth-remove-tokens-response", {
-        requestId: payload.requestId,
-        error: error instanceof Error ? error.message : String(error),
+      this.sendRuntimeRpc({
+        response: {
+          oauthRemoveTokens: {
+            requestId: payload.requestId,
+            ok: false,
+            error: error instanceof Error ? error.message : String(error),
+          },
+        },
       });
     }
   }
@@ -420,6 +488,12 @@ class PersistentRunnerSession {
   private handleOauthAuthorize(payload: { url: string }): void {
     void shellOpen(payload.url).catch((error) => {
       console.error(`[persistent-runner:${this.runnerId}] oauth open failed`, error);
+    });
+  }
+
+  private sendRuntimeRpc(message: RuntimeRpc): void {
+    void sendExtensionRuntimeRpc(this.runtimeId, message).catch((error) => {
+      console.error(`[persistent-runner:${this.runnerId}] failed to send runtime rpc`, error);
     });
   }
 
@@ -447,9 +521,14 @@ class PersistentRunnerSession {
       }
       settled = true;
       cleanup();
-      this.sendResponse("ai-ask-response", {
-        requestId: payload.requestId,
-        result: { fullText },
+      this.sendRuntimeRpc({
+        response: {
+          aiAsk: {
+            requestId: payload.requestId,
+            fullText,
+            error: "",
+          },
+        },
       });
     };
 
@@ -459,11 +538,23 @@ class PersistentRunnerSession {
       }
       settled = true;
       cleanup();
-      this.sendResponse("ai-ask-error", {
-        streamRequestId: payload.streamRequestId,
-        error: message,
+      this.sendRuntimeRpc({
+        response: {
+          aiAskError: {
+            streamRequestId: payload.streamRequestId,
+            error: message,
+          },
+        },
       });
-      this.sendResponse("ai-ask-response", { requestId: payload.requestId, error: message });
+      this.sendRuntimeRpc({
+        response: {
+          aiAsk: {
+            requestId: payload.requestId,
+            fullText: "",
+            error: message,
+          },
+        },
+      });
     };
 
     try {
@@ -472,9 +563,13 @@ class PersistentRunnerSession {
           if (event.payload.requestId !== payload.streamRequestId) {
             return;
           }
-          this.sendResponse("ai-ask-chunk", {
-            streamRequestId: payload.streamRequestId,
-            chunk: typeof event.payload.text === "string" ? event.payload.text : "",
+          this.sendRuntimeRpc({
+            response: {
+              aiAskChunk: {
+                streamRequestId: payload.streamRequestId,
+                chunk: typeof event.payload.text === "string" ? event.payload.text : "",
+              },
+            },
           });
         }),
       );
@@ -485,7 +580,14 @@ class PersistentRunnerSession {
             return;
           }
           const fullText = typeof event.payload.fullText === "string" ? event.payload.fullText : "";
-          this.sendResponse("ai-ask-end", { streamRequestId: payload.streamRequestId, fullText });
+          this.sendRuntimeRpc({
+            response: {
+              aiAskEnd: {
+                streamRequestId: payload.streamRequestId,
+                fullText,
+              },
+            },
+          });
           resolveOnce(fullText);
         }),
       );
@@ -515,12 +617,6 @@ class PersistentRunnerSession {
     }
   }
 
-  private sendResponse(action: string, payload: Record<string, unknown>): void {
-    void this.writeEvent({ action, payload }).catch((error) => {
-      console.error(`[persistent-runner:${this.runnerId}] failed to send response`, error);
-    });
-  }
-
   private async syncMenuBarTray(): Promise<void> {
     if (this.mode !== "menu-bar") {
       return;
@@ -539,138 +635,188 @@ class PersistentRunnerSession {
   }
 
   handleRuntimeMessage(raw: unknown): void {
-    const rawRecord = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : null;
-    const rawType = typeof rawRecord?.type === "string" ? rawRecord.type : null;
-    if (rawType === "open-extension-preferences" || rawType === "open-command-preferences") {
+    const runtimeOutput = parseRuntimeOutput(raw);
+    if (runtimeOutput?.openExtensionPreferences || runtimeOutput?.openCommandPreferences) {
       this.callbacks.openExtensions?.();
       return;
     }
 
-    const confirmAlertRequest = parseConfirmAlertRequest(raw);
-    if (confirmAlertRequest) {
-      const lines = [confirmAlertRequest.title, confirmAlertRequest.message].filter(Boolean);
-      const confirmed =
-        typeof window !== "undefined" && typeof window.confirm === "function"
-          ? window.confirm(lines.join("\n\n") || "Continue?")
-          : true;
-      this.sendResponse("confirm-alert-response", {
-        requestId: confirmAlertRequest.requestId,
-        result: confirmed,
+    if (runtimeOutput?.goBackToPluginList) {
+      if (this.onExit) {
+        void this.onExit();
+      } else {
+        void this.stop();
+      }
+      return;
+    }
+
+    if (runtimeOutput?.open) {
+      void shellOpen(runtimeOutput.open.target, runtimeOutput.open.application || undefined).catch(
+        (error) => {
+          console.error(`[persistent-runner:${this.runnerId}] open failed`, error);
+        },
+      );
+      return;
+    }
+
+    if (runtimeOutput?.showHud) {
+      toast.message(runtimeOutput.showHud.text);
+      return;
+    }
+
+    const runtimeRpc = parseRuntimeRpc(raw);
+    if (runtimeRpc?.request?.invokeCommand) {
+      void this.handleInvokeCommand({
+        requestId: runtimeRpc.request.invokeCommand.requestId,
+        command: runtimeRpc.request.invokeCommand.command,
+        params: toRecord(runtimeRpc.request.invokeCommand.params),
       });
       return;
     }
 
-    const launchCommandRequest = parseLaunchCommandRequest(raw);
-    if (launchCommandRequest) {
+    if (runtimeRpc?.request?.browserExtension) {
+      void this.handleBrowserExtensionRequest({
+        requestId: runtimeRpc.request.browserExtension.requestId,
+        method: runtimeRpc.request.browserExtension.method,
+        params: runtimeRpc.request.browserExtension.params,
+      });
+      return;
+    }
+
+    if (runtimeRpc?.request?.oauthAuthorize) {
+      this.handleOauthAuthorize({ url: runtimeRpc.request.oauthAuthorize.url });
+      return;
+    }
+
+    if (runtimeRpc?.request?.oauthGetTokens) {
+      void this.handleOauthGetTokens({
+        requestId: runtimeRpc.request.oauthGetTokens.requestId,
+        providerId: runtimeRpc.request.oauthGetTokens.providerId,
+      });
+      return;
+    }
+
+    if (runtimeRpc?.request?.oauthSetTokens) {
+      void this.handleOauthSetTokens({
+        requestId: runtimeRpc.request.oauthSetTokens.requestId,
+        providerId: runtimeRpc.request.oauthSetTokens.providerId,
+        tokens: runtimeRpc.request.oauthSetTokens.tokens ?? {},
+      });
+      return;
+    }
+
+    if (runtimeRpc?.request?.oauthRemoveTokens) {
+      void this.handleOauthRemoveTokens({
+        requestId: runtimeRpc.request.oauthRemoveTokens.requestId,
+        providerId: runtimeRpc.request.oauthRemoveTokens.providerId,
+      });
+      return;
+    }
+
+    if (runtimeRpc?.request?.confirmAlert) {
+      const lines = [
+        runtimeRpc.request.confirmAlert.title,
+        runtimeRpc.request.confirmAlert.message,
+      ].filter(Boolean);
+      const confirmed =
+        typeof window !== "undefined" && typeof window.confirm === "function"
+          ? window.confirm(lines.join("\n\n") || "Continue?")
+          : true;
+      this.sendRuntimeRpc({
+        response: {
+          confirmAlert: {
+            requestId: runtimeRpc.request.confirmAlert.requestId,
+            confirmed,
+            error: "",
+          },
+        },
+      });
+      return;
+    }
+
+    if (runtimeRpc?.request?.launchCommand) {
+      const launchRequest = runtimeRpc.request.launchCommand;
       if (!this.callbacks.launchCommand) {
-        this.sendResponse("launch-command-response", {
-          requestId: launchCommandRequest.requestId,
-          error: "Launch command callback is not configured.",
+        this.sendRuntimeRpc({
+          response: {
+            launchCommand: {
+              requestId: launchRequest.requestId,
+              ok: false,
+              error: "Launch command callback is not configured.",
+            },
+          },
         });
         return;
       }
 
       void this.callbacks
-        .launchCommand(launchCommandRequest)
+        .launchCommand({
+          requestId: launchRequest.requestId,
+          name: launchRequest.name,
+          type: launchRequest.type || undefined,
+          context: toRecord(launchRequest.context),
+          arguments: toRecord(launchRequest.arguments),
+          extensionName: launchRequest.extensionName || undefined,
+        })
         .then(() => {
-          this.sendResponse("launch-command-response", {
-            requestId: launchCommandRequest.requestId,
-            result: true,
+          this.sendRuntimeRpc({
+            response: {
+              launchCommand: {
+                requestId: launchRequest.requestId,
+                ok: true,
+                error: "",
+              },
+            },
           });
         })
         .catch((error) => {
-          this.sendResponse("launch-command-response", {
-            requestId: launchCommandRequest.requestId,
-            error: error instanceof Error ? error.message : String(error),
+          this.sendRuntimeRpc({
+            response: {
+              launchCommand: {
+                requestId: launchRequest.requestId,
+                ok: false,
+                error: error instanceof Error ? error.message : String(error),
+              },
+            },
           });
         });
       return;
     }
 
-    const aiAskRequest = parseAiAskRequest(raw);
-    if (aiAskRequest) {
-      void this.handleAiAsk(aiAskRequest);
+    if (runtimeRpc?.request?.aiAsk) {
+      void this.handleAiAsk({
+        requestId: runtimeRpc.request.aiAsk.requestId,
+        streamRequestId: runtimeRpc.request.aiAsk.streamRequestId,
+        prompt: runtimeRpc.request.aiAsk.prompt,
+        options: toRecord(runtimeRpc.request.aiAsk.options),
+      });
       return;
     }
 
-    const parsed = SidecarMessageWithPluginsSchema.safeParse(raw);
-    if (!parsed.success) {
-      console.error(`[persistent-runner:${this.runnerId}] invalid stdout payload`, parsed.error.issues);
-      return;
-    }
-
-    const message = parsed.data;
-    if (message.type === "BATCH_UPDATE") {
-      this.tree = applyProtocolCommandsToRuntimeTree(this.tree, message.payload, this.propTemplates);
+    const runtimeRender = parseRuntimeRender(raw);
+    if (runtimeRender?.kind === "batch") {
+      this.tree = applyRuntimeCommandsToRuntimeTree(this.tree, runtimeRender.commands, this.propTemplates);
       void this.syncMenuBarTray();
       return;
     }
 
-    if (
-      message.type === "CREATE_INSTANCE" ||
-      message.type === "CREATE_TEXT_INSTANCE" ||
-      message.type === "APPEND_CHILD" ||
-      message.type === "INSERT_BEFORE" ||
-      message.type === "REMOVE_CHILD" ||
-      message.type === "UPDATE_PROPS" ||
-      message.type === "UPDATE_TEXT" ||
-      message.type === "REPLACE_CHILDREN" ||
-      message.type === "CLEAR_CONTAINER" ||
-      message.type === "SHOW_TOAST" ||
-      message.type === "UPDATE_TOAST" ||
-      message.type === "HIDE_TOAST" ||
-      message.type === "DEFINE_PROPS_TEMPLATE" ||
-      message.type === "APPLY_PROPS_TEMPLATE"
-    ) {
-      this.tree = applyProtocolCommandsToRuntimeTree(this.tree, [message as ProtocolCommand], this.propTemplates);
+    if (runtimeRender?.kind === "command") {
+      this.tree = applyRuntimeCommandsToRuntimeTree(this.tree, [runtimeRender.command], this.propTemplates);
       void this.syncMenuBarTray();
       return;
     }
 
-    switch (message.type) {
-      case "go-back-to-plugin-list":
-        if (this.onExit) {
-          void this.onExit();
-        } else {
-          void this.stop();
-        }
-        return;
-      case "open":
-        void shellOpen(message.payload.target, message.payload.application).catch((error) => {
-          console.error(`[persistent-runner:${this.runnerId}] open failed`, error);
-        });
-        return;
-      case "invoke_command":
-        void this.handleInvokeCommand({
-          requestId: message.payload.requestId,
-          command: message.payload.command,
-          params: message.payload.params ? toRecord(message.payload.params) : undefined,
-        });
-        return;
-      case "browser-extension-request":
-        void this.handleBrowserExtensionRequest(message.payload);
-        return;
-      case "oauth-authorize":
-        this.handleOauthAuthorize({ url: message.payload.url });
-        return;
-      case "oauth-get-tokens":
-        void this.handleOauthGetTokens(message.payload);
-        return;
-      case "oauth-set-tokens":
-        void this.handleOauthSetTokens(message.payload);
-        return;
-      case "oauth-remove-tokens":
-        void this.handleOauthRemoveTokens(message.payload);
-        return;
-      case "SHOW_HUD":
-        toast.message(message.payload.title);
-        return;
-      case "log":
-        console.log(`[persistent-runner:${this.runnerId}]`, message.payload);
-        return;
-      default:
-        return;
+    if (runtimeRender?.kind === "log") {
+      console.log(`[persistent-runner:${this.runnerId}]`, runtimeRender.payload);
+      return;
     }
+
+    if (runtimeRender?.kind === "error") {
+      console.error(`[persistent-runner:${this.runnerId}]`, runtimeRender.message, runtimeRender.stack);
+      return;
+    }
+
+    console.error(`[persistent-runner:${this.runnerId}] invalid stdout payload`, raw);
   }
 }
 

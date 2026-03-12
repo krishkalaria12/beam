@@ -1,3 +1,4 @@
+import { RuntimeRender, createRuntimeRenderLog } from "@beam/extension-protocol";
 import { Packr } from "msgpackr";
 import { deflate } from "pako";
 
@@ -32,7 +33,10 @@ export const writeOutput = (data: object): void => {
     process.stdout.write(payloadToWrite);
   } catch (e: unknown) {
     const errorString = e instanceof Error ? e.toString() : String(e);
-    const errorPayload = packr.pack({ type: "log", payload: errorString, timestamp: Date.now() });
+    const errorPayload = packr.pack({
+      runtimeRender: RuntimeRender.toJSON(createRuntimeRenderLog(errorString)),
+      timestamp: Date.now(),
+    });
     const errorHeader = Buffer.alloc(4);
     errorHeader.writeUInt32BE(errorPayload.length);
     process.stdout.write(errorHeader);
@@ -41,5 +45,7 @@ export const writeOutput = (data: object): void => {
 };
 
 export const writeLog = (message: unknown): void => {
-  writeOutput({ type: "log", payload: message });
+  writeOutput({
+    runtimeRender: RuntimeRender.toJSON(createRuntimeRenderLog(message)),
+  });
 };

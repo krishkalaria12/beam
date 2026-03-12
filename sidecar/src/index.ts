@@ -6,7 +6,7 @@ import { batchedUpdates, updateContainer } from "./reconciler";
 import { preferencesStore } from "./preferences";
 import type { FlareInstance } from "./types";
 import { handleResponse } from "./api/rpc";
-import { handleOAuthResponse, handleTokenResponse } from "./api/oauth";
+import { handleOAuthResponse } from "./api/oauth";
 import { handleAskStreamChunk, handleAskStreamEnd, handleAskStreamError } from "./api/ai";
 import {
   createAckResponse,
@@ -20,6 +20,9 @@ import {
   toLaunchType,
   withRequestId,
 } from "./protocol/manager";
+import { writeRuntimeOutput } from "./protocol/runtime-output";
+import { writeRuntimeRenderErrorMessage } from "./protocol/runtime-render";
+import { parseRuntimeRpcInput } from "./protocol/runtime-rpc";
 
 const reportRuntimeError = (err: unknown): void => {
   const error =
@@ -27,7 +30,7 @@ const reportRuntimeError = (err: unknown): void => {
       ? { message: err.message, stack: err.stack }
       : { message: String(err) };
   writeLog(`ERROR: ${error.message} \n ${error.stack ?? ""}`);
-  writeOutput({ type: "error", payload: error.message });
+  writeRuntimeRenderErrorMessage(error);
 };
 
 process.on("unhandledRejection", (reason: unknown) => {
@@ -43,7 +46,7 @@ const handlePopView = (): void => {
   if (previousElement) {
     updateContainer(previousElement);
   } else {
-    writeOutput({ type: "go-back-to-plugin-list", payload: {} });
+    writeRuntimeOutput({ goBackToPluginList: {} });
   }
 };
 
@@ -97,32 +100,119 @@ rl.on("line", (line) => {
     try {
       const command: { action: string; payload: unknown } = JSON.parse(line);
 
-      if (command.action.endsWith("-response")) {
-        if (command.action === "oauth-authorize-response") {
-          const { state, code, error } = command.payload as {
-            state?: string;
-            code?: string;
-            error?: string;
-          };
-          handleOAuthResponse(state, code, error);
+      if (command.action === "runtime-rpc") {
+        const rpc = parseRuntimeRpcInput(command.payload);
+        if (!rpc?.response) {
+          writeLog("Received invalid runtime-rpc payload from host.");
           return;
         }
 
-        const { requestId, result, error } = command.payload as {
-          requestId?: string;
-          result?: unknown;
-          error?: string;
-        };
-        if (!requestId) {
-          writeLog(`Missing requestId for response action: ${command.action}`);
+        if (rpc.response.oauthAuthorize) {
+          handleOAuthResponse(
+            rpc.response.oauthAuthorize.state || undefined,
+            rpc.response.oauthAuthorize.code || undefined,
+            rpc.response.oauthAuthorize.error || undefined,
+          );
           return;
         }
 
-        if (command.action.startsWith("oauth-")) {
-          handleTokenResponse(requestId, result, error);
-        } else {
-          handleResponse(requestId, result, error);
+        if (rpc.response.invokeCommand) {
+          handleResponse(
+            rpc.response.invokeCommand.requestId,
+            rpc.response.invokeCommand.result,
+            rpc.response.invokeCommand.error || undefined,
+          );
+          return;
         }
+
+        if (rpc.response.browserExtension) {
+          handleResponse(
+            rpc.response.browserExtension.requestId,
+            rpc.response.browserExtension.result,
+            rpc.response.browserExtension.error || undefined,
+          );
+          return;
+        }
+
+        if (rpc.response.oauthGetTokens) {
+          handleResponse(
+            rpc.response.oauthGetTokens.requestId,
+            rpc.response.oauthGetTokens.result,
+            rpc.response.oauthGetTokens.error || undefined,
+          );
+          return;
+        }
+
+        if (rpc.response.oauthSetTokens) {
+          handleResponse(
+            rpc.response.oauthSetTokens.requestId,
+            rpc.response.oauthSetTokens.ok,
+            rpc.response.oauthSetTokens.error || undefined,
+          );
+          return;
+        }
+
+        if (rpc.response.oauthRemoveTokens) {
+          handleResponse(
+            rpc.response.oauthRemoveTokens.requestId,
+            rpc.response.oauthRemoveTokens.ok,
+            rpc.response.oauthRemoveTokens.error || undefined,
+          );
+          return;
+        }
+
+        if (rpc.response.confirmAlert) {
+          handleResponse(
+            rpc.response.confirmAlert.requestId,
+            rpc.response.confirmAlert.confirmed,
+            rpc.response.confirmAlert.error || undefined,
+          );
+          return;
+        }
+
+        if (rpc.response.launchCommand) {
+          handleResponse(
+            rpc.response.launchCommand.requestId,
+            rpc.response.launchCommand.ok,
+            rpc.response.launchCommand.error || undefined,
+          );
+          return;
+        }
+
+        if (rpc.response.aiAsk) {
+          handleResponse(
+            rpc.response.aiAsk.requestId,
+            { fullText: rpc.response.aiAsk.fullText },
+            rpc.response.aiAsk.error || undefined,
+          );
+          return;
+        }
+
+        if (rpc.response.aiAskChunk) {
+          handleAskStreamChunk(
+            rpc.response.aiAskChunk.streamRequestId,
+            rpc.response.aiAskChunk.chunk,
+          );
+          return;
+        }
+
+        if (rpc.response.aiAskEnd) {
+          handleAskStreamEnd(
+            rpc.response.aiAskEnd.streamRequestId,
+            rpc.response.aiAskEnd.fullText,
+          );
+          return;
+        }
+
+        if (rpc.response.aiAskError) {
+          handleAskStreamError(
+            rpc.response.aiAskError.streamRequestId,
+            rpc.response.aiAskError.error,
+          );
+          return;
+        }
+
+        writeLog("Received unsupported runtime-rpc response from host.");
         return;
       }
 
@@ -253,41 +343,7 @@ rl.on("line", (line) => {
         );
         return;
       }
-
-      switch (command.action) {
-        case "ai-ask-chunk": {
-          const { streamRequestId, chunk } = command.payload as {
-            streamRequestId?: unknown;
-            chunk?: unknown;
-          };
-          if (typeof streamRequestId === "string" && typeof chunk === "string") {
-            handleAskStreamChunk(streamRequestId, chunk);
-          }
-          break;
-        }
-        case "ai-ask-end": {
-          const { streamRequestId, fullText } = command.payload as {
-            streamRequestId?: unknown;
-            fullText?: unknown;
-          };
-          if (typeof streamRequestId === "string" && typeof fullText === "string") {
-            handleAskStreamEnd(streamRequestId, fullText);
-          }
-          break;
-        }
-        case "ai-ask-error": {
-          const { streamRequestId, error } = command.payload as {
-            streamRequestId?: unknown;
-            error?: unknown;
-          };
-          if (typeof streamRequestId === "string" && typeof error === "string") {
-            handleAskStreamError(streamRequestId, error);
-          }
-          break;
-        }
-        default:
-          writeLog(`Unknown command action: ${command.action}`);
-      }
+      writeLog(`Unknown command action: ${command.action}`);
     } catch (err: unknown) {
       reportRuntimeError(err);
     }

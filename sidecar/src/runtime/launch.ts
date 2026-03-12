@@ -1,4 +1,3 @@
-import type { Preference } from "@flare/protocol";
 import type { RuntimeLaunchPayload } from "@beam/extension-protocol";
 import * as fs from "fs";
 import * as path from "path";
@@ -8,6 +7,7 @@ import { config } from "../config";
 import { writeLog } from "../io";
 import { preferencesStore } from "../preferences";
 import { aiContext, setCurrentPlugin } from "../state";
+import type { Preference } from "../manifest";
 
 export type LaunchMode = "view" | "no-view" | "menu-bar";
 

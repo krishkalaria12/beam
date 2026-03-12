@@ -1,5 +1,5 @@
-import { writeOutput } from "../io";
 import { getNextInstanceId, toasts } from "../state";
+import { writeRuntimeRenderCommandMessage } from "../protocol/runtime-render";
 import {
   ToastStyle,
   type Toast as RuntimeToast,
@@ -14,6 +14,36 @@ interface ToastOptions {
   message?: string;
   primaryAction?: RuntimeToastActionOptions;
   secondaryAction?: RuntimeToastActionOptions;
+}
+
+function toShortcut(
+  shortcut: RuntimeToastActionOptions["shortcut"],
+): { modifiers: Array<"cmd" | "ctrl" | "opt" | "shift">; key: string } | undefined {
+  if (!shortcut) {
+    return undefined;
+  }
+
+  const modifiers = shortcut.modifiers.filter(
+    (modifier): modifier is "cmd" | "ctrl" | "opt" | "shift" =>
+      modifier === "cmd" || modifier === "ctrl" || modifier === "opt" || modifier === "shift",
+  );
+
+  return {
+    modifiers,
+    key: shortcut.key,
+  };
+}
+
+function toToastAction(action: RuntimeToastActionOptions | undefined) {
+  if (!action) {
+    return undefined;
+  }
+
+  return {
+    title: action.title,
+    onAction: !!action.onAction,
+    shortcut: toShortcut(action.shortcut),
+  };
 }
 
 class ToastImpl implements RuntimeToast {
@@ -62,19 +92,21 @@ class ToastImpl implements RuntimeToast {
   }
 
   private _update() {
-    writeOutput({
+    writeRuntimeRenderCommandMessage({
       type: "UPDATE_TOAST",
       payload: {
         id: this.#id,
         style: this.#style,
         title: this.#title,
         message: this.#message,
+        primaryAction: toToastAction(this.primaryAction),
+        secondaryAction: toToastAction(this.secondaryAction),
       },
     });
   }
 
   async hide(): Promise<void> {
-    writeOutput({ type: "HIDE_TOAST", payload: { id: this.#id } });
+    writeRuntimeRenderCommandMessage({ type: "HIDE_TOAST", payload: { id: this.#id } });
     toasts.delete(this.#id);
     if (activeToastId === this.#id) {
       activeToastId = null;
@@ -87,27 +119,15 @@ class ToastImpl implements RuntimeToast {
 
   _sendShowCommand() {
     toasts.set(this.id, this);
-    writeOutput({
+    writeRuntimeRenderCommandMessage({
       type: "SHOW_TOAST",
       payload: {
         id: this.#id,
         style: this.style,
         title: this.title,
         message: this.message,
-        primaryAction: this.primaryAction
-          ? {
-              title: this.primaryAction.title,
-              onAction: !!this.primaryAction.onAction,
-              shortcut: this.primaryAction.shortcut,
-            }
-          : undefined,
-        secondaryAction: this.secondaryAction
-          ? {
-              title: this.secondaryAction.title,
-              onAction: !!this.secondaryAction.onAction,
-              shortcut: this.secondaryAction.shortcut,
-            }
-          : undefined,
+        primaryAction: toToastAction(this.primaryAction),
+        secondaryAction: toToastAction(this.secondaryAction),
       },
     });
   }
@@ -139,7 +159,7 @@ export async function showToast(
 
   const toast = new ToastImpl(options);
   if (activeToastId !== null && activeToastId !== toast.id) {
-    writeOutput({ type: "HIDE_TOAST", payload: { id: activeToastId } });
+    writeRuntimeRenderCommandMessage({ type: "HIDE_TOAST", payload: { id: activeToastId } });
     toasts.delete(activeToastId);
   }
   activeToastId = toast.id;

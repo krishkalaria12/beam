@@ -24,26 +24,6 @@ export const EXTENSIONS_QUERY_KEY_INSTALLED = ["extensions", "installed"] as con
 export const EXTENSIONS_QUERY_KEY_STORE = ["extensions", "store"] as const;
 export const EXTENSIONS_QUERY_KEY_PREFERENCES = ["extensions", "preferences"] as const;
 
-export const EXTENSIONS_PROTOCOL_COMMAND_TYPES = [
-  "CREATE_INSTANCE",
-  "CREATE_TEXT_INSTANCE",
-  "APPEND_CHILD",
-  "INSERT_BEFORE",
-  "REMOVE_CHILD",
-  "UPDATE_PROPS",
-  "UPDATE_TEXT",
-  "REPLACE_CHILDREN",
-  "CLEAR_CONTAINER",
-  "SHOW_TOAST",
-  "UPDATE_TOAST",
-  "HIDE_TOAST",
-  "DEFINE_PROPS_TEMPLATE",
-  "APPLY_PROPS_TEMPLATE",
-] as const;
-export const EXTENSIONS_PROTOCOL_COMMAND_TYPE_SET = new Set<string>(
-  EXTENSIONS_PROTOCOL_COMMAND_TYPES,
-);
-
 export const EXTENSIONS_RUNNER_ACTION_CONTAINER_TYPES = [
   "ActionPanel",
   "ActionPanel.Section",

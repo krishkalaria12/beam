@@ -111,7 +111,7 @@ message PopViewResponse {
 }
 
 message UpdateCommandMetadataRequest {
-  string subtitle = 1;
+  optional string subtitle = 1;
 }
 
 message UpdateCommandMetadataResponse {

@@ -2,7 +2,8 @@ import React from "react";
 import * as ReactJsxRuntime from "react/jsx-runtime";
 import { inspect } from "util";
 import { environment } from "./api/environment";
-import { writeLog, writeOutput } from "./io";
+import { writeLog } from "./io";
+import { writeRuntimeOutput } from "./protocol/runtime-output";
 import { updateContainer } from "./reconciler";
 import { createRuntimeRequire, ensureBeamGlobal, withGlobalReact } from "./runtime/bootstrap";
 import { createCompatElement, createCompatElementDev } from "./runtime/jsx-runtime";
@@ -91,11 +92,11 @@ export const runPlugin = (
         return (PluginRoot as (props: LaunchProps) => Promise<void>)(launchProps)
           .then(() => {
             writeLog("No-view command finished.");
-            writeOutput({ type: "go-back-to-plugin-list", payload: {} });
+            writeRuntimeOutput({ goBackToPluginList: {} });
           })
           .catch((e) => {
             writeLog(`No-view command failed: ${e}`);
-            writeOutput({ type: "go-back-to-plugin-list", payload: {} });
+            writeRuntimeOutput({ goBackToPluginList: {} });
           });
       }
 

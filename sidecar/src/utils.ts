@@ -1,7 +1,7 @@
 import React from "react";
 import type { ComponentType, ParentInstance } from "./types";
 import { root, instances } from "./state";
-import type { Command } from "@flare/protocol";
+import type { RuntimeCommand } from "@beam/extension-protocol";
 
 export const getComponentDisplayName = (type: ComponentType): string => {
   if (typeof type === "string") {
@@ -82,13 +82,13 @@ function createStableFingerprint(
   return result;
 }
 
-export function optimizeCommitBuffer(buffer: Command[]): Command[] {
+export function optimizeCommitBuffer(buffer: RuntimeCommand[]): RuntimeCommand[] {
   const CHILD_OP_THRESHOLD = 10;
   const PROPS_TEMPLATE_THRESHOLD = 5;
 
-  const childOpsByParent = new Map<ParentInstance["id"], Command[]>();
-  const updatePropsOps: Extract<Command, { type: "UPDATE_PROPS" }>[] = [];
-  const otherNonUpdateOps: Command[] = [];
+  const childOpsByParent = new Map<ParentInstance["id"], RuntimeCommand[]>();
+  const updatePropsOps: Extract<RuntimeCommand, { type: "UPDATE_PROPS" }>[] = [];
+  const otherNonUpdateOps: RuntimeCommand[] = [];
 
   for (const op of buffer) {
     if (op.type === "UPDATE_PROPS") {
@@ -105,7 +105,7 @@ export function optimizeCommitBuffer(buffer: Command[]): Command[] {
     }
   }
 
-  const finalOps: Command[] = [...otherNonUpdateOps];
+  const finalOps: RuntimeCommand[] = [...otherNonUpdateOps];
 
   for (const [parentId, ops] of childOpsByParent.entries()) {
     if (ops.length <= CHILD_OP_THRESHOLD) {
@@ -127,7 +127,7 @@ export function optimizeCommitBuffer(buffer: Command[]): Command[] {
   }
 
   const propsToIdMap = new Map<string, number[]>();
-  const idToPayloadMap = new Map<number, Extract<Command, { type: "UPDATE_PROPS" }>["payload"]>();
+  const idToPayloadMap = new Map<number, Extract<RuntimeCommand, { type: "UPDATE_PROPS" }>["payload"]>();
 
   for (const op of updatePropsOps) {
     const payload = op.payload;

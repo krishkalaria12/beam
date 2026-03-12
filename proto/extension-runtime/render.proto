@@ -1,0 +1,141 @@
+syntax = "proto3";
+
+package beam.extension_runtime.v1;
+
+import "common.proto";
+import "google/protobuf/struct.proto";
+
+message ParentRef {
+  oneof parent {
+    Empty root = 1;
+    uint32 node_id = 2;
+  }
+}
+
+message KeyboardShortcut {
+  repeated string modifiers = 1;
+  string key = 2;
+}
+
+message RuntimeToastAction {
+  string title = 1;
+  bool on_action = 2;
+  KeyboardShortcut shortcut = 3;
+}
+
+message ToastModel {
+  uint32 id = 1;
+  string title = 2;
+  string message = 3;
+  ToastStyle style = 4;
+  RuntimeToastAction primary_action = 5;
+  RuntimeToastAction secondary_action = 6;
+}
+
+message CreateInstanceCommand {
+  uint32 id = 1;
+  string type = 2;
+  google.protobuf.Struct props = 3;
+  repeated uint32 children = 4;
+  map<string, uint32> named_children = 5;
+}
+
+message CreateTextInstanceCommand {
+  uint32 id = 1;
+  string text = 2;
+}
+
+message ParentChildCommand {
+  ParentRef parent = 1;
+  uint32 child_id = 2;
+}
+
+message InsertBeforeCommand {
+  ParentRef parent = 1;
+  uint32 child_id = 2;
+  uint32 before_id = 3;
+}
+
+message UpdatePropsCommand {
+  uint32 id = 1;
+  google.protobuf.Struct props = 2;
+  map<string, uint32> named_children = 3;
+}
+
+message UpdateTextCommand {
+  uint32 id = 1;
+  string text = 2;
+}
+
+message ReplaceChildrenCommand {
+  ParentRef parent = 1;
+  repeated uint32 children_ids = 2;
+}
+
+message ClearContainerCommand {
+  string container_id = 1;
+}
+
+message DefinePropsTemplateCommand {
+  uint32 template_id = 1;
+  google.protobuf.Struct props = 2;
+  map<string, uint32> named_children = 3;
+}
+
+message ApplyPropsTemplateCommand {
+  uint32 template_id = 1;
+  repeated uint32 target_ids = 2;
+}
+
+message ShowToastCommand {
+  ToastModel toast = 1;
+}
+
+message UpdateToastCommand {
+  ToastModel toast = 1;
+}
+
+message HideToastCommand {
+  uint32 id = 1;
+}
+
+message RenderCommand {
+  oneof command {
+    CreateInstanceCommand create_instance = 1;
+    CreateTextInstanceCommand create_text_instance = 2;
+    ParentChildCommand append_child = 3;
+    InsertBeforeCommand insert_before = 4;
+    ParentChildCommand remove_child = 5;
+    UpdatePropsCommand update_props = 6;
+    UpdateTextCommand update_text = 7;
+    ReplaceChildrenCommand replace_children = 8;
+    ClearContainerCommand clear_container = 9;
+    ShowToastCommand show_toast = 10;
+    UpdateToastCommand update_toast = 11;
+    HideToastCommand hide_toast = 12;
+    DefinePropsTemplateCommand define_props_template = 13;
+    ApplyPropsTemplateCommand apply_props_template = 14;
+  }
+}
+
+message RenderBatch {
+  repeated RenderCommand commands = 1;
+}
+
+message RuntimeLog {
+  google.protobuf.Value payload = 1;
+}
+
+message RuntimeError {
+  string message = 1;
+  string stack = 2;
+}
+
+message RuntimeRender {
+  oneof message {
+    RenderBatch batch = 1;
+    RenderCommand command = 2;
+    RuntimeLog log = 3;
+    RuntimeError error = 4;
+  }
+}
