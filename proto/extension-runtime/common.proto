@@ -1,0 +1,79 @@
+syntax = "proto3";
+
+package beam.extension_runtime.v1;
+
+import "google/protobuf/struct.proto";
+
+message Empty {}
+
+message VersionInfo {
+  string tag = 1;
+  string commit = 2;
+}
+
+message FileSystemItem {
+  string path = 1;
+}
+
+message Application {
+  string name = 1;
+  string path = 2;
+  string bundle_id = 3;
+  string localized_name = 4;
+}
+
+message FocusedWindow {
+  string id = 1;
+  string title = 2;
+  string app_name = 3;
+  string class_name = 4;
+  string app_id = 5;
+  uint32 pid = 6;
+  string workspace = 7;
+  bool is_focused = 8;
+}
+
+message JsonObject {
+  google.protobuf.Struct value = 1;
+}
+
+enum CommandMode {
+  COMMAND_MODE_UNSPECIFIED = 0;
+  COMMAND_MODE_VIEW = 1;
+  COMMAND_MODE_NO_VIEW = 2;
+  COMMAND_MODE_MENU_BAR = 3;
+}
+
+enum LaunchType {
+  LAUNCH_TYPE_UNSPECIFIED = 0;
+  LAUNCH_TYPE_USER_INITIATED = 1;
+  LAUNCH_TYPE_BACKGROUND = 2;
+}
+
+enum DesktopContextState {
+  DESKTOP_CONTEXT_STATE_UNSPECIFIED = 0;
+  DESKTOP_CONTEXT_STATE_SUPPORTED = 1;
+  DESKTOP_CONTEXT_STATE_UNAVAILABLE = 2;
+  DESKTOP_CONTEXT_STATE_UNSUPPORTED = 3;
+}
+
+enum PopToRootType {
+  POP_TO_ROOT_TYPE_UNSPECIFIED = 0;
+  POP_TO_ROOT_TYPE_DEFAULT = 1;
+  POP_TO_ROOT_TYPE_IMMEDIATE = 2;
+  POP_TO_ROOT_TYPE_SUSPENDED = 3;
+}
+
+enum ToastStyle {
+  TOAST_STYLE_UNSPECIFIED = 0;
+  TOAST_STYLE_SUCCESS = 1;
+  TOAST_STYLE_FAILURE = 2;
+  TOAST_STYLE_ANIMATED = 3;
+}
+
+enum AlertActionStyle {
+  ALERT_ACTION_STYLE_UNSPECIFIED = 0;
+  ALERT_ACTION_STYLE_DEFAULT = 1;
+  ALERT_ACTION_STYLE_CANCEL = 2;
+  ALERT_ACTION_STYLE_DESTRUCTIVE = 3;
+}

@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+package beam.extension_runtime.v1;
+
+import "google/protobuf/struct.proto";
+import "environment.proto";
+
+message RuntimeLaunchPayload {
+  string extension_id = 1;
+  string extension_path = 2;
+  string entrypoint_path = 3;
+  EnvironmentSnapshot environment = 4;
+  DesktopContextSnapshot desktop_context = 5;
+  google.protobuf.Struct preference_values = 6;
+  google.protobuf.Struct launch_arguments = 7;
+  google.protobuf.Struct launch_context = 8;
+  string fallback_text = 9;
+}
+
+message PingRequest {}
+
+message PingResponse {
+  bool ok = 1;
+}
+
+message StartDevSessionRequest {
+  string extension_id = 1;
+}
+
+message StartDevSessionResponse {
+  bool ok = 1;
+}
+
+message RefreshDevSessionRequest {
+  string extension_id = 1;
+}
+
+message RefreshDevSessionResponse {
+  bool ok = 1;
+}
+
+message StopDevSessionRequest {
+  string extension_id = 1;
+}
+
+message StopDevSessionResponse {
+  bool ok = 1;
+}
+
+message ShutdownEvent {}
+
+message PopViewEvent {}
+
+message PreferencesChangedEvent {
+  google.protobuf.Struct values = 1;
+}
+
+message RuntimeEvent {
+  oneof event {
+    ShutdownEvent shutdown = 1;
+    PopViewEvent pop_view = 2;
+    PreferencesChangedEvent preferences_changed = 3;
+  }
+}

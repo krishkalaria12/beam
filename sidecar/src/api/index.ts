@@ -56,7 +56,7 @@ const Alert = {
   },
 } as const;
 
-const preferences = new Proxy({} as Record<string, unknown>, {
+export const preferences = new Proxy({} as Record<string, unknown>, {
   get(_target, property: string) {
     const values =
       currentPluginName
@@ -304,3 +304,8 @@ export const getRaycastApi = () => {
     Keyboard,
   };
 };
+
+export const getBeamApi = () => ({
+  ...getRaycastApi(),
+  BrowserExtension: BrowserExtensionAPI,
+});

@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package beam.extension_runtime.v1;
+
+import "google/protobuf/struct.proto";
+
+message GetLocalStorageItemRequest {
+  string key = 1;
+}
+
+message GetLocalStorageItemResponse {
+  google.protobuf.Value value = 1;
+  bool found = 2;
+}
+
+message SetLocalStorageItemRequest {
+  string key = 1;
+  google.protobuf.Value value = 2;
+}
+
+message SetLocalStorageItemResponse {
+  bool ok = 1;
+}
+
+message RemoveLocalStorageItemRequest {
+  string key = 1;
+}
+
+message RemoveLocalStorageItemResponse {
+  bool ok = 1;
+}
+
+message ClearLocalStorageRequest {}
+
+message ClearLocalStorageResponse {
+  bool ok = 1;
+}
+
+message ListLocalStorageItemsRequest {}
+
+message ListLocalStorageItemsResponse {
+  map<string, google.protobuf.Value> items = 1;
+}

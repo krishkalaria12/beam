@@ -5,7 +5,7 @@ import * as path from "path";
 import React from "react";
 import * as ReactJsxRuntime from "react/jsx-runtime";
 import { inspect } from "util";
-import { getRaycastApi } from "./api";
+import { getBeamApi, getRaycastApi, preferences } from "./api";
 import { environment } from "./api/environment";
 import { getRaycastUtils } from "./api/raycastUtils";
 import { LaunchType } from "./api/types";
@@ -86,6 +86,10 @@ const createPluginRequire = (pluginPath: string) => {
       return getRaycastApi();
     }
 
+    if (moduleName.startsWith("@beam/api")) {
+      return getBeamApi();
+    }
+
     if (moduleName.startsWith("@raycast/utils")) {
       return getRaycastUtils();
     }
@@ -106,6 +110,24 @@ const createPluginRequire = (pluginPath: string) => {
     }
 
     return pluginRequire(moduleName);
+  };
+};
+
+type BeamGlobal = typeof globalThis & {
+  beam?: {
+    api: ReturnType<typeof getBeamApi>;
+    environ: typeof environment;
+    preferences: Record<string, unknown>;
+  };
+};
+
+const ensureBeamGlobal = (): void => {
+  const globalBeam = globalThis as BeamGlobal;
+
+  globalBeam.beam = {
+    api: getBeamApi(),
+    environ: environment,
+    preferences,
   };
 };
 
@@ -181,6 +203,7 @@ export const runPlugin = (
   environment.extensionName = pluginName;
 
   setCurrentPlugin(pluginName, preferences);
+  ensureBeamGlobal();
 
   const pluginModule = {
     exports: {} as {

@@ -2,6 +2,7 @@ pub mod browser_extension;
 pub(crate) mod config;
 pub mod error;
 pub mod oauth;
+pub mod runtime;
 
 use std::fs;
 use std::io::{self, Cursor, Read};

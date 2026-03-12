@@ -13,6 +13,8 @@
     "serve": "vite preview",
     "start": "vite",
     "check-types": "tsc --noEmit",
+    "extension-protocol:generate": "bun run --cwd packages/extension-protocol generate:ts",
+    "extension-protocol:check": "bun run --cwd packages/extension-protocol check",
     "fmt": "oxfmt --write .",
     "fmt:check": "oxfmt --check .",
     "rust:fmt": "cargo fmt --manifest-path src-tauri/Cargo.toml --all",
