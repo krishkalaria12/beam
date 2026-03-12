@@ -17,6 +17,7 @@ fn compile_extension_runtime_proto() -> Result<(), Box<dyn Error>> {
     let proto_files = [
         "common.proto",
         "environment.proto",
+        "manifest.proto",
         "manager.proto",
         "output.proto",
         "rpc.proto",

@@ -1,45 +1,11 @@
 import { z } from "zod";
+import type {
+  DiscoveredPluginRecord as PluginInfo,
+  ExtensionAuthor as Author,
+  ExtensionPreference as Preference,
+} from "@beam/extension-protocol";
 
-export const authorSchema = z.union([
-  z.string(),
-  z.object({
-    name: z.string(),
-  }),
-]);
-
-export const preferenceDataSchema = z.object({
-  title: z.string(),
-  value: z.string(),
-});
-
-export const preferenceSchema = z.object({
-  name: z.string(),
-  type: z.string(),
-  title: z.string().nullish(),
-  description: z.string().nullish(),
-  required: z.boolean().nullish(),
-  default: z.unknown().nullish(),
-  data: z.array(preferenceDataSchema).nullish(),
-  label: z.string().nullish(),
-});
-
-export const pluginInfoSchema = z.object({
-  title: z.string(),
-  description: z.string().nullish(),
-  pluginTitle: z.string(),
-  pluginName: z.string(),
-  commandName: z.string(),
-  pluginPath: z.string(),
-  icon: z.string().nullish(),
-  preferences: z.array(preferenceSchema).nullish(),
-  commandPreferences: z.array(preferenceSchema).nullish(),
-  mode: z.string().nullish(),
-  interval: z.string().nullish(),
-  author: authorSchema.nullish(),
-  owner: z.string().nullish(),
-});
-
-export const pluginListSchema = z.array(pluginInfoSchema);
+export type { Author, Preference, PluginInfo };
 
 export const heuristicViolationSchema = z.object({
   commandName: z.string(),
@@ -79,9 +45,6 @@ export const extensionStoreSearchResponseSchema = z.object({
   data: z.array(extensionStoreListingSchema),
 });
 
-export type Author = z.infer<typeof authorSchema>;
-export type Preference = z.infer<typeof preferenceSchema>;
-export type PluginInfo = z.infer<typeof pluginInfoSchema>;
 export type HeuristicViolation = z.infer<typeof heuristicViolationSchema>;
 export type InstallResult = z.infer<typeof installResultSchema>;
 export type ExtensionStoreListing = z.infer<typeof extensionStoreListingSchema>;

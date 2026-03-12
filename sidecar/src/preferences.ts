@@ -1,8 +1,8 @@
 import * as fs from "fs";
 import * as path from "path";
+import type { ExtensionPreference as Preference } from "@beam/extension-protocol";
 import { writeLog } from "./io";
 import { config } from "./config";
-import type { Preference } from "./manifest";
 
 export class PreferencesStore {
   private preferencesPath: string;

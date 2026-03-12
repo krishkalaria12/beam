@@ -1,0 +1,69 @@
+syntax = "proto3";
+
+package beam.extension_runtime.v1;
+
+import "google/protobuf/struct.proto";
+
+message AuthorName {
+  string name = 1;
+}
+
+message ManifestAuthor {
+  oneof author {
+    string simple = 1;
+    AuthorName detailed = 2;
+  }
+}
+
+message PreferenceOption {
+  string title = 1;
+  string value = 2;
+}
+
+message PreferenceDefinition {
+  string name = 1;
+  string type = 2;
+  optional string title = 3;
+  optional string description = 4;
+  optional bool required = 5;
+  google.protobuf.Value default_value = 6;
+  repeated PreferenceOption data = 7;
+  optional string label = 8;
+}
+
+message CommandManifest {
+  string name = 1;
+  optional string title = 2;
+  optional string description = 3;
+  optional string icon = 4;
+  optional string mode = 5;
+  optional string interval = 6;
+  repeated PreferenceDefinition preferences = 7;
+}
+
+message ExtensionManifest {
+  optional string name = 1;
+  optional string title = 2;
+  optional string description = 3;
+  optional string icon = 4;
+  ManifestAuthor author = 5;
+  optional string owner = 6;
+  repeated CommandManifest commands = 7;
+  repeated PreferenceDefinition preferences = 8;
+}
+
+message DiscoveredPlugin {
+  string title = 1;
+  optional string description = 2;
+  string plugin_title = 3;
+  string plugin_name = 4;
+  string command_name = 5;
+  string plugin_path = 6;
+  optional string icon = 7;
+  repeated PreferenceDefinition preferences = 8;
+  repeated PreferenceDefinition command_preferences = 9;
+  optional string mode = 10;
+  optional string interval = 11;
+  ManifestAuthor author = 12;
+  optional string owner = 13;
+}

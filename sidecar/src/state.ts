@@ -1,7 +1,7 @@
 import type { AnyInstance, Container, Toast } from "./types";
 import type { RuntimeCommand } from "@beam/extension-protocol";
+import type { ExtensionPreference as Preference } from "@beam/extension-protocol";
 import type React from "react";
-import type { Preference } from "./manifest";
 
 export const instances = new Map<number, AnyInstance>();
 export const root: Container = { id: "root", children: [] };

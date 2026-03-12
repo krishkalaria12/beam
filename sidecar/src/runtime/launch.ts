@@ -1,3 +1,7 @@
+import {
+  parseExtensionManifest,
+  type ExtensionPreference as Preference,
+} from "@beam/extension-protocol";
 import type { RuntimeLaunchPayload } from "@beam/extension-protocol";
 import * as fs from "fs";
 import * as path from "path";
@@ -7,7 +11,6 @@ import { config } from "../config";
 import { writeLog } from "../io";
 import { preferencesStore } from "../preferences";
 import { aiContext, setCurrentPlugin } from "../state";
-import type { Preference } from "../manifest";
 
 export type LaunchMode = "view" | "no-view" | "menu-bar";
 
@@ -16,12 +19,6 @@ export interface LaunchProps {
   launchContext?: Record<string, unknown>;
   launchType: typeof environment.launchType;
 }
-
-type PluginPackageJson = {
-  name?: string;
-  preferences?: Preference[];
-  commands?: Array<{ preferences?: Preference[] }>;
-};
 
 export interface PluginMetadata {
   extensionId: string;
@@ -77,19 +74,25 @@ const readPluginScript = (pluginPath: string): string => {
   }
 };
 
-const readPluginMetadata = (pluginPath: string): PluginMetadata => {
+const readPluginMetadata = (pluginPath: string, commandName?: string): PluginMetadata => {
   const pluginDir = path.dirname(pluginPath);
   const packageJsonPath = path.join(pluginDir, "package.json");
   let extensionId = path.basename(pluginDir);
   let preferences: Preference[] = [];
+  const resolvedCommandName = commandName || path.parse(pluginPath).name;
 
   if (fs.existsSync(packageJsonPath)) {
     try {
-      const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8")) as PluginPackageJson;
-      extensionId = packageJson.name || extensionId;
-      const pluginPreferences = packageJson.preferences || [];
-      const commandPreferences = (packageJson.commands || []).flatMap((command) => command.preferences || []);
-      preferences = [...pluginPreferences, ...commandPreferences];
+      const packageJson = parseExtensionManifest(
+        JSON.parse(fs.readFileSync(packageJsonPath, "utf-8")),
+      );
+      if (packageJson) {
+        extensionId = packageJson.name || extensionId;
+        const pluginPreferences = packageJson.preferences || [];
+        const commandPreferences =
+          packageJson.commands.find((command) => command.name === resolvedCommandName)?.preferences || [];
+        preferences = [...pluginPreferences, ...commandPreferences];
+      }
     } catch (error) {
       writeLog(`Error reading plugin package.json: ${error}`);
     }
@@ -125,12 +128,13 @@ export const createRuntimeLaunchPlan = async (
   options: CreateRuntimeLaunchPayloadOptions,
 ): Promise<RuntimeLaunchPlan> => {
   const mode = options.mode ?? "view";
-  const metadata = readPluginMetadata(options.pluginPath);
+  const resolvedCommandName = options.commandName || path.parse(options.pluginPath).name;
+  const metadata = readPluginMetadata(options.pluginPath, resolvedCommandName);
   const scriptText = readPluginScript(options.pluginPath);
 
   applyRuntimeContext(metadata, {
     aiAccessStatus: Boolean(options.aiAccessStatus),
-    commandName: options.commandName,
+    commandName: resolvedCommandName,
     launchType: options.launchType,
     mode,
   });

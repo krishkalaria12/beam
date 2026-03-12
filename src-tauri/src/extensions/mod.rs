@@ -11,11 +11,13 @@ use std::path::{Path, PathBuf};
 use bytes::Bytes;
 use error::{ExtensionsError, Result};
 use serde::{Deserialize, Serialize};
+use serde_json::{json, Value as JsonValue};
 use tauri::Manager;
 use zip::result::ZipError;
 use zip::ZipArchive;
 
 use crate::extensions::config::CONFIG as EXTENSIONS_CONFIG;
+use crate::extensions::runtime::proto;
 
 #[derive(Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -384,21 +386,21 @@ fn extract_archive(archive_data: &Bytes, target_dir: &Path) -> Result<()> {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(untagged)]
-pub enum Author {
+enum RawAuthor {
     Simple(String),
     Detailed { name: String },
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct PreferenceData {
+struct RawPreferenceData {
     pub title: String,
     pub value: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct Preference {
+struct RawPreference {
     pub name: String,
     #[serde(rename = "type")]
     pub r#type: String,
@@ -406,55 +408,220 @@ pub struct Preference {
     pub description: Option<String>,
     pub required: Option<bool>,
     #[serde(default)]
-    pub default: serde_json::Value,
-    pub data: Option<Vec<PreferenceData>>,
+    pub default: JsonValue,
+    pub data: Option<Vec<RawPreferenceData>>,
     pub label: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
-struct CommandInfo {
+struct RawCommandInfo {
     name: String,
     title: Option<String>,
     description: Option<String>,
     icon: Option<String>,
     mode: Option<String>,
     interval: Option<String>,
-    preferences: Option<Vec<Preference>>,
+    preferences: Option<Vec<RawPreference>>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
-struct PackageJson {
+struct RawPackageJson {
     name: Option<String>,
     title: Option<String>,
     description: Option<String>,
     icon: Option<String>,
-    author: Option<Author>,
+    author: Option<RawAuthor>,
     owner: Option<String>,
-    commands: Option<Vec<CommandInfo>>,
-    preferences: Option<Vec<Preference>>,
+    commands: Option<Vec<RawCommandInfo>>,
+    preferences: Option<Vec<RawPreference>>,
 }
 
-#[derive(Serialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct PluginInfo {
-    pub title: String,
-    pub description: Option<String>,
-    pub plugin_title: String,
-    pub plugin_name: String,
-    pub command_name: String,
-    pub plugin_path: String,
-    pub icon: Option<String>,
-    pub preferences: Option<Vec<Preference>>,
-    pub command_preferences: Option<Vec<Preference>>,
-    pub mode: Option<String>,
-    pub interval: Option<String>,
-    pub author: Option<Author>,
-    pub owner: Option<String>,
+fn normalize_optional_string(value: Option<String>) -> Option<String> {
+    value.and_then(|value| {
+        let trimmed = value.trim().to_string();
+        if trimmed.is_empty() {
+            None
+        } else {
+            Some(trimmed)
+        }
+    })
 }
 
-pub fn discover_plugins(app: &tauri::AppHandle) -> Result<Vec<PluginInfo>> {
+fn json_value_to_proto(value: JsonValue) -> ::prost_types::Value {
+    use prost_types::{value::Kind, ListValue, Struct, Value};
+
+    let kind = match value {
+        JsonValue::Null => Kind::NullValue(0),
+        JsonValue::Bool(value) => Kind::BoolValue(value),
+        JsonValue::Number(value) => Kind::NumberValue(value.as_f64().unwrap_or_default()),
+        JsonValue::String(value) => Kind::StringValue(value),
+        JsonValue::Array(values) => Kind::ListValue(ListValue {
+            values: values.into_iter().map(json_value_to_proto).collect(),
+        }),
+        JsonValue::Object(values) => Kind::StructValue(Struct {
+            fields: values
+                .into_iter()
+                .map(|(key, value)| (key, json_value_to_proto(value)))
+                .collect(),
+        }),
+    };
+
+    Value { kind: Some(kind) }
+}
+
+fn proto_value_to_json(value: &::prost_types::Value) -> JsonValue {
+    use prost_types::value::Kind;
+
+    match &value.kind {
+        Some(Kind::NullValue(_)) | None => JsonValue::Null,
+        Some(Kind::NumberValue(value)) => serde_json::Number::from_f64(*value)
+            .map(JsonValue::Number)
+            .unwrap_or(JsonValue::Null),
+        Some(Kind::StringValue(value)) => JsonValue::String(value.clone()),
+        Some(Kind::BoolValue(value)) => JsonValue::Bool(*value),
+        Some(Kind::StructValue(value)) => JsonValue::Object(
+            value
+                .fields
+                .iter()
+                .map(|(key, value)| (key.clone(), proto_value_to_json(value)))
+                .collect(),
+        ),
+        Some(Kind::ListValue(value)) => {
+            JsonValue::Array(value.values.iter().map(proto_value_to_json).collect())
+        }
+    }
+}
+
+fn raw_author_to_proto(author: Option<RawAuthor>) -> Option<proto::ManifestAuthor> {
+    author.and_then(|author| match author {
+        RawAuthor::Simple(value) => normalize_optional_string(Some(value)).map(|value| {
+            proto::ManifestAuthor {
+                author: Some(proto::manifest_author::Author::Simple(value)),
+            }
+        }),
+        RawAuthor::Detailed { name } => normalize_optional_string(Some(name)).map(|name| {
+            proto::ManifestAuthor {
+                author: Some(proto::manifest_author::Author::Detailed(proto::AuthorName {
+                    name,
+                })),
+            }
+        }),
+    })
+}
+
+fn raw_preference_to_proto(preference: RawPreference) -> proto::PreferenceDefinition {
+    proto::PreferenceDefinition {
+        name: preference.name.trim().to_string(),
+        r#type: preference.r#type.trim().to_string(),
+        title: normalize_optional_string(preference.title),
+        description: normalize_optional_string(preference.description),
+        required: preference.required,
+        default_value: match preference.default {
+            JsonValue::Null => None,
+            value => Some(json_value_to_proto(value)),
+        },
+        data: preference
+            .data
+            .unwrap_or_default()
+            .into_iter()
+            .map(|entry| proto::PreferenceOption {
+                title: entry.title,
+                value: entry.value,
+            })
+            .collect(),
+        label: normalize_optional_string(preference.label),
+    }
+}
+
+fn raw_command_to_proto(command: RawCommandInfo) -> proto::CommandManifest {
+    proto::CommandManifest {
+        name: command.name.trim().to_string(),
+        title: normalize_optional_string(command.title),
+        description: normalize_optional_string(command.description),
+        icon: normalize_optional_string(command.icon),
+        mode: normalize_optional_string(command.mode),
+        interval: normalize_optional_string(command.interval),
+        preferences: command
+            .preferences
+            .unwrap_or_default()
+            .into_iter()
+            .map(raw_preference_to_proto)
+            .collect(),
+    }
+}
+
+fn raw_package_json_to_proto(package_json: RawPackageJson) -> proto::ExtensionManifest {
+    proto::ExtensionManifest {
+        name: normalize_optional_string(package_json.name),
+        title: normalize_optional_string(package_json.title),
+        description: normalize_optional_string(package_json.description),
+        icon: normalize_optional_string(package_json.icon),
+        author: raw_author_to_proto(package_json.author),
+        owner: normalize_optional_string(package_json.owner),
+        commands: package_json
+            .commands
+            .unwrap_or_default()
+            .into_iter()
+            .map(raw_command_to_proto)
+            .collect(),
+        preferences: package_json
+            .preferences
+            .unwrap_or_default()
+            .into_iter()
+            .map(raw_preference_to_proto)
+            .collect(),
+    }
+}
+
+fn manifest_author_to_json(author: &proto::ManifestAuthor) -> JsonValue {
+    match &author.author {
+        Some(proto::manifest_author::Author::Simple(value)) => json!({ "simple": value }),
+        Some(proto::manifest_author::Author::Detailed(value)) => {
+            json!({ "detailed": { "name": value.name } })
+        }
+        None => JsonValue::Null,
+    }
+}
+
+fn preference_to_json(preference: &proto::PreferenceDefinition) -> JsonValue {
+    json!({
+        "name": preference.name,
+        "type": preference.r#type,
+        "title": preference.title,
+        "description": preference.description,
+        "required": preference.required,
+        "defaultValue": preference.default_value.as_ref().map(proto_value_to_json),
+        "data": preference.data.iter().map(|entry| {
+            json!({
+                "title": entry.title,
+                "value": entry.value,
+            })
+        }).collect::<Vec<_>>(),
+        "label": preference.label,
+    })
+}
+
+fn discovered_plugin_to_json(plugin: &proto::DiscoveredPlugin) -> JsonValue {
+    json!({
+        "title": plugin.title,
+        "description": plugin.description,
+        "pluginTitle": plugin.plugin_title,
+        "pluginName": plugin.plugin_name,
+        "commandName": plugin.command_name,
+        "pluginPath": plugin.plugin_path,
+        "icon": plugin.icon,
+        "preferences": plugin.preferences.iter().map(preference_to_json).collect::<Vec<_>>(),
+        "commandPreferences": plugin.command_preferences.iter().map(preference_to_json).collect::<Vec<_>>(),
+        "mode": plugin.mode,
+        "interval": plugin.interval,
+        "author": plugin.author.as_ref().map(manifest_author_to_json),
+        "owner": plugin.owner,
+    })
+}
+
+pub fn discover_plugins(app: &tauri::AppHandle) -> Result<Vec<proto::DiscoveredPlugin>> {
     let plugins_base_dir = get_extension_dir(app, "")?;
     let mut plugins = Vec::new();
 
@@ -489,7 +656,7 @@ pub fn discover_plugins(app: &tauri::AppHandle) -> Result<Vec<PluginInfo>> {
             }
         };
 
-        let package_json: PackageJson = match serde_json::from_str(&package_json_content) {
+        let package_json: RawPackageJson = match serde_json::from_str(&package_json_content) {
             Ok(parsed) => parsed,
             Err(error) => {
                 eprintln!("Error parsing package.json for plugin {plugin_dir_name}: {error}");
@@ -497,47 +664,54 @@ pub fn discover_plugins(app: &tauri::AppHandle) -> Result<Vec<PluginInfo>> {
             }
         };
 
-        if let Some(commands) = package_json.commands {
-            for command in commands {
-                let command_file_path = plugin_dir.join(format!("{}.js", command.name));
-                if command_file_path.exists() {
-                    let resolved_icon = resolve_plugin_icon_reference(
-                        &plugin_dir,
-                        command.icon.as_deref().or(package_json.icon.as_deref()),
-                    );
-                    plugins.push(PluginInfo {
-                        title: command
-                            .title
-                            .clone()
-                            .unwrap_or_else(|| command.name.clone()),
-                        description: command
-                            .description
-                            .or_else(|| package_json.description.clone()),
-                        plugin_title: package_json
-                            .title
-                            .clone()
-                            .unwrap_or_else(|| plugin_dir_name.clone()),
-                        plugin_name: package_json
-                            .name
-                            .clone()
-                            .unwrap_or_else(|| plugin_dir_name.clone()),
-                        command_name: command.name.clone(),
-                        plugin_path: command_file_path.to_string_lossy().to_string(),
-                        icon: resolved_icon,
-                        preferences: package_json.preferences.clone(),
-                        command_preferences: command.preferences,
-                        mode: command.mode,
-                        interval: command.interval,
-                        author: package_json.author.clone(),
-                        owner: package_json.owner.clone(),
-                    });
-                } else {
-                    eprintln!(
-                        "Command file {} not found for command {}",
-                        command_file_path.display(),
-                        command.name
-                    );
-                }
+        let manifest = raw_package_json_to_proto(package_json);
+        let plugin_title = manifest
+            .title
+            .clone()
+            .unwrap_or_else(|| plugin_dir_name.clone());
+        let plugin_name = manifest
+            .name
+            .clone()
+            .unwrap_or_else(|| plugin_dir_name.clone());
+
+        for command in &manifest.commands {
+            if command.name.trim().is_empty() {
+                continue;
+            }
+
+            let command_file_path = plugin_dir.join(format!("{}.js", command.name));
+            if command_file_path.exists() {
+                let resolved_icon = resolve_plugin_icon_reference(
+                    &plugin_dir,
+                    command.icon.as_deref().or(manifest.icon.as_deref()),
+                );
+                plugins.push(proto::DiscoveredPlugin {
+                    title: command
+                        .title
+                        .clone()
+                        .unwrap_or_else(|| command.name.clone()),
+                    description: command
+                        .description
+                        .clone()
+                        .or_else(|| manifest.description.clone()),
+                    plugin_title: plugin_title.clone(),
+                    plugin_name: plugin_name.clone(),
+                    command_name: command.name.clone(),
+                    plugin_path: command_file_path.to_string_lossy().to_string(),
+                    icon: resolved_icon,
+                    preferences: manifest.preferences.clone(),
+                    command_preferences: command.preferences.clone(),
+                    mode: command.mode.clone(),
+                    interval: command.interval.clone(),
+                    author: manifest.author.clone(),
+                    owner: manifest.owner.clone(),
+                });
+            } else {
+                eprintln!(
+                    "Command file {} not found for command {}",
+                    command_file_path.display(),
+                    command.name
+                );
             }
         }
     }
@@ -546,8 +720,13 @@ pub fn discover_plugins(app: &tauri::AppHandle) -> Result<Vec<PluginInfo>> {
 }
 
 #[tauri::command]
-pub fn get_discovered_plugins(app: tauri::AppHandle) -> Result<Vec<PluginInfo>> {
-    discover_plugins(&app)
+pub fn get_discovered_plugins(app: tauri::AppHandle) -> Result<Vec<JsonValue>> {
+    discover_plugins(&app).map(|plugins| {
+        plugins
+            .iter()
+            .map(discovered_plugin_to_json)
+            .collect::<Vec<_>>()
+    })
 }
 
 #[tauri::command]
