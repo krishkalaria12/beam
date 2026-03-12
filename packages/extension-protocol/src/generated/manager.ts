@@ -6,8 +6,16 @@
 
 /* eslint-disable */
 import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
+import {
+  CommandMode,
+  commandModeFromJSON,
+  commandModeToJSON,
+  LaunchType,
+  launchTypeFromJSON,
+  launchTypeToJSON,
+} from "./common";
 import { DesktopContextSnapshot, EnvironmentSnapshot } from "./environment";
-import { Struct } from "./google/protobuf/struct";
+import { Struct, Value } from "./google/protobuf/struct";
 
 export interface RuntimeLaunchPayload {
   extensionId: string;
@@ -21,11 +29,30 @@ export interface RuntimeLaunchPayload {
   fallbackText: string;
 }
 
+export interface LaunchPluginRequest {
+  pluginPath: string;
+  mode: CommandMode;
+  aiAccess: boolean;
+  launchArguments: { [key: string]: any } | undefined;
+  launchContext: { [key: string]: any } | undefined;
+  launchType: LaunchType;
+  commandName: string;
+  fallbackText: string;
+}
+
 export interface PingRequest {
 }
 
 export interface PingResponse {
   ok: boolean;
+}
+
+export interface AckResponse {
+  ok: boolean;
+}
+
+export interface ErrorResponse {
+  message: string;
 }
 
 export interface StartDevSessionRequest {
@@ -50,6 +77,66 @@ export interface StopDevSessionRequest {
 
 export interface StopDevSessionResponse {
   ok: boolean;
+}
+
+export interface GetPreferencesRequest {
+  extensionId: string;
+}
+
+export interface GetPreferencesResponse {
+  extensionId: string;
+  values: { [key: string]: any } | undefined;
+}
+
+export interface SetPreferencesRequest {
+  extensionId: string;
+  values: { [key: string]: any } | undefined;
+}
+
+export interface SetPreferencesResponse {
+  extensionId: string;
+  ok: boolean;
+}
+
+export interface DispatchViewEventRequest {
+  instanceId: number;
+  handlerName: string;
+  args: any[];
+}
+
+export interface DispatchToastActionRequest {
+  toastId: number;
+  actionType: string;
+}
+
+export interface TriggerToastHideRequest {
+  toastId: number;
+}
+
+export interface SetBrowserExtensionConnectionStatusRequest {
+  isConnected: boolean;
+}
+
+export interface ManagerRequest {
+  requestId: string;
+  ping?: PingRequest | undefined;
+  launchPlugin?: LaunchPluginRequest | undefined;
+  getPreferences?: GetPreferencesRequest | undefined;
+  setPreferences?: SetPreferencesRequest | undefined;
+  dispatchViewEvent?: DispatchViewEventRequest | undefined;
+  runtimeEvent?: RuntimeEvent | undefined;
+  dispatchToastAction?: DispatchToastActionRequest | undefined;
+  triggerToastHide?: TriggerToastHideRequest | undefined;
+  setBrowserExtensionConnectionStatus?: SetBrowserExtensionConnectionStatusRequest | undefined;
+}
+
+export interface ManagerResponse {
+  requestId: string;
+  ping?: PingResponse | undefined;
+  ack?: AckResponse | undefined;
+  error?: ErrorResponse | undefined;
+  getPreferences?: GetPreferencesResponse | undefined;
+  setPreferences?: SetPreferencesResponse | undefined;
 }
 
 export interface ShutdownEvent {
@@ -302,6 +389,215 @@ export const RuntimeLaunchPayload: MessageFns<RuntimeLaunchPayload> = {
   },
 };
 
+function createBaseLaunchPluginRequest(): LaunchPluginRequest {
+  return {
+    pluginPath: "",
+    mode: 0,
+    aiAccess: false,
+    launchArguments: undefined,
+    launchContext: undefined,
+    launchType: 0,
+    commandName: "",
+    fallbackText: "",
+  };
+}
+
+export const LaunchPluginRequest: MessageFns<LaunchPluginRequest> = {
+  encode(message: LaunchPluginRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.pluginPath !== "") {
+      writer.uint32(10).string(message.pluginPath);
+    }
+    if (message.mode !== 0) {
+      writer.uint32(16).int32(message.mode);
+    }
+    if (message.aiAccess !== false) {
+      writer.uint32(24).bool(message.aiAccess);
+    }
+    if (message.launchArguments !== undefined) {
+      Struct.encode(Struct.wrap(message.launchArguments), writer.uint32(34).fork()).join();
+    }
+    if (message.launchContext !== undefined) {
+      Struct.encode(Struct.wrap(message.launchContext), writer.uint32(42).fork()).join();
+    }
+    if (message.launchType !== 0) {
+      writer.uint32(48).int32(message.launchType);
+    }
+    if (message.commandName !== "") {
+      writer.uint32(58).string(message.commandName);
+    }
+    if (message.fallbackText !== "") {
+      writer.uint32(66).string(message.fallbackText);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): LaunchPluginRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseLaunchPluginRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.pluginPath = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 16) {
+            break;
+          }
+
+          message.mode = reader.int32() as any;
+          continue;
+        }
+        case 3: {
+          if (tag !== 24) {
+            break;
+          }
+
+          message.aiAccess = reader.bool();
+          continue;
+        }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.launchArguments = Struct.unwrap(Struct.decode(reader, reader.uint32()));
+          continue;
+        }
+        case 5: {
+          if (tag !== 42) {
+            break;
+          }
+
+          message.launchContext = Struct.unwrap(Struct.decode(reader, reader.uint32()));
+          continue;
+        }
+        case 6: {
+          if (tag !== 48) {
+            break;
+          }
+
+          message.launchType = reader.int32() as any;
+          continue;
+        }
+        case 7: {
+          if (tag !== 58) {
+            break;
+          }
+
+          message.commandName = reader.string();
+          continue;
+        }
+        case 8: {
+          if (tag !== 66) {
+            break;
+          }
+
+          message.fallbackText = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): LaunchPluginRequest {
+    return {
+      pluginPath: isSet(object.pluginPath)
+        ? globalThis.String(object.pluginPath)
+        : isSet(object.plugin_path)
+        ? globalThis.String(object.plugin_path)
+        : "",
+      mode: isSet(object.mode) ? commandModeFromJSON(object.mode) : 0,
+      aiAccess: isSet(object.aiAccess)
+        ? globalThis.Boolean(object.aiAccess)
+        : isSet(object.ai_access)
+        ? globalThis.Boolean(object.ai_access)
+        : false,
+      launchArguments: isObject(object.launchArguments)
+        ? object.launchArguments
+        : isObject(object.launch_arguments)
+        ? object.launch_arguments
+        : undefined,
+      launchContext: isObject(object.launchContext)
+        ? object.launchContext
+        : isObject(object.launch_context)
+        ? object.launch_context
+        : undefined,
+      launchType: isSet(object.launchType)
+        ? launchTypeFromJSON(object.launchType)
+        : isSet(object.launch_type)
+        ? launchTypeFromJSON(object.launch_type)
+        : 0,
+      commandName: isSet(object.commandName)
+        ? globalThis.String(object.commandName)
+        : isSet(object.command_name)
+        ? globalThis.String(object.command_name)
+        : "",
+      fallbackText: isSet(object.fallbackText)
+        ? globalThis.String(object.fallbackText)
+        : isSet(object.fallback_text)
+        ? globalThis.String(object.fallback_text)
+        : "",
+    };
+  },
+
+  toJSON(message: LaunchPluginRequest): unknown {
+    const obj: any = {};
+    if (message.pluginPath !== "") {
+      obj.pluginPath = message.pluginPath;
+    }
+    if (message.mode !== 0) {
+      obj.mode = commandModeToJSON(message.mode);
+    }
+    if (message.aiAccess !== false) {
+      obj.aiAccess = message.aiAccess;
+    }
+    if (message.launchArguments !== undefined) {
+      obj.launchArguments = message.launchArguments;
+    }
+    if (message.launchContext !== undefined) {
+      obj.launchContext = message.launchContext;
+    }
+    if (message.launchType !== 0) {
+      obj.launchType = launchTypeToJSON(message.launchType);
+    }
+    if (message.commandName !== "") {
+      obj.commandName = message.commandName;
+    }
+    if (message.fallbackText !== "") {
+      obj.fallbackText = message.fallbackText;
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<LaunchPluginRequest>): LaunchPluginRequest {
+    return LaunchPluginRequest.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<LaunchPluginRequest>): LaunchPluginRequest {
+    const message = createBaseLaunchPluginRequest();
+    message.pluginPath = object.pluginPath ?? "";
+    message.mode = object.mode ?? 0;
+    message.aiAccess = object.aiAccess ?? false;
+    message.launchArguments = object.launchArguments ?? undefined;
+    message.launchContext = object.launchContext ?? undefined;
+    message.launchType = object.launchType ?? 0;
+    message.commandName = object.commandName ?? "";
+    message.fallbackText = object.fallbackText ?? "";
+    return message;
+  },
+};
+
 function createBasePingRequest(): PingRequest {
   return {};
 }
@@ -399,6 +695,122 @@ export const PingResponse: MessageFns<PingResponse> = {
   fromPartial(object: DeepPartial<PingResponse>): PingResponse {
     const message = createBasePingResponse();
     message.ok = object.ok ?? false;
+    return message;
+  },
+};
+
+function createBaseAckResponse(): AckResponse {
+  return { ok: false };
+}
+
+export const AckResponse: MessageFns<AckResponse> = {
+  encode(message: AckResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.ok !== false) {
+      writer.uint32(8).bool(message.ok);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): AckResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseAckResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.ok = reader.bool();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): AckResponse {
+    return { ok: isSet(object.ok) ? globalThis.Boolean(object.ok) : false };
+  },
+
+  toJSON(message: AckResponse): unknown {
+    const obj: any = {};
+    if (message.ok !== false) {
+      obj.ok = message.ok;
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<AckResponse>): AckResponse {
+    return AckResponse.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<AckResponse>): AckResponse {
+    const message = createBaseAckResponse();
+    message.ok = object.ok ?? false;
+    return message;
+  },
+};
+
+function createBaseErrorResponse(): ErrorResponse {
+  return { message: "" };
+}
+
+export const ErrorResponse: MessageFns<ErrorResponse> = {
+  encode(message: ErrorResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.message !== "") {
+      writer.uint32(10).string(message.message);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ErrorResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseErrorResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.message = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ErrorResponse {
+    return { message: isSet(object.message) ? globalThis.String(object.message) : "" };
+  },
+
+  toJSON(message: ErrorResponse): unknown {
+    const obj: any = {};
+    if (message.message !== "") {
+      obj.message = message.message;
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<ErrorResponse>): ErrorResponse {
+    return ErrorResponse.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<ErrorResponse>): ErrorResponse {
+    const message = createBaseErrorResponse();
+    message.message = object.message ?? "";
     return message;
   },
 };
@@ -765,6 +1177,1069 @@ export const StopDevSessionResponse: MessageFns<StopDevSessionResponse> = {
   fromPartial(object: DeepPartial<StopDevSessionResponse>): StopDevSessionResponse {
     const message = createBaseStopDevSessionResponse();
     message.ok = object.ok ?? false;
+    return message;
+  },
+};
+
+function createBaseGetPreferencesRequest(): GetPreferencesRequest {
+  return { extensionId: "" };
+}
+
+export const GetPreferencesRequest: MessageFns<GetPreferencesRequest> = {
+  encode(message: GetPreferencesRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.extensionId !== "") {
+      writer.uint32(10).string(message.extensionId);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): GetPreferencesRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseGetPreferencesRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.extensionId = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): GetPreferencesRequest {
+    return {
+      extensionId: isSet(object.extensionId)
+        ? globalThis.String(object.extensionId)
+        : isSet(object.extension_id)
+        ? globalThis.String(object.extension_id)
+        : "",
+    };
+  },
+
+  toJSON(message: GetPreferencesRequest): unknown {
+    const obj: any = {};
+    if (message.extensionId !== "") {
+      obj.extensionId = message.extensionId;
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<GetPreferencesRequest>): GetPreferencesRequest {
+    return GetPreferencesRequest.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<GetPreferencesRequest>): GetPreferencesRequest {
+    const message = createBaseGetPreferencesRequest();
+    message.extensionId = object.extensionId ?? "";
+    return message;
+  },
+};
+
+function createBaseGetPreferencesResponse(): GetPreferencesResponse {
+  return { extensionId: "", values: undefined };
+}
+
+export const GetPreferencesResponse: MessageFns<GetPreferencesResponse> = {
+  encode(message: GetPreferencesResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.extensionId !== "") {
+      writer.uint32(10).string(message.extensionId);
+    }
+    if (message.values !== undefined) {
+      Struct.encode(Struct.wrap(message.values), writer.uint32(18).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): GetPreferencesResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseGetPreferencesResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.extensionId = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.values = Struct.unwrap(Struct.decode(reader, reader.uint32()));
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): GetPreferencesResponse {
+    return {
+      extensionId: isSet(object.extensionId)
+        ? globalThis.String(object.extensionId)
+        : isSet(object.extension_id)
+        ? globalThis.String(object.extension_id)
+        : "",
+      values: isObject(object.values) ? object.values : undefined,
+    };
+  },
+
+  toJSON(message: GetPreferencesResponse): unknown {
+    const obj: any = {};
+    if (message.extensionId !== "") {
+      obj.extensionId = message.extensionId;
+    }
+    if (message.values !== undefined) {
+      obj.values = message.values;
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<GetPreferencesResponse>): GetPreferencesResponse {
+    return GetPreferencesResponse.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<GetPreferencesResponse>): GetPreferencesResponse {
+    const message = createBaseGetPreferencesResponse();
+    message.extensionId = object.extensionId ?? "";
+    message.values = object.values ?? undefined;
+    return message;
+  },
+};
+
+function createBaseSetPreferencesRequest(): SetPreferencesRequest {
+  return { extensionId: "", values: undefined };
+}
+
+export const SetPreferencesRequest: MessageFns<SetPreferencesRequest> = {
+  encode(message: SetPreferencesRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.extensionId !== "") {
+      writer.uint32(10).string(message.extensionId);
+    }
+    if (message.values !== undefined) {
+      Struct.encode(Struct.wrap(message.values), writer.uint32(18).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): SetPreferencesRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseSetPreferencesRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.extensionId = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.values = Struct.unwrap(Struct.decode(reader, reader.uint32()));
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): SetPreferencesRequest {
+    return {
+      extensionId: isSet(object.extensionId)
+        ? globalThis.String(object.extensionId)
+        : isSet(object.extension_id)
+        ? globalThis.String(object.extension_id)
+        : "",
+      values: isObject(object.values) ? object.values : undefined,
+    };
+  },
+
+  toJSON(message: SetPreferencesRequest): unknown {
+    const obj: any = {};
+    if (message.extensionId !== "") {
+      obj.extensionId = message.extensionId;
+    }
+    if (message.values !== undefined) {
+      obj.values = message.values;
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<SetPreferencesRequest>): SetPreferencesRequest {
+    return SetPreferencesRequest.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<SetPreferencesRequest>): SetPreferencesRequest {
+    const message = createBaseSetPreferencesRequest();
+    message.extensionId = object.extensionId ?? "";
+    message.values = object.values ?? undefined;
+    return message;
+  },
+};
+
+function createBaseSetPreferencesResponse(): SetPreferencesResponse {
+  return { extensionId: "", ok: false };
+}
+
+export const SetPreferencesResponse: MessageFns<SetPreferencesResponse> = {
+  encode(message: SetPreferencesResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.extensionId !== "") {
+      writer.uint32(10).string(message.extensionId);
+    }
+    if (message.ok !== false) {
+      writer.uint32(16).bool(message.ok);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): SetPreferencesResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseSetPreferencesResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.extensionId = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 16) {
+            break;
+          }
+
+          message.ok = reader.bool();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): SetPreferencesResponse {
+    return {
+      extensionId: isSet(object.extensionId)
+        ? globalThis.String(object.extensionId)
+        : isSet(object.extension_id)
+        ? globalThis.String(object.extension_id)
+        : "",
+      ok: isSet(object.ok) ? globalThis.Boolean(object.ok) : false,
+    };
+  },
+
+  toJSON(message: SetPreferencesResponse): unknown {
+    const obj: any = {};
+    if (message.extensionId !== "") {
+      obj.extensionId = message.extensionId;
+    }
+    if (message.ok !== false) {
+      obj.ok = message.ok;
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<SetPreferencesResponse>): SetPreferencesResponse {
+    return SetPreferencesResponse.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<SetPreferencesResponse>): SetPreferencesResponse {
+    const message = createBaseSetPreferencesResponse();
+    message.extensionId = object.extensionId ?? "";
+    message.ok = object.ok ?? false;
+    return message;
+  },
+};
+
+function createBaseDispatchViewEventRequest(): DispatchViewEventRequest {
+  return { instanceId: 0, handlerName: "", args: [] };
+}
+
+export const DispatchViewEventRequest: MessageFns<DispatchViewEventRequest> = {
+  encode(message: DispatchViewEventRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.instanceId !== 0) {
+      writer.uint32(8).uint32(message.instanceId);
+    }
+    if (message.handlerName !== "") {
+      writer.uint32(18).string(message.handlerName);
+    }
+    for (const v of message.args) {
+      Value.encode(Value.wrap(v!), writer.uint32(26).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): DispatchViewEventRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseDispatchViewEventRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.instanceId = reader.uint32();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.handlerName = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.args.push(Value.unwrap(Value.decode(reader, reader.uint32())));
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): DispatchViewEventRequest {
+    return {
+      instanceId: isSet(object.instanceId)
+        ? globalThis.Number(object.instanceId)
+        : isSet(object.instance_id)
+        ? globalThis.Number(object.instance_id)
+        : 0,
+      handlerName: isSet(object.handlerName)
+        ? globalThis.String(object.handlerName)
+        : isSet(object.handler_name)
+        ? globalThis.String(object.handler_name)
+        : "",
+      args: globalThis.Array.isArray(object?.args) ? [...object.args] : [],
+    };
+  },
+
+  toJSON(message: DispatchViewEventRequest): unknown {
+    const obj: any = {};
+    if (message.instanceId !== 0) {
+      obj.instanceId = Math.round(message.instanceId);
+    }
+    if (message.handlerName !== "") {
+      obj.handlerName = message.handlerName;
+    }
+    if (message.args?.length) {
+      obj.args = message.args;
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<DispatchViewEventRequest>): DispatchViewEventRequest {
+    return DispatchViewEventRequest.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<DispatchViewEventRequest>): DispatchViewEventRequest {
+    const message = createBaseDispatchViewEventRequest();
+    message.instanceId = object.instanceId ?? 0;
+    message.handlerName = object.handlerName ?? "";
+    message.args = object.args?.map((e) => e) || [];
+    return message;
+  },
+};
+
+function createBaseDispatchToastActionRequest(): DispatchToastActionRequest {
+  return { toastId: 0, actionType: "" };
+}
+
+export const DispatchToastActionRequest: MessageFns<DispatchToastActionRequest> = {
+  encode(message: DispatchToastActionRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.toastId !== 0) {
+      writer.uint32(8).uint32(message.toastId);
+    }
+    if (message.actionType !== "") {
+      writer.uint32(18).string(message.actionType);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): DispatchToastActionRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseDispatchToastActionRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.toastId = reader.uint32();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.actionType = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): DispatchToastActionRequest {
+    return {
+      toastId: isSet(object.toastId)
+        ? globalThis.Number(object.toastId)
+        : isSet(object.toast_id)
+        ? globalThis.Number(object.toast_id)
+        : 0,
+      actionType: isSet(object.actionType)
+        ? globalThis.String(object.actionType)
+        : isSet(object.action_type)
+        ? globalThis.String(object.action_type)
+        : "",
+    };
+  },
+
+  toJSON(message: DispatchToastActionRequest): unknown {
+    const obj: any = {};
+    if (message.toastId !== 0) {
+      obj.toastId = Math.round(message.toastId);
+    }
+    if (message.actionType !== "") {
+      obj.actionType = message.actionType;
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<DispatchToastActionRequest>): DispatchToastActionRequest {
+    return DispatchToastActionRequest.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<DispatchToastActionRequest>): DispatchToastActionRequest {
+    const message = createBaseDispatchToastActionRequest();
+    message.toastId = object.toastId ?? 0;
+    message.actionType = object.actionType ?? "";
+    return message;
+  },
+};
+
+function createBaseTriggerToastHideRequest(): TriggerToastHideRequest {
+  return { toastId: 0 };
+}
+
+export const TriggerToastHideRequest: MessageFns<TriggerToastHideRequest> = {
+  encode(message: TriggerToastHideRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.toastId !== 0) {
+      writer.uint32(8).uint32(message.toastId);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): TriggerToastHideRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseTriggerToastHideRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.toastId = reader.uint32();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): TriggerToastHideRequest {
+    return {
+      toastId: isSet(object.toastId)
+        ? globalThis.Number(object.toastId)
+        : isSet(object.toast_id)
+        ? globalThis.Number(object.toast_id)
+        : 0,
+    };
+  },
+
+  toJSON(message: TriggerToastHideRequest): unknown {
+    const obj: any = {};
+    if (message.toastId !== 0) {
+      obj.toastId = Math.round(message.toastId);
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<TriggerToastHideRequest>): TriggerToastHideRequest {
+    return TriggerToastHideRequest.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<TriggerToastHideRequest>): TriggerToastHideRequest {
+    const message = createBaseTriggerToastHideRequest();
+    message.toastId = object.toastId ?? 0;
+    return message;
+  },
+};
+
+function createBaseSetBrowserExtensionConnectionStatusRequest(): SetBrowserExtensionConnectionStatusRequest {
+  return { isConnected: false };
+}
+
+export const SetBrowserExtensionConnectionStatusRequest: MessageFns<SetBrowserExtensionConnectionStatusRequest> = {
+  encode(message: SetBrowserExtensionConnectionStatusRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.isConnected !== false) {
+      writer.uint32(8).bool(message.isConnected);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): SetBrowserExtensionConnectionStatusRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseSetBrowserExtensionConnectionStatusRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.isConnected = reader.bool();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): SetBrowserExtensionConnectionStatusRequest {
+    return {
+      isConnected: isSet(object.isConnected)
+        ? globalThis.Boolean(object.isConnected)
+        : isSet(object.is_connected)
+        ? globalThis.Boolean(object.is_connected)
+        : false,
+    };
+  },
+
+  toJSON(message: SetBrowserExtensionConnectionStatusRequest): unknown {
+    const obj: any = {};
+    if (message.isConnected !== false) {
+      obj.isConnected = message.isConnected;
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<SetBrowserExtensionConnectionStatusRequest>): SetBrowserExtensionConnectionStatusRequest {
+    return SetBrowserExtensionConnectionStatusRequest.fromPartial(base ?? {});
+  },
+  fromPartial(
+    object: DeepPartial<SetBrowserExtensionConnectionStatusRequest>,
+  ): SetBrowserExtensionConnectionStatusRequest {
+    const message = createBaseSetBrowserExtensionConnectionStatusRequest();
+    message.isConnected = object.isConnected ?? false;
+    return message;
+  },
+};
+
+function createBaseManagerRequest(): ManagerRequest {
+  return {
+    requestId: "",
+    ping: undefined,
+    launchPlugin: undefined,
+    getPreferences: undefined,
+    setPreferences: undefined,
+    dispatchViewEvent: undefined,
+    runtimeEvent: undefined,
+    dispatchToastAction: undefined,
+    triggerToastHide: undefined,
+    setBrowserExtensionConnectionStatus: undefined,
+  };
+}
+
+export const ManagerRequest: MessageFns<ManagerRequest> = {
+  encode(message: ManagerRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.requestId !== "") {
+      writer.uint32(10).string(message.requestId);
+    }
+    if (message.ping !== undefined) {
+      PingRequest.encode(message.ping, writer.uint32(82).fork()).join();
+    }
+    if (message.launchPlugin !== undefined) {
+      LaunchPluginRequest.encode(message.launchPlugin, writer.uint32(90).fork()).join();
+    }
+    if (message.getPreferences !== undefined) {
+      GetPreferencesRequest.encode(message.getPreferences, writer.uint32(98).fork()).join();
+    }
+    if (message.setPreferences !== undefined) {
+      SetPreferencesRequest.encode(message.setPreferences, writer.uint32(106).fork()).join();
+    }
+    if (message.dispatchViewEvent !== undefined) {
+      DispatchViewEventRequest.encode(message.dispatchViewEvent, writer.uint32(114).fork()).join();
+    }
+    if (message.runtimeEvent !== undefined) {
+      RuntimeEvent.encode(message.runtimeEvent, writer.uint32(122).fork()).join();
+    }
+    if (message.dispatchToastAction !== undefined) {
+      DispatchToastActionRequest.encode(message.dispatchToastAction, writer.uint32(130).fork()).join();
+    }
+    if (message.triggerToastHide !== undefined) {
+      TriggerToastHideRequest.encode(message.triggerToastHide, writer.uint32(138).fork()).join();
+    }
+    if (message.setBrowserExtensionConnectionStatus !== undefined) {
+      SetBrowserExtensionConnectionStatusRequest.encode(
+        message.setBrowserExtensionConnectionStatus,
+        writer.uint32(146).fork(),
+      ).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ManagerRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseManagerRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.requestId = reader.string();
+          continue;
+        }
+        case 10: {
+          if (tag !== 82) {
+            break;
+          }
+
+          message.ping = PingRequest.decode(reader, reader.uint32());
+          continue;
+        }
+        case 11: {
+          if (tag !== 90) {
+            break;
+          }
+
+          message.launchPlugin = LaunchPluginRequest.decode(reader, reader.uint32());
+          continue;
+        }
+        case 12: {
+          if (tag !== 98) {
+            break;
+          }
+
+          message.getPreferences = GetPreferencesRequest.decode(reader, reader.uint32());
+          continue;
+        }
+        case 13: {
+          if (tag !== 106) {
+            break;
+          }
+
+          message.setPreferences = SetPreferencesRequest.decode(reader, reader.uint32());
+          continue;
+        }
+        case 14: {
+          if (tag !== 114) {
+            break;
+          }
+
+          message.dispatchViewEvent = DispatchViewEventRequest.decode(reader, reader.uint32());
+          continue;
+        }
+        case 15: {
+          if (tag !== 122) {
+            break;
+          }
+
+          message.runtimeEvent = RuntimeEvent.decode(reader, reader.uint32());
+          continue;
+        }
+        case 16: {
+          if (tag !== 130) {
+            break;
+          }
+
+          message.dispatchToastAction = DispatchToastActionRequest.decode(reader, reader.uint32());
+          continue;
+        }
+        case 17: {
+          if (tag !== 138) {
+            break;
+          }
+
+          message.triggerToastHide = TriggerToastHideRequest.decode(reader, reader.uint32());
+          continue;
+        }
+        case 18: {
+          if (tag !== 146) {
+            break;
+          }
+
+          message.setBrowserExtensionConnectionStatus = SetBrowserExtensionConnectionStatusRequest.decode(
+            reader,
+            reader.uint32(),
+          );
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ManagerRequest {
+    return {
+      requestId: isSet(object.requestId)
+        ? globalThis.String(object.requestId)
+        : isSet(object.request_id)
+        ? globalThis.String(object.request_id)
+        : "",
+      ping: isSet(object.ping) ? PingRequest.fromJSON(object.ping) : undefined,
+      launchPlugin: isSet(object.launchPlugin)
+        ? LaunchPluginRequest.fromJSON(object.launchPlugin)
+        : isSet(object.launch_plugin)
+        ? LaunchPluginRequest.fromJSON(object.launch_plugin)
+        : undefined,
+      getPreferences: isSet(object.getPreferences)
+        ? GetPreferencesRequest.fromJSON(object.getPreferences)
+        : isSet(object.get_preferences)
+        ? GetPreferencesRequest.fromJSON(object.get_preferences)
+        : undefined,
+      setPreferences: isSet(object.setPreferences)
+        ? SetPreferencesRequest.fromJSON(object.setPreferences)
+        : isSet(object.set_preferences)
+        ? SetPreferencesRequest.fromJSON(object.set_preferences)
+        : undefined,
+      dispatchViewEvent: isSet(object.dispatchViewEvent)
+        ? DispatchViewEventRequest.fromJSON(object.dispatchViewEvent)
+        : isSet(object.dispatch_view_event)
+        ? DispatchViewEventRequest.fromJSON(object.dispatch_view_event)
+        : undefined,
+      runtimeEvent: isSet(object.runtimeEvent)
+        ? RuntimeEvent.fromJSON(object.runtimeEvent)
+        : isSet(object.runtime_event)
+        ? RuntimeEvent.fromJSON(object.runtime_event)
+        : undefined,
+      dispatchToastAction: isSet(object.dispatchToastAction)
+        ? DispatchToastActionRequest.fromJSON(object.dispatchToastAction)
+        : isSet(object.dispatch_toast_action)
+        ? DispatchToastActionRequest.fromJSON(object.dispatch_toast_action)
+        : undefined,
+      triggerToastHide: isSet(object.triggerToastHide)
+        ? TriggerToastHideRequest.fromJSON(object.triggerToastHide)
+        : isSet(object.trigger_toast_hide)
+        ? TriggerToastHideRequest.fromJSON(object.trigger_toast_hide)
+        : undefined,
+      setBrowserExtensionConnectionStatus: isSet(object.setBrowserExtensionConnectionStatus)
+        ? SetBrowserExtensionConnectionStatusRequest.fromJSON(object.setBrowserExtensionConnectionStatus)
+        : isSet(object.set_browser_extension_connection_status)
+        ? SetBrowserExtensionConnectionStatusRequest.fromJSON(object.set_browser_extension_connection_status)
+        : undefined,
+    };
+  },
+
+  toJSON(message: ManagerRequest): unknown {
+    const obj: any = {};
+    if (message.requestId !== "") {
+      obj.requestId = message.requestId;
+    }
+    if (message.ping !== undefined) {
+      obj.ping = PingRequest.toJSON(message.ping);
+    }
+    if (message.launchPlugin !== undefined) {
+      obj.launchPlugin = LaunchPluginRequest.toJSON(message.launchPlugin);
+    }
+    if (message.getPreferences !== undefined) {
+      obj.getPreferences = GetPreferencesRequest.toJSON(message.getPreferences);
+    }
+    if (message.setPreferences !== undefined) {
+      obj.setPreferences = SetPreferencesRequest.toJSON(message.setPreferences);
+    }
+    if (message.dispatchViewEvent !== undefined) {
+      obj.dispatchViewEvent = DispatchViewEventRequest.toJSON(message.dispatchViewEvent);
+    }
+    if (message.runtimeEvent !== undefined) {
+      obj.runtimeEvent = RuntimeEvent.toJSON(message.runtimeEvent);
+    }
+    if (message.dispatchToastAction !== undefined) {
+      obj.dispatchToastAction = DispatchToastActionRequest.toJSON(message.dispatchToastAction);
+    }
+    if (message.triggerToastHide !== undefined) {
+      obj.triggerToastHide = TriggerToastHideRequest.toJSON(message.triggerToastHide);
+    }
+    if (message.setBrowserExtensionConnectionStatus !== undefined) {
+      obj.setBrowserExtensionConnectionStatus = SetBrowserExtensionConnectionStatusRequest.toJSON(
+        message.setBrowserExtensionConnectionStatus,
+      );
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<ManagerRequest>): ManagerRequest {
+    return ManagerRequest.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<ManagerRequest>): ManagerRequest {
+    const message = createBaseManagerRequest();
+    message.requestId = object.requestId ?? "";
+    message.ping = (object.ping !== undefined && object.ping !== null)
+      ? PingRequest.fromPartial(object.ping)
+      : undefined;
+    message.launchPlugin = (object.launchPlugin !== undefined && object.launchPlugin !== null)
+      ? LaunchPluginRequest.fromPartial(object.launchPlugin)
+      : undefined;
+    message.getPreferences = (object.getPreferences !== undefined && object.getPreferences !== null)
+      ? GetPreferencesRequest.fromPartial(object.getPreferences)
+      : undefined;
+    message.setPreferences = (object.setPreferences !== undefined && object.setPreferences !== null)
+      ? SetPreferencesRequest.fromPartial(object.setPreferences)
+      : undefined;
+    message.dispatchViewEvent = (object.dispatchViewEvent !== undefined && object.dispatchViewEvent !== null)
+      ? DispatchViewEventRequest.fromPartial(object.dispatchViewEvent)
+      : undefined;
+    message.runtimeEvent = (object.runtimeEvent !== undefined && object.runtimeEvent !== null)
+      ? RuntimeEvent.fromPartial(object.runtimeEvent)
+      : undefined;
+    message.dispatchToastAction = (object.dispatchToastAction !== undefined && object.dispatchToastAction !== null)
+      ? DispatchToastActionRequest.fromPartial(object.dispatchToastAction)
+      : undefined;
+    message.triggerToastHide = (object.triggerToastHide !== undefined && object.triggerToastHide !== null)
+      ? TriggerToastHideRequest.fromPartial(object.triggerToastHide)
+      : undefined;
+    message.setBrowserExtensionConnectionStatus =
+      (object.setBrowserExtensionConnectionStatus !== undefined && object.setBrowserExtensionConnectionStatus !== null)
+        ? SetBrowserExtensionConnectionStatusRequest.fromPartial(object.setBrowserExtensionConnectionStatus)
+        : undefined;
+    return message;
+  },
+};
+
+function createBaseManagerResponse(): ManagerResponse {
+  return {
+    requestId: "",
+    ping: undefined,
+    ack: undefined,
+    error: undefined,
+    getPreferences: undefined,
+    setPreferences: undefined,
+  };
+}
+
+export const ManagerResponse: MessageFns<ManagerResponse> = {
+  encode(message: ManagerResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.requestId !== "") {
+      writer.uint32(10).string(message.requestId);
+    }
+    if (message.ping !== undefined) {
+      PingResponse.encode(message.ping, writer.uint32(82).fork()).join();
+    }
+    if (message.ack !== undefined) {
+      AckResponse.encode(message.ack, writer.uint32(90).fork()).join();
+    }
+    if (message.error !== undefined) {
+      ErrorResponse.encode(message.error, writer.uint32(98).fork()).join();
+    }
+    if (message.getPreferences !== undefined) {
+      GetPreferencesResponse.encode(message.getPreferences, writer.uint32(106).fork()).join();
+    }
+    if (message.setPreferences !== undefined) {
+      SetPreferencesResponse.encode(message.setPreferences, writer.uint32(114).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ManagerResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseManagerResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.requestId = reader.string();
+          continue;
+        }
+        case 10: {
+          if (tag !== 82) {
+            break;
+          }
+
+          message.ping = PingResponse.decode(reader, reader.uint32());
+          continue;
+        }
+        case 11: {
+          if (tag !== 90) {
+            break;
+          }
+
+          message.ack = AckResponse.decode(reader, reader.uint32());
+          continue;
+        }
+        case 12: {
+          if (tag !== 98) {
+            break;
+          }
+
+          message.error = ErrorResponse.decode(reader, reader.uint32());
+          continue;
+        }
+        case 13: {
+          if (tag !== 106) {
+            break;
+          }
+
+          message.getPreferences = GetPreferencesResponse.decode(reader, reader.uint32());
+          continue;
+        }
+        case 14: {
+          if (tag !== 114) {
+            break;
+          }
+
+          message.setPreferences = SetPreferencesResponse.decode(reader, reader.uint32());
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ManagerResponse {
+    return {
+      requestId: isSet(object.requestId)
+        ? globalThis.String(object.requestId)
+        : isSet(object.request_id)
+        ? globalThis.String(object.request_id)
+        : "",
+      ping: isSet(object.ping) ? PingResponse.fromJSON(object.ping) : undefined,
+      ack: isSet(object.ack) ? AckResponse.fromJSON(object.ack) : undefined,
+      error: isSet(object.error) ? ErrorResponse.fromJSON(object.error) : undefined,
+      getPreferences: isSet(object.getPreferences)
+        ? GetPreferencesResponse.fromJSON(object.getPreferences)
+        : isSet(object.get_preferences)
+        ? GetPreferencesResponse.fromJSON(object.get_preferences)
+        : undefined,
+      setPreferences: isSet(object.setPreferences)
+        ? SetPreferencesResponse.fromJSON(object.setPreferences)
+        : isSet(object.set_preferences)
+        ? SetPreferencesResponse.fromJSON(object.set_preferences)
+        : undefined,
+    };
+  },
+
+  toJSON(message: ManagerResponse): unknown {
+    const obj: any = {};
+    if (message.requestId !== "") {
+      obj.requestId = message.requestId;
+    }
+    if (message.ping !== undefined) {
+      obj.ping = PingResponse.toJSON(message.ping);
+    }
+    if (message.ack !== undefined) {
+      obj.ack = AckResponse.toJSON(message.ack);
+    }
+    if (message.error !== undefined) {
+      obj.error = ErrorResponse.toJSON(message.error);
+    }
+    if (message.getPreferences !== undefined) {
+      obj.getPreferences = GetPreferencesResponse.toJSON(message.getPreferences);
+    }
+    if (message.setPreferences !== undefined) {
+      obj.setPreferences = SetPreferencesResponse.toJSON(message.setPreferences);
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<ManagerResponse>): ManagerResponse {
+    return ManagerResponse.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<ManagerResponse>): ManagerResponse {
+    const message = createBaseManagerResponse();
+    message.requestId = object.requestId ?? "";
+    message.ping = (object.ping !== undefined && object.ping !== null)
+      ? PingResponse.fromPartial(object.ping)
+      : undefined;
+    message.ack = (object.ack !== undefined && object.ack !== null) ? AckResponse.fromPartial(object.ack) : undefined;
+    message.error = (object.error !== undefined && object.error !== null)
+      ? ErrorResponse.fromPartial(object.error)
+      : undefined;
+    message.getPreferences = (object.getPreferences !== undefined && object.getPreferences !== null)
+      ? GetPreferencesResponse.fromPartial(object.getPreferences)
+      : undefined;
+    message.setPreferences = (object.setPreferences !== undefined && object.setPreferences !== null)
+      ? SetPreferencesResponse.fromPartial(object.setPreferences)
+      : undefined;
     return message;
   },
 };

@@ -1,12 +1,8 @@
 import { isTauri } from "@tauri-apps/api/core";
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
-import { appCacheDir, appLocalDataDir } from "@tauri-apps/api/path";
-import { Command, open as shellOpen, type Child } from "@tauri-apps/plugin-shell";
+import { open as shellOpen } from "@tauri-apps/plugin-shell";
 import { SidecarMessageWithPluginsSchema, type Command as ProtocolCommand } from "@flare/protocol";
-import { Unpackr } from "msgpackr";
-import { inflate } from "pako";
-import { EXTENSIONS_PREFERENCE_REQUEST_TIMEOUT_MS } from "@/modules/extensions/constants";
 import {
   parseAiAskRequest,
   parseConfirmAlertRequest,
@@ -18,10 +14,22 @@ import {
   type DiscoveredPluginRecord,
   type ExtensionMode,
 } from "@/modules/extensions/sidecar/discovery";
+import {
+  buildBrowserExtensionStatusManagerRequest,
+  buildDispatchToastActionManagerRequest,
+  buildDispatchViewEventManagerRequest,
+  buildGetPreferencesManagerRequest,
+  buildLaunchPluginManagerRequest,
+  buildPopViewManagerRequest,
+  buildSetPreferencesManagerRequest,
+  buildTriggerToastHideManagerRequest,
+  decodeManagerResponse,
+  encodeManagerRequest,
+} from "@/modules/extensions/sidecar/manager-protocol";
 import { persistentExtensionRunnerManager } from "@/modules/extensions/background/persistent-runners";
 import { isProtocolCommandType } from "@/modules/extensions/sidecar/protocol";
-import { concatChunks, decodeTextPayload, toByteChunk } from "@/modules/extensions/sidecar/stream";
 import { useExtensionRuntimeStore } from "@/modules/extensions/runtime/store";
+import type { ManagerRequest, ManagerResponse } from "@beam/extension-protocol";
 
 interface RunPluginPayload {
   pluginPath: string;
@@ -30,11 +38,12 @@ interface RunPluginPayload {
   arguments?: Record<string, unknown>;
   launchContext?: Record<string, unknown>;
   launchType?: string;
+  commandName?: string;
 }
 
 interface SidecarEvent {
   action: string;
-  payload: Record<string, unknown> | RunPluginPayload;
+  payload: Record<string, unknown>;
 }
 
 export type ExtensionSidecarMessageEvent =
@@ -50,11 +59,6 @@ export type ExtensionSidecarMessageEvent =
   | { type: "log"; payload: unknown };
 
 type SidecarEventListener = (event: ExtensionSidecarMessageEvent) => void;
-interface PendingPreferenceRequest {
-  resolve: (values: Record<string, unknown>) => void;
-  reject: (error: Error) => void;
-  timeoutId: ReturnType<typeof setTimeout>;
-}
 
 interface SidecarRequestFailureLog {
   tag: "extensions-sidecar-request-failure";
@@ -82,15 +86,14 @@ function toRecord(value: unknown): Record<string, unknown> | undefined {
 }
 
 class ExtensionSidecarService {
-  private child: Child | null = null;
+  private runtimeStarted = false;
   private startPromise: Promise<void> | null = null;
-  private unpackr = new Unpackr();
-  private pendingStdout: Uint8Array<ArrayBufferLike> = new Uint8Array(0);
+  private runtimeMessageUnlisten: UnlistenFn | null = null;
+  private runtimeStderrUnlisten: UnlistenFn | null = null;
   private listeners = new Set<SidecarEventListener>();
   private oauthTokenStore = new Map<string, Record<string, unknown>>();
   private browserExtensionStatusPollId: ReturnType<typeof setInterval> | null = null;
   private pendingOauthStates = new Set<string>();
-  private pendingPreferenceResolvers = new Map<string, PendingPreferenceRequest[]>();
 
   private toErrorMessage(error: unknown): string {
     return error instanceof Error ? error.message : String(error);
@@ -109,83 +112,57 @@ class ExtensionSidecarService {
   }
 
   dispatchEvent(instanceId: number, handlerName: string, args: unknown[] = []): void {
-    this.writeEvent({
-      action: "dispatch-event",
-      payload: {
+    void this.sendManagerRequest(
+      buildDispatchViewEventManagerRequest({
         instanceId,
         handlerName,
         args,
-      },
-    });
-  }
-
-  private requestPreferences(pluginName: string): void {
-    this.writeEvent({
-      action: "get-preferences",
-      payload: { pluginName },
-    });
-  }
-
-  private writePreferences(pluginName: string, values: Record<string, unknown>): void {
-    this.writeEvent({
-      action: "set-preferences",
-      payload: { pluginName, values },
+      }),
+    ).catch((error) => {
+      console.error("[extensions-sidecar] dispatch event failed:", error);
     });
   }
 
   async getPreferences(pluginName: string): Promise<Record<string, unknown>> {
-    await this.start();
+    const response = await this.sendManagerRequest(
+      buildGetPreferencesManagerRequest(pluginName),
+    );
+    if (response.error) {
+      throw new Error(response.error.message);
+    }
 
-    return await new Promise<Record<string, unknown>>((resolve, reject) => {
-      const timeoutId = setTimeout(() => {
-        const pending = this.pendingPreferenceResolvers.get(pluginName) ?? [];
-        const remaining = pending.filter((entry) => entry.timeoutId !== timeoutId);
-        if (remaining.length > 0) {
-          this.pendingPreferenceResolvers.set(pluginName, remaining);
-        } else {
-          this.pendingPreferenceResolvers.delete(pluginName);
-        }
-        reject(new Error(`Timed out while loading preferences for "${pluginName}".`));
-      }, EXTENSIONS_PREFERENCE_REQUEST_TIMEOUT_MS);
-      const pendingRequest: PendingPreferenceRequest = {
-        resolve,
-        reject,
-        timeoutId,
-      };
-      const pending = this.pendingPreferenceResolvers.get(pluginName) ?? [];
-      this.pendingPreferenceResolvers.set(pluginName, [...pending, pendingRequest]);
-      this.requestPreferences(pluginName);
-    });
+    return response.getPreferences?.values ?? {};
   }
 
   async setPreferences(pluginName: string, values: Record<string, unknown>): Promise<void> {
-    await this.start();
-    this.writePreferences(pluginName, values);
+    const response = await this.sendManagerRequest(
+      buildSetPreferencesManagerRequest(pluginName, values),
+    );
+    if (response.error) {
+      throw new Error(response.error.message);
+    }
   }
 
   popView(): void {
-    this.writeEvent({
-      action: "pop-view",
-      payload: {},
+    void this.sendManagerRequest(buildPopViewManagerRequest()).catch((error) => {
+      console.error("[extensions-sidecar] pop view failed:", error);
     });
   }
 
   dispatchToastAction(toastId: number, actionType: "primary" | "secondary"): void {
-    this.writeEvent({
-      action: "dispatch-toast-action",
-      payload: {
+    void this.sendManagerRequest(
+      buildDispatchToastActionManagerRequest({
         toastId,
         actionType,
-      },
+      }),
+    ).catch((error) => {
+      console.error("[extensions-sidecar] dispatch toast action failed:", error);
     });
   }
 
   triggerToastHide(toastId: number): void {
-    this.writeEvent({
-      action: "trigger-toast-hide",
-      payload: {
-        toastId,
-      },
+    void this.sendManagerRequest(buildTriggerToastHideManagerRequest(toastId)).catch((error) => {
+      console.error("[extensions-sidecar] trigger toast hide failed:", error);
     });
   }
 
@@ -204,18 +181,21 @@ class ExtensionSidecarService {
   }
 
   private sendResponse(action: string, payload: Record<string, unknown>): void {
-    this.writeEvent({ action, payload });
-  }
-
-  private setBrowserExtensionConnectionStatus(isConnected: boolean): void {
-    this.writeEvent({
-      action: "browser-extension-connection-status",
-      payload: { isConnected },
+    void this.writeEvent({ action, payload }).catch((error) => {
+      console.error("[extensions-sidecar] response write failed:", error);
     });
   }
 
+  private setBrowserExtensionConnectionStatus(isConnected: boolean): void {
+    void this.sendManagerRequest(buildBrowserExtensionStatusManagerRequest(isConnected)).catch(
+      (error) => {
+        console.error("[extensions-sidecar] browser extension status update failed:", error);
+      },
+    );
+  }
+
   private async refreshBrowserExtensionConnectionStatus(): Promise<void> {
-    if (!this.child) {
+    if (!this.runtimeStarted) {
       return;
     }
 
@@ -349,6 +329,7 @@ class ExtensionSidecarService {
         arguments: toRecord(payload.arguments),
         launchContext: toRecord(payload.context),
         launchType: payload.type,
+        commandName: command.commandName,
       });
 
       this.sendResponse("launch-command-response", {
@@ -436,7 +417,7 @@ class ExtensionSidecarService {
       return false;
     }
 
-    if (!this.child) {
+    if (!this.runtimeStarted) {
       return false;
     }
 
@@ -856,74 +837,16 @@ class ExtensionSidecarService {
       case "log":
         this.emit({ type: "log", payload: message.payload });
         return;
-      case "plugin-list":
-      case "preference-values":
-        if (message.type === "preference-values") {
-          const pluginName = message.payload.pluginName;
-          const pendingResolvers = this.pendingPreferenceResolvers.get(pluginName) ?? [];
-          if (pendingResolvers.length > 0) {
-            this.pendingPreferenceResolvers.delete(pluginName);
-            for (const pending of pendingResolvers) {
-              clearTimeout(pending.timeoutId);
-              pending.resolve(message.payload.values);
-            }
-          }
-        }
-        return;
       default:
         return;
     }
-  }
-
-  private consumeStdoutChunk(data: unknown): void {
-    const chunk = toByteChunk(data);
-    if (chunk.length === 0) {
-      return;
-    }
-
-    this.pendingStdout = concatChunks(this.pendingStdout, chunk);
-    while (this.pendingStdout.length >= 4) {
-      const headerView = new DataView(this.pendingStdout.buffer, this.pendingStdout.byteOffset, 4);
-      const headerValue = headerView.getUint32(0, false);
-      const isCompressed = (headerValue & 0x8000_0000) !== 0;
-      const payloadLength = headerValue & 0x7fff_ffff;
-      const totalLength = 4 + payloadLength;
-
-      if (this.pendingStdout.length < totalLength) {
-        break;
-      }
-
-      const payloadSlice = this.pendingStdout.slice(4, totalLength);
-      this.pendingStdout = this.pendingStdout.slice(totalLength);
-
-      let decodedBytes: Uint8Array<ArrayBufferLike> = payloadSlice;
-      if (isCompressed) {
-        try {
-          decodedBytes = inflate(payloadSlice) as Uint8Array<ArrayBufferLike>;
-        } catch (error) {
-          console.error("[extensions-sidecar] failed to inflate payload:", error);
-          continue;
-        }
-      }
-
-      try {
-        const unpacked = this.unpackr.unpack(decodedBytes);
-        this.handleDecodedMessage(unpacked);
-      } catch (error) {
-        console.error("[extensions-sidecar] failed to decode payload:", error);
-      }
-    }
-  }
-
-  private resetStreamState(): void {
-    this.pendingStdout = new Uint8Array(0);
   }
 
   async start(): Promise<void> {
     if (!isTauri()) {
       throw new Error("desktop runtime is required");
     }
-    if (this.child) {
+    if (this.runtimeStarted) {
       return;
     }
     if (this.startPromise) {
@@ -931,24 +854,22 @@ class ExtensionSidecarService {
     }
 
     this.startPromise = (async () => {
-      this.resetStreamState();
-      const args = [`--data-dir=${await appLocalDataDir()}`, `--cache-dir=${await appCacheDir()}`];
+      if (!this.runtimeMessageUnlisten) {
+        this.runtimeMessageUnlisten = await listen("extension-runtime-message", (event) => {
+          this.handleDecodedMessage(event.payload);
+        });
+      }
 
-      const command = Command.sidecar("binaries/app", args, {
-        encoding: "raw",
-      });
+      if (!this.runtimeStderrUnlisten) {
+        this.runtimeStderrUnlisten = await listen<string>("extension-runtime-stderr", (event) => {
+          if (typeof event.payload === "string" && event.payload.trim().length > 0) {
+            console.error("[extensions-sidecar] stderr:", event.payload);
+          }
+        });
+      }
 
-      command.stdout.on("data", (chunk: unknown) => {
-        this.consumeStdoutChunk(chunk);
-      });
-      command.stderr.on("data", (line: unknown) => {
-        const stderr = decodeTextPayload(line);
-        if (stderr.length > 0) {
-          console.error("[extensions-sidecar] stderr:", stderr);
-        }
-      });
-
-      this.child = await command.spawn();
+      await invoke("extension_runtime_start");
+      this.runtimeStarted = true;
       void this.refreshBrowserExtensionConnectionStatus();
       this.startBrowserExtensionStatusPolling();
     })();
@@ -961,37 +882,42 @@ class ExtensionSidecarService {
   }
 
   stop(): void {
-    if (!this.child) {
-      return;
-    }
-
-    this.child.kill();
-    this.child = null;
+    this.runtimeStarted = false;
     this.stopBrowserExtensionStatusPolling();
-    this.resetStreamState();
-    for (const [pluginName, pendingResolvers] of this.pendingPreferenceResolvers.entries()) {
-      for (const pending of pendingResolvers) {
-        clearTimeout(pending.timeoutId);
-        pending.reject(new Error(`Preferences request for "${pluginName}" was interrupted.`));
-      }
+    if (this.runtimeMessageUnlisten) {
+      this.runtimeMessageUnlisten();
+      this.runtimeMessageUnlisten = null;
     }
-    this.pendingPreferenceResolvers.clear();
+    if (this.runtimeStderrUnlisten) {
+      this.runtimeStderrUnlisten();
+      this.runtimeStderrUnlisten = null;
+    }
+    void invoke("extension_runtime_stop").catch((error) => {
+      console.error("[extensions-sidecar] failed to stop runtime bridge:", error);
+    });
   }
 
-  private writeEvent(event: SidecarEvent): void {
-    if (!this.child) {
-      throw new Error("extensions sidecar is not running");
-    }
+  private async writeEvent(event: SidecarEvent): Promise<void> {
+    await this.start();
+    await invoke("extension_runtime_send_message", {
+      action: event.action,
+      payload: event.payload,
+    });
+  }
 
-    this.child.write(`${JSON.stringify(event)}\n`);
+  private async sendManagerRequest(request: ManagerRequest): Promise<ManagerResponse> {
+    await this.start();
+    const response = await invoke<number[]>("extension_runtime_send_manager_request", {
+      request: encodeManagerRequest(request),
+    });
+    return decodeManagerResponse(response);
   }
 
   async runPlugin(payload: RunPluginPayload): Promise<void> {
-    await this.start();
-    this.writeEvent({
-      action: "run-plugin",
-      payload,
-    });
+    const response = await this.sendManagerRequest(buildLaunchPluginManagerRequest(payload));
+    if (response.error) {
+      throw new Error(response.error.message);
+    }
   }
 }
 

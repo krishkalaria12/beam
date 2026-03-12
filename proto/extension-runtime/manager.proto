@@ -3,6 +3,7 @@ syntax = "proto3";
 package beam.extension_runtime.v1;
 
 import "google/protobuf/struct.proto";
+import "common.proto";
 import "environment.proto";
 
 message RuntimeLaunchPayload {
@@ -17,10 +18,29 @@ message RuntimeLaunchPayload {
   string fallback_text = 9;
 }
 
+message LaunchPluginRequest {
+  string plugin_path = 1;
+  CommandMode mode = 2;
+  bool ai_access = 3;
+  google.protobuf.Struct launch_arguments = 4;
+  google.protobuf.Struct launch_context = 5;
+  LaunchType launch_type = 6;
+  string command_name = 7;
+  string fallback_text = 8;
+}
+
 message PingRequest {}
 
 message PingResponse {
   bool ok = 1;
+}
+
+message AckResponse {
+  bool ok = 1;
+}
+
+message ErrorResponse {
+  string message = 1;
 }
 
 message StartDevSessionRequest {
@@ -45,6 +65,72 @@ message StopDevSessionRequest {
 
 message StopDevSessionResponse {
   bool ok = 1;
+}
+
+message GetPreferencesRequest {
+  string extension_id = 1;
+}
+
+message GetPreferencesResponse {
+  string extension_id = 1;
+  google.protobuf.Struct values = 2;
+}
+
+message SetPreferencesRequest {
+  string extension_id = 1;
+  google.protobuf.Struct values = 2;
+}
+
+message SetPreferencesResponse {
+  string extension_id = 1;
+  bool ok = 2;
+}
+
+message DispatchViewEventRequest {
+  uint32 instance_id = 1;
+  string handler_name = 2;
+  repeated google.protobuf.Value args = 3;
+}
+
+message DispatchToastActionRequest {
+  uint32 toast_id = 1;
+  string action_type = 2;
+}
+
+message TriggerToastHideRequest {
+  uint32 toast_id = 1;
+}
+
+message SetBrowserExtensionConnectionStatusRequest {
+  bool is_connected = 1;
+}
+
+message ManagerRequest {
+  string request_id = 1;
+
+  oneof request {
+    PingRequest ping = 10;
+    LaunchPluginRequest launch_plugin = 11;
+    GetPreferencesRequest get_preferences = 12;
+    SetPreferencesRequest set_preferences = 13;
+    DispatchViewEventRequest dispatch_view_event = 14;
+    RuntimeEvent runtime_event = 15;
+    DispatchToastActionRequest dispatch_toast_action = 16;
+    TriggerToastHideRequest trigger_toast_hide = 17;
+    SetBrowserExtensionConnectionStatusRequest set_browser_extension_connection_status = 18;
+  }
+}
+
+message ManagerResponse {
+  string request_id = 1;
+
+  oneof response {
+    PingResponse ping = 10;
+    AckResponse ack = 11;
+    ErrorResponse error = 12;
+    GetPreferencesResponse get_preferences = 13;
+    SetPreferencesResponse set_preferences = 14;
+  }
 }
 
 message ShutdownEvent {}

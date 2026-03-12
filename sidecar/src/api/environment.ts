@@ -5,6 +5,8 @@ import type { Application } from "./types";
 import { config } from "../config";
 import { browserExtensionState, aiContext } from "../state";
 import { invokeCommand } from "./rpc";
+import { createEnvironmentResponse } from "../protocol/environment";
+import type { GetEnvironmentResponse } from "@beam/extension-protocol";
 
 const supportPath = config.supportDir;
 try {
@@ -69,6 +71,7 @@ export const environment = {
   ownerOrAuthorName: "Flare",
   raycastVersion: "1.0.0",
   supportPath: supportPath,
+  theme: "dark" as const,
   textSize: "medium" as const,
   canAccess: (feature: { name: string }): boolean => {
     if (feature && feature.name === "BrowserExtension") {
@@ -104,6 +107,10 @@ function normalizeDesktopContextValue<T>(
 }
 
 export async function getDesktopContext(): Promise<DesktopContext> {
+  return loadDesktopContext();
+}
+
+async function loadDesktopContext(): Promise<DesktopContext> {
   const raw = await invokeCommand<Record<string, unknown>>("get_desktop_context");
 
   return {
@@ -199,6 +206,14 @@ export async function getDesktopContext(): Promise<DesktopContext> {
             frontmostApplication: false,
           },
   };
+}
+
+export async function getEnvironmentProtocolSnapshot(): Promise<GetEnvironmentResponse> {
+  const context = await loadDesktopContext();
+  return createEnvironmentResponse(environment, context, {
+    aiAccess: aiContext.hasAccess,
+    browserExtensionAccess: browserExtensionState.isConnected,
+  });
 }
 
 export async function getSelectedFinderItems(): Promise<FileSystemItem[]> {

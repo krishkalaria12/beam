@@ -8,6 +8,27 @@ import type { FlareInstance } from "./types";
 import { handleResponse } from "./api/rpc";
 import { handleOAuthResponse, handleTokenResponse } from "./api/oauth";
 import { handleAskStreamChunk, handleAskStreamEnd, handleAskStreamError } from "./api/ai";
+import {
+  createAckResponse,
+  createErrorResponse,
+  createGetPreferencesResponse,
+  createManagerResponseOutput,
+  createSetPreferencesResponse,
+  isPopViewEvent,
+  parseManagerRequestPayload,
+  toLaunchMode,
+  toLaunchType,
+  withRequestId,
+} from "./protocol/manager";
+
+const reportRuntimeError = (err: unknown): void => {
+  const error =
+    err instanceof Error
+      ? { message: err.message, stack: err.stack }
+      : { message: String(err) };
+  writeLog(`ERROR: ${error.message} \n ${error.stack ?? ""}`);
+  writeOutput({ type: "error", payload: error.message });
+};
 
 process.on("unhandledRejection", (reason: unknown) => {
   writeLog(`--- UNHANDLED PROMISE REJECTION ---`);
@@ -16,6 +37,60 @@ process.on("unhandledRejection", (reason: unknown) => {
 });
 
 const rl = createInterface({ input: process.stdin });
+
+const handlePopView = (): void => {
+  const previousElement = navigationStack.pop();
+  if (previousElement) {
+    updateContainer(previousElement);
+  } else {
+    writeOutput({ type: "go-back-to-plugin-list", payload: {} });
+  }
+};
+
+const handleDispatchEvent = (payload: {
+  instanceId: number;
+  handlerName: string;
+  args: unknown[];
+}): void => {
+  const instance = instances.get(payload.instanceId);
+  if (!instance) {
+    writeLog(`Instance ${payload.instanceId} not found.`);
+    return;
+  }
+
+  if (!("props" in instance)) {
+    return;
+  }
+
+  const flareInstance = instance as FlareInstance;
+  const props = flareInstance._unserializedProps;
+  const handler = props?.[payload.handlerName];
+
+  if (typeof handler === "function") {
+    handler(...payload.args);
+  } else {
+    writeLog(
+      `Handler ${payload.handlerName} not found or not a function on instance ${payload.instanceId}`,
+    );
+  }
+};
+
+const handleDispatchToastAction = (payload: {
+  toastId: number;
+  actionType: "primary" | "secondary";
+}): void => {
+  const toast = toasts.get(payload.toastId);
+  if (!toast) {
+    return;
+  }
+
+  const action = payload.actionType === "primary" ? toast.primaryAction : toast.secondaryAction;
+  action?.onAction?.(toast);
+};
+
+const handleTriggerToastHide = (payload: { toastId: number }): void => {
+  toasts.get(payload.toastId)?.hide();
+};
 
 rl.on("line", (line) => {
   batchedUpdates(() => {
@@ -51,106 +126,135 @@ rl.on("line", (line) => {
         return;
       }
 
-      switch (command.action) {
-        case "run-plugin": {
-          const { pluginPath, mode, aiAccessStatus, arguments: launchArguments, launchContext, launchType } =
-            command.payload as {
-            pluginPath?: string;
-            commandName?: string;
-            mode?: "view" | "no-view" | "menu-bar";
-            aiAccessStatus: boolean;
-            arguments?: Record<string, unknown>;
-            launchContext?: Record<string, unknown>;
-            launchType?: string;
-          };
-          runPlugin(pluginPath, mode, aiAccessStatus, launchArguments, launchContext, launchType);
-          break;
+      if (command.action === "manager-request") {
+        const request = parseManagerRequestPayload(command.payload);
+
+        if (request.ping) {
+          writeOutput(
+            createManagerResponseOutput(
+              withRequestId(
+                {
+                  requestId: "",
+                  ping: {
+                    ok: true,
+                  },
+                },
+                request.requestId,
+              ),
+            ),
+          );
+          return;
         }
-        case "get-preferences": {
-          const { pluginName } = command.payload as { pluginName: string };
-          const preferences = preferencesStore.getAllPreferences();
-          writeOutput({
-            type: "preference-values",
-            payload: {
-              pluginName,
-              values: preferences[pluginName] || {},
-            },
+
+        if (request.launchPlugin) {
+          writeOutput(createManagerResponseOutput(withRequestId(createAckResponse(), request.requestId)));
+          void runPlugin(
+            request.launchPlugin.pluginPath,
+            toLaunchMode(request.launchPlugin.mode),
+            request.launchPlugin.aiAccess,
+            request.launchPlugin.launchArguments ?? undefined,
+            request.launchPlugin.launchContext ?? undefined,
+            toLaunchType(request.launchPlugin.launchType),
+            request.launchPlugin.commandName || undefined,
+          ).catch(reportRuntimeError);
+          return;
+        }
+
+        if (request.getPreferences) {
+          const values = preferencesStore.getPreferenceValues(request.getPreferences.extensionId);
+          writeOutput(
+            createManagerResponseOutput(
+              withRequestId(
+                createGetPreferencesResponse({
+                  extensionId: request.getPreferences.extensionId,
+                  values,
+                }),
+                request.requestId,
+              ),
+            ),
+          );
+          return;
+        }
+
+        if (request.setPreferences) {
+          preferencesStore.setPreferenceValues(
+            request.setPreferences.extensionId,
+            request.setPreferences.values ?? {},
+          );
+          writeOutput(
+            createManagerResponseOutput(
+              withRequestId(
+                createSetPreferencesResponse(request.setPreferences.extensionId),
+                request.requestId,
+              ),
+            ),
+          );
+          return;
+        }
+
+        if (request.dispatchViewEvent) {
+          handleDispatchEvent({
+            instanceId: request.dispatchViewEvent.instanceId,
+            handlerName: request.dispatchViewEvent.handlerName,
+            args: request.dispatchViewEvent.args ?? [],
           });
-          break;
+          writeOutput(createManagerResponseOutput(withRequestId(createAckResponse(), request.requestId)));
+          return;
         }
-        case "set-preferences": {
-          const { pluginName, values } = command.payload as {
-            pluginName: string;
-            values: Record<string, unknown>;
-          };
-          preferencesStore.setPreferenceValues(pluginName, values);
-          break;
-        }
-        case "pop-view": {
-          const previousElement = navigationStack.pop();
-          if (previousElement) {
-            updateContainer(previousElement);
-          } else {
-            writeOutput({ type: "go-back-to-plugin-list", payload: {} });
-          }
-          break;
-        }
-        case "dispatch-event": {
-          const { instanceId, handlerName, args } = command.payload as {
-            instanceId: number;
-            handlerName: string;
-            args: unknown[];
-          };
 
-          const instance = instances.get(instanceId);
-          if (!instance) {
-            writeLog(`Instance ${instanceId} not found.`);
-            return;
-          }
-
-          if (!("props" in instance)) {
-            return;
-          }
-
-          const flareInstance = instance as FlareInstance;
-
-          const props = flareInstance._unserializedProps;
-          const handler = props?.[handlerName];
-
-          if (typeof handler === "function") {
-            handler(...args);
-          } else {
-            writeLog(
-              `Handler ${handlerName} not found or not a function on instance ${instanceId}`,
+        if (request.runtimeEvent) {
+          if (isPopViewEvent(request.runtimeEvent)) {
+            handlePopView();
+            writeOutput(
+              createManagerResponseOutput(
+                withRequestId(createAckResponse(), request.requestId),
+              ),
             );
+            return;
           }
-          break;
+
+          writeOutput(
+            createManagerResponseOutput(
+              withRequestId(
+                createErrorResponse("Unsupported runtime event in manager request."),
+                request.requestId,
+              ),
+            ),
+          );
+          return;
         }
-        case "dispatch-toast-action": {
-          const { toastId, actionType } = command.payload as {
-            toastId: number;
-            actionType: "primary" | "secondary";
-          };
-          const toast = toasts.get(toastId);
-          if (toast) {
-            const action = actionType === "primary" ? toast.primaryAction : toast.secondaryAction;
-            if (action?.onAction) {
-              action.onAction(toast);
-            }
-          }
-          break;
+
+        if (request.dispatchToastAction) {
+          handleDispatchToastAction({
+            toastId: request.dispatchToastAction.toastId,
+            actionType:
+              request.dispatchToastAction.actionType === "secondary" ? "secondary" : "primary",
+          });
+          writeOutput(createManagerResponseOutput(withRequestId(createAckResponse(), request.requestId)));
+          return;
         }
-        case "trigger-toast-hide": {
-          const { toastId } = command.payload as { toastId: number };
-          const toast = toasts.get(toastId);
-          toast?.hide();
-          break;
+
+        if (request.triggerToastHide) {
+          handleTriggerToastHide({ toastId: request.triggerToastHide.toastId });
+          writeOutput(createManagerResponseOutput(withRequestId(createAckResponse(), request.requestId)));
+          return;
         }
-        case "browser-extension-connection-status": {
-          const { isConnected } = command.payload as { isConnected: boolean };
-          browserExtensionState.isConnected = isConnected;
-          break;
+
+        if (request.setBrowserExtensionConnectionStatus) {
+          browserExtensionState.isConnected = request.setBrowserExtensionConnectionStatus.isConnected;
+          writeOutput(createManagerResponseOutput(withRequestId(createAckResponse(), request.requestId)));
+          return;
         }
+
+        writeOutput(
+          createManagerResponseOutput(
+            withRequestId(createErrorResponse("Unsupported manager request."), request.requestId),
+          ),
+        );
+        return;
+      }
+
+      switch (command.action) {
         case "ai-ask-chunk": {
           const { streamRequestId, chunk } = command.payload as {
             streamRequestId?: unknown;
@@ -185,14 +289,7 @@ rl.on("line", (line) => {
           writeLog(`Unknown command action: ${command.action}`);
       }
     } catch (err: unknown) {
-      const error =
-        err instanceof Error
-          ? { message: err.message, stack: err.stack }
-          : { message: String(err) };
-      writeLog(`ERROR: ${error.message} \n ${error.stack ?? ""}`);
-      writeOutput({ type: "error", payload: error.message });
-
-      throw err;
+      reportRuntimeError(err);
     }
   });
 });

@@ -61,6 +61,67 @@ Today:
 - Raycast compatibility is treated as primary instead of secondary
 - there is no dedicated protobuf-native extension contract
 
+## Progress Snapshot
+
+Completed so far:
+
+- `proto/extension-runtime/` created with initial native runtime schemas:
+  - `common.proto`
+  - `environment.proto`
+  - `manager.proto`
+  - `storage.proto`
+  - `ui.proto`
+- `packages/extension-protocol/` added as the generated TypeScript protocol package
+- bun-based TS codegen wired with `protoc + ts-proto`
+- Rust-side codegen wired through `src-tauri/build.rs` with `prost-build`
+- initial sidecar protocol mappers added for:
+  - environment snapshots
+  - local storage
+- sidecar launch path partially restructured to mirror Vicinae more closely:
+  - `sidecar/src/runtime/bootstrap.ts`
+  - `sidecar/src/runtime/jsx-runtime.ts`
+  - `sidecar/src/runtime/launch.ts`
+- plugin launch now creates a typed `RuntimeLaunchPayload`-aligned launch plan before execution
+- manager protocol expanded with typed request/response envelopes for:
+  - launch plugin
+  - get/set preferences
+  - dispatch view events
+  - pop view runtime events
+  - toast and browser-extension control events
+- app-side and persistent-runner control paths now send manager requests instead of legacy action strings
+- sidecar now routes manager requests directly and responds with typed manager responses
+- legacy sidecar control actions for launch/preferences/pop-view/view-event/toast/browser-status have been removed
+- stale legacy protocol messages `plugin-list` and `preference-values` have been removed from `packages/protocol`
+- Rust now owns the foreground extension runtime process lifecycle through:
+  - `src-tauri/src/extensions/runtime/bridge.rs`
+  - `extension_runtime_start`
+  - `extension_runtime_stop`
+  - `extension_runtime_send_message`
+  - `extension_runtime_send_manager_request`
+- foreground `ExtensionSidecarService` no longer spawns `Command.sidecar(...)` directly
+- manager requests now carry `request_id` and manager responses are correlated in the Rust bridge before returning typed protobuf responses to the frontend
+- non-manager runtime stdout messages are emitted from Rust to the frontend as Tauri events instead of being decoded in the frontend process
+
+Verified:
+
+- `bun run extension-protocol:generate`
+- `bun run extension-protocol:check`
+- `cargo check --manifest-path src-tauri/Cargo.toml`
+- `bun run check-types`
+- `bun run check` in `sidecar/`
+- sidecar bundle smoke test via `bunx esbuild`
+
+Current migration status:
+
+- Phase 1: in progress
+- Phase 2: in progress
+- Phase 3: in progress
+- Phase 6: started for environment, local storage, launch, preferences, and manager control events
+
+Known remaining gap:
+
+- persistent/background runners still use the old frontend-owned sidecar child path and have not yet been moved to the Rust runtime bridge
+
 ## Core Principles
 
 1. Native Beam first, compatibility second.

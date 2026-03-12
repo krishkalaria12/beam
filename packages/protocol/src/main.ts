@@ -10,7 +10,7 @@ import {
 } from "./api";
 import { CommandSchema } from "./command";
 import { ShowHudMessageSchema } from "./hud";
-import { GoBackToPluginListSchema, PluginListSchema, PreferenceValuesSchema } from "./plugin";
+import { GoBackToPluginListSchema } from "./plugin";
 
 export const BatchUpdateSchema = z.object({
   type: z.literal("BATCH_UPDATE"),
@@ -42,8 +42,6 @@ export const SidecarMessageWithPluginsSchema = z
     CommandSchema,
     ShowHudMessageSchema,
     LogMessageSchema,
-    PluginListSchema,
-    PreferenceValuesSchema,
     GoBackToPluginListSchema,
     OpenMessageSchema,
     InvokeCommandMessageSchema,

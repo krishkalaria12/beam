@@ -42,6 +42,10 @@ export class PreferencesStore {
     const pluginPrefs = this.preferences[pluginName] || {};
     const result: Record<string, unknown> = {};
 
+    if (!preferenceDefinitions) {
+      return { ...pluginPrefs };
+    }
+
     if (preferenceDefinitions) {
       for (const pref of preferenceDefinitions) {
         if (pluginPrefs[pref.name] !== undefined) {
@@ -62,10 +66,6 @@ export class PreferencesStore {
 
     Object.assign(this.preferences[pluginName], values);
     this.savePreferences();
-  }
-
-  public getAllPreferences(): Record<string, Record<string, unknown>> {
-    return { ...this.preferences };
   }
 }
 

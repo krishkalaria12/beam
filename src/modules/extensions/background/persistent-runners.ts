@@ -8,6 +8,12 @@ import { inflate } from "pako";
 import { toast } from "sonner";
 
 import { parseAiAskRequest, parseConfirmAlertRequest, parseLaunchCommandRequest } from "@/modules/extensions/sidecar/custom-message";
+import {
+  buildDispatchViewEventManagerRequest,
+  buildLaunchPluginManagerRequest,
+  type ManagerRequestEnvelope,
+  toManagerRequestEnvelope,
+} from "@/modules/extensions/sidecar/manager-protocol";
 import { concatChunks, decodeTextPayload, toByteChunk } from "@/modules/extensions/sidecar/stream";
 import type { PluginInfo } from "@/modules/extensions/types";
 import {
@@ -37,18 +43,9 @@ type PersistentPluginDescriptor = Pick<
   | "icon"
 >;
 
-interface RunPluginPayload {
-  pluginPath: string;
-  mode: PersistentMode;
-  aiAccessStatus: boolean;
-  arguments?: Record<string, unknown>;
-  launchContext?: Record<string, unknown>;
-  launchType?: LaunchTypeValue;
-}
-
 interface SidecarEvent {
   action: string;
-  payload: Record<string, unknown> | RunPluginPayload;
+  payload: Record<string, unknown>;
 }
 
 interface MenuBarTrayItem {
@@ -260,15 +257,17 @@ class PersistentRunnerSession {
     });
 
     this.child = await command.spawn();
-    this.writeEvent({
-      action: "run-plugin",
-      payload: {
-        pluginPath: this.plugin.pluginPath,
-        mode: this.mode,
-        aiAccessStatus: false,
-        launchType,
-      },
-    });
+    this.writeEvent(
+      toManagerRequestEnvelope(
+        buildLaunchPluginManagerRequest({
+          pluginPath: this.plugin.pluginPath,
+          mode: this.mode,
+          aiAccessStatus: false,
+          launchType,
+          commandName: this.plugin.commandName,
+        }),
+      ),
+    );
   }
 
   async stop(): Promise<void> {
@@ -302,17 +301,18 @@ class PersistentRunnerSession {
       return;
     }
 
-    this.writeEvent({
-      action: "dispatch-event",
-      payload: {
-        instanceId: parsedId,
-        handlerName: "onAction",
-        args: [],
-      },
-    });
+    this.writeEvent(
+      toManagerRequestEnvelope(
+        buildDispatchViewEventManagerRequest({
+          instanceId: parsedId,
+          handlerName: "onAction",
+          args: [],
+        }),
+      ),
+    );
   }
 
-  private writeEvent(event: SidecarEvent): void {
+  private writeEvent(event: SidecarEvent | ManagerRequestEnvelope): void {
     if (!this.child) {
       throw new Error(`persistent runner "${this.runnerId}" is not running`);
     }
@@ -524,6 +524,10 @@ class PersistentRunnerSession {
   private handleRawMessage(raw: unknown): void {
     const rawRecord = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : null;
     const rawType = typeof rawRecord?.type === "string" ? rawRecord.type : null;
+    if (rawType === "manager-response") {
+      return;
+    }
+
     if (rawType === "open-extension-preferences" || rawType === "open-command-preferences") {
       this.callbacks.openExtensions?.();
       return;

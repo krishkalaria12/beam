@@ -152,7 +152,7 @@ export const hostConfig: HostConfig<
     }
   },
 
-  createInstance(type, props, root, hostContext, internalInstanceHandle: OpaqueHandle) {
+  createInstance(type, props, _root, _hostContext, internalInstanceHandle: OpaqueHandle) {
     const componentType =
       typeof type === "string" ? type : type.displayName || type.name || "Anonymous";
     const id = getNextInstanceId();
@@ -229,7 +229,7 @@ export const hostConfig: HostConfig<
   removeChild: removeChildFromParent,
   removeChildFromContainer: removeChildFromParent,
 
-  commitUpdate(instance, type, oldProps, newProps) {
+  commitUpdate(instance, _type, _oldProps, newProps) {
     const propsToSerialize: Record<string, unknown> = {};
     for (const key in newProps) {
       if (key !== "children" && key !== "ref" && !React.isValidElement(newProps[key])) {
@@ -250,7 +250,7 @@ export const hostConfig: HostConfig<
     });
   },
 
-  commitTextUpdate(textInstance, oldText, newText) {
+  commitTextUpdate(textInstance, _oldText, newText) {
     textInstance.text = newText;
     addToCommitBuffer({
       type: "UPDATE_TEXT",
@@ -258,7 +258,7 @@ export const hostConfig: HostConfig<
     });
   },
 
-  finalizeInitialChildren: (instance, type, props) => {
+  finalizeInitialChildren: (instance, _type, props) => {
     const { propsToSerialize, namedChildren } = processProps(props);
     instance.props = serializeProps(propsToSerialize);
     instance.namedChildren = { ...instance.namedChildren, ...namedChildren };

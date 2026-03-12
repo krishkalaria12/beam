@@ -1,5 +1,4 @@
 import React from "react";
-import { jsx } from "react/jsx-runtime";
 import { createWrapperComponent } from "../utils";
 import { currentRootElement, navigationStack } from "../../state";
 import { updateContainer } from "../../reconciler";

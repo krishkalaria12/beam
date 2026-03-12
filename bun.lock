@@ -5,6 +5,7 @@
       "name": "web",
       "dependencies": {
         "@base-ui/react": "^1.0.0",
+        "@beam/extension-protocol": "workspace:*",
         "@cloudflare/speedtest": "^1.7.0",
         "@dnd-kit/core": "^6.3.1",
         "@dnd-kit/sortable": "^10.0.0",
@@ -91,6 +92,7 @@
       "name": "sidecar",
       "version": "1.0.0",
       "dependencies": {
+        "@beam/extension-protocol": "workspace:*",
         "@flare/protocol": "workspace:*",
         "msgpackr": "^1.11.4",
         "pako": "^2.1.0",
