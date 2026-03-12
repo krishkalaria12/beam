@@ -1,0 +1,25 @@
+{
+	"include": [
+		"types",
+		"src/index.ts",
+		"src/public/**/*",
+		"src/api/icon.ts",
+		"src/api/keyboard.ts",
+		"src/commands/**/*",
+		"src/schemas/**/*",
+		"src/utils/**/*"
+	],
+	"compilerOptions": {
+		"jsx": "react-jsx",
+		"module": "nodenext",
+		"declaration": true,
+		"declarationMap": false,
+		"noEmit": false,
+		"esModuleInterop": true,
+		"forceConsistentCasingInFileNames": true,
+		"strict": true,
+		"noImplicitAny": false,
+		"skipLibCheck": true,
+		"rootDir": "."
+	}
+}
