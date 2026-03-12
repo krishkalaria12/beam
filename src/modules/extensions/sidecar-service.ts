@@ -23,9 +23,17 @@ import {
   buildPopViewManagerRequest,
   buildSetPreferencesManagerRequest,
   buildTriggerToastHideManagerRequest,
-  decodeManagerResponse,
-  encodeManagerRequest,
 } from "@/modules/extensions/sidecar/manager-protocol";
+import {
+  FOREGROUND_EXTENSION_RUNTIME_ID,
+  listenToExtensionRuntimeExit,
+  listenToExtensionRuntimeMessages,
+  listenToExtensionRuntimeStderr,
+  sendExtensionRuntimeManagerRequest,
+  sendExtensionRuntimeMessage,
+  startExtensionRuntime,
+  stopExtensionRuntime,
+} from "@/modules/extensions/sidecar/runtime-bridge";
 import { persistentExtensionRunnerManager } from "@/modules/extensions/background/persistent-runners";
 import { isProtocolCommandType } from "@/modules/extensions/sidecar/protocol";
 import { useExtensionRuntimeStore } from "@/modules/extensions/runtime/store";
@@ -88,8 +96,9 @@ function toRecord(value: unknown): Record<string, unknown> | undefined {
 class ExtensionSidecarService {
   private runtimeStarted = false;
   private startPromise: Promise<void> | null = null;
-  private runtimeMessageUnlisten: UnlistenFn | null = null;
-  private runtimeStderrUnlisten: UnlistenFn | null = null;
+  private runtimeMessageUnlisten: (() => void) | null = null;
+  private runtimeStderrUnlisten: (() => void) | null = null;
+  private runtimeExitUnlisten: (() => void) | null = null;
   private listeners = new Set<SidecarEventListener>();
   private oauthTokenStore = new Map<string, Record<string, unknown>>();
   private browserExtensionStatusPollId: ReturnType<typeof setInterval> | null = null;
@@ -855,20 +864,37 @@ class ExtensionSidecarService {
 
     this.startPromise = (async () => {
       if (!this.runtimeMessageUnlisten) {
-        this.runtimeMessageUnlisten = await listen("extension-runtime-message", (event) => {
-          this.handleDecodedMessage(event.payload);
+        this.runtimeMessageUnlisten = await listenToExtensionRuntimeMessages((runtimeId, message) => {
+          if (runtimeId !== FOREGROUND_EXTENSION_RUNTIME_ID) {
+            return;
+          }
+
+          this.handleDecodedMessage(message);
         });
       }
 
       if (!this.runtimeStderrUnlisten) {
-        this.runtimeStderrUnlisten = await listen<string>("extension-runtime-stderr", (event) => {
-          if (typeof event.payload === "string" && event.payload.trim().length > 0) {
-            console.error("[extensions-sidecar] stderr:", event.payload);
+        this.runtimeStderrUnlisten = await listenToExtensionRuntimeStderr((runtimeId, line) => {
+          if (runtimeId !== FOREGROUND_EXTENSION_RUNTIME_ID) {
+            return;
           }
+
+          console.error("[extensions-sidecar] stderr:", line);
         });
       }
 
-      await invoke("extension_runtime_start");
+      if (!this.runtimeExitUnlisten) {
+        this.runtimeExitUnlisten = await listenToExtensionRuntimeExit((runtimeId) => {
+          if (runtimeId !== FOREGROUND_EXTENSION_RUNTIME_ID) {
+            return;
+          }
+
+          this.runtimeStarted = false;
+          this.stopBrowserExtensionStatusPolling();
+        });
+      }
+
+      await startExtensionRuntime(FOREGROUND_EXTENSION_RUNTIME_ID);
       this.runtimeStarted = true;
       void this.refreshBrowserExtensionConnectionStatus();
       this.startBrowserExtensionStatusPolling();
@@ -892,25 +918,23 @@ class ExtensionSidecarService {
       this.runtimeStderrUnlisten();
       this.runtimeStderrUnlisten = null;
     }
-    void invoke("extension_runtime_stop").catch((error) => {
+    if (this.runtimeExitUnlisten) {
+      this.runtimeExitUnlisten();
+      this.runtimeExitUnlisten = null;
+    }
+    void stopExtensionRuntime(FOREGROUND_EXTENSION_RUNTIME_ID).catch((error) => {
       console.error("[extensions-sidecar] failed to stop runtime bridge:", error);
     });
   }
 
   private async writeEvent(event: SidecarEvent): Promise<void> {
     await this.start();
-    await invoke("extension_runtime_send_message", {
-      action: event.action,
-      payload: event.payload,
-    });
+    await sendExtensionRuntimeMessage(FOREGROUND_EXTENSION_RUNTIME_ID, event.action, event.payload);
   }
 
   private async sendManagerRequest(request: ManagerRequest): Promise<ManagerResponse> {
     await this.start();
-    const response = await invoke<number[]>("extension_runtime_send_manager_request", {
-      request: encodeManagerRequest(request),
-    });
-    return decodeManagerResponse(response);
+    return sendExtensionRuntimeManagerRequest(FOREGROUND_EXTENSION_RUNTIME_ID, request);
   }
 
   async runPlugin(payload: RunPluginPayload): Promise<void> {

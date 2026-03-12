@@ -7,20 +7,6 @@ import {
 } from "@beam/extension-protocol";
 import type { ExtensionMode } from "@/modules/extensions/sidecar/discovery";
 
-export interface ManagerRequestEnvelope {
-  action: "manager-request";
-  payload: ReturnType<typeof ManagerRequest.toJSON>;
-}
-
-export function toManagerRequestEnvelope(
-  request: ManagerRequest,
-): ManagerRequestEnvelope {
-  return {
-    action: "manager-request",
-    payload: ManagerRequest.toJSON(request),
-  };
-}
-
 function toProtocolCommandMode(mode: ExtensionMode): CommandMode {
   switch (mode) {
     case "no-view":

@@ -21,6 +21,8 @@ use crate::extensions::runtime::proto::{
 
 const EXTENSION_RUNTIME_MESSAGE_EVENT: &str = "extension-runtime-message";
 const EXTENSION_RUNTIME_STDERR_EVENT: &str = "extension-runtime-stderr";
+const EXTENSION_RUNTIME_EXIT_EVENT: &str = "extension-runtime-exit";
+const DEFAULT_RUNTIME_ID: &str = "foreground";
 const MANAGER_REQUEST_TIMEOUT: Duration = Duration::from_secs(5);
 
 type PendingSender = mpsc::SyncSender<Result<ManagerResponse, String>>;
@@ -32,8 +34,8 @@ struct ManagedRuntime {
 
 #[derive(Default)]
 pub struct ExtensionRuntimeBridgeState {
-    runtime: Mutex<Option<ManagedRuntime>>,
-    pending_manager_requests: Arc<Mutex<HashMap<String, PendingSender>>>,
+    runtimes: Arc<Mutex<HashMap<String, ManagedRuntime>>>,
+    pending_manager_requests: Arc<Mutex<HashMap<String, HashMap<String, PendingSender>>>>,
 }
 
 fn write_json_line(stdin: &Arc<Mutex<BufWriter<ChildStdin>>>, value: &Value) -> Result<(), String> {
@@ -106,12 +108,43 @@ fn maybe_inflate(payload: &[u8], compressed: bool) -> Result<Vec<u8>, String> {
     Ok(output)
 }
 
-fn emit_runtime_message(app: &AppHandle, value: &Value) {
-    let _ = app.emit(EXTENSION_RUNTIME_MESSAGE_EVENT, value);
+fn normalize_runtime_id(runtime_id: Option<String>) -> String {
+    let normalized = runtime_id.unwrap_or_else(|| DEFAULT_RUNTIME_ID.to_string());
+    let trimmed = normalized.trim();
+    if trimmed.is_empty() {
+        DEFAULT_RUNTIME_ID.to_string()
+    } else {
+        trimmed.to_string()
+    }
 }
 
-fn emit_runtime_stderr(app: &AppHandle, line: &str) {
-    let _ = app.emit(EXTENSION_RUNTIME_STDERR_EVENT, line.to_string());
+fn emit_runtime_message(app: &AppHandle, runtime_id: &str, value: &Value) {
+    let _ = app.emit(
+        EXTENSION_RUNTIME_MESSAGE_EVENT,
+        json!({
+            "runtimeId": runtime_id,
+            "message": value,
+        }),
+    );
+}
+
+fn emit_runtime_stderr(app: &AppHandle, runtime_id: &str, line: &str) {
+    let _ = app.emit(
+        EXTENSION_RUNTIME_STDERR_EVENT,
+        json!({
+            "runtimeId": runtime_id,
+            "line": line,
+        }),
+    );
+}
+
+fn emit_runtime_exit(app: &AppHandle, runtime_id: &str) {
+    let _ = app.emit(
+        EXTENSION_RUNTIME_EXIT_EVENT,
+        json!({
+            "runtimeId": runtime_id,
+        }),
+    );
 }
 
 fn prost_struct_to_json(value: &prost_types::Struct) -> Value {
@@ -382,8 +415,10 @@ fn json_to_manager_response(value: &Value) -> Result<ManagerResponse, String> {
 
 fn spawn_stdout_reader(
     app: AppHandle,
+    runtime_id: String,
     stdout: ChildStdout,
-    pending_requests: Arc<Mutex<HashMap<String, PendingSender>>>,
+    runtimes: Arc<Mutex<HashMap<String, ManagedRuntime>>>,
+    pending_requests: Arc<Mutex<HashMap<String, HashMap<String, PendingSender>>>>,
 ) {
     std::thread::spawn(move || {
         let mut reader = BufReader::new(stdout);
@@ -392,7 +427,11 @@ fn spawn_stdout_reader(
             let mut header = [0u8; 4];
             if let Err(error) = reader.read_exact(&mut header) {
                 if error.kind() != std::io::ErrorKind::UnexpectedEof {
-                    emit_runtime_stderr(&app, &format!("runtime stdout read failed: {error}"));
+                    emit_runtime_stderr(
+                        &app,
+                        &runtime_id,
+                        &format!("runtime stdout read failed: {error}"),
+                    );
                 }
                 break;
             }
@@ -402,14 +441,22 @@ fn spawn_stdout_reader(
             let payload_length = (header_value & 0x7fff_ffff) as usize;
             let mut payload = vec![0u8; payload_length];
             if let Err(error) = reader.read_exact(&mut payload) {
-                emit_runtime_stderr(&app, &format!("runtime stdout payload read failed: {error}"));
+                emit_runtime_stderr(
+                    &app,
+                    &runtime_id,
+                    &format!("runtime stdout payload read failed: {error}"),
+                );
                 break;
             }
 
             let decoded_payload = match maybe_inflate(&payload, compressed) {
                 Ok(value) => value,
                 Err(error) => {
-                    emit_runtime_stderr(&app, &format!("runtime stdout inflate failed: {error}"));
+                    emit_runtime_stderr(
+                        &app,
+                        &runtime_id,
+                        &format!("runtime stdout inflate failed: {error}"),
+                    );
                     continue;
                 }
             };
@@ -417,7 +464,11 @@ fn spawn_stdout_reader(
             let decoded_value: Value = match rmp_serde::from_slice(&decoded_payload) {
                 Ok(value) => value,
                 Err(error) => {
-                    emit_runtime_stderr(&app, &format!("runtime stdout decode failed: {error}"));
+                    emit_runtime_stderr(
+                        &app,
+                        &runtime_id,
+                        &format!("runtime stdout decode failed: {error}"),
+                    );
                     continue;
                 }
             };
@@ -425,52 +476,65 @@ fn spawn_stdout_reader(
             if let Some(result) = parse_manager_response_message(&decoded_value) {
                 match result {
                     Ok(response) => {
-                        if let Some(sender) =
-                            pending_requests.lock().remove(&response.request_id)
-                        {
+                        let sender = pending_requests
+                            .lock()
+                            .get_mut(&runtime_id)
+                            .and_then(|requests| requests.remove(&response.request_id));
+                        if let Some(sender) = sender {
                             let _ = sender.send(Ok(response));
                         }
                     }
                     Err(error) => emit_runtime_stderr(
                         &app,
+                        &runtime_id,
                         &format!("runtime manager response decode failed: {error}"),
                     ),
                 }
                 continue;
             }
 
-            emit_runtime_message(&app, &decoded_value);
+            emit_runtime_message(&app, &runtime_id, &decoded_value);
         }
 
-        let mut pending = pending_requests.lock();
-        for (_, sender) in pending.drain() {
-            let _ = sender.send(Err("extension runtime disconnected".to_string()));
+        runtimes.lock().remove(&runtime_id);
+
+        let pending = pending_requests.lock().remove(&runtime_id);
+        if let Some(pending) = pending {
+            for (_, sender) in pending {
+                let _ = sender.send(Err("extension runtime disconnected".to_string()));
+            }
         }
+
+        emit_runtime_exit(&app, &runtime_id);
     });
 }
 
-fn spawn_stderr_reader(app: AppHandle, stderr: ChildStderr) {
+fn spawn_stderr_reader(app: AppHandle, runtime_id: String, stderr: ChildStderr) {
     std::thread::spawn(move || {
         let reader = BufReader::new(stderr);
         for line in reader.lines().map_while(Result::ok) {
             if !line.trim().is_empty() {
-                emit_runtime_stderr(&app, &line);
+                emit_runtime_stderr(&app, &runtime_id, &line);
             }
         }
     });
 }
 
 impl ExtensionRuntimeBridgeState {
-    fn ensure_started(&self, app: &AppHandle) -> Result<(), String> {
-        let mut runtime = self.runtime.lock();
+    fn ensure_started(&self, app: &AppHandle, runtime_id: &str) -> Result<(), String> {
+        let mut runtimes = self.runtimes.lock();
 
-        if let Some(managed) = runtime.as_mut() {
+        let runtime_exited = if let Some(managed) = runtimes.get_mut(runtime_id) {
             match managed.child.try_wait().map_err(|error| error.to_string())? {
                 None => return Ok(()),
-                Some(_) => {
-                    *runtime = None;
-                }
+                Some(_) => true,
             }
+        } else {
+            false
+        };
+
+        if runtime_exited {
+            runtimes.remove(runtime_id);
         }
 
         let launcher = resolve_sidecar_launcher(app)?;
@@ -497,37 +561,49 @@ impl ExtensionRuntimeBridgeState {
             .ok_or_else(|| "failed to capture runtime stderr".to_string())?;
 
         let stdin = Arc::new(Mutex::new(BufWriter::new(stdin)));
-        spawn_stdout_reader(app.clone(), stdout, self.pending_manager_requests.clone());
-        spawn_stderr_reader(app.clone(), stderr);
+        spawn_stdout_reader(
+            app.clone(),
+            runtime_id.to_string(),
+            stdout,
+            self.runtimes.clone(),
+            self.pending_manager_requests.clone(),
+        );
+        spawn_stderr_reader(app.clone(), runtime_id.to_string(), stderr);
 
-        *runtime = Some(ManagedRuntime { child, stdin });
+        runtimes.insert(runtime_id.to_string(), ManagedRuntime { child, stdin });
         Ok(())
     }
 
-    fn stop_runtime(&self) -> Result<(), String> {
-        let mut runtime = self.runtime.lock();
-        if let Some(mut managed) = runtime.take() {
+    fn stop_runtime(&self, runtime_id: &str) -> Result<(), String> {
+        let mut runtimes = self.runtimes.lock();
+        if let Some(mut managed) = runtimes.remove(runtime_id) {
             managed.child.kill().map_err(|error| error.to_string())?;
             let _ = managed.child.wait();
         }
 
-        let mut pending = self.pending_manager_requests.lock();
-        for (_, sender) in pending.drain() {
-            let _ = sender.send(Err("extension runtime stopped".to_string()));
+        if let Some(pending) = self.pending_manager_requests.lock().remove(runtime_id) {
+            for (_, sender) in pending {
+                let _ = sender.send(Err("extension runtime stopped".to_string()));
+            }
         }
 
         Ok(())
     }
 
-    fn send_wire_message(&self, app: &AppHandle, value: &Value) -> Result<(), String> {
-        self.ensure_started(app)?;
-        let runtime = self.runtime.lock();
-        let stdin = runtime
-            .as_ref()
+    fn send_wire_message(
+        &self,
+        app: &AppHandle,
+        runtime_id: &str,
+        value: &Value,
+    ) -> Result<(), String> {
+        self.ensure_started(app, runtime_id)?;
+        let runtimes = self.runtimes.lock();
+        let stdin = runtimes
+            .get(runtime_id)
             .ok_or_else(|| "extension runtime is not running".to_string())?
             .stdin
             .clone();
-        drop(runtime);
+        drop(runtimes);
         write_json_line(&stdin, value)
     }
 }
@@ -536,27 +612,34 @@ impl ExtensionRuntimeBridgeState {
 pub fn extension_runtime_start(
     app: AppHandle,
     state: State<'_, ExtensionRuntimeBridgeState>,
+    runtime_id: Option<String>,
 ) -> Result<bool, String> {
-    state.ensure_started(&app)?;
+    let runtime_id = normalize_runtime_id(runtime_id);
+    state.ensure_started(&app, &runtime_id)?;
     Ok(true)
 }
 
 #[tauri::command]
 pub fn extension_runtime_stop(
     state: State<'_, ExtensionRuntimeBridgeState>,
+    runtime_id: Option<String>,
 ) -> Result<(), String> {
-    state.stop_runtime()
+    let runtime_id = normalize_runtime_id(runtime_id);
+    state.stop_runtime(&runtime_id)
 }
 
 #[tauri::command]
 pub fn extension_runtime_send_message(
     app: AppHandle,
     state: State<'_, ExtensionRuntimeBridgeState>,
+    runtime_id: Option<String>,
     action: String,
     payload: Value,
 ) -> Result<(), String> {
+    let runtime_id = normalize_runtime_id(runtime_id);
     state.send_wire_message(
         &app,
+        &runtime_id,
         &json!({
             "action": action,
             "payload": payload,
@@ -568,8 +651,10 @@ pub fn extension_runtime_send_message(
 pub fn extension_runtime_send_manager_request(
     app: AppHandle,
     state: State<'_, ExtensionRuntimeBridgeState>,
+    runtime_id: Option<String>,
     request: Vec<u8>,
 ) -> Result<Vec<u8>, String> {
+    let runtime_id = normalize_runtime_id(runtime_id);
     let mut request = ManagerRequest::decode(request.as_slice()).map_err(|error| error.to_string())?;
     if request.request_id.is_empty() {
         request.request_id = nanoid!();
@@ -580,16 +665,34 @@ pub fn extension_runtime_send_manager_request(
     state
         .pending_manager_requests
         .lock()
+        .entry(runtime_id.clone())
+        .or_default()
         .insert(request.request_id.clone(), sender);
 
-    if let Err(error) = state.send_wire_message(&app, &wire_message) {
-        state.pending_manager_requests.lock().remove(&request.request_id);
+    if let Err(error) = state.send_wire_message(&app, &runtime_id, &wire_message) {
+        let mut pending_requests = state.pending_manager_requests.lock();
+        if let Some(requests) = pending_requests.get_mut(&runtime_id) {
+            requests.remove(&request.request_id);
+            if requests.is_empty() {
+                pending_requests.remove(&runtime_id);
+            }
+        }
         return Err(error);
     }
 
-    let response = receiver
-        .recv_timeout(MANAGER_REQUEST_TIMEOUT)
-        .map_err(|error| error.to_string())??;
+    let response = match receiver.recv_timeout(MANAGER_REQUEST_TIMEOUT) {
+        Ok(result) => result?,
+        Err(error) => {
+            let mut pending_requests = state.pending_manager_requests.lock();
+            if let Some(requests) = pending_requests.get_mut(&runtime_id) {
+                requests.remove(&request.request_id);
+                if requests.is_empty() {
+                    pending_requests.remove(&runtime_id);
+                }
+            }
+            return Err(error.to_string());
+        }
+    };
 
     let mut encoded = Vec::new();
     response.encode(&mut encoded).map_err(|error| error.to_string())?;
