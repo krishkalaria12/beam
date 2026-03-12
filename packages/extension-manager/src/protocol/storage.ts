@@ -101,7 +101,7 @@ class PersistentLocalStorageStore {
       this.snapshot = normalized;
     } catch (error) {
       writeLog({
-        tag: "sidecar-local-storage",
+        tag: "extension-manager-local-storage",
         message: "Failed to load LocalStorage snapshot",
         error: error instanceof Error ? error.message : String(error),
       });
@@ -115,7 +115,7 @@ class PersistentLocalStorageStore {
       fs.writeFileSync(this.storagePath, JSON.stringify(this.snapshot, null, 2));
     } catch (error) {
       writeLog({
-        tag: "sidecar-local-storage",
+        tag: "extension-manager-local-storage",
         message: "Failed to persist LocalStorage snapshot",
         error: error instanceof Error ? error.message : String(error),
       });

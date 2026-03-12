@@ -43,7 +43,7 @@ export function sendRuntimeRpcRequest<T>(
         pendingRequests.delete(requestId);
         const message = `Request for ${operation} timed out`;
         writeLog({
-          tag: "sidecar-rpc-request-failure",
+          tag: "extension-manager-rpc-request-failure",
           requestId,
           operation,
           message,
@@ -143,7 +143,7 @@ export function handleResponse(requestId: string, result: unknown, error?: strin
   }
 
   writeLog({
-    tag: "sidecar-rpc-request-failure",
+    tag: "extension-manager-rpc-request-failure",
     requestId,
     operation: "response",
     message: "Received response for unknown requestId",

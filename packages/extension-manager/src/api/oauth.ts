@@ -101,7 +101,7 @@ export function handleOAuthResponse(
     pendingAuthorizationRequests.delete(stateKey);
   } else {
     writeLog({
-      tag: "sidecar-rpc-request-failure",
+      tag: "extension-manager-rpc-request-failure",
       operation: "oauth-authorize-response",
       message: "OAuth response did not match any pending authorization request",
       state,
@@ -263,7 +263,7 @@ export class PKCEClient {
           if (pendingAuthorizationRequests.has(state)) {
             pendingAuthorizationRequests.delete(state);
             writeLog({
-              tag: "sidecar-rpc-request-failure",
+              tag: "extension-manager-rpc-request-failure",
               requestId: state,
               operation: "oauth-authorize",
               message: "OAuth authorization timed out",

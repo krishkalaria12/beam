@@ -12,9 +12,9 @@
     "rootDirs": ["."],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
-    }
+      "@/*": ["./src/*"],
+    },
   },
   "include": ["src", "src/main.tsx", "src/routeTree.gen.ts", "vite.config.ts"],
-  "exclude": ["flare-main", "sidecar", "packages", "dist", "node_modules"]
+  "exclude": ["packages", "dist", "node_modules"],
 }

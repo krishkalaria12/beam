@@ -1,5 +1,5 @@
 {
-  "name": "sidecar",
+  "name": "@beam/extension-manager",
   "version": "1.0.0",
   "description": "",
   "keywords": [],
@@ -8,11 +8,13 @@
   "main": "index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "esbuild src/index.ts --bundle --outfile=dist/index.js --platform=node && pkg dist/index.js --output app --public --sea && bun run rename",
-    "rename": "mkdir -p ../src-tauri/binaries && mv \"app$([[ \"$OSTYPE\" =~ msys|win32 ]] && echo .exe)\" \"../src-tauri/binaries/app-$(rustc -vV | awk '/host:/ {print $2}')$([[ \"$OSTYPE\" =~ msys|win32 ]] && echo .exe)\"",
+    "build": "esbuild src/index.ts --bundle --outfile=dist/index.js --platform=node && pkg dist/index.js --targets node22-linux-x64 --output app --public --sea && bun run rename",
+    "rename": "mkdir -p ../../src-tauri/binaries && mv \"app$([[ \"$OSTYPE\" =~ msys|win32 ]] && echo .exe)\" \"../../src-tauri/binaries/app-$(rustc -vV | awk '/host:/ {print $2}')$([[ \"$OSTYPE\" =~ msys|win32 ]] && echo .exe)\"",
     "check": "tsc --noEmit"
   },
   "dependencies": {
+    "@beam/api": "workspace:*",
+    "@beam/raycast-api-compat": "workspace:*",
     "@beam/extension-protocol": "workspace:*",
     "msgpackr": "^1.11.4",
     "pako": "^2.1.0",

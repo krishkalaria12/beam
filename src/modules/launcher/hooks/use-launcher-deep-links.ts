@@ -6,8 +6,8 @@ import { toast } from "sonner";
 import type { CommandPanel } from "@/command-registry/types";
 import { getDiscoveredPlugins } from "@/modules/extensions/api/get-discovered-plugins";
 import { persistentExtensionRunnerManager } from "@/modules/extensions/background/persistent-runners";
-import { extensionSidecarService } from "@/modules/extensions/sidecar-service";
-import { parseRaycastDeepLink } from "@/modules/extensions/sidecar/deep-link";
+import { extensionManagerService } from "@/modules/extensions/extension-manager-service";
+import { parseRaycastDeepLink } from "@/modules/extensions/extension-manager/deep-link";
 import { useExtensionRuntimeStore } from "@/modules/extensions/runtime/store";
 import { useExtensionsUiStore } from "@/modules/extensions/store/use-extensions-ui-store";
 
@@ -102,7 +102,7 @@ export function useLauncherDeepLinks({ openPanel, backToCommands }: UseLauncherD
       }
 
       try {
-        await extensionSidecarService.runPlugin({
+        await extensionManagerService.runPlugin({
           pluginPath: matchedPlugin.pluginPath,
           mode: pluginMode,
           aiAccessStatus: false,
@@ -129,7 +129,7 @@ export function useLauncherDeepLinks({ openPanel, backToCommands }: UseLauncherD
 
     void listen<string>("deep-link", (event) => {
       const deepLinkUrl = event.payload;
-      if (extensionSidecarService.handleDeepLink(deepLinkUrl)) {
+      if (extensionManagerService.handleDeepLink(deepLinkUrl)) {
         return;
       }
 

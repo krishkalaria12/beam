@@ -5,7 +5,7 @@ import {
   ManagerResponse,
   RuntimeEvent,
 } from "@beam/extension-protocol";
-import type { ExtensionMode } from "@/modules/extensions/sidecar/discovery";
+import type { ExtensionMode } from "@/modules/extensions/extension-manager/discovery";
 
 function toProtocolCommandMode(mode: ExtensionMode): CommandMode {
   switch (mode) {

@@ -2,12 +2,12 @@ import { isTauri } from "@tauri-apps/api/core";
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { open as shellOpen } from "@tauri-apps/plugin-shell";
-import { parseRaycastDeepLink } from "@/modules/extensions/sidecar/deep-link";
+import { parseRaycastDeepLink } from "@/modules/extensions/extension-manager/deep-link";
 import {
   normalizeDiscoveredPluginRecord,
   type DiscoveredPluginRecord,
   type ExtensionMode,
-} from "@/modules/extensions/sidecar/discovery";
+} from "@/modules/extensions/extension-manager/discovery";
 import {
   buildBrowserExtensionStatusManagerRequest,
   buildDispatchToastActionManagerRequest,
@@ -17,10 +17,10 @@ import {
   buildPopViewManagerRequest,
   buildSetPreferencesManagerRequest,
   buildTriggerToastHideManagerRequest,
-} from "@/modules/extensions/sidecar/manager-protocol";
-import { parseRuntimeRender } from "@/modules/extensions/sidecar/runtime-render";
-import { parseRuntimeOutput } from "@/modules/extensions/sidecar/runtime-output";
-import { parseRuntimeRpc } from "@/modules/extensions/sidecar/runtime-rpc";
+} from "@/modules/extensions/extension-manager/manager-protocol";
+import { parseRuntimeRender } from "@/modules/extensions/extension-manager/runtime-render";
+import { parseRuntimeOutput } from "@/modules/extensions/extension-manager/runtime-output";
+import { parseRuntimeRpc } from "@/modules/extensions/extension-manager/runtime-rpc";
 import {
   FOREGROUND_EXTENSION_RUNTIME_ID,
   listenToExtensionRuntimeExit,
@@ -31,7 +31,7 @@ import {
   sendExtensionRuntimeMessage,
   startExtensionRuntime,
   stopExtensionRuntime,
-} from "@/modules/extensions/sidecar/runtime-bridge";
+} from "@/modules/extensions/extension-manager/runtime-bridge";
 import { persistentExtensionRunnerManager } from "@/modules/extensions/background/persistent-runners";
 import { useExtensionRuntimeStore } from "@/modules/extensions/runtime/store";
 import type { ManagerRequest, ManagerResponse, RuntimeCommand, RuntimeRpc } from "@beam/extension-protocol";
@@ -46,12 +46,12 @@ interface RunPluginPayload {
   commandName?: string;
 }
 
-interface SidecarEvent {
+interface ExtensionManagerEventEnvelope {
   action: string;
   payload: Record<string, unknown>;
 }
 
-export type ExtensionSidecarMessageEvent =
+export type ExtensionManagerMessageEvent =
   | { type: "go-back-to-plugin-list" }
   | { type: "open"; target: string; application?: string }
   | { type: "focus-element"; elementId: number }
@@ -63,10 +63,10 @@ export type ExtensionSidecarMessageEvent =
   | { type: "open-command-preferences"; extensionName?: string; commandName?: string }
   | { type: "log"; payload: unknown };
 
-type SidecarEventListener = (event: ExtensionSidecarMessageEvent) => void;
+type ExtensionManagerEventListener = (event: ExtensionManagerMessageEvent) => void;
 
-interface SidecarRequestFailureLog {
-  tag: "extensions-sidecar-request-failure";
+interface ExtensionManagerRequestFailureLog {
+  tag: "extensions-manager-request-failure";
   channel:
     | "launch-command"
     | "invoke_command"
@@ -90,14 +90,13 @@ function toRecord(value: unknown): Record<string, unknown> | undefined {
   return value as Record<string, unknown>;
 }
 
-class ExtensionSidecarService {
+class ExtensionManagerService {
   private runtimeStarted = false;
   private startPromise: Promise<void> | null = null;
   private runtimeMessageUnlisten: (() => void) | null = null;
   private runtimeStderrUnlisten: (() => void) | null = null;
   private runtimeExitUnlisten: (() => void) | null = null;
-  private listeners = new Set<SidecarEventListener>();
-  private oauthTokenStore = new Map<string, Record<string, unknown>>();
+  private listeners = new Set<ExtensionManagerEventListener>();
   private browserExtensionStatusPollId: ReturnType<typeof setInterval> | null = null;
   private pendingOauthStates = new Set<string>();
 
@@ -105,12 +104,12 @@ class ExtensionSidecarService {
     return error instanceof Error ? error.message : String(error);
   }
 
-  private logRequestFailure(log: SidecarRequestFailureLog): void {
-    console.error(`[extensions-sidecar][request-failure] ${JSON.stringify(log)}`);
+  private logRequestFailure(log: ExtensionManagerRequestFailureLog): void {
+    console.error(`[extensions-manager][request-failure] ${JSON.stringify(log)}`);
     this.emit({ type: "log", payload: log });
   }
 
-  subscribe(listener: SidecarEventListener): () => void {
+  subscribe(listener: ExtensionManagerEventListener): () => void {
     this.listeners.add(listener);
     return () => {
       this.listeners.delete(listener);
@@ -125,7 +124,7 @@ class ExtensionSidecarService {
         args,
       }),
     ).catch((error) => {
-      console.error("[extensions-sidecar] dispatch event failed:", error);
+      console.error("[extensions-manager] dispatch event failed:", error);
     });
   }
 
@@ -151,7 +150,7 @@ class ExtensionSidecarService {
 
   popView(): void {
     void this.sendManagerRequest(buildPopViewManagerRequest()).catch((error) => {
-      console.error("[extensions-sidecar] pop view failed:", error);
+      console.error("[extensions-manager] pop view failed:", error);
     });
   }
 
@@ -162,13 +161,13 @@ class ExtensionSidecarService {
         actionType,
       }),
     ).catch((error) => {
-      console.error("[extensions-sidecar] dispatch toast action failed:", error);
+      console.error("[extensions-manager] dispatch toast action failed:", error);
     });
   }
 
   triggerToastHide(toastId: number): void {
     void this.sendManagerRequest(buildTriggerToastHideManagerRequest(toastId)).catch((error) => {
-      console.error("[extensions-sidecar] trigger toast hide failed:", error);
+      console.error("[extensions-manager] trigger toast hide failed:", error);
     });
   }
 
@@ -176,7 +175,7 @@ class ExtensionSidecarService {
     this.openTarget(target, application);
   }
 
-  private emit(event: ExtensionSidecarMessageEvent): void {
+  private emit(event: ExtensionManagerMessageEvent): void {
     for (const listener of this.listeners) {
       listener(event);
     }
@@ -189,7 +188,7 @@ class ExtensionSidecarService {
   private setBrowserExtensionConnectionStatus(isConnected: boolean): void {
     void this.sendManagerRequest(buildBrowserExtensionStatusManagerRequest(isConnected)).catch(
       (error) => {
-        console.error("[extensions-sidecar] browser extension status update failed:", error);
+        console.error("[extensions-manager] browser extension status update failed:", error);
       },
     );
   }
@@ -354,7 +353,7 @@ class ExtensionSidecarService {
     } catch (error) {
       const message = this.toErrorMessage(error);
       this.logRequestFailure({
-        tag: "extensions-sidecar-request-failure",
+        tag: "extensions-manager-request-failure",
         channel: "launch-command",
         requestId: payload.requestId,
         operation: payload.name,
@@ -444,7 +443,7 @@ class ExtensionSidecarService {
     } catch (error) {
       const message = this.toErrorMessage(error);
       this.logRequestFailure({
-        tag: "extensions-sidecar-request-failure",
+        tag: "extensions-manager-request-failure",
         channel: "invoke_command",
         requestId: payload.requestId,
         operation: payload.command,
@@ -524,20 +523,18 @@ class ExtensionSidecarService {
       const cached = await invoke("oauth_get_tokens", { providerId: payload.providerId });
       this.sendOauthResponse("get", payload.requestId, cached);
     } catch (error) {
-      const fallback = this.oauthTokenStore.get(payload.providerId);
       const message = this.toErrorMessage(error);
       this.logRequestFailure({
-        tag: "extensions-sidecar-request-failure",
+        tag: "extensions-manager-request-failure",
         channel: "oauth-get-tokens",
         requestId: payload.requestId,
         operation: "oauth_get_tokens",
         message,
         metadata: {
           providerId: payload.providerId,
-          fallbackUsed: Boolean(fallback),
         },
       });
-      this.sendOauthResponse("get", payload.requestId, fallback, message);
+      this.sendOauthResponse("get", payload.requestId, undefined, message);
     }
   }
 
@@ -553,20 +550,18 @@ class ExtensionSidecarService {
       });
       this.sendOauthResponse("set", payload.requestId, true);
     } catch (error) {
-      this.oauthTokenStore.set(payload.providerId, payload.tokens);
       const message = this.toErrorMessage(error);
       this.logRequestFailure({
-        tag: "extensions-sidecar-request-failure",
+        tag: "extensions-manager-request-failure",
         channel: "oauth-set-tokens",
         requestId: payload.requestId,
         operation: "oauth_set_tokens",
         message,
         metadata: {
           providerId: payload.providerId,
-          fallbackUsed: true,
         },
       });
-      this.sendOauthResponse("set", payload.requestId, true, message);
+      this.sendOauthResponse("set", payload.requestId, false, message);
     }
   }
 
@@ -578,20 +573,18 @@ class ExtensionSidecarService {
       await invoke("oauth_remove_tokens", { providerId: payload.providerId });
       this.sendOauthResponse("remove", payload.requestId, true);
     } catch (error) {
-      this.oauthTokenStore.delete(payload.providerId);
       const message = this.toErrorMessage(error);
       this.logRequestFailure({
-        tag: "extensions-sidecar-request-failure",
+        tag: "extensions-manager-request-failure",
         channel: "oauth-remove-tokens",
         requestId: payload.requestId,
         operation: "oauth_remove_tokens",
         message,
         metadata: {
           providerId: payload.providerId,
-          fallbackUsed: true,
         },
       });
-      this.sendOauthResponse("remove", payload.requestId, true, message);
+      this.sendOauthResponse("remove", payload.requestId, false, message);
     }
   }
 
@@ -617,7 +610,7 @@ class ExtensionSidecarService {
     } catch (error) {
       const message = this.toErrorMessage(error);
       this.logRequestFailure({
-        tag: "extensions-sidecar-request-failure",
+        tag: "extensions-manager-request-failure",
         channel: "browser-extension-request",
         requestId: payload.requestId,
         operation: payload.method,
@@ -761,7 +754,7 @@ class ExtensionSidecarService {
     } catch (error) {
       const message = this.toErrorMessage(error);
       this.logRequestFailure({
-        tag: "extensions-sidecar-request-failure",
+        tag: "extensions-manager-request-failure",
         channel: "invoke_command",
         requestId: payload.requestId,
         operation: "ai_ask_stream",
@@ -784,7 +777,7 @@ class ExtensionSidecarService {
         window.open(target, "_blank", "noopener,noreferrer");
       }
       this.logRequestFailure({
-        tag: "extensions-sidecar-request-failure",
+        tag: "extensions-manager-request-failure",
         channel: "open-target",
         operation: "shellOpen",
         message: this.toErrorMessage(error),
@@ -798,7 +791,7 @@ class ExtensionSidecarService {
 
   private sendRuntimeRpc(message: RuntimeRpc): void {
     void sendExtensionRuntimeRpc(FOREGROUND_EXTENSION_RUNTIME_ID, message).catch((error) => {
-      console.error("[extensions-sidecar] runtime rpc response write failed:", error);
+      console.error("[extensions-manager] runtime rpc response write failed:", error);
     });
   }
 
@@ -820,7 +813,7 @@ class ExtensionSidecarService {
     }
 
     if (runtimeRender?.kind === "error") {
-      console.error("[extensions-sidecar] runtime error:", runtimeRender.message, runtimeRender.stack);
+      console.error("[extensions-manager] runtime error:", runtimeRender.message, runtimeRender.stack);
       this.emit({
         type: "log",
         payload: {
@@ -970,7 +963,7 @@ class ExtensionSidecarService {
       return;
     }
 
-    console.error("[extensions-sidecar] invalid stdout payload:", raw);
+    console.error("[extensions-manager] invalid stdout payload:", raw);
   }
 
   async start(): Promise<void> {
@@ -1001,7 +994,7 @@ class ExtensionSidecarService {
             return;
           }
 
-          console.error("[extensions-sidecar] stderr:", line);
+          console.error("[extensions-manager] stderr:", line);
         });
       }
 
@@ -1045,11 +1038,11 @@ class ExtensionSidecarService {
       this.runtimeExitUnlisten = null;
     }
     void stopExtensionRuntime(FOREGROUND_EXTENSION_RUNTIME_ID).catch((error) => {
-      console.error("[extensions-sidecar] failed to stop runtime bridge:", error);
+      console.error("[extensions-manager] failed to stop runtime bridge:", error);
     });
   }
 
-  private async writeEvent(event: SidecarEvent): Promise<void> {
+  private async writeEvent(event: ExtensionManagerEventEnvelope): Promise<void> {
     await this.start();
     await sendExtensionRuntimeMessage(FOREGROUND_EXTENSION_RUNTIME_ID, event.action, event.payload);
   }
@@ -1067,4 +1060,4 @@ class ExtensionSidecarService {
   }
 }
 
-export const extensionSidecarService = new ExtensionSidecarService();
+export const extensionManagerService = new ExtensionManagerService();

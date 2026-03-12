@@ -82,13 +82,6 @@ function normalizeTabs(method: string, raw: unknown): Tab[] {
   return raw.map((entry) => normalizeTab(method, entry));
 }
 
-function combineFallbackError(method: string, primaryError: unknown, fallbackError: unknown): Error {
-  return browserError(
-    method,
-    `primary request failed: ${toErrorMessage(primaryError)}; fallback failed: ${toErrorMessage(fallbackError)}`,
-  );
-}
-
 function buildContentParams(options?: ContentOptions): {
   field: string;
   selector?: string;
@@ -136,62 +129,27 @@ async function getContent(options?: ContentOptions): Promise<string> {
 }
 
 async function getActiveTab(): Promise<Tab | null> {
-  try {
-    const response = await sendBrowserRequest<unknown>("getActiveTab", {});
-    const value = extractValue<unknown>("getActiveTab", response);
-    if (value == null) {
-      return null;
-    }
-    return normalizeTab("getActiveTab", value);
-  } catch (primaryError) {
-    try {
-      const tabs = await getTabs();
-      return tabs.find((tab) => tab.active) ?? tabs[0] ?? null;
-    } catch (fallbackError) {
-      throw combineFallbackError("getActiveTab", primaryError, fallbackError);
-    }
+  const response = await sendBrowserRequest<unknown>("getActiveTab", {});
+  const value = extractValue<unknown>("getActiveTab", response);
+  if (value == null) {
+    return null;
   }
+  return normalizeTab("getActiveTab", value);
 }
 
 async function getTabById(tabId: number): Promise<Tab | null> {
-  try {
-    const response = await sendBrowserRequest<unknown>("getTabById", { tabId });
-    const value = extractValue<unknown>("getTabById", response);
-    if (value == null) {
-      return null;
-    }
-    return normalizeTab("getTabById", value);
-  } catch (primaryError) {
-    try {
-      const tabs = await getTabs();
-      return tabs.find((tab) => tab.id === tabId) ?? null;
-    } catch (fallbackError) {
-      throw combineFallbackError("getTabById", primaryError, fallbackError);
-    }
+  const response = await sendBrowserRequest<unknown>("getTabById", { tabId });
+  const value = extractValue<unknown>("getTabById", response);
+  if (value == null) {
+    return null;
   }
+  return normalizeTab("getTabById", value);
 }
 
 async function searchTabs(query: string): Promise<Tab[]> {
-  try {
-    const response = await sendBrowserRequest<unknown>("searchTabs", { query });
-    const value = extractValue<unknown>("searchTabs", response);
-    return normalizeTabs("searchTabs", value);
-  } catch (primaryError) {
-    try {
-      const normalizedQuery = query.trim().toLowerCase();
-      const tabs = await getTabs();
-      if (!normalizedQuery) {
-        return tabs;
-      }
-      return tabs.filter(
-        (tab) =>
-          tab.url.toLowerCase().includes(normalizedQuery) ||
-          (tab.title ?? "").toLowerCase().includes(normalizedQuery),
-      );
-    } catch (fallbackError) {
-      throw combineFallbackError("searchTabs", primaryError, fallbackError);
-    }
-  }
+  const response = await sendBrowserRequest<unknown>("searchTabs", { query });
+  const value = extractValue<unknown>("searchTabs", response);
+  return normalizeTabs("searchTabs", value);
 }
 
 async function getActiveTabContent(options?: Omit<ContentOptions, "tabId">): Promise<string> {

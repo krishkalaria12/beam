@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import {
   buildDispatchViewEventManagerRequest,
   buildLaunchPluginManagerRequest,
-} from "@/modules/extensions/sidecar/manager-protocol";
+} from "@/modules/extensions/extension-manager/manager-protocol";
 import {
   listenToExtensionRuntimeExit,
   listenToExtensionRuntimeMessages,
@@ -17,10 +17,10 @@ import {
   sendExtensionRuntimeRpc,
   startExtensionRuntime,
   stopExtensionRuntime,
-} from "@/modules/extensions/sidecar/runtime-bridge";
-import { parseRuntimeRender } from "@/modules/extensions/sidecar/runtime-render";
-import { parseRuntimeOutput } from "@/modules/extensions/sidecar/runtime-output";
-import { parseRuntimeRpc } from "@/modules/extensions/sidecar/runtime-rpc";
+} from "@/modules/extensions/extension-manager/runtime-bridge";
+import { parseRuntimeRender } from "@/modules/extensions/extension-manager/runtime-render";
+import { parseRuntimeOutput } from "@/modules/extensions/extension-manager/runtime-output";
+import { parseRuntimeRpc } from "@/modules/extensions/extension-manager/runtime-rpc";
 import type { PluginInfo } from "@/modules/extensions/types";
 import {
   applyRuntimeCommandsToRuntimeTree,
@@ -50,7 +50,7 @@ type PersistentPluginDescriptor = Pick<
   | "icon"
 >;
 
-interface SidecarEvent {
+interface ExtensionManagerEventEnvelope {
   action: string;
   payload: Record<string, unknown>;
 }
@@ -325,7 +325,7 @@ class PersistentRunnerSession {
     console.error(`[persistent-runner:${this.runnerId}] stderr:`, line);
   }
 
-  private async writeEvent(event: SidecarEvent): Promise<void> {
+  private async writeEvent(event: ExtensionManagerEventEnvelope): Promise<void> {
     if (!this.runtimeStarted) {
       throw new Error(`persistent runner "${this.runnerId}" is not running`);
     }

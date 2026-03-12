@@ -13,12 +13,20 @@
   },
   "files": [
     "dist",
-    "types"
+    "src",
+    "bin"
   ],
   "keywords": [],
   "author": "",
   "license": "ISC",
   "types": "./dist/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./package.json": "./package.json"
+  },
   "publishConfig": {
     "access": "public"
   },

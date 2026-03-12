@@ -32,7 +32,7 @@ import { LauncherCommandModeContent } from "@/modules/launcher/components/launch
 import { LauncherFooter } from "@/modules/launcher/components/launcher-footer";
 import { LauncherSecondaryPanel } from "@/modules/launcher/components/launcher-secondary-panel";
 import { LauncherTakeoverPanel } from "@/modules/launcher/components/launcher-takeover-panel";
-import { useExtensionSidecarEvents } from "@/modules/launcher/hooks/use-extension-sidecar-events";
+import { useExtensionManagerEvents } from "@/modules/launcher/hooks/use-extension-manager-events";
 import { useCliDmenuRequests } from "@/modules/launcher/hooks/use-cli-dmenu-requests";
 import { useLauncherDeepLinks } from "@/modules/launcher/hooks/use-launcher-deep-links";
 import { useLauncherPanelPrefetch } from "@/modules/launcher/hooks/use-launcher-panel-prefetch";
@@ -49,7 +49,7 @@ import type { ShellExecutionEntry } from "@/modules/shell/types";
 import { persistentExtensionRunnerManager } from "@/modules/extensions/background/persistent-runners";
 import { getDiscoveredPlugins } from "@/modules/extensions/api/get-discovered-plugins";
 import { PersistentExtensionsHost } from "@/modules/extensions/components/persistent-extensions-host";
-import { extensionSidecarService } from "@/modules/extensions/sidecar-service";
+import { extensionManagerService } from "@/modules/extensions/extension-manager-service";
 import { ExtensionToastBridge } from "@/modules/extensions/components/extension-toast-bridge";
 import { useExtensionRuntimeStore } from "@/modules/extensions/runtime/store";
 import { findQuicklinkByKeyword } from "@/modules/quicklinks/api/quicklinks";
@@ -151,7 +151,7 @@ export default function LauncherCommand() {
     setFallbackCommandIds,
   } = useCommandPreferences();
   useLauncherDeepLinks({ openPanel, backToCommands });
-  useExtensionSidecarEvents({ backToCommands, openExtensions });
+  useExtensionManagerEvents({ backToCommands, openExtensions });
   useCliDmenuRequests();
   useLauncherPanelPrefetch();
 
@@ -194,7 +194,7 @@ export default function LauncherCommand() {
       }
 
       try {
-        await extensionSidecarService.runPlugin({
+        await extensionManagerService.runPlugin({
           pluginPath: input.pluginPath,
           mode: input.pluginMode,
           aiAccessStatus: false,

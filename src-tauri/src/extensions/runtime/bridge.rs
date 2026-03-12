@@ -45,7 +45,7 @@ fn write_json_line(stdin: &Arc<Mutex<BufWriter<ChildStdin>>>, value: &Value) -> 
     writer.flush().map_err(|error| error.to_string())
 }
 
-fn resolve_sidecar_launcher(app: &AppHandle) -> Result<PathBuf, String> {
+fn resolve_extension_manager_launcher(app: &AppHandle) -> Result<PathBuf, String> {
     let mut candidate_dirs = Vec::new();
 
     if let Ok(resource_dir) = app.path().resource_dir() {
@@ -60,7 +60,7 @@ fn resolve_sidecar_launcher(app: &AppHandle) -> Result<PathBuf, String> {
     }
 
     for directory in candidate_dirs {
-        if let Some(path) = find_sidecar_launcher_in_dir(&directory) {
+        if let Some(path) = find_extension_manager_launcher_in_dir(&directory) {
             return Ok(path);
         }
     }
@@ -68,7 +68,7 @@ fn resolve_sidecar_launcher(app: &AppHandle) -> Result<PathBuf, String> {
     Err("failed to locate the extension runtime launcher".to_string())
 }
 
-fn find_sidecar_launcher_in_dir(directory: &Path) -> Option<PathBuf> {
+fn find_extension_manager_launcher_in_dir(directory: &Path) -> Option<PathBuf> {
     let entries = fs::read_dir(directory).ok()?;
 
     for entry in entries.flatten() {
@@ -82,7 +82,7 @@ fn find_sidecar_launcher_in_dir(directory: &Path) -> Option<PathBuf> {
     None
 }
 
-fn build_sidecar_args(app: &AppHandle) -> Result<Vec<String>, String> {
+fn build_extension_manager_args(app: &AppHandle) -> Result<Vec<String>, String> {
     let data_dir = app
         .path()
         .app_local_data_dir()
@@ -537,8 +537,8 @@ impl ExtensionRuntimeBridgeState {
             runtimes.remove(runtime_id);
         }
 
-        let launcher = resolve_sidecar_launcher(app)?;
-        let args = build_sidecar_args(app)?;
+        let launcher = resolve_extension_manager_launcher(app)?;
+        let args = build_extension_manager_args(app)?;
         let mut child = Command::new(launcher)
             .args(args)
             .stdin(Stdio::piped())

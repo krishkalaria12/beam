@@ -111,7 +111,7 @@ A full-featured AI assistant panel with first-class multi-provider support.
 
 ### Extensions
 
-Beam ships a **Raycast-compatible extension runtime** — a compiled Node.js sidecar process that runs extensions using a custom React reconciler.
+Beam ships a **Raycast-compatible extension runtime** — a compiled Node.js extension manager process that runs extensions using a custom React reconciler.
 
 - **Extension Store** — browse, install, and uninstall extensions
 - **React-based extension UIs** rendered inside the launcher
@@ -167,12 +167,12 @@ beam/
 │   └── modules/            One directory per feature panel
 ├── src-tauri/              Rust backend — IPC commands, persistence, system APIs
 │   └── src/                ~80 Tauri IPC commands across all feature modules
-├── sidecar/                Node.js extension runtime (React reconciler + RPC)
-├── packages/protocol/      Shared Zod-validated message schemas (frontend ↔ sidecar)
+├── packages/extension-manager/ Node.js extension runtime (React reconciler + RPC)
+├── packages/extension-protocol/ Shared protobuf-generated runtime contracts
 └── browser-extension/      Chrome + Firefox bridge extensions
 ```
 
-**Frontend → Backend communication** happens entirely over Tauri's typed IPC. The sidecar extension runtime communicates with the main process over stdin/stdout using JSON + msgpack.
+**Frontend → Backend communication** happens entirely over Tauri's typed IPC. The extension manager runtime communicates with the main process over stdin/stdout using JSON + msgpack.
 
 ---
 
@@ -225,7 +225,7 @@ beam/
 - **React Compiler**: babel-plugin-react-compiler
 - **Linting**: oxlint
 - **Formatting**: oxfmt (JS/TS), cargo fmt (Rust)
-- **Sidecar Bundling**: esbuild + @yao-pkg/pkg + patchelf
+- **Extension Manager Bundling**: esbuild + @yao-pkg/pkg + patchelf
 
 ---
 
@@ -280,8 +280,8 @@ bun run desktop:dev       # Tauri + Vite (full app)
 bun run build             # Frontend build only
 bun run desktop:build     # Full desktop app build
 bun run check-types       # TypeScript type check
-bun run sidecar:check     # Sidecar TypeScript check
-bun run sidecar:build     # Rebuild sidecar binary
+bun run extension-manager:check # Extension Manager TypeScript check
+bun run extension-manager:build # Rebuild extension manager binary
 bun run fmt:check         # JS/TS format check
 bun run rust:fmt:check    # Rust format check
 ```

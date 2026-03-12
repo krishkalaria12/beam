@@ -46,20 +46,21 @@ Beam should end up with these major parts:
 
 Beam already has useful pieces:
 
-- runtime host: `sidecar/`
-- binary framed transport: `sidecar/src/io.ts`
-- host request plumbing: `sidecar/src/api/rpc.ts`
-- typed message schemas: `packages/protocol/`
+- native Beam SDK package: `packages/beam-api/`
+- runtime host: `packages/extension-manager/`
+- binary framed transport: `packages/extension-manager/src/io.ts`
+- host request plumbing: `packages/extension-manager/src/api/rpc.ts`
+- generated native protocol package: `packages/extension-protocol/`
 - extension install/runtime code: `src-tauri/src/extensions/`
 
 What is missing is clean separation.
 
 Today:
 
-- SDK concerns, runtime concerns, and host concerns are mixed together
-- protocol schemas are not the real native runtime boundary
-- Raycast compatibility is treated as primary instead of secondary
-- there is no dedicated protobuf-native extension contract
+- `packages/beam-api/` exists as the native SDK package
+- SDK concerns, runtime concerns, and host concerns are now split cleanly enough that `@beam/api` no longer exposes runtime-factory code
+- Raycast compatibility is now package-scoped, and extension manager owns the concrete host-side primitives behind the runtime factories
+- there is no Beam-native store/package/update layer yet
 
 ## Progress Snapshot
 
@@ -68,19 +69,32 @@ Completed so far:
 - `proto/extension-runtime/` created with initial native runtime schemas:
   - `common.proto`
   - `environment.proto`
+  - `manifest.proto`
   - `manager.proto`
+  - `output.proto`
+  - `render.proto`
+  - `rpc.proto`
   - `storage.proto`
   - `ui.proto`
 - `packages/extension-protocol/` added as the generated TypeScript protocol package
+- `packages/beam-api/` is now the native Beam SDK package path
+- `packages/raycast-api-compat/` added as the first explicit compatibility package boundary
+- `packages/extension-manager/src/patch-require.ts` now resolves `@beam/api` and `@raycast/api` through workspace package modules instead of inline compat assembly
+- runtime API assembly now lives in `packages/extension-manager/src/runtime/create-api.ts`, not in the public SDK
 - bun-based TS codegen wired with `protoc + ts-proto`
 - Rust-side codegen wired through `src-tauri/build.rs` with `prost-build`
-- initial sidecar protocol mappers added for:
+- initial extension manager protocol mappers added for:
   - environment snapshots
   - local storage
-- sidecar launch path partially restructured to mirror Vicinae more closely:
-  - `sidecar/src/runtime/bootstrap.ts`
-  - `sidecar/src/runtime/jsx-runtime.ts`
-  - `sidecar/src/runtime/launch.ts`
+- extension manager launch path now follows Vicinae’s top-level structure more closely:
+  - `packages/extension-manager/src/globals.ts`
+  - `packages/extension-manager/src/patch-require.ts`
+  - `packages/extension-manager/src/worker.ts`
+  - `packages/extension-manager/src/loaders/load-view-command.tsx`
+  - `packages/extension-manager/src/loaders/load-no-view-command.ts`
+- old extension-manager boot files have been removed:
+  - `packages/extension-manager/src/plugin.ts`
+  - `packages/extension-manager/src/runtime/bootstrap.ts`
 - plugin launch now creates a typed `RuntimeLaunchPayload`-aligned launch plan before execution
 - manager protocol expanded with typed request/response envelopes for:
   - launch plugin
@@ -89,8 +103,8 @@ Completed so far:
   - pop view runtime events
   - toast and browser-extension control events
 - app-side and persistent-runner control paths now send manager requests instead of legacy action strings
-- sidecar now routes manager requests directly and responds with typed manager responses
-- legacy sidecar control actions for launch/preferences/pop-view/view-event/toast/browser-status have been removed
+- extension manager now routes manager requests directly and responds with typed manager responses
+- legacy extension manager control actions for launch/preferences/pop-view/view-event/toast/browser-status have been removed
 - stale legacy protocol messages `plugin-list` and `preference-values` have been removed from `packages/protocol`
 - Rust now owns the foreground extension runtime process lifecycle through:
   - `src-tauri/src/extensions/runtime/bridge.rs`
@@ -98,9 +112,14 @@ Completed so far:
   - `extension_runtime_stop`
   - `extension_runtime_send_message`
   - `extension_runtime_send_manager_request`
-- foreground `ExtensionSidecarService` no longer spawns `Command.sidecar(...)` directly
+- foreground `ExtensionManagerService` no longer spawns a frontend-owned runtime child directly
 - manager requests now carry `request_id` and manager responses are correlated in the Rust bridge before returning typed protobuf responses to the frontend
 - non-manager runtime stdout messages are emitted from Rust to the frontend as Tauri events instead of being decoded in the frontend process
+- persistent/background runners now also use the same Rust runtime bridge instead of a frontend-owned child-process path
+- runtime control, rpc, output, render, and diagnostics traffic now use native protocol-backed envelopes
+- legacy `packages/protocol/` and `@flare/protocol` runtime traffic have been removed
+- manifest and discovered-plugin shapes now use native protocol contracts in TS and Rust
+- browser-extension, environment, and OAuth fallback behavior has been removed from the live extension-manager path
 
 Verified:
 
@@ -108,19 +127,23 @@ Verified:
 - `bun run extension-protocol:check`
 - `cargo check --manifest-path src-tauri/Cargo.toml`
 - `bun run check-types`
-- `bun run check` in `sidecar/`
-- sidecar bundle smoke test via `bunx esbuild`
+- `bun run check` in `packages/extension-manager/`
+- extension manager bundle smoke test via `bunx esbuild`
 
 Current migration status:
 
-- Phase 1: in progress
-- Phase 2: in progress
-- Phase 3: in progress
-- Phase 6: started for environment, local storage, launch, preferences, and manager control events
+- Phase 1: substantially complete
+- Phase 2: complete
+- Phase 3: substantially complete
+- Phase 4: partially complete through `packages/beam-api/`
+- Phase 6: in progress for environment, storage, launch, preferences, manager control, rpc, render, diagnostics, and manifest/discovery
 
 Known remaining gap:
 
-- persistent/background runners still use the old frontend-owned sidecar child path and have not yet been moved to the Rust runtime bridge
+- `packages/beam-api/` still carries transitional runtime factories alongside the public SDK and should become pure public API surface
+- `packages/raycast-api-compat/` now owns an explicit Raycast-shaped export surface, but it still depends on Beam-native runtime behavior underneath
+- `packages/extension-manager/` still has Beam-specific host adapter files that are correct but not yet as cleanly isolated as Vicinae’s final shape
+- Beam-native store/package/update/verification architecture has not been built yet
 
 ## Core Principles
 
@@ -136,7 +159,7 @@ Known remaining gap:
 
 Before more refactoring:
 
-- treat `sidecar` as Beam's future `extension-manager`
+- treat `packages/extension-manager` as Beam's extension runtime package
 - stop adding more ad hoc runtime paths
 - define target ownership boundaries once and keep them stable
 
@@ -179,9 +202,9 @@ Important:
 - use protobuf for payload schema first
 - do not rewrite framing at the same time
 
-### Phase 3: Refactor Sidecar into Extension Manager Layers
+### Phase 3: Refactor Extension Manager Layers
 
-Restructure the current `sidecar` into explicit layers:
+Restructure `packages/extension-manager` into explicit layers:
 
 - runtime bootstrap
 - require patching
@@ -193,15 +216,23 @@ Restructure the current `sidecar` into explicit layers:
 
 This is mostly a separation refactor first, not a behavior rewrite.
 
+Current note:
+
+- runtime ownership and protocol boundaries are already much cleaner
+- the main remaining work is removing the last mixed public/runtime seam from `packages/beam-api`
+
 ### Phase 4: Build Native Beam SDK Properly
 
-`packages/beam-api` should become:
+`packages/beam-api/` should continue evolving into the final native SDK package and become:
 
 - pure public API surface
 - backed by protocol adapters
 - independent from old ad hoc runtime internals
 
-The current shim-based Beam API is only a transition step and should not be the final architecture.
+Current note:
+
+- `packages/beam-api/` already exists inside the workspace and builds
+- the remaining work is to remove the `./runtime` public subpath and make Beam’s SDK package public-only
 
 ### Phase 5: Introduce Raycast Compat Layer
 
@@ -244,6 +275,11 @@ During migration:
 
 This period should be temporary, but it is required for a controlled transition.
 
+Current note:
+
+- most high-value runtime paths are already on the new protocol-backed route
+- the main remaining dual-path concern is API/package structure, not the transport/control plane
+
 ### Phase 8: Hard Cutover
 
 Once all important APIs are protocol-backed:
@@ -259,13 +295,18 @@ After the cutover:
 - remove old ad hoc message shapes in `packages/protocol` if replaced
 - remove temporary shims from `beam-api`
 - remove direct runtime implementations that bypass the protocol
-- rename or replace `sidecar/` with `packages/extension-manager`
+- rename or replace `packages/extension-manager/` with `packages/extension-manager`
+
+Current note:
+
+- old runtime protocol package has already been removed
+- future deletions should focus on mixed extension manager API internals once `beam-api` and compat layers are split cleanly
 
 ## What Should Be Kept During Migration
 
 These should not be deleted early:
 
-- current sidecar runtime process
+- current extension manager runtime process
 - current Rust extension host
 - current extension installation/store code
 - current framed transport
@@ -281,6 +322,10 @@ These are likely transitional and should not survive the final architecture:
 - direct runtime APIs that bypass the new protocol client
 - temporary Beam global compatibility glue once bootstrap context is formalized
 
+Current note:
+
+- `packages/protocol/` has already been deleted
+
 ## Package and Folder Direction
 
 Planned long-term structure:
@@ -295,8 +340,8 @@ Planned long-term structure:
 
 Near term:
 
-- current `sidecar/` evolves toward `packages/extension-manager`
-- current `packages/protocol/` evolves toward generated protocol package
+- `packages/extension-manager/` needs cleaner internal host-adapter isolation
+- `packages/beam-api/` and `packages/raycast-api-compat/` need to become fully public-only package boundaries
 
 ## Architectural Notes
 
@@ -346,13 +391,26 @@ That means Beam-native APIs should model what Beam can support well on Linux:
    - `storage.proto`
    - `ui.proto`
 3. Decide TS and Rust code generation layout
-4. Refactor `sidecar/` internally into clearer runtime layers without changing behavior
+4. Refactor `packages/extension-manager/` internally into clearer runtime layers without changing behavior
 5. Move `environment`, preferences, and storage first onto the new protocol
+
+These are now complete.
+
+Revised immediate next steps:
+
+1. Continue hardening `packages/raycast-api-compat` as the real Raycast-facing compatibility surface
+2. Start Beam-native store/package/update schema work on top of the manifest contract
+3. Add Beam-native packaging, catalog, and update metadata on top of the manifest/protocol contract
+4. Split any remaining Beam-specific host adapter code in `packages/extension-manager/src/api/*` into cleaner internal adapter layers where it improves clarity
 
 ## Current Transition Notes
 
-- `beam-api/` now builds with bun and provides a working Beam-native package path
-- `sidecar/` now resolves `@beam/api`
+- `packages/beam-api/` now builds with bun and provides a working Beam-native package path
+- `packages/raycast-api-compat/` now exists as the initial compatibility package boundary
+- `packages/extension-manager/` now resolves `@beam/api` and `@raycast/api` through package boundaries
+- runtime API assembly now lives in `packages/extension-manager/src/runtime/create-api.ts`
+- extension manager now follows the Vicinae-style `globals` / `patch-require` / `worker` / `loaders` shape
+- `@beam/api/runtime` has been removed, so the runtime factory is no longer part of the public SDK surface
 - this is transitional, not the final native protocol architecture
 
 ## Decision

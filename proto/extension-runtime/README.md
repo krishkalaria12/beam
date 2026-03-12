@@ -28,12 +28,12 @@ The intent is to replace the current mixed runtime contract with a protobuf-firs
 
 ## Current Beam mapping
 
-- current runtime host: `sidecar/`
-- current transport framing: `sidecar/src/io.ts`
-- current request plumbing: `sidecar/src/api/rpc.ts`
-- current environment logic: `sidecar/src/api/environment.ts`
-- current UI and launcher controls: `sidecar/src/api/index.ts`, `sidecar/src/api/toast.ts`, `sidecar/src/api/hud.ts`
-- current local storage: `sidecar/src/api/localStorage.ts`
+- current runtime host: `packages/extension-manager/`
+- current transport framing: `packages/extension-manager/src/io.ts`
+- current request plumbing: `packages/extension-manager/src/api/rpc.ts`
+- current environment logic: `packages/extension-manager/src/api/environment.ts`
+- current UI and launcher controls: `packages/extension-manager/src/api/index.ts`, `packages/extension-manager/src/api/toast.ts`, `packages/extension-manager/src/api/hud.ts`
+- current local storage: `packages/extension-manager/src/api/localStorage.ts`
 - current Rust host bridge: `src-tauri/src/extensions/`
 
 ## Transition note

@@ -1,20 +1,20 @@
 import { useEffect } from "react";
 import { toast } from "sonner";
 
-import { extensionSidecarService } from "@/modules/extensions/sidecar-service";
+import { extensionManagerService } from "@/modules/extensions/extension-manager-service";
 import { useExtensionRuntimeStore } from "@/modules/extensions/runtime/store";
 
-interface UseExtensionSidecarEventsInput {
+interface UseExtensionManagerEventsInput {
   backToCommands: () => void;
   openExtensions?: () => void;
 }
 
-export function useExtensionSidecarEvents({
+export function useExtensionManagerEvents({
   backToCommands,
   openExtensions,
-}: UseExtensionSidecarEventsInput) {
+}: UseExtensionManagerEventsInput) {
   useEffect(() => {
-    const unsubscribe = extensionSidecarService.subscribe((event) => {
+    const unsubscribe = extensionManagerService.subscribe((event) => {
       if (event.type === "go-back-to-plugin-list") {
         useExtensionRuntimeStore.getState().resetRuntime();
         backToCommands();
@@ -44,7 +44,7 @@ export function useExtensionSidecarEvents({
 
     return () => {
       unsubscribe();
-      extensionSidecarService.stop();
+      extensionManagerService.stop();
       useExtensionRuntimeStore.getState().resetRuntime();
     };
   }, [backToCommands, openExtensions]);

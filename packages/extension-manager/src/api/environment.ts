@@ -1,6 +1,5 @@
 import { LaunchType } from "./types";
 import * as fs from "fs";
-import { writeLog } from "../io";
 import { writeRuntimeOutput } from "../protocol/runtime-output";
 import type { Application } from "./types";
 import { config } from "../config";
@@ -259,13 +258,6 @@ type RawApplication = {
 
 const DEFAULT_APPLICATION_PATH = "xdg-open";
 
-function toRecord(value: unknown): Record<string, unknown> {
-  if (!value || typeof value !== "object") {
-    return {};
-  }
-  return value as Record<string, unknown>;
-}
-
 function normalizeApplication(raw: unknown): Application {
   const candidate = raw as RawApplication;
   const name =
@@ -309,18 +301,6 @@ function normalizeApplication(raw: unknown): Application {
   };
 }
 
-async function invokeWithFallback<T>(
-  command: string,
-  params: Record<string, unknown>,
-  fallback: () => Promise<T>,
-): Promise<T> {
-  try {
-    return await invokeCommand<T>(command, params);
-  } catch {
-    return fallback();
-  }
-}
-
 export async function getApplications(path?: fs.PathLike): Promise<Application[]> {
   const rawApps = await invokeCommand<unknown[]>("get_applications", {});
   if (!Array.isArray(rawApps)) {
@@ -334,11 +314,10 @@ export async function getApplications(path?: fs.PathLike): Promise<Application[]
 }
 
 export async function getDefaultApplication(path: fs.PathLike): Promise<Application> {
-  return invokeWithFallback(
-    "get_default_application",
-    { path: path.toString() },
-    async () => normalizeApplication({ name: "Default Application", path: DEFAULT_APPLICATION_PATH }),
-  ).then((application) => normalizeApplication(application));
+  const application = await invokeCommand<unknown>("get_default_application", {
+    path: path.toString(),
+  });
+  return normalizeApplication(application);
 }
 
 export async function getFrontmostApplication(): Promise<Application> {
@@ -348,41 +327,18 @@ export async function getFrontmostApplication(): Promise<Application> {
       return normalizeApplication(context.frontmostApplication.value);
     }
   } catch {
-    // Fall through to the existing compatibility path.
+    // Fall through to the direct runtime command.
   }
 
-  return invokeWithFallback(
-    "get_frontmost_application",
-    {},
-    async () =>
-      normalizeApplication({
-        name: "Beam",
-        path: process.execPath || DEFAULT_APPLICATION_PATH,
-      }),
-  ).then((application) => normalizeApplication(application));
+  const application = await invokeCommand<unknown>("get_frontmost_application", {});
+  return normalizeApplication(application);
 }
 
 export async function showInFinder(path: fs.PathLike): Promise<void> {
-  const target = path.toString();
-  try {
-    await invokeCommand<void>("show_in_finder", { path: target });
-  } catch {
-    await open(target);
-  }
+  await invokeCommand<void>("show_in_finder", { path: path.toString() });
 }
 
 export async function trash(path: fs.PathLike | fs.PathLike[]): Promise<void> {
   const paths = (Array.isArray(path) ? path : [path]).map((p) => p.toString());
-  await invokeWithFallback(
-    "trash",
-    { paths },
-    async () => {
-      writeLog({
-        tag: "sidecar-rpc-request-failure",
-        operation: "trash",
-        message: "Trash command unavailable; fallback no-op applied",
-        params: toRecord({ paths }),
-      });
-    },
-  );
+  await invokeCommand<void>("trash", { paths });
 }

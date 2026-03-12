@@ -1,6 +1,6 @@
 import * as path from "path";
 
-export interface SidecarConfig {
+export interface ExtensionManagerConfig {
   dataDir: string;
   cacheDir: string;
   supportDir: string;
@@ -24,7 +24,7 @@ function getArg(name: string): string | undefined {
   return undefined;
 }
 
-export function createConfig(): SidecarConfig {
+export function createConfig(): ExtensionManagerConfig {
   const dataDir = getArg("data-dir");
   const cacheBase = getArg("cache-dir");
 
@@ -35,7 +35,7 @@ export function createConfig(): SidecarConfig {
   const pluginsDir = path.join(dataDir, "plugins");
   return {
     dataDir,
-    cacheDir: path.join(cacheBase, "sidecar"),
+    cacheDir: path.join(cacheBase, "extension-manager"),
     supportDir: path.join(dataDir, "support"),
     pluginsDir,
     preferencesFile: path.join(dataDir, "preferences.json"),

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { invoke } from "@tauri-apps/api/core";
 
-import { extensionSidecarService } from "@/modules/extensions/sidecar-service";
+import { extensionManagerService } from "@/modules/extensions/extension-manager-service";
 import {
   type ExtensionToast,
   type ExtensionUiNode,
@@ -292,7 +292,7 @@ export function useExtensionRunnerState({
         (rootNode?.type === "List" || rootNode?.type === "Grid") &&
         asBoolean(rootNode.props.onSelectionChange)
       ) {
-        extensionSidecarService.dispatchEvent(rootNode.id, "onSelectionChange", [null]);
+        extensionManagerService.dispatchEvent(rootNode.id, "onSelectionChange", [null]);
       }
       return;
     }
@@ -302,7 +302,7 @@ export function useExtensionRunnerState({
       (rootNode?.type === "List" || rootNode?.type === "Grid") &&
       asBoolean(rootNode.props.onSelectionChange)
     ) {
-      extensionSidecarService.dispatchEvent(rootNode.id, "onSelectionChange", [
+      extensionManagerService.dispatchEvent(rootNode.id, "onSelectionChange", [
         selectedEntry.itemId,
       ]);
     }
@@ -352,7 +352,7 @@ export function useExtensionRunnerState({
   }, [rootNode?.type, formFields]);
 
   useEffect(() => {
-    return extensionSidecarService.subscribe((event) => {
+    return extensionManagerService.subscribe((event) => {
       if (event.type === "focus-element") {
         setFocusElementId(event.elementId);
       }
@@ -365,7 +365,7 @@ export function useExtensionRunnerState({
           (rootNode?.type === "List" || rootNode?.type === "Grid") &&
           asBoolean(rootNode.props.onSearchTextChange)
         ) {
-          extensionSidecarService.dispatchEvent(rootNode.id, "onSearchTextChange", [""]);
+          extensionManagerService.dispatchEvent(rootNode.id, "onSearchTextChange", [""]);
         }
       }
     });
@@ -391,13 +391,13 @@ export function useExtensionRunnerState({
       [field.key]: field.defaultValue,
     }));
     if (field.hasOnChange) {
-      extensionSidecarService.dispatchEvent(field.nodeId, "onChange", [field.defaultValue]);
+      extensionManagerService.dispatchEvent(field.nodeId, "onChange", [field.defaultValue]);
     }
   }, [resetElementId, formFieldByNodeId]);
 
   const handleBack = useCallback(() => {
     try {
-      extensionSidecarService.popView();
+      extensionManagerService.popView();
     } catch {
       onBack();
     }
@@ -409,9 +409,9 @@ export function useExtensionRunnerState({
         const target = asString(action.props.url, asString(action.props.target));
         if (target) {
           if (action.hasOnAction) {
-            extensionSidecarService.dispatchEvent(action.nodeId, "onAction", [target]);
+            extensionManagerService.dispatchEvent(action.nodeId, "onAction", [target]);
           } else {
-            extensionSidecarService.open(target);
+            extensionManagerService.open(target);
           }
           return;
         }
@@ -421,9 +421,9 @@ export function useExtensionRunnerState({
         const target = asString(action.props.target, asString(action.props.url));
         if (target) {
           if (action.hasOnAction) {
-            extensionSidecarService.dispatchEvent(action.nodeId, "onAction", [target]);
+            extensionManagerService.dispatchEvent(action.nodeId, "onAction", [target]);
           } else {
-            extensionSidecarService.open(
+            extensionManagerService.open(
               target,
               readApplicationTarget(action.props.application),
             );
@@ -436,7 +436,7 @@ export function useExtensionRunnerState({
         const target = asString(action.props.path, asString(action.props.target));
         if (target) {
           if (action.hasOnAction) {
-            extensionSidecarService.dispatchEvent(action.nodeId, "onAction", [target]);
+            extensionManagerService.dispatchEvent(action.nodeId, "onAction", [target]);
           } else {
             await invoke("show_in_finder", { path: target });
           }
@@ -446,7 +446,7 @@ export function useExtensionRunnerState({
 
       if (action.type === "Action.RunInTerminal") {
         if (action.hasOnAction) {
-          extensionSidecarService.dispatchEvent(action.nodeId, "onAction");
+          extensionManagerService.dispatchEvent(action.nodeId, "onAction");
         } else {
           console.warn("[extensions-runner] Action.RunInTerminal is unsupported without onAction");
         }
@@ -455,7 +455,7 @@ export function useExtensionRunnerState({
 
       if (action.type === "Action.CreateQuicklink") {
         if (action.hasOnAction) {
-          extensionSidecarService.dispatchEvent(action.nodeId, "onAction");
+          extensionManagerService.dispatchEvent(action.nodeId, "onAction");
         } else {
           console.warn("[extensions-runner] Action.CreateQuicklink is unsupported without onAction");
         }
@@ -464,7 +464,7 @@ export function useExtensionRunnerState({
 
       if (action.type === "Action.CopyToClipboard") {
         if (action.hasOnAction) {
-          extensionSidecarService.dispatchEvent(action.nodeId, "onAction");
+          extensionManagerService.dispatchEvent(action.nodeId, "onAction");
           return;
         }
         const content = readClipboardText(action.props.content);
@@ -476,7 +476,7 @@ export function useExtensionRunnerState({
 
       if (action.type === "Action.Paste") {
         if (action.hasOnAction) {
-          extensionSidecarService.dispatchEvent(action.nodeId, "onAction");
+          extensionManagerService.dispatchEvent(action.nodeId, "onAction");
           return;
         }
         const content = readClipboardText(action.props.content);
@@ -488,17 +488,17 @@ export function useExtensionRunnerState({
 
       if (action.type === "Action.SubmitForm") {
         if (action.hasOnSubmit) {
-          extensionSidecarService.dispatchEvent(action.nodeId, "onSubmit", [formValues]);
+          extensionManagerService.dispatchEvent(action.nodeId, "onSubmit", [formValues]);
           return;
         }
         if (action.hasOnAction) {
-          extensionSidecarService.dispatchEvent(action.nodeId, "onAction", [formValues]);
+          extensionManagerService.dispatchEvent(action.nodeId, "onAction", [formValues]);
         }
         return;
       }
 
       if (action.hasOnAction) {
-        extensionSidecarService.dispatchEvent(action.nodeId, "onAction");
+        extensionManagerService.dispatchEvent(action.nodeId, "onAction");
       }
     },
     [formValues],
@@ -511,7 +511,7 @@ export function useExtensionRunnerState({
       return;
     }
     if (selectedEntry?.hasOnAction) {
-      extensionSidecarService.dispatchEvent(selectedEntry.nodeId, "onAction");
+      extensionManagerService.dispatchEvent(selectedEntry.nodeId, "onAction");
     }
   }, [
     executeAction,
@@ -529,7 +529,7 @@ export function useExtensionRunnerState({
         rootNode &&
         asBoolean(rootNode.props.onSearchTextChange)
       ) {
-        extensionSidecarService.dispatchEvent(rootNode.id, "onSearchTextChange", [value]);
+        extensionManagerService.dispatchEvent(rootNode.id, "onSearchTextChange", [value]);
       }
     },
     [rootNode, rootType],
@@ -538,7 +538,7 @@ export function useExtensionRunnerState({
   const handleSetFormValue = useCallback((field: FormField, value: FormValue) => {
     setFormValues((previous) => ({ ...previous, [field.key]: value }));
     if (field.hasOnChange) {
-      extensionSidecarService.dispatchEvent(field.nodeId, "onChange", [value]);
+      extensionManagerService.dispatchEvent(field.nodeId, "onChange", [value]);
     }
   }, []);
 
@@ -549,7 +549,7 @@ export function useExtensionRunnerState({
       }
 
       const currentValue = formValues[field.key];
-      extensionSidecarService.dispatchEvent(field.nodeId, "onBlur", [
+      extensionManagerService.dispatchEvent(field.nodeId, "onBlur", [
         {
           type: "blur",
           target: {
@@ -563,11 +563,11 @@ export function useExtensionRunnerState({
   );
 
   const handleToastAction = useCallback((toastId: number, actionType: "primary" | "secondary") => {
-    extensionSidecarService.dispatchToastAction(toastId, actionType);
+    extensionManagerService.dispatchToastAction(toastId, actionType);
   }, []);
 
   const handleToastHide = useCallback((toastId: number) => {
-    extensionSidecarService.triggerToastHide(toastId);
+    extensionManagerService.triggerToastHide(toastId);
   }, []);
 
   const handleRootKeyDownCapture = useCallback((event: KeyboardEvent<HTMLDivElement>) => {
@@ -838,7 +838,7 @@ export function useExtensionRunnerState({
 
   const dispatchNodeEvent = useCallback(
     (nodeId: number, handlerName: string, args: unknown[] = []) => {
-      extensionSidecarService.dispatchEvent(nodeId, handlerName, args);
+      extensionManagerService.dispatchEvent(nodeId, handlerName, args);
     },
     [],
   );

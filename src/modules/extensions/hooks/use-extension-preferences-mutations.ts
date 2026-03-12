@@ -1,16 +1,16 @@
 import { useMutation } from "@tanstack/react-query";
 
-import { extensionSidecarService } from "@/modules/extensions/sidecar-service";
+import { extensionManagerService } from "@/modules/extensions/extension-manager-service";
 
 export function useLoadExtensionPreferencesMutation() {
   return useMutation({
-    mutationFn: (pluginName: string) => extensionSidecarService.getPreferences(pluginName),
+    mutationFn: (pluginName: string) => extensionManagerService.getPreferences(pluginName),
   });
 }
 
 export function useSaveExtensionPreferencesMutation() {
   return useMutation({
     mutationFn: (input: { pluginName: string; values: Record<string, unknown> }) =>
-      extensionSidecarService.setPreferences(input.pluginName, input.values),
+      extensionManagerService.setPreferences(input.pluginName, input.values),
   });
 }

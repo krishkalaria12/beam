@@ -3,8 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "workspaces": [
-    "packages/*",
-    "sidecar"
+    "packages/*"
   ],
   "type": "module",
   "scripts": {
@@ -19,8 +18,8 @@
     "fmt:check": "oxfmt --check .",
     "rust:fmt": "cargo fmt --manifest-path src-tauri/Cargo.toml --all",
     "rust:fmt:check": "cargo fmt --manifest-path src-tauri/Cargo.toml --all -- --check",
-    "sidecar:build": "bun run --cwd sidecar build",
-    "sidecar:check": "bun run --cwd sidecar check",
+    "extension-manager:build": "bun run --cwd packages/extension-manager build",
+    "extension-manager:check": "bun run --cwd packages/extension-manager check",
     "tauri": "tauri",
     "desktop:dev": "tauri dev",
     "desktop:build": "tauri build"
