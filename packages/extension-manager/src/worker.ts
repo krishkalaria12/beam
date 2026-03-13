@@ -27,9 +27,7 @@ import loadViewCommand from "./loaders/load-view-command";
 
 const reportRuntimeError = (err: unknown): void => {
   const error =
-    err instanceof Error
-      ? { message: err.message, stack: err.stack }
-      : { message: String(err) };
+    err instanceof Error ? { message: err.message, stack: err.stack } : { message: String(err) };
   writeLog(`ERROR: ${error.message} \n ${error.stack ?? ""}`);
   writeRuntimeRenderErrorMessage(error);
 };
@@ -313,9 +311,7 @@ export const main = () => {
             if (isPopViewEvent(request.runtimeEvent)) {
               handlePopView();
               writeOutput(
-                createManagerResponseOutput(
-                  withRequestId(createAckResponse(), request.requestId),
-                ),
+                createManagerResponseOutput(withRequestId(createAckResponse(), request.requestId)),
               );
               return;
             }

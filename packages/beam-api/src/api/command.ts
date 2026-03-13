@@ -6,13 +6,11 @@ import { bus } from "./bus";
  *
  * Raycast API: https://developers.raycast.com/api-reference/command#updatecommandmetadata
  */
-export async function updateCommandMetadata(metadata: {
-	subtitle?: string | null;
-}): Promise<void> {
-	const payload: { subtitle?: string | undefined } = {};
-	if (Object.prototype.hasOwnProperty.call(metadata, "subtitle")) {
-		payload.subtitle = metadata.subtitle ?? undefined;
-	}
+export async function updateCommandMetadata(metadata: { subtitle?: string | null }): Promise<void> {
+  const payload: { subtitle?: string | undefined } = {};
+  if (Object.prototype.hasOwnProperty.call(metadata, "subtitle")) {
+    payload.subtitle = metadata.subtitle ?? undefined;
+  }
 
-	await bus.request("command.updateCommandMetadata", payload);
+  await bus.request("command.updateCommandMetadata", payload);
 }

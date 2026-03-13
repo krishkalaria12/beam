@@ -48,7 +48,10 @@ export function ActionListPanel({
     for (const item of items) {
       const matches =
         normalizedQuery.length === 0 ||
-        [item.title, item.shortcut?.join(" ") ?? ""].join(" ").toLowerCase().includes(normalizedQuery);
+        [item.title, item.shortcut?.join(" ") ?? ""]
+          .join(" ")
+          .toLowerCase()
+          .includes(normalizedQuery);
 
       if (!matches) {
         continue;
@@ -68,7 +71,9 @@ export function ActionListPanel({
     return output;
   }, [items, query]);
 
-  const itemRows = rows.filter((row): row is Extract<ActionRow, { type: "item" }> => row.type === "item");
+  const itemRows = rows.filter(
+    (row): row is Extract<ActionRow, { type: "item" }> => row.type === "item",
+  );
 
   useEffect(() => {
     if (!open) {
@@ -187,10 +192,16 @@ export function ActionListPanel({
                           <ArrowRight className="size-3.5 text-muted-foreground" />
                         )
                       }
-                      className={cn("rounded-lg px-2.5 py-2", row.item.danger && "text-[var(--icon-red-fg)]")}
+                      className={cn(
+                        "rounded-lg px-2.5 py-2",
+                        row.item.danger && "text-[var(--icon-red-fg)]",
+                      )}
                     >
                       <ListItem.Title
-                        className={cn("text-[12px]", row.item.danger && "text-[var(--icon-red-fg)]")}
+                        className={cn(
+                          "text-[12px]",
+                          row.item.danger && "text-[var(--icon-red-fg)]",
+                        )}
                       >
                         {row.item.title}
                       </ListItem.Title>

@@ -16,10 +16,7 @@ interface ExtensionRuntimeShellProps {
   onOpenExtensions?: () => void;
 }
 
-export function ExtensionRuntimeShell({
-  state,
-  onOpenExtensions,
-}: ExtensionRuntimeShellProps) {
+export function ExtensionRuntimeShell({ state, onOpenExtensions }: ExtensionRuntimeShellProps) {
   const rootNode = state.rootNode;
   const rootType = rootNode?.type ?? "";
   const showSearchInput = rootType === "List" || rootType === "Grid";
@@ -56,7 +53,9 @@ export function ExtensionRuntimeShell({
       <ModuleHeader
         onBack={state.handleBack}
         title={state.runningSession?.title || "Extension"}
-        subtitle={state.runningSession?.subtitle || state.runningSession?.pluginPath || "Beam extension"}
+        subtitle={
+          state.runningSession?.subtitle || state.runningSession?.pluginPath || "Beam extension"
+        }
         rightSlot={
           <div className="flex items-center gap-2">
             {searchBarAccessoryNodeId ? (
@@ -89,9 +88,7 @@ export function ExtensionRuntimeShell({
 
       {content}
 
-      {!rootNode ? (
-        <ModuleFooter shortcuts={[{ keys: ["Esc"], label: "Back" }]} />
-      ) : null}
+      {!rootNode ? <ModuleFooter shortcuts={[{ keys: ["Esc"], label: "Back" }]} /> : null}
     </div>
   );
 }

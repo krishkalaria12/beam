@@ -5,25 +5,25 @@ import * as ui from "./proto/ui";
  * @category Launcher Window
  */
 export enum PopToRootType {
-	/**
-	 * Translates to Immediate or Suspended depending on the
-	 * user configuration.
-	 */
-	Default = "default",
-	/**
-	 * Immediately pop to root
-	 */
-	Immediate = "immediate",
-	/**
-	 * Do not pop to root, preserve the navigation state as it is
-	 */
-	Suspended = "suspended",
+  /**
+   * Translates to Immediate or Suspended depending on the
+   * user configuration.
+   */
+  Default = "default",
+  /**
+   * Immediately pop to root
+   */
+  Immediate = "immediate",
+  /**
+   * Do not pop to root, preserve the navigation state as it is
+   */
+  Suspended = "suspended",
 }
 
 const popToRootProtoMap: Record<PopToRootType, ui.PopToRootType> = {
-	[PopToRootType.Default]: ui.PopToRootType.PopToRootDefault,
-	[PopToRootType.Immediate]: ui.PopToRootType.PopToRootImmediate,
-	[PopToRootType.Suspended]: ui.PopToRootType.PopToRootSuspended,
+  [PopToRootType.Default]: ui.PopToRootType.PopToRootDefault,
+  [PopToRootType.Immediate]: ui.PopToRootType.PopToRootImmediate,
+  [PopToRootType.Suspended]: ui.PopToRootType.PopToRootSuspended,
 };
 
 /**
@@ -37,15 +37,14 @@ const popToRootProtoMap: Record<PopToRootType, ui.PopToRootType> = {
  * @category Launcher Window
  */
 export const showHUD = async (
-	title: string,
-	options?: { clearRootSearch?: boolean; popToRootType?: PopToRootType },
+  title: string,
+  options?: { clearRootSearch?: boolean; popToRootType?: PopToRootType },
 ) => {
-	bus.request("ui.showHud", {
-		text: title,
-		clearRootSearch: options?.clearRootSearch ?? false,
-		popToRoot:
-			popToRootProtoMap[options?.popToRootType ?? PopToRootType.Default],
-	});
+  bus.request("ui.showHud", {
+    text: title,
+    clearRootSearch: options?.clearRootSearch ?? false,
+    popToRoot: popToRootProtoMap[options?.popToRootType ?? PopToRootType.Default],
+  });
 };
 
 /**
@@ -55,22 +54,21 @@ export const showHUD = async (
  * @category Launcher Window
  */
 export const closeMainWindow = async (
-	options: { clearRootSearch?: boolean; popToRootType?: PopToRootType } = {},
+  options: { clearRootSearch?: boolean; popToRootType?: PopToRootType } = {},
 ) => {
-	const { clearRootSearch = false, popToRootType = PopToRootType.Default } =
-		options;
+  const { clearRootSearch = false, popToRootType = PopToRootType.Default } = options;
 
-	await bus.request("ui.closeMainWindow", {
-		clearRootSearch,
-		popToRoot: popToRootProtoMap[popToRootType],
-	});
+  await bus.request("ui.closeMainWindow", {
+    clearRootSearch,
+    popToRoot: popToRootProtoMap[popToRootType],
+  });
 };
 
 /**
  * @category Launcher Window
  */
 export const clearSearchBar = async () => {
-	await bus.request("ui.setSearchText", { text: "" });
+  await bus.request("ui.setSearchText", { text: "" });
 };
 
 /**
@@ -81,13 +79,13 @@ export const clearSearchBar = async () => {
  * @category Launcher Window
  */
 export const getSelectedText = async () => {
-	const response = await bus.request("ui.getSelectedText", {});
+  const response = await bus.request("ui.getSelectedText", {});
 
-	if (!response.ok) {
-		throw new Error(`Failed to get selected text`);
-	}
+  if (!response.ok) {
+    throw new Error(`Failed to get selected text`);
+  }
 
-	return response.value.text;
+  return response.value.text;
 };
 
 /**
@@ -96,7 +94,7 @@ export const getSelectedText = async () => {
  * @category Launcher Window
  */
 export const popToRoot = async (options?: { clearSearchBar?: boolean }) => {
-	await bus.request("ui.popToRoot", {
-		clearSearchBar: options?.clearSearchBar ?? false,
-	});
+  await bus.request("ui.popToRoot", {
+    clearSearchBar: options?.clearSearchBar ?? false,
+  });
 };

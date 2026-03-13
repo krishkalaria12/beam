@@ -20,13 +20,16 @@
     "rust:fmt:check": "cargo fmt --manifest-path src-tauri/Cargo.toml --all -- --check",
     "extension-manager:build": "bun run --cwd packages/extension-manager build",
     "extension-manager:check": "bun run --cwd packages/extension-manager check",
+    "publish:beam-api": "bun scripts/publish-beam-api.ts",
+    "store:publish": "bun scripts/publish-store-package.ts",
+    "store:publish:all": "bun scripts/publish-store-package.ts --all",
     "tauri": "tauri",
     "desktop:dev": "tauri dev",
     "desktop:build": "tauri build"
   },
   "dependencies": {
-    "@beam/extension-protocol": "workspace:*",
     "@base-ui/react": "^1.0.0",
+    "@beam/extension-protocol": "workspace:*",
     "@cloudflare/speedtest": "^1.7.0",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",

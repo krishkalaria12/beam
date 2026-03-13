@@ -190,9 +190,7 @@ type LocalStorageValues = Record<string, LocalStorageValue>;
 const fallbackLocalStorage = new Map<string, LocalStorageValue>();
 
 function unavailable(path: string): Error {
-  return new Error(
-    `@beam/api runtime is unavailable. Missing Beam runtime binding for "${path}".`,
-  );
+  return new Error(`@beam-launcher/api runtime is unavailable. Missing Beam runtime binding for "${path}".`);
 }
 
 function pathGet(value: unknown, path: string): unknown {
@@ -216,10 +214,7 @@ function getBeamApi(): BeamRuntimeApi {
   return api;
 }
 
-function runtimeMethod<T extends (...args: any[]) => any>(
-  path: string,
-  fallback?: T,
-): T {
+function runtimeMethod<T extends (...args: any[]) => any>(path: string, fallback?: T): T {
   return ((...args: Parameters<T>) => {
     const fn = pathGet(getBeamApi(), path);
     if (typeof fn !== "function") {
@@ -232,26 +227,19 @@ function runtimeMethod<T extends (...args: any[]) => any>(
   }) as T;
 }
 
-function createRuntimeNamespace<T extends object>(
-  path: string,
-  fallback: T,
-): T {
+function createRuntimeNamespace<T extends object>(path: string, fallback: T): T {
   return new Proxy(fallback, {
     get(target, prop, receiver) {
       const runtimeValue = pathGet(tryGetBeamApi(), path);
       if (runtimeValue && typeof runtimeValue === "object") {
         const entry = (runtimeValue as Record<string, unknown>)[prop as string];
         if (entry !== undefined) {
-          return typeof entry === "function"
-            ? entry.bind(runtimeValue)
-            : entry;
+          return typeof entry === "function" ? entry.bind(runtimeValue) : entry;
         }
       }
 
       const localValue = Reflect.get(target, prop, receiver);
-      return typeof localValue === "function"
-        ? localValue.bind(target)
-        : localValue;
+      return typeof localValue === "function" ? localValue.bind(target) : localValue;
     },
   });
 }
@@ -263,10 +251,7 @@ function createRuntimeBackedComponent(
   const Component = (props: Record<string, unknown>) => {
     const runtimeComponent = pathGet(tryGetBeamApi(), runtimePath);
     if (runtimeComponent) {
-      return React.createElement(
-        runtimeComponent as React.ElementType,
-        props,
-      );
+      return React.createElement(runtimeComponent as React.ElementType, props);
     }
     return React.createElement(fallbackName as React.ElementType, props);
   };
@@ -284,10 +269,7 @@ function createSlottedComponent(
   const Component = (props: Record<string, unknown>) => {
     const runtimeComponent = pathGet(tryGetBeamApi(), runtimePath);
     if (runtimeComponent) {
-      return React.createElement(
-        runtimeComponent as React.ElementType,
-        props,
-      );
+      return React.createElement(runtimeComponent as React.ElementType, props);
     }
 
     const { children, ...rest } = props as Record<string, any>;
@@ -405,10 +387,7 @@ export const Clipboard = createRuntimeNamespace("Clipboard", {
   },
 });
 
-export const LocalStorage = createRuntimeNamespace(
-  "LocalStorage",
-  fallbackLocalStorageApi,
-);
+export const LocalStorage = createRuntimeNamespace("LocalStorage", fallbackLocalStorageApi);
 
 export const Cache = createRuntimeNamespace("Cache", {} as Record<string, unknown>);
 export const FileSearch = createRuntimeNamespace("FileSearch", {
@@ -416,11 +395,73 @@ export const FileSearch = createRuntimeNamespace("FileSearch", {
     throw unavailable("FileSearch.search");
   },
 });
+
+export type WindowManagementWindow = {
+  id: string;
+  title: string;
+  active: boolean;
+  bounds: {
+    position: { x: number; y: number };
+    size: { width: number; height: number };
+  };
+  workspaceId?: string;
+  application?: Application;
+  focus(): Promise<boolean>;
+};
+
+export type WindowManagementWorkspace = {
+  id: string;
+  name: string;
+  monitorId: string;
+  active: boolean;
+};
+
+export type WindowManagementScreen = {
+  name: string;
+  make: string;
+  model: string;
+  serial?: string;
+  bounds: {
+    position: { x: number; y: number };
+    size: { width: number; height: number };
+  };
+};
+
 export const WindowManagement = createRuntimeNamespace("WindowManagement", {
-  async getActiveWindow(): Promise<unknown> {
+  async getActiveWindow(): Promise<WindowManagementWindow> {
     throw unavailable("WindowManagement.getActiveWindow");
   },
-});
+  async getWindows(): Promise<WindowManagementWindow[]> {
+    throw unavailable("WindowManagement.getWindows");
+  },
+  async getScreens(): Promise<WindowManagementScreen[]> {
+    throw unavailable("WindowManagement.getScreens");
+  },
+  async getActiveWorkspace(): Promise<WindowManagementWorkspace> {
+    throw unavailable("WindowManagement.getActiveWorkspace");
+  },
+  async getWorkspaces(): Promise<WindowManagementWorkspace[]> {
+    throw unavailable("WindowManagement.getWorkspaces");
+  },
+  async getWindowsOnActiveWorkspace(): Promise<WindowManagementWindow[]> {
+    throw unavailable("WindowManagement.getWindowsOnActiveWorkspace");
+  },
+  async setWindowBounds(_payload: Record<string, unknown>): Promise<void> {
+    throw unavailable("WindowManagement.setWindowBounds");
+  },
+  async focusWindow(_window: WindowManagementWindow): Promise<boolean> {
+    throw unavailable("WindowManagement.focusWindow");
+  },
+}) as {
+  getActiveWindow(): Promise<WindowManagementWindow>;
+  getWindows(options?: Record<string, unknown>): Promise<WindowManagementWindow[]>;
+  getScreens(): Promise<WindowManagementScreen[]>;
+  getActiveWorkspace(): Promise<WindowManagementWorkspace>;
+  getWorkspaces(): Promise<WindowManagementWorkspace[]>;
+  getWindowsOnActiveWorkspace(): Promise<WindowManagementWindow[]>;
+  setWindowBounds(payload: Record<string, unknown>): Promise<void>;
+  focusWindow(window: WindowManagementWindow): Promise<boolean>;
+};
 export const OAuth = createRuntimeNamespace("OAuth", {} as Record<string, unknown>);
 export const AI = createRuntimeNamespace("AI", {
   name: "AI",
@@ -469,96 +510,78 @@ export const showToast = async (
   });
 };
 
-export const showHUD = runtimeMethod<
-  (title: string, options?: { clearRootSearch?: boolean; popToRootType?: PopToRootType }) => Promise<void>
->("showHUD");
+export const showHUD =
+  runtimeMethod<
+    (
+      title: string,
+      options?: { clearRootSearch?: boolean; popToRootType?: PopToRootType },
+    ) => Promise<void>
+  >("showHUD");
 
-export const closeMainWindow = runtimeMethod<
-  (options?: { clearRootSearch?: boolean; popToRootType?: PopToRootType }) => Promise<void>
->("closeMainWindow");
+export const closeMainWindow =
+  runtimeMethod<
+    (options?: { clearRootSearch?: boolean; popToRootType?: PopToRootType }) => Promise<void>
+  >("closeMainWindow");
 
-export const clearSearchBar = runtimeMethod<() => Promise<void>>(
-  "clearSearchBar",
-);
-export const popToRoot = runtimeMethod<
-  (options?: { clearSearchBar?: boolean }) => Promise<void>
->("popToRoot");
-export const confirmAlert = runtimeMethod<
-  (options?: {
-    title?: string;
-    message?: string;
-    primaryAction?: { title?: string };
-  }) => Promise<boolean>
->("confirmAlert");
-export const launchCommand = runtimeMethod<
-  (options: {
-    name: string;
-    type?: string;
-    context?: Record<string, unknown>;
-    arguments?: Record<string, unknown>;
-  }) => Promise<void>
->("launchCommand");
-export const updateCommandMetadata = runtimeMethod<
-  (metadata: { subtitle?: string | null }) => Promise<void>
->("updateCommandMetadata");
+export const clearSearchBar = runtimeMethod<() => Promise<void>>("clearSearchBar");
+export const popToRoot =
+  runtimeMethod<(options?: { clearSearchBar?: boolean }) => Promise<void>>("popToRoot");
+export const confirmAlert =
+  runtimeMethod<
+    (options?: {
+      title?: string;
+      message?: string;
+      primaryAction?: { title?: string };
+    }) => Promise<boolean>
+  >("confirmAlert");
+export const launchCommand =
+  runtimeMethod<
+    (options: {
+      name: string;
+      type?: string;
+      context?: Record<string, unknown>;
+      arguments?: Record<string, unknown>;
+    }) => Promise<void>
+  >("launchCommand");
+export const updateCommandMetadata =
+  runtimeMethod<(metadata: { subtitle?: string | null }) => Promise<void>>("updateCommandMetadata");
 export const openExtensionPreferences = runtimeMethod<() => Promise<void>>(
   "openExtensionPreferences",
 );
-export const openCommandPreferences = runtimeMethod<() => Promise<void>>(
-  "openCommandPreferences",
-);
-export const open = runtimeMethod<
-  (target: string, application?: Application | string) => Promise<void>
->("open");
-export const showInFinder = runtimeMethod<(path: string) => Promise<void>>(
-  "showInFinder",
-);
-export const showInFileBrowser = runtimeMethod<
-  (path: string) => Promise<void>
->("showInFileBrowser");
-export const trash = runtimeMethod<
-  (path: string | string[]) => Promise<void>
->("trash");
-export const getDesktopContext = runtimeMethod<
-  () => Promise<DesktopContext>
->("getDesktopContext");
-export const getSelectedFinderItems = runtimeMethod<
-  () => Promise<FileSystemItem[]>
->("getSelectedFinderItems");
-export const getSelectedText = runtimeMethod<() => Promise<string>>(
-  "getSelectedText",
-);
-export const getApplications = runtimeMethod<
-  (target?: string) => Promise<Application[]>
->("getApplications");
-export const getDefaultApplication = runtimeMethod<
-  (path: string) => Promise<Application>
->("getDefaultApplication");
-export const getFrontmostApplication = runtimeMethod<
-  () => Promise<Application>
->("getFrontmostApplication");
-export const captureException = runtimeMethod<(exception: unknown) => void>(
-  "captureException",
-  ((exception: unknown) => {
-    if (exception instanceof Error) {
-      console.error(exception);
-      return;
-    }
-    console.error(String(exception));
-  }) as (exception: unknown) => void,
-);
+export const openCommandPreferences = runtimeMethod<() => Promise<void>>("openCommandPreferences");
+export const open =
+  runtimeMethod<(target: string, application?: Application | string) => Promise<void>>("open");
+export const showInFinder = runtimeMethod<(path: string) => Promise<void>>("showInFinder");
+export const showInFileBrowser =
+  runtimeMethod<(path: string) => Promise<void>>("showInFileBrowser");
+export const trash = runtimeMethod<(path: string | string[]) => Promise<void>>("trash");
+export const getDesktopContext = runtimeMethod<() => Promise<DesktopContext>>("getDesktopContext");
+export const getSelectedFinderItems =
+  runtimeMethod<() => Promise<FileSystemItem[]>>("getSelectedFinderItems");
+export const getSelectedText = runtimeMethod<() => Promise<string>>("getSelectedText");
+export const getApplications =
+  runtimeMethod<(target?: string) => Promise<Application[]>>("getApplications");
+export const getDefaultApplication =
+  runtimeMethod<(path: string) => Promise<Application>>("getDefaultApplication");
+export const getFrontmostApplication =
+  runtimeMethod<() => Promise<Application>>("getFrontmostApplication");
+export const captureException = runtimeMethod<(exception: unknown) => void>("captureException", ((
+  exception: unknown,
+) => {
+  if (exception instanceof Error) {
+    console.error(exception);
+    return;
+  }
+  console.error(String(exception));
+}) as (exception: unknown) => void);
 
-export const allLocalStorageItems = (): Promise<LocalStorageValues> =>
-  LocalStorage.allItems();
+export const allLocalStorageItems = (): Promise<LocalStorageValues> => LocalStorage.allItems();
 export const getLocalStorageItem = <T extends LocalStorageValue>(
   key: string,
 ): Promise<T | undefined> => LocalStorage.getItem(key);
-export const setLocalStorageItem = (
-  key: string,
-  value: LocalStorageValue,
-): Promise<void> => LocalStorage.setItem(key, value);
-export const removeLocalStorageItem = (key: string): Promise<void> =>
-  LocalStorage.removeItem(key);
+export const setLocalStorageItem = (key: string, value: LocalStorageValue): Promise<void> =>
+  LocalStorage.setItem(key, value);
+export const removeLocalStorageItem = (key: string): Promise<void> => LocalStorage.removeItem(key);
 export const clearLocalStorage = (): Promise<void> => LocalStorage.clear();
 
 export const useNavigation = (): {
@@ -580,7 +603,7 @@ export const useNavigation = (): {
   };
 };
 
-export const usePersistentState = <T,>(
+export const usePersistentState = <T>(
   key: string,
   initialValue: T,
 ): [T, React.Dispatch<React.SetStateAction<T>>, boolean] => {
@@ -624,8 +647,7 @@ export const usePersistentState = <T,>(
       return;
     }
 
-    const value =
-      typeof state === "string" ? state : JSON.stringify(state ?? null);
+    const value = typeof state === "string" ? state : JSON.stringify(state ?? null);
     void LocalStorage.setItem(storageKey, value);
   }, [isLoading, state, storageKey]);
 
@@ -643,10 +665,7 @@ function Action(props: Record<string, unknown>) {
 function ActionPanel(props: Record<string, unknown>) {
   const RuntimeActionPanel = pathGet(tryGetBeamApi(), "ActionPanel");
   if (RuntimeActionPanel) {
-    return React.createElement(
-      RuntimeActionPanel as React.ElementType,
-      props,
-    );
+    return React.createElement(RuntimeActionPanel as React.ElementType, props);
   }
   return React.createElement("ActionPanel" as React.ElementType, props);
 }
@@ -670,10 +689,7 @@ function List(props: Record<string, unknown>) {
 function MenuBarExtra(props: Record<string, unknown>) {
   const RuntimeMenuBar = pathGet(tryGetBeamApi(), "MenuBarExtra");
   if (RuntimeMenuBar) {
-    return React.createElement(
-      RuntimeMenuBar as React.ElementType,
-      props,
-    );
+    return React.createElement(RuntimeMenuBar as React.ElementType, props);
   }
   return React.createElement("MenuBarExtra" as React.ElementType, props);
 }
@@ -688,24 +704,13 @@ export namespace Form {
 
 const DetailRoot = createSlottedComponent("Detail", ["metadata", "actions"]);
 const DetailMetadata = createRuntimeBackedComponent("Detail.Metadata");
-const DetailMetadataLabel = createRuntimeBackedComponent(
-  "Detail.Metadata.Label",
-);
+const DetailMetadataLabel = createRuntimeBackedComponent("Detail.Metadata.Label");
 const DetailMetadataLink = createRuntimeBackedComponent("Detail.Metadata.Link");
-const DetailMetadataTagList = createRuntimeBackedComponent(
-  "Detail.Metadata.TagList",
-);
-const DetailMetadataTagListItem = createRuntimeBackedComponent(
-  "Detail.Metadata.TagList.Item",
-);
-const DetailMetadataSeparator = createRuntimeBackedComponent(
-  "Detail.Metadata.Separator",
-);
+const DetailMetadataTagList = createRuntimeBackedComponent("Detail.Metadata.TagList");
+const DetailMetadataTagListItem = createRuntimeBackedComponent("Detail.Metadata.TagList.Item");
+const DetailMetadataSeparator = createRuntimeBackedComponent("Detail.Metadata.Separator");
 
-const FormRoot = createSlottedComponent("Form", [
-  "searchBarAccessory",
-  "actions",
-]);
+const FormRoot = createSlottedComponent("Form", ["searchBarAccessory", "actions"]);
 const FormTextField = createRuntimeBackedComponent("Form.TextField");
 const FormPasswordField = createRuntimeBackedComponent("Form.PasswordField");
 const FormTextArea = createRuntimeBackedComponent("Form.TextArea");
@@ -713,39 +718,26 @@ const FormCheckbox = createRuntimeBackedComponent("Form.Checkbox");
 const FormDatePicker = createRuntimeBackedComponent("Form.DatePicker");
 const FormDropdown = createRuntimeBackedComponent("Form.Dropdown");
 const FormDropdownItem = createRuntimeBackedComponent("Form.Dropdown.Item");
-const FormDropdownSection = createRuntimeBackedComponent(
-  "Form.Dropdown.Section",
-);
+const FormDropdownSection = createRuntimeBackedComponent("Form.Dropdown.Section");
 const FormTagPicker = createRuntimeBackedComponent("Form.TagPicker");
 const FormTagPickerItem = createRuntimeBackedComponent("Form.TagPicker.Item");
-const FormTagPickerSection = createRuntimeBackedComponent(
-  "Form.TagPicker.Section",
-);
+const FormTagPickerSection = createRuntimeBackedComponent("Form.TagPicker.Section");
 const FormFilePicker = createRuntimeBackedComponent("Form.FilePicker");
 const FormDescription = createRuntimeBackedComponent("Form.Description");
-const FormLinkAccessory = createRuntimeBackedComponent(
-  "Form.LinkAccessory",
-);
+const FormLinkAccessory = createRuntimeBackedComponent("Form.LinkAccessory");
+const FormSeparator = createRuntimeBackedComponent("Form.Separator");
 
 const GridRoot = createSlottedComponent("Grid", ["searchBarAccessory"]);
 const GridItem = createSlottedComponent("Grid.Item", ["detail", "actions"]);
 const GridSection = createRuntimeBackedComponent("Grid.Section");
 const GridDropdown = createRuntimeBackedComponent("Grid.Dropdown");
 const GridDropdownItem = createRuntimeBackedComponent("Grid.Dropdown.Item");
-const GridDropdownSection = createRuntimeBackedComponent(
-  "Grid.Dropdown.Section",
-);
+const GridDropdownSection = createRuntimeBackedComponent("Grid.Dropdown.Section");
 const GridEmptyView = createSlottedComponent("Grid.EmptyView", ["actions"]);
 const GridItemDetail = createRuntimeBackedComponent("Grid.Item.Detail");
-const GridItemDetailMetadata = createRuntimeBackedComponent(
-  "Grid.Item.Detail.Metadata",
-);
-const GridItemDetailMetadataLabel = createRuntimeBackedComponent(
-  "Grid.Item.Detail.Metadata.Label",
-);
-const GridItemDetailMetadataLink = createRuntimeBackedComponent(
-  "Grid.Item.Detail.Metadata.Link",
-);
+const GridItemDetailMetadata = createRuntimeBackedComponent("Grid.Item.Detail.Metadata");
+const GridItemDetailMetadataLabel = createRuntimeBackedComponent("Grid.Item.Detail.Metadata.Label");
+const GridItemDetailMetadataLink = createRuntimeBackedComponent("Grid.Item.Detail.Metadata.Link");
 const GridItemDetailMetadataTagList = createRuntimeBackedComponent(
   "Grid.Item.Detail.Metadata.TagList",
 );
@@ -762,19 +754,11 @@ const ListSection = createRuntimeBackedComponent("List.Section");
 const ListEmptyView = createRuntimeBackedComponent("List.EmptyView");
 const ListDropdown = createRuntimeBackedComponent("List.Dropdown");
 const ListDropdownItem = createRuntimeBackedComponent("List.Dropdown.Item");
-const ListDropdownSection = createRuntimeBackedComponent(
-  "List.Dropdown.Section",
-);
+const ListDropdownSection = createRuntimeBackedComponent("List.Dropdown.Section");
 const ListItemDetail = createRuntimeBackedComponent("List.Item.Detail");
-const ListItemDetailMetadata = createRuntimeBackedComponent(
-  "List.Item.Detail.Metadata",
-);
-const ListItemDetailMetadataLabel = createRuntimeBackedComponent(
-  "List.Item.Detail.Metadata.Label",
-);
-const ListItemDetailMetadataLink = createRuntimeBackedComponent(
-  "List.Item.Detail.Metadata.Link",
-);
+const ListItemDetailMetadata = createRuntimeBackedComponent("List.Item.Detail.Metadata");
+const ListItemDetailMetadataLabel = createRuntimeBackedComponent("List.Item.Detail.Metadata.Label");
+const ListItemDetailMetadataLink = createRuntimeBackedComponent("List.Item.Detail.Metadata.Link");
 const ListItemDetailMetadataTagList = createRuntimeBackedComponent(
   "List.Item.Detail.Metadata.TagList",
 );
@@ -789,28 +773,16 @@ const ActionPanelSection = createRuntimeBackedComponent("ActionPanel.Section");
 const ActionPanelSubmenu = createRuntimeBackedComponent("ActionPanel.Submenu");
 const ActionOpen = createRuntimeBackedComponent("Action.Open");
 const ActionShowInFinder = createRuntimeBackedComponent("Action.ShowInFinder");
-const ActionRunInTerminal = createRuntimeBackedComponent(
-  "Action.RunInTerminal",
-);
-const ActionCreateQuicklink = createRuntimeBackedComponent(
-  "Action.CreateQuicklink",
-);
+const ActionRunInTerminal = createRuntimeBackedComponent("Action.RunInTerminal");
+const ActionCreateQuicklink = createRuntimeBackedComponent("Action.CreateQuicklink");
 const ActionPaste = createRuntimeBackedComponent("Action.Paste");
-const ActionCopyToClipboard = createRuntimeBackedComponent(
-  "Action.CopyToClipboard",
-);
-const ActionOpenInBrowser = createRuntimeBackedComponent(
-  "Action.OpenInBrowser",
-);
+const ActionCopyToClipboard = createRuntimeBackedComponent("Action.CopyToClipboard");
+const ActionOpenInBrowser = createRuntimeBackedComponent("Action.OpenInBrowser");
 const ActionPush = createRuntimeBackedComponent("Action.Push");
 const ActionSubmitForm = createRuntimeBackedComponent("Action.SubmitForm");
 const MenuBarExtraItem = createRuntimeBackedComponent("MenuBarExtra.Item");
-const MenuBarExtraSection = createRuntimeBackedComponent(
-  "MenuBarExtra.Section",
-);
-const MenuBarExtraSubmenu = createRuntimeBackedComponent(
-  "MenuBarExtra.Submenu",
-);
+const MenuBarExtraSection = createRuntimeBackedComponent("MenuBarExtra.Section");
+const MenuBarExtraSubmenu = createRuntimeBackedComponent("MenuBarExtra.Submenu");
 
 Object.assign(Action, {
   Open: ActionOpen,
@@ -858,6 +830,13 @@ Object.assign(Form, {
   FilePicker: FormFilePicker,
   Description: FormDescription,
   LinkAccessory: FormLinkAccessory,
+  Separator: FormSeparator,
+});
+Object.assign(FormDatePicker, {
+  Type: {
+    DateTime: "dateTime",
+    Date: "date",
+  },
 });
 Object.assign(FormDropdown, {
   Item: FormDropdownItem,
@@ -942,4 +921,13 @@ Object.assign(MenuBarExtra, {
   },
 });
 
-export { Action, ActionPanel, Detail, Form, Grid, List, MenuBarExtra, Icon };
+export {
+  Action,
+  ActionPanel,
+  Detail,
+  Form,
+  Grid,
+  List,
+  MenuBarExtra,
+  Icon,
+};

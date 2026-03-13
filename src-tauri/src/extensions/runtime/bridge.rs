@@ -87,7 +87,10 @@ fn build_extension_manager_args(app: &AppHandle) -> Result<Vec<String>, String> 
         .path()
         .app_local_data_dir()
         .map_err(|error| error.to_string())?;
-    let cache_dir = app.path().app_cache_dir().map_err(|error| error.to_string())?;
+    let cache_dir = app
+        .path()
+        .app_cache_dir()
+        .map_err(|error| error.to_string())?;
 
     Ok(vec![
         format!("--data-dir={}", data_dir.display()),
@@ -206,7 +209,10 @@ fn manager_request_to_wire_message(request: &ManagerRequest) -> Result<Value, St
             payload.insert("ping".to_string(), json!({}));
         }
         Some(manager_request::Request::LaunchPlugin(launch)) => {
-            payload.insert("launchPlugin".to_string(), launch_plugin_request_to_json(launch));
+            payload.insert(
+                "launchPlugin".to_string(),
+                launch_plugin_request_to_json(launch),
+            );
         }
         Some(manager_request::Request::GetPreferences(value)) => {
             payload.insert(
@@ -276,26 +282,25 @@ fn launch_plugin_request_to_json(value: &LaunchPluginRequest) -> Value {
     inner.insert("pluginPath".to_string(), json!(value.plugin_path));
     inner.insert(
         "mode".to_string(),
-        json!(
-            CommandMode::try_from(value.mode)
-                .unwrap_or(CommandMode::Unspecified)
-                .as_str_name()
-        ),
+        json!(CommandMode::try_from(value.mode)
+            .unwrap_or(CommandMode::Unspecified)
+            .as_str_name()),
     );
     inner.insert("aiAccess".to_string(), json!(value.ai_access));
     if let Some(arguments) = &value.launch_arguments {
-        inner.insert("launchArguments".to_string(), prost_struct_to_json(arguments));
+        inner.insert(
+            "launchArguments".to_string(),
+            prost_struct_to_json(arguments),
+        );
     }
     if let Some(context) = &value.launch_context {
         inner.insert("launchContext".to_string(), prost_struct_to_json(context));
     }
     inner.insert(
         "launchType".to_string(),
-        json!(
-            LaunchType::try_from(value.launch_type)
-                .unwrap_or(LaunchType::Unspecified)
-                .as_str_name()
-        ),
+        json!(LaunchType::try_from(value.launch_type)
+            .unwrap_or(LaunchType::Unspecified)
+            .as_str_name()),
     );
     if !value.command_name.is_empty() {
         inner.insert("commandName".to_string(), json!(value.command_name));
@@ -317,7 +322,9 @@ fn runtime_event_to_json(value: &RuntimeEvent) -> Value {
         Some(crate::extensions::runtime::proto::runtime_event::Event::PopView(_)) => {
             inner.insert("popView".to_string(), json!({}));
         }
-        Some(crate::extensions::runtime::proto::runtime_event::Event::PreferencesChanged(event)) => {
+        Some(crate::extensions::runtime::proto::runtime_event::Event::PreferencesChanged(
+            event,
+        )) => {
             let mut payload = Map::new();
             if let Some(values) = &event.values {
                 payload.insert("values".to_string(), prost_struct_to_json(values));
@@ -525,7 +532,11 @@ impl ExtensionRuntimeBridgeState {
         let mut runtimes = self.runtimes.lock();
 
         let runtime_exited = if let Some(managed) = runtimes.get_mut(runtime_id) {
-            match managed.child.try_wait().map_err(|error| error.to_string())? {
+            match managed
+                .child
+                .try_wait()
+                .map_err(|error| error.to_string())?
+            {
                 None => return Ok(()),
                 Some(_) => true,
             }
@@ -655,7 +666,8 @@ pub fn extension_runtime_send_manager_request(
     request: Vec<u8>,
 ) -> Result<Vec<u8>, String> {
     let runtime_id = normalize_runtime_id(runtime_id);
-    let mut request = ManagerRequest::decode(request.as_slice()).map_err(|error| error.to_string())?;
+    let mut request =
+        ManagerRequest::decode(request.as_slice()).map_err(|error| error.to_string())?;
     if request.request_id.is_empty() {
         request.request_id = nanoid!();
     }
@@ -695,6 +707,8 @@ pub fn extension_runtime_send_manager_request(
     };
 
     let mut encoded = Vec::new();
-    response.encode(&mut encoded).map_err(|error| error.to_string())?;
+    response
+        .encode(&mut encoded)
+        .map_err(|error| error.to_string())?;
     Ok(encoded)
 }

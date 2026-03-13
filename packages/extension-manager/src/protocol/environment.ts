@@ -53,7 +53,9 @@ function toProtocolLaunchType(value: string): ProtocolLaunchType {
   }
 }
 
-function toProtocolDesktopContextState(value: DesktopContext["selectedText"]["state"]): DesktopContextState {
+function toProtocolDesktopContextState(
+  value: DesktopContext["selectedText"]["state"],
+): DesktopContextState {
   switch (value) {
     case "supported":
       return DesktopContextState.DESKTOP_CONTEXT_STATE_SUPPORTED;

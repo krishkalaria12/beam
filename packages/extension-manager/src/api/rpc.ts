@@ -15,13 +15,16 @@ interface SendRequestOptions {
 const DEFAULT_REQUEST_TIMEOUT_MS = 5000;
 
 export function invokeCommand<T>(command: string, params: object = {}): Promise<T> {
-  return sendRuntimeRpcRequest<T>({
-    invokeCommand: {
-      command,
-      params,
-      requestId: "",
+  return sendRuntimeRpcRequest<T>(
+    {
+      invokeCommand: {
+        command,
+        params,
+        requestId: "",
+      },
     },
-  }, "invoke_command");
+    "invoke_command",
+  );
 }
 
 export function sendRuntimeRpcRequest<T>(

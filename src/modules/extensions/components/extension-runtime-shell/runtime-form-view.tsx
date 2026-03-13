@@ -54,7 +54,9 @@ function renderFormField(state: UseExtensionRunnerStateResult, field: RunnerForm
     return (
       <ModuleFormField
         key={field.nodeId}
-        label={<Label className="text-[12px] font-medium text-muted-foreground">{field.title}</Label>}
+        label={
+          <Label className="text-[12px] font-medium text-muted-foreground">{field.title}</Label>
+        }
         description={field.info}
         error={field.error}
       >
@@ -83,7 +85,9 @@ function renderFormField(state: UseExtensionRunnerStateResult, field: RunnerForm
     return (
       <ModuleFormField
         key={field.nodeId}
-        label={<Label className="text-[12px] font-medium text-muted-foreground">{field.title}</Label>}
+        label={
+          <Label className="text-[12px] font-medium text-muted-foreground">{field.title}</Label>
+        }
         description={field.info}
         error={field.error}
       >
@@ -111,7 +115,9 @@ function renderFormField(state: UseExtensionRunnerStateResult, field: RunnerForm
     return (
       <ModuleFormField
         key={field.nodeId}
-        label={<Label className="text-[12px] font-medium text-muted-foreground">{field.title}</Label>}
+        label={
+          <Label className="text-[12px] font-medium text-muted-foreground">{field.title}</Label>
+        }
         description={field.info}
         error={field.error}
       >
@@ -193,8 +199,12 @@ export function RuntimeFormView({ state }: RuntimeFormViewProps) {
                   key={child.id}
                   className="space-y-1.5 rounded-xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-4 py-3"
                 >
-                  {title ? <div className="text-[12px] font-medium text-muted-foreground">{title}</div> : null}
-                  {text ? <div className="text-[13px] leading-6 text-foreground">{text}</div> : null}
+                  {title ? (
+                    <div className="text-[12px] font-medium text-muted-foreground">{title}</div>
+                  ) : null}
+                  {text ? (
+                    <div className="text-[13px] leading-6 text-foreground">{text}</div>
+                  ) : null}
                 </div>
               );
             }

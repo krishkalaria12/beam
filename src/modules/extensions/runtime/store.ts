@@ -7,10 +7,7 @@ import {
   type ExtensionUiNode,
 } from "@/modules/extensions/runtime/runtime-tree";
 
-export type {
-  ExtensionToast,
-  ExtensionUiNode,
-} from "@/modules/extensions/runtime/runtime-tree";
+export type { ExtensionToast, ExtensionUiNode } from "@/modules/extensions/runtime/runtime-tree";
 
 export interface RunningExtensionSession {
   pluginPath: string;
@@ -59,11 +56,14 @@ export const useExtensionRuntimeStore = create<ExtensionRuntimeState>((set, get)
     }
 
     const currentState = get();
-    const nextTree = applyRuntimeCommandsToRuntimeTree({
-      uiTree: currentState.uiTree,
-      rootNodeId: currentState.rootNodeId,
-      toasts: currentState.toasts,
-    }, commands);
+    const nextTree = applyRuntimeCommandsToRuntimeTree(
+      {
+        uiTree: currentState.uiTree,
+        rootNodeId: currentState.rootNodeId,
+        toasts: currentState.toasts,
+      },
+      commands,
+    );
 
     set((previous) => ({
       ...previous,

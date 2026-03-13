@@ -34,7 +34,12 @@ import {
 } from "@/modules/extensions/extension-manager/runtime-bridge";
 import { persistentExtensionRunnerManager } from "@/modules/extensions/background/persistent-runners";
 import { useExtensionRuntimeStore } from "@/modules/extensions/runtime/store";
-import type { ManagerRequest, ManagerResponse, RuntimeCommand, RuntimeRpc } from "@beam/extension-protocol";
+import type {
+  ManagerRequest,
+  ManagerResponse,
+  RuntimeCommand,
+  RuntimeRpc,
+} from "@beam/extension-protocol";
 
 interface RunPluginPayload {
   pluginPath: string;
@@ -129,9 +134,7 @@ class ExtensionManagerService {
   }
 
   async getPreferences(pluginName: string): Promise<Record<string, unknown>> {
-    const response = await this.sendManagerRequest(
-      buildGetPreferencesManagerRequest(pluginName),
-    );
+    const response = await this.sendManagerRequest(buildGetPreferencesManagerRequest(pluginName));
     if (response.error) {
       throw new Error(response.error.message);
     }
@@ -400,7 +403,10 @@ class ExtensionManagerService {
         response: {
           oauthGetTokens: {
             requestId,
-            result: result && typeof result === "object" ? (result as Record<string, unknown>) : undefined,
+            result:
+              result && typeof result === "object"
+                ? (result as Record<string, unknown>)
+                : undefined,
             error: error ?? "",
           },
         },
@@ -714,8 +720,7 @@ class ExtensionManagerService {
             return;
           }
 
-          const fullText =
-            typeof event.payload.fullText === "string" ? event.payload.fullText : "";
+          const fullText = typeof event.payload.fullText === "string" ? event.payload.fullText : "";
           this.sendRuntimeRpc({
             response: {
               aiAskEnd: {
@@ -813,7 +818,11 @@ class ExtensionManagerService {
     }
 
     if (runtimeRender?.kind === "error") {
-      console.error("[extensions-manager] runtime error:", runtimeRender.message, runtimeRender.stack);
+      console.error(
+        "[extensions-manager] runtime error:",
+        runtimeRender.message,
+        runtimeRender.stack,
+      );
       this.emit({
         type: "log",
         payload: {
@@ -979,13 +988,15 @@ class ExtensionManagerService {
 
     this.startPromise = (async () => {
       if (!this.runtimeMessageUnlisten) {
-        this.runtimeMessageUnlisten = await listenToExtensionRuntimeMessages((runtimeId, message) => {
-          if (runtimeId !== FOREGROUND_EXTENSION_RUNTIME_ID) {
-            return;
-          }
+        this.runtimeMessageUnlisten = await listenToExtensionRuntimeMessages(
+          (runtimeId, message) => {
+            if (runtimeId !== FOREGROUND_EXTENSION_RUNTIME_ID) {
+              return;
+            }
 
-          this.handleDecodedMessage(message);
-        });
+            this.handleDecodedMessage(message);
+          },
+        );
       }
 
       if (!this.runtimeStderrUnlisten) {

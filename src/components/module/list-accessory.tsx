@@ -23,7 +23,8 @@ export function ListAccessory({
     <span
       className={cn(
         "inline-flex items-center gap-1 text-[11px] text-muted-foreground",
-        fill && "rounded-md border border-[var(--launcher-chip-border)] bg-[var(--launcher-chip-bg)] px-2 py-0.5",
+        fill &&
+          "rounded-md border border-[var(--launcher-chip-border)] bg-[var(--launcher-chip-bg)] px-2 py-0.5",
         className,
       )}
       style={accentColor ? { color: accentColor } : undefined}

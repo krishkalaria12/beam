@@ -16,11 +16,13 @@ node_modules/
 /out/
 /build/
 /dist/
+**/dist/
 .vinxi
 .output
 .react-router/
 .tanstack/
 .nitro/
+*.tgz
 
 # Deployment
 .vercel
@@ -31,6 +33,7 @@ node_modules/
 # Environment & local files
 .env*
 !.env.example
+.npmrc
 .DS_Store
 *.pem
 *.local
@@ -62,3 +65,6 @@ dev-dist
 flare-main/
 SuperCmd-main/
 vicinae-main/
+
+# Generated local store artifacts
+store/artifacts/*.zip

@@ -1,7 +1,7 @@
 /**
  * Raycast-compatible entrypoint.
  *
- * This follows Vicinae's package split: Beam keeps a native SDK in `@beam/api`
+ * This follows Vicinae's package split: Beam keeps a native SDK in `@beam-launcher/api`
  * and exposes Raycast-shaped exports through a separate compat package.
  */
 
@@ -49,7 +49,7 @@ export {
   MenuBarExtra,
   launchCommand,
   trash,
-} from "@beam/api";
+} from "@beam-launcher/api";
 
 export {
   getApplications,

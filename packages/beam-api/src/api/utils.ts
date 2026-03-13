@@ -8,10 +8,10 @@ import type { Application } from "./proto/application";
   @ignore - we should probably move this to raycast compat, I don't think we want that.
  */
 export const trash = async (path: PathLike | PathLike[]): Promise<void> => {
-	const targets = Array.isArray(path) ? path : [path];
-	const promises = targets.map((p) => rm(p, { recursive: true }));
+  const targets = Array.isArray(path) ? path : [path];
+  const promises = targets.map((p) => rm(p, { recursive: true }));
 
-	await Promise.all(promises);
+  await Promise.all(promises);
 };
 
 /**
@@ -23,29 +23,29 @@ export const trash = async (path: PathLike | PathLike[]): Promise<void> => {
  * @category System
  */
 export type RunInTerminalOptions = {
-	/**
-	 * Ensure the terminal window is held open after the execution of the command completes.
-	 * This option is provided as a hint to the default terminal emulator, and might not be honored.
-	 */
-	hold?: boolean;
+  /**
+   * Ensure the terminal window is held open after the execution of the command completes.
+   * This option is provided as a hint to the default terminal emulator, and might not be honored.
+   */
+  hold?: boolean;
 
-	/**
-	 * Overrides the application ID used for this specific terminal window.
-	 * Can be useful if you want to target this window by its class with the window management API.
-	 * This option is provided as a hint to the default terminal emulator, and might not be honored.
-	 *
-	 * @see WindowManagement
-	 */
-	appId?: string;
+  /**
+   * Overrides the application ID used for this specific terminal window.
+   * Can be useful if you want to target this window by its class with the window management API.
+   * This option is provided as a hint to the default terminal emulator, and might not be honored.
+   *
+   * @see WindowManagement
+   */
+  appId?: string;
 
-	/**
-	 * Overrides the title used for this specific terminal window.
-	 * Can be useful if you want to target this window by its title with the window management API.
-	 * This option is provided as a hint to the default terminal emulator, and might not be honored.
-	 *
-	 * @see WindowManagement
-	 */
-	title?: string;
+  /**
+   * Overrides the title used for this specific terminal window.
+   * Can be useful if you want to target this window by its title with the window management API.
+   * This option is provided as a hint to the default terminal emulator, and might not be honored.
+   *
+   * @see WindowManagement
+   */
+  title?: string;
 };
 
 /**
@@ -63,84 +63,77 @@ export type RunInTerminalOptions = {
  *
  * @category System
  */
-export const runInTerminal = async (
-	args: string[],
-	options: RunInTerminalOptions = {},
-) => {
-	const { hold = false, appId, title } = options;
+export const runInTerminal = async (args: string[], options: RunInTerminalOptions = {}) => {
+  const { hold = false, appId, title } = options;
 
-	await bus.request("app.runInTerminal", {
-		cmdline: args,
-		hold,
-		appId,
-		title,
-	});
+  await bus.request("app.runInTerminal", {
+    cmdline: args,
+    hold,
+    appId,
+    title,
+  });
 };
 
 /**
  * @category System
  */
 export const open = async (target: string, app?: Application | string) => {
-	let appId: string | undefined;
+  let appId: string | undefined;
 
-	if (app) {
-		if (typeof app === "string") {
-			appId = app;
-		} else {
-			appId = app.id;
-		}
-	}
+  if (app) {
+    if (typeof app === "string") {
+      appId = app;
+    } else {
+      appId = app.id;
+    }
+  }
 
-	await bus.request("app.open", {
-		target,
-		appId,
-	});
+  await bus.request("app.open", {
+    target,
+    appId,
+  });
 };
 
 /**
  * @category System
  */
 export const getFrontmostApplication = async (): Promise<Application> => {
-	const { application } = await WindowManagement.getActiveWindow();
+  const { application } = await WindowManagement.getActiveWindow();
 
-	if (!application) {
-		throw new Error(`Could not get frontmost application`);
-	}
+  if (!application) {
+    throw new Error(`Could not get frontmost application`);
+  }
 
-	return application;
+  return application;
 };
 
 /**
  * @category System
  */
-export const getApplications = async (
-	target?: string,
-): Promise<Application[]> => {
-	const res = await bus.request("app.list", { target });
+export const getApplications = async (target?: string): Promise<Application[]> => {
+  const res = await bus.request("app.list", { target });
 
-	return res.unwrap().apps;
+  return res.unwrap().apps;
 };
 
 /**
  * @category System
  */
-export const getDefaultApplication = async (
-	path: string,
-): Promise<Application> => {
-	const res = await bus.request("app.getDefault", { target: path });
-	const app = res.unwrap().app;
+export const getDefaultApplication = async (path: string): Promise<Application> => {
+  const res = await bus.request("app.getDefault", { target: path });
+  const app = res.unwrap().app;
 
-	if (!app) throw new Error(`No default application for target ${path}`);
+  if (!app) throw new Error(`No default application for target ${path}`);
 
-	return app;
+  return app;
 };
 
 /**
  * @category System
  */
 export const showInFileBrowser = async (path: PathLike): Promise<void> => {
-	const fileBrowser = await getDefaultApplication("inode/directory"); // FIXME: we may want something more robust
-	await open(path.toString(), fileBrowser);
+  const fileBrowser = await getDefaultApplication("inode/directory"); // FIXME: we may want something more robust
+  await open(path.toString(), fileBrowser);
 };
 
 export { Application } from "./proto/application";

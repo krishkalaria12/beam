@@ -154,7 +154,9 @@ function toNamedChildren(namedChildren?: Record<string, number>): Record<string,
   return namedChildren ? { ...namedChildren } : {};
 }
 
-function fromNamedChildren(namedChildren: Record<string, number> | undefined): Record<string, number> | undefined {
+function fromNamedChildren(
+  namedChildren: Record<string, number> | undefined,
+): Record<string, number> | undefined {
   if (!namedChildren || Object.keys(namedChildren).length === 0) {
     return undefined;
   }
@@ -545,7 +547,9 @@ export function fromRenderCommandMessage(message: RenderCommandMessage): Runtime
   return null;
 }
 
-export function createRuntimeRenderBatch(commands: readonly RuntimeCommand[]): RuntimeRenderMessage {
+export function createRuntimeRenderBatch(
+  commands: readonly RuntimeCommand[],
+): RuntimeRenderMessage {
   return {
     batch: {
       commands: commands.map((command) => toRenderCommandMessage(command)),
@@ -579,7 +583,9 @@ export function createRuntimeRenderError(error: {
   };
 }
 
-export function decodeRuntimeRenderMessage(message: RuntimeRenderMessage): RuntimeRenderEnvelope | null {
+export function decodeRuntimeRenderMessage(
+  message: RuntimeRenderMessage,
+): RuntimeRenderEnvelope | null {
   if (message.batch) {
     const commands = message.batch.commands
       .map((command) => fromRenderCommandMessage(command))

@@ -47,9 +47,11 @@ export function NotePreview({
         <article className="rounded-xl bg-[var(--launcher-card-bg)] p-4 ring-1 ring-[var(--launcher-card-border)]">
           <div className="mb-3 flex items-center gap-2">
             <div className="size-7 rounded-lg bg-[var(--launcher-card-hover-bg)] p-1.5">
-              {note.pinned
-                ? <Pin className="size-full text-[var(--icon-orange-fg)]" />
-                : <Book className="size-full text-[var(--icon-primary-fg)]" />}
+              {note.pinned ? (
+                <Pin className="size-full text-[var(--icon-orange-fg)]" />
+              ) : (
+                <Book className="size-full text-[var(--icon-primary-fg)]" />
+              )}
             </div>
             <div className="min-w-0 flex-1">
               <p className="truncate text-[16px] font-semibold tracking-[-0.02em] text-foreground">
@@ -59,13 +61,11 @@ export function NotePreview({
                 Updated {formatTimestamp(note.updated_at)}
               </p>
             </div>
-            {note.pinned
-              ? (
-                  <span className="rounded-full bg-[var(--icon-orange-bg)] px-2 py-0.5 text-[10px] font-medium text-[var(--icon-orange-fg)]">
-                    Pinned
-                  </span>
-                )
-              : null}
+            {note.pinned ? (
+              <span className="rounded-full bg-[var(--icon-orange-bg)] px-2 py-0.5 text-[10px] font-medium text-[var(--icon-orange-fg)]">
+                Pinned
+              </span>
+            ) : null}
           </div>
 
           <div className="rounded-xl bg-[var(--launcher-card-hover-bg)] p-4">

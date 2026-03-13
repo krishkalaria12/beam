@@ -128,7 +128,10 @@ function useAsyncRunner<TData>(
   options: UseAsyncOptions<TData> = {},
 ): AsyncState<TData> & {
   revalidate: () => void;
-  mutate: (asyncUpdate?: Promise<TData>, mutateOptions?: MutationOptions<TData>) => Promise<TData | undefined>;
+  mutate: (
+    asyncUpdate?: Promise<TData>,
+    mutateOptions?: MutationOptions<TData>,
+  ) => Promise<TData | undefined>;
 } {
   const [state, setState] = React.useState<AsyncState<TData>>({
     data: options.initialData,
@@ -262,9 +265,7 @@ export function useCachedState<T>(
     (nextValue) => {
       setValue((previous) => {
         const resolved =
-          typeof nextValue === "function"
-            ? (nextValue as (value: T) => T)(previous)
-            : nextValue;
+          typeof nextValue === "function" ? (nextValue as (value: T) => T)(previous) : nextValue;
         cacheRef.current.set(cacheKey, toJsonString(resolved));
         return resolved;
       });
@@ -275,7 +276,10 @@ export function useCachedState<T>(
   return [value, setCachedValue];
 }
 
-export function useLocalStorage<T>(key: string, initialValue?: T): {
+export function useLocalStorage<T>(
+  key: string,
+  initialValue?: T,
+): {
   value: T | undefined;
   setValue: (value: T | ((previous: T | undefined) => T)) => Promise<void>;
   removeValue: () => Promise<void>;
@@ -343,14 +347,10 @@ export function usePromise<T>(
   fnRef.current = fn;
   const argsKey = stableSerialize(args);
 
-  return useAsyncRunner<T>(
-    () => fnRef.current(...args),
-    [argsKey],
-    {
-      ...options,
-      onWillExecute: () => options.onWillExecute?.(args),
-    },
-  );
+  return useAsyncRunner<T>(() => fnRef.current(...args), [argsKey], {
+    ...options,
+    onWillExecute: () => options.onWillExecute?.(args),
+  });
 }
 
 export function useCachedPromise<T>(
@@ -437,8 +437,8 @@ export function useFetch<T = unknown>(
           headers: currentOptions.headers,
           body:
             currentOptions.body &&
-              typeof currentOptions.body === "object" &&
-              !(currentOptions.body instanceof Uint8Array)
+            typeof currentOptions.body === "object" &&
+            !(currentOptions.body instanceof Uint8Array)
               ? JSON.stringify(currentOptions.body)
               : (currentOptions.body as BodyInitLike | undefined),
         });
@@ -608,8 +608,9 @@ export function useAI(
 
     const request = AI.ask(currentPrompt, {
       model: currentOptions.model,
-      creativity:
-        currentOptions.creativity as NonNullable<Parameters<typeof AI.ask>[1]>["creativity"],
+      creativity: currentOptions.creativity as NonNullable<
+        Parameters<typeof AI.ask>[1]
+      >["creativity"],
       signal: controller.signal,
     });
 
@@ -661,7 +662,9 @@ export function useAI(
 export function useForm<T extends Record<string, unknown> = Record<string, unknown>>(options: {
   onSubmit: (values: T) => void | boolean | Promise<void | boolean>;
   initialValues?: Partial<T>;
-  validation?: Partial<Record<keyof T, ((value: unknown) => string | undefined | null) | FormValidation>>;
+  validation?: Partial<
+    Record<keyof T, ((value: unknown) => string | undefined | null) | FormValidation>
+  >;
 }) {
   const [values, setValues] = React.useState<T>((options.initialValues ?? {}) as T);
   const [errors, setErrors] = React.useState<Partial<Record<keyof T, string>>>({});
@@ -682,11 +685,7 @@ export function useForm<T extends Record<string, unknown> = Record<string, unkno
         return undefined;
       }
       if (rule === FormValidation.Required) {
-        if (
-          value == null ||
-          value === "" ||
-          (Array.isArray(value) && value.length === 0)
-        ) {
+        if (value == null || value === "" || (Array.isArray(value) && value.length === 0)) {
           return "This field is required";
         }
         return undefined;
@@ -898,15 +897,13 @@ export async function executeSQL<T = unknown>(
   } catch {
     let paramIndex = 0;
     const interpolatedQuery = query.replace(/\?/g, () => escapeSqlLiteral(params[paramIndex++]));
-    const result = await execFileAsync("sqlite3", [
-      "-json",
-      databasePath,
-      interpolatedQuery,
-    ]).catch((error) => {
-      throw new Error(
-        error instanceof Error ? error.message : "SQL helpers require sqlite support.",
-      );
-    });
+    const result = await execFileAsync("sqlite3", ["-json", databasePath, interpolatedQuery]).catch(
+      (error) => {
+        throw new Error(
+          error instanceof Error ? error.message : "SQL helpers require sqlite support.",
+        );
+      },
+    );
     return tryParseJson<T[]>(result.stdout, []);
   }
 
@@ -943,7 +940,10 @@ export function withCache<TArgs extends unknown[], TResult>(
     const key = `${keyPrefix}:${stableSerialize(args)}`;
     const raw = cache.get(key);
     if (raw) {
-      const cached = tryParseJson<{ value: TResult; expiresAt?: number } | TResult>(raw, raw as TResult);
+      const cached = tryParseJson<{ value: TResult; expiresAt?: number } | TResult>(
+        raw,
+        raw as TResult,
+      );
       if (
         cached &&
         typeof cached === "object" &&
@@ -1012,12 +1012,12 @@ export function getAvatarIcon(
         ? firstPart.slice(0, 1).toUpperCase()
         : `${firstPart.slice(0, 1)}${lastPart.slice(0, 1)}`.toUpperCase();
   const background = options.background ?? AVATAR_COLORS[hashString(name) % AVATAR_COLORS.length];
-  const gradient = options.gradient !== false
-    ? '<rect width="64" height="64" rx="32" fill="url(#g)"/>'
-    : "";
-  const defs = options.gradient !== false
-    ? '<defs><linearGradient id="g" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="rgba(255,255,255,0.12)"/><stop offset="100%" stop-color="rgba(0,0,0,0.12)"/></linearGradient></defs>'
-    : "";
+  const gradient =
+    options.gradient !== false ? '<rect width="64" height="64" rx="32" fill="url(#g)"/>' : "";
+  const defs =
+    options.gradient !== false
+      ? '<defs><linearGradient id="g" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="rgba(255,255,255,0.12)"/><stop offset="100%" stop-color="rgba(0,0,0,0.12)"/></linearGradient></defs>'
+      : "";
   return encodeSvg(
     `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">${defs}<rect width="64" height="64" rx="32" fill="${background}"/>${gradient}<text x="32" y="32" text-anchor="middle" dominant-baseline="central" fill="white" font-size="24" font-family="system-ui,sans-serif" font-weight="700">${initials}</text></svg>`,
   );

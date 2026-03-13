@@ -11,7 +11,7 @@ import { Metadata } from "./metadata";
  *
  * @example
  * ```typescript
- * import { Detail } from '@beam/api';
+ * import { Detail } from '@beam-launcher/api';
  *
  * export default function MyCommand() {
  *  return <Detail markdown={'# Hello world!'} />;
@@ -22,32 +22,28 @@ import { Metadata } from "./metadata";
  * @public
  */
 export namespace Detail {
-	export type Props = {
-		navigationTitle?: string;
-		metadata?: ReactNode;
-		markdown: string;
-		actions?: ReactNode;
-	};
+  export type Props = {
+    navigationTitle?: string;
+    metadata?: ReactNode;
+    markdown: string;
+    actions?: ReactNode;
+  };
 }
 
-const DetailRoot: React.FC<Detail.Props> = ({
-	metadata,
-	actions,
-	...props
-}) => {
-	const nativeProps: React.JSX.IntrinsicElements["detail"] = props;
+const DetailRoot: React.FC<Detail.Props> = ({ metadata, actions, ...props }) => {
+  const nativeProps: React.JSX.IntrinsicElements["detail"] = props;
 
-	return (
-		<detail {...nativeProps}>
-			{actions}
-			{metadata}
-		</detail>
-	);
+  return (
+    <detail {...nativeProps}>
+      {actions}
+      {metadata}
+    </detail>
+  );
 };
 
 /**
  * @category UI Components
  */
 export const Detail = Object.assign(DetailRoot, {
-	Metadata,
+  Metadata,
 });

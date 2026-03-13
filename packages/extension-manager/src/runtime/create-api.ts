@@ -64,9 +64,7 @@ export type BeamRuntimeApiDependencies = {
     context?: Record<string, unknown>;
     arguments?: Record<string, unknown>;
   }) => Promise<void>;
-  updateCommandMetadata: (metadata: {
-    subtitle?: string | null;
-  }) => Promise<void>;
+  updateCommandMetadata: (metadata: { subtitle?: string | null }) => Promise<void>;
   openExtensionPreferences: () => Promise<void>;
   openCommandPreferences: () => Promise<void>;
   useNavigation: () => {
@@ -85,10 +83,7 @@ export const createRaycastRuntimeApi = (deps: BeamRuntimeApiDependencies) => {
     open: deps.menuBarExtraOpen,
   });
 
-  const popToRoot = async (options?: {
-    clearSearchBar?: boolean;
-    popToRootType?: string;
-  }) => {
+  const popToRoot = async (options?: { clearSearchBar?: boolean; popToRootType?: string }) => {
     if (options?.popToRootType === deps.PopToRootType.Suspended) {
       return;
     }
@@ -117,7 +112,7 @@ export const createRaycastRuntimeApi = (deps: BeamRuntimeApiDependencies) => {
     deps.goBackToPluginList();
   };
 
-  const usePersistentState = <T,>(
+  const usePersistentState = <T>(
     key: string,
     initialValue: T,
   ): [T, React.Dispatch<React.SetStateAction<T>>, boolean] => {
@@ -157,15 +152,11 @@ export const createRaycastRuntimeApi = (deps: BeamRuntimeApiDependencies) => {
       };
     }, [storageKey]);
 
-    const persistentSetState = React.useCallback<
-      React.Dispatch<React.SetStateAction<T>>
-    >(
+    const persistentSetState = React.useCallback<React.Dispatch<React.SetStateAction<T>>>(
       (nextValue) => {
         setState((previous) => {
           const resolved =
-            typeof nextValue === "function"
-              ? (nextValue as (value: T) => T)(previous)
-              : nextValue;
+            typeof nextValue === "function" ? (nextValue as (value: T) => T)(previous) : nextValue;
           void deps.LocalStorage.setItem(storageKey, JSON.stringify(resolved));
           return resolved;
         });

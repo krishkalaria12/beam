@@ -13,6 +13,7 @@ use bytes::Bytes;
 use error::{ExtensionsError, Result};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value as JsonValue};
+use sha2::{Digest, Sha256};
 use tauri::Manager;
 use zip::result::ZipError;
 use zip::ZipArchive;
@@ -214,7 +215,27 @@ fn resolve_plugin_icon_reference(plugin_dir: &Path, icon: Option<&str>) -> Optio
 }
 
 async fn download_archive(url: &str) -> Result<Bytes> {
-    let response = reqwest::get(url).await?;
+    let trimmed = url.trim();
+    if trimmed.is_empty() {
+        return Err(ExtensionsError::Message(
+            "extension archive url is required".to_string(),
+        ));
+    }
+
+    if let Some(path) = trimmed.strip_prefix("file://") {
+        return fs::read(path)
+            .map(Bytes::from)
+            .map_err(ExtensionsError::from);
+    }
+
+    let local_path = PathBuf::from(trimmed);
+    if !has_uri_scheme(trimmed) && local_path.is_file() {
+        return fs::read(local_path)
+            .map(Bytes::from)
+            .map_err(ExtensionsError::from);
+    }
+
+    let response = reqwest::get(trimmed).await?;
     if !response.status().is_success() {
         return Err(ExtensionsError::Network(format!(
             "Failed to download extension: status code {}",
@@ -223,6 +244,47 @@ async fn download_archive(url: &str) -> Result<Bytes> {
     }
 
     response.bytes().await.map_err(ExtensionsError::from)
+}
+
+fn verify_archive_checksum(content: &Bytes, checksum_sha256: Option<&str>) -> Result<()> {
+    let Some(expected) = checksum_sha256
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+    else {
+        return Ok(());
+    };
+
+    let digest = format!("{:x}", Sha256::digest(content));
+    if digest.eq_ignore_ascii_case(expected) {
+        return Ok(());
+    }
+
+    Err(ExtensionsError::Message(format!(
+        "extension archive checksum mismatch: expected {expected}, got {digest}"
+    )))
+}
+
+fn install_extension_archive(
+    app: &tauri::AppHandle,
+    slug: &str,
+    content: &Bytes,
+    force: bool,
+) -> Result<InstallResult> {
+    if !is_valid_extension_slug(slug) {
+        return Err(ExtensionsError::InvalidSlug(slug.to_string()));
+    }
+
+    let extension_dir = get_extension_dir(app, slug)?;
+
+    if !force {
+        let violations = run_heuristic_checks(content)?;
+        if !violations.is_empty() {
+            return Ok(InstallResult::RequiresConfirmation { violations });
+        }
+    }
+
+    extract_archive(content, &extension_dir)?;
+    Ok(InstallResult::Success)
 }
 
 fn find_common_prefix(file_names: &[PathBuf]) -> Option<PathBuf> {
@@ -436,6 +498,10 @@ struct RawPackageJson {
     author: Option<RawAuthor>,
     owner: Option<String>,
     version: Option<String>,
+    schema_version: Option<String>,
+    package_id: Option<String>,
+    minimum_beam_version: Option<String>,
+    release_channel: Option<String>,
     commands: Option<Vec<RawCommandInfo>>,
     preferences: Option<Vec<RawPreference>>,
 }
@@ -498,18 +564,18 @@ fn proto_value_to_json(value: &::prost_types::Value) -> JsonValue {
 
 fn raw_author_to_proto(author: Option<RawAuthor>) -> Option<proto::ManifestAuthor> {
     author.and_then(|author| match author {
-        RawAuthor::Simple(value) => normalize_optional_string(Some(value)).map(|value| {
-            proto::ManifestAuthor {
+        RawAuthor::Simple(value) => {
+            normalize_optional_string(Some(value)).map(|value| proto::ManifestAuthor {
                 author: Some(proto::manifest_author::Author::Simple(value)),
-            }
-        }),
-        RawAuthor::Detailed { name } => normalize_optional_string(Some(name)).map(|name| {
-            proto::ManifestAuthor {
-                author: Some(proto::manifest_author::Author::Detailed(proto::AuthorName {
-                    name,
-                })),
-            }
-        }),
+            })
+        }
+        RawAuthor::Detailed { name } => {
+            normalize_optional_string(Some(name)).map(|name| proto::ManifestAuthor {
+                author: Some(proto::manifest_author::Author::Detailed(
+                    proto::AuthorName { name },
+                )),
+            })
+        }
     })
 }
 
@@ -563,6 +629,10 @@ fn raw_package_json_to_proto(package_json: RawPackageJson) -> proto::ExtensionMa
         author: raw_author_to_proto(package_json.author),
         owner: normalize_optional_string(package_json.owner),
         version: normalize_optional_string(package_json.version),
+        schema_version: normalize_optional_string(package_json.schema_version),
+        package_id: normalize_optional_string(package_json.package_id),
+        minimum_beam_version: normalize_optional_string(package_json.minimum_beam_version),
+        release_channel: normalize_optional_string(package_json.release_channel),
         commands: package_json
             .commands
             .unwrap_or_default()
@@ -735,28 +805,38 @@ pub fn get_discovered_plugins(app: tauri::AppHandle) -> Result<Vec<JsonValue>> {
 }
 
 #[tauri::command]
-pub async fn install_extension(
+pub async fn install_store_extension(
     app: tauri::AppHandle,
-    download_url: String,
-    slug: String,
+    package_id: String,
+    release_version: Option<String>,
+    channel: Option<String>,
     force: bool,
 ) -> Result<InstallResult> {
-    if !is_valid_extension_slug(&slug) {
-        return Err(ExtensionsError::InvalidSlug(slug));
+    let resolved = store::resolve_store_artifact(
+        &app,
+        &package_id,
+        release_version.as_deref(),
+        channel.as_deref(),
+    )
+    .await?;
+
+    if !is_valid_extension_slug(&resolved.package.slug) {
+        return Err(ExtensionsError::InvalidSlug(resolved.package.slug));
     }
 
-    let extension_dir = get_extension_dir(&app, &slug)?;
-    let content = download_archive(&download_url).await?;
+    let content = download_archive(&resolved.artifact.download_url).await?;
+    verify_archive_checksum(
+        &content,
+        resolved
+            .artifact
+            .checksums
+            .iter()
+            .find(|checksum| checksum.algorithm == proto::ExtensionChecksumAlgorithm::Sha256 as i32)
+            .map(|checksum| checksum.value.as_str())
+            .or(resolved.release.checksum_sha256.as_deref()),
+    )?;
 
-    if !force {
-        let violations = run_heuristic_checks(&content)?;
-        if !violations.is_empty() {
-            return Ok(InstallResult::RequiresConfirmation { violations });
-        }
-    }
-
-    extract_archive(&content, &extension_dir)?;
-    Ok(InstallResult::Success)
+    install_extension_archive(&app, &resolved.package.slug, &content, force)
 }
 
 #[tauri::command]

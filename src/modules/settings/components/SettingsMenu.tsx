@@ -1,4 +1,13 @@
-import { AtSign, ChevronRight, EyeOff, Keyboard, Layers, Monitor, Pin, Sparkles } from "lucide-react";
+import {
+  AtSign,
+  ChevronRight,
+  EyeOff,
+  Keyboard,
+  Layers,
+  Monitor,
+  Pin,
+  Sparkles,
+} from "lucide-react";
 
 import { IconChip } from "@/components/module";
 import { Button } from "@/components/ui/button";

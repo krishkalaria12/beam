@@ -99,4 +99,3 @@ function Description({ children, className }: DescriptionProps) {
 
 ListItem.Title = Title;
 ListItem.Description = Description;
-

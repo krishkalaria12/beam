@@ -1,7 +1,5 @@
-export const getPreferenceValues = <
-	T = { [preferenceName: string]: any },
->(): T => {
-	return (globalThis as any).beam.preferences;
+export const getPreferenceValues = <T = { [preferenceName: string]: any }>(): T => {
+  return (globalThis as any).beam.preferences;
 };
 
 /**
@@ -9,7 +7,7 @@ export const getPreferenceValues = <
  * @ignore
  */
 export const openExtensionPreferences = async (): Promise<void> => {
-	console.error("openExtensionPreferences is not implemented");
+  console.error("openExtensionPreferences is not implemented");
 };
 
 /**
@@ -17,5 +15,5 @@ export const openExtensionPreferences = async (): Promise<void> => {
  * @ignore
  */
 export const openCommandPreferences = async (): Promise<void> => {
-	console.error("openCommandPreferences is not implemented");
+  console.error("openCommandPreferences is not implemented");
 };

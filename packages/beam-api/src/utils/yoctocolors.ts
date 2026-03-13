@@ -10,44 +10,44 @@ export type Format = (string?: string) => string;
 const hasColors = tty?.WriteStream?.prototype?.hasColors?.() ?? false;
 
 const format = (open: number, close: number): Format => {
-	if (!hasColors) {
-		return (input?: string) => input ?? "";
-	}
+  if (!hasColors) {
+    return (input?: string) => input ?? "";
+  }
 
-	const openCode = `\u001B[${open}m`;
-	const closeCode = `\u001B[${close}m`;
+  const openCode = `\u001B[${open}m`;
+  const closeCode = `\u001B[${close}m`;
 
-	return (input: string = "") => {
-		let index = input.indexOf(closeCode);
+  return (input: string = "") => {
+    let index = input.indexOf(closeCode);
 
-		if (index === -1) {
-			// Note: Intentionally not using string interpolation for performance reasons.
-			return openCode + input + closeCode;
-		}
+    if (index === -1) {
+      // Note: Intentionally not using string interpolation for performance reasons.
+      return openCode + input + closeCode;
+    }
 
-		// Handle nested colors.
+    // Handle nested colors.
 
-		// We could have done this, but it's too slow (as of Node.js 22).
-		// return openCode + string.replaceAll(closeCode, (close === 22 ? closeCode : '') + openCode) + closeCode;
+    // We could have done this, but it's too slow (as of Node.js 22).
+    // return openCode + string.replaceAll(closeCode, (close === 22 ? closeCode : '') + openCode) + closeCode;
 
-		let result = openCode;
-		let lastIndex = 0;
+    let result = openCode;
+    let lastIndex = 0;
 
-		// SGR 22 resets both bold (1) and dim (2). When we encounter a nested
-		// close for styles that use 22, we need to re-open the outer style.
-		const reopenOnNestedClose = close === 22;
-		const replaceCode = (reopenOnNestedClose ? closeCode : "") + openCode;
+    // SGR 22 resets both bold (1) and dim (2). When we encounter a nested
+    // close for styles that use 22, we need to re-open the outer style.
+    const reopenOnNestedClose = close === 22;
+    const replaceCode = (reopenOnNestedClose ? closeCode : "") + openCode;
 
-		while (index !== -1) {
-			result += input.slice(lastIndex, index) + replaceCode;
-			lastIndex = index + closeCode.length;
-			index = input.indexOf(closeCode, lastIndex);
-		}
+    while (index !== -1) {
+      result += input.slice(lastIndex, index) + replaceCode;
+      lastIndex = index + closeCode.length;
+      index = input.indexOf(closeCode, lastIndex);
+    }
 
-		result += input.slice(lastIndex) + closeCode;
+    result += input.slice(lastIndex) + closeCode;
 
-		return result;
-	};
+    return result;
+  };
 };
 
 export const reset = format(0, 0);

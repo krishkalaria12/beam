@@ -16,10 +16,7 @@ import type { CustomActionRequest } from "@/command-registry/dispatcher";
 import { staticCommandRegistry } from "@/command-registry/registry";
 import { createStaticCommandRegistryStore } from "@/command-registry/static-registry";
 import { logDispatchFailure } from "@/command-registry/telemetry";
-import {
-  QUICKLINK_TRIGGER_MODE,
-  SHELL_TRIGGER_MODE,
-} from "@/command-registry/trigger-registry";
+import { QUICKLINK_TRIGGER_MODE, SHELL_TRIGGER_MODE } from "@/command-registry/trigger-registry";
 import type { CommandDescriptor } from "@/command-registry/types";
 import { useCommandPreferences } from "@/command-registry/use-command-preferences";
 import { Command, CommandInput, CommandList } from "@/components/ui/command";

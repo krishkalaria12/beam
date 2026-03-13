@@ -1,9 +1,322 @@
 {
+  "formatVersion": "1",
+  "generatedAt": "2026-03-13T06:02:51.236Z",
   "source": {
     "id": "beam",
     "label": "Beam Store",
     "kind": "EXTENSION_STORE_SOURCE_KIND_BEAM",
     "homepageUrl": "https://beam.sh/store"
   },
-  "packages": []
+  "packages": [
+    {
+      "id": "beam.demo-tools",
+      "slug": "beam-demo-tools",
+      "title": "Beam Demo Tools",
+      "summary": "Sample Beam-native package published from the local store catalog.",
+      "description": "A local Beam-native extension package used to exercise publishing, installation, and update flows without relying on the Raycast store.",
+      "author": {
+        "handle": "beam",
+        "name": "Beam Team",
+        "profileUrl": "https://beam.sh"
+      },
+      "categories": [
+        "Developer Tools"
+      ],
+      "tags": [
+        "beam",
+        "sample",
+        "local-store"
+      ],
+      "verification": {
+        "status": "EXTENSION_VERIFICATION_STATUS_VERIFIED",
+        "label": "Beam Verified",
+        "verifiedBy": "Beam Store",
+        "summary": "Built and signed from the Beam repository store fixture."
+      },
+      "compatibility": {
+        "platforms": [
+          "linux"
+        ],
+        "desktopEnvironments": [
+          "gnome",
+          "kde",
+          "hyprland",
+          "sway"
+        ],
+        "minimumBeamVersion": "1.0.0",
+        "linuxTested": true,
+        "waylandTested": true,
+        "x11Tested": true,
+        "notes": [
+          "Installs from a local file-backed store artifact."
+        ]
+      },
+      "defaultChannel": "EXTENSION_RELEASE_CHANNEL_STABLE",
+      "packageFormatVersion": "1",
+      "downloadCount": 12,
+      "manifest": {
+        "name": "beam-demo-tools",
+        "title": "Beam Demo Tools",
+        "description": "Local Beam store package used to exercise publishing and update flows.",
+        "icon": "icons/demo-tools.png",
+        "author": {
+          "name": "Beam Team"
+        },
+        "owner": "beam",
+        "version": "1.0.0",
+        "packageId": "beam.demo-tools",
+        "minimumBeamVersion": "1.0.0",
+        "releaseChannel": "stable",
+        "commands": [
+          {
+            "name": "demo-tools",
+            "title": "Demo Tools",
+            "description": "A simple Beam-native sample command.",
+            "mode": "view"
+          }
+        ],
+        "preferences": [
+          {
+            "name": "workspace",
+            "type": "textfield",
+            "title": "Workspace",
+            "description": "Workspace label used by the demo package.",
+            "required": false,
+            "default": "beam"
+          }
+        ]
+      },
+      "releases": [
+        {
+          "version": "1.1.0",
+          "channel": "EXTENSION_RELEASE_CHANNEL_STABLE",
+          "prerelease": false,
+          "publishedAt": "2026-03-13T09:00:00Z",
+          "publishedBy": "beam-ci",
+          "primaryArtifactId": "linux-zip",
+          "releaseNotes": {
+            "summary": "Metadata and update-aware sample release.",
+            "markdown": "## Beam Demo Tools 1.1.0\n\nAdds release metadata and checksum-backed install validation."
+          },
+          "artifacts": [
+            {
+              "id": "linux-zip",
+              "kind": "EXTENSION_PACKAGE_ARTIFACT_KIND_ZIP",
+              "downloadUrl": "./artifacts/beam-demo-tools-1.1.0.zip",
+              "fileName": "beam-demo-tools-1.1.0.zip",
+              "mimeType": "application/zip",
+              "sizeBytes": 730,
+              "platforms": [
+                "linux"
+              ],
+              "desktopEnvironments": [
+                "gnome",
+                "kde",
+                "hyprland",
+                "sway"
+              ],
+              "checksums": [
+                {
+                  "algorithm": "EXTENSION_CHECKSUM_ALGORITHM_SHA256",
+                  "value": "b772ac2c1cef18deff42e6161d753ee85f74ccd1145a02faa001c1ef8d37fe0a"
+                }
+              ],
+              "verification": {
+                "signer": "beam-ci",
+                "provenanceUrl": "https://beam.sh/store/provenance/beam-demo-tools/1.1.0"
+              }
+            }
+          ]
+        },
+        {
+          "version": "1.0.0",
+          "channel": "EXTENSION_RELEASE_CHANNEL_STABLE",
+          "prerelease": false,
+          "publishedAt": "2026-02-20T09:00:00Z",
+          "publishedBy": "beam-ci",
+          "primaryArtifactId": "linux-zip",
+          "releaseNotes": {
+            "summary": "Initial Beam-native sample release.",
+            "markdown": "## Beam Demo Tools 1.0.0\n\nInitial Beam-native store release used to validate local publishing."
+          },
+          "artifacts": [
+            {
+              "id": "linux-zip",
+              "kind": "EXTENSION_PACKAGE_ARTIFACT_KIND_ZIP",
+              "downloadUrl": "./artifacts/beam-demo-tools-1.0.0.zip",
+              "fileName": "beam-demo-tools-1.0.0.zip",
+              "mimeType": "application/zip",
+              "sizeBytes": 718,
+              "platforms": [
+                "linux"
+              ],
+              "desktopEnvironments": [
+                "gnome",
+                "kde",
+                "hyprland",
+                "sway"
+              ],
+              "checksums": [
+                {
+                  "algorithm": "EXTENSION_CHECKSUM_ALGORITHM_SHA256",
+                  "value": "a253c4e2f8850111de669e7a2da068f5ef4ece2b7ed7dc894d965ab0f0dc88f3"
+                }
+              ],
+              "verification": {
+                "signer": "beam-ci",
+                "provenanceUrl": "https://beam.sh/store/provenance/beam-demo-tools/1.0.0"
+              }
+            }
+          ]
+        }
+      ],
+      "screenshots": []
+    },
+    {
+      "id": "beam.window-recipes",
+      "slug": "beam-window-recipes",
+      "title": "Beam Window Recipes",
+      "summary": "Sample package with stable and beta channels.",
+      "description": "A local Beam-native package used to validate release channel selection and artifact metadata.",
+      "author": {
+        "handle": "beam",
+        "name": "Beam Team",
+        "profileUrl": "https://beam.sh"
+      },
+      "categories": [
+        "Window Management"
+      ],
+      "tags": [
+        "beam",
+        "sample",
+        "beta"
+      ],
+      "verification": {
+        "status": "EXTENSION_VERIFICATION_STATUS_CURATED",
+        "label": "Beam Curated",
+        "verifiedBy": "Beam Store",
+        "summary": "Used to exercise release channel resolution."
+      },
+      "compatibility": {
+        "platforms": [
+          "linux"
+        ],
+        "desktopEnvironments": [
+          "gnome",
+          "kde",
+          "hyprland",
+          "sway"
+        ],
+        "minimumBeamVersion": "1.0.0",
+        "linuxTested": true,
+        "waylandTested": true,
+        "x11Tested": true,
+        "notes": [
+          "Stable and beta releases are both shipped for this package."
+        ]
+      },
+      "defaultChannel": "EXTENSION_RELEASE_CHANNEL_STABLE",
+      "packageFormatVersion": "1",
+      "downloadCount": 4,
+      "manifest": {
+        "name": "beam-window-recipes",
+        "title": "Beam Window Recipes",
+        "description": "Local Beam store package with a beta channel to exercise channel-aware resolution.",
+        "icon": "icons/window-recipes.png",
+        "author": {
+          "name": "Beam Team"
+        },
+        "owner": "beam",
+        "version": "0.9.0",
+        "packageId": "beam.window-recipes",
+        "minimumBeamVersion": "1.0.0",
+        "releaseChannel": "stable",
+        "commands": [
+          {
+            "name": "window-recipes",
+            "title": "Window Recipes",
+            "description": "A sample no-view command from the local Beam store.",
+            "mode": "no-view"
+          }
+        ],
+        "preferences": []
+      },
+      "releases": [
+        {
+          "version": "1.0.0-beta.1",
+          "channel": "EXTENSION_RELEASE_CHANNEL_BETA",
+          "channelName": "beta",
+          "prerelease": true,
+          "publishedAt": "2026-03-10T09:00:00Z",
+          "publishedBy": "beam-ci",
+          "primaryArtifactId": "linux-zip",
+          "releaseNotes": {
+            "summary": "Preview release for beta users.",
+            "markdown": "## Beam Window Recipes 1.0.0-beta.1\n\nBeta release to exercise channel-aware resolution."
+          },
+          "artifacts": [
+            {
+              "id": "linux-zip",
+              "kind": "EXTENSION_PACKAGE_ARTIFACT_KIND_ZIP",
+              "downloadUrl": "./artifacts/beam-window-recipes-1.0.0-beta.1.zip",
+              "fileName": "beam-window-recipes-1.0.0-beta.1.zip",
+              "mimeType": "application/zip",
+              "sizeBytes": 666,
+              "platforms": [
+                "linux"
+              ],
+              "desktopEnvironments": [],
+              "checksums": [
+                {
+                  "algorithm": "EXTENSION_CHECKSUM_ALGORITHM_SHA256",
+                  "value": "e1b047eb0ea8a1d81fda4b9ff1e13e11b6d6cf1fc866d6de3b3640e2fa5a58da"
+                }
+              ],
+              "verification": {
+                "signer": "beam-ci",
+                "provenanceUrl": "https://beam.sh/store/provenance/beam-window-recipes/1.0.0-beta.1"
+              }
+            }
+          ]
+        },
+        {
+          "version": "0.9.0",
+          "channel": "EXTENSION_RELEASE_CHANNEL_STABLE",
+          "prerelease": false,
+          "publishedAt": "2026-02-14T09:00:00Z",
+          "publishedBy": "beam-ci",
+          "primaryArtifactId": "linux-zip",
+          "releaseNotes": {
+            "summary": "Stable local release.",
+            "markdown": "## Beam Window Recipes 0.9.0\n\nStable store release for production users."
+          },
+          "artifacts": [
+            {
+              "id": "linux-zip",
+              "kind": "EXTENSION_PACKAGE_ARTIFACT_KIND_ZIP",
+              "downloadUrl": "./artifacts/beam-window-recipes-0.9.0.zip",
+              "fileName": "beam-window-recipes-0.9.0.zip",
+              "mimeType": "application/zip",
+              "sizeBytes": 672,
+              "platforms": [
+                "linux"
+              ],
+              "desktopEnvironments": [],
+              "checksums": [
+                {
+                  "algorithm": "EXTENSION_CHECKSUM_ALGORITHM_SHA256",
+                  "value": "77412af5cdae2faf5045094c767cd663fe2001743e846fa12be073aadd7483b5"
+                }
+              ],
+              "verification": {
+                "signer": "beam-ci",
+                "provenanceUrl": "https://beam.sh/store/provenance/beam-window-recipes/0.9.0"
+              }
+            }
+          ]
+        }
+      ],
+      "screenshots": []
+    }
+  ]
 }

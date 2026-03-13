@@ -59,10 +59,9 @@ const Alert = {
 
 export const preferences = new Proxy({} as Record<string, unknown>, {
   get(_target, property: string) {
-    const values =
-      currentPluginName
-        ? preferencesStore.getPreferenceValues(currentPluginName, currentPluginPreferences)
-        : {};
+    const values = currentPluginName
+      ? preferencesStore.getPreferenceValues(currentPluginName, currentPluginPreferences)
+      : {};
     return values[property];
   },
 });

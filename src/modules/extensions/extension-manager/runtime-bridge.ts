@@ -1,8 +1,16 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
-import { RuntimeRpc, type ManagerRequest, type ManagerResponse, type RuntimeRpc as RuntimeRpcMessage } from "@beam/extension-protocol";
+import {
+  RuntimeRpc,
+  type ManagerRequest,
+  type ManagerResponse,
+  type RuntimeRpc as RuntimeRpcMessage,
+} from "@beam/extension-protocol";
 
-import { decodeManagerResponse, encodeManagerRequest } from "@/modules/extensions/extension-manager/manager-protocol";
+import {
+  decodeManagerResponse,
+  encodeManagerRequest,
+} from "@/modules/extensions/extension-manager/manager-protocol";
 
 export const FOREGROUND_EXTENSION_RUNTIME_ID = "foreground";
 

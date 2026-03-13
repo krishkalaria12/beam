@@ -30,8 +30,10 @@ export type ExtensionStoreListing = ExtensionStoreListingRecord;
 export type ExtensionStoreUpdate = ExtensionStoreUpdateRecord;
 
 export interface InstallExtensionInput {
-  downloadUrl: string;
+  packageId: string;
   slug: string;
+  releaseVersion?: string;
+  channel?: string;
   force?: boolean;
 }
 

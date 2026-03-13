@@ -61,11 +61,7 @@ function toExtensionId(plugin: PluginInfo): string {
 
 function isExecutableInBeam(plugin: PluginInfo): boolean {
   const normalizedMode = plugin.mode?.trim().toLowerCase();
-  return (
-    normalizedMode === "no-view" ||
-    normalizedMode === "view" ||
-    normalizedMode === "menu-bar"
-  );
+  return normalizedMode === "no-view" || normalizedMode === "view" || normalizedMode === "menu-bar";
 }
 
 function matchPlugin(plugin: PluginInfo, query: string): boolean {

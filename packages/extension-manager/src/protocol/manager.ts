@@ -68,9 +68,7 @@ export function createErrorResponse(message: string): ManagerResponse {
   };
 }
 
-export function createGetPreferencesResponse(
-  response: GetPreferencesResponse,
-): ManagerResponse {
+export function createGetPreferencesResponse(response: GetPreferencesResponse): ManagerResponse {
   return {
     requestId: "",
     getPreferences: response,
@@ -91,10 +89,7 @@ export function isPopViewEvent(event: RuntimeEvent | undefined): boolean {
   return Boolean(event?.popView);
 }
 
-export function withRequestId(
-  response: ManagerResponse,
-  requestId: string,
-): ManagerResponse {
+export function withRequestId(response: ManagerResponse, requestId: string): ManagerResponse {
   return {
     ...response,
     requestId,

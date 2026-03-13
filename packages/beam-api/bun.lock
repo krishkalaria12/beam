@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "@beam/api",
+      "name": "@beam-launcher/api",
       "dependencies": {
         "@jgoz/esbuild-plugin-typecheck": "^4.0.3",
         "@oclif/core": "^4",

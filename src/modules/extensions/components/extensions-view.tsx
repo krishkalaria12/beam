@@ -1,13 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  Download,
-  Loader2,
-  RefreshCcw,
-  Save,
-  Search,
-  Sparkles,
-  Trash2,
-} from "lucide-react";
+import { Download, Loader2, RefreshCcw, Save, Search, Sparkles, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { toast } from "sonner";
 
@@ -55,6 +47,7 @@ import {
 } from "@/modules/extensions/hooks/use-extension-preferences-mutations";
 import { useInstallExtensionMutation } from "@/modules/extensions/hooks/use-install-extension-mutation";
 import { useInstalledExtensionsQuery } from "@/modules/extensions/hooks/use-installed-extensions-query";
+import { useStoreExtensionPackageQuery } from "@/modules/extensions/hooks/use-store-extension-package-query";
 import { useStoreExtensionUpdatesQuery } from "@/modules/extensions/hooks/use-store-extension-updates-query";
 import { useStoreExtensionsSearchQuery } from "@/modules/extensions/hooks/use-store-extensions-search-query";
 import { useUninstallExtensionMutation } from "@/modules/extensions/hooks/use-uninstall-extension-mutation";
@@ -94,13 +87,7 @@ function matchesInstalledSearch(entry: InstalledExtensionSummary, query: string)
     return true;
   }
 
-  return [
-    entry.title,
-    entry.slug,
-    entry.owner,
-    entry.description,
-    entry.version ?? "",
-  ]
+  return [entry.title, entry.slug, entry.owner, entry.description, entry.version ?? ""]
     .join(" ")
     .toLowerCase()
     .includes(normalized);
@@ -122,6 +109,25 @@ function compactMetadataRows(rows: Array<{ label: string; value: string }>): Met
   return rows
     .filter((entry) => entry.value.trim().length > 0)
     .map((entry) => ({ label: entry.label, value: entry.value }));
+}
+
+function formatReleaseChannelLabel(channelName: string | undefined, channel: number): string {
+  if (channelName && channelName.trim().length > 0) {
+    return channelName.trim();
+  }
+
+  switch (channel) {
+    case 1:
+      return "stable";
+    case 2:
+      return "beta";
+    case 3:
+      return "nightly";
+    case 4:
+      return "custom";
+    default:
+      return "unspecified";
+  }
 }
 
 function PreferenceEditor({
@@ -154,7 +160,10 @@ function PreferenceEditor({
           label={<Label className="text-[12px] font-medium text-muted-foreground">{label}</Label>}
           description={field.description}
         >
-          <Select value={toInputValue(value)} onValueChange={(nextValue) => onChange(field.name, nextValue)}>
+          <Select
+            value={toInputValue(value)}
+            onValueChange={(nextValue) => onChange(field.name, nextValue)}
+          >
             <SelectTrigger className="h-10 rounded-lg border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] text-[13px]">
               <SelectValue placeholder={field.title} />
             </SelectTrigger>
@@ -177,7 +186,10 @@ function PreferenceEditor({
           className="space-y-2 rounded-xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-3 py-3"
         >
           <div className="flex items-center gap-3">
-            <Checkbox checked={Boolean(value)} onCheckedChange={(checked) => onChange(field.name, Boolean(checked))} />
+            <Checkbox
+              checked={Boolean(value)}
+              onCheckedChange={(checked) => onChange(field.name, Boolean(checked))}
+            />
             <Label className="text-[13px] font-medium text-foreground">{label}</Label>
           </div>
           {field.description ? (
@@ -230,7 +242,11 @@ function PreferenceEditor({
           <h3 className="text-[13px] font-medium text-foreground">Preferences</h3>
           <p className="text-[12px] text-muted-foreground">Extension-level configuration.</p>
         </div>
-        <Button size="sm" onClick={() => void onSave()} disabled={isLoading || isSaving || fields.length === 0}>
+        <Button
+          size="sm"
+          onClick={() => void onSave()}
+          disabled={isLoading || isSaving || fields.length === 0}
+        >
           {isSaving ? <Loader2 className="size-3.5 animate-spin" /> : <Save className="size-3.5" />}
           Save
         </Button>
@@ -248,7 +264,9 @@ function PreferenceEditor({
           Loading preferences…
         </div>
       ) : fields.length === 0 ? (
-        <div className="text-[12px] text-muted-foreground">No preferences declared by this extension.</div>
+        <div className="text-[12px] text-muted-foreground">
+          No preferences declared by this extension.
+        </div>
       ) : (
         <div className="space-y-3">{fields.map(renderField)}</div>
       )}
@@ -309,7 +327,10 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
   );
 
   const filteredInstalledExtensions = useMemo(
-    () => displayedInstalledExtensions.filter((entry) => matchesInstalledSearch(entry, normalizedSearch)),
+    () =>
+      displayedInstalledExtensions.filter((entry) =>
+        matchesInstalledSearch(entry, normalizedSearch),
+      ),
     [displayedInstalledExtensions, normalizedSearch],
   );
 
@@ -321,7 +342,7 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
   const selectedInstalled = useMemo(
     () =>
       selectedRow?.kind === "installed"
-        ? filteredInstalledExtensions.find((entry) => entry.id === selectedRow.id) ?? null
+        ? (filteredInstalledExtensions.find((entry) => entry.id === selectedRow.id) ?? null)
         : null,
     [filteredInstalledExtensions, selectedRow],
   );
@@ -329,21 +350,25 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
   const selectedStore = useMemo(
     () =>
       selectedRow?.kind === "store"
-        ? (storeSearchQuery.data ?? []).find((entry) => entry.id === selectedRow.id) ?? null
+        ? ((storeSearchQuery.data ?? []).find((entry) => entry.id === selectedRow.id) ?? null)
         : null,
     [selectedRow, storeSearchQuery.data],
   );
+  const selectedStorePackageQuery = useStoreExtensionPackageQuery(selectedStore?.id ?? null);
+  const selectedStoreDetail = selectedStorePackageQuery.data ?? selectedStore;
 
   const selectedInstalledUpdate = useMemo(() => {
     if (!selectedInstalled) {
       return null;
     }
 
-    return [...updateById.values()].find(
-      (entry) =>
-        entry.slug.toLowerCase() === selectedInstalled.slug.toLowerCase() &&
-        selectedInstalled.owner.trim().length > 0,
-    ) ?? null;
+    return (
+      [...updateById.values()].find(
+        (entry) =>
+          entry.slug.toLowerCase() === selectedInstalled.slug.toLowerCase() &&
+          selectedInstalled.owner.trim().length > 0,
+      ) ?? null
+    );
   }, [selectedInstalled, updateById]);
 
   useEffect(() => {
@@ -441,14 +466,22 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
   }, [queryClient]);
 
   const handleInstall = useCallback(
-    async (input: { slug: string; downloadUrl: string; title: string }) => {
+    async (input: {
+      packageId: string;
+      slug: string;
+      title: string;
+      releaseVersion?: string;
+      channel?: string;
+    }) => {
       setActionError(null);
       setPendingInstallSlug(input.slug);
 
       try {
         const result = await installExtensionMutation.mutateAsync({
+          packageId: input.packageId,
           slug: input.slug,
-          downloadUrl: input.downloadUrl,
+          releaseVersion: input.releaseVersion,
+          channel: input.channel,
           force: false,
         });
 
@@ -465,8 +498,10 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
           }
 
           await installExtensionMutation.mutateAsync({
+            packageId: input.packageId,
             slug: input.slug,
-            downloadUrl: input.downloadUrl,
+            releaseVersion: input.releaseVersion,
+            channel: input.channel,
             force: true,
           });
         }
@@ -476,7 +511,9 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
           if (!normalizedSlug) {
             return current;
           }
-          const alreadyExists = current.some((entry) => entry.toLowerCase() === normalizedSlug.toLowerCase());
+          const alreadyExists = current.some(
+            (entry) => entry.toLowerCase() === normalizedSlug.toLowerCase(),
+          );
           return alreadyExists ? current : [...current, normalizedSlug];
         });
         await handleRefreshInstalled();
@@ -564,7 +601,9 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
 
   const selectedStoreInstalled =
     selectedStore &&
-    filteredInstalledExtensions.some((entry) => entry.slug.toLowerCase() === selectedStore.slug.toLowerCase());
+    filteredInstalledExtensions.some(
+      (entry) => entry.slug.toLowerCase() === selectedStore.slug.toLowerCase(),
+    );
 
   return (
     <div className="flex h-full w-full flex-col overflow-hidden bg-[var(--solid-bg)] text-foreground">
@@ -614,7 +653,13 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
                     key={entry.id}
                     selected={selectedRow?.kind === "installed" && selectedRow.id === entry.id}
                     onSelect={() => setSelectedRow({ kind: "installed", id: entry.id })}
-                    leftSlot={<ExtensionIcon iconReference={entry.icon} title={entry.title} className="size-9 rounded-lg" />}
+                    leftSlot={
+                      <ExtensionIcon
+                        iconReference={entry.icon}
+                        title={entry.title}
+                        className="size-9 rounded-lg"
+                      />
+                    }
                     rightSlot={
                       selectedInstalledUpdate &&
                       selectedInstalledUpdate.slug.toLowerCase() === entry.slug.toLowerCase() ? (
@@ -665,14 +710,18 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
                     onSelect={() => setSelectedRow({ kind: "store", id: entry.id })}
                     leftSlot={
                       <ExtensionIcon
-                        iconReference={entry.icons.light || entry.icons.dark || entry.author.avatar || null}
+                        iconReference={
+                          entry.icons.light || entry.icons.dark || entry.author.avatar || null
+                        }
                         title={entry.title}
                         className="size-9 rounded-lg"
                       />
                     }
                     rightSlot={
                       entry.verification.label ? (
-                        <span className="text-[11px] text-muted-foreground">{entry.verification.label}</span>
+                        <span className="text-[11px] text-muted-foreground">
+                          {entry.verification.label}
+                        </span>
                       ) : null
                     }
                   >
@@ -697,13 +746,19 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
               </DetailPanel.Content>
             </DetailPanel>
           ) : selectedInstalled ? (
-            <DetailPanel className="h-full bg-transparent">
+          <DetailPanel className="h-full bg-transparent">
               <DetailPanel.Content className="space-y-4">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-start gap-3">
-                    <ExtensionIcon iconReference={selectedInstalled.icon} title={selectedInstalled.title} className="size-12 rounded-xl" />
+                    <ExtensionIcon
+                      iconReference={selectedInstalled.icon}
+                      title={selectedInstalled.title}
+                      className="size-12 rounded-xl"
+                    />
                     <div>
-                      <h2 className="text-[18px] font-semibold text-foreground">{selectedInstalled.title}</h2>
+                      <h2 className="text-[18px] font-semibold text-foreground">
+                        {selectedInstalled.title}
+                      </h2>
                       <p className="text-[12px] text-muted-foreground">
                         {selectedInstalled.owner}/{selectedInstalled.slug}
                         {selectedInstalled.version ? ` · v${selectedInstalled.version}` : ""}
@@ -716,9 +771,12 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
                         size="sm"
                         onClick={() =>
                           void handleInstall({
+                            packageId: selectedInstalledUpdate.id,
                             slug: selectedInstalled.slug,
-                            downloadUrl: selectedInstalledUpdate.latestRelease.downloadUrl,
                             title: selectedInstalled.title,
+                            releaseVersion: selectedInstalledUpdate.latestVersion,
+                            channel:
+                              selectedInstalledUpdate.latestRelease.channelName || undefined,
                           })
                         }
                         disabled={pendingInstallSlug === selectedInstalled.slug}
@@ -761,7 +819,8 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
                       Update available
                     </div>
                     <p className="mt-1 text-[12px] text-muted-foreground">
-                      Installed v{selectedInstalled.version ?? "unknown"} · latest v{selectedInstalledUpdate.latestVersion}
+                      Installed v{selectedInstalled.version ?? "unknown"} · latest v
+                      {selectedInstalledUpdate.latestVersion}
                     </p>
                   </section>
                 ) : null}
@@ -797,20 +856,28 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
                 />
               </DetailPanel.Content>
             </DetailPanel>
-          ) : selectedStore ? (
+          ) : selectedStoreDetail ? (
             <DetailPanel className="h-full bg-transparent">
               <DetailPanel.Content className="space-y-4">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-start gap-3">
                     <ExtensionIcon
-                      iconReference={selectedStore.icons.light || selectedStore.icons.dark || selectedStore.author.avatar || null}
-                      title={selectedStore.title}
+                      iconReference={
+                        selectedStoreDetail.icons.light ||
+                        selectedStoreDetail.icons.dark ||
+                        selectedStoreDetail.author.avatar ||
+                        null
+                      }
+                      title={selectedStoreDetail.title}
                       className="size-12 rounded-xl"
                     />
                     <div>
-                      <h2 className="text-[18px] font-semibold text-foreground">{selectedStore.title}</h2>
+                      <h2 className="text-[18px] font-semibold text-foreground">
+                        {selectedStoreDetail.title}
+                      </h2>
                       <p className="text-[12px] text-muted-foreground">
-                        {selectedStore.author.handle}/{selectedStore.slug} · v{selectedStore.latestRelease.version}
+                        {selectedStoreDetail.author.handle}/{selectedStoreDetail.slug} · v
+                        {selectedStoreDetail.latestRelease.version}
                       </p>
                     </div>
                   </div>
@@ -818,14 +885,16 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
                     size="sm"
                     onClick={() =>
                       void handleInstall({
-                        slug: selectedStore.slug,
-                        downloadUrl: selectedStore.download_url,
-                        title: selectedStore.title,
+                        packageId: selectedStoreDetail.id,
+                        slug: selectedStoreDetail.slug,
+                        title: selectedStoreDetail.title,
+                        releaseVersion: selectedStoreDetail.latestRelease.version,
+                        channel: selectedStoreDetail.latestRelease.channelName || undefined,
                       })
                     }
-                    disabled={pendingInstallSlug === selectedStore.slug}
+                    disabled={pendingInstallSlug === selectedStoreDetail.slug}
                   >
-                    {pendingInstallSlug === selectedStore.slug ? (
+                    {pendingInstallSlug === selectedStoreDetail.slug ? (
                       <Loader2 className="size-3.5 animate-spin" />
                     ) : (
                       <Download className="size-3.5" />
@@ -835,46 +904,100 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
                 </div>
 
                 <p className="max-w-2xl text-[13px] leading-6 text-foreground/90">
-                  {selectedStore.description || selectedStore.summary || "No description provided."}
+                  {selectedStoreDetail.description ||
+                    selectedStoreDetail.summary ||
+                    "No description provided."}
                 </p>
+
+                {selectedStorePackageQuery.isLoading && selectedStorePackageQuery.data == null ? (
+                  <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
+                    <Loader2 className="size-3.5 animate-spin" />
+                    Loading package details…
+                  </div>
+                ) : null}
+
+                {selectedStorePackageQuery.isError ? (
+                  <div className="rounded-lg border border-[var(--icon-red-bg)] bg-[var(--icon-red-bg)] px-3 py-2 text-[12px] text-[var(--icon-red-fg)]">
+                    {selectedStorePackageQuery.error instanceof Error
+                      ? selectedStorePackageQuery.error.message
+                      : "Failed to load package details."}
+                  </div>
+                ) : null}
 
                 <section className="rounded-xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)]">
                   <MetadataBar
                     items={compactMetadataRows([
-                      { label: "Source", value: selectedStore.source.label },
+                      { label: "Source", value: selectedStoreDetail.source.label },
                       {
                         label: "Verification",
-                        value: selectedStore.verification.label || "Unspecified",
+                        value: selectedStoreDetail.verification.label || "Unspecified",
                       },
                       {
                         label: "Platforms",
-                        value: selectedStore.compatibility.platforms.join(", ") || "Unspecified",
+                        value:
+                          selectedStoreDetail.compatibility.platforms.join(", ") || "Unspecified",
                       },
                       {
                         label: "Desktop Environments",
                         value:
-                          selectedStore.compatibility.desktopEnvironments.join(", ") || "Unspecified",
+                          selectedStoreDetail.compatibility.desktopEnvironments.join(", ") ||
+                          "Unspecified",
                       },
                       {
                         label: "Commands",
-                        value: String(selectedStore.manifest?.commands.length ?? 0),
+                        value: String(selectedStoreDetail.manifest?.commands.length ?? 0),
+                      },
+                      {
+                        label: "Channel",
+                        value: formatReleaseChannelLabel(
+                          selectedStoreDetail.latestRelease.channelName,
+                          selectedStoreDetail.latestRelease.channel,
+                        ),
+                      },
+                      {
+                        label: "Releases",
+                        value: String(selectedStoreDetail.releases.length),
                       },
                     ])}
                   />
                 </section>
 
-                {(selectedStore.categories.length > 0 || selectedStore.tags.length > 0) ? (
+                {selectedStoreDetail.latestRelease.releaseNotes?.summary ||
+                selectedStoreDetail.latestRelease.releaseNotes?.markdown ? (
+                  <section className="space-y-2 rounded-xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] p-4">
+                    <h3 className="text-[13px] font-medium text-foreground">Latest release</h3>
+                    {selectedStoreDetail.latestRelease.releaseNotes?.summary ? (
+                      <p className="text-[12px] text-foreground/90">
+                        {selectedStoreDetail.latestRelease.releaseNotes.summary}
+                      </p>
+                    ) : null}
+                    <div className="text-[11px] text-muted-foreground">
+                      v{selectedStoreDetail.latestRelease.version} ·{" "}
+                      {formatReleaseChannelLabel(
+                        selectedStoreDetail.latestRelease.channelName,
+                        selectedStoreDetail.latestRelease.channel,
+                      )}
+                      {selectedStoreDetail.latestRelease.publishedAt
+                        ? ` · ${selectedStoreDetail.latestRelease.publishedAt}`
+                        : ""}
+                    </div>
+                  </section>
+                ) : null}
+
+                {selectedStoreDetail.categories.length > 0 || selectedStoreDetail.tags.length > 0 ? (
                   <section className="space-y-2 rounded-xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] p-4">
                     <h3 className="text-[13px] font-medium text-foreground">Metadata</h3>
                     <div className="flex flex-wrap gap-2">
-                      {[...selectedStore.categories, ...selectedStore.tags].map((entry) => (
+                      {[...selectedStoreDetail.categories, ...selectedStoreDetail.tags].map(
+                        (entry) => (
                         <span
                           key={entry}
                           className="rounded-md border border-[var(--launcher-chip-border)] bg-[var(--launcher-chip-bg)] px-2 py-0.5 text-[11px] text-muted-foreground"
                         >
                           {entry}
                         </span>
-                      ))}
+                        ),
+                      )}
                     </div>
                   </section>
                 ) : null}

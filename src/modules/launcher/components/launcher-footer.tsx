@@ -1,9 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 
-import {
-  CommandFooterBar,
-  type FooterAction,
-} from "@/components/command/command-footer-bar";
+import { CommandFooterBar, type FooterAction } from "@/components/command/command-footer-bar";
 import { LauncherActionsPanel } from "@/modules/launcher/components/launcher-actions-panel";
 import { isLauncherActionsHotkey } from "@/lib/launcher-actions";
 

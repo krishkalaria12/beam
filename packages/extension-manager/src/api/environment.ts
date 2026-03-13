@@ -121,7 +121,9 @@ async function loadDesktopContext(): Promise<DesktopContext> {
       Array.isArray(value)
         ? value
             .map((entry) =>
-              entry && typeof entry === "object" && typeof (entry as { path?: unknown }).path === "string"
+              entry &&
+              typeof entry === "object" &&
+              typeof (entry as { path?: unknown }).path === "string"
                 ? { path: (entry as { path: string }).path }
                 : undefined,
             )
@@ -131,7 +133,10 @@ async function loadDesktopContext(): Promise<DesktopContext> {
     focusedWindow: normalizeDesktopContextValue(raw?.focusedWindow, (value) =>
       value && typeof value === "object"
         ? {
-            id: typeof (value as { id?: unknown }).id === "string" ? (value as { id: string }).id : "",
+            id:
+              typeof (value as { id?: unknown }).id === "string"
+                ? (value as { id: string }).id
+                : "",
             title:
               typeof (value as { title?: unknown }).title === "string"
                 ? (value as { title: string }).title
@@ -167,11 +172,13 @@ async function loadDesktopContext(): Promise<DesktopContext> {
       raw?.sources && typeof raw.sources === "object"
         ? {
             selectedTextBackend:
-              typeof (raw.sources as { selectedTextBackend?: unknown }).selectedTextBackend === "string"
+              typeof (raw.sources as { selectedTextBackend?: unknown }).selectedTextBackend ===
+              "string"
                 ? (raw.sources as { selectedTextBackend: string }).selectedTextBackend
                 : "unsupported",
             selectedFilesBackend:
-              typeof (raw.sources as { selectedFilesBackend?: unknown }).selectedFilesBackend === "string"
+              typeof (raw.sources as { selectedFilesBackend?: unknown }).selectedFilesBackend ===
+              "string"
                 ? (raw.sources as { selectedFilesBackend: string }).selectedFilesBackend
                 : "unsupported",
             windowBackend:
@@ -179,7 +186,8 @@ async function loadDesktopContext(): Promise<DesktopContext> {
                 ? (raw.sources as { windowBackend: string }).windowBackend
                 : "unsupported",
             applicationBackend:
-              typeof (raw.sources as { applicationBackend?: unknown }).applicationBackend === "string"
+              typeof (raw.sources as { applicationBackend?: unknown }).applicationBackend ===
+              "string"
                 ? (raw.sources as { applicationBackend: string }).applicationBackend
                 : "unsupported",
           }

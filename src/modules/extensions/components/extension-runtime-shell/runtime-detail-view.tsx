@@ -12,11 +12,7 @@ interface RuntimeDetailViewProps {
   nested?: boolean;
 }
 
-export function RuntimeDetailView({
-  state,
-  nodeId,
-  nested = false,
-}: RuntimeDetailViewProps) {
+export function RuntimeDetailView({ state, nodeId, nested = false }: RuntimeDetailViewProps) {
   const node = state.uiTree.get(nodeId);
   if (!node) {
     return null;

@@ -127,7 +127,10 @@ export function optimizeCommitBuffer(buffer: RuntimeCommand[]): RuntimeCommand[]
   }
 
   const propsToIdMap = new Map<string, number[]>();
-  const idToPayloadMap = new Map<number, Extract<RuntimeCommand, { type: "UPDATE_PROPS" }>["payload"]>();
+  const idToPayloadMap = new Map<
+    number,
+    Extract<RuntimeCommand, { type: "UPDATE_PROPS" }>["payload"]
+  >();
 
   for (const op of updatePropsOps) {
     const payload = op.payload;

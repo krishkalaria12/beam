@@ -20,7 +20,7 @@ Beam should end up with these major parts:
    Native Beam SDK for Beam-first extensions.
 
 2. `packages/raycast-api-compat`
-   Compatibility package that exposes `@raycast/api` semantics on top of `@beam/api`.
+   Compatibility package that exposes `@raycast/api` semantics on top of `@beam-launcher/api`.
 
 3. `packages/extension-protocol`
    Generated protocol types for TS and Rust from protobuf definitions.
@@ -58,7 +58,7 @@ What is missing is clean separation.
 Today:
 
 - `packages/beam-api/` exists as the native SDK package
-- SDK concerns, runtime concerns, and host concerns are now split cleanly enough that `@beam/api` no longer exposes runtime-factory code
+- SDK concerns, runtime concerns, and host concerns are now split cleanly enough that `@beam-launcher/api` no longer exposes runtime-factory code
 - Raycast compatibility is now package-scoped, and extension manager owns the concrete host-side primitives behind the runtime factories
 - Beam now has a native store/catalog backend contract, but the visible store UI has not been migrated yet
 - the extension runtime UI has been moved off the old node-renderer path onto a Vicinae-style shell with reusable module primitives
@@ -81,7 +81,7 @@ Completed so far:
 - `packages/extension-protocol/` added as the generated TypeScript protocol package
 - `packages/beam-api/` is now the native Beam SDK package path
 - `packages/raycast-api-compat/` added as the first explicit compatibility package boundary
-- `packages/extension-manager/src/patch-require.ts` now resolves `@beam/api` and `@raycast/api` through workspace package modules instead of inline compat assembly
+- `packages/extension-manager/src/patch-require.ts` now resolves `@beam-launcher/api` and `@raycast/api` through workspace package modules instead of inline compat assembly
 - runtime API assembly now lives in `packages/extension-manager/src/runtime/create-api.ts`, not in the public SDK
 - bun-based TS codegen wired with `protoc + ts-proto`
 - Rust-side codegen wired through `src-tauri/build.rs` with `prost-build`
@@ -140,7 +140,23 @@ Current migration status:
 - Phase 4: partially complete through `packages/beam-api/`
 - Phase 6: in progress for environment, storage, launch, preferences, manager control, rpc, render, diagnostics, and manifest/discovery
 - Beam-native store backend is now in place for search, detail lookup, and update resolution through `src-tauri/src/extensions/store.rs`
+- Beam-native publication/update backend now has a real package artifact model:
+  - `store.proto` defines releases, channels, artifacts, checksums, release notes, and package format metadata
+  - `store/catalog.json` now represents publishable packages with release history instead of flat searchable listings
+  - `store/artifacts/*.zip` provides local installable Beam-native sample artifacts for end-to-end validation
+  - Rust install/update resolution now works through package -> release -> artifact selection via `install_store_extension` and checksum verification
 - frontend API plumbing now reads store data from generated `@beam/extension-protocol` store types instead of Raycast HTTP response schemas
+- store search/detail/install/update UI flows now read the native catalog contract and install through `install_store_extension` instead of raw `downloadUrl` payloads
+- maintainer automation now exists for both SDK and store publishing:
+  - `scripts/publish-beam-api.ts` builds and publishes `@beam-launcher/api`
+  - `scripts/publish-store-package.ts` generates zipped artifacts, SHA-256 checksums, and catalog entries from `store/packages/*`
+  - per-package publish metadata now lives in `store/packages/*/beam-store.json`
+- Vicinae-style external developer entrypoints now exist:
+  - `extra/extension-boilerplate/` provides a Beam-native template extension with list/detail/form/no-view/app/window samples
+  - `extra/schemas/extension.json` provides a manifest schema for extension packages
+  - `packages/beam-api/` now publishes from `dist` + `types` instead of exporting raw source
+  - `packages/raycast-api-compat/` now exists as an internal-only workspace compatibility layer, matching Vicinae's packaging model
+- `packages/beam-api/types/index.d.ts` now acts as a standalone public declaration surface so external templates and workspace packages do not need to resolve Beam source internals to consume the SDK
 - old extension runtime node renderer files have been removed and replaced by a shell-based runtime surface:
   - `src/modules/extensions/components/extension-runtime-shell.tsx`
   - `src/modules/extensions/components/extension-runtime-shell/*`
@@ -171,10 +187,10 @@ Current migration status:
 
 Known remaining gap:
 
-- `packages/raycast-api-compat/` now owns an explicit Raycast-shaped export surface, but it still depends on Beam-native runtime behavior underneath
+- `packages/raycast-api-compat/` now owns an explicit Raycast-shaped export surface, but it intentionally remains an internal workspace package rather than an npm distribution target
 - `packages/extension-manager/` still has Beam-specific host adapter files that are correct but not yet as cleanly isolated as Vicinae’s final shape
-- Beam-native store presentation, install/detail UX, and update surfacing are still pending on the UI side
-- Beam still does not have the full Beam-native extension publication/update workflow on top of the store/catalog contract
+- the developer docs / create-extension flow are still missing the Vicinae-level polish around generating new extensions from the boilerplate automatically
+- `@raycast/utils` is still intentionally deferred and not part of the current parity target
 - higher-level generic list/grid/form wrappers are still optional frontend cleanup work, not the main architecture blocker now
 
 ## Core Principles
@@ -274,7 +290,7 @@ Create:
 
 This package should:
 
-- wrap `@beam/api`
+- wrap `@beam-launcher/api`
 - expose `@raycast/api`-compatible behavior where possible
 - keep compatibility-specific oddities out of the native Beam API
 
@@ -316,8 +332,8 @@ Current note:
 
 Once all important APIs are protocol-backed:
 
-- make `@beam/api` use only the new runtime path
-- make `@raycast/api` compat layer wrap `@beam/api`
+- make `@beam-launcher/api` use only the new runtime path
+- make `@raycast/api` compat layer wrap `@beam-launcher/api`
 - stop routing new work through old direct runtime APIs
 
 ### Phase 9: Delete Legacy Paths
@@ -430,22 +446,30 @@ These are now complete.
 
 Revised immediate next steps:
 
-1. Build the Beam-native extension publication/update workflow on top of `store.proto`, `manifest.proto`, and `store/catalog.json`
-2. Wire install/update flows end-to-end around Beam-native package metadata instead of treating the catalog as just a search source
-3. Continue hardening `packages/raycast-api-compat` as the real Raycast-facing compatibility surface
-4. Split any remaining Beam-specific host adapter code in `packages/extension-manager/src/api/*` into cleaner internal adapter layers where it improves clarity
-5. Move the store UI/search/install/update presentation fully onto the native Beam catalog contract once the package/update workflow is stable
+1. Publish the external developer-facing package layer cleanly:
+   - finalize `@beam-launcher/api` npm publishing workflow and docs
+   - keep `@beam/raycast-api-compat` internal, matching Vicinae
+2. Continue hardening `packages/raycast-api-compat` as the real internal Raycast-facing compatibility surface
+3. Add richer policy checks around compatibility, channel selection, and artifact verification as Beam-native publishing matures
+4. Build publisher-facing management flows on top of the store contract
+5. Split any remaining Beam-specific host adapter code in `packages/extension-manager/src/api/*` into cleaner internal adapter layers where it improves clarity
 
 ## Current Transition Notes
 
 - `packages/beam-api/` now builds with bun and provides a working Beam-native package path
 - `packages/raycast-api-compat/` now exists as the initial compatibility package boundary
-- `packages/extension-manager/` now resolves `@beam/api` and `@raycast/api` through package boundaries
+- `packages/extension-manager/` now resolves `@beam-launcher/api` and `@raycast/api` through package boundaries
 - runtime API assembly now lives in `packages/extension-manager/src/runtime/create-api.ts`
 - extension manager now follows the Vicinae-style `globals` / `patch-require` / `worker` / `loaders` shape
 - `src-tauri/src/extensions/store.rs` now owns Beam-native catalog loading, search, detail lookup, and update detection
-- `store/catalog.json` is now the repo-native catalog source, with optional runtime override through env/config later
-- `@beam/api/runtime` has been removed, so the runtime factory is no longer part of the public SDK surface
+- `src-tauri/src/extensions/mod.rs` now also supports `install_store_extension`, which resolves package/release/artifact metadata before downloading and validating an archive
+- `store/catalog.json` is now the repo-native catalog source for publishable packages, with optional runtime override through env/config later
+- `store/artifacts/` now contains local sample release archives referenced by the catalog
+- the live extension store UI and launcher install actions now install via package id + release metadata instead of a raw download URL path
+- publishing automation now exists for:
+  - `@beam-launcher/api` via `bun run publish:beam-api`
+  - Beam store artifacts/catalog via `bun run store:publish` and `bun run store:publish:all`
+- `@beam-launcher/api/runtime` has been removed, so the runtime factory is no longer part of the public SDK surface
 - extension runtime/detail UI is now on the shared module-component path instead of the old per-node renderer path
 - markdown/detail rendering is now modular and shared through `src/components/module/markdown-view.tsx` and `detail-view.tsx`
 - the extension runtime shell is now split into view-specific modules and shared helper utilities, and its remaining small reusable controls are on shared module components

@@ -52,14 +52,15 @@ function toRecord(value: unknown): Record<string, unknown> {
 function extractValue<T>(method: string, response: unknown): T {
   const payload = toRecord(response);
   if (!Object.prototype.hasOwnProperty.call(payload, "value")) {
-    throw browserError(method, "invalid response payload: missing \"value\" field");
+    throw browserError(method, 'invalid response payload: missing "value" field');
   }
   return payload.value as T;
 }
 
 function normalizeTab(method: string, raw: unknown): Tab {
   const entry = toRecord(raw);
-  const id = typeof entry.tabId === "number" && Number.isFinite(entry.tabId) ? entry.tabId : undefined;
+  const id =
+    typeof entry.tabId === "number" && Number.isFinite(entry.tabId) ? entry.tabId : undefined;
   const url = typeof entry.url === "string" ? entry.url.trim() : "";
 
   if (id === undefined || url.length === 0) {
@@ -161,7 +162,10 @@ async function getActiveTabContent(options?: Omit<ContentOptions, "tabId">): Pro
   return getContent({ ...options, tabId: activeTab.id });
 }
 
-async function getTabContent(tabId: number, options?: Omit<ContentOptions, "tabId">): Promise<string> {
+async function getTabContent(
+  tabId: number,
+  options?: Omit<ContentOptions, "tabId">,
+): Promise<string> {
   return getContent({ ...options, tabId });
 }
 

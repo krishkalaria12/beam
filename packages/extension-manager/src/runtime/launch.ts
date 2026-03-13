@@ -90,7 +90,8 @@ const readPluginMetadata = (pluginPath: string, commandName?: string): PluginMet
         extensionId = packageJson.name || extensionId;
         const pluginPreferences = packageJson.preferences || [];
         const commandPreferences =
-          packageJson.commands.find((command) => command.name === resolvedCommandName)?.preferences || [];
+          packageJson.commands.find((command) => command.name === resolvedCommandName)
+            ?.preferences || [];
         preferences = [...pluginPreferences, ...commandPreferences];
       }
     } catch (error) {

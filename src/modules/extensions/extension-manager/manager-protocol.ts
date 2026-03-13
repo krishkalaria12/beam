@@ -121,9 +121,7 @@ export function buildTriggerToastHideManagerRequest(toastId: number): ManagerReq
   };
 }
 
-export function buildBrowserExtensionStatusManagerRequest(
-  isConnected: boolean,
-): ManagerRequest {
+export function buildBrowserExtensionStatusManagerRequest(isConnected: boolean): ManagerRequest {
   return {
     requestId: "",
     setBrowserExtensionConnectionStatus: {
@@ -137,7 +135,5 @@ export function encodeManagerRequest(request: ManagerRequest): number[] {
 }
 
 export function decodeManagerResponse(bytes: number[] | Uint8Array): ManagerResponse {
-  return ManagerResponse.decode(
-    bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes),
-  );
+  return ManagerResponse.decode(bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes));
 }

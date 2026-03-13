@@ -74,19 +74,13 @@ const pendingAuthorizationRequests = new Map<
   { resolve: (value: AuthorizationResponse) => void; reject: (reason?: unknown) => void }
 >();
 
-export function handleOAuthResponse(
-  state?: string,
-  code?: string,
-  error?: string,
-) {
+export function handleOAuthResponse(state?: string, code?: string, error?: string) {
   const fallbackState =
     pendingAuthorizationRequests.size === 1
       ? pendingAuthorizationRequests.keys().next().value
       : undefined;
   const resolvedState =
-    typeof state === "string" && pendingAuthorizationRequests.has(state)
-      ? state
-      : fallbackState;
+    typeof state === "string" && pendingAuthorizationRequests.has(state) ? state : fallbackState;
   const promise = resolvedState ? pendingAuthorizationRequests.get(resolvedState) : undefined;
 
   if (promise) {
@@ -250,8 +244,8 @@ export class PKCEClient {
       writeRuntimeRpc({
         request: {
           oauthAuthorize: {
-          url: authRequest.url,
-          providerName: this.options.providerName,
+            url: authRequest.url,
+            providerName: this.options.providerName,
             providerIcon: this.options.providerIcon ?? "",
             description: this.options.description ?? "",
           },

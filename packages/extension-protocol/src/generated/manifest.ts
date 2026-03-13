@@ -53,6 +53,10 @@ export interface ExtensionManifest {
   commands: CommandManifest[];
   preferences: PreferenceDefinition[];
   version?: string | undefined;
+  schemaVersion?: string | undefined;
+  packageId?: string | undefined;
+  minimumBeamVersion?: string | undefined;
+  releaseChannel?: string | undefined;
 }
 
 export interface DiscoveredPlugin {
@@ -646,6 +650,10 @@ function createBaseExtensionManifest(): ExtensionManifest {
     commands: [],
     preferences: [],
     version: undefined,
+    schemaVersion: undefined,
+    packageId: undefined,
+    minimumBeamVersion: undefined,
+    releaseChannel: undefined,
   };
 }
 
@@ -677,6 +685,18 @@ export const ExtensionManifest: MessageFns<ExtensionManifest> = {
     }
     if (message.version !== undefined) {
       writer.uint32(74).string(message.version);
+    }
+    if (message.schemaVersion !== undefined) {
+      writer.uint32(82).string(message.schemaVersion);
+    }
+    if (message.packageId !== undefined) {
+      writer.uint32(90).string(message.packageId);
+    }
+    if (message.minimumBeamVersion !== undefined) {
+      writer.uint32(98).string(message.minimumBeamVersion);
+    }
+    if (message.releaseChannel !== undefined) {
+      writer.uint32(106).string(message.releaseChannel);
     }
     return writer;
   },
@@ -760,6 +780,38 @@ export const ExtensionManifest: MessageFns<ExtensionManifest> = {
           message.version = reader.string();
           continue;
         }
+        case 10: {
+          if (tag !== 82) {
+            break;
+          }
+
+          message.schemaVersion = reader.string();
+          continue;
+        }
+        case 11: {
+          if (tag !== 90) {
+            break;
+          }
+
+          message.packageId = reader.string();
+          continue;
+        }
+        case 12: {
+          if (tag !== 98) {
+            break;
+          }
+
+          message.minimumBeamVersion = reader.string();
+          continue;
+        }
+        case 13: {
+          if (tag !== 106) {
+            break;
+          }
+
+          message.releaseChannel = reader.string();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -784,6 +836,26 @@ export const ExtensionManifest: MessageFns<ExtensionManifest> = {
         ? object.preferences.map((e: any) => PreferenceDefinition.fromJSON(e))
         : [],
       version: isSet(object.version) ? globalThis.String(object.version) : undefined,
+      schemaVersion: isSet(object.schemaVersion)
+        ? globalThis.String(object.schemaVersion)
+        : isSet(object.schema_version)
+        ? globalThis.String(object.schema_version)
+        : undefined,
+      packageId: isSet(object.packageId)
+        ? globalThis.String(object.packageId)
+        : isSet(object.package_id)
+        ? globalThis.String(object.package_id)
+        : undefined,
+      minimumBeamVersion: isSet(object.minimumBeamVersion)
+        ? globalThis.String(object.minimumBeamVersion)
+        : isSet(object.minimum_beam_version)
+        ? globalThis.String(object.minimum_beam_version)
+        : undefined,
+      releaseChannel: isSet(object.releaseChannel)
+        ? globalThis.String(object.releaseChannel)
+        : isSet(object.release_channel)
+        ? globalThis.String(object.release_channel)
+        : undefined,
     };
   },
 
@@ -816,6 +888,18 @@ export const ExtensionManifest: MessageFns<ExtensionManifest> = {
     if (message.version !== undefined) {
       obj.version = message.version;
     }
+    if (message.schemaVersion !== undefined) {
+      obj.schemaVersion = message.schemaVersion;
+    }
+    if (message.packageId !== undefined) {
+      obj.packageId = message.packageId;
+    }
+    if (message.minimumBeamVersion !== undefined) {
+      obj.minimumBeamVersion = message.minimumBeamVersion;
+    }
+    if (message.releaseChannel !== undefined) {
+      obj.releaseChannel = message.releaseChannel;
+    }
     return obj;
   },
 
@@ -835,6 +919,10 @@ export const ExtensionManifest: MessageFns<ExtensionManifest> = {
     message.commands = object.commands?.map((e) => CommandManifest.fromPartial(e)) || [];
     message.preferences = object.preferences?.map((e) => PreferenceDefinition.fromPartial(e)) || [];
     message.version = object.version ?? undefined;
+    message.schemaVersion = object.schemaVersion ?? undefined;
+    message.packageId = object.packageId ?? undefined;
+    message.minimumBeamVersion = object.minimumBeamVersion ?? undefined;
+    message.releaseChannel = object.releaseChannel ?? undefined;
     return message;
   },
 };

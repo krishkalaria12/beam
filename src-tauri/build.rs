@@ -27,10 +27,7 @@ fn compile_extension_runtime_proto() -> Result<(), Box<dyn Error>> {
     ];
 
     for file in &proto_files {
-        println!(
-            "cargo:rerun-if-changed={}",
-            proto_dir.join(file).display()
-        );
+        println!("cargo:rerun-if-changed={}", proto_dir.join(file).display());
     }
 
     let proto_paths = proto_files

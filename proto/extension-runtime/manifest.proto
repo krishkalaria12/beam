@@ -51,6 +51,10 @@ message ExtensionManifest {
   repeated CommandManifest commands = 7;
   repeated PreferenceDefinition preferences = 8;
   optional string version = 9;
+  optional string schema_version = 10;
+  optional string package_id = 11;
+  optional string minimum_beam_version = 12;
+  optional string release_channel = 13;
 }
 
 message DiscoveredPlugin {

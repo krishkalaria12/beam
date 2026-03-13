@@ -26,18 +26,12 @@ function StatusChip({ entry }: { entry: ShellExecutionEntry }) {
     return (
       <span className={cn("inline-flex items-center gap-1.5 text-[11px]", toneClass)}>
         <TimerReset className="size-3" />
-        {entry.result.timedOut
-          ? "Timed out"
-          : `Exit ${entry.result.exitCode ?? "signal"}`}
+        {entry.result.timedOut ? "Timed out" : `Exit ${entry.result.exitCode ?? "signal"}`}
       </span>
     );
   }
 
-  return (
-    <span className="inline-flex items-center text-[11px] text-rose-300">
-      Failed
-    </span>
-  );
+  return <span className="inline-flex items-center text-[11px] text-rose-300">Failed</span>;
 }
 
 function OutputBlock({
@@ -64,7 +58,7 @@ function OutputBlock({
         toneClassName,
       )}
     >
-        {value}
+      {value}
     </pre>
   );
 }
@@ -87,10 +81,7 @@ export function ShellCommandPanel({
 
   return (
     <div className="flex h-full w-full min-h-0 flex-1 flex-col overflow-hidden bg-[rgba(9,9,11,0.98)] font-mono">
-      <div
-        ref={scrollRef}
-        className="custom-scrollbar min-h-0 flex-1 overflow-y-auto px-4 py-4"
-      >
+      <div ref={scrollRef} className="custom-scrollbar min-h-0 flex-1 overflow-y-auto px-4 py-4">
         {history.length === 0 ? (
           <div className="flex h-full min-h-[240px] flex-col items-center justify-center gap-3 text-center">
             <div className="flex size-10 items-center justify-center rounded-md bg-white/5">

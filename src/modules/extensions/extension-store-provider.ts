@@ -39,6 +39,25 @@ function parseStoreQuery(query: string): string | null {
   return searchTerm.length > 0 ? searchTerm : null;
 }
 
+function toReleaseChannelInput(channelName: string | undefined, channel: number): string | undefined {
+  if (channelName && channelName.trim().length > 0) {
+    return channelName.trim();
+  }
+
+  switch (channel) {
+    case 1:
+      return "stable";
+    case 2:
+      return "beta";
+    case 3:
+      return "nightly";
+    case 4:
+      return "custom";
+    default:
+      return undefined;
+  }
+}
+
 async function getStoreResults(query: string): Promise<ExtensionStoreListing[]> {
   const lowerCased = query.toLowerCase();
   const cached = queryCache.get(lowerCased);
@@ -68,7 +87,7 @@ async function getStoreResults(query: string): Promise<ExtensionStoreListing[]> 
 }
 
 function toInstallCommand(entry: ExtensionStoreListing): CommandDescriptor {
-  const slug = entry.name.trim();
+  const slug = entry.slug.trim();
   const author = entry.author.handle.trim();
   const fullSlug = `${author}/${slug}`;
   const iconReference =
@@ -83,7 +102,7 @@ function toInstallCommand(entry: ExtensionStoreListing): CommandDescriptor {
       "install extension",
       "beam extension",
       entry.title,
-      entry.name,
+      entry.slug,
       entry.description,
       author,
       fullSlug,
@@ -106,7 +125,12 @@ function toInstallCommand(entry: ExtensionStoreListing): CommandDescriptor {
           allowOpenUrl: false,
           allowReadQuery: false,
         },
-        extensionInstallDownloadUrl: entry.download_url.trim(),
+        extensionInstallPackageId: entry.id.trim(),
+        extensionInstallReleaseVersion: entry.latestRelease.version.trim(),
+        extensionInstallChannel: toReleaseChannelInput(
+          entry.latestRelease.channelName,
+          entry.latestRelease.channel,
+        ),
         extensionInstallSlug: slug,
         extensionInstallTitle: entry.title.trim(),
       },

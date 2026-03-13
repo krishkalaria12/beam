@@ -8,7 +8,7 @@ import navigationContext from "../context/navigation-context";
  * @category Navigation
  */
 export const useNavigation = () => {
-	const { push, pop } = useContext(navigationContext);
+  const { push, pop } = useContext(navigationContext);
 
-	return { push, pop };
+  return { push, pop };
 };

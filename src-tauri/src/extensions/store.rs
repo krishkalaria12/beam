@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 
+use reqwest::Url;
 use semver::Version;
 use serde::Deserialize;
 use serde_json::{json, Value as JsonValue};
@@ -62,6 +63,10 @@ struct RawPackageManifest {
     author: Option<RawAuthor>,
     owner: Option<String>,
     version: Option<String>,
+    schema_version: Option<String>,
+    package_id: Option<String>,
+    minimum_beam_version: Option<String>,
+    release_channel: Option<String>,
     commands: Option<Vec<RawCommandManifest>>,
     preferences: Option<Vec<RawPreference>>,
 }
@@ -118,12 +123,62 @@ struct RawStoreCompatibility {
 
 #[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
+struct RawStoreChecksum {
+    algorithm: Option<String>,
+    value: Option<String>,
+}
+
+#[derive(Deserialize, Debug, Clone, Default)]
+#[serde(rename_all = "camelCase")]
+struct RawStoreArtifactVerification {
+    signer: Option<String>,
+    signature: Option<String>,
+    provenance_url: Option<String>,
+    transparency_log_url: Option<String>,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+struct RawStoreArtifact {
+    id: Option<String>,
+    kind: Option<String>,
+    download_url: Option<String>,
+    file_name: Option<String>,
+    mime_type: Option<String>,
+    size_bytes: Option<i64>,
+    #[serde(default)]
+    checksums: Vec<RawStoreChecksum>,
+    verification: Option<RawStoreArtifactVerification>,
+    #[serde(default)]
+    platforms: Vec<String>,
+    #[serde(default)]
+    desktop_environments: Vec<String>,
+}
+
+#[derive(Deserialize, Debug, Clone, Default)]
+#[serde(rename_all = "camelCase")]
+struct RawStoreReleaseNotes {
+    summary: Option<String>,
+    markdown: Option<String>,
+    changelog_url: Option<String>,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
 struct RawStoreRelease {
     version: Option<String>,
     download_url: Option<String>,
     published_at: Option<String>,
     checksum_sha256: Option<String>,
     changelog_url: Option<String>,
+    channel: Option<String>,
+    channel_name: Option<String>,
+    prerelease: Option<bool>,
+    #[serde(default)]
+    artifacts: Vec<RawStoreArtifact>,
+    primary_artifact_id: Option<String>,
+    release_notes: Option<RawStoreReleaseNotes>,
+    published_by: Option<String>,
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -143,13 +198,17 @@ struct RawStorePackage {
     source: Option<RawStoreSource>,
     verification: Option<RawStoreVerification>,
     compatibility: Option<RawStoreCompatibility>,
-    latest_release: RawStoreRelease,
+    latest_release: Option<RawStoreRelease>,
     readme_url: Option<String>,
     source_url: Option<String>,
     #[serde(default)]
     screenshots: Vec<String>,
     manifest: Option<RawPackageManifest>,
     download_count: Option<i64>,
+    #[serde(default)]
+    releases: Vec<RawStoreRelease>,
+    default_channel: Option<String>,
+    package_format_version: Option<String>,
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -158,6 +217,21 @@ struct RawStoreCatalog {
     source: Option<RawStoreSource>,
     #[serde(default)]
     packages: Vec<RawStorePackage>,
+    generated_at: Option<String>,
+    format_version: Option<String>,
+}
+
+#[derive(Debug, Clone)]
+enum CatalogBase {
+    File(PathBuf),
+    Url(Url),
+}
+
+#[derive(Debug, Clone)]
+pub(crate) struct ResolvedStoreArtifact {
+    pub package: proto::ExtensionStorePackage,
+    pub release: proto::ExtensionStoreRelease,
+    pub artifact: proto::ExtensionStoreArtifact,
 }
 
 fn normalize_optional_string(value: Option<String>) -> Option<String> {
@@ -225,16 +299,18 @@ fn proto_value_to_json(value: &::prost_types::Value) -> JsonValue {
 
 fn raw_author_to_proto(author: Option<RawAuthor>) -> Option<proto::ManifestAuthor> {
     author.and_then(|author| match author {
-        RawAuthor::Simple(value) => normalize_optional_string(Some(value)).map(|value| {
-            proto::ManifestAuthor {
+        RawAuthor::Simple(value) => {
+            normalize_optional_string(Some(value)).map(|value| proto::ManifestAuthor {
                 author: Some(proto::manifest_author::Author::Simple(value)),
-            }
-        }),
-        RawAuthor::Detailed { name } => normalize_optional_string(Some(name)).map(|name| {
-            proto::ManifestAuthor {
-                author: Some(proto::manifest_author::Author::Detailed(proto::AuthorName { name })),
-            }
-        }),
+            })
+        }
+        RawAuthor::Detailed { name } => {
+            normalize_optional_string(Some(name)).map(|name| proto::ManifestAuthor {
+                author: Some(proto::manifest_author::Author::Detailed(
+                    proto::AuthorName { name },
+                )),
+            })
+        }
     })
 }
 
@@ -300,6 +376,10 @@ fn raw_manifest_to_proto(manifest: RawPackageManifest) -> proto::ExtensionManife
             .map(raw_preference_to_proto)
             .collect(),
         version: normalize_optional_string(manifest.version),
+        schema_version: normalize_optional_string(manifest.schema_version),
+        package_id: normalize_optional_string(manifest.package_id),
+        minimum_beam_version: normalize_optional_string(manifest.minimum_beam_version),
+        release_channel: normalize_optional_string(manifest.release_channel),
     }
 }
 
@@ -333,6 +413,100 @@ fn parse_verification_status(value: Option<&str>) -> i32 {
     }
 }
 
+fn parse_release_channel(value: Option<&str>) -> i32 {
+    match value.unwrap_or_default() {
+        "EXTENSION_RELEASE_CHANNEL_STABLE" | "stable" | "STABLE" => {
+            proto::ExtensionReleaseChannel::Stable as i32
+        }
+        "EXTENSION_RELEASE_CHANNEL_BETA" | "beta" | "BETA" => {
+            proto::ExtensionReleaseChannel::Beta as i32
+        }
+        "EXTENSION_RELEASE_CHANNEL_NIGHTLY" | "nightly" | "NIGHTLY" => {
+            proto::ExtensionReleaseChannel::Nightly as i32
+        }
+        "EXTENSION_RELEASE_CHANNEL_CUSTOM" | "custom" | "CUSTOM" => {
+            proto::ExtensionReleaseChannel::Custom as i32
+        }
+        _ => proto::ExtensionReleaseChannel::Unspecified as i32,
+    }
+}
+
+fn parse_artifact_kind(value: Option<&str>) -> i32 {
+    match value.unwrap_or_default() {
+        "EXTENSION_PACKAGE_ARTIFACT_KIND_ZIP" | "zip" | "ZIP" => {
+            proto::ExtensionPackageArtifactKind::Zip as i32
+        }
+        "EXTENSION_PACKAGE_ARTIFACT_KIND_TAR_GZ" | "tar.gz" | "tgz" | "TAR_GZ" => {
+            proto::ExtensionPackageArtifactKind::TarGz as i32
+        }
+        _ => proto::ExtensionPackageArtifactKind::Unspecified as i32,
+    }
+}
+
+fn parse_checksum_algorithm(value: Option<&str>) -> i32 {
+    match value.unwrap_or_default() {
+        "EXTENSION_CHECKSUM_ALGORITHM_SHA256" | "sha256" | "SHA256" => {
+            proto::ExtensionChecksumAlgorithm::Sha256 as i32
+        }
+        _ => proto::ExtensionChecksumAlgorithm::Unspecified as i32,
+    }
+}
+
+fn resolve_relative_reference(value: Option<String>, base: Option<&CatalogBase>) -> Option<String> {
+    let normalized = normalize_optional_string(value)?;
+    if normalized.starts_with("http://")
+        || normalized.starts_with("https://")
+        || normalized.starts_with("file://")
+        || normalized.starts_with("asset:")
+        || normalized.starts_with("data:")
+    {
+        return Some(normalized);
+    }
+
+    if let Some(base) = base {
+        match base {
+            CatalogBase::File(root) => {
+                let candidate = root.join(&normalized);
+                if let Ok(url) = Url::from_file_path(candidate) {
+                    return Some(url.to_string());
+                }
+            }
+            CatalogBase::Url(root) => {
+                if let Ok(url) = root.join(&normalized) {
+                    return Some(url.to_string());
+                }
+            }
+        }
+    }
+
+    Some(normalized)
+}
+
+fn normalize_manifest_with_package_context(
+    manifest: Option<RawPackageManifest>,
+    package_id: &str,
+    compatibility: Option<&RawStoreCompatibility>,
+    release: Option<&proto::ExtensionStoreRelease>,
+) -> Option<proto::ExtensionManifest> {
+    manifest.map(|manifest| {
+        let mut normalized = raw_manifest_to_proto(manifest);
+        normalized.package_id = Some(package_id.to_string());
+        normalized.minimum_beam_version = compatibility.and_then(|compatibility| {
+            normalize_optional_string(compatibility.minimum_beam_version.clone())
+        });
+        normalized.release_channel = release
+            .and_then(|release| proto::ExtensionReleaseChannel::try_from(release.channel).ok())
+            .and_then(|channel| match channel {
+                proto::ExtensionReleaseChannel::Unspecified => None,
+                value => Some(value.as_str_name().to_string()),
+            });
+        if normalized.schema_version.is_none() {
+            normalized.schema_version = Some("1".to_string());
+        }
+        normalized
+    })
+}
+
 fn raw_store_source_to_proto(source: Option<RawStoreSource>) -> proto::ExtensionStoreSource {
     let source = source.unwrap_or(RawStoreSource {
         id: Some("beam".to_string()),
@@ -349,17 +523,305 @@ fn raw_store_source_to_proto(source: Option<RawStoreSource>) -> proto::Extension
     }
 }
 
+fn raw_store_checksum_to_proto(
+    checksum: RawStoreChecksum,
+) -> Option<proto::ExtensionStoreChecksum> {
+    let value = normalize_optional_string(checksum.value)?;
+    Some(proto::ExtensionStoreChecksum {
+        algorithm: parse_checksum_algorithm(checksum.algorithm.as_deref()),
+        value,
+    })
+}
+
+fn raw_store_artifact_to_proto(
+    artifact: RawStoreArtifact,
+    base: Option<&CatalogBase>,
+) -> Option<proto::ExtensionStoreArtifact> {
+    let id = normalize_optional_string(artifact.id)?;
+    let download_url = resolve_relative_reference(artifact.download_url, base)?;
+
+    Some(proto::ExtensionStoreArtifact {
+        id,
+        kind: parse_artifact_kind(artifact.kind.as_deref()),
+        download_url,
+        file_name: normalize_optional_string(artifact.file_name),
+        mime_type: normalize_optional_string(artifact.mime_type),
+        size_bytes: artifact.size_bytes,
+        checksums: artifact
+            .checksums
+            .into_iter()
+            .filter_map(raw_store_checksum_to_proto)
+            .collect(),
+        verification: Some(proto::ExtensionStoreArtifactVerification {
+            signer: artifact
+                .verification
+                .as_ref()
+                .and_then(|verification| normalize_optional_string(verification.signer.clone())),
+            signature: artifact
+                .verification
+                .as_ref()
+                .and_then(|verification| normalize_optional_string(verification.signature.clone())),
+            provenance_url: artifact.verification.as_ref().and_then(|verification| {
+                resolve_relative_reference(verification.provenance_url.clone(), base)
+            }),
+            transparency_log_url: artifact.verification.and_then(|verification| {
+                resolve_relative_reference(verification.transparency_log_url, base)
+            }),
+        }),
+        platforms: normalize_string_list(artifact.platforms),
+        desktop_environments: normalize_string_list(artifact.desktop_environments),
+    })
+}
+
+fn current_platform_tokens() -> Vec<String> {
+    vec![std::env::consts::OS.to_lowercase()]
+}
+
+fn current_desktop_tokens() -> Vec<String> {
+    let mut tokens = Vec::new();
+    for value in [
+        std::env::var("XDG_CURRENT_DESKTOP").ok(),
+        std::env::var("DESKTOP_SESSION").ok(),
+    ]
+    .into_iter()
+    .flatten()
+    {
+        for token in value.split([':', ';', ',']) {
+            let normalized = token.trim().to_lowercase();
+            if !normalized.is_empty() {
+                tokens.push(normalized);
+            }
+        }
+    }
+
+    tokens
+}
+
+fn list_matches_environment(requirements: &[String], actual: &[String]) -> bool {
+    if requirements.is_empty() {
+        return true;
+    }
+
+    requirements.iter().any(|required| {
+        let normalized = required.trim().to_lowercase();
+        !normalized.is_empty() && actual.iter().any(|value| value == &normalized)
+    })
+}
+
+fn artifact_matches_runtime(artifact: &proto::ExtensionStoreArtifact) -> bool {
+    let platforms = current_platform_tokens();
+    let desktops = current_desktop_tokens();
+
+    list_matches_environment(&artifact.platforms, &platforms)
+        && list_matches_environment(&artifact.desktop_environments, &desktops)
+}
+
+fn artifact_matches_platform(artifact: &proto::ExtensionStoreArtifact) -> bool {
+    let platforms = current_platform_tokens();
+    list_matches_environment(&artifact.platforms, &platforms)
+}
+
+fn select_release_artifact(
+    release: &proto::ExtensionStoreRelease,
+) -> Option<proto::ExtensionStoreArtifact> {
+    if release.artifacts.is_empty() {
+        return None;
+    }
+
+    if let Some(primary_artifact_id) = release
+        .primary_artifact_id
+        .as_ref()
+        .map(|value| value.trim())
+        .filter(|value| !value.is_empty())
+    {
+        if let Some(artifact) = release.artifacts.iter().find(|artifact| {
+            artifact.id == primary_artifact_id && artifact_matches_runtime(artifact)
+        }) {
+            return Some(artifact.clone());
+        }
+    }
+
+    if let Some(artifact) = release
+        .artifacts
+        .iter()
+        .find(|artifact| artifact_matches_runtime(artifact))
+    {
+        return Some(artifact.clone());
+    }
+
+    if let Some(artifact) = release
+        .artifacts
+        .iter()
+        .find(|artifact| artifact_matches_platform(artifact))
+    {
+        return Some(artifact.clone());
+    }
+
+    if let Some(primary_artifact_id) = release
+        .primary_artifact_id
+        .as_ref()
+        .map(|value| value.trim())
+        .filter(|value| !value.is_empty())
+    {
+        if let Some(artifact) = release
+            .artifacts
+            .iter()
+            .find(|artifact| artifact.id == primary_artifact_id)
+        {
+            return Some(artifact.clone());
+        }
+    }
+
+    release.artifacts.first().cloned()
+}
+
+fn raw_store_release_to_proto(
+    release: RawStoreRelease,
+    base: Option<&CatalogBase>,
+) -> Option<proto::ExtensionStoreRelease> {
+    let version = normalize_optional_string(release.version)?;
+    let artifacts = release
+        .artifacts
+        .into_iter()
+        .filter_map(|artifact| raw_store_artifact_to_proto(artifact, base))
+        .collect::<Vec<_>>();
+
+    let mut normalized_release = proto::ExtensionStoreRelease {
+        version,
+        download_url: String::new(),
+        published_at: normalize_optional_string(release.published_at),
+        checksum_sha256: normalize_optional_string(release.checksum_sha256),
+        changelog_url: resolve_relative_reference(release.changelog_url, base),
+        channel: parse_release_channel(release.channel.as_deref()),
+        channel_name: normalize_optional_string(release.channel_name),
+        prerelease: release.prerelease.unwrap_or(false),
+        artifacts,
+        primary_artifact_id: normalize_optional_string(release.primary_artifact_id),
+        release_notes: Some(proto::ExtensionStoreReleaseNotes {
+            summary: release
+                .release_notes
+                .as_ref()
+                .and_then(|notes| normalize_optional_string(notes.summary.clone())),
+            markdown: release
+                .release_notes
+                .as_ref()
+                .and_then(|notes| normalize_optional_string(notes.markdown.clone())),
+            changelog_url: release
+                .release_notes
+                .and_then(|notes| resolve_relative_reference(notes.changelog_url, base)),
+        }),
+        published_by: normalize_optional_string(release.published_by),
+    };
+
+    let selected_artifact = select_release_artifact(&normalized_release);
+    normalized_release.download_url = resolve_relative_reference(release.download_url, base)
+        .or_else(|| {
+            selected_artifact
+                .as_ref()
+                .map(|artifact| artifact.download_url.clone())
+        })?;
+
+    if normalized_release.checksum_sha256.is_none() {
+        normalized_release.checksum_sha256 = selected_artifact.as_ref().and_then(|artifact| {
+            artifact
+                .checksums
+                .iter()
+                .find(|checksum| {
+                    checksum.algorithm == proto::ExtensionChecksumAlgorithm::Sha256 as i32
+                })
+                .map(|checksum| checksum.value.clone())
+        });
+    }
+
+    if normalized_release.primary_artifact_id.is_none() {
+        normalized_release.primary_artifact_id = selected_artifact
+            .as_ref()
+            .map(|artifact| artifact.id.clone());
+    }
+
+    if normalized_release.changelog_url.is_none() {
+        normalized_release.changelog_url = normalized_release
+            .release_notes
+            .as_ref()
+            .and_then(|notes| notes.changelog_url.clone());
+    }
+
+    Some(normalized_release)
+}
+
+fn merge_package_releases(
+    releases: Vec<RawStoreRelease>,
+    latest_release: Option<RawStoreRelease>,
+    base: Option<&CatalogBase>,
+) -> Vec<proto::ExtensionStoreRelease> {
+    let mut by_version = HashMap::<String, proto::ExtensionStoreRelease>::new();
+    for release in releases
+        .into_iter()
+        .chain(latest_release.into_iter())
+        .filter_map(|release| raw_store_release_to_proto(release, base))
+    {
+        by_version.insert(release.version.clone(), release);
+    }
+
+    by_version.into_values().collect()
+}
+
+fn release_matches_channel(release: &proto::ExtensionStoreRelease, channel: i32) -> bool {
+    channel == proto::ExtensionReleaseChannel::Unspecified as i32 || release.channel == channel
+}
+
+fn select_preferred_release(
+    releases: &[proto::ExtensionStoreRelease],
+    preferred_channel: i32,
+) -> Option<proto::ExtensionStoreRelease> {
+    let mut candidates = releases
+        .iter()
+        .filter(|release| release_matches_channel(release, preferred_channel))
+        .cloned()
+        .collect::<Vec<_>>();
+
+    if candidates.is_empty()
+        && preferred_channel != proto::ExtensionReleaseChannel::Unspecified as i32
+    {
+        candidates = releases.to_vec();
+    }
+
+    candidates.into_iter().max_by(|left, right| {
+        let left_version = parse_version(&left.version);
+        let right_version = parse_version(&right.version);
+        left_version
+            .cmp(&right_version)
+            .then_with(|| left.published_at.cmp(&right.published_at))
+    })
+}
+
 fn raw_store_package_to_proto(
     package: RawStorePackage,
     catalog_source: &proto::ExtensionStoreSource,
+    base: Option<&CatalogBase>,
 ) -> Option<proto::ExtensionStorePackage> {
     let id = normalize_optional_string(package.id)?;
     let slug = normalize_optional_string(package.slug)?;
     let title = normalize_optional_string(package.title)?;
     let author = package.author?;
     let author_handle = normalize_optional_string(author.handle)?;
-    let version = normalize_optional_string(package.latest_release.version.clone())?;
-    let download_url = normalize_optional_string(package.latest_release.download_url.clone())?;
+    let compatibility = package.compatibility.clone();
+    let default_channel = parse_release_channel(package.default_channel.as_deref());
+    let releases = merge_package_releases(package.releases, package.latest_release, base);
+    let latest_release = select_preferred_release(
+        &releases,
+        if default_channel == proto::ExtensionReleaseChannel::Unspecified as i32 {
+            proto::ExtensionReleaseChannel::Stable as i32
+        } else {
+            default_channel
+        },
+    )?;
+    let manifest = normalize_manifest_with_package_context(
+        package.manifest,
+        &id,
+        compatibility.as_ref(),
+        Some(&latest_release),
+    );
 
     Some(proto::ExtensionStorePackage {
         id,
@@ -374,8 +836,13 @@ fn raw_store_package_to_proto(
             profile_url: normalize_optional_string(author.profile_url),
         }),
         icons: Some(proto::ExtensionStoreIcons {
-            light: package.icons.as_ref().and_then(|icons| normalize_optional_string(icons.light.clone())),
-            dark: package.icons.and_then(|icons| normalize_optional_string(icons.dark)),
+            light: package
+                .icons
+                .as_ref()
+                .and_then(|icons| normalize_optional_string(icons.light.clone())),
+            dark: package
+                .icons
+                .and_then(|icons| normalize_optional_string(icons.dark)),
         }),
         categories: normalize_string_list(package.categories),
         tags: normalize_string_list(package.tags),
@@ -399,7 +866,7 @@ fn raw_store_package_to_proto(
                 summary: None,
             },
         }),
-        compatibility: Some(match package.compatibility {
+        compatibility: Some(match compatibility {
             Some(compatibility) => proto::ExtensionStoreCompatibility {
                 platforms: normalize_string_list(compatibility.platforms),
                 desktop_environments: normalize_string_list(compatibility.desktop_environments),
@@ -421,22 +888,26 @@ fn raw_store_package_to_proto(
                 notes: Vec::new(),
             },
         }),
-        latest_release: Some(proto::ExtensionStoreRelease {
-            version,
-            download_url,
-            published_at: normalize_optional_string(package.latest_release.published_at),
-            checksum_sha256: normalize_optional_string(package.latest_release.checksum_sha256),
-            changelog_url: normalize_optional_string(package.latest_release.changelog_url),
-        }),
-        readme_url: normalize_optional_string(package.readme_url),
-        source_url: normalize_optional_string(package.source_url),
-        screenshots: normalize_string_list(package.screenshots),
-        manifest: package.manifest.map(raw_manifest_to_proto),
+        latest_release: Some(latest_release),
+        readme_url: resolve_relative_reference(package.readme_url, base),
+        source_url: resolve_relative_reference(package.source_url, base),
+        screenshots: package
+            .screenshots
+            .into_iter()
+            .filter_map(|screenshot| resolve_relative_reference(Some(screenshot), base))
+            .collect(),
+        manifest,
         download_count: package.download_count,
+        releases,
+        default_channel,
+        package_format_version: normalize_optional_string(package.package_format_version),
     })
 }
 
-fn load_catalog_from_str(content: &str) -> Result<proto::ExtensionStoreCatalog> {
+fn load_catalog_from_str(
+    content: &str,
+    base: Option<&CatalogBase>,
+) -> Result<proto::ExtensionStoreCatalog> {
     let raw_catalog: RawStoreCatalog = serde_json::from_str(content)?;
     let source = raw_store_source_to_proto(raw_catalog.source);
 
@@ -445,8 +916,10 @@ fn load_catalog_from_str(content: &str) -> Result<proto::ExtensionStoreCatalog> 
         packages: raw_catalog
             .packages
             .into_iter()
-            .filter_map(|package| raw_store_package_to_proto(package, &source))
+            .filter_map(|package| raw_store_package_to_proto(package, &source, base))
             .collect(),
+        generated_at: normalize_optional_string(raw_catalog.generated_at),
+        format_version: normalize_optional_string(raw_catalog.format_version),
     })
 }
 
@@ -493,7 +966,8 @@ async fn load_catalog(app: &AppHandle) -> Result<proto::ExtensionStoreCatalog> {
                 )));
             }
 
-            return load_catalog_from_str(&response.text().await?);
+            let base = Url::parse(trimmed).ok().map(CatalogBase::Url);
+            return load_catalog_from_str(&response.text().await?, base.as_ref());
         }
     }
 
@@ -502,11 +976,25 @@ async fn load_catalog(app: &AppHandle) -> Result<proto::ExtensionStoreCatalog> {
             continue;
         }
 
-        let content = fs::read_to_string(candidate)?;
-        return load_catalog_from_str(&content);
+        let content = fs::read_to_string(&candidate)?;
+        let base = CatalogBase::File(
+            candidate
+                .parent()
+                .map(PathBuf::from)
+                .unwrap_or_else(|| PathBuf::from(".")),
+        );
+        return load_catalog_from_str(&content, Some(&base));
     }
 
-    load_catalog_from_str(EXTENSIONS_CONFIG.store_catalog.default_catalog_json)
+    let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let default_base = manifest_dir.parent().map(|workspace_root| {
+        CatalogBase::File(workspace_root.join(EXTENSIONS_CONFIG.store_catalog.directory_name))
+    });
+
+    load_catalog_from_str(
+        EXTENSIONS_CONFIG.store_catalog.default_catalog_json,
+        default_base.as_ref(),
+    )
 }
 
 fn store_source_to_json(source: &proto::ExtensionStoreSource) -> JsonValue {
@@ -556,6 +1044,47 @@ fn store_compatibility_to_json(compatibility: &proto::ExtensionStoreCompatibilit
     })
 }
 
+fn store_checksum_to_json(checksum: &proto::ExtensionStoreChecksum) -> JsonValue {
+    json!({
+        "algorithm": checksum.algorithm,
+        "value": checksum.value,
+    })
+}
+
+fn store_artifact_verification_to_json(
+    verification: &proto::ExtensionStoreArtifactVerification,
+) -> JsonValue {
+    json!({
+        "signer": verification.signer,
+        "signature": verification.signature,
+        "provenanceUrl": verification.provenance_url,
+        "transparencyLogUrl": verification.transparency_log_url,
+    })
+}
+
+fn store_artifact_to_json(artifact: &proto::ExtensionStoreArtifact) -> JsonValue {
+    json!({
+        "id": artifact.id,
+        "kind": artifact.kind,
+        "downloadUrl": artifact.download_url,
+        "fileName": artifact.file_name,
+        "mimeType": artifact.mime_type,
+        "sizeBytes": artifact.size_bytes,
+        "checksums": artifact.checksums.iter().map(store_checksum_to_json).collect::<Vec<_>>(),
+        "verification": artifact.verification.as_ref().map(store_artifact_verification_to_json),
+        "platforms": artifact.platforms,
+        "desktopEnvironments": artifact.desktop_environments,
+    })
+}
+
+fn store_release_notes_to_json(notes: &proto::ExtensionStoreReleaseNotes) -> JsonValue {
+    json!({
+        "summary": notes.summary,
+        "markdown": notes.markdown,
+        "changelogUrl": notes.changelog_url,
+    })
+}
+
 fn store_release_to_json(release: &proto::ExtensionStoreRelease) -> JsonValue {
     json!({
         "version": release.version,
@@ -563,6 +1092,13 @@ fn store_release_to_json(release: &proto::ExtensionStoreRelease) -> JsonValue {
         "publishedAt": release.published_at,
         "checksumSha256": release.checksum_sha256,
         "changelogUrl": release.changelog_url,
+        "channel": release.channel,
+        "channelName": release.channel_name,
+        "prerelease": release.prerelease,
+        "artifacts": release.artifacts.iter().map(store_artifact_to_json).collect::<Vec<_>>(),
+        "primaryArtifactId": release.primary_artifact_id,
+        "releaseNotes": release.release_notes.as_ref().map(store_release_notes_to_json),
+        "publishedBy": release.published_by,
     })
 }
 
@@ -617,6 +1153,10 @@ fn manifest_to_json(manifest: &proto::ExtensionManifest) -> JsonValue {
         "commands": manifest.commands.iter().map(command_manifest_to_json).collect::<Vec<_>>(),
         "preferences": manifest.preferences.iter().map(preference_to_json).collect::<Vec<_>>(),
         "version": manifest.version,
+        "schemaVersion": manifest.schema_version,
+        "packageId": manifest.package_id,
+        "minimumBeamVersion": manifest.minimum_beam_version,
+        "releaseChannel": manifest.release_channel,
     })
 }
 
@@ -640,6 +1180,9 @@ fn store_package_to_json(package: &proto::ExtensionStorePackage) -> JsonValue {
         "screenshots": package.screenshots,
         "manifest": package.manifest.as_ref().map(manifest_to_json),
         "downloadCount": package.download_count,
+        "releases": package.releases.iter().map(store_release_to_json).collect::<Vec<_>>(),
+        "defaultChannel": package.default_channel,
+        "packageFormatVersion": package.package_format_version,
     })
 }
 
@@ -666,7 +1209,11 @@ fn search_matches(package: &proto::ExtensionStorePackage, query: &str) -> bool {
         package.slug.to_lowercase(),
         package.title.to_lowercase(),
         package.summary.clone().unwrap_or_default().to_lowercase(),
-        package.description.clone().unwrap_or_default().to_lowercase(),
+        package
+            .description
+            .clone()
+            .unwrap_or_default()
+            .to_lowercase(),
         package
             .author
             .as_ref()
@@ -682,6 +1229,98 @@ fn search_matches(package: &proto::ExtensionStorePackage, query: &str) -> bool {
 
 fn parse_version(value: &str) -> Option<Version> {
     Version::parse(value.trim_start_matches('v')).ok()
+}
+
+fn parse_requested_channel(value: Option<&str>) -> i32 {
+    let parsed = parse_release_channel(value);
+    if parsed == proto::ExtensionReleaseChannel::Unspecified as i32 {
+        proto::ExtensionReleaseChannel::Stable as i32
+    } else {
+        parsed
+    }
+}
+
+fn package_key(package: &proto::ExtensionStorePackage) -> Option<String> {
+    let author = package.author.as_ref()?;
+    Some(format!(
+        "{}::{}",
+        author.handle.trim().to_lowercase(),
+        package.slug.trim().to_lowercase()
+    ))
+}
+
+pub(crate) async fn resolve_store_artifact(
+    app: &AppHandle,
+    package_id_or_slug: &str,
+    release_version: Option<&str>,
+    release_channel: Option<&str>,
+) -> Result<ResolvedStoreArtifact> {
+    let catalog = load_catalog(app).await?;
+    let normalized_package_id = package_id_or_slug.trim().to_lowercase();
+    if normalized_package_id.is_empty() {
+        return Err(ExtensionsError::Message(
+            "extension store package id is required".to_string(),
+        ));
+    }
+
+    let package = catalog
+        .packages
+        .iter()
+        .find(|package| {
+            package
+                .id
+                .trim()
+                .eq_ignore_ascii_case(&normalized_package_id)
+                || package
+                    .slug
+                    .trim()
+                    .eq_ignore_ascii_case(&normalized_package_id)
+                || package_key(package)
+                    .as_ref()
+                    .is_some_and(|key| key == &normalized_package_id)
+        })
+        .cloned()
+        .ok_or_else(|| {
+            ExtensionsError::Message(format!(
+                "extension store package not found: {package_id_or_slug}"
+            ))
+        })?;
+
+    let requested_version = release_version
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .map(ToOwned::to_owned);
+    let requested_channel = parse_requested_channel(release_channel);
+
+    let release = if let Some(requested_version) = requested_version {
+        package
+            .releases
+            .iter()
+            .find(|release| release.version == requested_version)
+            .cloned()
+    } else {
+        select_preferred_release(&package.releases, requested_channel)
+            .or_else(|| package.latest_release.clone())
+    }
+    .ok_or_else(|| {
+        ExtensionsError::Message(format!(
+            "no matching release found for package {}",
+            package.id
+        ))
+    })?;
+
+    let artifact = select_release_artifact(&release).ok_or_else(|| {
+        ExtensionsError::Message(format!(
+            "no installable artifact found for package {} release {}",
+            package.id, release.version
+        ))
+    })?;
+
+    Ok(ResolvedStoreArtifact {
+        package,
+        release,
+        artifact,
+    })
 }
 
 #[tauri::command]
@@ -747,12 +1386,23 @@ pub async fn get_extension_store_updates(app: AppHandle) -> Result<JsonValue> {
         })
         .collect::<HashMap<_, _>>();
 
-    let mut installed_by_owner_and_slug = HashMap::<String, (&proto::DiscoveredPlugin, String)>::new();
+    let mut installed_by_owner_and_slug =
+        HashMap::<String, (&proto::DiscoveredPlugin, String)>::new();
     for plugin in &discovered {
-        let Some(owner) = plugin.owner.as_ref().map(|value| value.trim()).filter(|value| !value.is_empty()) else {
+        let Some(owner) = plugin
+            .owner
+            .as_ref()
+            .map(|value| value.trim())
+            .filter(|value| !value.is_empty())
+        else {
             continue;
         };
-        let Some(version) = plugin.version.as_ref().map(|value| value.trim()).filter(|value| !value.is_empty()) else {
+        let Some(version) = plugin
+            .version
+            .as_ref()
+            .map(|value| value.trim())
+            .filter(|value| !value.is_empty())
+        else {
             continue;
         };
         let slug = plugin.plugin_name.trim();
@@ -770,7 +1420,15 @@ pub async fn get_extension_store_updates(app: AppHandle) -> Result<JsonValue> {
         let Some(package) = catalog_by_owner_and_slug.get(&key) else {
             continue;
         };
-        let Some(latest_release) = package.latest_release.as_ref() else {
+        let preferred_channel =
+            if package.default_channel == proto::ExtensionReleaseChannel::Unspecified as i32 {
+                proto::ExtensionReleaseChannel::Stable as i32
+            } else {
+                package.default_channel
+            };
+        let Some(latest_release) = select_preferred_release(&package.releases, preferred_channel)
+            .or_else(|| package.latest_release.clone())
+        else {
             continue;
         };
 
@@ -791,7 +1449,7 @@ pub async fn get_extension_store_updates(app: AppHandle) -> Result<JsonValue> {
             title: package.title.clone(),
             installed_version,
             latest_version: latest_release.version.clone(),
-            latest_release: Some(latest_release.clone()),
+            latest_release: Some(latest_release),
             verification: package.verification.clone(),
             compatibility: package.compatibility.clone(),
         });
@@ -800,4 +1458,70 @@ pub async fn get_extension_store_updates(app: AppHandle) -> Result<JsonValue> {
     Ok(json!({
         "updates": updates.iter().map(store_update_to_json).collect::<Vec<_>>(),
     }))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn catalog_fixture_parses_into_publishable_packages() {
+        let catalog = load_catalog_from_str(
+            include_str!("../../../store/catalog.json"),
+            Some(&CatalogBase::File(PathBuf::from("store"))),
+        )
+        .expect("catalog fixture should parse");
+
+        assert_eq!(catalog.packages.len(), 2);
+
+        let demo_tools = catalog
+            .packages
+            .iter()
+            .find(|package| package.id == "beam.demo-tools")
+            .expect("demo tools package should exist");
+        assert_eq!(demo_tools.releases.len(), 2);
+        assert_eq!(
+            demo_tools
+                .latest_release
+                .as_ref()
+                .map(|release| release.version.as_str()),
+            Some("1.1.0")
+        );
+        assert_eq!(
+            demo_tools
+                .latest_release
+                .as_ref()
+                .and_then(|release| release.primary_artifact_id.as_deref()),
+            Some("linux-zip")
+        );
+    }
+
+    #[test]
+    fn preferred_release_follows_channel_selection() {
+        let catalog = load_catalog_from_str(
+            include_str!("../../../store/catalog.json"),
+            Some(&CatalogBase::File(PathBuf::from("store"))),
+        )
+        .expect("catalog fixture should parse");
+
+        let package = catalog
+            .packages
+            .iter()
+            .find(|package| package.id == "beam.window-recipes")
+            .expect("window recipes package should exist");
+
+        let stable_release = select_preferred_release(
+            &package.releases,
+            proto::ExtensionReleaseChannel::Stable as i32,
+        )
+        .expect("stable release should resolve");
+        assert_eq!(stable_release.version, "0.9.0");
+
+        let beta_release = select_preferred_release(
+            &package.releases,
+            proto::ExtensionReleaseChannel::Beta as i32,
+        )
+        .expect("beta release should resolve");
+        assert_eq!(beta_release.version, "1.0.0-beta.1");
+    }
 }

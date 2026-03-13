@@ -1,12 +1,5 @@
 import { Check, ChevronDown, Search } from "lucide-react";
-import {
-  type KeyboardEvent,
-  type ReactNode,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { type KeyboardEvent, type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -65,10 +58,7 @@ export function SearchableDropdown({
   const [highlightedIndex, setHighlightedIndex] = useState(0);
 
   const selectedItem = useMemo(
-    () =>
-      sections
-        .flatMap((section) => section.items)
-        .find((item) => item.value === value),
+    () => sections.flatMap((section) => section.items).find((item) => item.value === value),
     [sections, value],
   );
 
@@ -112,7 +102,9 @@ export function SearchableDropdown({
     });
   }, [query, sections]);
 
-  const itemRows = rows.filter((row): row is Extract<FlatRow, { type: "item" }> => row.type === "item");
+  const itemRows = rows.filter(
+    (row): row is Extract<FlatRow, { type: "item" }> => row.type === "item",
+  );
 
   useEffect(() => {
     if (!open) {
@@ -196,9 +188,7 @@ export function SearchableDropdown({
           triggerClassName,
         )}
       >
-        <span className="min-w-0 truncate text-inherit">
-          {selectedItem?.title || placeholder}
-        </span>
+        <span className="min-w-0 truncate text-inherit">{selectedItem?.title || placeholder}</span>
         <ChevronDown className="size-3.5 shrink-0 text-muted-foreground" />
       </button>
 

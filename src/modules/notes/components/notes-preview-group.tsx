@@ -66,39 +66,39 @@ export function NotesPreviewGroup({ query, onOpenNotes }: NotesPreviewGroupProps
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-medium">Open notes</p>
           <p className="text-xs text-muted-foreground">
-            {notes.length === 0 ? "No notes yet" : `${notes.length} saved note${notes.length === 1 ? "" : "s"}`}
+            {notes.length === 0
+              ? "No notes yet"
+              : `${notes.length} saved note${notes.length === 1 ? "" : "s"}`}
           </p>
         </div>
         <CommandShortcut>open</CommandShortcut>
       </CommandItem>
 
-      {notes.length === 0
-        ? (
-            <CommandItem disabled forceMount className="text-muted-foreground">
-              <Book className="size-4" />
-              <span>Create your first note.</span>
-            </CommandItem>
-          )
-        : (
-            recentNotes.map((note) => (
-              <CommandItem
-                key={note.id}
-                value={`note ${note.title} ${note.content}`}
-                onSelect={onOpenNotes}
-                className="cursor-pointer"
-                forceMount
-              >
-                {note.pinned ? <Pin className="size-4" /> : <Book className="size-4" />}
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm">{note.title}</p>
-                  <p className="truncate text-xs text-muted-foreground">
-                    {excerptContent(note.content)}
-                  </p>
-                </div>
-                <CommandShortcut>{note.pinned ? "pin" : "note"}</CommandShortcut>
-              </CommandItem>
-            ))
-          )}
+      {notes.length === 0 ? (
+        <CommandItem disabled forceMount className="text-muted-foreground">
+          <Book className="size-4" />
+          <span>Create your first note.</span>
+        </CommandItem>
+      ) : (
+        recentNotes.map((note) => (
+          <CommandItem
+            key={note.id}
+            value={`note ${note.title} ${note.content}`}
+            onSelect={onOpenNotes}
+            className="cursor-pointer"
+            forceMount
+          >
+            {note.pinned ? <Pin className="size-4" /> : <Book className="size-4" />}
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm">{note.title}</p>
+              <p className="truncate text-xs text-muted-foreground">
+                {excerptContent(note.content)}
+              </p>
+            </div>
+            <CommandShortcut>{note.pinned ? "pin" : "note"}</CommandShortcut>
+          </CommandItem>
+        ))
+      )}
     </CommandGroup>
   );
 }

@@ -128,7 +128,10 @@ function buildRunnerId(plugin: PersistentPluginDescriptor): string {
   return `${owner}.${plugin.pluginName}.${plugin.commandName}`.replace(/[^a-z0-9._-]+/g, "-");
 }
 
-function findNode(snapshot: RuntimeTreeSnapshot, id: number | undefined): ExtensionUiNode | undefined {
+function findNode(
+  snapshot: RuntimeTreeSnapshot,
+  id: number | undefined,
+): ExtensionUiNode | undefined {
   if (id === undefined) {
     return undefined;
   }
@@ -143,7 +146,10 @@ function collectNodeText(snapshot: RuntimeTreeSnapshot, nodeId: number | undefin
   if (node.type === "TEXT") {
     return node.text?.trim() ?? "";
   }
-  return node.children.map((childId) => collectNodeText(snapshot, childId)).join(" ").trim();
+  return node.children
+    .map((childId) => collectNodeText(snapshot, childId))
+    .join(" ")
+    .trim();
 }
 
 function buildMenuBarItem(snapshot: RuntimeTreeSnapshot, nodeId: number): MenuBarTrayItem[] {
@@ -177,7 +183,8 @@ function buildMenuBarItem(snapshot: RuntimeTreeSnapshot, nodeId: number): MenuBa
   }
 
   if (node.type === "MenuBarExtra.Submenu") {
-    const title = asString(node.props.title) || collectNodeText(snapshot, node.children[0]) || "Menu";
+    const title =
+      asString(node.props.title) || collectNodeText(snapshot, node.children[0]) || "Menu";
     return [
       {
         id: String(node.id),
@@ -190,7 +197,8 @@ function buildMenuBarItem(snapshot: RuntimeTreeSnapshot, nodeId: number): MenuBa
   }
 
   if (node.type === "MenuBarExtra.Item") {
-    const title = asString(node.props.title) || collectNodeText(snapshot, node.children[0]) || "Item";
+    const title =
+      asString(node.props.title) || collectNodeText(snapshot, node.children[0]) || "Item";
     return [
       {
         id: String(node.id),
@@ -233,7 +241,10 @@ class PersistentRunnerSession {
   readonly mode: PersistentMode;
   private runtimeStarted = false;
   private tree = createEmptyRuntimeTreeSnapshot();
-  private propTemplates = new Map<number, { props: Record<string, unknown>; namedChildren?: Record<string, number> }>();
+  private propTemplates = new Map<
+    number,
+    { props: Record<string, unknown>; namedChildren?: Record<string, number> }
+  >();
   private callbacks: RunnerManagerCallbacks;
   private onExit?: () => void;
 
@@ -333,9 +344,7 @@ class PersistentRunnerSession {
     await sendExtensionRuntimeMessage(this.runtimeId, event.action, event.payload);
   }
 
-  private async sendManagerRequest(
-    request: ManagerRequest,
-  ): Promise<void> {
+  private async sendManagerRequest(request: ManagerRequest): Promise<void> {
     const response = await sendExtensionRuntimeManagerRequest(this.runtimeId, request);
     if (response.error) {
       throw new Error(response.error.message);
@@ -403,14 +412,20 @@ class PersistentRunnerSession {
     }
   }
 
-  private async handleOauthGetTokens(payload: { requestId: string; providerId: string }): Promise<void> {
+  private async handleOauthGetTokens(payload: {
+    requestId: string;
+    providerId: string;
+  }): Promise<void> {
     try {
       const result = await invoke("oauth_get_tokens", { providerId: payload.providerId });
       this.sendRuntimeRpc({
         response: {
           oauthGetTokens: {
             requestId: payload.requestId,
-            result: result && typeof result === "object" ? (result as Record<string, unknown>) : undefined,
+            result:
+              result && typeof result === "object"
+                ? (result as Record<string, unknown>)
+                : undefined,
             error: "",
           },
         },
@@ -795,13 +810,21 @@ class PersistentRunnerSession {
 
     const runtimeRender = parseRuntimeRender(raw);
     if (runtimeRender?.kind === "batch") {
-      this.tree = applyRuntimeCommandsToRuntimeTree(this.tree, runtimeRender.commands, this.propTemplates);
+      this.tree = applyRuntimeCommandsToRuntimeTree(
+        this.tree,
+        runtimeRender.commands,
+        this.propTemplates,
+      );
       void this.syncMenuBarTray();
       return;
     }
 
     if (runtimeRender?.kind === "command") {
-      this.tree = applyRuntimeCommandsToRuntimeTree(this.tree, [runtimeRender.command], this.propTemplates);
+      this.tree = applyRuntimeCommandsToRuntimeTree(
+        this.tree,
+        [runtimeRender.command],
+        this.propTemplates,
+      );
       void this.syncMenuBarTray();
       return;
     }
@@ -812,7 +835,11 @@ class PersistentRunnerSession {
     }
 
     if (runtimeRender?.kind === "error") {
-      console.error(`[persistent-runner:${this.runnerId}]`, runtimeRender.message, runtimeRender.stack);
+      console.error(
+        `[persistent-runner:${this.runnerId}]`,
+        runtimeRender.message,
+        runtimeRender.stack,
+      );
       return;
     }
 
@@ -891,7 +918,10 @@ class PersistentExtensionRunnerManager {
 
     const eligible = plugins.filter((plugin) => {
       const mode = plugin.mode?.trim().toLowerCase();
-      return mode === "menu-bar" || (mode === "no-view" && normalizeIntervalToMs(plugin.interval) !== null);
+      return (
+        mode === "menu-bar" ||
+        (mode === "no-view" && normalizeIntervalToMs(plugin.interval) !== null)
+      );
     });
 
     for (const plugin of eligible) {
@@ -962,7 +992,10 @@ class PersistentExtensionRunnerManager {
     this.scheduledTimers.clear();
   }
 
-  private async startMenuBar(plugin: PersistentPluginDescriptor, launchType: LaunchTypeValue): Promise<void> {
+  private async startMenuBar(
+    plugin: PersistentPluginDescriptor,
+    launchType: LaunchTypeValue,
+  ): Promise<void> {
     const runnerId = buildRunnerId(plugin);
     const existing = this.menuBarSessions.get(runnerId);
     if (existing) {
@@ -982,7 +1015,10 @@ class PersistentExtensionRunnerManager {
     }
   }
 
-  private async runBackgroundJob(plugin: PersistentPluginDescriptor, launchType: LaunchTypeValue): Promise<void> {
+  private async runBackgroundJob(
+    plugin: PersistentPluginDescriptor,
+    launchType: LaunchTypeValue,
+  ): Promise<void> {
     const runtimeId = buildBackgroundRuntimeId(plugin);
     const session = new PersistentRunnerSession(runtimeId, plugin, this.callbacks, async () => {
       this.activeSessions.delete(runtimeId);

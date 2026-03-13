@@ -17,7 +17,6 @@ export function normalizeDiscoveredPluginRecord(value: unknown): DiscoveredPlugi
 
   return {
     ...plugin,
-    mode:
-      plugin.mode === "menu-bar" ? "menu-bar" : plugin.mode === "no-view" ? "no-view" : "view",
+    mode: plugin.mode === "menu-bar" ? "menu-bar" : plugin.mode === "no-view" ? "no-view" : "view",
   };
 }

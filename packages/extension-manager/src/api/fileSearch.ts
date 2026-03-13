@@ -28,7 +28,8 @@ function asNumber(value: unknown): number {
 
 export const FileSearch = {
   async search(query: string, options?: { page?: number; perPage?: number }): Promise<FileEntry[]> {
-    const page = typeof options?.page === "number" && options.page > 0 ? Math.floor(options.page) : 1;
+    const page =
+      typeof options?.page === "number" && options.page > 0 ? Math.floor(options.page) : 1;
     const perPage =
       typeof options?.perPage === "number" && options.perPage > 0
         ? Math.floor(options.perPage)

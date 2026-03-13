@@ -1,7 +1,7 @@
 This package lets you extend the [Beam](https://docs.beam.com/) launcher using React and TypeScript.
 
-[![Version](https://img.shields.io/npm/v/@beam/api.svg)](https://npmjs.org/package/@beam/api)
-[![Downloads/week](https://img.shields.io/npm/dw/@beam/api.svg)](https://npmjs.org/package/@beam/api)
+[![Version](https://img.shields.io/npm/v/@beam-launcher/api.svg)](https://npmjs.org/package/@beam-launcher/api)
+[![Downloads/week](https://img.shields.io/npm/dw/@beam-launcher/api.svg)](https://npmjs.org/package/@beam-launcher/api)
 
 # Getting started
 
@@ -9,17 +9,17 @@ The recommend way to start developing a new extension is to [read the docs](http
 
 The full API reference (expect breaking changes) can be found [here](https://api-reference.beam.com).
 
-# Installation 
+# Installation
 
 Install the package:
 
 ```
-bun add @beam/api
+bun add @beam-launcher/api
 ```
 
 # Versioning
 
-The `@beam/api` package follows the same versioning as the main `beam` binary, since the API is always embedded in the binary.
+The `@beam-launcher/api` package follows the same versioning as the main `beam` binary, since the API is always embedded in the binary.
 
 # CLI usage
 

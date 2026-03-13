@@ -423,10 +423,7 @@ export function useExtensionRunnerState({
           if (action.hasOnAction) {
             extensionManagerService.dispatchEvent(action.nodeId, "onAction", [target]);
           } else {
-            extensionManagerService.open(
-              target,
-              readApplicationTarget(action.props.application),
-            );
+            extensionManagerService.open(target, readApplicationTarget(action.props.application));
           }
           return;
         }
@@ -457,7 +454,9 @@ export function useExtensionRunnerState({
         if (action.hasOnAction) {
           extensionManagerService.dispatchEvent(action.nodeId, "onAction");
         } else {
-          console.warn("[extensions-runner] Action.CreateQuicklink is unsupported without onAction");
+          console.warn(
+            "[extensions-runner] Action.CreateQuicklink is unsupported without onAction",
+          );
         }
         return;
       }

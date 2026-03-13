@@ -1,4 +1,7 @@
-import { RuntimeOutput, type RuntimeOutput as RuntimeOutputMessage } from "@beam/extension-protocol";
+import {
+  RuntimeOutput,
+  type RuntimeOutput as RuntimeOutputMessage,
+} from "@beam/extension-protocol";
 
 import { writeOutput } from "../io";
 

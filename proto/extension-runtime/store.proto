@@ -18,6 +18,25 @@ enum ExtensionVerificationStatus {
   EXTENSION_VERIFICATION_STATUS_UNVERIFIED = 4;
 }
 
+enum ExtensionReleaseChannel {
+  EXTENSION_RELEASE_CHANNEL_UNSPECIFIED = 0;
+  EXTENSION_RELEASE_CHANNEL_STABLE = 1;
+  EXTENSION_RELEASE_CHANNEL_BETA = 2;
+  EXTENSION_RELEASE_CHANNEL_NIGHTLY = 3;
+  EXTENSION_RELEASE_CHANNEL_CUSTOM = 4;
+}
+
+enum ExtensionPackageArtifactKind {
+  EXTENSION_PACKAGE_ARTIFACT_KIND_UNSPECIFIED = 0;
+  EXTENSION_PACKAGE_ARTIFACT_KIND_ZIP = 1;
+  EXTENSION_PACKAGE_ARTIFACT_KIND_TAR_GZ = 2;
+}
+
+enum ExtensionChecksumAlgorithm {
+  EXTENSION_CHECKSUM_ALGORITHM_UNSPECIFIED = 0;
+  EXTENSION_CHECKSUM_ALGORITHM_SHA256 = 1;
+}
+
 message ExtensionStoreSource {
   string id = 1;
   string label = 2;
@@ -55,12 +74,50 @@ message ExtensionStoreCompatibility {
   repeated string notes = 8;
 }
 
+message ExtensionStoreChecksum {
+  ExtensionChecksumAlgorithm algorithm = 1;
+  string value = 2;
+}
+
+message ExtensionStoreArtifactVerification {
+  optional string signer = 1;
+  optional string signature = 2;
+  optional string provenance_url = 3;
+  optional string transparency_log_url = 4;
+}
+
+message ExtensionStoreArtifact {
+  string id = 1;
+  ExtensionPackageArtifactKind kind = 2;
+  string download_url = 3;
+  optional string file_name = 4;
+  optional string mime_type = 5;
+  optional int64 size_bytes = 6;
+  repeated ExtensionStoreChecksum checksums = 7;
+  ExtensionStoreArtifactVerification verification = 8;
+  repeated string platforms = 9;
+  repeated string desktop_environments = 10;
+}
+
+message ExtensionStoreReleaseNotes {
+  optional string summary = 1;
+  optional string markdown = 2;
+  optional string changelog_url = 3;
+}
+
 message ExtensionStoreRelease {
   string version = 1;
   string download_url = 2;
   optional string published_at = 3;
   optional string checksum_sha256 = 4;
   optional string changelog_url = 5;
+  ExtensionReleaseChannel channel = 6;
+  optional string channel_name = 7;
+  bool prerelease = 8;
+  repeated ExtensionStoreArtifact artifacts = 9;
+  optional string primary_artifact_id = 10;
+  ExtensionStoreReleaseNotes release_notes = 11;
+  optional string published_by = 12;
 }
 
 message ExtensionStorePackage {
@@ -82,11 +139,16 @@ message ExtensionStorePackage {
   repeated string screenshots = 16;
   ExtensionManifest manifest = 17;
   optional int64 download_count = 18;
+  repeated ExtensionStoreRelease releases = 19;
+  ExtensionReleaseChannel default_channel = 20;
+  optional string package_format_version = 21;
 }
 
 message ExtensionStoreCatalog {
   ExtensionStoreSource source = 1;
   repeated ExtensionStorePackage packages = 2;
+  optional string generated_at = 3;
+  optional string format_version = 4;
 }
 
 message ExtensionStoreSearchResult {

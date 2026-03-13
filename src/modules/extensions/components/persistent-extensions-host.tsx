@@ -1,7 +1,10 @@
 import { useEffect } from "react";
 
 import { getDiscoveredPlugins } from "@/modules/extensions/api/get-discovered-plugins";
-import { listenForPersistentMenuBarEvents, persistentExtensionRunnerManager } from "@/modules/extensions/background/persistent-runners";
+import {
+  listenForPersistentMenuBarEvents,
+  persistentExtensionRunnerManager,
+} from "@/modules/extensions/background/persistent-runners";
 
 interface PersistentExtensionsHostProps {
   launchCommand: (payload: {

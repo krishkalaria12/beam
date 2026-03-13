@@ -55,7 +55,9 @@ export function MetadataBar({
       <div className={cn("space-y-2 p-4", contentClassName)}>
         {items.map((item, index) => {
           if (item.type === "separator") {
-            return <div key={`separator:${index}`} className="my-1 h-px w-full bg-[var(--ui-divider)]" />;
+            return (
+              <div key={`separator:${index}`} className="my-1 h-px w-full bg-[var(--ui-divider)]" />
+            );
           }
 
           if (item.type === "tags") {

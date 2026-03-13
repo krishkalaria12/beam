@@ -27,4 +27,3 @@ export function RunnerIcon({ icon, className }: RunnerIconProps) {
     />
   );
 }
-

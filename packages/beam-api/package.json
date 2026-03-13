@@ -1,36 +1,44 @@
 {
-  "name": "@beam/api",
+  "name": "@beam-launcher/api",
   "version": "1.0.0",
   "description": "TypeScript SDK to build Beam extensions",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "rm -rf dist && bunx tsc --outDir dist",
-    "pack": "bun run build && bun pm pack",
-    "docgen": "typedoc"
+  "type": "commonjs",
+  "keywords": [],
+  "license": "ISC",
+  "author": "",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/krishkalaria12/beam.git"
   },
   "bin": {
-    "beam-api": "./bin/run.js"
+    "beam-api": "bin/run.js"
   },
   "files": [
     "dist",
-    "src",
-    "bin"
+    "bin",
+    "types",
+    "README.md"
   ],
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "types": "./dist/src/index.d.ts",
+  "main": "dist/src/index.js",
+  "types": "./types/index.d.ts",
   "exports": {
     ".": {
-      "types": "./src/index.ts",
-      "default": "./src/index.ts"
+      "types": "./types/index.d.ts",
+      "import": "./dist/src/index.js",
+      "require": "./dist/src/index.js",
+      "default": "./dist/src/index.js"
     },
     "./package.json": "./package.json"
   },
   "publishConfig": {
     "access": "public"
   },
-  "main": "dist/src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "rm -rf dist && bunx tsc --outDir dist",
+    "pack": "bun run build && bun pm pack",
+    "docgen": "typedoc"
+  },
   "dependencies": {
     "@jgoz/esbuild-plugin-typecheck": "^4.0.3",
     "@oclif/core": "^4",
@@ -42,10 +50,6 @@
     "esbuild": "^0.25.2",
     "react": "19.0.0",
     "zod": "^4.0.17"
-  },
-  "peerDependencies": {
-    "@types/node": ">=18",
-    "@types/react": "19.0.10"
   },
   "devDependencies": {
     "@bufbuild/protobuf": "^2.7.0",
@@ -63,15 +67,18 @@
     "typedoc-plugin-markdown": "^4.8.1",
     "typescript": "^5"
   },
+  "peerDependencies": {
+    "@types/node": ">=18",
+    "@types/react": "19.0.10"
+  },
   "oclif": {
     "bin": "beam-api",
-    "dirname": "beam-api",
     "commands": "./dist/src/commands",
+    "dirname": "beam-api",
     "plugins": [
       "@oclif/plugin-help"
     ],
     "topicSeparator": " ",
     "topics": {}
-  },
-  "repository": "krishkalaria12/beam"
+  }
 }

@@ -33,7 +33,10 @@ export function useExtensionManagerEvents({
         return;
       }
 
-      if (event.type === "open-extension-preferences" || event.type === "open-command-preferences") {
+      if (
+        event.type === "open-extension-preferences" ||
+        event.type === "open-command-preferences"
+      ) {
         if (openExtensions) {
           openExtensions();
         } else {

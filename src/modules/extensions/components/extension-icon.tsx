@@ -31,4 +31,3 @@ export function ExtensionIcon({ iconReference, title, className }: ExtensionIcon
     />
   );
 }
-

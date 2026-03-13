@@ -42,7 +42,13 @@ export function SplitView({
     >
       <div className={cn("min-h-0", primaryClassName)}>{primary}</div>
       {showDetail ? (
-        <div className={cn("min-h-0 border-l border-[var(--ui-divider)]", dividerClassName, detailClassName)}>
+        <div
+          className={cn(
+            "min-h-0 border-l border-[var(--ui-divider)]",
+            dividerClassName,
+            detailClassName,
+          )}
+        >
           {detail}
         </div>
       ) : null}

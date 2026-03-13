@@ -59,7 +59,7 @@ The core of Beam is a registry-first command system with smart ranking, fuzzy ma
 | Panel                  | Description                                                                                                  |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------ |
 | **Application Search** | Discovers and launches installed apps via freedesktop `.desktop` files with icon resolution                  |
-| **Calculator**         | Natural language math, conversions, time, dates, and rates via smart-calculator with expression history     |
+| **Calculator**         | Natural language math, conversions, time, dates, and rates via smart-calculator with expression history      |
 | **Clipboard History**  | Persistent clipboard monitor — stores up to 100 entries (text + images), AES-GCM encrypted, fuzzy searchable |
 | **File Search**        | Real-time indexed search powered by nucleo fuzzy matching and a background file watcher                      |
 | **Todo**               | Full todo list with sub-todos, ordering, and CRUD — stored in SQLite                                         |

@@ -24,19 +24,19 @@ export function RuntimeGridView({ state }: RuntimeGridViewProps) {
       entries: Array<{ entry: ListEntry; index: number }>;
     }> = [];
 
-    let current:
-      | {
-          key: string;
-          title?: string;
-          columns: number;
-          entries: Array<{ entry: ListEntry; index: number }>;
-        }
-      | null = null;
+    let current: {
+      key: string;
+      title?: string;
+      columns: number;
+      entries: Array<{ entry: ListEntry; index: number }>;
+    } | null = null;
 
     state.currentEntries.forEach((entry, index) => {
       const key = String(entry.sectionNodeId ?? `root-${entry.gridColumns ?? 6}`);
       const columns =
-        typeof entry.gridColumns === "number" && Number.isFinite(entry.gridColumns) && entry.gridColumns > 0
+        typeof entry.gridColumns === "number" &&
+        Number.isFinite(entry.gridColumns) &&
+        entry.gridColumns > 0
           ? Math.max(1, Math.floor(entry.gridColumns))
           : 6;
 
@@ -55,7 +55,8 @@ export function RuntimeGridView({ state }: RuntimeGridViewProps) {
     rootNode?.props.pagination && typeof rootNode.props.pagination === "object"
       ? (rootNode.props.pagination as Record<string, unknown>)
       : undefined;
-  const hasMore = pagination && typeof pagination.hasMore === "boolean" ? pagination.hasMore : false;
+  const hasMore =
+    pagination && typeof pagination.hasMore === "boolean" ? pagination.hasMore : false;
   const pageSize =
     pagination && typeof pagination.pageSize === "number" && pagination.pageSize > 0
       ? Math.max(0, Math.floor(pagination.pageSize))
@@ -89,7 +90,10 @@ export function RuntimeGridView({ state }: RuntimeGridViewProps) {
         }}
       >
         {sections.length === 0 ? (
-          <EmptyView title="No results" description="This extension did not return any grid items." />
+          <EmptyView
+            title="No results"
+            description="This extension did not return any grid items."
+          />
         ) : (
           <div className="space-y-4">
             {sections.map((section) => (
@@ -112,7 +116,8 @@ export function RuntimeGridView({ state }: RuntimeGridViewProps) {
                       node.props.accessory && typeof node.props.accessory === "object"
                         ? (node.props.accessory as Record<string, unknown>)
                         : null;
-                    const aspectRatio = entry.gridAspectRatio ?? (asString(node.props.aspectRatio).trim() || "1");
+                    const aspectRatio =
+                      entry.gridAspectRatio ?? (asString(node.props.aspectRatio).trim() || "1");
                     const fit = entry.gridFit ?? (asString(node.props.fit).trim() || "fill");
                     const insetClass = toInsetClass(entry.gridInset ?? node.props.inset);
 
@@ -138,18 +143,28 @@ export function RuntimeGridView({ state }: RuntimeGridViewProps) {
                           style={{ aspectRatio }}
                         >
                           {colorContent ? (
-                            <div className="h-full w-full rounded-md" style={{ backgroundColor: colorContent }} />
+                            <div
+                              className="h-full w-full rounded-md"
+                              style={{ backgroundColor: colorContent }}
+                            />
                           ) : (
                             <RunnerIcon
                               icon={contentValue}
-                              className={cn("h-full w-full", fit === "contain" ? "object-contain" : "object-cover")}
+                              className={cn(
+                                "h-full w-full",
+                                fit === "contain" ? "object-contain" : "object-cover",
+                              )}
                             />
                           )}
                         </div>
                         <div className="min-w-0">
-                          <div className="truncate text-[13px] font-medium text-foreground">{entry.title}</div>
+                          <div className="truncate text-[13px] font-medium text-foreground">
+                            {entry.title}
+                          </div>
                           {entry.subtitle ? (
-                            <div className="truncate text-[11px] text-muted-foreground">{entry.subtitle}</div>
+                            <div className="truncate text-[11px] text-muted-foreground">
+                              {entry.subtitle}
+                            </div>
                           ) : null}
                         </div>
                         {accessory ? (
@@ -158,7 +173,9 @@ export function RuntimeGridView({ state }: RuntimeGridViewProps) {
                               {
                                 key: `${entry.nodeId}:accessory`,
                                 text: asString(accessory.text).trim(),
-                                icon: accessory.icon ? <RunnerIcon icon={accessory.icon} className="size-3.5" /> : undefined,
+                                icon: accessory.icon ? (
+                                  <RunnerIcon icon={accessory.icon} className="size-3.5" />
+                                ) : undefined,
                               },
                             ]}
                           />

@@ -112,7 +112,7 @@ pub fn get_handler() -> impl Fn(Invoke) -> bool {
         extensions::store::search_extension_store,
         extensions::store::get_extension_store_package,
         extensions::store::get_extension_store_updates,
-        extensions::install_extension,
+        extensions::install_store_extension,
         extensions::uninstall_extension,
         extensions::runtime::bridge::extension_runtime_start,
         extensions::runtime::bridge::extension_runtime_stop,

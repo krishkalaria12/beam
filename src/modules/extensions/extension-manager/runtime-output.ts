@@ -1,4 +1,7 @@
-import { RuntimeOutput, type RuntimeOutput as RuntimeOutputMessage } from "@beam/extension-protocol";
+import {
+  RuntimeOutput,
+  type RuntimeOutput as RuntimeOutputMessage,
+} from "@beam/extension-protocol";
 
 export function parseRuntimeOutput(raw: unknown): RuntimeOutputMessage | null {
   if (!raw || typeof raw !== "object") {

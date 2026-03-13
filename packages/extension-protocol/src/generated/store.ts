@@ -98,6 +98,129 @@ export function extensionVerificationStatusToJSON(object: ExtensionVerificationS
   }
 }
 
+export enum ExtensionReleaseChannel {
+  EXTENSION_RELEASE_CHANNEL_UNSPECIFIED = 0,
+  EXTENSION_RELEASE_CHANNEL_STABLE = 1,
+  EXTENSION_RELEASE_CHANNEL_BETA = 2,
+  EXTENSION_RELEASE_CHANNEL_NIGHTLY = 3,
+  EXTENSION_RELEASE_CHANNEL_CUSTOM = 4,
+  UNRECOGNIZED = -1,
+}
+
+export function extensionReleaseChannelFromJSON(object: any): ExtensionReleaseChannel {
+  switch (object) {
+    case 0:
+    case "EXTENSION_RELEASE_CHANNEL_UNSPECIFIED":
+      return ExtensionReleaseChannel.EXTENSION_RELEASE_CHANNEL_UNSPECIFIED;
+    case 1:
+    case "EXTENSION_RELEASE_CHANNEL_STABLE":
+      return ExtensionReleaseChannel.EXTENSION_RELEASE_CHANNEL_STABLE;
+    case 2:
+    case "EXTENSION_RELEASE_CHANNEL_BETA":
+      return ExtensionReleaseChannel.EXTENSION_RELEASE_CHANNEL_BETA;
+    case 3:
+    case "EXTENSION_RELEASE_CHANNEL_NIGHTLY":
+      return ExtensionReleaseChannel.EXTENSION_RELEASE_CHANNEL_NIGHTLY;
+    case 4:
+    case "EXTENSION_RELEASE_CHANNEL_CUSTOM":
+      return ExtensionReleaseChannel.EXTENSION_RELEASE_CHANNEL_CUSTOM;
+    case -1:
+    case "UNRECOGNIZED":
+    default:
+      return ExtensionReleaseChannel.UNRECOGNIZED;
+  }
+}
+
+export function extensionReleaseChannelToJSON(object: ExtensionReleaseChannel): string {
+  switch (object) {
+    case ExtensionReleaseChannel.EXTENSION_RELEASE_CHANNEL_UNSPECIFIED:
+      return "EXTENSION_RELEASE_CHANNEL_UNSPECIFIED";
+    case ExtensionReleaseChannel.EXTENSION_RELEASE_CHANNEL_STABLE:
+      return "EXTENSION_RELEASE_CHANNEL_STABLE";
+    case ExtensionReleaseChannel.EXTENSION_RELEASE_CHANNEL_BETA:
+      return "EXTENSION_RELEASE_CHANNEL_BETA";
+    case ExtensionReleaseChannel.EXTENSION_RELEASE_CHANNEL_NIGHTLY:
+      return "EXTENSION_RELEASE_CHANNEL_NIGHTLY";
+    case ExtensionReleaseChannel.EXTENSION_RELEASE_CHANNEL_CUSTOM:
+      return "EXTENSION_RELEASE_CHANNEL_CUSTOM";
+    case ExtensionReleaseChannel.UNRECOGNIZED:
+    default:
+      return "UNRECOGNIZED";
+  }
+}
+
+export enum ExtensionPackageArtifactKind {
+  EXTENSION_PACKAGE_ARTIFACT_KIND_UNSPECIFIED = 0,
+  EXTENSION_PACKAGE_ARTIFACT_KIND_ZIP = 1,
+  EXTENSION_PACKAGE_ARTIFACT_KIND_TAR_GZ = 2,
+  UNRECOGNIZED = -1,
+}
+
+export function extensionPackageArtifactKindFromJSON(object: any): ExtensionPackageArtifactKind {
+  switch (object) {
+    case 0:
+    case "EXTENSION_PACKAGE_ARTIFACT_KIND_UNSPECIFIED":
+      return ExtensionPackageArtifactKind.EXTENSION_PACKAGE_ARTIFACT_KIND_UNSPECIFIED;
+    case 1:
+    case "EXTENSION_PACKAGE_ARTIFACT_KIND_ZIP":
+      return ExtensionPackageArtifactKind.EXTENSION_PACKAGE_ARTIFACT_KIND_ZIP;
+    case 2:
+    case "EXTENSION_PACKAGE_ARTIFACT_KIND_TAR_GZ":
+      return ExtensionPackageArtifactKind.EXTENSION_PACKAGE_ARTIFACT_KIND_TAR_GZ;
+    case -1:
+    case "UNRECOGNIZED":
+    default:
+      return ExtensionPackageArtifactKind.UNRECOGNIZED;
+  }
+}
+
+export function extensionPackageArtifactKindToJSON(object: ExtensionPackageArtifactKind): string {
+  switch (object) {
+    case ExtensionPackageArtifactKind.EXTENSION_PACKAGE_ARTIFACT_KIND_UNSPECIFIED:
+      return "EXTENSION_PACKAGE_ARTIFACT_KIND_UNSPECIFIED";
+    case ExtensionPackageArtifactKind.EXTENSION_PACKAGE_ARTIFACT_KIND_ZIP:
+      return "EXTENSION_PACKAGE_ARTIFACT_KIND_ZIP";
+    case ExtensionPackageArtifactKind.EXTENSION_PACKAGE_ARTIFACT_KIND_TAR_GZ:
+      return "EXTENSION_PACKAGE_ARTIFACT_KIND_TAR_GZ";
+    case ExtensionPackageArtifactKind.UNRECOGNIZED:
+    default:
+      return "UNRECOGNIZED";
+  }
+}
+
+export enum ExtensionChecksumAlgorithm {
+  EXTENSION_CHECKSUM_ALGORITHM_UNSPECIFIED = 0,
+  EXTENSION_CHECKSUM_ALGORITHM_SHA256 = 1,
+  UNRECOGNIZED = -1,
+}
+
+export function extensionChecksumAlgorithmFromJSON(object: any): ExtensionChecksumAlgorithm {
+  switch (object) {
+    case 0:
+    case "EXTENSION_CHECKSUM_ALGORITHM_UNSPECIFIED":
+      return ExtensionChecksumAlgorithm.EXTENSION_CHECKSUM_ALGORITHM_UNSPECIFIED;
+    case 1:
+    case "EXTENSION_CHECKSUM_ALGORITHM_SHA256":
+      return ExtensionChecksumAlgorithm.EXTENSION_CHECKSUM_ALGORITHM_SHA256;
+    case -1:
+    case "UNRECOGNIZED":
+    default:
+      return ExtensionChecksumAlgorithm.UNRECOGNIZED;
+  }
+}
+
+export function extensionChecksumAlgorithmToJSON(object: ExtensionChecksumAlgorithm): string {
+  switch (object) {
+    case ExtensionChecksumAlgorithm.EXTENSION_CHECKSUM_ALGORITHM_UNSPECIFIED:
+      return "EXTENSION_CHECKSUM_ALGORITHM_UNSPECIFIED";
+    case ExtensionChecksumAlgorithm.EXTENSION_CHECKSUM_ALGORITHM_SHA256:
+      return "EXTENSION_CHECKSUM_ALGORITHM_SHA256";
+    case ExtensionChecksumAlgorithm.UNRECOGNIZED:
+    default:
+      return "UNRECOGNIZED";
+  }
+}
+
 export interface ExtensionStoreSource {
   id: string;
   label: string;
@@ -135,12 +258,50 @@ export interface ExtensionStoreCompatibility {
   notes: string[];
 }
 
+export interface ExtensionStoreChecksum {
+  algorithm: ExtensionChecksumAlgorithm;
+  value: string;
+}
+
+export interface ExtensionStoreArtifactVerification {
+  signer?: string | undefined;
+  signature?: string | undefined;
+  provenanceUrl?: string | undefined;
+  transparencyLogUrl?: string | undefined;
+}
+
+export interface ExtensionStoreArtifact {
+  id: string;
+  kind: ExtensionPackageArtifactKind;
+  downloadUrl: string;
+  fileName?: string | undefined;
+  mimeType?: string | undefined;
+  sizeBytes?: number | undefined;
+  checksums: ExtensionStoreChecksum[];
+  verification: ExtensionStoreArtifactVerification | undefined;
+  platforms: string[];
+  desktopEnvironments: string[];
+}
+
+export interface ExtensionStoreReleaseNotes {
+  summary?: string | undefined;
+  markdown?: string | undefined;
+  changelogUrl?: string | undefined;
+}
+
 export interface ExtensionStoreRelease {
   version: string;
   downloadUrl: string;
   publishedAt?: string | undefined;
   checksumSha256?: string | undefined;
   changelogUrl?: string | undefined;
+  channel: ExtensionReleaseChannel;
+  channelName?: string | undefined;
+  prerelease: boolean;
+  artifacts: ExtensionStoreArtifact[];
+  primaryArtifactId?: string | undefined;
+  releaseNotes: ExtensionStoreReleaseNotes | undefined;
+  publishedBy?: string | undefined;
 }
 
 export interface ExtensionStorePackage {
@@ -162,11 +323,16 @@ export interface ExtensionStorePackage {
   screenshots: string[];
   manifest: ExtensionManifest | undefined;
   downloadCount?: number | undefined;
+  releases: ExtensionStoreRelease[];
+  defaultChannel: ExtensionReleaseChannel;
+  packageFormatVersion?: string | undefined;
 }
 
 export interface ExtensionStoreCatalog {
   source: ExtensionStoreSource | undefined;
   packages: ExtensionStorePackage[];
+  generatedAt?: string | undefined;
+  formatVersion?: string | undefined;
 }
 
 export interface ExtensionStoreSearchResult {
@@ -813,8 +979,552 @@ export const ExtensionStoreCompatibility: MessageFns<ExtensionStoreCompatibility
   },
 };
 
+function createBaseExtensionStoreChecksum(): ExtensionStoreChecksum {
+  return { algorithm: 0, value: "" };
+}
+
+export const ExtensionStoreChecksum: MessageFns<ExtensionStoreChecksum> = {
+  encode(message: ExtensionStoreChecksum, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.algorithm !== 0) {
+      writer.uint32(8).int32(message.algorithm);
+    }
+    if (message.value !== "") {
+      writer.uint32(18).string(message.value);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ExtensionStoreChecksum {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseExtensionStoreChecksum();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.algorithm = reader.int32() as any;
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.value = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ExtensionStoreChecksum {
+    return {
+      algorithm: isSet(object.algorithm) ? extensionChecksumAlgorithmFromJSON(object.algorithm) : 0,
+      value: isSet(object.value) ? globalThis.String(object.value) : "",
+    };
+  },
+
+  toJSON(message: ExtensionStoreChecksum): unknown {
+    const obj: any = {};
+    if (message.algorithm !== 0) {
+      obj.algorithm = extensionChecksumAlgorithmToJSON(message.algorithm);
+    }
+    if (message.value !== "") {
+      obj.value = message.value;
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<ExtensionStoreChecksum>): ExtensionStoreChecksum {
+    return ExtensionStoreChecksum.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<ExtensionStoreChecksum>): ExtensionStoreChecksum {
+    const message = createBaseExtensionStoreChecksum();
+    message.algorithm = object.algorithm ?? 0;
+    message.value = object.value ?? "";
+    return message;
+  },
+};
+
+function createBaseExtensionStoreArtifactVerification(): ExtensionStoreArtifactVerification {
+  return { signer: undefined, signature: undefined, provenanceUrl: undefined, transparencyLogUrl: undefined };
+}
+
+export const ExtensionStoreArtifactVerification: MessageFns<ExtensionStoreArtifactVerification> = {
+  encode(message: ExtensionStoreArtifactVerification, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.signer !== undefined) {
+      writer.uint32(10).string(message.signer);
+    }
+    if (message.signature !== undefined) {
+      writer.uint32(18).string(message.signature);
+    }
+    if (message.provenanceUrl !== undefined) {
+      writer.uint32(26).string(message.provenanceUrl);
+    }
+    if (message.transparencyLogUrl !== undefined) {
+      writer.uint32(34).string(message.transparencyLogUrl);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ExtensionStoreArtifactVerification {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseExtensionStoreArtifactVerification();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.signer = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.signature = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.provenanceUrl = reader.string();
+          continue;
+        }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.transparencyLogUrl = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ExtensionStoreArtifactVerification {
+    return {
+      signer: isSet(object.signer) ? globalThis.String(object.signer) : undefined,
+      signature: isSet(object.signature) ? globalThis.String(object.signature) : undefined,
+      provenanceUrl: isSet(object.provenanceUrl)
+        ? globalThis.String(object.provenanceUrl)
+        : isSet(object.provenance_url)
+        ? globalThis.String(object.provenance_url)
+        : undefined,
+      transparencyLogUrl: isSet(object.transparencyLogUrl)
+        ? globalThis.String(object.transparencyLogUrl)
+        : isSet(object.transparency_log_url)
+        ? globalThis.String(object.transparency_log_url)
+        : undefined,
+    };
+  },
+
+  toJSON(message: ExtensionStoreArtifactVerification): unknown {
+    const obj: any = {};
+    if (message.signer !== undefined) {
+      obj.signer = message.signer;
+    }
+    if (message.signature !== undefined) {
+      obj.signature = message.signature;
+    }
+    if (message.provenanceUrl !== undefined) {
+      obj.provenanceUrl = message.provenanceUrl;
+    }
+    if (message.transparencyLogUrl !== undefined) {
+      obj.transparencyLogUrl = message.transparencyLogUrl;
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<ExtensionStoreArtifactVerification>): ExtensionStoreArtifactVerification {
+    return ExtensionStoreArtifactVerification.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<ExtensionStoreArtifactVerification>): ExtensionStoreArtifactVerification {
+    const message = createBaseExtensionStoreArtifactVerification();
+    message.signer = object.signer ?? undefined;
+    message.signature = object.signature ?? undefined;
+    message.provenanceUrl = object.provenanceUrl ?? undefined;
+    message.transparencyLogUrl = object.transparencyLogUrl ?? undefined;
+    return message;
+  },
+};
+
+function createBaseExtensionStoreArtifact(): ExtensionStoreArtifact {
+  return {
+    id: "",
+    kind: 0,
+    downloadUrl: "",
+    fileName: undefined,
+    mimeType: undefined,
+    sizeBytes: undefined,
+    checksums: [],
+    verification: undefined,
+    platforms: [],
+    desktopEnvironments: [],
+  };
+}
+
+export const ExtensionStoreArtifact: MessageFns<ExtensionStoreArtifact> = {
+  encode(message: ExtensionStoreArtifact, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.id !== "") {
+      writer.uint32(10).string(message.id);
+    }
+    if (message.kind !== 0) {
+      writer.uint32(16).int32(message.kind);
+    }
+    if (message.downloadUrl !== "") {
+      writer.uint32(26).string(message.downloadUrl);
+    }
+    if (message.fileName !== undefined) {
+      writer.uint32(34).string(message.fileName);
+    }
+    if (message.mimeType !== undefined) {
+      writer.uint32(42).string(message.mimeType);
+    }
+    if (message.sizeBytes !== undefined) {
+      writer.uint32(48).int64(message.sizeBytes);
+    }
+    for (const v of message.checksums) {
+      ExtensionStoreChecksum.encode(v!, writer.uint32(58).fork()).join();
+    }
+    if (message.verification !== undefined) {
+      ExtensionStoreArtifactVerification.encode(message.verification, writer.uint32(66).fork()).join();
+    }
+    for (const v of message.platforms) {
+      writer.uint32(74).string(v!);
+    }
+    for (const v of message.desktopEnvironments) {
+      writer.uint32(82).string(v!);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ExtensionStoreArtifact {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseExtensionStoreArtifact();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.id = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 16) {
+            break;
+          }
+
+          message.kind = reader.int32() as any;
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.downloadUrl = reader.string();
+          continue;
+        }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.fileName = reader.string();
+          continue;
+        }
+        case 5: {
+          if (tag !== 42) {
+            break;
+          }
+
+          message.mimeType = reader.string();
+          continue;
+        }
+        case 6: {
+          if (tag !== 48) {
+            break;
+          }
+
+          message.sizeBytes = longToNumber(reader.int64());
+          continue;
+        }
+        case 7: {
+          if (tag !== 58) {
+            break;
+          }
+
+          message.checksums.push(ExtensionStoreChecksum.decode(reader, reader.uint32()));
+          continue;
+        }
+        case 8: {
+          if (tag !== 66) {
+            break;
+          }
+
+          message.verification = ExtensionStoreArtifactVerification.decode(reader, reader.uint32());
+          continue;
+        }
+        case 9: {
+          if (tag !== 74) {
+            break;
+          }
+
+          message.platforms.push(reader.string());
+          continue;
+        }
+        case 10: {
+          if (tag !== 82) {
+            break;
+          }
+
+          message.desktopEnvironments.push(reader.string());
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ExtensionStoreArtifact {
+    return {
+      id: isSet(object.id) ? globalThis.String(object.id) : "",
+      kind: isSet(object.kind) ? extensionPackageArtifactKindFromJSON(object.kind) : 0,
+      downloadUrl: isSet(object.downloadUrl)
+        ? globalThis.String(object.downloadUrl)
+        : isSet(object.download_url)
+        ? globalThis.String(object.download_url)
+        : "",
+      fileName: isSet(object.fileName)
+        ? globalThis.String(object.fileName)
+        : isSet(object.file_name)
+        ? globalThis.String(object.file_name)
+        : undefined,
+      mimeType: isSet(object.mimeType)
+        ? globalThis.String(object.mimeType)
+        : isSet(object.mime_type)
+        ? globalThis.String(object.mime_type)
+        : undefined,
+      sizeBytes: isSet(object.sizeBytes)
+        ? globalThis.Number(object.sizeBytes)
+        : isSet(object.size_bytes)
+        ? globalThis.Number(object.size_bytes)
+        : undefined,
+      checksums: globalThis.Array.isArray(object?.checksums)
+        ? object.checksums.map((e: any) => ExtensionStoreChecksum.fromJSON(e))
+        : [],
+      verification: isSet(object.verification)
+        ? ExtensionStoreArtifactVerification.fromJSON(object.verification)
+        : undefined,
+      platforms: globalThis.Array.isArray(object?.platforms)
+        ? object.platforms.map((e: any) => globalThis.String(e))
+        : [],
+      desktopEnvironments: globalThis.Array.isArray(object?.desktopEnvironments)
+        ? object.desktopEnvironments.map((e: any) => globalThis.String(e))
+        : globalThis.Array.isArray(object?.desktop_environments)
+        ? object.desktop_environments.map((e: any) => globalThis.String(e))
+        : [],
+    };
+  },
+
+  toJSON(message: ExtensionStoreArtifact): unknown {
+    const obj: any = {};
+    if (message.id !== "") {
+      obj.id = message.id;
+    }
+    if (message.kind !== 0) {
+      obj.kind = extensionPackageArtifactKindToJSON(message.kind);
+    }
+    if (message.downloadUrl !== "") {
+      obj.downloadUrl = message.downloadUrl;
+    }
+    if (message.fileName !== undefined) {
+      obj.fileName = message.fileName;
+    }
+    if (message.mimeType !== undefined) {
+      obj.mimeType = message.mimeType;
+    }
+    if (message.sizeBytes !== undefined) {
+      obj.sizeBytes = Math.round(message.sizeBytes);
+    }
+    if (message.checksums?.length) {
+      obj.checksums = message.checksums.map((e) => ExtensionStoreChecksum.toJSON(e));
+    }
+    if (message.verification !== undefined) {
+      obj.verification = ExtensionStoreArtifactVerification.toJSON(message.verification);
+    }
+    if (message.platforms?.length) {
+      obj.platforms = message.platforms;
+    }
+    if (message.desktopEnvironments?.length) {
+      obj.desktopEnvironments = message.desktopEnvironments;
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<ExtensionStoreArtifact>): ExtensionStoreArtifact {
+    return ExtensionStoreArtifact.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<ExtensionStoreArtifact>): ExtensionStoreArtifact {
+    const message = createBaseExtensionStoreArtifact();
+    message.id = object.id ?? "";
+    message.kind = object.kind ?? 0;
+    message.downloadUrl = object.downloadUrl ?? "";
+    message.fileName = object.fileName ?? undefined;
+    message.mimeType = object.mimeType ?? undefined;
+    message.sizeBytes = object.sizeBytes ?? undefined;
+    message.checksums = object.checksums?.map((e) => ExtensionStoreChecksum.fromPartial(e)) || [];
+    message.verification = (object.verification !== undefined && object.verification !== null)
+      ? ExtensionStoreArtifactVerification.fromPartial(object.verification)
+      : undefined;
+    message.platforms = object.platforms?.map((e) => e) || [];
+    message.desktopEnvironments = object.desktopEnvironments?.map((e) => e) || [];
+    return message;
+  },
+};
+
+function createBaseExtensionStoreReleaseNotes(): ExtensionStoreReleaseNotes {
+  return { summary: undefined, markdown: undefined, changelogUrl: undefined };
+}
+
+export const ExtensionStoreReleaseNotes: MessageFns<ExtensionStoreReleaseNotes> = {
+  encode(message: ExtensionStoreReleaseNotes, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.summary !== undefined) {
+      writer.uint32(10).string(message.summary);
+    }
+    if (message.markdown !== undefined) {
+      writer.uint32(18).string(message.markdown);
+    }
+    if (message.changelogUrl !== undefined) {
+      writer.uint32(26).string(message.changelogUrl);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ExtensionStoreReleaseNotes {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseExtensionStoreReleaseNotes();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.summary = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.markdown = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.changelogUrl = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ExtensionStoreReleaseNotes {
+    return {
+      summary: isSet(object.summary) ? globalThis.String(object.summary) : undefined,
+      markdown: isSet(object.markdown) ? globalThis.String(object.markdown) : undefined,
+      changelogUrl: isSet(object.changelogUrl)
+        ? globalThis.String(object.changelogUrl)
+        : isSet(object.changelog_url)
+        ? globalThis.String(object.changelog_url)
+        : undefined,
+    };
+  },
+
+  toJSON(message: ExtensionStoreReleaseNotes): unknown {
+    const obj: any = {};
+    if (message.summary !== undefined) {
+      obj.summary = message.summary;
+    }
+    if (message.markdown !== undefined) {
+      obj.markdown = message.markdown;
+    }
+    if (message.changelogUrl !== undefined) {
+      obj.changelogUrl = message.changelogUrl;
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<ExtensionStoreReleaseNotes>): ExtensionStoreReleaseNotes {
+    return ExtensionStoreReleaseNotes.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<ExtensionStoreReleaseNotes>): ExtensionStoreReleaseNotes {
+    const message = createBaseExtensionStoreReleaseNotes();
+    message.summary = object.summary ?? undefined;
+    message.markdown = object.markdown ?? undefined;
+    message.changelogUrl = object.changelogUrl ?? undefined;
+    return message;
+  },
+};
+
 function createBaseExtensionStoreRelease(): ExtensionStoreRelease {
-  return { version: "", downloadUrl: "", publishedAt: undefined, checksumSha256: undefined, changelogUrl: undefined };
+  return {
+    version: "",
+    downloadUrl: "",
+    publishedAt: undefined,
+    checksumSha256: undefined,
+    changelogUrl: undefined,
+    channel: 0,
+    channelName: undefined,
+    prerelease: false,
+    artifacts: [],
+    primaryArtifactId: undefined,
+    releaseNotes: undefined,
+    publishedBy: undefined,
+  };
 }
 
 export const ExtensionStoreRelease: MessageFns<ExtensionStoreRelease> = {
@@ -833,6 +1543,27 @@ export const ExtensionStoreRelease: MessageFns<ExtensionStoreRelease> = {
     }
     if (message.changelogUrl !== undefined) {
       writer.uint32(42).string(message.changelogUrl);
+    }
+    if (message.channel !== 0) {
+      writer.uint32(48).int32(message.channel);
+    }
+    if (message.channelName !== undefined) {
+      writer.uint32(58).string(message.channelName);
+    }
+    if (message.prerelease !== false) {
+      writer.uint32(64).bool(message.prerelease);
+    }
+    for (const v of message.artifacts) {
+      ExtensionStoreArtifact.encode(v!, writer.uint32(74).fork()).join();
+    }
+    if (message.primaryArtifactId !== undefined) {
+      writer.uint32(82).string(message.primaryArtifactId);
+    }
+    if (message.releaseNotes !== undefined) {
+      ExtensionStoreReleaseNotes.encode(message.releaseNotes, writer.uint32(90).fork()).join();
+    }
+    if (message.publishedBy !== undefined) {
+      writer.uint32(98).string(message.publishedBy);
     }
     return writer;
   },
@@ -884,6 +1615,62 @@ export const ExtensionStoreRelease: MessageFns<ExtensionStoreRelease> = {
           message.changelogUrl = reader.string();
           continue;
         }
+        case 6: {
+          if (tag !== 48) {
+            break;
+          }
+
+          message.channel = reader.int32() as any;
+          continue;
+        }
+        case 7: {
+          if (tag !== 58) {
+            break;
+          }
+
+          message.channelName = reader.string();
+          continue;
+        }
+        case 8: {
+          if (tag !== 64) {
+            break;
+          }
+
+          message.prerelease = reader.bool();
+          continue;
+        }
+        case 9: {
+          if (tag !== 74) {
+            break;
+          }
+
+          message.artifacts.push(ExtensionStoreArtifact.decode(reader, reader.uint32()));
+          continue;
+        }
+        case 10: {
+          if (tag !== 82) {
+            break;
+          }
+
+          message.primaryArtifactId = reader.string();
+          continue;
+        }
+        case 11: {
+          if (tag !== 90) {
+            break;
+          }
+
+          message.releaseNotes = ExtensionStoreReleaseNotes.decode(reader, reader.uint32());
+          continue;
+        }
+        case 12: {
+          if (tag !== 98) {
+            break;
+          }
+
+          message.publishedBy = reader.string();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -916,6 +1703,31 @@ export const ExtensionStoreRelease: MessageFns<ExtensionStoreRelease> = {
         : isSet(object.changelog_url)
         ? globalThis.String(object.changelog_url)
         : undefined,
+      channel: isSet(object.channel) ? extensionReleaseChannelFromJSON(object.channel) : 0,
+      channelName: isSet(object.channelName)
+        ? globalThis.String(object.channelName)
+        : isSet(object.channel_name)
+        ? globalThis.String(object.channel_name)
+        : undefined,
+      prerelease: isSet(object.prerelease) ? globalThis.Boolean(object.prerelease) : false,
+      artifacts: globalThis.Array.isArray(object?.artifacts)
+        ? object.artifacts.map((e: any) => ExtensionStoreArtifact.fromJSON(e))
+        : [],
+      primaryArtifactId: isSet(object.primaryArtifactId)
+        ? globalThis.String(object.primaryArtifactId)
+        : isSet(object.primary_artifact_id)
+        ? globalThis.String(object.primary_artifact_id)
+        : undefined,
+      releaseNotes: isSet(object.releaseNotes)
+        ? ExtensionStoreReleaseNotes.fromJSON(object.releaseNotes)
+        : isSet(object.release_notes)
+        ? ExtensionStoreReleaseNotes.fromJSON(object.release_notes)
+        : undefined,
+      publishedBy: isSet(object.publishedBy)
+        ? globalThis.String(object.publishedBy)
+        : isSet(object.published_by)
+        ? globalThis.String(object.published_by)
+        : undefined,
     };
   },
 
@@ -936,6 +1748,27 @@ export const ExtensionStoreRelease: MessageFns<ExtensionStoreRelease> = {
     if (message.changelogUrl !== undefined) {
       obj.changelogUrl = message.changelogUrl;
     }
+    if (message.channel !== 0) {
+      obj.channel = extensionReleaseChannelToJSON(message.channel);
+    }
+    if (message.channelName !== undefined) {
+      obj.channelName = message.channelName;
+    }
+    if (message.prerelease !== false) {
+      obj.prerelease = message.prerelease;
+    }
+    if (message.artifacts?.length) {
+      obj.artifacts = message.artifacts.map((e) => ExtensionStoreArtifact.toJSON(e));
+    }
+    if (message.primaryArtifactId !== undefined) {
+      obj.primaryArtifactId = message.primaryArtifactId;
+    }
+    if (message.releaseNotes !== undefined) {
+      obj.releaseNotes = ExtensionStoreReleaseNotes.toJSON(message.releaseNotes);
+    }
+    if (message.publishedBy !== undefined) {
+      obj.publishedBy = message.publishedBy;
+    }
     return obj;
   },
 
@@ -949,6 +1782,15 @@ export const ExtensionStoreRelease: MessageFns<ExtensionStoreRelease> = {
     message.publishedAt = object.publishedAt ?? undefined;
     message.checksumSha256 = object.checksumSha256 ?? undefined;
     message.changelogUrl = object.changelogUrl ?? undefined;
+    message.channel = object.channel ?? 0;
+    message.channelName = object.channelName ?? undefined;
+    message.prerelease = object.prerelease ?? false;
+    message.artifacts = object.artifacts?.map((e) => ExtensionStoreArtifact.fromPartial(e)) || [];
+    message.primaryArtifactId = object.primaryArtifactId ?? undefined;
+    message.releaseNotes = (object.releaseNotes !== undefined && object.releaseNotes !== null)
+      ? ExtensionStoreReleaseNotes.fromPartial(object.releaseNotes)
+      : undefined;
+    message.publishedBy = object.publishedBy ?? undefined;
     return message;
   },
 };
@@ -973,6 +1815,9 @@ function createBaseExtensionStorePackage(): ExtensionStorePackage {
     screenshots: [],
     manifest: undefined,
     downloadCount: undefined,
+    releases: [],
+    defaultChannel: 0,
+    packageFormatVersion: undefined,
   };
 }
 
@@ -1031,6 +1876,15 @@ export const ExtensionStorePackage: MessageFns<ExtensionStorePackage> = {
     }
     if (message.downloadCount !== undefined) {
       writer.uint32(144).int64(message.downloadCount);
+    }
+    for (const v of message.releases) {
+      ExtensionStoreRelease.encode(v!, writer.uint32(154).fork()).join();
+    }
+    if (message.defaultChannel !== 0) {
+      writer.uint32(160).int32(message.defaultChannel);
+    }
+    if (message.packageFormatVersion !== undefined) {
+      writer.uint32(170).string(message.packageFormatVersion);
     }
     return writer;
   },
@@ -1186,6 +2040,30 @@ export const ExtensionStorePackage: MessageFns<ExtensionStorePackage> = {
           message.downloadCount = longToNumber(reader.int64());
           continue;
         }
+        case 19: {
+          if (tag !== 154) {
+            break;
+          }
+
+          message.releases.push(ExtensionStoreRelease.decode(reader, reader.uint32()));
+          continue;
+        }
+        case 20: {
+          if (tag !== 160) {
+            break;
+          }
+
+          message.defaultChannel = reader.int32() as any;
+          continue;
+        }
+        case 21: {
+          if (tag !== 170) {
+            break;
+          }
+
+          message.packageFormatVersion = reader.string();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -1236,6 +2114,19 @@ export const ExtensionStorePackage: MessageFns<ExtensionStorePackage> = {
         ? globalThis.Number(object.downloadCount)
         : isSet(object.download_count)
         ? globalThis.Number(object.download_count)
+        : undefined,
+      releases: globalThis.Array.isArray(object?.releases)
+        ? object.releases.map((e: any) => ExtensionStoreRelease.fromJSON(e))
+        : [],
+      defaultChannel: isSet(object.defaultChannel)
+        ? extensionReleaseChannelFromJSON(object.defaultChannel)
+        : isSet(object.default_channel)
+        ? extensionReleaseChannelFromJSON(object.default_channel)
+        : 0,
+      packageFormatVersion: isSet(object.packageFormatVersion)
+        ? globalThis.String(object.packageFormatVersion)
+        : isSet(object.package_format_version)
+        ? globalThis.String(object.package_format_version)
         : undefined,
     };
   },
@@ -1296,6 +2187,15 @@ export const ExtensionStorePackage: MessageFns<ExtensionStorePackage> = {
     if (message.downloadCount !== undefined) {
       obj.downloadCount = Math.round(message.downloadCount);
     }
+    if (message.releases?.length) {
+      obj.releases = message.releases.map((e) => ExtensionStoreRelease.toJSON(e));
+    }
+    if (message.defaultChannel !== 0) {
+      obj.defaultChannel = extensionReleaseChannelToJSON(message.defaultChannel);
+    }
+    if (message.packageFormatVersion !== undefined) {
+      obj.packageFormatVersion = message.packageFormatVersion;
+    }
     return obj;
   },
 
@@ -1336,12 +2236,15 @@ export const ExtensionStorePackage: MessageFns<ExtensionStorePackage> = {
       ? ExtensionManifest.fromPartial(object.manifest)
       : undefined;
     message.downloadCount = object.downloadCount ?? undefined;
+    message.releases = object.releases?.map((e) => ExtensionStoreRelease.fromPartial(e)) || [];
+    message.defaultChannel = object.defaultChannel ?? 0;
+    message.packageFormatVersion = object.packageFormatVersion ?? undefined;
     return message;
   },
 };
 
 function createBaseExtensionStoreCatalog(): ExtensionStoreCatalog {
-  return { source: undefined, packages: [] };
+  return { source: undefined, packages: [], generatedAt: undefined, formatVersion: undefined };
 }
 
 export const ExtensionStoreCatalog: MessageFns<ExtensionStoreCatalog> = {
@@ -1351,6 +2254,12 @@ export const ExtensionStoreCatalog: MessageFns<ExtensionStoreCatalog> = {
     }
     for (const v of message.packages) {
       ExtensionStorePackage.encode(v!, writer.uint32(18).fork()).join();
+    }
+    if (message.generatedAt !== undefined) {
+      writer.uint32(26).string(message.generatedAt);
+    }
+    if (message.formatVersion !== undefined) {
+      writer.uint32(34).string(message.formatVersion);
     }
     return writer;
   },
@@ -1378,6 +2287,22 @@ export const ExtensionStoreCatalog: MessageFns<ExtensionStoreCatalog> = {
           message.packages.push(ExtensionStorePackage.decode(reader, reader.uint32()));
           continue;
         }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.generatedAt = reader.string();
+          continue;
+        }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.formatVersion = reader.string();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -1393,6 +2318,16 @@ export const ExtensionStoreCatalog: MessageFns<ExtensionStoreCatalog> = {
       packages: globalThis.Array.isArray(object?.packages)
         ? object.packages.map((e: any) => ExtensionStorePackage.fromJSON(e))
         : [],
+      generatedAt: isSet(object.generatedAt)
+        ? globalThis.String(object.generatedAt)
+        : isSet(object.generated_at)
+        ? globalThis.String(object.generated_at)
+        : undefined,
+      formatVersion: isSet(object.formatVersion)
+        ? globalThis.String(object.formatVersion)
+        : isSet(object.format_version)
+        ? globalThis.String(object.format_version)
+        : undefined,
     };
   },
 
@@ -1403,6 +2338,12 @@ export const ExtensionStoreCatalog: MessageFns<ExtensionStoreCatalog> = {
     }
     if (message.packages?.length) {
       obj.packages = message.packages.map((e) => ExtensionStorePackage.toJSON(e));
+    }
+    if (message.generatedAt !== undefined) {
+      obj.generatedAt = message.generatedAt;
+    }
+    if (message.formatVersion !== undefined) {
+      obj.formatVersion = message.formatVersion;
     }
     return obj;
   },
@@ -1416,6 +2357,8 @@ export const ExtensionStoreCatalog: MessageFns<ExtensionStoreCatalog> = {
       ? ExtensionStoreSource.fromPartial(object.source)
       : undefined;
     message.packages = object.packages?.map((e) => ExtensionStorePackage.fromPartial(e)) || [];
+    message.generatedAt = object.generatedAt ?? undefined;
+    message.formatVersion = object.formatVersion ?? undefined;
     return message;
   },
 };

@@ -170,12 +170,14 @@ export function DesktopIntegrationSettings() {
           </div>
 
           <div className="grid gap-3 px-4 py-4 md:grid-cols-2">
-            <SummaryCard label="Session Type" value={status?.sessionType ?? "loading"} icon={Monitor} />
+            <SummaryCard
+              label="Session Type"
+              value={status?.sessionType ?? "loading"}
+              icon={Monitor}
+            />
             <SummaryCard
               label="Desktop"
-              value={
-                status ? `${status.desktopEnvironment} / ${status.compositor}` : "loading"
-              }
+              value={status ? `${status.desktopEnvironment} / ${status.compositor}` : "loading"}
               icon={Wrench}
             />
             <SummaryCard
@@ -203,8 +205,8 @@ export function DesktopIntegrationSettings() {
               value={
                 status
                   ? status.waylandHelper.available
-                    ? status.waylandHelper.backend ?? "available"
-                    : status.waylandHelper.lastError ?? "unavailable"
+                    ? (status.waylandHelper.backend ?? "available")
+                    : (status.waylandHelper.lastError ?? "unavailable")
                   : "loading"
               }
               icon={Wrench}
@@ -374,7 +376,9 @@ export function DesktopIntegrationSettings() {
             </div>
 
             {gnomeExtension?.path ? (
-              <p className="mt-3 break-all text-[11px] text-muted-foreground">{gnomeExtension.path}</p>
+              <p className="mt-3 break-all text-[11px] text-muted-foreground">
+                {gnomeExtension.path}
+              </p>
             ) : null}
           </div>
         ) : null}

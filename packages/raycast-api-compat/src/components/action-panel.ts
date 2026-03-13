@@ -1,1 +1,1 @@
-export { ActionPanel } from "@beam/api";
+export { ActionPanel } from "@beam-launcher/api";

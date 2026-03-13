@@ -1,5 +1,5 @@
 import Module from "module";
-import * as beamApi from "@beam/api";
+import * as beamApi from "@beam-launcher/api";
 import * as raycastApiCompat from "@beam/raycast-api-compat";
 import React from "react";
 import * as ReactJsxRuntime from "react/jsx-runtime";
@@ -39,7 +39,7 @@ export const patchRequire = (pluginPath: string) => {
       };
     }
 
-    if (moduleName.startsWith("@beam/api")) {
+    if (moduleName.startsWith("@beam-launcher/api")) {
       return beamApi;
     }
 

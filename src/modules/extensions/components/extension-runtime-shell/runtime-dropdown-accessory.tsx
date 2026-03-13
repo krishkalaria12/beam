@@ -10,10 +10,7 @@ interface RuntimeDropdownAccessoryProps {
   state: UseExtensionRunnerStateResult;
 }
 
-export function RuntimeDropdownAccessory({
-  nodeId,
-  state,
-}: RuntimeDropdownAccessoryProps) {
+export function RuntimeDropdownAccessory({ nodeId, state }: RuntimeDropdownAccessoryProps) {
   const node = state.uiTree.get(nodeId);
   if (!node) {
     return null;
@@ -28,7 +25,9 @@ export function RuntimeDropdownAccessory({
   const dropdownItems = getDropdownItems(node, state.uiTree);
   const dropdownItemByValue = new Map(dropdownItems.map((item) => [item.value, item]));
   const [internalValue, setInternalValue] = useState<string | undefined>(
-    asString(node.props.value).trim() || asString(node.props.defaultValue).trim() || dropdownItems[0]?.value,
+    asString(node.props.value).trim() ||
+      asString(node.props.defaultValue).trim() ||
+      dropdownItems[0]?.value,
   );
 
   const placeholder = asString(node.props.placeholder, "Select option");

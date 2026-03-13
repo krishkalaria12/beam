@@ -1,6 +1,12 @@
 import { useMemo } from "react";
 
-import { EmptyView, ListAccessoryRow, ListItem, SectionHeader, SplitView } from "@/components/module";
+import {
+  EmptyView,
+  ListAccessoryRow,
+  ListItem,
+  SectionHeader,
+  SplitView,
+} from "@/components/module";
 import { RunnerIcon } from "@/modules/extensions/components/runner/nodes/shared/runner-icon";
 import type { ListEntry } from "@/modules/extensions/components/runner/types";
 import type { UseExtensionRunnerStateResult } from "@/modules/extensions/components/runner/use-extension-runner-state";
@@ -17,7 +23,12 @@ interface RuntimeListViewProps {
 export function RuntimeListView({ state }: RuntimeListViewProps) {
   const rootNode = state.rootNode;
   const rows = useMemo(() => {
-    const output: Array<{ type: "section" | "item"; title?: string; entry?: ListEntry; index?: number }> = [];
+    const output: Array<{
+      type: "section" | "item";
+      title?: string;
+      entry?: ListEntry;
+      index?: number;
+    }> = [];
     let previousSectionTitle: string | undefined;
 
     state.currentEntries.forEach((entry, index) => {
@@ -32,7 +43,9 @@ export function RuntimeListView({ state }: RuntimeListViewProps) {
     return output;
   }, [state.currentEntries]);
 
-  const showDetail = Boolean(asBoolean(rootNode?.props.isShowingDetail) && state.selectedEntry?.detailNodeId);
+  const showDetail = Boolean(
+    asBoolean(rootNode?.props.isShowingDetail) && state.selectedEntry?.detailNodeId,
+  );
   const detailNodeId = state.selectedEntry?.detailNodeId;
 
   return (
@@ -53,7 +66,11 @@ export function RuntimeListView({ state }: RuntimeListViewProps) {
               {rows.map((row, rowIndex) => {
                 if (row.type === "section") {
                   return (
-                    <SectionHeader key={`section:${row.title}:${rowIndex}`} title={row.title} className="pt-2" />
+                    <SectionHeader
+                      key={`section:${row.title}:${rowIndex}`}
+                      title={row.title}
+                      className="pt-2"
+                    />
                   );
                 }
 
@@ -66,7 +83,9 @@ export function RuntimeListView({ state }: RuntimeListViewProps) {
                 const icon = node.props.icon;
                 const accessories = Array.isArray(node.props.accessories)
                   ? node.props.accessories
-                      .map((accessory, accessoryIndex) => readAccessory(accessory, node.id, accessoryIndex))
+                      .map((accessory, accessoryIndex) =>
+                        readAccessory(accessory, node.id, accessoryIndex),
+                      )
                       .filter((value): value is AccessoryDescriptor => value !== null)
                   : [];
 
@@ -78,7 +97,13 @@ export function RuntimeListView({ state }: RuntimeListViewProps) {
                     onMouseEnter={() => state.setSelectedIndex(row.index!)}
                     onDoubleClick={() => state.runPrimarySelectionAction()}
                     showAccentBar
-                    leftSlot={icon ? <RunnerIcon icon={icon} className="size-5" /> : <span className="size-5" />}
+                    leftSlot={
+                      icon ? (
+                        <RunnerIcon icon={icon} className="size-5" />
+                      ) : (
+                        <span className="size-5" />
+                      )
+                    }
                     rightSlot={
                       accessories.length > 0 ? (
                         <ListAccessoryRow
@@ -86,7 +111,9 @@ export function RuntimeListView({ state }: RuntimeListViewProps) {
                             key: accessory.key,
                             text: accessory.text ?? "",
                             accentColor: accessory.color,
-                            icon: accessory.icon ? <RunnerIcon icon={accessory.icon} className="size-3.5" /> : undefined,
+                            icon: accessory.icon ? (
+                              <RunnerIcon icon={accessory.icon} className="size-3.5" />
+                            ) : undefined,
                             tooltip: accessory.tooltip,
                           }))}
                         />
@@ -94,7 +121,9 @@ export function RuntimeListView({ state }: RuntimeListViewProps) {
                     }
                   >
                     <ListItem.Title>{entry.title}</ListItem.Title>
-                    {entry.subtitle ? <ListItem.Description>{entry.subtitle}</ListItem.Description> : null}
+                    {entry.subtitle ? (
+                      <ListItem.Description>{entry.subtitle}</ListItem.Description>
+                    ) : null}
                   </ListItem>
                 );
               })}
