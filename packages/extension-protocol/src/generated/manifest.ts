@@ -52,6 +52,7 @@ export interface ExtensionManifest {
   owner?: string | undefined;
   commands: CommandManifest[];
   preferences: PreferenceDefinition[];
+  version?: string | undefined;
 }
 
 export interface DiscoveredPlugin {
@@ -68,6 +69,7 @@ export interface DiscoveredPlugin {
   interval?: string | undefined;
   author: ManifestAuthor | undefined;
   owner?: string | undefined;
+  version?: string | undefined;
 }
 
 function createBaseAuthorName(): AuthorName {
@@ -643,6 +645,7 @@ function createBaseExtensionManifest(): ExtensionManifest {
     owner: undefined,
     commands: [],
     preferences: [],
+    version: undefined,
   };
 }
 
@@ -671,6 +674,9 @@ export const ExtensionManifest: MessageFns<ExtensionManifest> = {
     }
     for (const v of message.preferences) {
       PreferenceDefinition.encode(v!, writer.uint32(66).fork()).join();
+    }
+    if (message.version !== undefined) {
+      writer.uint32(74).string(message.version);
     }
     return writer;
   },
@@ -746,6 +752,14 @@ export const ExtensionManifest: MessageFns<ExtensionManifest> = {
           message.preferences.push(PreferenceDefinition.decode(reader, reader.uint32()));
           continue;
         }
+        case 9: {
+          if (tag !== 74) {
+            break;
+          }
+
+          message.version = reader.string();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -769,6 +783,7 @@ export const ExtensionManifest: MessageFns<ExtensionManifest> = {
       preferences: globalThis.Array.isArray(object?.preferences)
         ? object.preferences.map((e: any) => PreferenceDefinition.fromJSON(e))
         : [],
+      version: isSet(object.version) ? globalThis.String(object.version) : undefined,
     };
   },
 
@@ -798,6 +813,9 @@ export const ExtensionManifest: MessageFns<ExtensionManifest> = {
     if (message.preferences?.length) {
       obj.preferences = message.preferences.map((e) => PreferenceDefinition.toJSON(e));
     }
+    if (message.version !== undefined) {
+      obj.version = message.version;
+    }
     return obj;
   },
 
@@ -816,6 +834,7 @@ export const ExtensionManifest: MessageFns<ExtensionManifest> = {
     message.owner = object.owner ?? undefined;
     message.commands = object.commands?.map((e) => CommandManifest.fromPartial(e)) || [];
     message.preferences = object.preferences?.map((e) => PreferenceDefinition.fromPartial(e)) || [];
+    message.version = object.version ?? undefined;
     return message;
   },
 };
@@ -835,6 +854,7 @@ function createBaseDiscoveredPlugin(): DiscoveredPlugin {
     interval: undefined,
     author: undefined,
     owner: undefined,
+    version: undefined,
   };
 }
 
@@ -878,6 +898,9 @@ export const DiscoveredPlugin: MessageFns<DiscoveredPlugin> = {
     }
     if (message.owner !== undefined) {
       writer.uint32(106).string(message.owner);
+    }
+    if (message.version !== undefined) {
+      writer.uint32(114).string(message.version);
     }
     return writer;
   },
@@ -993,6 +1016,14 @@ export const DiscoveredPlugin: MessageFns<DiscoveredPlugin> = {
           message.owner = reader.string();
           continue;
         }
+        case 14: {
+          if (tag !== 114) {
+            break;
+          }
+
+          message.version = reader.string();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -1039,6 +1070,7 @@ export const DiscoveredPlugin: MessageFns<DiscoveredPlugin> = {
       interval: isSet(object.interval) ? globalThis.String(object.interval) : undefined,
       author: isSet(object.author) ? ManifestAuthor.fromJSON(object.author) : undefined,
       owner: isSet(object.owner) ? globalThis.String(object.owner) : undefined,
+      version: isSet(object.version) ? globalThis.String(object.version) : undefined,
     };
   },
 
@@ -1083,6 +1115,9 @@ export const DiscoveredPlugin: MessageFns<DiscoveredPlugin> = {
     if (message.owner !== undefined) {
       obj.owner = message.owner;
     }
+    if (message.version !== undefined) {
+      obj.version = message.version;
+    }
     return obj;
   },
 
@@ -1106,6 +1141,7 @@ export const DiscoveredPlugin: MessageFns<DiscoveredPlugin> = {
       ? ManifestAuthor.fromPartial(object.author)
       : undefined;
     message.owner = object.owner ?? undefined;
+    message.version = object.version ?? undefined;
     return message;
   },
 };

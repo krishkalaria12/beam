@@ -3,6 +3,8 @@ import type {
   DiscoveredPluginRecord as PluginInfo,
   ExtensionAuthor as Author,
   ExtensionPreference as Preference,
+  ExtensionStoreListingRecord,
+  ExtensionStoreUpdateRecord,
 } from "@beam/extension-protocol";
 
 export type { Author, Preference, PluginInfo };
@@ -22,32 +24,10 @@ export const installResultSchema = z.discriminatedUnion("status", [
   }),
 ]);
 
-export const extensionStoreListingSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  title: z.string(),
-  description: z.string().default(""),
-  download_url: z.string().url(),
-  icons: z
-    .object({
-      light: z.string().nullish(),
-      dark: z.string().nullish(),
-    })
-    .nullish(),
-  author: z.object({
-    handle: z.string(),
-    name: z.string().optional(),
-    avatar: z.string().nullish().optional(),
-  }),
-});
-
-export const extensionStoreSearchResponseSchema = z.object({
-  data: z.array(extensionStoreListingSchema),
-});
-
 export type HeuristicViolation = z.infer<typeof heuristicViolationSchema>;
 export type InstallResult = z.infer<typeof installResultSchema>;
-export type ExtensionStoreListing = z.infer<typeof extensionStoreListingSchema>;
+export type ExtensionStoreListing = ExtensionStoreListingRecord;
+export type ExtensionStoreUpdate = ExtensionStoreUpdateRecord;
 
 export interface InstallExtensionInput {
   downloadUrl: string;
@@ -83,6 +63,7 @@ export interface InstalledExtensionSummary {
   title: string;
   owner: string;
   description: string;
+  version: string | null;
   commandCount: number;
   icon: string | null;
   pluginName: string | null;

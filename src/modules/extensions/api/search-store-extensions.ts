@@ -1,11 +1,10 @@
-import {
-  extensionStoreSearchResponseSchema,
-  type ExtensionStoreListing,
-} from "@/modules/extensions/types";
+import { invoke, isTauri } from "@tauri-apps/api/core";
+import { parseExtensionStoreSearchResult } from "@beam/extension-protocol";
+
+import type { ExtensionStoreListing } from "@/modules/extensions/types";
 import {
   EXTENSIONS_STORE_SEARCH_DEFAULT_LIMIT,
   EXTENSIONS_STORE_SEARCH_MAX_LIMIT,
-  EXTENSIONS_STORE_SEARCH_URL,
 } from "@/modules/extensions/constants";
 
 export async function searchStoreExtensions(
@@ -17,21 +16,18 @@ export async function searchStoreExtensions(
     return [];
   }
 
-  const params = new URLSearchParams({
-    q: normalizedQuery,
-    per_page: String(Math.max(1, Math.min(limit, EXTENSIONS_STORE_SEARCH_MAX_LIMIT))),
-  });
-
-  const response = await fetch(`${EXTENSIONS_STORE_SEARCH_URL}?${params.toString()}`);
-  if (!response.ok) {
-    throw new Error(`store search failed with status ${response.status}`);
+  if (!isTauri()) {
+    return [];
   }
 
-  const body = await response.json();
-  const parsed = extensionStoreSearchResponseSchema.safeParse(body);
-  if (!parsed.success) {
+  const body = await invoke<unknown>("search_extension_store", {
+    query: normalizedQuery,
+    limit: Math.max(1, Math.min(limit, EXTENSIONS_STORE_SEARCH_MAX_LIMIT)),
+  });
+  const parsed = parseExtensionStoreSearchResult(body);
+  if (!parsed) {
     throw new Error("invalid store search response");
   }
 
-  return parsed.data.data;
+  return parsed;
 }

@@ -1,5 +1,4 @@
-import { ModuleFooter } from "@/components/module";
-import { Button } from "@/components/ui/button";
+import { ActionListPanel, ModuleFooter } from "@/components/module";
 import { RunnerToast } from "@/modules/extensions/components/runner/runner-toast";
 import type { FlattenedAction } from "@/modules/extensions/components/runner/types";
 import type { ExtensionToast } from "@/modules/extensions/runtime/store";
@@ -29,21 +28,6 @@ export function RunnerActionBar({
       .filter((part) => part.length > 0);
   };
 
-  const actionElements = actions.map((action) => {
-    const keys = parseShortcut(action.shortcut);
-    return (
-      <Button
-        key={action.nodeId}
-        size="sm"
-        variant={action.style === "destructive" ? "destructive" : "outline"}
-        onClick={() => onExecuteAction(action)}
-        className="h-8 gap-1.5 bg-[var(--launcher-card-bg)] text-foreground border-[var(--launcher-card-border)] hover:bg-[var(--launcher-card-hover-bg)]"
-      >
-        <span className="truncate">{action.title}</span>
-      </Button>
-    );
-  });
-
   return (
     <ModuleFooter
       className="h-auto min-h-[48px] py-2"
@@ -56,9 +40,25 @@ export function RunnerActionBar({
           <span>Extension actions</span>
         )
       }
-      shortcuts={[{ keys: ["Esc"], label: "Back" }, ...actions.filter(a => a.shortcut).map(a => ({ keys: parseShortcut(a.shortcut), label: a.title }))]}
-      actions={actionElements.length > 0 ? <>{actionElements}</> : undefined}
+      shortcuts={[
+        { keys: ["Esc"], label: "Back" },
+        ...actions
+          .filter((action) => action.shortcut)
+          .map((action) => ({ keys: parseShortcut(action.shortcut), label: action.title })),
+      ]}
+      actions={
+        actions.length > 0 ? (
+          <ActionListPanel
+            items={actions.map((action) => ({
+              key: String(action.nodeId),
+              title: action.title,
+              shortcut: parseShortcut(action.shortcut),
+              danger: action.style === "destructive",
+              onSelect: () => onExecuteAction(action),
+            }))}
+          />
+        ) : undefined
+      }
     />
   );
 }
-

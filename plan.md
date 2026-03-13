@@ -60,7 +60,8 @@ Today:
 - `packages/beam-api/` exists as the native SDK package
 - SDK concerns, runtime concerns, and host concerns are now split cleanly enough that `@beam/api` no longer exposes runtime-factory code
 - Raycast compatibility is now package-scoped, and extension manager owns the concrete host-side primitives behind the runtime factories
-- there is no Beam-native store/package/update layer yet
+- Beam now has a native store/catalog backend contract, but the visible store UI has not been migrated yet
+- the extension runtime UI has been moved off the old node-renderer path onto a Vicinae-style shell with reusable module primitives
 
 ## Progress Snapshot
 
@@ -74,6 +75,7 @@ Completed so far:
   - `output.proto`
   - `render.proto`
   - `rpc.proto`
+  - `store.proto`
   - `storage.proto`
   - `ui.proto`
 - `packages/extension-protocol/` added as the generated TypeScript protocol package
@@ -137,13 +139,43 @@ Current migration status:
 - Phase 3: substantially complete
 - Phase 4: partially complete through `packages/beam-api/`
 - Phase 6: in progress for environment, storage, launch, preferences, manager control, rpc, render, diagnostics, and manifest/discovery
+- Beam-native store backend is now in place for search, detail lookup, and update resolution through `src-tauri/src/extensions/store.rs`
+- frontend API plumbing now reads store data from generated `@beam/extension-protocol` store types instead of Raycast HTTP response schemas
+- old extension runtime node renderer files have been removed and replaced by a shell-based runtime surface:
+  - `src/modules/extensions/components/extension-runtime-shell.tsx`
+  - `src/modules/extensions/components/extension-runtime-shell/*`
+- the old extension manager setup/store section UI has been removed in favor of a single split-view surface:
+  - `src/modules/extensions/components/extensions-view.tsx`
+- reusable module components now cover the first Vicinae-style UI layer:
+  - `EmptyView`
+  - `SectionHeader`
+  - `SplitView`
+  - `MetadataBar`
+  - `FormField`
+  - `MarkdownView`
+  - `DetailView`
+- extension-facing reusable controls now cover the remaining small Vicinae-style shell pieces:
+  - `SearchableDropdown`
+  - `ListAccessory`
+  - `ListAccessoryRow`
+  - `ActionListPanel`
+- extension detail markdown now uses `streamdown` through the shared `MarkdownView` / `DetailView` path instead of a raw `<pre>` renderer
+- the extension runtime shell frontend is now modularized by runtime mode with shared helpers consolidated into:
+  - `src/modules/extensions/components/extension-runtime-shell/utils.ts`
+  - `runtime-list-view.tsx`
+  - `runtime-grid-view.tsx`
+  - `runtime-form-view.tsx`
+  - `runtime-detail-view.tsx`
+  - `runtime-dropdown-accessory.tsx`
+  - `runtime-action-footer.tsx`
 
 Known remaining gap:
 
-- `packages/beam-api/` still carries transitional runtime factories alongside the public SDK and should become pure public API surface
 - `packages/raycast-api-compat/` now owns an explicit Raycast-shaped export surface, but it still depends on Beam-native runtime behavior underneath
 - `packages/extension-manager/` still has Beam-specific host adapter files that are correct but not yet as cleanly isolated as Vicinae’s final shape
-- Beam-native store/package/update/verification architecture has not been built yet
+- Beam-native store presentation, install/detail UX, and update surfacing are still pending on the UI side
+- Beam still does not have the full Beam-native extension publication/update workflow on top of the store/catalog contract
+- higher-level generic list/grid/form wrappers are still optional frontend cleanup work, not the main architecture blocker now
 
 ## Core Principles
 
@@ -398,10 +430,11 @@ These are now complete.
 
 Revised immediate next steps:
 
-1. Continue hardening `packages/raycast-api-compat` as the real Raycast-facing compatibility surface
-2. Start Beam-native store/package/update schema work on top of the manifest contract
-3. Add Beam-native packaging, catalog, and update metadata on top of the manifest/protocol contract
+1. Build the Beam-native extension publication/update workflow on top of `store.proto`, `manifest.proto`, and `store/catalog.json`
+2. Wire install/update flows end-to-end around Beam-native package metadata instead of treating the catalog as just a search source
+3. Continue hardening `packages/raycast-api-compat` as the real Raycast-facing compatibility surface
 4. Split any remaining Beam-specific host adapter code in `packages/extension-manager/src/api/*` into cleaner internal adapter layers where it improves clarity
+5. Move the store UI/search/install/update presentation fully onto the native Beam catalog contract once the package/update workflow is stable
 
 ## Current Transition Notes
 
@@ -410,7 +443,12 @@ Revised immediate next steps:
 - `packages/extension-manager/` now resolves `@beam/api` and `@raycast/api` through package boundaries
 - runtime API assembly now lives in `packages/extension-manager/src/runtime/create-api.ts`
 - extension manager now follows the Vicinae-style `globals` / `patch-require` / `worker` / `loaders` shape
+- `src-tauri/src/extensions/store.rs` now owns Beam-native catalog loading, search, detail lookup, and update detection
+- `store/catalog.json` is now the repo-native catalog source, with optional runtime override through env/config later
 - `@beam/api/runtime` has been removed, so the runtime factory is no longer part of the public SDK surface
+- extension runtime/detail UI is now on the shared module-component path instead of the old per-node renderer path
+- markdown/detail rendering is now modular and shared through `src/components/module/markdown-view.tsx` and `detail-view.tsx`
+- the extension runtime shell is now split into view-specific modules and shared helper utilities, and its remaining small reusable controls are on shared module components
 - this is transitional, not the final native protocol architecture
 
 ## Decision

@@ -2314,32 +2314,38 @@
   }
 }
 
-/* AI prose styling for markdown content */
-.ai-prose {
+/* Shared prose styling for markdown content */
+.ai-prose,
+.module-markdown {
   color: var(--foreground);
   font-size: 13px;
   line-height: 1.65;
   letter-spacing: -0.01em;
 }
 
-.ai-prose p {
+.ai-prose p,
+.module-markdown p {
   margin-bottom: 0.75em;
 }
 
-.ai-prose p:last-child {
+.ai-prose p:last-child,
+.module-markdown p:last-child {
   margin-bottom: 0;
 }
 
-.ai-prose strong {
+.ai-prose strong,
+.module-markdown strong {
   color: var(--foreground);
   font-weight: 600;
 }
 
-.ai-prose em {
+.ai-prose em,
+.module-markdown em {
   color: var(--muted-foreground);
 }
 
-.ai-prose code {
+.ai-prose code,
+.module-markdown code {
   background: var(--launcher-chip-bg);
   border-radius: 4px;
   padding: 0.15em 0.35em;
@@ -2348,7 +2354,8 @@
   color: var(--ring);
 }
 
-.ai-prose pre {
+.ai-prose pre,
+.module-markdown pre {
   background: var(--launcher-card-bg);
   border-radius: 8px;
   padding: 0.875rem 1rem;
@@ -2357,7 +2364,8 @@
   border: 1px solid var(--launcher-card-border);
 }
 
-.ai-prose pre code {
+.ai-prose pre code,
+.module-markdown pre code {
   background: transparent;
   padding: 0;
   color: var(--foreground);
@@ -2366,31 +2374,38 @@
 }
 
 .ai-prose ul,
-.ai-prose ol {
+.ai-prose ol,
+.module-markdown ul,
+.module-markdown ol {
   margin: 0.5em 0;
   padding-left: 1.25em;
 }
 
-.ai-prose li {
+.ai-prose li,
+.module-markdown li {
   margin-bottom: 0.25em;
 }
 
-.ai-prose li::marker {
+.ai-prose li::marker,
+.module-markdown li::marker {
   color: var(--muted-foreground);
 }
 
-.ai-prose a {
+.ai-prose a,
+.module-markdown a {
   color: var(--ring);
   text-decoration: none;
   border-bottom: 1px solid var(--launcher-card-selected-border);
   transition: border-color 150ms ease;
 }
 
-.ai-prose a:hover {
+.ai-prose a:hover,
+.module-markdown a:hover {
   border-color: var(--ring);
 }
 
-.ai-prose blockquote {
+.ai-prose blockquote,
+.module-markdown blockquote {
   border-left: 2px solid var(--launcher-card-selected-border);
   padding-left: 1em;
   margin: 0.75em 0;
@@ -2403,7 +2418,13 @@
 .ai-prose h3,
 .ai-prose h4,
 .ai-prose h5,
-.ai-prose h6 {
+.ai-prose h6,
+.module-markdown h1,
+.module-markdown h2,
+.module-markdown h3,
+.module-markdown h4,
+.module-markdown h5,
+.module-markdown h6 {
   color: var(--foreground);
   font-weight: 600;
   letter-spacing: -0.02em;
@@ -2413,29 +2434,37 @@
 
 .ai-prose h1:first-child,
 .ai-prose h2:first-child,
-.ai-prose h3:first-child {
+.ai-prose h3:first-child,
+.module-markdown h1:first-child,
+.module-markdown h2:first-child,
+.module-markdown h3:first-child {
   margin-top: 0;
 }
 
-.ai-prose h1 {
+.ai-prose h1,
+.module-markdown h1 {
   font-size: 1.35em;
 }
 
-.ai-prose h2 {
+.ai-prose h2,
+.module-markdown h2 {
   font-size: 1.2em;
 }
 
-.ai-prose h3 {
+.ai-prose h3,
+.module-markdown h3 {
   font-size: 1.1em;
 }
 
-.ai-prose hr {
+.ai-prose hr,
+.module-markdown hr {
   border: none;
   border-top: 1px solid var(--launcher-card-border);
   margin: 1.25em 0;
 }
 
-.ai-prose table {
+.ai-prose table,
+.module-markdown table {
   width: 100%;
   border-collapse: collapse;
   margin: 0.75em 0;
@@ -2443,13 +2472,16 @@
 }
 
 .ai-prose th,
-.ai-prose td {
+.ai-prose td,
+.module-markdown th,
+.module-markdown td {
   border: 1px solid var(--launcher-card-border);
   padding: 0.5em 0.75em;
   text-align: left;
 }
 
-.ai-prose th {
+.ai-prose th,
+.module-markdown th {
   background: var(--launcher-card-hover-bg);
   font-weight: 600;
   color: var(--foreground);

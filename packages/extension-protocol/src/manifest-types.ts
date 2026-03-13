@@ -41,6 +41,7 @@ export interface ExtensionManifestRecord {
   icon?: string;
   author?: ExtensionAuthor;
   owner?: string;
+  version?: string;
   commands: ExtensionCommandManifestRecord[];
   preferences: ExtensionPreference[];
 }
@@ -59,6 +60,7 @@ export interface DiscoveredPluginRecord {
   interval?: string;
   author?: ExtensionAuthor;
   owner?: string;
+  version?: string;
 }
 
 function normalizeOptionalString(value: string | null | undefined): string | undefined {
@@ -154,6 +156,7 @@ export function parseExtensionManifest(raw: unknown): ExtensionManifestRecord | 
       icon: normalizeOptionalString(manifest.icon),
       author: normalizeAuthor(manifest.author),
       owner: normalizeOptionalString(manifest.owner),
+      version: normalizeOptionalString(manifest.version),
       commands: manifest.commands
         .map((command) => normalizeCommand(command))
         .filter((command): command is ExtensionCommandManifestRecord => command !== null),
@@ -191,6 +194,7 @@ export function parseDiscoveredPlugin(raw: unknown): DiscoveredPluginRecord | nu
       interval: normalizeOptionalString(plugin.interval),
       author: normalizeAuthor(plugin.author),
       owner: normalizeOptionalString(plugin.owner),
+      version: normalizeOptionalString(plugin.version),
     };
   } catch {
     return null;

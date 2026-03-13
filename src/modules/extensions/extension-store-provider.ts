@@ -81,16 +81,17 @@ function toInstallCommand(entry: ExtensionStoreListing): CommandDescriptor {
     keywords: [
       "extension",
       "install extension",
-      "raycast extension",
+      "beam extension",
       entry.title,
       entry.name,
       entry.description,
       author,
       fullSlug,
     ]
+      .filter((part): part is string => typeof part === "string")
       .map((part) => part.trim())
       .filter((part) => part.length > 0),
-    endText: "raycast store",
+    endText: "beam store",
     icon: iconReference ? `extension-icon:${iconReference}` : "extension",
     kind: "provider-item",
     scope: EXTENSIONS_PROVIDER_SCOPE,

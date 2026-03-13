@@ -597,6 +597,7 @@ dependencies = [
  "rkyv",
  "rmp-serde",
  "scraper",
+ "semver",
  "serde",
  "serde_json",
  "sha2",

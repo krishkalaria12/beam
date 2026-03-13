@@ -50,6 +50,7 @@ message ExtensionManifest {
   optional string owner = 6;
   repeated CommandManifest commands = 7;
   repeated PreferenceDefinition preferences = 8;
+  optional string version = 9;
 }
 
 message DiscoveredPlugin {
@@ -66,4 +67,5 @@ message DiscoveredPlugin {
   optional string interval = 11;
   ManifestAuthor author = 12;
   optional string owner = 13;
+  optional string version = 14;
 }

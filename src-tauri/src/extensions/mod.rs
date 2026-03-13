@@ -3,6 +3,7 @@ pub(crate) mod config;
 pub mod error;
 pub mod oauth;
 pub mod runtime;
+pub mod store;
 
 use std::fs;
 use std::io::{self, Cursor, Read};
@@ -434,6 +435,7 @@ struct RawPackageJson {
     icon: Option<String>,
     author: Option<RawAuthor>,
     owner: Option<String>,
+    version: Option<String>,
     commands: Option<Vec<RawCommandInfo>>,
     preferences: Option<Vec<RawPreference>>,
 }
@@ -560,6 +562,7 @@ fn raw_package_json_to_proto(package_json: RawPackageJson) -> proto::ExtensionMa
         icon: normalize_optional_string(package_json.icon),
         author: raw_author_to_proto(package_json.author),
         owner: normalize_optional_string(package_json.owner),
+        version: normalize_optional_string(package_json.version),
         commands: package_json
             .commands
             .unwrap_or_default()
@@ -618,6 +621,7 @@ fn discovered_plugin_to_json(plugin: &proto::DiscoveredPlugin) -> JsonValue {
         "interval": plugin.interval,
         "author": plugin.author.as_ref().map(manifest_author_to_json),
         "owner": plugin.owner,
+        "version": plugin.version,
     })
 }
 
@@ -705,6 +709,7 @@ pub fn discover_plugins(app: &tauri::AppHandle) -> Result<Vec<proto::DiscoveredP
                     interval: command.interval.clone(),
                     author: manifest.author.clone(),
                     owner: manifest.owner.clone(),
+                    version: manifest.version.clone(),
                 });
             } else {
                 eprintln!(

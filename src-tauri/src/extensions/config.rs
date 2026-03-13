@@ -11,6 +11,13 @@ pub(crate) const CONFIG: ExtensionsConfig = ExtensionsConfig {
         max_body_bytes: 2 * 1024 * 1024,
         max_content_chars: 200_000,
     },
+    store_catalog: StoreCatalogConfig {
+        directory_name: "store",
+        file_name: "catalog.json",
+        path_env_name: "BEAM_EXTENSION_STORE_CATALOG_PATH",
+        url_env_name: "BEAM_EXTENSION_STORE_CATALOG_URL",
+        default_catalog_json: include_str!("../../../store/catalog.json"),
+    },
 };
 
 pub(crate) struct ExtensionsConfig {
@@ -20,6 +27,7 @@ pub(crate) struct ExtensionsConfig {
     pub heuristic_applescript_symbol: &'static str,
     pub heuristic_macos_paths: &'static [&'static str],
     pub browser_bridge: BrowserBridgeConfig,
+    pub store_catalog: StoreCatalogConfig,
 }
 
 pub(crate) struct BrowserBridgeConfig {
@@ -28,4 +36,12 @@ pub(crate) struct BrowserBridgeConfig {
     pub stale_seconds: u64,
     pub max_body_bytes: usize,
     pub max_content_chars: usize,
+}
+
+pub(crate) struct StoreCatalogConfig {
+    pub directory_name: &'static str,
+    pub file_name: &'static str,
+    pub path_env_name: &'static str,
+    pub url_env_name: &'static str,
+    pub default_catalog_json: &'static str,
 }

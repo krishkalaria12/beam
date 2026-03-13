@@ -1,0 +1,109 @@
+syntax = "proto3";
+
+package beam.extension_runtime.v1;
+
+import "manifest.proto";
+
+enum ExtensionStoreSourceKind {
+  EXTENSION_STORE_SOURCE_KIND_UNSPECIFIED = 0;
+  EXTENSION_STORE_SOURCE_KIND_BEAM = 1;
+  EXTENSION_STORE_SOURCE_KIND_COMMUNITY = 2;
+}
+
+enum ExtensionVerificationStatus {
+  EXTENSION_VERIFICATION_STATUS_UNSPECIFIED = 0;
+  EXTENSION_VERIFICATION_STATUS_VERIFIED = 1;
+  EXTENSION_VERIFICATION_STATUS_CURATED = 2;
+  EXTENSION_VERIFICATION_STATUS_COMMUNITY = 3;
+  EXTENSION_VERIFICATION_STATUS_UNVERIFIED = 4;
+}
+
+message ExtensionStoreSource {
+  string id = 1;
+  string label = 2;
+  ExtensionStoreSourceKind kind = 3;
+  optional string homepage_url = 4;
+}
+
+message ExtensionStoreAuthor {
+  string handle = 1;
+  optional string name = 2;
+  optional string avatar_url = 3;
+  optional string profile_url = 4;
+}
+
+message ExtensionStoreIcons {
+  optional string light = 1;
+  optional string dark = 2;
+}
+
+message ExtensionStoreVerification {
+  ExtensionVerificationStatus status = 1;
+  optional string label = 2;
+  optional string verified_by = 3;
+  optional string summary = 4;
+}
+
+message ExtensionStoreCompatibility {
+  repeated string platforms = 1;
+  repeated string desktop_environments = 2;
+  optional string minimum_beam_version = 3;
+  optional string maximum_beam_version = 4;
+  bool linux_tested = 5;
+  bool wayland_tested = 6;
+  bool x11_tested = 7;
+  repeated string notes = 8;
+}
+
+message ExtensionStoreRelease {
+  string version = 1;
+  string download_url = 2;
+  optional string published_at = 3;
+  optional string checksum_sha256 = 4;
+  optional string changelog_url = 5;
+}
+
+message ExtensionStorePackage {
+  string id = 1;
+  string slug = 2;
+  string title = 3;
+  optional string summary = 4;
+  optional string description = 5;
+  ExtensionStoreAuthor author = 6;
+  ExtensionStoreIcons icons = 7;
+  repeated string categories = 8;
+  repeated string tags = 9;
+  ExtensionStoreSource source = 10;
+  ExtensionStoreVerification verification = 11;
+  ExtensionStoreCompatibility compatibility = 12;
+  ExtensionStoreRelease latest_release = 13;
+  optional string readme_url = 14;
+  optional string source_url = 15;
+  repeated string screenshots = 16;
+  ExtensionManifest manifest = 17;
+  optional int64 download_count = 18;
+}
+
+message ExtensionStoreCatalog {
+  ExtensionStoreSource source = 1;
+  repeated ExtensionStorePackage packages = 2;
+}
+
+message ExtensionStoreSearchResult {
+  repeated ExtensionStorePackage packages = 1;
+}
+
+message ExtensionStoreUpdate {
+  string id = 1;
+  string slug = 2;
+  string title = 3;
+  string installed_version = 4;
+  string latest_version = 5;
+  ExtensionStoreRelease latest_release = 6;
+  ExtensionStoreVerification verification = 7;
+  ExtensionStoreCompatibility compatibility = 8;
+}
+
+message ExtensionStoreUpdateResult {
+  repeated ExtensionStoreUpdate updates = 1;
+}

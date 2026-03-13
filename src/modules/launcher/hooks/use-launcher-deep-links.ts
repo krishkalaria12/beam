@@ -23,9 +23,7 @@ export function useLauncherDeepLinks({ openPanel, backToCommands }: UseLauncherD
       const extensionsUi = useExtensionsUiStore.getState();
       const normalizedSlug = extensionSlug?.trim() ?? "";
       if (normalizedSlug.length > 0) {
-        extensionsUi.setSearch(normalizedSlug);
-        extensionsUi.setDebouncedSearch(normalizedSlug);
-        extensionsUi.setSearchDebouncing(false);
+        extensionsUi.primeSearch(normalizedSlug);
       }
     },
     [openPanel],
