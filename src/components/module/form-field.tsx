@@ -24,17 +24,17 @@ export function FormField({
   children,
 }: FormFieldProps) {
   return (
-    <div className={cn("space-y-1.5", className)}>
+    <div className={cn("module-form-field space-y-1.5", className)}>
       {label ? (
-        <div className={cn("text-[12px] font-medium text-muted-foreground", labelClassName)}>
+        <div className={cn("module-form-field-label text-[12px] font-medium text-muted-foreground", labelClassName)}>
           {label}
         </div>
       ) : null}
-      <div className={cn(bodyClassName)}>{children}</div>
+      <div className={cn("module-form-field-body", bodyClassName)}>{children}</div>
       {description || error ? (
-        <div className={cn("space-y-1", metaClassName)}>
-          {error ? <p className="text-[11px] text-[var(--icon-red-fg)]">{error}</p> : null}
-          {description ? <p className="text-[11px] text-muted-foreground">{description}</p> : null}
+        <div className={cn("module-form-field-meta space-y-1", metaClassName)}>
+          {error ? <p className="module-form-field-error text-[11px] text-[var(--icon-red-fg)]">{error}</p> : null}
+          {description ? <p className="module-form-field-description text-[11px] text-muted-foreground">{description}</p> : null}
         </div>
       ) : null}
     </div>
@@ -46,7 +46,7 @@ interface FormSeparatorProps {
 }
 
 function Separator({ className }: FormSeparatorProps) {
-  return <div className={cn("h-px w-full bg-[var(--ui-divider)]", className)} />;
+  return <div className={cn("module-form-separator h-px w-full bg-[var(--ui-divider)]", className)} />;
 }
 
 FormField.Separator = Separator;

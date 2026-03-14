@@ -1,0 +1,91 @@
+{
+  "$schema": "../schemas/extension.json",
+  "name": "template",
+  "title": "Template",
+  "description": "A collection of command templates to build Beam extensions from",
+  "icon": "icon.svg",
+  "author": "beam",
+  "owner": "beam",
+  "package_id": "beam.template",
+  "version": "0.1.0",
+  "minimum_beam_version": "1.0.0",
+  "release_channel": "stable",
+  "commands": [
+    {
+      "name": "list",
+      "title": "Simple List",
+      "description": "A simple list view",
+      "mode": "view"
+    },
+    {
+      "name": "list-detail",
+      "title": "List With Detail",
+      "description": "A list with a detail view",
+      "mode": "view"
+    },
+    {
+      "name": "list-icons",
+      "title": "List With Icons",
+      "description": "A list with icons and accessories",
+      "mode": "view"
+    },
+    {
+      "name": "controlled-list",
+      "title": "Controlled List",
+      "description": "A list where search is controlled by state",
+      "mode": "view"
+    },
+    {
+      "name": "simple-detail",
+      "title": "Simple Detail",
+      "description": "A simple detail view",
+      "mode": "view"
+    },
+    {
+      "name": "form",
+      "title": "Form Elements",
+      "description": "A collection of form elements",
+      "mode": "view"
+    },
+    {
+      "name": "no-view",
+      "title": "No View",
+      "description": "A basic no-view command",
+      "mode": "no-view"
+    },
+    {
+      "name": "app-utils",
+      "title": "App Utils",
+      "description": "Try out application-related APIs",
+      "mode": "view"
+    },
+    {
+      "name": "window-switcher",
+      "title": "Window Switcher",
+      "description": "Test window management APIs",
+      "mode": "view"
+    },
+    {
+      "name": "torture",
+      "title": "Torture Test",
+      "description": "Stress test reactivity and detail updates",
+      "mode": "view"
+    }
+  ],
+  "preferences": [],
+  "scripts": {
+    "build": "beam-api build",
+    "dev": "beam-api develop",
+    "check": "bunx tsc --noEmit",
+    "format": "biome format --write src"
+  },
+  "dependencies": {
+    "@beam-launcher/api": "file:../../packages/beam-api"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.3.2",
+    "@types/node": "^24.9.2",
+    "@types/react": "^19.2.2",
+    "typescript": "^5.9.2"
+  }
+}

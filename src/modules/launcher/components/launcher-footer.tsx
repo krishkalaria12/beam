@@ -44,13 +44,6 @@ export function LauncherFooter({ leftSlot, primaryAction }: LauncherFooterProps)
           shortcut: ["ESC"],
         },
       ]}
-      actionsButton={{
-        label: "Actions",
-        shortcut: ["⌘", "K"],
-        onClick: () => {
-          setActionsOpen((previous) => !previous);
-        },
-      }}
       overlay={<LauncherActionsPanel open={actionsOpen} onOpenChange={setActionsOpen} />}
     />
   );

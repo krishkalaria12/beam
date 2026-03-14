@@ -2,9 +2,7 @@
   "include": [
     "types",
     "src/index.ts",
-    "src/public/**/*",
-    "src/api/icon.ts",
-    "src/api/keyboard.ts",
+    "src/api/**/*",
     "src/commands/**/*",
     "src/schemas/**/*",
     "src/utils/**/*"

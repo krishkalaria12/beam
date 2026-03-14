@@ -1,5 +1,5 @@
 import { ArrowRight, Search } from "lucide-react";
-import { type KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
+import { type CSSProperties, type KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -21,8 +21,14 @@ export interface ActionListPanelItem {
 interface ActionListPanelProps {
   items: ActionListPanelItem[];
   className?: string;
+  style?: CSSProperties;
   panelClassName?: string;
+  panelStyle?: CSSProperties;
+  triggerClassName?: string;
   triggerLabel?: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  showTrigger?: boolean;
 }
 
 type ActionRow =
@@ -32,14 +38,28 @@ type ActionRow =
 export function ActionListPanel({
   items,
   className,
+  style,
   panelClassName,
+  panelStyle,
+  triggerClassName,
   triggerLabel = "Actions",
+  open,
+  onOpenChange,
+  showTrigger = true,
 }: ActionListPanelProps) {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const [open, setOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [highlightedIndex, setHighlightedIndex] = useState(0);
+  const resolvedOpen = open ?? uncontrolledOpen;
+
+  const setPanelOpen = (nextOpen: boolean) => {
+    if (open === undefined) {
+      setUncontrolledOpen(nextOpen);
+    }
+    onOpenChange?.(nextOpen);
+  };
 
   const rows = useMemo<ActionRow[]>(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -74,9 +94,16 @@ export function ActionListPanel({
   const itemRows = rows.filter(
     (row): row is Extract<ActionRow, { type: "item" }> => row.type === "item",
   );
+  const maxHighlightedIndex = Math.max(0, itemRows.length - 1);
+
+  const closePanel = () => {
+    setPanelOpen(false);
+    setQuery("");
+    setHighlightedIndex(0);
+  };
 
   useEffect(() => {
-    if (!open) {
+    if (!resolvedOpen) {
       return;
     }
 
@@ -86,7 +113,7 @@ export function ActionListPanel({
       if (rootRef.current?.contains(event.target as Node)) {
         return;
       }
-      setOpen(false);
+      closePanel();
     };
 
     document.addEventListener("mousedown", onPointerDown);
@@ -94,22 +121,27 @@ export function ActionListPanel({
       window.clearTimeout(timer);
       document.removeEventListener("mousedown", onPointerDown);
     };
-  }, [open]);
+  }, [resolvedOpen]);
 
   const activate = (item: ActionListPanelItem) => {
     item.onSelect();
-    setOpen(false);
-    setQuery("");
+    closePanel();
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "ArrowDown") {
+      if (itemRows.length === 0) {
+        return;
+      }
       event.preventDefault();
-      setHighlightedIndex((current) => Math.min(itemRows.length - 1, current + 1));
+      setHighlightedIndex((current) => Math.min(maxHighlightedIndex, current + 1));
       return;
     }
 
     if (event.key === "ArrowUp") {
+      if (itemRows.length === 0) {
+        return;
+      }
       event.preventDefault();
       setHighlightedIndex((current) => Math.max(0, current - 1));
       return;
@@ -127,31 +159,45 @@ export function ActionListPanel({
 
     if (event.key === "Escape") {
       event.preventDefault();
-      setOpen(false);
-      setQuery("");
+      closePanel();
     }
   };
 
   return (
-    <div ref={rootRef} className={cn("relative", className)}>
-      <Button
-        type="button"
-        size="sm"
-        variant="outline"
-        onClick={() => setOpen((current) => !current)}
-        className="h-8 gap-1.5 bg-[var(--launcher-card-bg)] text-foreground border-[var(--launcher-card-border)] hover:bg-[var(--launcher-card-hover-bg)]"
-      >
-        {triggerLabel}
-      </Button>
+    <div ref={rootRef} className={cn("module-action-list-panel relative", className)} style={style}>
+      {showTrigger ? (
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={() => {
+            if (resolvedOpen) {
+              closePanel();
+              return;
+            }
+            setQuery("");
+            setPanelOpen(true);
+          }}
+          className={cn(
+            "module-action-list-trigger",
+            "h-8 gap-1.5 bg-[var(--launcher-card-bg)] text-foreground border-[var(--launcher-card-border)] hover:bg-[var(--launcher-card-hover-bg)]",
+            triggerClassName,
+          )}
+        >
+          {triggerLabel}
+        </Button>
+      ) : null}
 
-      {open ? (
+      {resolvedOpen ? (
         <div
           className={cn(
+            "sc-actions-panel module-action-list-overlay",
             "absolute bottom-[calc(100%+8px)] right-0 z-50 w-[320px] overflow-hidden rounded-xl border border-[var(--launcher-card-border)] bg-[var(--popover)] shadow-lg",
             panelClassName,
           )}
+          style={panelStyle}
         >
-          <div className="border-b border-[var(--ui-divider)] p-2">
+          <div className="module-action-list-search border-b border-[var(--ui-divider)] p-2">
             <SearchInput
               ref={inputRef}
               value={query}
@@ -164,16 +210,22 @@ export function ActionListPanel({
             />
           </div>
 
-          <div className="max-h-[320px] overflow-y-auto p-2">
+          <div className="module-action-list-content custom-scrollbar max-h-[320px] overflow-y-auto overscroll-contain p-2">
             {itemRows.length === 0 ? (
-              <div className="px-3 py-10 text-center text-[12px] text-muted-foreground">
+              <div className="module-action-list-empty px-3 py-10 text-center text-[12px] text-muted-foreground">
                 No matching actions
               </div>
             ) : (
-              <div className="space-y-1">
+              <div className="module-action-list-items space-y-1">
                 {rows.map((row) => {
                   if (row.type === "section") {
-                    return <SectionHeader key={row.key} title={row.title} className="pt-2" />;
+                    return (
+                      <SectionHeader
+                        key={row.key}
+                        title={row.title}
+                        className="module-action-list-section pt-2"
+                      />
+                    );
                   }
 
                   const itemIndex = itemRows.findIndex((itemRow) => itemRow.key === row.key);
@@ -193,6 +245,7 @@ export function ActionListPanel({
                         )
                       }
                       className={cn(
+                        "module-action-list-row",
                         "rounded-lg px-2.5 py-2",
                         row.item.danger && "text-[var(--icon-red-fg)]",
                       )}

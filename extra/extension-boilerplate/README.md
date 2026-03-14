@@ -1,11 +1,25 @@
-# Beam extension boilerplate
+# Beam Extension Boilerplate
 
-This extension mirrors the Vicinae template flow, but targets Beam's native SDK.
+This directory is the source template for Beam’s extension scaffold flow.
 
-It is both:
+Use it in two ways:
 
-- a starter template for new extensions
-- a runnable development extension you can use to exercise the SDK surface
+- directly, inside the Beam repo, as a runnable SDK exercise surface
+- indirectly, through `beam-api create`, which copies this template into a new extension
+
+## Create A New Extension
+
+From the repo root:
+
+```bash
+bun run create:extension -- --directory my-extension
+```
+
+From the published SDK:
+
+```bash
+bunx @beam-launcher/api create --directory my-extension
+```
 
 ## Development
 

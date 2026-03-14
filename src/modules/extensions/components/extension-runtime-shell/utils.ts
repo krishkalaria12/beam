@@ -1,6 +1,7 @@
-import type { KeyboardEvent } from "react";
+import type { CSSProperties, KeyboardEvent } from "react";
 import { formatDistanceToNowStrict } from "date-fns";
 
+import { normalizeIconToken } from "@/components/icons/icon-registry";
 import type { MetadataBarItem } from "@/components/module";
 import type { FlattenedAction } from "@/modules/extensions/components/runner/types";
 import type { UseExtensionRunnerStateResult } from "@/modules/extensions/components/runner/use-extension-runner-state";
@@ -12,6 +13,46 @@ export interface AccessoryDescriptor {
   tooltip?: string;
   icon?: unknown;
   color?: string;
+}
+
+function readIconToken(icon: unknown): string {
+  if (typeof icon === "string") {
+    return icon;
+  }
+
+  if (!icon || typeof icon !== "object") {
+    return "";
+  }
+
+  const record = icon as Record<string, unknown>;
+  if (typeof record.source === "string" && record.source.trim().length > 0) {
+    return record.source;
+  }
+  if (typeof record.fallback === "string" && record.fallback.trim().length > 0) {
+    return record.fallback;
+  }
+  return "";
+}
+
+export function isAnimatedEmptyViewIcon(icon: unknown): boolean {
+  const token = normalizeIconToken(readIconToken(icon));
+
+  return [
+    "loader2",
+    "circleprogress",
+    "circleprogress100",
+    "circleprogress75",
+    "circleprogress50",
+    "circleprogress25",
+    "refresh",
+    "arrowclockwise",
+    "arrowcounterclockwise",
+    "hourglass",
+  ].includes(token);
+}
+
+export function getEmptyViewIconClassName(icon: unknown): string {
+  return isAnimatedEmptyViewIcon(icon) ? "size-16 animate-spin" : "size-12";
 }
 
 export function stopFieldKeyPropagation(event: KeyboardEvent<HTMLElement>): void {
@@ -37,6 +78,20 @@ export function formatRuntimeRelativeDate(value: Date): string {
     .replace(/^(\d+) months$/, "$1mo")
     .replace(/^1 year$/, "1y")
     .replace(/^(\d+) years$/, "$1y");
+}
+
+function parseTransportDate(value: string): Date | null {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  if (!/^\d{4}-\d{2}-\d{2}(?:[T\s].+)?$/.test(trimmed)) {
+    return null;
+  }
+
+  const timestamp = Date.parse(trimmed);
+  return Number.isNaN(timestamp) ? null : new Date(timestamp);
 }
 
 export function readAccessory(
@@ -78,10 +133,11 @@ export function readAccessory(
   const tag = record.tag;
   if (typeof tag === "string") {
     const value = tag.trim();
+    const parsedDate = parseTransportDate(value);
     return value.length > 0
       ? {
           key: `${nodeId}:${index}:tag`,
-          text: value,
+          text: parsedDate ? formatRuntimeRelativeDate(parsedDate) : value,
           tooltip,
           icon,
         }
@@ -101,10 +157,11 @@ export function readAccessory(
     }
     if (typeof value === "string") {
       const textValue = value.trim();
+      const parsedDate = parseTransportDate(textValue);
       return textValue.length > 0
         ? {
             key: `${nodeId}:${index}:tag-value`,
-            text: textValue,
+            text: parsedDate ? formatRuntimeRelativeDate(parsedDate) : textValue,
             tooltip,
             icon,
             color: asString((tag as { color?: unknown }).color).trim() || undefined,
@@ -124,10 +181,11 @@ export function readAccessory(
   }
   if (typeof date === "string") {
     const textValue = date.trim();
+    const parsedDate = parseTransportDate(textValue);
     return textValue.length > 0
       ? {
           key: `${nodeId}:${index}:date-text`,
-          text: textValue,
+          text: parsedDate ? formatRuntimeRelativeDate(parsedDate) : textValue,
           tooltip,
           icon,
         }
@@ -183,6 +241,18 @@ export function selectedActions(state: UseExtensionRunnerStateResult): Flattened
   return state.selectedEntryActions.length > 0 ? state.selectedEntryActions : state.rootActions;
 }
 
+export function readClassName(value: unknown): string | undefined {
+  return typeof value === "string" && value.trim().length > 0 ? value.trim() : undefined;
+}
+
+export function readStyle(value: unknown): CSSProperties | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return undefined;
+  }
+
+  return value as CSSProperties;
+}
+
 export function collectMetadataItems(
   nodeId: number,
   state: UseExtensionRunnerStateResult,
@@ -203,7 +273,17 @@ export function collectMetadataItems(
         ? asString((node.props.text as { value?: unknown }).value).trim()
         : asString(node.props.text).trim();
 
-    return [{ label: title || "Value", value: text || "-" }];
+    return [
+      {
+        label: title || "Value",
+        value: text || "-",
+        className: readClassName(node.props.className),
+        style: readStyle(node.props.style),
+        labelClassName: readClassName(node.props.labelClassName),
+        valueClassName: readClassName(node.props.valueClassName),
+        valueStyle: readStyle(node.props.valueStyle),
+      },
+    ];
   }
 
   if (node.type.endsWith(".Link")) {
@@ -212,8 +292,30 @@ export function collectMetadataItems(
     const text = asString(node.props.text).trim() || target;
 
     return target
-      ? [{ type: "link", label: title || "Link", value: text || "-", url: target }]
-      : [{ label: title || "Link", value: text || "-" }];
+      ? [
+          {
+            type: "link",
+            label: title || "Link",
+            value: text || "-",
+            url: target,
+            className: readClassName(node.props.className),
+            style: readStyle(node.props.style),
+            labelClassName: readClassName(node.props.labelClassName),
+            valueClassName: readClassName(node.props.valueClassName),
+            valueStyle: readStyle(node.props.valueStyle),
+          },
+        ]
+      : [
+          {
+            label: title || "Link",
+            value: text || "-",
+            className: readClassName(node.props.className),
+            style: readStyle(node.props.style),
+            labelClassName: readClassName(node.props.labelClassName),
+            valueClassName: readClassName(node.props.valueClassName),
+            valueStyle: readStyle(node.props.valueStyle),
+          },
+        ];
   }
 
   if (node.type.endsWith(".Separator")) {
@@ -225,6 +327,10 @@ export function collectMetadataItems(
       {
         type: "tags",
         label: asString(node.props.title).trim() || "Tags",
+        className: readClassName(node.props.className),
+        style: readStyle(node.props.style),
+        labelClassName: readClassName(node.props.labelClassName),
+        tagsClassName: readClassName(node.props.tagsClassName),
         tags: node.children
           .map((childId) => {
             const child = state.uiTree.get(childId);

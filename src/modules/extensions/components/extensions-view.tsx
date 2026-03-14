@@ -1,62 +1,38 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { Download, Loader2, RefreshCcw, Save, Search, Sparkles, Trash2 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { RefreshCcw } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
-import {
-  DetailPanel,
-  EmptyView,
-  FormField,
-  ListItem,
-  MetadataBar,
-  ModuleHeader,
-  SearchInput,
-  SectionHeader,
-  SplitView,
-  type MetadataBarItem,
-} from "@/components/module";
+import { GenericListView, SearchBar } from "@/components/module";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import debounce from "@/lib/debounce";
+import { ExtensionsDetailPane } from "@/modules/extensions/components/extensions-view/extensions-detail-pane";
+import { ExtensionsSidebar } from "@/modules/extensions/components/extensions-view/extensions-sidebar";
+import {
+  buildPreferenceValues,
+  mergeInstalledWithOptimisticSlugs,
+  toInstalledExtensionSummary,
+} from "@/modules/extensions/components/extensions-view-model";
 import {
   EXTENSIONS_QUERY_KEY_INSTALLED,
   EXTENSIONS_QUERY_KEY_STORE_UPDATES,
   EXTENSIONS_SEARCH_DEBOUNCE_MS,
   EXTENSIONS_STORE_SEARCH_MIN_LENGTH,
 } from "@/modules/extensions/constants";
-import { ExtensionIcon } from "@/modules/extensions/components/extension-icon";
-import {
-  buildPreferenceValues,
-  mergeInstalledWithOptimisticSlugs,
-  toInstalledExtensionSummary,
-} from "@/modules/extensions/components/extensions-view-model";
 import { invalidateDiscoveredExtensionsCache } from "@/modules/extensions/extension-command-provider";
-import {
-  useLoadExtensionPreferencesMutation,
-  useSaveExtensionPreferencesMutation,
-} from "@/modules/extensions/hooks/use-extension-preferences-mutations";
+import { extensionManagerService } from "@/modules/extensions/extension-manager-service";
 import { useInstallExtensionMutation } from "@/modules/extensions/hooks/use-install-extension-mutation";
 import { useInstalledExtensionsQuery } from "@/modules/extensions/hooks/use-installed-extensions-query";
 import { useStoreExtensionPackageQuery } from "@/modules/extensions/hooks/use-store-extension-package-query";
 import { useStoreExtensionUpdatesQuery } from "@/modules/extensions/hooks/use-store-extension-updates-query";
 import { useStoreExtensionsSearchQuery } from "@/modules/extensions/hooks/use-store-extensions-search-query";
 import { useUninstallExtensionMutation } from "@/modules/extensions/hooks/use-uninstall-extension-mutation";
-import { useLauncherPanelBackHandler } from "@/modules/launcher/lib/back-navigation";
 import { useExtensionsUiStore } from "@/modules/extensions/store/use-extensions-ui-store";
 import type {
   ExtensionPreferenceField,
   InstalledExtensionSummary,
 } from "@/modules/extensions/types";
+import { useLauncherPanelBackHandler } from "@/modules/launcher/lib/back-navigation";
 
 interface ExtensionsViewProps {
   onBack: () => void;
@@ -67,18 +43,11 @@ type SelectedExtensionsRow =
   | { kind: "store"; id: string }
   | null;
 
-function stopFieldKeyPropagation(event: KeyboardEvent<HTMLElement>): void {
-  event.stopPropagation();
-}
-
-function toInputValue(value: unknown): string {
-  if (typeof value === "string") {
-    return value;
-  }
-  if (value == null) {
-    return "";
-  }
-  return String(value);
+function areSelectedRowsEqual(
+  left: SelectedExtensionsRow,
+  right: SelectedExtensionsRow,
+): boolean {
+  return left?.kind === right?.kind && left?.id === right?.id;
 }
 
 function matchesInstalledSearch(entry: InstalledExtensionSummary, query: string): boolean {
@@ -102,175 +71,25 @@ function isMissingRequiredField(field: ExtensionPreferenceField, value: unknown)
     return value !== true;
   }
 
-  return toInputValue(value).trim().length === 0;
+  return String(value ?? "").trim().length === 0;
 }
 
-function compactMetadataRows(rows: Array<{ label: string; value: string }>): MetadataBarItem[] {
-  return rows
-    .filter((entry) => entry.value.trim().length > 0)
-    .map((entry) => ({ label: entry.label, value: entry.value }));
-}
-
-function formatReleaseChannelLabel(channelName: string | undefined, channel: number): string {
-  if (channelName && channelName.trim().length > 0) {
-    return channelName.trim();
-  }
-
-  switch (channel) {
-    case 1:
-      return "stable";
-    case 2:
-      return "beta";
-    case 3:
-      return "nightly";
-    case 4:
-      return "custom";
-    default:
-      return "unspecified";
-  }
-}
-
-function PreferenceEditor({
-  fields,
-  values,
-  isLoading,
-  isSaving,
-  error,
-  validationError,
-  onChange,
-  onSave,
-}: {
-  fields: ExtensionPreferenceField[];
-  values: Record<string, unknown>;
-  isLoading: boolean;
-  isSaving: boolean;
-  error: string | null;
-  validationError: string | null;
-  onChange: (key: string, value: unknown) => void;
-  onSave: () => Promise<void>;
-}) {
-  const renderField = (field: ExtensionPreferenceField) => {
-    const label = field.required ? `${field.title} *` : field.title;
-    const value = values[field.name];
-
-    if (field.type === "dropdown") {
-      return (
-        <FormField
-          key={field.name}
-          label={<Label className="text-[12px] font-medium text-muted-foreground">{label}</Label>}
-          description={field.description}
-        >
-          <Select
-            value={toInputValue(value)}
-            onValueChange={(nextValue) => onChange(field.name, nextValue)}
-          >
-            <SelectTrigger className="h-10 rounded-lg border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] text-[13px]">
-              <SelectValue placeholder={field.title} />
-            </SelectTrigger>
-            <SelectContent className="rounded-lg border border-[var(--launcher-card-border)]">
-              {field.options.map((option) => (
-                <SelectItem key={`${field.name}:${option.value}`} value={option.value}>
-                  {option.title}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </FormField>
-      );
-    }
-
-    if (field.type === "checkbox") {
-      return (
-        <div
-          key={field.name}
-          className="space-y-2 rounded-xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-3 py-3"
-        >
-          <div className="flex items-center gap-3">
-            <Checkbox
-              checked={Boolean(value)}
-              onCheckedChange={(checked) => onChange(field.name, Boolean(checked))}
-            />
-            <Label className="text-[13px] font-medium text-foreground">{label}</Label>
-          </div>
-          {field.description ? (
-            <p className="text-[11px] text-muted-foreground">{field.description}</p>
-          ) : null}
-        </div>
-      );
-    }
-
-    if (field.type === "textarea") {
-      return (
-        <FormField
-          key={field.name}
-          label={<Label className="text-[12px] font-medium text-muted-foreground">{label}</Label>}
-          description={field.description}
-        >
-          <Textarea
-            value={toInputValue(value)}
-            onChange={(event) => onChange(field.name, event.target.value)}
-            onKeyDownCapture={stopFieldKeyPropagation}
-            onKeyDown={stopFieldKeyPropagation}
-            className="min-h-[110px] rounded-lg border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] text-[13px]"
-          />
-        </FormField>
-      );
-    }
-
-    return (
-      <FormField
-        key={field.name}
-        label={<Label className="text-[12px] font-medium text-muted-foreground">{label}</Label>}
-        description={field.description}
-      >
-        <Input
-          type={field.type === "password" ? "password" : "text"}
-          value={toInputValue(value)}
-          onChange={(event) => onChange(field.name, event.target.value)}
-          onKeyDownCapture={stopFieldKeyPropagation}
-          onKeyDown={stopFieldKeyPropagation}
-          className="h-10 rounded-lg border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] text-[13px]"
-        />
-      </FormField>
-    );
-  };
-
+function InlineBadge({ value }: { value: string | number }) {
   return (
-    <section className="space-y-3 rounded-xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] p-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-[13px] font-medium text-foreground">Preferences</h3>
-          <p className="text-[12px] text-muted-foreground">Extension-level configuration.</p>
-        </div>
-        <Button
-          size="sm"
-          onClick={() => void onSave()}
-          disabled={isLoading || isSaving || fields.length === 0}
-        >
-          {isSaving ? <Loader2 className="size-3.5 animate-spin" /> : <Save className="size-3.5" />}
-          Save
-        </Button>
+    <span className="inline-flex h-8 items-center rounded-md border border-[var(--launcher-chip-border)] bg-[var(--launcher-chip-bg)] px-2.5 text-[11px] font-medium text-muted-foreground">
+      {value}
+    </span>
+  );
+}
+
+function SummaryMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-3 py-2">
+      <div className="text-[10px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
+        {label}
       </div>
-
-      {error || validationError ? (
-        <div className="rounded-lg border border-[var(--icon-red-bg)] bg-[var(--icon-red-bg)] px-3 py-2 text-[12px] text-[var(--icon-red-fg)]">
-          {validationError || error}
-        </div>
-      ) : null}
-
-      {isLoading ? (
-        <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
-          <Loader2 className="size-3.5 animate-spin" />
-          Loading preferences…
-        </div>
-      ) : fields.length === 0 ? (
-        <div className="text-[12px] text-muted-foreground">
-          No preferences declared by this extension.
-        </div>
-      ) : (
-        <div className="space-y-3">{fields.map(renderField)}</div>
-      )}
-    </section>
+      <div className="mt-1 text-[14px] font-semibold text-foreground">{value}</div>
+    </div>
   );
 }
 
@@ -313,8 +132,6 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
   const storeUpdatesQuery = useStoreExtensionUpdatesQuery();
   const installExtensionMutation = useInstallExtensionMutation();
   const uninstallExtensionMutation = useUninstallExtensionMutation();
-  const loadExtensionPreferencesMutation = useLoadExtensionPreferencesMutation();
-  const saveExtensionPreferencesMutation = useSaveExtensionPreferencesMutation();
 
   const installedExtensions = useMemo(
     () => toInstalledExtensionSummary(installedQuery.data ?? []),
@@ -354,6 +171,7 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
         : null,
     [selectedRow, storeSearchQuery.data],
   );
+
   const selectedStorePackageQuery = useStoreExtensionPackageQuery(selectedStore?.id ?? null);
   const selectedStoreDetail = selectedStorePackageQuery.data ?? selectedStore;
 
@@ -364,42 +182,50 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
 
     return (
       [...updateById.values()].find(
-        (entry) =>
-          entry.slug.toLowerCase() === selectedInstalled.slug.toLowerCase() &&
-          selectedInstalled.owner.trim().length > 0,
+        (entry) => entry.slug.toLowerCase() === selectedInstalled.slug.toLowerCase(),
       ) ?? null
     );
   }, [selectedInstalled, updateById]);
 
-  useEffect(() => {
-    if (selectedRow?.kind === "installed") {
-      const exists = filteredInstalledExtensions.some((entry) => entry.id === selectedRow.id);
+  const installedUpdateSlugs = useMemo(
+    () => new Set((storeUpdatesQuery.data ?? []).map((entry) => entry.slug.toLowerCase())),
+    [storeUpdatesQuery.data],
+  );
+
+  const desiredSelectedRow = useMemo<SelectedExtensionsRow>(() => {
+    const selectedKind = selectedRow?.kind ?? null;
+    const selectedId = selectedRow?.id ?? null;
+
+    if (selectedKind === "installed" && selectedId) {
+      const exists = filteredInstalledExtensions.some((entry) => entry.id === selectedId);
       if (exists) {
-        return;
+        return selectedRow;
       }
     }
 
-    if (selectedRow?.kind === "store") {
-      const exists = (storeSearchQuery.data ?? []).some((entry) => entry.id === selectedRow.id);
+    if (selectedKind === "store" && selectedId) {
+      const exists = (storeSearchQuery.data ?? []).some((entry) => entry.id === selectedId);
       if (exists) {
-        return;
+        return selectedRow;
       }
     }
 
     const firstInstalled = filteredInstalledExtensions[0];
     if (firstInstalled) {
-      setSelectedRow({ kind: "installed", id: firstInstalled.id });
-      return;
+      return { kind: "installed", id: firstInstalled.id };
     }
 
     const firstStore = (storeSearchQuery.data ?? [])[0];
-    if (firstStore) {
-      setSelectedRow({ kind: "store", id: firstStore.id });
-      return;
-    }
-
-    setSelectedRow(null);
+    return firstStore ? { kind: "store", id: firstStore.id } : null;
   }, [filteredInstalledExtensions, selectedRow, storeSearchQuery.data]);
+
+  useEffect(() => {
+    if (!areSelectedRowsEqual(selectedRow, desiredSelectedRow)) {
+      setSelectedRow((current) =>
+        areSelectedRowsEqual(current, desiredSelectedRow) ? current : desiredSelectedRow,
+      );
+    }
+  }, [desiredSelectedRow, selectedRow]);
 
   useEffect(() => {
     if (!selectedInstalled?.pluginName || selectedInstalled.preferences.length === 0) {
@@ -417,8 +243,8 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
     setValidationError(null);
     setPreferenceValues(buildPreferenceValues(selectedInstalled.preferences, {}));
 
-    loadExtensionPreferencesMutation
-      .mutateAsync(selectedInstalled.pluginName)
+    extensionManagerService
+      .getPreferences(selectedInstalled.pluginName)
       .then((savedValues) => {
         if (requestId !== preferenceRequestIdRef.current) {
           return;
@@ -438,7 +264,7 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
           setIsPreferenceLoading(false);
         }
       });
-  }, [loadExtensionPreferencesMutation, selectedInstalled]);
+  }, [selectedInstalled]);
 
   useEffect(() => {
     if (optimisticInstalledSlugs.length === 0) {
@@ -447,7 +273,13 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
 
     const installedSlugSet = new Set(installedExtensions.map((entry) => entry.slug.toLowerCase()));
     setOptimisticInstalledSlugs((current) =>
-      current.filter((entry) => !installedSlugSet.has(entry.toLowerCase())),
+      {
+        const next = current.filter((entry) => !installedSlugSet.has(entry.toLowerCase()));
+        return next.length === current.length &&
+          next.every((entry, index) => entry === current[index])
+          ? current
+          : next;
+      },
     );
   }, [installedExtensions, optimisticInstalledSlugs.length]);
 
@@ -582,10 +414,7 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
     setPreferenceError(null);
     setIsPreferenceSaving(true);
     try {
-      await saveExtensionPreferencesMutation.mutateAsync({
-        pluginName: selectedInstalled.pluginName,
-        values: preferenceValues,
-      });
+      await extensionManagerService.setPreferences(selectedInstalled.pluginName, preferenceValues);
       toast.success(`Saved setup for ${selectedInstalled.title}.`);
       await handleRefreshInstalled();
     } catch (error) {
@@ -599,411 +428,121 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
 
   useLauncherPanelBackHandler("extensions", onBack);
 
+  const updateCount = storeUpdatesQuery.data?.length ?? 0;
+  const storeResultCount =
+    normalizedSearch.length >= EXTENSIONS_STORE_SEARCH_MIN_LENGTH
+      ? (storeSearchQuery.data?.length ?? 0)
+      : 0;
   const selectedStoreInstalled =
-    selectedStore &&
+    selectedStoreDetail != null &&
     filteredInstalledExtensions.some(
-      (entry) => entry.slug.toLowerCase() === selectedStore.slug.toLowerCase(),
+      (entry) => entry.slug.toLowerCase() === selectedStoreDetail.slug.toLowerCase(),
     );
 
   return (
     <div className="flex h-full w-full flex-col overflow-hidden bg-[var(--solid-bg)] text-foreground">
-      <ModuleHeader
+      <SearchBar
         onBack={onBack}
-        title="Extensions"
-        subtitle="Installed commands and the Beam store"
-        badge={
-          <ModuleHeader.Badge className="inline-flex items-center gap-1 rounded-lg px-2">
-            <Sparkles className="size-3" />
-            {displayedInstalledExtensions.length}
-          </ModuleHeader.Badge>
+        showBackButton
+        interactive
+        value={extensionsUi.search}
+        onChange={handleSearchChange}
+        placeholder="Search installed extensions or the Beam store"
+        rightSlot={
+          <div className="flex items-center gap-2">
+            <InlineBadge value={`${displayedInstalledExtensions.length} installed`} />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-8 rounded-md px-2.5 text-[11px]"
+              onClick={() => void handleRefreshInstalled()}
+            >
+              <RefreshCcw className="size-3.5" />
+              Refresh
+            </Button>
+          </div>
         }
       />
 
-      <div className="border-b border-[var(--ui-divider)] px-4 py-3">
-        <SearchInput
-          value={extensionsUi.search}
-          onChange={handleSearchChange}
-          placeholder="Search installed extensions or the Beam store"
-          leftIcon={<Search />}
-        />
+      <div className="border-b border-[var(--ui-divider)] bg-[var(--solid-bg-header)] px-4 py-3">
+        <div className="grid grid-cols-4 gap-2">
+          <SummaryMetric label="Installed" value={String(displayedInstalledExtensions.length)} />
+          <SummaryMetric label="Updates" value={String(updateCount)} />
+          <SummaryMetric label="Store" value={String(storeResultCount)} />
+          <SummaryMetric
+            label="Search"
+            value={
+              normalizedSearch.length >= EXTENSIONS_STORE_SEARCH_MIN_LENGTH
+                ? "Catalog"
+                : `Min ${EXTENSIONS_STORE_SEARCH_MIN_LENGTH}`
+            }
+          />
+        </div>
       </div>
 
-      <SplitView
+      <GenericListView
         detailVisible
         templateColumns="320px minmax(0, 1fr)"
-        primaryClassName="overflow-y-auto border-r border-[var(--ui-divider)] p-2"
-        detailClassName="overflow-y-auto"
-        primary={
-          <div className="space-y-5">
-            <section className="space-y-1">
-              <SectionHeader title="Installed" />
-              {installedQuery.isError ? (
-                <div className="rounded-lg border border-[var(--icon-red-bg)] bg-[var(--icon-red-bg)] px-3 py-2 text-[12px] text-[var(--icon-red-fg)]">
-                  Failed to load installed extensions.
-                </div>
-              ) : filteredInstalledExtensions.length === 0 ? (
-                <EmptyView
-                  className="min-h-[120px] justify-start px-2 py-4"
-                  contentClassName="max-w-none text-left"
-                  title="No installed extensions match."
-                />
-              ) : (
-                filteredInstalledExtensions.map((entry) => (
-                  <ListItem
-                    key={entry.id}
-                    selected={selectedRow?.kind === "installed" && selectedRow.id === entry.id}
-                    onSelect={() => setSelectedRow({ kind: "installed", id: entry.id })}
-                    leftSlot={
-                      <ExtensionIcon
-                        iconReference={entry.icon}
-                        title={entry.title}
-                        className="size-9 rounded-lg"
-                      />
-                    }
-                    rightSlot={
-                      selectedInstalledUpdate &&
-                      selectedInstalledUpdate.slug.toLowerCase() === entry.slug.toLowerCase() ? (
-                        <span className="text-[11px] text-amber-700">Update</span>
-                      ) : null
-                    }
-                  >
-                    <ListItem.Title>{entry.title}</ListItem.Title>
-                    <ListItem.Description>
-                      {entry.owner}/{entry.slug}
-                      {entry.version ? ` · v${entry.version}` : ""}
-                    </ListItem.Description>
-                  </ListItem>
-                ))
-              )}
-            </section>
-
-            <section className="space-y-1">
-              <SectionHeader title="Store" />
-              {normalizedSearch.length < EXTENSIONS_STORE_SEARCH_MIN_LENGTH ? (
-                <EmptyView
-                  className="min-h-[120px] justify-start px-2 py-4"
-                  contentClassName="max-w-none text-left"
-                  title={`Type at least ${EXTENSIONS_STORE_SEARCH_MIN_LENGTH} characters to search the Beam store.`}
-                />
-              ) : storeSearchQuery.isLoading || extensionsUi.isSearchDebouncing ? (
-                <div className="flex items-center gap-2 px-2 py-2 text-[12px] text-muted-foreground">
-                  <Loader2 className="size-3.5 animate-spin" />
-                  Searching store…
-                </div>
-              ) : storeSearchQuery.isError ? (
-                <div className="rounded-lg border border-[var(--icon-red-bg)] bg-[var(--icon-red-bg)] px-3 py-2 text-[12px] text-[var(--icon-red-fg)]">
-                  {storeSearchQuery.error instanceof Error
-                    ? storeSearchQuery.error.message
-                    : "Store search failed."}
-                </div>
-              ) : (storeSearchQuery.data ?? []).length === 0 ? (
-                <EmptyView
-                  className="min-h-[120px] justify-start px-2 py-4"
-                  contentClassName="max-w-none text-left"
-                  title="No store packages found."
-                />
-              ) : (
-                (storeSearchQuery.data ?? []).map((entry) => (
-                  <ListItem
-                    key={entry.id}
-                    selected={selectedRow?.kind === "store" && selectedRow.id === entry.id}
-                    onSelect={() => setSelectedRow({ kind: "store", id: entry.id })}
-                    leftSlot={
-                      <ExtensionIcon
-                        iconReference={
-                          entry.icons.light || entry.icons.dark || entry.author.avatar || null
-                        }
-                        title={entry.title}
-                        className="size-9 rounded-lg"
-                      />
-                    }
-                    rightSlot={
-                      entry.verification.label ? (
-                        <span className="text-[11px] text-muted-foreground">
-                          {entry.verification.label}
-                        </span>
-                      ) : null
-                    }
-                  >
-                    <ListItem.Title>{entry.title}</ListItem.Title>
-                    <ListItem.Description>
-                      {entry.author.handle}/{entry.slug} · v{entry.latestRelease.version}
-                    </ListItem.Description>
-                  </ListItem>
-                ))
-              )}
-            </section>
-          </div>
+        listPaneClassName="overflow-y-auto border-r border-[var(--ui-divider)] bg-[var(--solid-bg-base)] p-3"
+        detailPaneClassName="overflow-y-auto bg-[var(--solid-bg-recessed)]"
+        list={
+          <ExtensionsSidebar
+            installedExtensions={filteredInstalledExtensions}
+            installedErrorMessage={
+              installedQuery.isError ? "Failed to load installed extensions." : null
+            }
+            selectedInstalledId={selectedRow?.kind === "installed" ? selectedRow.id : null}
+            installedUpdateSlugs={installedUpdateSlugs}
+            onSelectInstalled={(id) => setSelectedRow({ kind: "installed", id })}
+            search={normalizedSearch}
+            minimumSearchLength={EXTENSIONS_STORE_SEARCH_MIN_LENGTH}
+            storeResults={storeSearchQuery.data ?? []}
+            selectedStoreId={selectedRow?.kind === "store" ? selectedRow.id : null}
+            onSelectStore={(id) => setSelectedRow({ kind: "store", id })}
+            isStoreLoading={Boolean(storeSearchQuery.isLoading)}
+            isStoreError={Boolean(storeSearchQuery.isError)}
+            storeErrorMessage={
+              storeSearchQuery.error instanceof Error
+                ? storeSearchQuery.error.message
+                : storeSearchQuery.isError
+                  ? "Store search failed."
+                  : null
+            }
+            isSearchDebouncing={extensionsUi.isSearchDebouncing}
+          />
         }
         detail={
-          !selectedInstalled && !selectedStore ? (
-            <DetailPanel className="h-full">
-              <DetailPanel.Content className="flex items-center justify-center">
-                <EmptyView
-                  title="Select an extension"
-                  description="Installed commands and store packages open here."
-                />
-              </DetailPanel.Content>
-            </DetailPanel>
-          ) : selectedInstalled ? (
-          <DetailPanel className="h-full bg-transparent">
-              <DetailPanel.Content className="space-y-4">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-start gap-3">
-                    <ExtensionIcon
-                      iconReference={selectedInstalled.icon}
-                      title={selectedInstalled.title}
-                      className="size-12 rounded-xl"
-                    />
-                    <div>
-                      <h2 className="text-[18px] font-semibold text-foreground">
-                        {selectedInstalled.title}
-                      </h2>
-                      <p className="text-[12px] text-muted-foreground">
-                        {selectedInstalled.owner}/{selectedInstalled.slug}
-                        {selectedInstalled.version ? ` · v${selectedInstalled.version}` : ""}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {selectedInstalledUpdate ? (
-                      <Button
-                        size="sm"
-                        onClick={() =>
-                          void handleInstall({
-                            packageId: selectedInstalledUpdate.id,
-                            slug: selectedInstalled.slug,
-                            title: selectedInstalled.title,
-                            releaseVersion: selectedInstalledUpdate.latestVersion,
-                            channel:
-                              selectedInstalledUpdate.latestRelease.channelName || undefined,
-                          })
-                        }
-                        disabled={pendingInstallSlug === selectedInstalled.slug}
-                      >
-                        {pendingInstallSlug === selectedInstalled.slug ? (
-                          <Loader2 className="size-3.5 animate-spin" />
-                        ) : (
-                          <RefreshCcw className="size-3.5" />
-                        )}
-                        Update
-                      </Button>
-                    ) : null}
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="text-[var(--icon-red-fg)]"
-                      onClick={() => void handleUninstall(selectedInstalled)}
-                      disabled={pendingUninstallSlug === selectedInstalled.slug}
-                    >
-                      {pendingUninstallSlug === selectedInstalled.slug ? (
-                        <Loader2 className="size-3.5 animate-spin" />
-                      ) : (
-                        <Trash2 className="size-3.5" />
-                      )}
-                      Uninstall
-                    </Button>
-                  </div>
-                </div>
-
-                {selectedInstalled.description ? (
-                  <p className="max-w-2xl text-[13px] leading-6 text-foreground/90">
-                    {selectedInstalled.description}
-                  </p>
-                ) : null}
-
-                {selectedInstalledUpdate ? (
-                  <section className="rounded-xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] p-4">
-                    <div className="flex items-center gap-2 text-[13px] font-medium text-foreground">
-                      <RefreshCcw className="size-4" />
-                      Update available
-                    </div>
-                    <p className="mt-1 text-[12px] text-muted-foreground">
-                      Installed v{selectedInstalled.version ?? "unknown"} · latest v
-                      {selectedInstalledUpdate.latestVersion}
-                    </p>
-                  </section>
-                ) : null}
-
-                <section className="rounded-xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)]">
-                  <MetadataBar
-                    items={compactMetadataRows([
-                      { label: "Commands", value: String(selectedInstalled.commandCount) },
-                      { label: "Version", value: selectedInstalled.version ?? "Unknown" },
-                      {
-                        label: "Preferences",
-                        value:
-                          selectedInstalled.preferences.length > 0
-                            ? `${selectedInstalled.preferences.length} fields`
-                            : "None",
-                      },
-                    ])}
-                  />
-                </section>
-
-                <PreferenceEditor
-                  fields={selectedInstalled.preferences}
-                  values={preferenceValues}
-                  isLoading={isPreferenceLoading}
-                  isSaving={isPreferenceSaving}
-                  error={preferenceError}
-                  validationError={validationError}
-                  onChange={(key, value) => {
-                    setValidationError(null);
-                    setPreferenceValues((previous) => ({ ...previous, [key]: value }));
-                  }}
-                  onSave={handleSavePreferences}
-                />
-              </DetailPanel.Content>
-            </DetailPanel>
-          ) : selectedStoreDetail ? (
-            <DetailPanel className="h-full bg-transparent">
-              <DetailPanel.Content className="space-y-4">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-start gap-3">
-                    <ExtensionIcon
-                      iconReference={
-                        selectedStoreDetail.icons.light ||
-                        selectedStoreDetail.icons.dark ||
-                        selectedStoreDetail.author.avatar ||
-                        null
-                      }
-                      title={selectedStoreDetail.title}
-                      className="size-12 rounded-xl"
-                    />
-                    <div>
-                      <h2 className="text-[18px] font-semibold text-foreground">
-                        {selectedStoreDetail.title}
-                      </h2>
-                      <p className="text-[12px] text-muted-foreground">
-                        {selectedStoreDetail.author.handle}/{selectedStoreDetail.slug} · v
-                        {selectedStoreDetail.latestRelease.version}
-                      </p>
-                    </div>
-                  </div>
-                  <Button
-                    size="sm"
-                    onClick={() =>
-                      void handleInstall({
-                        packageId: selectedStoreDetail.id,
-                        slug: selectedStoreDetail.slug,
-                        title: selectedStoreDetail.title,
-                        releaseVersion: selectedStoreDetail.latestRelease.version,
-                        channel: selectedStoreDetail.latestRelease.channelName || undefined,
-                      })
-                    }
-                    disabled={pendingInstallSlug === selectedStoreDetail.slug}
-                  >
-                    {pendingInstallSlug === selectedStoreDetail.slug ? (
-                      <Loader2 className="size-3.5 animate-spin" />
-                    ) : (
-                      <Download className="size-3.5" />
-                    )}
-                    {selectedStoreInstalled ? "Reinstall" : "Install"}
-                  </Button>
-                </div>
-
-                <p className="max-w-2xl text-[13px] leading-6 text-foreground/90">
-                  {selectedStoreDetail.description ||
-                    selectedStoreDetail.summary ||
-                    "No description provided."}
-                </p>
-
-                {selectedStorePackageQuery.isLoading && selectedStorePackageQuery.data == null ? (
-                  <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
-                    <Loader2 className="size-3.5 animate-spin" />
-                    Loading package details…
-                  </div>
-                ) : null}
-
-                {selectedStorePackageQuery.isError ? (
-                  <div className="rounded-lg border border-[var(--icon-red-bg)] bg-[var(--icon-red-bg)] px-3 py-2 text-[12px] text-[var(--icon-red-fg)]">
-                    {selectedStorePackageQuery.error instanceof Error
-                      ? selectedStorePackageQuery.error.message
-                      : "Failed to load package details."}
-                  </div>
-                ) : null}
-
-                <section className="rounded-xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)]">
-                  <MetadataBar
-                    items={compactMetadataRows([
-                      { label: "Source", value: selectedStoreDetail.source.label },
-                      {
-                        label: "Verification",
-                        value: selectedStoreDetail.verification.label || "Unspecified",
-                      },
-                      {
-                        label: "Platforms",
-                        value:
-                          selectedStoreDetail.compatibility.platforms.join(", ") || "Unspecified",
-                      },
-                      {
-                        label: "Desktop Environments",
-                        value:
-                          selectedStoreDetail.compatibility.desktopEnvironments.join(", ") ||
-                          "Unspecified",
-                      },
-                      {
-                        label: "Commands",
-                        value: String(selectedStoreDetail.manifest?.commands.length ?? 0),
-                      },
-                      {
-                        label: "Channel",
-                        value: formatReleaseChannelLabel(
-                          selectedStoreDetail.latestRelease.channelName,
-                          selectedStoreDetail.latestRelease.channel,
-                        ),
-                      },
-                      {
-                        label: "Releases",
-                        value: String(selectedStoreDetail.releases.length),
-                      },
-                    ])}
-                  />
-                </section>
-
-                {selectedStoreDetail.latestRelease.releaseNotes?.summary ||
-                selectedStoreDetail.latestRelease.releaseNotes?.markdown ? (
-                  <section className="space-y-2 rounded-xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] p-4">
-                    <h3 className="text-[13px] font-medium text-foreground">Latest release</h3>
-                    {selectedStoreDetail.latestRelease.releaseNotes?.summary ? (
-                      <p className="text-[12px] text-foreground/90">
-                        {selectedStoreDetail.latestRelease.releaseNotes.summary}
-                      </p>
-                    ) : null}
-                    <div className="text-[11px] text-muted-foreground">
-                      v{selectedStoreDetail.latestRelease.version} ·{" "}
-                      {formatReleaseChannelLabel(
-                        selectedStoreDetail.latestRelease.channelName,
-                        selectedStoreDetail.latestRelease.channel,
-                      )}
-                      {selectedStoreDetail.latestRelease.publishedAt
-                        ? ` · ${selectedStoreDetail.latestRelease.publishedAt}`
-                        : ""}
-                    </div>
-                  </section>
-                ) : null}
-
-                {selectedStoreDetail.categories.length > 0 || selectedStoreDetail.tags.length > 0 ? (
-                  <section className="space-y-2 rounded-xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] p-4">
-                    <h3 className="text-[13px] font-medium text-foreground">Metadata</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {[...selectedStoreDetail.categories, ...selectedStoreDetail.tags].map(
-                        (entry) => (
-                        <span
-                          key={entry}
-                          className="rounded-md border border-[var(--launcher-chip-border)] bg-[var(--launcher-chip-bg)] px-2 py-0.5 text-[11px] text-muted-foreground"
-                        >
-                          {entry}
-                        </span>
-                        ),
-                      )}
-                    </div>
-                  </section>
-                ) : null}
-              </DetailPanel.Content>
-            </DetailPanel>
-          ) : null
+          <ExtensionsDetailPane
+            selectedInstalled={selectedInstalled}
+            selectedInstalledUpdate={selectedInstalledUpdate}
+            selectedStoreDetail={selectedStoreDetail ?? null}
+            selectedStoreInstalled={Boolean(selectedStoreInstalled)}
+            pendingInstallSlug={pendingInstallSlug}
+            pendingUninstallSlug={pendingUninstallSlug}
+            onInstall={handleInstall}
+            onUninstall={handleUninstall}
+            isPreferenceLoading={isPreferenceLoading}
+            isPreferenceSaving={isPreferenceSaving}
+            preferenceValues={preferenceValues}
+            preferenceError={preferenceError}
+            validationError={validationError}
+            onChangePreference={(key, value) => {
+              setValidationError(null);
+              setPreferenceValues((previous) => ({ ...previous, [key]: value }));
+            }}
+            onSavePreferences={handleSavePreferences}
+            storeDetailIsLoading={
+              Boolean(selectedStorePackageQuery.isLoading) && selectedStorePackageQuery.data == null
+            }
+            storeDetailError={
+              selectedStorePackageQuery.error instanceof Error
+                ? selectedStorePackageQuery.error.message
+                : selectedStorePackageQuery.isError
+                  ? "Failed to load package details."
+                  : null
+            }
+          />
         }
       />
 

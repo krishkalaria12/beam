@@ -9,6 +9,8 @@
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
+    "desktop:frontend:dev": "vite dev",
+    "desktop:frontend:build": "vite build",
     "serve": "vite preview",
     "start": "vite",
     "check-types": "tsc --noEmit",
@@ -20,12 +22,15 @@
     "rust:fmt:check": "cargo fmt --manifest-path src-tauri/Cargo.toml --all -- --check",
     "extension-manager:build": "bun run --cwd packages/extension-manager build",
     "extension-manager:check": "bun run --cwd packages/extension-manager check",
+    "create:extension": "bun run --cwd packages/beam-api build && node packages/beam-api/bin/run.js create",
     "publish:beam-api": "bun scripts/publish-beam-api.ts",
     "store:publish": "bun scripts/publish-store-package.ts",
     "store:publish:all": "bun scripts/publish-store-package.ts --all",
+    "store:validate": "bun scripts/validate-store-package.ts --all",
     "tauri": "tauri",
     "desktop:dev": "tauri dev",
-    "desktop:build": "tauri build"
+    "desktop:build": "tauri build",
+    "desktop:prepare": "bun run extension-manager:build"
   },
   "dependencies": {
     "@base-ui/react": "^1.0.0",

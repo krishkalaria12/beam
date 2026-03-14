@@ -4,10 +4,9 @@ import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { open as shellOpen } from "@tauri-apps/plugin-shell";
 import { parseRaycastDeepLink } from "@/modules/extensions/extension-manager/deep-link";
 import {
-  normalizeDiscoveredPluginRecord,
-  type DiscoveredPluginRecord,
   type ExtensionMode,
 } from "@/modules/extensions/extension-manager/discovery";
+import { findExtensionCommandByName } from "@/modules/extensions/extension-catalog";
 import {
   buildBrowserExtensionStatusManagerRequest,
   buildDispatchToastActionManagerRequest,
@@ -270,34 +269,19 @@ class ExtensionManagerService {
     extensionName?: string;
   }): Promise<void> {
     try {
-      const discoveredRaw = await invoke<unknown>("get_discovered_plugins");
-      if (!Array.isArray(discoveredRaw)) {
-        throw new Error("invalid plugin discovery response");
-      }
-
-      const discovered = discoveredRaw
-        .map((entry) => normalizeDiscoveredPluginRecord(entry))
-        .filter((entry): entry is DiscoveredPluginRecord => entry !== null);
-
-      const requestedCommand = payload.name.trim();
-      const requestedPluginName = (payload.extensionName ?? "").trim();
-
-      const command =
-        discovered.find(
-          (entry) =>
-            entry.commandName === requestedCommand &&
-            requestedPluginName.length > 0 &&
-            entry.pluginName === requestedPluginName,
-        ) ?? discovered.find((entry) => entry.commandName === requestedCommand);
+      const command = await findExtensionCommandByName({
+        commandName: payload.name,
+        extensionName: payload.extensionName,
+      });
 
       if (!command) {
         throw new Error(`command "${payload.name}" was not found`);
       }
 
-      if (
-        command.mode === "menu-bar" ||
-        (command.mode === "no-view" && typeof command.interval === "string")
-      ) {
+      const commandMode: ExtensionMode =
+        command.mode === "menu-bar" ? "menu-bar" : command.mode === "no-view" ? "no-view" : "view";
+
+      if (commandMode === "menu-bar" || (commandMode === "no-view" && typeof command.interval === "string")) {
         await persistentExtensionRunnerManager.runPlugin(
           {
             title: command.title,
@@ -306,7 +290,7 @@ class ExtensionManagerService {
             pluginName: command.pluginName,
             commandName: command.commandName,
             pluginPath: command.pluginPath,
-            mode: command.mode,
+            mode: commandMode,
             interval: command.interval,
           },
           payload.type === "background" ? "background" : "userInitiated",
@@ -326,7 +310,7 @@ class ExtensionManagerService {
 
       useExtensionRuntimeStore.getState().resetForNewPlugin({
         pluginPath: command.pluginPath,
-        pluginMode: command.mode,
+        pluginMode: commandMode,
         title: command.title,
         subtitle:
           [command.pluginTitle, command.description ?? ""]
@@ -336,7 +320,7 @@ class ExtensionManagerService {
 
       await this.runPlugin({
         pluginPath: command.pluginPath,
-        mode: command.mode,
+        mode: commandMode,
         aiAccessStatus: false,
         arguments: toRecord(payload.arguments),
         launchContext: toRecord(payload.context),

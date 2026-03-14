@@ -260,6 +260,62 @@
   opacity: 0.55;
 }
 
+.sc-solid .ext-search-bar .module-search-input,
+.sc-solid .ext-search-bar .module-search-bar-static,
+.sc-solid .ext-search-settings,
+.sc-solid .ext-dropdown-trigger,
+.sc-solid .ext-actions-trigger,
+.sc-solid .ext-form-input,
+.sc-solid .ext-form-dropdown .module-searchable-dropdown-trigger,
+.sc-solid .ext-form-link,
+.sc-solid .ext-detail-view .module-detail-markdown-panel,
+.sc-solid .ext-detail-view .module-detail-metadata-panel,
+.sc-solid .ext-form-description-card,
+.sc-solid .ext-grid-item,
+.sc-solid .ext-list-item {
+  background: var(--solid-bg-elevated);
+  border-color: var(--solid-border-subtle);
+}
+
+.sc-solid .ext-list-pane,
+.sc-solid .ext-detail-pane,
+.sc-solid .ext-grid-content,
+.sc-solid .ext-form-content,
+.sc-solid .ext-detail-page {
+  background: var(--solid-bg-base);
+}
+
+.sc-solid .ext-actions-panel,
+.sc-solid .module-searchable-dropdown-panel {
+  background: var(--solid-bg-overlay);
+  border-color: var(--solid-border-default);
+}
+
+.sc-solid .module-searchable-dropdown-row[data-selected="true"],
+.sc-solid .module-action-list-row[data-selected="true"],
+.sc-solid .ext-list-item[data-selected="true"],
+.sc-solid .ext-grid-item[data-selected="true"],
+.sc-solid .ext-grid-item:focus-visible {
+  background: var(--solid-selected-bg);
+}
+
+.sc-glassy .ext-detail-view .module-detail-markdown-panel,
+.sc-glassy .ext-detail-view .module-detail-metadata-panel,
+.sc-glassy .ext-form-description-card,
+.sc-glassy .ext-grid-item,
+.sc-glassy .ext-list-item {
+  background: color-mix(in srgb, var(--card) 88%, transparent);
+}
+
+.theme-custom-active .ext-search-bar,
+.theme-custom-active .ext-list-view,
+.theme-custom-active .ext-grid-view,
+.theme-custom-active .ext-form-view,
+.theme-custom-active .ext-detail-page,
+.theme-custom-active .ext-footer {
+  color: var(--foreground);
+}
+
 /* Keep hover affordance visible for non-actionable rows */
 .command-item[data-disabled="true"]:hover {
   background: var(--command-item-hover-bg);

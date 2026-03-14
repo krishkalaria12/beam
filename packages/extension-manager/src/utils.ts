@@ -3,12 +3,148 @@ import type { ComponentType, ParentInstance } from "./types";
 import { root, instances } from "./state";
 import type { RuntimeCommand } from "@beam/extension-protocol";
 
+const OMIT_SERIALIZED_VALUE = Symbol("omit-serialized-value");
+
 export const getComponentDisplayName = (type: ComponentType): string => {
   if (typeof type === "string") {
     return type;
   }
   return type.displayName ?? type.name ?? "Anonymous";
 };
+
+type NormalizeOptions = {
+  functionValue?: unknown;
+};
+
+function normalizeSerializableValue(
+  value: unknown,
+  seen: WeakSet<object>,
+  options: NormalizeOptions = {},
+): unknown | typeof OMIT_SERIALIZED_VALUE {
+  if (value === undefined || typeof value === "symbol") {
+    return OMIT_SERIALIZED_VALUE;
+  }
+
+  if (value === null || typeof value === "string" || typeof value === "boolean") {
+    return value;
+  }
+
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : null;
+  }
+
+  if (typeof value === "bigint") {
+    return value.toString();
+  }
+
+  if (typeof value === "function") {
+    return options.functionValue ?? OMIT_SERIALIZED_VALUE;
+  }
+
+  if (React.isValidElement(value)) {
+    const serializedProps = serializeProps(value.props as Record<string, unknown>);
+    return {
+      $$typeof: "react.element.serialized",
+      type: getComponentDisplayName(value.type as ComponentType),
+      props: serializedProps,
+    };
+  }
+
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value.toISOString();
+  }
+
+  if (value instanceof URL) {
+    return value.toString();
+  }
+
+  if (value instanceof Error) {
+    return {
+      name: value.name,
+      message: value.message,
+      stack: value.stack,
+    };
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((entry) => {
+      const normalizedEntry = normalizeSerializableValue(entry, seen, options);
+      return normalizedEntry === OMIT_SERIALIZED_VALUE ? null : normalizedEntry;
+    });
+  }
+
+  if (ArrayBuffer.isView(value)) {
+    return Array.from(new Uint8Array(value.buffer, value.byteOffset, value.byteLength));
+  }
+
+  if (value instanceof ArrayBuffer) {
+    return Array.from(new Uint8Array(value));
+  }
+
+  if (value instanceof Set) {
+    return Array.from(value, (entry) => {
+      const normalizedEntry = normalizeSerializableValue(entry, seen, options);
+      return normalizedEntry === OMIT_SERIALIZED_VALUE ? null : normalizedEntry;
+    });
+  }
+
+  if (value instanceof Map) {
+    const normalizedRecord: Record<string, unknown> = {};
+    for (const [entryKey, entryValue] of value.entries()) {
+      const normalizedEntry = normalizeSerializableValue(entryValue, seen, options);
+      if (normalizedEntry === OMIT_SERIALIZED_VALUE) {
+        continue;
+      }
+      normalizedRecord[String(entryKey)] = normalizedEntry;
+    }
+    return normalizedRecord;
+  }
+
+  if (typeof value === "object") {
+    if (seen.has(value)) {
+      return "[Circular]";
+    }
+
+    seen.add(value);
+    try {
+      const normalizedRecord: Record<string, unknown> = {};
+
+      for (const [entryKey, entryValue] of Object.entries(value)) {
+        const normalizedEntry = normalizeSerializableValue(entryValue, seen, options);
+        if (normalizedEntry === OMIT_SERIALIZED_VALUE) {
+          continue;
+        }
+        normalizedRecord[entryKey] = normalizedEntry;
+      }
+
+      return normalizedRecord;
+    } finally {
+      seen.delete(value);
+    }
+  }
+
+  return String(value);
+}
+
+function stableStringify(value: unknown): string {
+  if (value === null) {
+    return "null";
+  }
+
+  if (Array.isArray(value)) {
+    return `[${value.map((entry) => stableStringify(entry)).join(",")}]`;
+  }
+
+  if (typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    return `{${Object.keys(record)
+      .sort()
+      .map((key) => `${JSON.stringify(key)}:${stableStringify(record[key])}`)
+      .join(",")}}`;
+  }
+
+  return JSON.stringify(value);
+}
 
 export function serializeProps(props: Record<string, unknown>): Record<string, unknown> {
   const serialized: Record<string, unknown> = {};
@@ -21,65 +157,29 @@ export function serializeProps(props: Record<string, unknown>): Record<string, u
     }
 
     const value = props[key];
-
-    if (typeof value === "function") {
-      serialized[key] = true;
-      continue;
+    const normalizedValue = normalizeSerializableValue(value, new WeakSet<object>(), {
+      functionValue: true,
+    });
+    if (normalizedValue !== OMIT_SERIALIZED_VALUE) {
+      serialized[key] = normalizedValue;
     }
-
-    // part 2: deep-serialize react elements if they appear in props
-    if (React.isValidElement(value)) {
-      serialized[key] = {
-        $$typeof: "react.element.serialized",
-        type: getComponentDisplayName(value.type as ComponentType),
-        props: serializeProps(value.props as Record<string, unknown>),
-      };
-      continue;
-    }
-
-    // part 3: recursively serialize arrays because they might contain elements
-    if (Array.isArray(value)) {
-      serialized[key] = value.map((item) =>
-        React.isValidElement(item)
-          ? {
-              $$typeof: "react.element.serialized",
-              type: getComponentDisplayName(item.type as ComponentType),
-              props: serializeProps(item.props as Record<string, unknown>),
-            }
-          : item,
-      );
-      continue;
-    }
-
-    // part 4: we don't need to serialize the value, just copy it directly
-    serialized[key] = value;
   }
 
   return serialized;
+}
+
+export function normalizeTransportValue(value: unknown): unknown {
+  const normalizedValue = normalizeSerializableValue(value, new WeakSet<object>());
+  return normalizedValue === OMIT_SERIALIZED_VALUE ? null : normalizedValue;
 }
 
 function createStableFingerprint(
   props: Record<string, unknown>,
   namedChildren?: Record<string, number>,
 ): string {
-  let result = "";
-
-  const propKeys = Object.keys(props).sort();
-  for (const key of propKeys) {
-    if (key === "ref") continue;
-    result += `${key}=${String(props[key])};`;
-  }
-
-  if (namedChildren) {
-    const childKeys = Object.keys(namedChildren).sort();
-    if (childKeys.length > 0) {
-      result += "::nc::"; // named children
-      for (const key of childKeys) {
-        result += `${key}=${String(namedChildren[key])};`;
-      }
-    }
-  }
-  return result;
+  const normalizedProps = normalizeTransportValue(props);
+  const normalizedChildren = namedChildren ? normalizeTransportValue(namedChildren) : undefined;
+  return `${stableStringify(normalizedProps)}::${stableStringify(normalizedChildren ?? null)}`;
 }
 
 export function optimizeCommitBuffer(buffer: RuntimeCommand[]): RuntimeCommand[] {

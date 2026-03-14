@@ -5,7 +5,7 @@ import {
   getLocalStorageItem,
   removeLocalStorageItem,
   setLocalStorageItem,
-} from "@beam-launcher/api";
+} from "../../beam-api/src/index.js";
 
 export {
   LocalStorage,

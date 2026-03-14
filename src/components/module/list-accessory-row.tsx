@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -16,15 +16,16 @@ export interface ListAccessoryItem {
 interface ListAccessoryRowProps {
   items: ListAccessoryItem[];
   className?: string;
+  style?: CSSProperties;
 }
 
-export function ListAccessoryRow({ items, className }: ListAccessoryRowProps) {
+export function ListAccessoryRow({ items, className, style }: ListAccessoryRowProps) {
   if (items.length === 0) {
     return null;
   }
 
   return (
-    <div className={cn("flex items-center gap-2", className)}>
+    <div className={cn("module-list-accessory-row flex items-center gap-2", className)} style={style}>
       {items.map((item) => (
         <ListAccessory
           key={item.key}
@@ -33,6 +34,7 @@ export function ListAccessoryRow({ items, className }: ListAccessoryRowProps) {
           fill={item.fill}
           icon={item.icon}
           tooltip={item.tooltip}
+          style={style}
         />
       ))}
     </div>

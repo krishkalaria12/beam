@@ -1,10 +1,13 @@
 import { useEffect } from "react";
 
-import { getDiscoveredPlugins } from "@/modules/extensions/api/get-discovered-plugins";
 import {
   listenForPersistentMenuBarEvents,
   persistentExtensionRunnerManager,
 } from "@/modules/extensions/background/persistent-runners";
+import {
+  getExtensionCatalogPlugins,
+  isPersistentExtensionPlugin,
+} from "@/modules/extensions/extension-catalog";
 
 interface PersistentExtensionsHostProps {
   launchCommand: (payload: {
@@ -41,12 +44,14 @@ export function PersistentExtensionsHost({
     });
 
     const refresh = () => {
-      void getDiscoveredPlugins()
+      void getExtensionCatalogPlugins()
         .then((plugins) => {
           if (disposed) {
             return;
           }
-          void persistentExtensionRunnerManager.bootstrap(plugins);
+          void persistentExtensionRunnerManager.bootstrap(
+            plugins.filter((plugin) => isPersistentExtensionPlugin(plugin)),
+          );
         })
         .catch((error) => {
           console.error("Failed to bootstrap persistent extension runners:", error);

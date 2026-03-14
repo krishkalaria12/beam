@@ -13,7 +13,12 @@ export const createLocalStorage = () => {
 
 export const createWrapperComponent = (name: string) => {
   const ComponentFactory = (props: Record<string, unknown> & { children?: React.ReactNode }) => {
-    return jsx(name as ElementType, props);
+    const normalizedChildren =
+      props.children === undefined ? undefined : React.Children.toArray(props.children);
+    return jsx(name as ElementType, {
+      ...props,
+      children: normalizedChildren,
+    });
   };
   ComponentFactory.displayName = name;
   return ComponentFactory;
@@ -25,16 +30,24 @@ export const createSlottedComponent = (baseName: string, accessoryPropNames: str
 
   const SlottedComponentFactory = (props: { [key: string]: any; children?: React.ReactNode }) => {
     const { children, ...rest } = props;
-    const accessoryElements = [];
+    const accessoryElements: React.ReactElement[] = [];
     for (const name of accessoryPropNames) {
       if (rest[name]) {
-        accessoryElements.push(AccessorySlotFactory({ name, children: rest[name] }));
+        accessoryElements.push(
+          React.createElement(AccessorySlotFactory, {
+            key: name,
+            name,
+            children: rest[name],
+          }),
+        );
         delete rest[name];
       }
     }
+
+    const normalizedChildren = React.Children.toArray(children);
     return PrimitiveFactory({
       ...rest,
-      children: [children, ...accessoryElements].filter(Boolean),
+      children: [...normalizedChildren, ...accessoryElements],
     });
   };
   SlottedComponentFactory.displayName = baseName;

@@ -258,6 +258,195 @@
   }
 }
 
+/* extension runtime styles */
+
+.ext-shell {
+  background: transparent;
+}
+
+.ext-search-bar {
+  background: transparent;
+}
+
+.ext-search-bar .module-search-input,
+.ext-search-bar .module-search-bar-static,
+.ext-search-settings,
+.ext-dropdown-trigger,
+.ext-actions-trigger {
+  background: var(--launcher-card-bg);
+  border-color: var(--launcher-card-border);
+}
+
+.ext-search-bar .module-search-input:focus-within,
+.ext-search-bar .module-search-bar-static:focus-within,
+.ext-dropdown-trigger:focus-visible,
+.ext-actions-trigger:focus-visible {
+  box-shadow: 0 0 0 3px var(--launcher-card-selected-border);
+}
+
+.ext-search-title,
+.ext-search-subtitle,
+.ext-search-accessories,
+.ext-search-actions {
+  min-width: 0;
+}
+
+.ext-list-view,
+.ext-grid-view,
+.ext-form-view,
+.ext-detail-page {
+  background: transparent;
+}
+
+.ext-list-body,
+.ext-list-pane,
+.ext-detail-pane,
+.ext-grid-content,
+.ext-form-content,
+.ext-detail-page,
+.ext-detail-view,
+.ext-detail-content,
+.ext-detail-metadata-pane {
+  min-height: 0;
+}
+
+.ext-list-pane,
+.ext-grid-content,
+.ext-form-content,
+.ext-detail-page-root,
+.ext-detail-page-nested {
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+}
+
+.ext-list-items,
+.ext-grid-sections,
+.ext-form-width {
+  animation: detail-fade-in 220ms ease-out both;
+}
+
+.ext-list-item,
+.ext-grid-item,
+.ext-form-description-card,
+.ext-detail-view .module-detail-markdown-panel,
+.ext-detail-view .module-detail-metadata-panel {
+  position: relative;
+  overflow: hidden;
+}
+
+.ext-list-item::after,
+.ext-grid-item::after,
+.ext-form-description-card::after,
+.ext-detail-view .module-detail-markdown-panel::after,
+.ext-detail-view .module-detail-metadata-panel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.03), transparent 28%);
+}
+
+.ext-list-item[data-selected="true"],
+.ext-grid-item[data-selected="true"],
+.ext-grid-item:focus-visible {
+  box-shadow: 0 0 0 1px var(--launcher-card-selected-border);
+}
+
+.ext-section-header .module-section-header-title {
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.ext-list-accessories .module-list-accessory-filled,
+.ext-grid-accessories .module-list-accessory-filled,
+.ext-detail-view .module-metadata-tag {
+  background: var(--launcher-chip-bg);
+  border-color: var(--launcher-chip-border);
+}
+
+.ext-detail-view .module-detail-markdown-panel,
+.ext-detail-view .module-detail-metadata-panel {
+  min-height: 100%;
+}
+
+.ext-markdown {
+  color: var(--foreground);
+}
+
+.ext-markdown a {
+  color: var(--ring);
+}
+
+.ext-markdown code,
+.ext-markdown pre {
+  border-color: var(--launcher-card-border);
+  background: var(--launcher-chip-bg);
+}
+
+.ext-form-field {
+  gap: 0.5rem;
+}
+
+.ext-form-input,
+.ext-form-dropdown .module-searchable-dropdown-trigger {
+  background: var(--launcher-card-bg);
+  border-color: var(--launcher-card-border);
+}
+
+.ext-form-label,
+.ext-form-description-title {
+  letter-spacing: -0.01em;
+}
+
+.ext-form-link {
+  border-color: var(--launcher-card-border);
+  background: var(--launcher-card-bg);
+}
+
+.ext-footer {
+  position: relative;
+}
+
+.ext-footer-status {
+  max-width: 100%;
+}
+
+.ext-actions-panel,
+.module-searchable-dropdown-panel {
+  background: var(--actions-panel-bg, var(--popover));
+  border-color: var(--actions-panel-border, var(--launcher-card-border));
+  box-shadow: 0 16px 40px var(--actions-panel-shadow, rgb(0 0 0 / 0.24));
+}
+
+.module-action-list-row[data-selected="true"],
+.module-searchable-dropdown-row[data-selected="true"] {
+  background: var(--launcher-card-selected-bg);
+  border-color: var(--launcher-card-selected-border);
+}
+
+.module-action-list-row:hover,
+.module-searchable-dropdown-row:hover {
+  background: var(--launcher-card-hover-bg);
+}
+
+.module-list-accessory-row,
+.module-action-list-items,
+.module-searchable-dropdown-items {
+  min-width: 0;
+}
+
+.module-section-header,
+.module-list-accessory,
+.module-footer,
+.module-action-list-panel,
+.module-searchable-dropdown,
+.module-generic-list-view,
+.module-generic-grid-view,
+.module-form-view,
+.module-detail-view {
+  color: inherit;
+}
+
 /* Settings style cards */
 .settings-style-card {
   transition: all 200ms ease;

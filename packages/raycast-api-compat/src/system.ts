@@ -4,7 +4,7 @@ import {
   getDefaultApplication as beamGetDefaultApplication,
   getFrontmostApplication as beamGetFrontmostApplication,
   showInFinder as beamShowInFinder,
-} from "@beam-launcher/api";
+} from "../../beam-api/src/index.js";
 
 export const getApplications = beamGetApplications;
 export const getDefaultApplication = beamGetDefaultApplication;

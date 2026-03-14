@@ -32,6 +32,11 @@ struct ManagedRuntime {
     stdin: Arc<Mutex<BufWriter<ChildStdin>>>,
 }
 
+struct ExtensionRuntimeLauncher {
+    program: PathBuf,
+    args: Vec<String>,
+}
+
 #[derive(Default)]
 pub struct ExtensionRuntimeBridgeState {
     runtimes: Arc<Mutex<HashMap<String, ManagedRuntime>>>,
@@ -68,6 +73,17 @@ fn resolve_extension_manager_launcher(app: &AppHandle) -> Result<PathBuf, String
     Err("failed to locate the extension runtime launcher".to_string())
 }
 
+fn resolve_extension_manager_dev_entry() -> Option<PathBuf> {
+    let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let workspace_root = manifest_dir.parent()?;
+    let entry = workspace_root
+        .join("packages")
+        .join("extension-manager")
+        .join("dist")
+        .join("index.js");
+    if entry.is_file() { Some(entry) } else { None }
+}
+
 fn find_extension_manager_launcher_in_dir(directory: &Path) -> Option<PathBuf> {
     let entries = fs::read_dir(directory).ok()?;
 
@@ -96,6 +112,28 @@ fn build_extension_manager_args(app: &AppHandle) -> Result<Vec<String>, String> 
         format!("--data-dir={}", data_dir.display()),
         format!("--cache-dir={}", cache_dir.display()),
     ])
+}
+
+fn resolve_extension_runtime_launcher(app: &AppHandle) -> Result<ExtensionRuntimeLauncher, String> {
+    let args = build_extension_manager_args(app)?;
+
+    if cfg!(debug_assertions) {
+        if let Some(entry) = resolve_extension_manager_dev_entry() {
+            let mut node_args = Vec::with_capacity(args.len() + 1);
+            node_args.push(entry.display().to_string());
+            node_args.extend(args);
+
+            return Ok(ExtensionRuntimeLauncher {
+                program: PathBuf::from("node"),
+                args: node_args,
+            });
+        }
+    }
+
+    Ok(ExtensionRuntimeLauncher {
+        program: resolve_extension_manager_launcher(app)?,
+        args,
+    })
 }
 
 fn maybe_inflate(payload: &[u8], compressed: bool) -> Result<Vec<u8>, String> {
@@ -468,7 +506,7 @@ fn spawn_stdout_reader(
                 }
             };
 
-            let decoded_value: Value = match rmp_serde::from_slice(&decoded_payload) {
+            let decoded_value: Value = match serde_json::from_slice(&decoded_payload) {
                 Ok(value) => value,
                 Err(error) => {
                     emit_runtime_stderr(
@@ -548,10 +586,9 @@ impl ExtensionRuntimeBridgeState {
             runtimes.remove(runtime_id);
         }
 
-        let launcher = resolve_extension_manager_launcher(app)?;
-        let args = build_extension_manager_args(app)?;
-        let mut child = Command::new(launcher)
-            .args(args)
+        let launcher = resolve_extension_runtime_launcher(app)?;
+        let mut child = Command::new(&launcher.program)
+            .args(&launcher.args)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())

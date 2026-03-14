@@ -1,5 +1,6 @@
 import path from "node:path";
 import { existsSync, readdirSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 
 import {
   asFlag,
@@ -295,6 +296,63 @@ function requireValue(value: string | undefined, message: string): string {
   return value;
 }
 
+function isPrereleaseVersion(version: string): boolean {
+  return version.includes("-");
+}
+
+function validateCompatibilityPolicy(
+  sourceDir: string,
+  compatibility: StoreCompatibility,
+  manifest: PackageJsonManifest,
+): void {
+  if (!(compatibility.platforms ?? []).map((entry) => entry.toLowerCase()).includes("linux")) {
+    throw new Error(`${sourceDir}: Beam store packages must declare linux support in compatibility.platforms.`);
+  }
+
+  const minimumBeamVersion =
+    normalizeOptionalString(compatibility.minimumBeamVersion) ??
+    normalizeOptionalString(manifest.minimumBeamVersion);
+
+  if (!minimumBeamVersion) {
+    throw new Error(`${sourceDir}: minimumBeamVersion is required either in beam-store.json compatibility or package.json.`);
+  }
+}
+
+function validateChannelPolicy(
+  sourceDir: string,
+  version: string,
+  releaseChannel: string,
+  publishConfig: StorePublishConfig,
+  _existingPackage: CatalogPackage | undefined,
+): void {
+  const prerelease = Boolean(publishConfig.release?.prerelease);
+  const channelName = normalizeOptionalString(publishConfig.release?.channelName);
+
+  if (releaseChannel === "EXTENSION_RELEASE_CHANNEL_STABLE") {
+    if (prerelease || isPrereleaseVersion(version)) {
+      throw new Error(`${sourceDir}: stable releases cannot be prerelease builds.`);
+    }
+  } else if (!prerelease && !isPrereleaseVersion(version)) {
+    throw new Error(`${sourceDir}: non-stable channels must use prerelease versions or set release.prerelease=true.`);
+  }
+
+  if (releaseChannel === "EXTENSION_RELEASE_CHANNEL_CUSTOM" && !channelName) {
+    throw new Error(`${sourceDir}: custom channel releases require release.channelName.`);
+  }
+}
+
+function validateArtifactIntegrity(artifactPath: string, artifactKind: string): void {
+  const testArgs =
+    artifactKind === "EXTENSION_PACKAGE_ARTIFACT_KIND_TAR_GZ"
+      ? ["-tzf", artifactPath]
+      : ["-t", artifactPath];
+  const testCommand = artifactKind === "EXTENSION_PACKAGE_ARTIFACT_KIND_TAR_GZ" ? "tar" : "unzip";
+  const testResult = spawnSync(testCommand, testArgs, { stdio: "ignore" });
+  if (testResult.status !== 0) {
+    throw new Error(`Artifact validation failed for ${artifactPath}.`);
+  }
+}
+
 function publishPackage(
   sourceDir: string,
   catalog: Catalog,
@@ -364,12 +422,16 @@ function publishPackage(
       notes: [],
     } satisfies StoreCompatibility);
 
+  validateCompatibilityPolicy(sourceDir, compatibility, manifest);
+  validateChannelPolicy(sourceDir, version, releaseChannel, publishConfig, existingPackage);
+
   if (dryRun) {
     return { packageId, version, artifactFile };
   }
 
   const checksum = sha256File(artifactPath);
   const sizeBytes = fileSizeBytes(artifactPath);
+  validateArtifactIntegrity(artifactPath, artifactKind);
   const release: CatalogRelease = {
     version,
     channel: releaseChannel,

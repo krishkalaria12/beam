@@ -49,7 +49,7 @@ export {
   MenuBarExtra,
   launchCommand,
   trash,
-} from "@beam-launcher/api";
+} from "../../beam-api/src/index.js";
 
 export {
   getApplications,

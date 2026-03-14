@@ -1,6 +1,6 @@
 import { useMemo, useRef } from "react";
 
-import { EmptyView, ListAccessoryRow, SectionHeader } from "@/components/module";
+import { EmptyView, GenericGridView, ListAccessoryRow, SectionHeader } from "@/components/module";
 import { cn } from "@/lib/utils";
 import { RunnerIcon } from "@/modules/extensions/components/runner/nodes/shared/runner-icon";
 import type { ListEntry } from "@/modules/extensions/components/runner/types";
@@ -8,7 +8,16 @@ import type { UseExtensionRunnerStateResult } from "@/modules/extensions/compone
 import { asBoolean, asString } from "@/modules/extensions/components/runner/utils";
 
 import { RuntimeActionFooter } from "./runtime-action-footer";
-import { resolveColorContent, resolveContentValue, selectedActions, toInsetClass } from "./utils";
+import {
+  getEmptyViewIconClassName,
+  isAnimatedEmptyViewIcon,
+  readClassName,
+  readStyle,
+  resolveColorContent,
+  resolveContentValue,
+  selectedActions,
+  toInsetClass,
+} from "./utils";
 
 interface RuntimeGridViewProps {
   state: UseExtensionRunnerStateResult;
@@ -64,43 +73,79 @@ export function RuntimeGridView({ state }: RuntimeGridViewProps) {
   const hasOnLoadMore = pagination ? asBoolean(pagination.onLoadMore) : false;
   const showPlaceholders = hasMore && pageSize > 0;
   const lastLoadMoreAtRef = useRef(0);
+  const emptyViewNode = rootNode?.children
+    .map((childId) => state.uiTree.get(childId))
+    .find((child): child is NonNullable<typeof child> => child?.type === "Grid.EmptyView");
+  const className = readClassName(rootNode?.props.className);
+  const style = readStyle(rootNode?.props.style);
+  const contentClassName = readClassName(rootNode?.props.contentClassName);
+  const contentStyle = readStyle(rootNode?.props.contentStyle);
 
   return (
-    <>
-      <div
-        className="min-h-0 flex-1 overflow-y-auto px-4 py-3"
-        onScroll={(event) => {
-          if (!hasOnLoadMore || !hasMore || !rootNode) {
-            return;
-          }
+    <GenericGridView
+      className={cn("ext-grid-view", className)}
+      style={style}
+      contentClassName={cn("ext-grid-content", contentClassName)}
+      contentStyle={contentStyle}
+      onScroll={(event) => {
+        if (!hasOnLoadMore || !hasMore || !rootNode) {
+          return;
+        }
 
-          const target = event.currentTarget;
-          const distanceToBottom = target.scrollHeight - target.scrollTop - target.clientHeight;
-          if (distanceToBottom > 300) {
-            return;
-          }
+        const target = event.currentTarget;
+        const distanceToBottom = target.scrollHeight - target.scrollTop - target.clientHeight;
+        if (distanceToBottom > 300) {
+          return;
+        }
 
-          const now = Date.now();
-          if (now - lastLoadMoreAtRef.current < 400) {
-            return;
-          }
+        const now = Date.now();
+        if (now - lastLoadMoreAtRef.current < 400) {
+          return;
+        }
 
-          lastLoadMoreAtRef.current = now;
-          state.dispatchNodeEvent(rootNode.id, "onLoadMore", []);
-        }}
-      >
+        lastLoadMoreAtRef.current = now;
+        state.dispatchNodeEvent(rootNode.id, "onLoadMore", []);
+      }}
+      footer={<RuntimeActionFooter state={state} actions={selectedActions(state)} />}
+    >
         {sections.length === 0 ? (
           <EmptyView
-            title="No results"
-            description="This extension did not return any grid items."
+            title={emptyViewNode ? asString(emptyViewNode.props.title).trim() || "No results" : "No results"}
+            description={
+              emptyViewNode
+                ? asString(emptyViewNode.props.description).trim() || undefined
+                : "This extension did not return any grid items."
+            }
+            icon={
+              emptyViewNode?.props.icon ? (
+                <RunnerIcon
+                  icon={emptyViewNode.props.icon}
+                  className={getEmptyViewIconClassName(emptyViewNode.props.icon)}
+                />
+              ) : undefined
+            }
+            className={cn("ext-empty-view", readClassName(emptyViewNode?.props.className))}
+            style={readStyle(emptyViewNode?.props.style)}
+            contentClassName={cn(
+              isAnimatedEmptyViewIcon(emptyViewNode?.props.icon) ? "max-w-md" : undefined,
+              readClassName(emptyViewNode?.props.contentClassName),
+            )}
+            contentStyle={readStyle(emptyViewNode?.props.contentStyle)}
+            titleClassName={cn(
+              isAnimatedEmptyViewIcon(emptyViewNode?.props.icon) ? "text-[14px]" : undefined,
+              readClassName(emptyViewNode?.props.titleClassName),
+            )}
+            descriptionClassName={readClassName(emptyViewNode?.props.descriptionClassName)}
           />
         ) : (
-          <div className="space-y-4">
+          <div className="ext-grid-sections space-y-4">
             {sections.map((section) => (
-              <div key={section.key} className="space-y-2">
-                {section.title ? <SectionHeader title={section.title} className="px-0" /> : null}
+              <div key={section.key} className="ext-grid-section space-y-2">
+                {section.title ? (
+                  <SectionHeader title={section.title} className="ext-section-header px-0" />
+                ) : null}
                 <div
-                  className="grid gap-2"
+                  className="ext-grid-matrix grid gap-2"
                   style={{ gridTemplateColumns: `repeat(${section.columns}, minmax(0, 1fr))` }}
                 >
                   {section.entries.map(({ entry, index }) => {
@@ -116,6 +161,10 @@ export function RuntimeGridView({ state }: RuntimeGridViewProps) {
                       node.props.accessory && typeof node.props.accessory === "object"
                         ? (node.props.accessory as Record<string, unknown>)
                         : null;
+                    const itemClassName = readClassName(node.props.className);
+                    const itemStyle = readStyle(node.props.style);
+                    const titleClassName = readClassName(node.props.titleClassName);
+                    const subtitleClassName = readClassName(node.props.subtitleClassName);
                     const aspectRatio =
                       entry.gridAspectRatio ?? (asString(node.props.aspectRatio).trim() || "1");
                     const fit = entry.gridFit ?? (asString(node.props.fit).trim() || "fill");
@@ -125,15 +174,19 @@ export function RuntimeGridView({ state }: RuntimeGridViewProps) {
                       <button
                         key={`grid:${entry.nodeId}`}
                         type="button"
+                        data-selected={selected}
                         onMouseEnter={() => state.setSelectedIndex(index)}
                         onClick={() => state.setSelectedIndex(index)}
                         onDoubleClick={() => state.runPrimarySelectionAction()}
                         className={cn(
+                          "ext-grid-item",
                           "flex h-auto flex-col gap-2 rounded-xl border p-2 text-left transition-colors",
                           selected
                             ? "border-[var(--launcher-card-selected-border)] bg-[var(--launcher-card-selected-bg)]"
                             : "border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] hover:bg-[var(--launcher-card-hover-bg)]",
+                          itemClassName,
                         )}
+                        style={itemStyle}
                       >
                         <div
                           className={cn(
@@ -158,11 +211,21 @@ export function RuntimeGridView({ state }: RuntimeGridViewProps) {
                           )}
                         </div>
                         <div className="min-w-0">
-                          <div className="truncate text-[13px] font-medium text-foreground">
+                          <div
+                            className={cn(
+                              "ext-grid-item-title truncate text-[13px] font-medium text-foreground",
+                              titleClassName,
+                            )}
+                          >
                             {entry.title}
                           </div>
                           {entry.subtitle ? (
-                            <div className="truncate text-[11px] text-muted-foreground">
+                            <div
+                              className={cn(
+                                "ext-grid-item-subtitle truncate text-[11px] text-muted-foreground",
+                                subtitleClassName,
+                              )}
+                            >
                               {entry.subtitle}
                             </div>
                           ) : null}
@@ -178,6 +241,7 @@ export function RuntimeGridView({ state }: RuntimeGridViewProps) {
                                 ) : undefined,
                               },
                             ]}
+                            className="ext-grid-accessories"
                           />
                         ) : null}
                       </button>
@@ -188,20 +252,17 @@ export function RuntimeGridView({ state }: RuntimeGridViewProps) {
             ))}
 
             {showPlaceholders ? (
-              <div className="grid grid-cols-3 gap-2">
+              <div className="ext-grid-placeholders grid grid-cols-3 gap-2">
                 {Array.from({ length: pageSize }).map((_, index) => (
                   <div
                     key={`placeholder:${index}`}
-                    className="aspect-square rounded-lg border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)]/70"
+                    className="ext-grid-placeholder aspect-square rounded-lg border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)]/70"
                   />
                 ))}
               </div>
             ) : null}
           </div>
         )}
-      </div>
-
-      <RuntimeActionFooter state={state} actions={selectedActions(state)} />
-    </>
+    </GenericGridView>
   );
 }

@@ -18,3 +18,17 @@ Publish one package source directory with:
 ```bash
 bun run store:publish -- --source store/packages/beam-demo-tools-1.1.0
 ```
+
+Validate package sources plus catalog/artifact integrity with:
+
+```bash
+bun run store:validate
+```
+
+The validator checks:
+
+- channel policy
+- compatibility policy
+- release artifact integrity
+- checksum and size consistency
+- catalog/package consistency

@@ -1,13 +1,17 @@
 import { RuntimeRender, createRuntimeRenderLog } from "@beam/extension-protocol";
-import { Packr } from "msgpackr";
 import { deflate } from "pako";
+import { normalizeTransportValue } from "./utils";
 
-const packr = new Packr();
 const COMPRESSION_THRESHOLD = 2048; // 2KB
+const encoder = new TextEncoder();
+
+function encodePayload(data: object): Uint8Array {
+  return encoder.encode(JSON.stringify(normalizeTransportValue({ ...data, timestamp: Date.now() })));
+}
 
 export const writeOutput = (data: object): void => {
   try {
-    const payload = packr.pack({ ...data, timestamp: Date.now() });
+    const payload = encodePayload(data);
 
     let payloadToWrite: Uint8Array = payload;
     let isCompressed = false;
@@ -33,9 +37,8 @@ export const writeOutput = (data: object): void => {
     process.stdout.write(payloadToWrite);
   } catch (e: unknown) {
     const errorString = e instanceof Error ? e.toString() : String(e);
-    const errorPayload = packr.pack({
+    const errorPayload = encodePayload({
       runtimeRender: RuntimeRender.toJSON(createRuntimeRenderLog(errorString)),
-      timestamp: Date.now(),
     });
     const errorHeader = Buffer.alloc(4);
     errorHeader.writeUInt32BE(errorPayload.length);

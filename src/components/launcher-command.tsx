@@ -44,7 +44,10 @@ import { ShellCommandPanel } from "@/modules/shell/components/shell-command-pane
 import { useRunShellCommandMutation } from "@/modules/shell/hooks/use-run-shell-command-mutation";
 import type { ShellExecutionEntry } from "@/modules/shell/types";
 import { persistentExtensionRunnerManager } from "@/modules/extensions/background/persistent-runners";
-import { getDiscoveredPlugins } from "@/modules/extensions/api/get-discovered-plugins";
+import {
+  findExtensionCommandByName,
+  getExtensionCatalogPlugins,
+} from "@/modules/extensions/extension-catalog";
 import { PersistentExtensionsHost } from "@/modules/extensions/components/persistent-extensions-host";
 import { extensionManagerService } from "@/modules/extensions/extension-manager-service";
 import { ExtensionToastBridge } from "@/modules/extensions/components/extension-toast-bridge";
@@ -169,7 +172,7 @@ export default function LauncherCommand() {
         input.pluginMode === "menu-bar" ||
         (input.pluginMode === "no-view" && typeof input.pluginInterval === "string")
       ) {
-        const discovered = await getDiscoveredPlugins();
+        const discovered = await getExtensionCatalogPlugins();
         const matched = discovered.find((plugin) => plugin.pluginPath === input.pluginPath);
         if (!matched) {
           throw new Error("Extension command is no longer installed.");
@@ -219,16 +222,10 @@ export default function LauncherCommand() {
       arguments?: Record<string, unknown>;
       extensionName?: string;
     }) => {
-      const discovered = await getDiscoveredPlugins();
-      const requestedCommand = request.name.trim();
-      const requestedPluginName = request.extensionName?.trim();
-      const command =
-        discovered.find(
-          (entry) =>
-            entry.commandName === requestedCommand &&
-            requestedPluginName &&
-            entry.pluginName === requestedPluginName,
-        ) ?? discovered.find((entry) => entry.commandName === requestedCommand);
+      const command = await findExtensionCommandByName({
+        commandName: request.name,
+        extensionName: request.extensionName,
+      });
 
       if (!command) {
         throw new Error(`command "${request.name}" was not found`);

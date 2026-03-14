@@ -4,8 +4,8 @@ import { useCallback, useEffect } from "react";
 import { toast } from "sonner";
 
 import type { CommandPanel } from "@/command-registry/types";
-import { getDiscoveredPlugins } from "@/modules/extensions/api/get-discovered-plugins";
 import { persistentExtensionRunnerManager } from "@/modules/extensions/background/persistent-runners";
+import { findExtensionCommandByQualifiedName } from "@/modules/extensions/extension-catalog";
 import { extensionManagerService } from "@/modules/extensions/extension-manager-service";
 import { parseRaycastDeepLink } from "@/modules/extensions/extension-manager/deep-link";
 import { useExtensionRuntimeStore } from "@/modules/extensions/runtime/store";
@@ -38,23 +38,10 @@ export function useLauncherDeepLinks({ openPanel, backToCommands }: UseLauncherD
         return;
       }
 
-      const discovered = await getDiscoveredPlugins();
-      const matchedPlugin = discovered.find((plugin) => {
-        const owner = plugin.owner?.trim().toLowerCase() ?? "";
-        const author =
-          typeof plugin.author === "string"
-            ? plugin.author.trim().toLowerCase()
-            : (plugin.author?.name?.trim().toLowerCase() ?? "");
-        const ownerMatches = owner.length > 0 && owner === requestedOwner;
-        const authorMatches = author.length > 0 && author === requestedOwner;
-        if (!ownerMatches && !authorMatches) {
-          return false;
-        }
-
-        return (
-          plugin.pluginName.trim().toLowerCase() === requestedExtension &&
-          plugin.commandName.trim().toLowerCase() === requestedCommand
-        );
+      const matchedPlugin = await findExtensionCommandByQualifiedName({
+        ownerOrAuthor: requestedOwner,
+        extensionName: requestedExtension,
+        commandName: requestedCommand,
       });
 
       if (!matchedPlugin) {

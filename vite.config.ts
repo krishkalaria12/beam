@@ -11,6 +11,7 @@ export default defineConfig({
     tanstackRouter({}),
     react(),
     babel({
+      exclude: [/node_modules/],
       babelConfig: {
         plugins: ["babel-plugin-react-compiler"],
       },

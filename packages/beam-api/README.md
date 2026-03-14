@@ -1,37 +1,113 @@
-This package lets you extend the [Beam](https://docs.beam.com/) launcher using React and TypeScript.
+`@beam-launcher/api` is the public SDK for building Beam extensions with React and TypeScript.
 
 [![Version](https://img.shields.io/npm/v/@beam-launcher/api.svg)](https://npmjs.org/package/@beam-launcher/api)
 [![Downloads/week](https://img.shields.io/npm/dw/@beam-launcher/api.svg)](https://npmjs.org/package/@beam-launcher/api)
 
-# Getting started
+## Install
 
-The recommend way to start developing a new extension is to [read the docs](https://docs.beam.com/extensions/introduction).
-
-The full API reference (expect breaking changes) can be found [here](https://api-reference.beam.com).
-
-# Installation
-
-Install the package:
-
-```
+```bash
 bun add @beam-launcher/api
 ```
 
-# Versioning
+The package also exposes the `beam-api` CLI.
 
-The `@beam-launcher/api` package follows the same versioning as the main `beam` binary, since the API is always embedded in the binary.
+## Create An Extension
 
-# CLI usage
-
-The package exports the `beam-api` binary which is used to build and run extensions in development mode.
-
-While convenience scripts are already provided in the boilerplate, you can still call the binary manually:
+Create a new extension from the bundled Beam boilerplate:
 
 ```bash
-bunx beam-api --help
-
-# assuming beam is running
-bunx beam-api develop
-
-bunx beam-api build -o my/output/path
+bunx beam-api create --directory my-extension
 ```
+
+Useful flags:
+
+```bash
+bunx beam-api create \
+  --directory my-extension \
+  --title "My Extension" \
+  --owner beam-launcher \
+  --author "Beam Launcher" \
+  --install
+```
+
+This command scaffolds from the same template source used by Beam’s repo boilerplate in [`extra/extension-boilerplate`](../../extra/extension-boilerplate).
+
+## Local Development
+
+Inside your extension:
+
+```bash
+bun install
+bun run dev
+```
+
+The default scripts are:
+
+- `bun run dev`: run the extension in Beam’s development mode
+- `bun run build`: bundle the extension
+- `bun run check`: typecheck the extension source
+
+## Build And Package
+
+Build an extension bundle manually:
+
+```bash
+bunx beam-api build --src .
+```
+
+Output defaults to Beam’s local extension directory, or you can provide a custom output path:
+
+```bash
+bunx beam-api build --src . --out ./dist-extension
+```
+
+## Beam Store Workflow
+
+Beam-native store packages are distributed as versioned release artifacts plus catalog metadata.
+
+In the Beam repo, the end-to-end flow is:
+
+1. Prepare a package source directory under `store/packages/<name-version>/`
+2. Add `beam-store.json` metadata alongside the extension `package.json`
+3. Publish the artifact and update the local catalog:
+
+```bash
+bun run store:publish -- --source store/packages/beam-demo-tools-1.1.0
+```
+
+4. Validate all package sources and catalog rules:
+
+```bash
+bun run store:validate
+```
+
+The Beam store publisher generates:
+
+- zipped release artifacts
+- SHA-256 checksums
+- catalog entries in `store/catalog.json`
+
+## Release Workflow
+
+For SDK releases:
+
+1. update `packages/beam-api/package.json`
+2. build and dry-run the package:
+
+```bash
+bun run publish:beam-api -- --dry-run
+```
+
+3. publish with an npm token:
+
+```bash
+NPM_CONFIG_TOKEN=... bun run publish:beam-api -- --publish
+```
+
+## Docs
+
+For the Beam repo’s full local workflow, see [../../docs/extensions/developer-workflow.md](../../docs/extensions/developer-workflow.md).
+
+## Versioning
+
+`@beam-launcher/api` follows Beam’s runtime versioning. Extensions should target the Beam version they are intended to run on.

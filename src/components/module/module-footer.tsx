@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 import { Kbd } from "@/components/module/kbd";
 import { cn } from "@/lib/utils";
@@ -17,17 +17,22 @@ interface ModuleFooterProps {
   shortcuts?: FooterShortcut[];
   /** Primary action buttons on the right */
   actions?: ReactNode;
+  /** Anchored overlay rendered above the footer */
+  overlay?: ReactNode;
   /** Show Cmd+K shortcut hint */
   showActionsShortcut?: boolean;
   className?: string;
+  style?: CSSProperties;
 }
 
 export function ModuleFooter({
   leftSlot,
   shortcuts,
   actions,
+  overlay,
   showActionsShortcut = true,
   className,
+  style,
 }: ModuleFooterProps) {
   const hasActionsShortcut =
     showActionsShortcut &&
@@ -46,20 +51,23 @@ export function ModuleFooter({
   return (
     <footer
       className={cn(
-        "flex h-12 shrink-0 items-center justify-between border-t border-[var(--footer-border)] px-4",
+        "module-footer",
+        "sc-glass-footer",
+        "relative flex h-12 shrink-0 items-center justify-between border-t border-[var(--footer-border)] px-4",
         className,
       )}
+      style={style}
     >
       {/* Left: status / context */}
-      <div className="flex min-w-0 items-center gap-2 text-[12px] text-muted-foreground">
+      <div className="module-footer-left flex min-w-0 items-center gap-2 text-[12px] text-muted-foreground">
         {leftSlot}
       </div>
 
       {/* Right: shortcuts + actions */}
-      <div className="flex items-center gap-3">
+      <div className="module-footer-right flex items-center gap-3">
         {/* Keyboard shortcut hints */}
         {resolvedShortcuts && resolvedShortcuts.length > 0 && (
-          <div className="hidden items-center gap-3 sm:flex">
+          <div className="module-footer-shortcuts hidden items-center gap-3 sm:flex">
             {resolvedShortcuts.map((shortcut) => (
               <span
                 key={shortcut.keys.join("+")}
@@ -83,10 +91,12 @@ export function ModuleFooter({
                 aria-hidden="true"
               />
             )}
-            <div className="flex items-center gap-1.5">{actions}</div>
+            <div className="module-footer-actions flex items-center gap-1.5">{actions}</div>
           </>
         )}
       </div>
+
+      {overlay}
     </footer>
   );
 }

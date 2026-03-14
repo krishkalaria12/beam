@@ -1,6 +1,6 @@
 import Module from "module";
-import * as beamApi from "@beam-launcher/api";
-import * as raycastApiCompat from "@beam/raycast-api-compat";
+import * as beamApi from "../../beam-api/src/index.js";
+import * as raycastApiCompat from "../../raycast-api-compat/src/index.js";
 import React from "react";
 import * as ReactJsxRuntime from "react/jsx-runtime";
 import { getRaycastUtils } from "./api/raycastUtils";

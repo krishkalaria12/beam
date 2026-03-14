@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -13,8 +13,11 @@ interface DetailViewProps {
   emptyTitle?: string;
   emptyDescription?: string;
   className?: string;
+  style?: CSSProperties;
   contentClassName?: string;
+  contentStyle?: CSSProperties;
   metadataClassName?: string;
+  metadataStyle?: CSSProperties;
   markdownClassName?: string;
   emptyState?: ReactNode;
 }
@@ -25,8 +28,11 @@ export function DetailView({
   emptyTitle = "No detail available",
   emptyDescription,
   className,
+  style,
   contentClassName,
+  contentStyle,
   metadataClassName,
+  metadataStyle,
   markdownClassName,
   emptyState,
 }: DetailViewProps) {
@@ -36,7 +42,7 @@ export function DetailView({
 
   if (!hasMarkdown && !hasMetadata) {
     return (
-      <div className={cn("min-h-0 flex-1", className)}>
+      <div className={cn("module-detail-view min-h-0 flex-1 overflow-hidden", className)} style={style}>
         {emptyState ?? <EmptyView title={emptyTitle} description={emptyDescription} />}
       </div>
     );
@@ -48,15 +54,26 @@ export function DetailView({
         detailVisible
         detailRatio="40%"
         className={className}
-        primaryClassName={cn("overflow-y-auto", contentClassName)}
-        detailClassName={cn("overflow-y-auto bg-[var(--launcher-card-bg)]", metadataClassName)}
+        style={style}
+        primaryClassName={cn(
+          "module-detail-content",
+          "custom-scrollbar h-full overflow-y-auto overscroll-contain",
+          contentClassName,
+        )}
+        primaryStyle={contentStyle}
+        detailClassName={cn(
+          "module-detail-metadata",
+          "custom-scrollbar h-full overflow-y-auto overscroll-contain bg-[var(--launcher-card-bg)]",
+          metadataClassName,
+        )}
+        detailStyle={metadataStyle}
         primary={
-          <div className="rounded-xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] p-4">
+          <div className="module-detail-markdown-panel min-h-full rounded-xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] p-4">
             <MarkdownView className={markdownClassName}>{normalizedMarkdown}</MarkdownView>
           </div>
         }
         detail={
-          <div className="h-full rounded-xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)]">
+          <div className="module-detail-metadata-panel min-h-full rounded-xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)]">
             <MetadataBar items={metadata} />
           </div>
         }
@@ -66,8 +83,16 @@ export function DetailView({
 
   if (hasMarkdown) {
     return (
-      <div className={cn("min-h-0 flex-1 overflow-y-auto", className, contentClassName)}>
-        <div className="rounded-xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] p-4">
+      <div
+        className={cn(
+          "module-detail-content",
+          "custom-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain",
+          className,
+          contentClassName,
+        )}
+        style={{ ...style, ...contentStyle }}
+      >
+        <div className="module-detail-markdown-panel rounded-xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] p-4">
           <MarkdownView className={markdownClassName}>{normalizedMarkdown}</MarkdownView>
         </div>
       </div>
@@ -75,8 +100,16 @@ export function DetailView({
   }
 
   return (
-    <div className={cn("min-h-0 flex-1 overflow-y-auto", className, metadataClassName)}>
-      <div className="rounded-xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)]">
+    <div
+        className={cn(
+          "module-detail-metadata",
+          "custom-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain",
+          className,
+        metadataClassName,
+      )}
+      style={{ ...style, ...metadataStyle }}
+    >
+      <div className="module-detail-metadata-panel rounded-xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)]">
         <MetadataBar items={metadata} />
       </div>
     </div>

@@ -166,6 +166,7 @@ export function useExtensionRunnerState({
   const [focusElementId, setFocusElementId] = useState<number | null>(null);
   const [resetElementId, setResetElementId] = useState<number | null>(null);
   const fieldRefs = useRef<Map<number, HTMLElement>>(new Map());
+  const pendingControlledSearchTextRef = useRef<string | null>(null);
 
   const rootNode = rootNodeId ? uiTree.get(rootNodeId) : undefined;
   const rootType = rootNode?.type ?? "";
@@ -252,11 +253,28 @@ export function useExtensionRunnerState({
 
   useEffect(() => {
     if (rootNode?.type === "List" || rootNode?.type === "Grid") {
-      setSearchText(asString(rootNode.props.searchText));
+      const nextSearchText = asString(rootNode.props.searchText);
+      const isControlledSearch = asBoolean(rootNode.props.onSearchTextChange);
+
+      if (isControlledSearch) {
+        const pendingSearchText = pendingControlledSearchTextRef.current;
+        if (pendingSearchText !== null) {
+          if (nextSearchText === pendingSearchText) {
+            pendingControlledSearchTextRef.current = null;
+          } else if (searchText === pendingSearchText) {
+            return;
+          }
+        }
+      }
+
+      if (nextSearchText !== searchText) {
+        setSearchText(nextSearchText);
+      }
     } else {
+      pendingControlledSearchTextRef.current = null;
       setSearchText("");
     }
-  }, [rootNode?.id, rootNode?.type, rootNode?.props.searchText]);
+  }, [rootNode?.id, rootNode?.type, rootNode?.props.onSearchTextChange, rootNode?.props.searchText, searchText]);
 
   useEffect(() => {
     setSelectedIndex(0);
@@ -360,6 +378,7 @@ export function useExtensionRunnerState({
         setResetElementId(event.elementId);
       }
       if (event.type === "clear-search-bar") {
+        pendingControlledSearchTextRef.current = null;
         setSearchText("");
         if (
           (rootNode?.type === "List" || rootNode?.type === "Grid") &&
@@ -528,6 +547,7 @@ export function useExtensionRunnerState({
         rootNode &&
         asBoolean(rootNode.props.onSearchTextChange)
       ) {
+        pendingControlledSearchTextRef.current = value;
         extensionManagerService.dispatchEvent(rootNode.id, "onSearchTextChange", [value]);
       }
     },
