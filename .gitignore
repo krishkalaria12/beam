@@ -68,3 +68,6 @@ vicinae-main/
 
 # Generated local store artifacts
 store/artifacts/*.zip
+
+# Generated Tauri app binaries
+src-tauri/binaries/app-*
