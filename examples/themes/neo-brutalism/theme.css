@@ -201,3 +201,102 @@
 .theme-user-neo-brutalism .command-item.selected * {
   color: inherit !important;
 }
+
+/* Extension runtime surfaces */
+.theme-user-neo-brutalism .ext-search-bar .module-search-input,
+.theme-user-neo-brutalism .ext-search-bar .module-search-bar-static,
+.theme-user-neo-brutalism .ext-search-settings,
+.theme-user-neo-brutalism .ext-dropdown-trigger,
+.theme-user-neo-brutalism .ext-actions-trigger,
+.theme-user-neo-brutalism .ext-form-input,
+.theme-user-neo-brutalism .ext-form-dropdown .module-searchable-dropdown-trigger,
+.theme-user-neo-brutalism .ext-form-link,
+.theme-user-neo-brutalism .ext-form-description-card,
+.theme-user-neo-brutalism .ext-detail-view .module-detail-markdown-panel,
+.theme-user-neo-brutalism .ext-detail-view .module-detail-metadata-panel,
+.theme-user-neo-brutalism .ext-grid-item,
+.theme-user-neo-brutalism .ext-list-item,
+.theme-user-neo-brutalism .module-searchable-dropdown-panel,
+.theme-user-neo-brutalism .ext-actions-panel {
+  border: 3px solid var(--border) !important;
+  border-radius: 0 !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+.theme-user-neo-brutalism .ext-list-pane,
+.theme-user-neo-brutalism .ext-detail-pane,
+.theme-user-neo-brutalism .ext-grid-content,
+.theme-user-neo-brutalism .ext-form-content,
+.theme-user-neo-brutalism .ext-detail-page,
+.theme-user-neo-brutalism .ext-footer {
+  background: var(--background);
+}
+
+.theme-user-neo-brutalism .ext-footer {
+  border-top: 3px solid var(--border);
+  box-shadow: 0 -4px 0 0 var(--border);
+}
+
+.theme-user-neo-brutalism .ext-list-item[data-selected="true"],
+.theme-user-neo-brutalism .ext-grid-item[data-selected="true"],
+.theme-user-neo-brutalism .module-searchable-dropdown-row[data-selected="true"],
+.theme-user-neo-brutalism .module-action-list-row[data-selected="true"] {
+  background: var(--secondary) !important;
+  border-color: var(--primary) !important;
+  color: var(--secondary-foreground) !important;
+}
+
+.theme-user-neo-brutalism .ext-list-item[data-selected="true"] *,
+.theme-user-neo-brutalism .ext-grid-item[data-selected="true"] *,
+.theme-user-neo-brutalism .module-searchable-dropdown-row[data-selected="true"] *,
+.theme-user-neo-brutalism .module-action-list-row[data-selected="true"] * {
+  color: inherit !important;
+}
+
+.theme-user-neo-brutalism .ext-list-item:hover,
+.theme-user-neo-brutalism .ext-grid-item:hover,
+.theme-user-neo-brutalism .module-searchable-dropdown-row:hover,
+.theme-user-neo-brutalism .module-action-list-row:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-lg) !important;
+}
+
+.theme-user-neo-brutalism .ext-section-header .module-section-header-title {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border: 2px solid var(--border);
+  background: var(--primary);
+  color: var(--primary-foreground);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.theme-user-neo-brutalism .module-metadata-tag,
+.theme-user-neo-brutalism .module-list-accessory-filled {
+  border: 2px solid var(--border) !important;
+  border-radius: 0 !important;
+  background: var(--muted) !important;
+  box-shadow: 2px 2px 0 0 var(--border);
+}
+
+.theme-user-neo-brutalism .ext-markdown code,
+.theme-user-neo-brutalism .ext-markdown pre {
+  border: 2px solid var(--border);
+  border-radius: 0;
+  background: var(--muted);
+  box-shadow: 3px 3px 0 0 var(--border);
+}
+
+.theme-user-neo-brutalism .ext-search-title,
+.theme-user-neo-brutalism .ext-grid-item-title,
+.theme-user-neo-brutalism .ext-list-item-title,
+.theme-user-neo-brutalism .ext-form-description-title {
+  font-weight: 800;
+}
+
+.theme-user-neo-brutalism .module-search-input-field,
+.theme-user-neo-brutalism .module-searchable-dropdown-trigger-label,
+.theme-user-neo-brutalism .ext-markdown,
+.theme-user-neo-brutalism .module-metadata-value {
+  letter-spacing: -0.02em;
+}

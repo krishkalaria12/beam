@@ -70,20 +70,12 @@ function Input({
         ],
       )}
     >
-      {showLogo && (
-        <img
-          src={beamLogo}
-          alt="Beam"
-          className="size-5 shrink-0 object-contain"
-        />
-      )}
+      {showLogo && <img src={beamLogo} alt="Beam" className="size-5 shrink-0 object-contain" />}
       {!showLogo && leftIcon && (
         <span className="shrink-0 text-muted-foreground/60">{leftIcon}</span>
       )}
       {inputElement}
-      {rightIcon && (
-        <span className="shrink-0 text-muted-foreground/60">{rightIcon}</span>
-      )}
+      {rightIcon && <span className="shrink-0 text-muted-foreground/60">{rightIcon}</span>}
     </div>
   );
 }

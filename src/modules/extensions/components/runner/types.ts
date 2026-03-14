@@ -40,7 +40,11 @@ export interface FormField {
   type: string;
   title: string;
   placeholder?: string;
-  options: Array<{ value: string; title: string }>;
+  options: Array<{ value: string; title: string; icon?: unknown }>;
+  optionSections?: Array<{
+    title?: string;
+    items: Array<{ value: string; title: string; icon?: unknown }>;
+  }>;
   defaultValue: FormValue;
   controlledValue?: FormValue;
   hasOnChange: boolean;

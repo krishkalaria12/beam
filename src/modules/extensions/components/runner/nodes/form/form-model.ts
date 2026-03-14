@@ -30,7 +30,11 @@ export function collectFormFields(
       const placeholder = asString(node.props.placeholder).trim() || undefined;
       let defaultValue: FormValue = "";
       let controlledValue: FormValue | undefined;
-      const options: Array<{ value: string; title: string }> = [];
+      const options: Array<{ value: string; title: string; icon?: unknown }> = [];
+      const optionSections: Array<{
+        title?: string;
+        items: Array<{ value: string; title: string; icon?: unknown }>;
+      }> = [];
 
       if (node.type === "Form.Checkbox") {
         defaultValue = asBoolean(node.props.value, asBoolean(node.props.defaultValue));
@@ -40,10 +44,16 @@ export function collectFormFields(
       } else if (node.type === "Form.Dropdown" || node.type === "Form.TagPicker") {
         const itemType =
           node.type === "Form.Dropdown" ? "Form.Dropdown.Item" : "Form.TagPicker.Item";
-        const collectOptions = (candidateId: number) => {
+        const sectionType =
+          node.type === "Form.Dropdown" ? "Form.Dropdown.Section" : "Form.TagPicker.Section";
+        const collectOptions = (candidateId: number): Array<{
+          value: string;
+          title: string;
+          icon?: unknown;
+        }> => {
           const candidate = tree.get(candidateId);
           if (!candidate) {
-            return;
+            return [];
           }
           if (candidate.type === itemType) {
             const value = asString(
@@ -51,12 +61,29 @@ export function collectFormFields(
               asString(candidate.props.title, String(candidate.id)),
             );
             const optionTitle = asString(candidate.props.title, value);
-            options.push({ value, title: optionTitle });
-            return;
+            const option = { value, title: optionTitle, icon: candidate.props.icon };
+            options.push(option);
+            return [option];
           }
+          const nestedOptions: Array<{ value: string; title: string; icon?: unknown }> = [];
+          if (candidate.type === sectionType) {
+            for (const nestedId of candidate.children) {
+              nestedOptions.push(...collectOptions(nestedId));
+            }
+
+            if (nestedOptions.length > 0) {
+              optionSections.push({
+                title: asString(candidate.props.title).trim() || undefined,
+                items: nestedOptions,
+              });
+            }
+            return nestedOptions;
+          }
+
           for (const nestedId of candidate.children) {
-            collectOptions(nestedId);
+            nestedOptions.push(...collectOptions(nestedId));
           }
+          return nestedOptions;
         };
 
         for (const childId of node.children) {
@@ -108,6 +135,7 @@ export function collectFormFields(
         title,
         placeholder,
         options,
+        optionSections: optionSections.length > 0 ? optionSections : undefined,
         defaultValue,
         controlledValue,
         hasOnChange: asBoolean(node.props.onChange),

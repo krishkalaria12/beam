@@ -148,6 +148,7 @@ pub fn entry() -> i32 {
 pub fn run(startup_args: Vec<String>) {
     let mut builder = tauri::Builder::default()
         .manage(state::AppState::new())
+        .manage(extensions::runtime::bridge::ExtensionRuntimeBridgeState::default())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_clipboard::init())

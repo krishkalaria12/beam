@@ -190,9 +190,17 @@ export function createCustomActionHandler(
     }
 
     if (request.extensionCommandId === EXTENSION_INSTALL_COMMAND_ID) {
-      const extensionInstallDownloadUrl =
-        typeof request.payload.extensionInstallDownloadUrl === "string"
-          ? request.payload.extensionInstallDownloadUrl.trim()
+      const extensionInstallPackageId =
+        typeof request.payload.extensionInstallPackageId === "string"
+          ? request.payload.extensionInstallPackageId.trim()
+          : "";
+      const extensionInstallReleaseVersion =
+        typeof request.payload.extensionInstallReleaseVersion === "string"
+          ? request.payload.extensionInstallReleaseVersion.trim()
+          : "";
+      const extensionInstallChannel =
+        typeof request.payload.extensionInstallChannel === "string"
+          ? request.payload.extensionInstallChannel.trim()
           : "";
       const extensionInstallSlug =
         typeof request.payload.extensionInstallSlug === "string"
@@ -203,18 +211,20 @@ export function createCustomActionHandler(
           ? request.payload.extensionInstallTitle.trim()
           : extensionInstallSlug;
 
-      if (!extensionInstallDownloadUrl || !extensionInstallSlug) {
+      if (!extensionInstallPackageId || !extensionInstallSlug) {
         return {
           ok: false,
           code: "INVALID_INPUT",
-          message: "Extension install payload is missing download URL or slug.",
+          message: "Extension install payload is missing package metadata.",
         };
       }
 
       try {
         const result = await installExtension({
-          downloadUrl: extensionInstallDownloadUrl,
+          packageId: extensionInstallPackageId,
           slug: extensionInstallSlug,
+          releaseVersion: extensionInstallReleaseVersion || undefined,
+          channel: extensionInstallChannel || undefined,
           force: false,
         });
 

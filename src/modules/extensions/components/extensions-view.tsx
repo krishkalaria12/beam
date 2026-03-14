@@ -1,45 +1,116 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, Loader2, Search, Sparkles, X } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { RefreshCcw } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
-import { ModuleFooter, ModuleHeader, SearchInput } from "@/components/module";
+import { GenericListView, SearchBar } from "@/components/module";
 import { Button } from "@/components/ui/button";
 import debounce from "@/lib/debounce";
-import {
-  EXTENSIONS_QUERY_KEY_INSTALLED,
-  EXTENSIONS_SEARCH_DEBOUNCE_MS,
-  EXTENSIONS_STORE_SEARCH_MIN_LENGTH,
-} from "@/modules/extensions/constants";
-import { ExtensionSetupView } from "@/modules/extensions/components/extension-setup-view";
-import { ExtensionsInstalledSection } from "@/modules/extensions/components/extensions-installed-section";
-import { ExtensionsStoreResultsSection } from "@/modules/extensions/components/extensions-store-results-section";
+import { ExtensionsDetailPane } from "@/modules/extensions/components/extensions-view/extensions-detail-pane";
+import { ExtensionsSidebar } from "@/modules/extensions/components/extensions-view/extensions-sidebar";
 import {
   buildPreferenceValues,
   mergeInstalledWithOptimisticSlugs,
   toInstalledExtensionSummary,
 } from "@/modules/extensions/components/extensions-view-model";
-import { invalidateDiscoveredExtensionsCache } from "@/modules/extensions/extension-command-provider";
 import {
-  useLoadExtensionPreferencesMutation,
-  useSaveExtensionPreferencesMutation,
-} from "@/modules/extensions/hooks/use-extension-preferences-mutations";
+  EXTENSIONS_QUERY_KEY_INSTALLED,
+  EXTENSIONS_QUERY_KEY_STORE_UPDATES,
+  EXTENSIONS_SEARCH_DEBOUNCE_MS,
+  EXTENSIONS_STORE_SEARCH_MIN_LENGTH,
+} from "@/modules/extensions/constants";
+import { invalidateDiscoveredExtensionsCache } from "@/modules/extensions/extension-command-provider";
+import { extensionManagerService } from "@/modules/extensions/extension-manager-service";
 import { useInstallExtensionMutation } from "@/modules/extensions/hooks/use-install-extension-mutation";
 import { useInstalledExtensionsQuery } from "@/modules/extensions/hooks/use-installed-extensions-query";
+import { useStoreExtensionPackageQuery } from "@/modules/extensions/hooks/use-store-extension-package-query";
+import { useStoreExtensionUpdatesQuery } from "@/modules/extensions/hooks/use-store-extension-updates-query";
 import { useStoreExtensionsSearchQuery } from "@/modules/extensions/hooks/use-store-extensions-search-query";
 import { useUninstallExtensionMutation } from "@/modules/extensions/hooks/use-uninstall-extension-mutation";
-import { useLauncherPanelBackHandler } from "@/modules/launcher/lib/back-navigation";
 import { useExtensionsUiStore } from "@/modules/extensions/store/use-extensions-ui-store";
-import type { InstalledExtensionSummary } from "@/modules/extensions/types";
+import type {
+  ExtensionPreferenceField,
+  InstalledExtensionSummary,
+} from "@/modules/extensions/types";
+import { useLauncherPanelBackHandler } from "@/modules/launcher/lib/back-navigation";
 
 interface ExtensionsViewProps {
   onBack: () => void;
 }
 
+type SelectedExtensionsRow =
+  | { kind: "installed"; id: string }
+  | { kind: "store"; id: string }
+  | null;
+
+function areSelectedRowsEqual(
+  left: SelectedExtensionsRow,
+  right: SelectedExtensionsRow,
+): boolean {
+  return left?.kind === right?.kind && left?.id === right?.id;
+}
+
+function matchesInstalledSearch(entry: InstalledExtensionSummary, query: string): boolean {
+  const normalized = query.trim().toLowerCase();
+  if (!normalized) {
+    return true;
+  }
+
+  return [entry.title, entry.slug, entry.owner, entry.description, entry.version ?? ""]
+    .join(" ")
+    .toLowerCase()
+    .includes(normalized);
+}
+
+function extensionKey(owner: string, slug: string): string {
+  return `${owner.trim().toLowerCase()}::${slug.trim().toLowerCase()}`;
+}
+
+function isMissingRequiredField(field: ExtensionPreferenceField, value: unknown): boolean {
+  if (!field.required) {
+    return false;
+  }
+
+  if (field.type === "checkbox") {
+    return value !== true;
+  }
+
+  return String(value ?? "").trim().length === 0;
+}
+
+function InlineBadge({ value }: { value: string | number }) {
+  return (
+    <span className="inline-flex h-8 items-center rounded-md border border-[var(--launcher-chip-border)] bg-[var(--launcher-chip-bg)] px-2.5 text-[11px] font-medium text-muted-foreground">
+      {value}
+    </span>
+  );
+}
+
+function SummaryMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-3 py-2">
+      <div className="text-[10px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
+        {label}
+      </div>
+      <div className="mt-1 text-[14px] font-semibold text-foreground">{value}</div>
+    </div>
+  );
+}
+
 export function ExtensionsView({ onBack }: ExtensionsViewProps) {
   const queryClient = useQueryClient();
   const extensionsUi = useExtensionsUiStore();
-  const setupLoadRequestIdRef = useRef(0);
+  const [selectedRow, setSelectedRow] = useState<SelectedExtensionsRow>(null);
+  const [pendingInstallSlug, setPendingInstallSlug] = useState<string | null>(null);
+  const [pendingUninstallSlug, setPendingUninstallSlug] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [optimisticInstalledSlugs, setOptimisticInstalledSlugs] = useState<string[]>([]);
+  const [preferenceValues, setPreferenceValues] = useState<Record<string, unknown>>({});
+  const [preferenceError, setPreferenceError] = useState<string | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const [isPreferenceLoading, setIsPreferenceLoading] = useState(false);
+  const [isPreferenceSaving, setIsPreferenceSaving] = useState(false);
+  const preferenceRequestIdRef = useRef(0);
 
   const normalizedSearch = extensionsUi.search.trim();
   const debouncedNormalizedSearch = extensionsUi.debouncedSearch.trim();
@@ -62,10 +133,9 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
 
   const installedQuery = useInstalledExtensionsQuery();
   const storeSearchQuery = useStoreExtensionsSearchQuery(debouncedNormalizedSearch);
+  const storeUpdatesQuery = useStoreExtensionUpdatesQuery();
   const installExtensionMutation = useInstallExtensionMutation();
   const uninstallExtensionMutation = useUninstallExtensionMutation();
-  const loadExtensionPreferencesMutation = useLoadExtensionPreferencesMutation();
-  const saveExtensionPreferencesMutation = useSaveExtensionPreferencesMutation();
 
   const installedExtensions = useMemo(
     () => toInstalledExtensionSummary(installedQuery.data ?? []),
@@ -73,96 +143,253 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
   );
 
   const displayedInstalledExtensions = useMemo(
-    () =>
-      mergeInstalledWithOptimisticSlugs(installedExtensions, extensionsUi.optimisticInstalledSlugs),
-    [installedExtensions, extensionsUi.optimisticInstalledSlugs],
+    () => mergeInstalledWithOptimisticSlugs(installedExtensions, optimisticInstalledSlugs),
+    [installedExtensions, optimisticInstalledSlugs],
   );
 
+  const filteredInstalledExtensions = useMemo(
+    () =>
+      displayedInstalledExtensions.filter((entry) =>
+        matchesInstalledSearch(entry, normalizedSearch),
+      ),
+    [displayedInstalledExtensions, normalizedSearch],
+  );
+
+  const updateById = useMemo(
+    () => new Map((storeUpdatesQuery.data ?? []).map((entry) => [entry.id, entry])),
+    [storeUpdatesQuery.data],
+  );
+
+  const selectedInstalled = useMemo(
+    () =>
+      selectedRow?.kind === "installed"
+        ? (filteredInstalledExtensions.find((entry) => entry.id === selectedRow.id) ?? null)
+        : null,
+    [filteredInstalledExtensions, selectedRow],
+  );
+
+  const selectedStore = useMemo(
+    () =>
+      selectedRow?.kind === "store"
+        ? ((storeSearchQuery.data ?? []).find((entry) => entry.id === selectedRow.id) ?? null)
+        : null,
+    [selectedRow, storeSearchQuery.data],
+  );
+
+  const selectedStorePackageQuery = useStoreExtensionPackageQuery(selectedStore?.id ?? null);
+  const selectedStoreDetail = selectedStorePackageQuery.data ?? selectedStore;
+
+  const selectedInstalledUpdate = useMemo(() => {
+    if (!selectedInstalled) {
+      return null;
+    }
+
+    return (
+      [...updateById.values()].find(
+        (entry) =>
+          extensionKey(entry.author.handle, entry.slug) ===
+          extensionKey(selectedInstalled.owner, selectedInstalled.slug),
+      ) ?? null
+    );
+  }, [selectedInstalled, updateById]);
+
+  const installedUpdateKeys = useMemo(
+    () =>
+      new Set(
+        (storeUpdatesQuery.data ?? []).map((entry) => extensionKey(entry.author.handle, entry.slug)),
+      ),
+    [storeUpdatesQuery.data],
+  );
+
+  const desiredSelectedRow = useMemo<SelectedExtensionsRow>(() => {
+    const selectedKind = selectedRow?.kind ?? null;
+    const selectedId = selectedRow?.id ?? null;
+
+    if (selectedKind === "installed" && selectedId) {
+      const exists = filteredInstalledExtensions.some((entry) => entry.id === selectedId);
+      if (exists) {
+        return selectedRow;
+      }
+    }
+
+    if (selectedKind === "store" && selectedId) {
+      const exists = (storeSearchQuery.data ?? []).some((entry) => entry.id === selectedId);
+      if (exists) {
+        return selectedRow;
+      }
+    }
+
+    const firstInstalled = filteredInstalledExtensions[0];
+    if (firstInstalled) {
+      return { kind: "installed", id: firstInstalled.id };
+    }
+
+    const firstStore = (storeSearchQuery.data ?? [])[0];
+    return firstStore ? { kind: "store", id: firstStore.id } : null;
+  }, [filteredInstalledExtensions, selectedRow, storeSearchQuery.data]);
+
   useEffect(() => {
-    if (extensionsUi.optimisticInstalledSlugs.length === 0) {
+    if (!areSelectedRowsEqual(selectedRow, desiredSelectedRow)) {
+      setSelectedRow((current) =>
+        areSelectedRowsEqual(current, desiredSelectedRow) ? current : desiredSelectedRow,
+      );
+    }
+  }, [desiredSelectedRow, selectedRow]);
+
+  useEffect(() => {
+    if (!selectedInstalled?.pluginName || selectedInstalled.preferences.length === 0) {
+      setPreferenceValues({});
+      setPreferenceError(null);
+      setValidationError(null);
+      setIsPreferenceLoading(false);
       return;
     }
 
-    extensionsUi.pruneOptimisticInstalledSlugs(installedExtensions.map((entry) => entry.slug));
-  }, [extensionsUi, installedExtensions, extensionsUi.optimisticInstalledSlugs.length]);
+    preferenceRequestIdRef.current += 1;
+    const requestId = preferenceRequestIdRef.current;
+    setIsPreferenceLoading(true);
+    setPreferenceError(null);
+    setValidationError(null);
+    setPreferenceValues(buildPreferenceValues(selectedInstalled.preferences, {}));
 
-  const installedSlugSet = useMemo(
-    () =>
-      new Set([
-        ...installedExtensions.map((entry) => entry.slug.toLowerCase()),
-        ...extensionsUi.optimisticInstalledSlugs.map((slug) => slug.toLowerCase()),
-      ]),
-    [installedExtensions, extensionsUi.optimisticInstalledSlugs],
-  );
+    extensionManagerService
+      .getPreferences(selectedInstalled.pluginName)
+      .then((savedValues) => {
+        if (requestId !== preferenceRequestIdRef.current) {
+          return;
+        }
+        setPreferenceValues(buildPreferenceValues(selectedInstalled.preferences, savedValues));
+      })
+      .catch((error) => {
+        if (requestId !== preferenceRequestIdRef.current) {
+          return;
+        }
+        setPreferenceError(
+          error instanceof Error ? error.message : "Failed to load extension preferences.",
+        );
+      })
+      .finally(() => {
+        if (requestId === preferenceRequestIdRef.current) {
+          setIsPreferenceLoading(false);
+        }
+      });
+  }, [selectedInstalled]);
 
-  const handleRefreshInstalled = async () => {
+  useEffect(() => {
+    if (optimisticInstalledSlugs.length === 0) {
+      return;
+    }
+
+    const installedSlugSet = new Set(installedExtensions.map((entry) => entry.slug.toLowerCase()));
+    setOptimisticInstalledSlugs((current) =>
+      {
+        const next = current.filter((entry) => !installedSlugSet.has(entry.toLowerCase()));
+        return next.length === current.length &&
+          next.every((entry, index) => entry === current[index])
+          ? current
+          : next;
+      },
+    );
+  }, [installedExtensions, optimisticInstalledSlugs.length]);
+
+  const handleRefreshInstalled = useCallback(async () => {
     invalidateDiscoveredExtensionsCache();
     await queryClient.invalidateQueries({ queryKey: EXTENSIONS_QUERY_KEY_INSTALLED });
+    await queryClient.invalidateQueries({ queryKey: EXTENSIONS_QUERY_KEY_STORE_UPDATES });
     await queryClient.refetchQueries({
       queryKey: EXTENSIONS_QUERY_KEY_INSTALLED,
       type: "active",
     });
-  };
+    await queryClient.refetchQueries({
+      queryKey: EXTENSIONS_QUERY_KEY_STORE_UPDATES,
+      type: "active",
+    });
+  }, [queryClient]);
 
-  const handleInstall = async (input: { slug: string; downloadUrl: string; title: string }) => {
-    extensionsUi.setActionError(null);
-    extensionsUi.setPendingInstallSlug(input.slug);
+  const handleInstall = useCallback(
+    async (input: {
+      packageId: string;
+      slug: string;
+      title: string;
+      releaseVersion?: string;
+      channel?: string;
+    }) => {
+      setActionError(null);
+      setPendingInstallSlug(input.slug);
 
-    try {
-      const result = await installExtensionMutation.mutateAsync({
-        slug: input.slug,
-        downloadUrl: input.downloadUrl,
-        force: false,
-      });
+      try {
+        const result = await installExtensionMutation.mutateAsync({
+          packageId: input.packageId,
+          slug: input.slug,
+          releaseVersion: input.releaseVersion,
+          channel: input.channel,
+          force: false,
+        });
 
-      if (result.status === "requiresConfirmation") {
-        const reasons = result.violations
-          .slice(0, 4)
-          .map((entry) => `- ${entry.commandName}: ${entry.reason}`)
-          .join("\n");
-        const shouldForceInstall = window.confirm(
-          `Potential compatibility risks were found for "${input.title}".\n\n${reasons}\n\nInstall anyway?`,
-        );
-        if (!shouldForceInstall) {
-          return;
+        if (result.status === "requiresConfirmation") {
+          const reasons = result.violations
+            .slice(0, 4)
+            .map((entry) => `- ${entry.commandName}: ${entry.reason}`)
+            .join("\n");
+          const shouldForceInstall = window.confirm(
+            `Potential compatibility risks were found for "${input.title}".\n\n${reasons}\n\nInstall anyway?`,
+          );
+          if (!shouldForceInstall) {
+            return;
+          }
+
+          await installExtensionMutation.mutateAsync({
+            packageId: input.packageId,
+            slug: input.slug,
+            releaseVersion: input.releaseVersion,
+            channel: input.channel,
+            force: true,
+          });
         }
 
-        await installExtensionMutation.mutateAsync({
-          slug: input.slug,
-          downloadUrl: input.downloadUrl,
-          force: true,
+        setOptimisticInstalledSlugs((current) => {
+          const normalizedSlug = input.slug.trim();
+          if (!normalizedSlug) {
+            return current;
+          }
+          const alreadyExists = current.some(
+            (entry) => entry.toLowerCase() === normalizedSlug.toLowerCase(),
+          );
+          return alreadyExists ? current : [...current, normalizedSlug];
         });
+        await handleRefreshInstalled();
+      } catch (error) {
+        setActionError(error instanceof Error ? error.message : "Failed to install extension.");
+      } finally {
+        setPendingInstallSlug(null);
+      }
+    },
+    [handleRefreshInstalled, installExtensionMutation],
+  );
+
+  const handleUninstall = useCallback(
+    async (entry: InstalledExtensionSummary) => {
+      const shouldRemove = window.confirm(`Uninstall "${entry.title}" from Beam?`);
+      if (!shouldRemove) {
+        return;
       }
 
-      extensionsUi.addOptimisticInstalledSlug(input.slug);
-      await handleRefreshInstalled();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to install extension.";
-      extensionsUi.setActionError(message);
-    } finally {
-      extensionsUi.setPendingInstallSlug(null);
-    }
-  };
-
-  const handleUninstall = async (slug: string, title: string) => {
-    const shouldRemove = window.confirm(`Uninstall "${title}" from Beam?`);
-    if (!shouldRemove) {
-      return;
-    }
-
-    extensionsUi.setActionError(null);
-    extensionsUi.setPendingUninstallSlug(slug);
-    try {
-      await uninstallExtensionMutation.mutateAsync(slug);
-      extensionsUi.removeOptimisticInstalledSlug(slug);
-      await handleRefreshInstalled();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to uninstall extension.";
-      extensionsUi.setActionError(message);
-    } finally {
-      extensionsUi.setPendingUninstallSlug(null);
-    }
-  };
+      setActionError(null);
+      setPendingUninstallSlug(entry.slug);
+      try {
+        await uninstallExtensionMutation.mutateAsync(entry.slug);
+        setOptimisticInstalledSlugs((current) =>
+          current.filter((slug) => slug.toLowerCase() !== entry.slug.toLowerCase()),
+        );
+        await handleRefreshInstalled();
+      } catch (error) {
+        setActionError(error instanceof Error ? error.message : "Failed to uninstall extension.");
+      } finally {
+        setPendingUninstallSlug(null);
+      }
+    },
+    [handleRefreshInstalled, uninstallExtensionMutation],
+  );
 
   const handleSearchChange = (nextValue: string) => {
     extensionsUi.setSearch(nextValue);
@@ -179,205 +406,162 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
     applyDebouncedSearch(nextValue);
   };
 
-  const handleClearSearch = () => {
-    applyDebouncedSearch.clear();
-    extensionsUi.setSearch("");
-    extensionsUi.setDebouncedSearch("");
-    extensionsUi.setSearchDebouncing(false);
-  };
-
-  const handleOpenSetup = async (entry: InstalledExtensionSummary) => {
-    if (!entry.pluginName || entry.preferences.length === 0) {
+  const handleSavePreferences = async () => {
+    if (!selectedInstalled?.pluginName) {
       return;
     }
 
-    setupLoadRequestIdRef.current += 1;
-    const requestId = setupLoadRequestIdRef.current;
-
-    extensionsUi.setSetupExtension(entry);
-    extensionsUi.setSetupError(null);
-    extensionsUi.setIsSetupLoading(true);
-    extensionsUi.setSetupInitialValues(buildPreferenceValues(entry.preferences, {}));
-
-    try {
-      const savedValues = await loadExtensionPreferencesMutation.mutateAsync(entry.pluginName);
-      if (requestId !== setupLoadRequestIdRef.current) {
-        return;
-      }
-      extensionsUi.setSetupInitialValues(buildPreferenceValues(entry.preferences, savedValues));
-    } catch (error) {
-      if (requestId !== setupLoadRequestIdRef.current) {
-        return;
-      }
-      const message =
-        error instanceof Error ? error.message : "Failed to load extension preferences.";
-      extensionsUi.setSetupError(message);
-    } finally {
-      if (requestId === setupLoadRequestIdRef.current) {
-        extensionsUi.setIsSetupLoading(false);
-      }
-    }
-  };
-
-  const resetSetupState = useCallback(() => {
-    setupLoadRequestIdRef.current += 1;
-    extensionsUi.resetSetupState();
-  }, [extensionsUi]);
-
-  const handleCloseSetup = useCallback(() => {
-    if (extensionsUi.isSetupSaving) {
-      return;
-    }
-    resetSetupState();
-  }, [extensionsUi.isSetupSaving, resetSetupState]);
-
-  const handleBack = useCallback(() => {
-    if (extensionsUi.setupExtension) {
-      handleCloseSetup();
-      return;
-    }
-
-    onBack();
-  }, [extensionsUi.setupExtension, handleCloseSetup, onBack]);
-
-  useLauncherPanelBackHandler("extensions", handleBack);
-
-  const handleSaveSetup = async (values: Record<string, unknown>) => {
-    if (!extensionsUi.setupExtension?.pluginName) {
-      return;
-    }
-
-    extensionsUi.setSetupError(null);
-    extensionsUi.setIsSetupSaving(true);
-    try {
-      await saveExtensionPreferencesMutation.mutateAsync({
-        pluginName: extensionsUi.setupExtension.pluginName,
-        values,
-      });
-      toast.success(`Saved setup for ${extensionsUi.setupExtension.title}.`);
-      resetSetupState();
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Failed to save extension preferences.";
-      extensionsUi.setSetupError(message);
-    } finally {
-      extensionsUi.setIsSetupSaving(false);
-    }
-  };
-
-  const shouldShowStoreLoadingState =
-    normalizedSearch.length >= EXTENSIONS_STORE_SEARCH_MIN_LENGTH &&
-    (extensionsUi.isSearchDebouncing || storeSearchQuery.isFetching);
-
-  if (extensionsUi.setupExtension) {
-    return (
-      <ExtensionSetupView
-        extensionTitle={extensionsUi.setupExtension.title}
-        pluginName={extensionsUi.setupExtension.pluginName ?? ""}
-        fields={extensionsUi.setupExtension.preferences}
-        initialValues={extensionsUi.setupInitialValues}
-        isLoading={extensionsUi.isSetupLoading}
-        isSaving={extensionsUi.isSetupSaving}
-        error={extensionsUi.setupError}
-        onBack={handleBack}
-        onSave={handleSaveSetup}
-      />
+    const missingRequiredField = selectedInstalled.preferences.find((field) =>
+      isMissingRequiredField(field, preferenceValues[field.name]),
     );
-  }
+    if (missingRequiredField) {
+      setValidationError(`"${missingRequiredField.title}" is required.`);
+      return;
+    }
+
+    setValidationError(null);
+    setPreferenceError(null);
+    setIsPreferenceSaving(true);
+    try {
+      await extensionManagerService.setPreferences(selectedInstalled.pluginName, preferenceValues);
+      toast.success(`Saved setup for ${selectedInstalled.title}.`);
+      await handleRefreshInstalled();
+    } catch (error) {
+      setPreferenceError(
+        error instanceof Error ? error.message : "Failed to save extension preferences.",
+      );
+    } finally {
+      setIsPreferenceSaving(false);
+    }
+  };
+
+  useLauncherPanelBackHandler("extensions", onBack);
+
+  const updateCount = storeUpdatesQuery.data?.length ?? 0;
+  const storeResultCount =
+    normalizedSearch.length >= EXTENSIONS_STORE_SEARCH_MIN_LENGTH
+      ? (storeSearchQuery.data?.length ?? 0)
+      : 0;
+  const selectedStoreInstalled =
+    selectedStoreDetail != null &&
+    filteredInstalledExtensions.some(
+      (entry) =>
+        extensionKey(entry.owner, entry.slug) ===
+        extensionKey(selectedStoreDetail.author.handle, selectedStoreDetail.slug),
+    );
 
   return (
-    <div className="glass-effect flex h-full w-full flex-col overflow-hidden text-foreground">
-      <ModuleHeader
-        onBack={handleBack}
-        title="Extensions"
-        badge={
-          <ModuleHeader.Badge className="inline-flex items-center gap-1 border border-[var(--icon-purple-bg)] bg-[var(--icon-purple-bg)] px-2 py-0.5 text-[10px] font-medium text-[var(--icon-purple-fg)]">
-            <Sparkles className="size-3" />
-            {displayedInstalledExtensions.length}
-          </ModuleHeader.Badge>
+    <div className="flex h-full w-full flex-col overflow-hidden bg-[var(--solid-bg)] text-foreground">
+      <SearchBar
+        onBack={onBack}
+        showBackButton
+        interactive
+        value={extensionsUi.search}
+        onChange={handleSearchChange}
+        placeholder="Search installed extensions or the extension store"
+        rightSlot={
+          <div className="flex items-center gap-2">
+            <InlineBadge value={`${displayedInstalledExtensions.length} installed`} />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-8 rounded-md px-2.5 text-[11px]"
+              onClick={() => void handleRefreshInstalled()}
+            >
+              <RefreshCcw className="size-3.5" />
+              Refresh
+            </Button>
+          </div>
         }
       />
 
-      <div className="flex-none border-b border-[var(--ui-divider)] p-3">
-        <SearchInput
-          value={extensionsUi.search}
-          onChange={handleSearchChange}
-          placeholder="Search extensions..."
-          leftIcon={<Search />}
-          rightSlot={
-            shouldShowStoreLoadingState ? (
-              <Loader2 className="size-3.5 animate-spin text-muted-foreground" />
-            ) : extensionsUi.search.length > 0 ? (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleClearSearch}
-                className="size-6 rounded-full p-0 text-muted-foreground hover:bg-[var(--launcher-card-bg)] hover:text-foreground"
-              >
-                <X className="size-3" />
-              </Button>
-            ) : null
-          }
-        />
-      </div>
-
-      <div className="relative custom-scrollbar list-area min-h-0 flex-1 overflow-y-auto p-3">
-        {extensionsUi.actionError ? (
-          <div className="mb-4 rounded-lg border border-[var(--icon-red-bg)] bg-[var(--icon-red-bg)] p-3 text-xs text-[var(--icon-red-fg)]">
-            <span className="inline-flex items-center gap-2">
-              <AlertTriangle className="size-3.5" />
-              {extensionsUi.actionError}
-            </span>
-          </div>
-        ) : null}
-
-        <div className="space-y-6">
-          <ExtensionsInstalledSection
-            entries={displayedInstalledExtensions}
-            isFetching={installedQuery.isFetching}
-            isError={installedQuery.isError}
-            pendingUninstallSlug={extensionsUi.pendingUninstallSlug}
-            setupExtensionId={null}
-            isSetupLoading={extensionsUi.isSetupLoading}
-            isSetupSaving={extensionsUi.isSetupSaving}
-            onOpenSetup={(entry) => {
-              void handleOpenSetup(entry);
-            }}
-            onUninstall={(entry) => {
-              void handleUninstall(entry.slug, entry.title);
-            }}
-          />
-
-          <ExtensionsStoreResultsSection
-            searchTerm={normalizedSearch}
-            isLoading={shouldShowStoreLoadingState}
-            isError={
-              normalizedSearch.length >= EXTENSIONS_STORE_SEARCH_MIN_LENGTH &&
-              !extensionsUi.isSearchDebouncing &&
-              storeSearchQuery.isError
+      <div className="border-b border-[var(--ui-divider)] bg-[var(--solid-bg-header)] px-4 py-3">
+        <div className="grid grid-cols-4 gap-2">
+          <SummaryMetric label="Installed" value={String(displayedInstalledExtensions.length)} />
+          <SummaryMetric label="Updates" value={String(updateCount)} />
+          <SummaryMetric label="Store" value={String(storeResultCount)} />
+          <SummaryMetric
+            label="Search"
+            value={
+              normalizedSearch.length >= EXTENSIONS_STORE_SEARCH_MIN_LENGTH
+                ? "Store"
+                : `Min ${EXTENSIONS_STORE_SEARCH_MIN_LENGTH}`
             }
-            errorMessage={
-              storeSearchQuery.error instanceof Error ? storeSearchQuery.error.message : undefined
-            }
-            results={storeSearchQuery.data ?? []}
-            pendingInstallSlug={extensionsUi.pendingInstallSlug}
-            pendingUninstallSlug={extensionsUi.pendingUninstallSlug}
-            installedSlugSet={installedSlugSet}
-            onInstall={(input) => {
-              void handleInstall(input);
-            }}
-            onUninstall={(input) => {
-              void handleUninstall(input.slug, input.title);
-            }}
           />
         </div>
       </div>
 
-      <ModuleFooter
-        leftSlot={<span>{displayedInstalledExtensions.length} installed extensions</span>}
-        shortcuts={[{ keys: ["Esc"], label: "Back" }]}
+      <GenericListView
+        detailVisible
+        templateColumns="320px minmax(0, 1fr)"
+        listPaneClassName="overflow-y-auto border-r border-[var(--ui-divider)] bg-[var(--solid-bg-base)] p-3"
+        detailPaneClassName="overflow-y-auto bg-[var(--solid-bg-recessed)]"
+        list={
+          <ExtensionsSidebar
+            installedExtensions={filteredInstalledExtensions}
+            installedErrorMessage={
+              installedQuery.isError ? "Failed to load installed extensions." : null
+            }
+            selectedInstalledId={selectedRow?.kind === "installed" ? selectedRow.id : null}
+            installedUpdateKeys={installedUpdateKeys}
+            onSelectInstalled={(id) => setSelectedRow({ kind: "installed", id })}
+            search={normalizedSearch}
+            minimumSearchLength={EXTENSIONS_STORE_SEARCH_MIN_LENGTH}
+            storeResults={storeSearchQuery.data ?? []}
+            selectedStoreId={selectedRow?.kind === "store" ? selectedRow.id : null}
+            onSelectStore={(id) => setSelectedRow({ kind: "store", id })}
+            isStoreLoading={Boolean(storeSearchQuery.isLoading)}
+            isStoreError={Boolean(storeSearchQuery.isError)}
+            storeErrorMessage={
+              storeSearchQuery.error instanceof Error
+                ? storeSearchQuery.error.message
+                : storeSearchQuery.isError
+                  ? "Store search failed."
+                  : null
+            }
+            isSearchDebouncing={extensionsUi.isSearchDebouncing}
+          />
+        }
+        detail={
+          <ExtensionsDetailPane
+            selectedInstalled={selectedInstalled}
+            selectedInstalledUpdate={selectedInstalledUpdate}
+            selectedStoreDetail={selectedStoreDetail ?? null}
+            selectedStoreInstalled={Boolean(selectedStoreInstalled)}
+            pendingInstallSlug={pendingInstallSlug}
+            pendingUninstallSlug={pendingUninstallSlug}
+            onInstall={handleInstall}
+            onUninstall={handleUninstall}
+            isPreferenceLoading={isPreferenceLoading}
+            isPreferenceSaving={isPreferenceSaving}
+            preferenceValues={preferenceValues}
+            preferenceError={preferenceError}
+            validationError={validationError}
+            onChangePreference={(key, value) => {
+              setValidationError(null);
+              setPreferenceValues((previous) => ({ ...previous, [key]: value }));
+            }}
+            onSavePreferences={handleSavePreferences}
+            storeDetailIsLoading={
+              Boolean(selectedStorePackageQuery.isLoading) && selectedStorePackageQuery.data == null
+            }
+            storeDetailError={
+              selectedStorePackageQuery.error instanceof Error
+                ? selectedStorePackageQuery.error.message
+                : selectedStorePackageQuery.isError
+                  ? "Failed to load package details."
+                  : null
+            }
+          />
+        }
       />
+
+      {actionError ? (
+        <div className="border-t border-[var(--ui-divider)] px-4 py-2 text-[12px] text-[var(--icon-red-fg)]">
+          {actionError}
+        </div>
+      ) : null}
     </div>
   );
 }
-

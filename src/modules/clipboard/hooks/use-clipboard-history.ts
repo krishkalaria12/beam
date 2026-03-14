@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { onClipboardUpdate, startListening } from "tauri-plugin-clipboard-api";
 
 import { getClipboardHistory } from "../api/get-clipboard-history";
+import { CLIPBOARD_HISTORY_UPDATED_EVENT } from "../lib/updates";
 
 export function useClipboardHistory(enabled: boolean) {
   const queryClient = useQueryClient();
@@ -12,21 +13,25 @@ export function useClipboardHistory(enabled: boolean) {
 
     let unlistenClipboard: (() => void) | undefined;
     let stopListening: (() => Promise<void>) | undefined;
+    const invalidateHistory = () => {
+      queryClient.invalidateQueries({ queryKey: ["clipboard", "history"] });
+    };
 
     const setupListener = async () => {
       try {
         stopListening = await startListening();
-        unlistenClipboard = await onClipboardUpdate(() => {
-          queryClient.invalidateQueries({ queryKey: ["clipboard", "history"] });
-        });
+        unlistenClipboard = await onClipboardUpdate(invalidateHistory);
       } catch (error) {
         console.error("Failed to setup clipboard listener:", error);
       }
     };
 
     setupListener();
+    window.addEventListener(CLIPBOARD_HISTORY_UPDATED_EVENT, invalidateHistory);
 
     return () => {
+      window.removeEventListener(CLIPBOARD_HISTORY_UPDATED_EVENT, invalidateHistory);
+
       if (unlistenClipboard) {
         unlistenClipboard();
       }

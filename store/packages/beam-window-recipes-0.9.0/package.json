@@ -1,0 +1,19 @@
+{
+  "name": "beam-window-recipes",
+  "version": "0.9.0",
+  "description": "Local Beam store package with a beta channel to exercise channel-aware resolution.",
+  "author": {
+    "name": "Beam Team"
+  },
+  "icon": "icons/window-recipes.png",
+  "commands": [
+    {
+      "name": "window-recipes",
+      "title": "Window Recipes",
+      "description": "A sample no-view command from the local Beam store.",
+      "mode": "no-view"
+    }
+  ],
+  "owner": "beam",
+  "title": "Beam Window Recipes"
+}

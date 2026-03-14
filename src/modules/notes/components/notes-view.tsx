@@ -213,9 +213,7 @@ export function NotesView({ onBack }: NotesViewProps) {
               Notes
             </h2>
           </div>
-          <p className="truncate text-[11px] text-muted-foreground">
-            Quick notes and drafts
-          </p>
+          <p className="truncate text-[11px] text-muted-foreground">Quick notes and drafts</p>
         </div>
 
         <Button
@@ -241,52 +239,48 @@ export function NotesView({ onBack }: NotesViewProps) {
           onCreateNote={handleCreateMode}
         />
 
-        {notesQuery.isLoading && notes.length === 0
-          ? (
-              <section className="flex min-h-0 flex-1 items-center justify-center">
-                <div className="flex items-center gap-2 text-[13px] text-muted-foreground">
-                  <Loader2 className="size-4 animate-spin" />
-                  Loading notes...
-                </div>
-              </section>
-            )
-          : viewMode === "create" || viewMode === "edit"
-          ? (
-              <NoteEditor
-                mode={viewMode}
-                draft={draft}
-                isSubmitting={isSubmitting}
-                onDraftChange={setDraft}
-                onCancel={handleCancelEdit}
-                onSubmit={() => {
-                  void handleSaveNote();
-                }}
-              />
-            )
-          : (
-              <NotePreview
-                note={selectedNote}
-                isDeleting={deleteNoteMutation.isPending}
-                isTogglingPinned={updateNoteMutation.isPending}
-                onEdit={handleEditMode}
-                onTogglePinned={() => {
-                  void handleTogglePinned();
-                }}
-                onDelete={() => {
-                  void handleDeleteNote();
-                }}
-              />
-            )}
+        {notesQuery.isLoading && notes.length === 0 ? (
+          <section className="flex min-h-0 flex-1 items-center justify-center">
+            <div className="flex items-center gap-2 text-[13px] text-muted-foreground">
+              <Loader2 className="size-4 animate-spin" />
+              Loading notes...
+            </div>
+          </section>
+        ) : viewMode === "create" || viewMode === "edit" ? (
+          <NoteEditor
+            mode={viewMode}
+            draft={draft}
+            isSubmitting={isSubmitting}
+            onDraftChange={setDraft}
+            onCancel={handleCancelEdit}
+            onSubmit={() => {
+              void handleSaveNote();
+            }}
+          />
+        ) : (
+          <NotePreview
+            note={selectedNote}
+            isDeleting={deleteNoteMutation.isPending}
+            isTogglingPinned={updateNoteMutation.isPending}
+            onEdit={handleEditMode}
+            onTogglePinned={() => {
+              void handleTogglePinned();
+            }}
+            onDelete={() => {
+              void handleDeleteNote();
+            }}
+          />
+        )}
       </div>
 
       {viewMode === "view" ? (
         <ModuleFooter
           className="notes-footer-enter"
-          leftSlot={(
+          leftSlot={
             <span>
               {filteredNotes.length} visible of {notes.length}
             </span>
-          )}
+          }
           shortcuts={[{ keys: ["Esc"], label: "Back" }]}
         />
       ) : null}

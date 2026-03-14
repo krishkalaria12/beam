@@ -1,0 +1,174 @@
+syntax = "proto3";
+
+package beam.extension_runtime.v1;
+
+import "manifest.proto";
+
+enum ExtensionStoreSourceKind {
+  EXTENSION_STORE_SOURCE_KIND_UNSPECIFIED = 0;
+  EXTENSION_STORE_SOURCE_KIND_BEAM = 1;
+  EXTENSION_STORE_SOURCE_KIND_COMMUNITY = 2;
+  EXTENSION_STORE_SOURCE_KIND_RAYCAST = 3;
+}
+
+enum ExtensionVerificationStatus {
+  EXTENSION_VERIFICATION_STATUS_UNSPECIFIED = 0;
+  EXTENSION_VERIFICATION_STATUS_VERIFIED = 1;
+  EXTENSION_VERIFICATION_STATUS_CURATED = 2;
+  EXTENSION_VERIFICATION_STATUS_COMMUNITY = 3;
+  EXTENSION_VERIFICATION_STATUS_UNVERIFIED = 4;
+}
+
+enum ExtensionReleaseChannel {
+  EXTENSION_RELEASE_CHANNEL_UNSPECIFIED = 0;
+  EXTENSION_RELEASE_CHANNEL_STABLE = 1;
+  EXTENSION_RELEASE_CHANNEL_BETA = 2;
+  EXTENSION_RELEASE_CHANNEL_NIGHTLY = 3;
+  EXTENSION_RELEASE_CHANNEL_CUSTOM = 4;
+}
+
+enum ExtensionPackageArtifactKind {
+  EXTENSION_PACKAGE_ARTIFACT_KIND_UNSPECIFIED = 0;
+  EXTENSION_PACKAGE_ARTIFACT_KIND_ZIP = 1;
+  EXTENSION_PACKAGE_ARTIFACT_KIND_TAR_GZ = 2;
+}
+
+enum ExtensionChecksumAlgorithm {
+  EXTENSION_CHECKSUM_ALGORITHM_UNSPECIFIED = 0;
+  EXTENSION_CHECKSUM_ALGORITHM_SHA256 = 1;
+}
+
+message ExtensionStoreSource {
+  string id = 1;
+  string label = 2;
+  ExtensionStoreSourceKind kind = 3;
+  optional string homepage_url = 4;
+}
+
+message ExtensionStoreAuthor {
+  string handle = 1;
+  optional string name = 2;
+  optional string avatar_url = 3;
+  optional string profile_url = 4;
+}
+
+message ExtensionStoreIcons {
+  optional string light = 1;
+  optional string dark = 2;
+}
+
+message ExtensionStoreVerification {
+  ExtensionVerificationStatus status = 1;
+  optional string label = 2;
+  optional string verified_by = 3;
+  optional string summary = 4;
+}
+
+message ExtensionStoreCompatibility {
+  repeated string platforms = 1;
+  repeated string desktop_environments = 2;
+  optional string minimum_beam_version = 3;
+  optional string maximum_beam_version = 4;
+  bool linux_tested = 5;
+  bool wayland_tested = 6;
+  bool x11_tested = 7;
+  repeated string notes = 8;
+}
+
+message ExtensionStoreChecksum {
+  ExtensionChecksumAlgorithm algorithm = 1;
+  string value = 2;
+}
+
+message ExtensionStoreArtifactVerification {
+  optional string signer = 1;
+  optional string signature = 2;
+  optional string provenance_url = 3;
+  optional string transparency_log_url = 4;
+}
+
+message ExtensionStoreArtifact {
+  string id = 1;
+  ExtensionPackageArtifactKind kind = 2;
+  string download_url = 3;
+  optional string file_name = 4;
+  optional string mime_type = 5;
+  optional int64 size_bytes = 6;
+  repeated ExtensionStoreChecksum checksums = 7;
+  ExtensionStoreArtifactVerification verification = 8;
+  repeated string platforms = 9;
+  repeated string desktop_environments = 10;
+}
+
+message ExtensionStoreReleaseNotes {
+  optional string summary = 1;
+  optional string markdown = 2;
+  optional string changelog_url = 3;
+}
+
+message ExtensionStoreRelease {
+  string version = 1;
+  string download_url = 2;
+  optional string published_at = 3;
+  optional string checksum_sha256 = 4;
+  optional string changelog_url = 5;
+  ExtensionReleaseChannel channel = 6;
+  optional string channel_name = 7;
+  bool prerelease = 8;
+  repeated ExtensionStoreArtifact artifacts = 9;
+  optional string primary_artifact_id = 10;
+  ExtensionStoreReleaseNotes release_notes = 11;
+  optional string published_by = 12;
+}
+
+message ExtensionStorePackage {
+  string id = 1;
+  string slug = 2;
+  string title = 3;
+  optional string summary = 4;
+  optional string description = 5;
+  ExtensionStoreAuthor author = 6;
+  ExtensionStoreIcons icons = 7;
+  repeated string categories = 8;
+  repeated string tags = 9;
+  ExtensionStoreSource source = 10;
+  ExtensionStoreVerification verification = 11;
+  ExtensionStoreCompatibility compatibility = 12;
+  ExtensionStoreRelease latest_release = 13;
+  optional string readme_url = 14;
+  optional string source_url = 15;
+  repeated string screenshots = 16;
+  ExtensionManifest manifest = 17;
+  optional int64 download_count = 18;
+  repeated ExtensionStoreRelease releases = 19;
+  ExtensionReleaseChannel default_channel = 20;
+  optional string package_format_version = 21;
+}
+
+message ExtensionStoreCatalog {
+  ExtensionStoreSource source = 1;
+  repeated ExtensionStorePackage packages = 2;
+  optional string generated_at = 3;
+  optional string format_version = 4;
+}
+
+message ExtensionStoreSearchResult {
+  repeated ExtensionStorePackage packages = 1;
+}
+
+message ExtensionStoreUpdate {
+  string id = 1;
+  string slug = 2;
+  string title = 3;
+  string installed_version = 4;
+  string latest_version = 5;
+  ExtensionStoreRelease latest_release = 6;
+  ExtensionStoreVerification verification = 7;
+  ExtensionStoreCompatibility compatibility = 8;
+  ExtensionStoreAuthor author = 9;
+  ExtensionStoreSource source = 10;
+}
+
+message ExtensionStoreUpdateResult {
+  repeated ExtensionStoreUpdate updates = 1;
+}

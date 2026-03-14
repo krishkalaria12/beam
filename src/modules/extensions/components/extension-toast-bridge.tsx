@@ -1,22 +1,22 @@
 import { useEffect, useRef } from "react";
 import { toast, type ExternalToast } from "sonner";
 
-import { extensionSidecarService } from "@/modules/extensions/sidecar-service";
+import { extensionManagerService } from "@/modules/extensions/extension-manager-service";
 import { type ExtensionToast, useExtensionRuntimeStore } from "@/modules/extensions/runtime/store";
 
 function safeDispatchToastAction(toastId: number, actionType: "primary" | "secondary") {
   try {
-    extensionSidecarService.dispatchToastAction(toastId, actionType);
+    extensionManagerService.dispatchToastAction(toastId, actionType);
   } catch {
-    // Ignore action dispatch failures when sidecar is no longer running.
+    // Ignore action dispatch failures when the extension manager is no longer running.
   }
 }
 
 function safeTriggerToastHide(toastId: number) {
   try {
-    extensionSidecarService.triggerToastHide(toastId);
+    extensionManagerService.triggerToastHide(toastId);
   } catch {
-    // Ignore hide dispatch failures when sidecar is no longer running.
+    // Ignore hide dispatch failures when the extension manager is no longer running.
   }
 }
 

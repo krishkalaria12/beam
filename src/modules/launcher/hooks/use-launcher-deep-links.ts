@@ -4,10 +4,10 @@ import { useCallback, useEffect } from "react";
 import { toast } from "sonner";
 
 import type { CommandPanel } from "@/command-registry/types";
-import { getDiscoveredPlugins } from "@/modules/extensions/api/get-discovered-plugins";
 import { persistentExtensionRunnerManager } from "@/modules/extensions/background/persistent-runners";
-import { extensionSidecarService } from "@/modules/extensions/sidecar-service";
-import { parseRaycastDeepLink } from "@/modules/extensions/sidecar/deep-link";
+import { findExtensionCommandByQualifiedName } from "@/modules/extensions/extension-catalog";
+import { extensionManagerService } from "@/modules/extensions/extension-manager-service";
+import { parseRaycastDeepLink } from "@/modules/extensions/extension-manager/deep-link";
 import { useExtensionRuntimeStore } from "@/modules/extensions/runtime/store";
 import { useExtensionsUiStore } from "@/modules/extensions/store/use-extensions-ui-store";
 
@@ -23,9 +23,7 @@ export function useLauncherDeepLinks({ openPanel, backToCommands }: UseLauncherD
       const extensionsUi = useExtensionsUiStore.getState();
       const normalizedSlug = extensionSlug?.trim() ?? "";
       if (normalizedSlug.length > 0) {
-        extensionsUi.setSearch(normalizedSlug);
-        extensionsUi.setDebouncedSearch(normalizedSlug);
-        extensionsUi.setSearchDebouncing(false);
+        extensionsUi.primeSearch(normalizedSlug);
       }
     },
     [openPanel],
@@ -40,23 +38,10 @@ export function useLauncherDeepLinks({ openPanel, backToCommands }: UseLauncherD
         return;
       }
 
-      const discovered = await getDiscoveredPlugins();
-      const matchedPlugin = discovered.find((plugin) => {
-        const owner = plugin.owner?.trim().toLowerCase() ?? "";
-        const author =
-          typeof plugin.author === "string"
-            ? plugin.author.trim().toLowerCase()
-            : (plugin.author?.name?.trim().toLowerCase() ?? "");
-        const ownerMatches = owner.length > 0 && owner === requestedOwner;
-        const authorMatches = author.length > 0 && author === requestedOwner;
-        if (!ownerMatches && !authorMatches) {
-          return false;
-        }
-
-        return (
-          plugin.pluginName.trim().toLowerCase() === requestedExtension &&
-          plugin.commandName.trim().toLowerCase() === requestedCommand
-        );
+      const matchedPlugin = await findExtensionCommandByQualifiedName({
+        ownerOrAuthor: requestedOwner,
+        extensionName: requestedExtension,
+        commandName: requestedCommand,
       });
 
       if (!matchedPlugin) {
@@ -102,7 +87,7 @@ export function useLauncherDeepLinks({ openPanel, backToCommands }: UseLauncherD
       }
 
       try {
-        await extensionSidecarService.runPlugin({
+        await extensionManagerService.runPlugin({
           pluginPath: matchedPlugin.pluginPath,
           mode: pluginMode,
           aiAccessStatus: false,
@@ -129,7 +114,7 @@ export function useLauncherDeepLinks({ openPanel, backToCommands }: UseLauncherD
 
     void listen<string>("deep-link", (event) => {
       const deepLinkUrl = event.payload;
-      if (extensionSidecarService.handleDeepLink(deepLinkUrl)) {
+      if (extensionManagerService.handleDeepLink(deepLinkUrl)) {
         return;
       }
 

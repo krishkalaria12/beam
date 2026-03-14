@@ -3,7 +3,7 @@ import { listen } from "@tauri-apps/api/event";
 import { open as openExternal } from "@tauri-apps/plugin-shell";
 import { useEffect, useRef, useState } from "react";
 
-import { parseOauthDeepLink } from "@/modules/extensions/sidecar/deep-link";
+import { parseOauthDeepLink } from "@/modules/extensions/extension-manager/deep-link";
 
 import {
   githubCreateAuthSession,

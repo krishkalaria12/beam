@@ -86,12 +86,7 @@ function hasUniqueSymbols(symbols: {
   shell: string;
   customBindings: readonly CustomTriggerBinding[];
 }): boolean {
-  const used = new Set<string>([
-    symbols.quicklink,
-    symbols.system,
-    symbols.script,
-    symbols.shell,
-  ]);
+  const used = new Set<string>([symbols.quicklink, symbols.system, symbols.script, symbols.shell]);
 
   if (used.size !== 4) {
     return false;

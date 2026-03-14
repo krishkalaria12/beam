@@ -1,0 +1,170 @@
+syntax = "proto3";
+
+package beam.extension_runtime.v1;
+
+import "google/protobuf/struct.proto";
+
+message InvokeCommandRequest {
+  string request_id = 1;
+  string command = 2;
+  google.protobuf.Struct params = 3;
+}
+
+message RuntimeConfirmAlertRequest {
+  string request_id = 1;
+  string title = 2;
+  string message = 3;
+  string primary_action_title = 4;
+}
+
+message RuntimeConfirmAlertResponse {
+  string request_id = 1;
+  bool confirmed = 2;
+  string error = 3;
+}
+
+message LaunchCommandRequest {
+  string request_id = 1;
+  string name = 2;
+  string type = 3;
+  google.protobuf.Struct context = 4;
+  google.protobuf.Struct arguments = 5;
+  string extension_name = 6;
+}
+
+message LaunchCommandResponse {
+  string request_id = 1;
+  bool ok = 2;
+  string error = 3;
+}
+
+message InvokeCommandResponse {
+  string request_id = 1;
+  google.protobuf.Value result = 2;
+  string error = 3;
+}
+
+message BrowserExtensionRequest {
+  string request_id = 1;
+  string method = 2;
+  google.protobuf.Value params = 3;
+}
+
+message BrowserExtensionResponse {
+  string request_id = 1;
+  google.protobuf.Value result = 2;
+  string error = 3;
+}
+
+message OauthAuthorizeRequest {
+  string url = 1;
+  string provider_name = 2;
+  string provider_icon = 3;
+  string description = 4;
+}
+
+message OauthAuthorizeResponse {
+  string state = 1;
+  string code = 2;
+  string error = 3;
+}
+
+message OauthGetTokensRequest {
+  string request_id = 1;
+  string provider_id = 2;
+}
+
+message OauthGetTokensResponse {
+  string request_id = 1;
+  google.protobuf.Struct result = 2;
+  string error = 3;
+}
+
+message OauthSetTokensRequest {
+  string request_id = 1;
+  string provider_id = 2;
+  google.protobuf.Struct tokens = 3;
+}
+
+message OauthSetTokensResponse {
+  string request_id = 1;
+  bool ok = 2;
+  string error = 3;
+}
+
+message OauthRemoveTokensRequest {
+  string request_id = 1;
+  string provider_id = 2;
+}
+
+message OauthRemoveTokensResponse {
+  string request_id = 1;
+  bool ok = 2;
+  string error = 3;
+}
+
+message AiAskRequest {
+  string request_id = 1;
+  string stream_request_id = 2;
+  string prompt = 3;
+  google.protobuf.Struct options = 4;
+}
+
+message AiAskResponse {
+  string request_id = 1;
+  string full_text = 2;
+  string error = 3;
+}
+
+message AiAskChunkEvent {
+  string stream_request_id = 1;
+  string chunk = 2;
+}
+
+message AiAskEndEvent {
+  string stream_request_id = 1;
+  string full_text = 2;
+}
+
+message AiAskErrorEvent {
+  string stream_request_id = 1;
+  string error = 2;
+}
+
+message RuntimeRpcRequest {
+  oneof request {
+    InvokeCommandRequest invoke_command = 1;
+    BrowserExtensionRequest browser_extension = 2;
+    OauthAuthorizeRequest oauth_authorize = 3;
+    OauthGetTokensRequest oauth_get_tokens = 4;
+    OauthSetTokensRequest oauth_set_tokens = 5;
+    OauthRemoveTokensRequest oauth_remove_tokens = 6;
+    RuntimeConfirmAlertRequest confirm_alert = 7;
+    LaunchCommandRequest launch_command = 8;
+    AiAskRequest ai_ask = 9;
+  }
+}
+
+message RuntimeRpcResponse {
+  oneof response {
+    InvokeCommandResponse invoke_command = 1;
+    BrowserExtensionResponse browser_extension = 2;
+    OauthAuthorizeResponse oauth_authorize = 3;
+    OauthGetTokensResponse oauth_get_tokens = 4;
+    OauthSetTokensResponse oauth_set_tokens = 5;
+    OauthRemoveTokensResponse oauth_remove_tokens = 6;
+    RuntimeConfirmAlertResponse confirm_alert = 7;
+    LaunchCommandResponse launch_command = 8;
+    AiAskResponse ai_ask = 9;
+    AiAskChunkEvent ai_ask_chunk = 10;
+    AiAskEndEvent ai_ask_end = 11;
+    AiAskErrorEvent ai_ask_error = 12;
+  }
+}
+
+message RuntimeRpc {
+  oneof message {
+    RuntimeRpcRequest request = 1;
+    RuntimeRpcResponse response = 2;
+  }
+}

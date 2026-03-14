@@ -1,0 +1,78 @@
+syntax = "proto3";
+
+package beam.extension_runtime.v1;
+
+import "common.proto";
+
+message StringContextValue {
+  DesktopContextState state = 1;
+  string value = 2;
+  string reason = 3;
+}
+
+message FileListContextValue {
+  DesktopContextState state = 1;
+  repeated FileSystemItem value = 2;
+  string reason = 3;
+}
+
+message ApplicationContextValue {
+  DesktopContextState state = 1;
+  Application value = 2;
+  string reason = 3;
+}
+
+message FocusedWindowContextValue {
+  DesktopContextState state = 1;
+  FocusedWindow value = 2;
+  string reason = 3;
+}
+
+message DesktopContextSources {
+  string selected_text_backend = 1;
+  string selected_files_backend = 2;
+  string window_backend = 3;
+  string application_backend = 4;
+}
+
+message DesktopContextCapabilities {
+  bool selected_text = 1;
+  bool selected_files = 2;
+  bool focused_window = 3;
+  bool frontmost_application = 4;
+}
+
+message DesktopContextSnapshot {
+  StringContextValue selected_text = 1;
+  FileListContextValue selected_files = 2;
+  FocusedWindowContextValue focused_window = 3;
+  ApplicationContextValue frontmost_application = 4;
+  DesktopContextSources sources = 5;
+  DesktopContextCapabilities capabilities = 6;
+}
+
+message EnvironmentSnapshot {
+  string owner_or_author_name = 1;
+  string extension_name = 2;
+  string command_name = 3;
+  CommandMode command_mode = 4;
+  string assets_path = 5;
+  string support_path = 6;
+  bool is_development = 7;
+  bool is_raycast = 8;
+  string appearance = 9;
+  string theme = 10;
+  string text_size = 11;
+  string raycast_version = 12;
+  VersionInfo beam_version = 13;
+  LaunchType launch_type = 14;
+  bool ai_access = 15;
+  bool browser_extension_access = 16;
+}
+
+message GetEnvironmentRequest {}
+
+message GetEnvironmentResponse {
+  EnvironmentSnapshot environment = 1;
+  DesktopContextSnapshot desktop_context = 2;
+}

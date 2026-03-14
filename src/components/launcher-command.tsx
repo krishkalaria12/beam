@@ -16,10 +16,7 @@ import type { CustomActionRequest } from "@/command-registry/dispatcher";
 import { staticCommandRegistry } from "@/command-registry/registry";
 import { createStaticCommandRegistryStore } from "@/command-registry/static-registry";
 import { logDispatchFailure } from "@/command-registry/telemetry";
-import {
-  QUICKLINK_TRIGGER_MODE,
-  SHELL_TRIGGER_MODE,
-} from "@/command-registry/trigger-registry";
+import { QUICKLINK_TRIGGER_MODE, SHELL_TRIGGER_MODE } from "@/command-registry/trigger-registry";
 import type { CommandDescriptor } from "@/command-registry/types";
 import { useCommandPreferences } from "@/command-registry/use-command-preferences";
 import { Command, CommandInput, CommandList } from "@/components/ui/command";
@@ -32,7 +29,7 @@ import { LauncherCommandModeContent } from "@/modules/launcher/components/launch
 import { LauncherFooter } from "@/modules/launcher/components/launcher-footer";
 import { LauncherSecondaryPanel } from "@/modules/launcher/components/launcher-secondary-panel";
 import { LauncherTakeoverPanel } from "@/modules/launcher/components/launcher-takeover-panel";
-import { useExtensionSidecarEvents } from "@/modules/launcher/hooks/use-extension-sidecar-events";
+import { useExtensionManagerEvents } from "@/modules/launcher/hooks/use-extension-manager-events";
 import { useCliDmenuRequests } from "@/modules/launcher/hooks/use-cli-dmenu-requests";
 import { useLauncherDeepLinks } from "@/modules/launcher/hooks/use-launcher-deep-links";
 import { useLauncherPanelPrefetch } from "@/modules/launcher/hooks/use-launcher-panel-prefetch";
@@ -47,9 +44,12 @@ import { ShellCommandPanel } from "@/modules/shell/components/shell-command-pane
 import { useRunShellCommandMutation } from "@/modules/shell/hooks/use-run-shell-command-mutation";
 import type { ShellExecutionEntry } from "@/modules/shell/types";
 import { persistentExtensionRunnerManager } from "@/modules/extensions/background/persistent-runners";
-import { getDiscoveredPlugins } from "@/modules/extensions/api/get-discovered-plugins";
+import {
+  findExtensionCommandByName,
+  getExtensionCatalogPlugins,
+} from "@/modules/extensions/extension-catalog";
 import { PersistentExtensionsHost } from "@/modules/extensions/components/persistent-extensions-host";
-import { extensionSidecarService } from "@/modules/extensions/sidecar-service";
+import { extensionManagerService } from "@/modules/extensions/extension-manager-service";
 import { ExtensionToastBridge } from "@/modules/extensions/components/extension-toast-bridge";
 import { useExtensionRuntimeStore } from "@/modules/extensions/runtime/store";
 import { findQuicklinkByKeyword } from "@/modules/quicklinks/api/quicklinks";
@@ -151,7 +151,7 @@ export default function LauncherCommand() {
     setFallbackCommandIds,
   } = useCommandPreferences();
   useLauncherDeepLinks({ openPanel, backToCommands });
-  useExtensionSidecarEvents({ backToCommands, openExtensions });
+  useExtensionManagerEvents({ backToCommands, openExtensions });
   useCliDmenuRequests();
   useLauncherPanelPrefetch();
 
@@ -172,7 +172,7 @@ export default function LauncherCommand() {
         input.pluginMode === "menu-bar" ||
         (input.pluginMode === "no-view" && typeof input.pluginInterval === "string")
       ) {
-        const discovered = await getDiscoveredPlugins();
+        const discovered = await getExtensionCatalogPlugins();
         const matched = discovered.find((plugin) => plugin.pluginPath === input.pluginPath);
         if (!matched) {
           throw new Error("Extension command is no longer installed.");
@@ -194,7 +194,7 @@ export default function LauncherCommand() {
       }
 
       try {
-        await extensionSidecarService.runPlugin({
+        await extensionManagerService.runPlugin({
           pluginPath: input.pluginPath,
           mode: input.pluginMode,
           aiAccessStatus: false,
@@ -222,16 +222,10 @@ export default function LauncherCommand() {
       arguments?: Record<string, unknown>;
       extensionName?: string;
     }) => {
-      const discovered = await getDiscoveredPlugins();
-      const requestedCommand = request.name.trim();
-      const requestedPluginName = request.extensionName?.trim();
-      const command =
-        discovered.find(
-          (entry) =>
-            entry.commandName === requestedCommand &&
-            requestedPluginName &&
-            entry.pluginName === requestedPluginName,
-        ) ?? discovered.find((entry) => entry.commandName === requestedCommand);
+      const command = await findExtensionCommandByName({
+        commandName: request.name,
+        extensionName: request.extensionName,
+      });
 
       if (!command) {
         throw new Error(`command "${request.name}" was not found`);

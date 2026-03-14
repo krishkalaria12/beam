@@ -1,10 +1,16 @@
 import type { ExtensionUiNode } from "@/modules/extensions/runtime/store";
 import { asString } from "@/modules/extensions/components/runner/utils";
 
-interface DropdownItemDescriptor {
+export interface DropdownItemDescriptor {
   nodeId: number;
   value: string;
   title: string;
+  icon?: unknown;
+}
+
+export interface DropdownSectionDescriptor {
+  title?: string;
+  items: DropdownItemDescriptor[];
 }
 
 function isDropdownItemType(type: string): boolean {
@@ -25,9 +31,19 @@ export function getDropdownItems(
   node: ExtensionUiNode,
   uiTree: Map<number, ExtensionUiNode>,
 ): DropdownItemDescriptor[] {
-  const items: DropdownItemDescriptor[] = [];
+  return getDropdownSections(node, uiTree).flatMap((section) => section.items);
+}
 
-  const walk = (childIds: number[]) => {
+export function getDropdownSections(
+  node: ExtensionUiNode,
+  uiTree: Map<number, ExtensionUiNode>,
+): DropdownSectionDescriptor[] {
+  const rootItems: DropdownItemDescriptor[] = [];
+  const sections: DropdownSectionDescriptor[] = [];
+
+  const collectItems = (childIds: number[]): DropdownItemDescriptor[] => {
+    const items: DropdownItemDescriptor[] = [];
+
     for (const childId of childIds) {
       const childNode = uiTree.get(childId);
       if (!childNode) {
@@ -41,16 +57,24 @@ export function getDropdownItems(
           nodeId: childNode.id,
           value,
           title,
+          icon: childNode.props.icon,
         });
         continue;
       }
 
       if (isDropdownSectionType(childNode.type)) {
-        walk(childNode.children);
+        const sectionItems = collectItems(childNode.children);
+        if (sectionItems.length > 0) {
+          sections.push({
+            title: asString(childNode.props.title).trim() || undefined,
+            items: sectionItems,
+          });
+        }
       }
     }
+    return items;
   };
 
-  walk(node.children);
-  return items;
+  rootItems.push(...collectItems(node.children));
+  return rootItems.length > 0 ? [{ items: rootItems }, ...sections] : sections;
 }

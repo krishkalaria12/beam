@@ -1,4 +1,4 @@
-import type { Command as ProtocolCommand } from "@flare/protocol";
+import type { RuntimeCommand, RuntimeToast } from "@beam/extension-protocol";
 
 export interface ExtensionUiNode {
   id: number;
@@ -9,28 +9,7 @@ export interface ExtensionUiNode {
   text?: string;
 }
 
-export interface ExtensionToast {
-  id: number;
-  title: string;
-  message?: string;
-  style?: "SUCCESS" | "FAILURE" | "ANIMATED";
-  primaryAction?: {
-    title: string;
-    onAction: boolean;
-    shortcut?: {
-      modifiers: Array<"cmd" | "ctrl" | "opt" | "shift">;
-      key: string;
-    };
-  };
-  secondaryAction?: {
-    title: string;
-    onAction: boolean;
-    shortcut?: {
-      modifiers: Array<"cmd" | "ctrl" | "opt" | "shift">;
-      key: string;
-    };
-  };
-}
+export type ExtensionToast = RuntimeToast;
 
 export interface RuntimeTreeSnapshot {
   uiTree: Map<number, ExtensionUiNode>;
@@ -56,7 +35,7 @@ function cloneNode(node: ExtensionUiNode): ExtensionUiNode {
 }
 
 function processCommand(
-  command: ProtocolCommand,
+  command: RuntimeCommand,
   propTemplates: Map<number, PropTemplate>,
   tempTree: Map<number, ExtensionUiNode>,
   tempState: {
@@ -202,7 +181,7 @@ function processCommand(
       break;
     }
     case "SHOW_TOAST": {
-      const toast = command.payload as ExtensionToast;
+      const toast = command.payload;
       const existingIndex = tempState.toasts.findIndex((entry) => entry.id === toast.id);
       if (existingIndex >= 0) {
         tempState.toasts[existingIndex] = toast;
@@ -212,13 +191,9 @@ function processCommand(
       break;
     }
     case "UPDATE_TOAST": {
-      const { id, ...rest } = command.payload;
-      const existingIndex = tempState.toasts.findIndex((entry) => entry.id === id);
+      const existingIndex = tempState.toasts.findIndex((entry) => entry.id === command.payload.id);
       if (existingIndex >= 0) {
-        tempState.toasts[existingIndex] = {
-          ...tempState.toasts[existingIndex],
-          ...rest,
-        };
+        tempState.toasts[existingIndex] = command.payload;
       }
       break;
     }
@@ -251,9 +226,9 @@ export function createEmptyRuntimeTreeSnapshot(): RuntimeTreeSnapshot {
   };
 }
 
-export function applyProtocolCommandsToRuntimeTree(
+export function applyRuntimeCommandsToRuntimeTree(
   snapshot: RuntimeTreeSnapshot,
-  commands: readonly ProtocolCommand[],
+  commands: readonly RuntimeCommand[],
   propTemplates: Map<number, PropTemplate> = new Map(),
 ): RuntimeTreeSnapshot {
   if (commands.length === 0) {

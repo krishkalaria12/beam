@@ -1,21 +1,34 @@
 import { invoke, isTauri } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
-import { appCacheDir, appLocalDataDir } from "@tauri-apps/api/path";
-import { Command, open as shellOpen, type Child } from "@tauri-apps/plugin-shell";
-import { SidecarMessageWithPluginsSchema, type Command as ProtocolCommand } from "@flare/protocol";
-import { Unpackr } from "msgpackr";
-import { inflate } from "pako";
+import { open as shellOpen } from "@tauri-apps/plugin-shell";
+import type { ManagerRequest } from "@beam/extension-protocol";
 import { toast } from "sonner";
 
-import { parseAiAskRequest, parseConfirmAlertRequest, parseLaunchCommandRequest } from "@/modules/extensions/sidecar/custom-message";
-import { concatChunks, decodeTextPayload, toByteChunk } from "@/modules/extensions/sidecar/stream";
+import {
+  buildDispatchViewEventManagerRequest,
+  buildLaunchPluginManagerRequest,
+} from "@/modules/extensions/extension-manager/manager-protocol";
+import {
+  listenToExtensionRuntimeExit,
+  listenToExtensionRuntimeMessages,
+  listenToExtensionRuntimeStderr,
+  sendExtensionRuntimeManagerRequest,
+  sendExtensionRuntimeMessage,
+  sendExtensionRuntimeRpc,
+  startExtensionRuntime,
+  stopExtensionRuntime,
+} from "@/modules/extensions/extension-manager/runtime-bridge";
+import { parseRuntimeRender } from "@/modules/extensions/extension-manager/runtime-render";
+import { parseRuntimeOutput } from "@/modules/extensions/extension-manager/runtime-output";
+import { parseRuntimeRpc } from "@/modules/extensions/extension-manager/runtime-rpc";
 import type { PluginInfo } from "@/modules/extensions/types";
 import {
-  applyProtocolCommandsToRuntimeTree,
+  applyRuntimeCommandsToRuntimeTree,
   createEmptyRuntimeTreeSnapshot,
   type ExtensionUiNode,
   type RuntimeTreeSnapshot,
 } from "@/modules/extensions/runtime/runtime-tree";
+import type { RuntimeRpc } from "@beam/extension-protocol";
 
 const MENU_BAR_EVENT = "menu-bar-menu-event";
 
@@ -37,18 +50,13 @@ type PersistentPluginDescriptor = Pick<
   | "icon"
 >;
 
-interface RunPluginPayload {
-  pluginPath: string;
-  mode: PersistentMode;
-  aiAccessStatus: boolean;
-  arguments?: Record<string, unknown>;
-  launchContext?: Record<string, unknown>;
-  launchType?: LaunchTypeValue;
+interface ExtensionManagerEventEnvelope {
+  action: string;
+  payload: Record<string, unknown>;
 }
 
-interface SidecarEvent {
-  action: string;
-  payload: Record<string, unknown> | RunPluginPayload;
+function buildBackgroundRuntimeId(plugin: PersistentPluginDescriptor): string {
+  return `${buildRunnerId(plugin)}.${Date.now().toString(36)}.${Math.random().toString(36).slice(2, 8)}`;
 }
 
 interface MenuBarTrayItem {
@@ -120,7 +128,10 @@ function buildRunnerId(plugin: PersistentPluginDescriptor): string {
   return `${owner}.${plugin.pluginName}.${plugin.commandName}`.replace(/[^a-z0-9._-]+/g, "-");
 }
 
-function findNode(snapshot: RuntimeTreeSnapshot, id: number | undefined): ExtensionUiNode | undefined {
+function findNode(
+  snapshot: RuntimeTreeSnapshot,
+  id: number | undefined,
+): ExtensionUiNode | undefined {
   if (id === undefined) {
     return undefined;
   }
@@ -135,7 +146,10 @@ function collectNodeText(snapshot: RuntimeTreeSnapshot, nodeId: number | undefin
   if (node.type === "TEXT") {
     return node.text?.trim() ?? "";
   }
-  return node.children.map((childId) => collectNodeText(snapshot, childId)).join(" ").trim();
+  return node.children
+    .map((childId) => collectNodeText(snapshot, childId))
+    .join(" ")
+    .trim();
 }
 
 function buildMenuBarItem(snapshot: RuntimeTreeSnapshot, nodeId: number): MenuBarTrayItem[] {
@@ -169,7 +183,8 @@ function buildMenuBarItem(snapshot: RuntimeTreeSnapshot, nodeId: number): MenuBa
   }
 
   if (node.type === "MenuBarExtra.Submenu") {
-    const title = asString(node.props.title) || collectNodeText(snapshot, node.children[0]) || "Menu";
+    const title =
+      asString(node.props.title) || collectNodeText(snapshot, node.children[0]) || "Menu";
     return [
       {
         id: String(node.id),
@@ -182,7 +197,8 @@ function buildMenuBarItem(snapshot: RuntimeTreeSnapshot, nodeId: number): MenuBa
   }
 
   if (node.type === "MenuBarExtra.Item") {
-    const title = asString(node.props.title) || collectNodeText(snapshot, node.children[0]) || "Item";
+    const title =
+      asString(node.props.title) || collectNodeText(snapshot, node.children[0]) || "Item";
     return [
       {
         id: String(node.id),
@@ -219,19 +235,26 @@ function buildMenuBarTrayPayload(
 }
 
 class PersistentRunnerSession {
+  readonly runtimeId: string;
   readonly runnerId: string;
   readonly plugin: PersistentPluginDescriptor;
   readonly mode: PersistentMode;
-  private child: Child | null = null;
-  private unpackr = new Unpackr();
-  private pendingStdout: Uint8Array<ArrayBufferLike> = new Uint8Array(0);
+  private runtimeStarted = false;
   private tree = createEmptyRuntimeTreeSnapshot();
-  private propTemplates = new Map<number, { props: Record<string, unknown>; namedChildren?: Record<string, number> }>();
-  private unlisteners: UnlistenFn[] = [];
+  private propTemplates = new Map<
+    number,
+    { props: Record<string, unknown>; namedChildren?: Record<string, number> }
+  >();
   private callbacks: RunnerManagerCallbacks;
   private onExit?: () => void;
 
-  constructor(plugin: PersistentPluginDescriptor, callbacks: RunnerManagerCallbacks, onExit?: () => void) {
+  constructor(
+    runtimeId: string,
+    plugin: PersistentPluginDescriptor,
+    callbacks: RunnerManagerCallbacks,
+    onExit?: () => void,
+  ) {
+    this.runtimeId = runtimeId;
     this.plugin = plugin;
     this.runnerId = buildRunnerId(plugin);
     this.mode = (plugin.mode?.trim().toLowerCase() as PersistentMode) || "view";
@@ -245,45 +268,29 @@ class PersistentRunnerSession {
     }
 
     await this.stop();
-
-    const args = [`--data-dir=${await appLocalDataDir()}`, `--cache-dir=${await appCacheDir()}`];
-    const command = Command.sidecar("binaries/app", args, { encoding: "raw" });
-
-    command.stdout.on("data", (chunk: unknown) => {
-      this.consumeStdoutChunk(chunk);
-    });
-    command.stderr.on("data", (line: unknown) => {
-      const stderr = decodeTextPayload(line);
-      if (stderr.length > 0) {
-        console.error(`[persistent-runner:${this.runnerId}] stderr:`, stderr);
-      }
-    });
-
-    this.child = await command.spawn();
-    this.writeEvent({
-      action: "run-plugin",
-      payload: {
+    await startExtensionRuntime(this.runtimeId);
+    this.runtimeStarted = true;
+    await this.sendManagerRequest(
+      buildLaunchPluginManagerRequest({
         pluginPath: this.plugin.pluginPath,
         mode: this.mode,
         aiAccessStatus: false,
         launchType,
-      },
-    });
+        commandName: this.plugin.commandName,
+      }),
+    );
   }
 
   async stop(): Promise<void> {
-    while (this.unlisteners.length > 0) {
-      const unlisten = this.unlisteners.pop();
-      if (unlisten) {
-        unlisten();
+    if (this.runtimeStarted) {
+      try {
+        await stopExtensionRuntime(this.runtimeId);
+      } catch (error) {
+        console.error(`[persistent-runner:${this.runnerId}] failed to stop runtime`, error);
       }
     }
 
-    if (this.child) {
-      this.child.kill();
-      this.child = null;
-    }
-    this.pendingStdout = new Uint8Array(0);
+    this.runtimeStarted = false;
     this.tree = createEmptyRuntimeTreeSnapshot();
     this.propTemplates.clear();
 
@@ -302,22 +309,46 @@ class PersistentRunnerSession {
       return;
     }
 
-    this.writeEvent({
-      action: "dispatch-event",
-      payload: {
+    await this.sendManagerRequest(
+      buildDispatchViewEventManagerRequest({
         instanceId: parsedId,
         handlerName: "onAction",
         args: [],
-      },
-    });
+      }),
+    );
   }
 
-  private writeEvent(event: SidecarEvent): void {
-    if (!this.child) {
+  async handleRuntimeExit(): Promise<void> {
+    this.runtimeStarted = false;
+    this.tree = createEmptyRuntimeTreeSnapshot();
+    this.propTemplates.clear();
+
+    if (this.mode === "menu-bar") {
+      try {
+        await invoke("menu_bar_remove_tray", { runnerId: this.runnerId });
+      } catch (error) {
+        console.error(`[persistent-runner:${this.runnerId}] failed to remove tray`, error);
+      }
+    }
+  }
+
+  handleRuntimeStderr(line: string): void {
+    console.error(`[persistent-runner:${this.runnerId}] stderr:`, line);
+  }
+
+  private async writeEvent(event: ExtensionManagerEventEnvelope): Promise<void> {
+    if (!this.runtimeStarted) {
       throw new Error(`persistent runner "${this.runnerId}" is not running`);
     }
 
-    this.child.write(`${JSON.stringify(event)}\n`);
+    await sendExtensionRuntimeMessage(this.runtimeId, event.action, event.payload);
+  }
+
+  private async sendManagerRequest(request: ManagerRequest): Promise<void> {
+    const response = await sendExtensionRuntimeManagerRequest(this.runtimeId, request);
+    if (response.error) {
+      throw new Error(response.error.message);
+    }
   }
 
   private async handleInvokeCommand(payload: {
@@ -327,11 +358,24 @@ class PersistentRunnerSession {
   }): Promise<void> {
     try {
       const result = await invoke(payload.command, payload.params ?? {});
-      this.sendResponse("invoke_command-response", { requestId: payload.requestId, result });
+      this.sendRuntimeRpc({
+        response: {
+          invokeCommand: {
+            requestId: payload.requestId,
+            result,
+            error: "",
+          },
+        },
+      });
     } catch (error) {
-      this.sendResponse("invoke_command-response", {
-        requestId: payload.requestId,
-        error: error instanceof Error ? error.message : String(error),
+      this.sendRuntimeRpc({
+        response: {
+          invokeCommand: {
+            requestId: payload.requestId,
+            result: undefined,
+            error: error instanceof Error ? error.message : String(error),
+          },
+        },
       });
     }
   }
@@ -346,23 +390,55 @@ class PersistentRunnerSession {
         method: payload.method,
         params: payload.params,
       });
-      this.sendResponse("browser-extension-response", { requestId: payload.requestId, result });
+      this.sendRuntimeRpc({
+        response: {
+          browserExtension: {
+            requestId: payload.requestId,
+            result,
+            error: "",
+          },
+        },
+      });
     } catch (error) {
-      this.sendResponse("browser-extension-response", {
-        requestId: payload.requestId,
-        error: error instanceof Error ? error.message : String(error),
+      this.sendRuntimeRpc({
+        response: {
+          browserExtension: {
+            requestId: payload.requestId,
+            result: undefined,
+            error: error instanceof Error ? error.message : String(error),
+          },
+        },
       });
     }
   }
 
-  private async handleOauthGetTokens(payload: { requestId: string; providerId: string }): Promise<void> {
+  private async handleOauthGetTokens(payload: {
+    requestId: string;
+    providerId: string;
+  }): Promise<void> {
     try {
       const result = await invoke("oauth_get_tokens", { providerId: payload.providerId });
-      this.sendResponse("oauth-get-tokens-response", { requestId: payload.requestId, result });
+      this.sendRuntimeRpc({
+        response: {
+          oauthGetTokens: {
+            requestId: payload.requestId,
+            result:
+              result && typeof result === "object"
+                ? (result as Record<string, unknown>)
+                : undefined,
+            error: "",
+          },
+        },
+      });
     } catch (error) {
-      this.sendResponse("oauth-get-tokens-response", {
-        requestId: payload.requestId,
-        error: error instanceof Error ? error.message : String(error),
+      this.sendRuntimeRpc({
+        response: {
+          oauthGetTokens: {
+            requestId: payload.requestId,
+            result: undefined,
+            error: error instanceof Error ? error.message : String(error),
+          },
+        },
       });
     }
   }
@@ -374,11 +450,24 @@ class PersistentRunnerSession {
   }): Promise<void> {
     try {
       await invoke("oauth_set_tokens", { providerId: payload.providerId, tokens: payload.tokens });
-      this.sendResponse("oauth-set-tokens-response", { requestId: payload.requestId, result: true });
+      this.sendRuntimeRpc({
+        response: {
+          oauthSetTokens: {
+            requestId: payload.requestId,
+            ok: true,
+            error: "",
+          },
+        },
+      });
     } catch (error) {
-      this.sendResponse("oauth-set-tokens-response", {
-        requestId: payload.requestId,
-        error: error instanceof Error ? error.message : String(error),
+      this.sendRuntimeRpc({
+        response: {
+          oauthSetTokens: {
+            requestId: payload.requestId,
+            ok: false,
+            error: error instanceof Error ? error.message : String(error),
+          },
+        },
       });
     }
   }
@@ -389,11 +478,24 @@ class PersistentRunnerSession {
   }): Promise<void> {
     try {
       await invoke("oauth_remove_tokens", { providerId: payload.providerId });
-      this.sendResponse("oauth-remove-tokens-response", { requestId: payload.requestId, result: true });
+      this.sendRuntimeRpc({
+        response: {
+          oauthRemoveTokens: {
+            requestId: payload.requestId,
+            ok: true,
+            error: "",
+          },
+        },
+      });
     } catch (error) {
-      this.sendResponse("oauth-remove-tokens-response", {
-        requestId: payload.requestId,
-        error: error instanceof Error ? error.message : String(error),
+      this.sendRuntimeRpc({
+        response: {
+          oauthRemoveTokens: {
+            requestId: payload.requestId,
+            ok: false,
+            error: error instanceof Error ? error.message : String(error),
+          },
+        },
       });
     }
   }
@@ -401,6 +503,12 @@ class PersistentRunnerSession {
   private handleOauthAuthorize(payload: { url: string }): void {
     void shellOpen(payload.url).catch((error) => {
       console.error(`[persistent-runner:${this.runnerId}] oauth open failed`, error);
+    });
+  }
+
+  private sendRuntimeRpc(message: RuntimeRpc): void {
+    void sendExtensionRuntimeRpc(this.runtimeId, message).catch((error) => {
+      console.error(`[persistent-runner:${this.runnerId}] failed to send runtime rpc`, error);
     });
   }
 
@@ -428,9 +536,14 @@ class PersistentRunnerSession {
       }
       settled = true;
       cleanup();
-      this.sendResponse("ai-ask-response", {
-        requestId: payload.requestId,
-        result: { fullText },
+      this.sendRuntimeRpc({
+        response: {
+          aiAsk: {
+            requestId: payload.requestId,
+            fullText,
+            error: "",
+          },
+        },
       });
     };
 
@@ -440,11 +553,23 @@ class PersistentRunnerSession {
       }
       settled = true;
       cleanup();
-      this.sendResponse("ai-ask-error", {
-        streamRequestId: payload.streamRequestId,
-        error: message,
+      this.sendRuntimeRpc({
+        response: {
+          aiAskError: {
+            streamRequestId: payload.streamRequestId,
+            error: message,
+          },
+        },
       });
-      this.sendResponse("ai-ask-response", { requestId: payload.requestId, error: message });
+      this.sendRuntimeRpc({
+        response: {
+          aiAsk: {
+            requestId: payload.requestId,
+            fullText: "",
+            error: message,
+          },
+        },
+      });
     };
 
     try {
@@ -453,9 +578,13 @@ class PersistentRunnerSession {
           if (event.payload.requestId !== payload.streamRequestId) {
             return;
           }
-          this.sendResponse("ai-ask-chunk", {
-            streamRequestId: payload.streamRequestId,
-            chunk: typeof event.payload.text === "string" ? event.payload.text : "",
+          this.sendRuntimeRpc({
+            response: {
+              aiAskChunk: {
+                streamRequestId: payload.streamRequestId,
+                chunk: typeof event.payload.text === "string" ? event.payload.text : "",
+              },
+            },
           });
         }),
       );
@@ -466,7 +595,14 @@ class PersistentRunnerSession {
             return;
           }
           const fullText = typeof event.payload.fullText === "string" ? event.payload.fullText : "";
-          this.sendResponse("ai-ask-end", { streamRequestId: payload.streamRequestId, fullText });
+          this.sendRuntimeRpc({
+            response: {
+              aiAskEnd: {
+                streamRequestId: payload.streamRequestId,
+                fullText,
+              },
+            },
+          });
           resolveOnce(fullText);
         }),
       );
@@ -496,14 +632,6 @@ class PersistentRunnerSession {
     }
   }
 
-  private sendResponse(action: string, payload: Record<string, unknown>): void {
-    try {
-      this.writeEvent({ action, payload });
-    } catch (error) {
-      console.error(`[persistent-runner:${this.runnerId}] failed to send response`, error);
-    }
-  }
-
   private async syncMenuBarTray(): Promise<void> {
     if (this.mode !== "menu-bar") {
       return;
@@ -521,189 +649,262 @@ class PersistentRunnerSession {
     }
   }
 
-  private handleRawMessage(raw: unknown): void {
-    const rawRecord = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : null;
-    const rawType = typeof rawRecord?.type === "string" ? rawRecord.type : null;
-    if (rawType === "open-extension-preferences" || rawType === "open-command-preferences") {
+  handleRuntimeMessage(raw: unknown): void {
+    const runtimeOutput = parseRuntimeOutput(raw);
+    if (runtimeOutput?.openExtensionPreferences || runtimeOutput?.openCommandPreferences) {
       this.callbacks.openExtensions?.();
       return;
     }
 
-    const confirmAlertRequest = parseConfirmAlertRequest(raw);
-    if (confirmAlertRequest) {
-      const lines = [confirmAlertRequest.title, confirmAlertRequest.message].filter(Boolean);
-      const confirmed =
-        typeof window !== "undefined" && typeof window.confirm === "function"
-          ? window.confirm(lines.join("\n\n") || "Continue?")
-          : true;
-      this.sendResponse("confirm-alert-response", {
-        requestId: confirmAlertRequest.requestId,
-        result: confirmed,
+    if (runtimeOutput?.goBackToPluginList) {
+      if (this.onExit) {
+        void this.onExit();
+      } else {
+        void this.stop();
+      }
+      return;
+    }
+
+    if (runtimeOutput?.open) {
+      void shellOpen(runtimeOutput.open.target, runtimeOutput.open.application || undefined).catch(
+        (error) => {
+          console.error(`[persistent-runner:${this.runnerId}] open failed`, error);
+        },
+      );
+      return;
+    }
+
+    if (runtimeOutput?.showHud) {
+      toast.message(runtimeOutput.showHud.text);
+      return;
+    }
+
+    const runtimeRpc = parseRuntimeRpc(raw);
+    if (runtimeRpc?.request?.invokeCommand) {
+      void this.handleInvokeCommand({
+        requestId: runtimeRpc.request.invokeCommand.requestId,
+        command: runtimeRpc.request.invokeCommand.command,
+        params: toRecord(runtimeRpc.request.invokeCommand.params),
       });
       return;
     }
 
-    const launchCommandRequest = parseLaunchCommandRequest(raw);
-    if (launchCommandRequest) {
+    if (runtimeRpc?.request?.browserExtension) {
+      void this.handleBrowserExtensionRequest({
+        requestId: runtimeRpc.request.browserExtension.requestId,
+        method: runtimeRpc.request.browserExtension.method,
+        params: runtimeRpc.request.browserExtension.params,
+      });
+      return;
+    }
+
+    if (runtimeRpc?.request?.oauthAuthorize) {
+      this.handleOauthAuthorize({ url: runtimeRpc.request.oauthAuthorize.url });
+      return;
+    }
+
+    if (runtimeRpc?.request?.oauthGetTokens) {
+      void this.handleOauthGetTokens({
+        requestId: runtimeRpc.request.oauthGetTokens.requestId,
+        providerId: runtimeRpc.request.oauthGetTokens.providerId,
+      });
+      return;
+    }
+
+    if (runtimeRpc?.request?.oauthSetTokens) {
+      void this.handleOauthSetTokens({
+        requestId: runtimeRpc.request.oauthSetTokens.requestId,
+        providerId: runtimeRpc.request.oauthSetTokens.providerId,
+        tokens: runtimeRpc.request.oauthSetTokens.tokens ?? {},
+      });
+      return;
+    }
+
+    if (runtimeRpc?.request?.oauthRemoveTokens) {
+      void this.handleOauthRemoveTokens({
+        requestId: runtimeRpc.request.oauthRemoveTokens.requestId,
+        providerId: runtimeRpc.request.oauthRemoveTokens.providerId,
+      });
+      return;
+    }
+
+    if (runtimeRpc?.request?.confirmAlert) {
+      const lines = [
+        runtimeRpc.request.confirmAlert.title,
+        runtimeRpc.request.confirmAlert.message,
+      ].filter(Boolean);
+      const confirmed =
+        typeof window !== "undefined" && typeof window.confirm === "function"
+          ? window.confirm(lines.join("\n\n") || "Continue?")
+          : true;
+      this.sendRuntimeRpc({
+        response: {
+          confirmAlert: {
+            requestId: runtimeRpc.request.confirmAlert.requestId,
+            confirmed,
+            error: "",
+          },
+        },
+      });
+      return;
+    }
+
+    if (runtimeRpc?.request?.launchCommand) {
+      const launchRequest = runtimeRpc.request.launchCommand;
       if (!this.callbacks.launchCommand) {
-        this.sendResponse("launch-command-response", {
-          requestId: launchCommandRequest.requestId,
-          error: "Launch command callback is not configured.",
+        this.sendRuntimeRpc({
+          response: {
+            launchCommand: {
+              requestId: launchRequest.requestId,
+              ok: false,
+              error: "Launch command callback is not configured.",
+            },
+          },
         });
         return;
       }
 
       void this.callbacks
-        .launchCommand(launchCommandRequest)
+        .launchCommand({
+          requestId: launchRequest.requestId,
+          name: launchRequest.name,
+          type: launchRequest.type || undefined,
+          context: toRecord(launchRequest.context),
+          arguments: toRecord(launchRequest.arguments),
+          extensionName: launchRequest.extensionName || undefined,
+        })
         .then(() => {
-          this.sendResponse("launch-command-response", {
-            requestId: launchCommandRequest.requestId,
-            result: true,
+          this.sendRuntimeRpc({
+            response: {
+              launchCommand: {
+                requestId: launchRequest.requestId,
+                ok: true,
+                error: "",
+              },
+            },
           });
         })
         .catch((error) => {
-          this.sendResponse("launch-command-response", {
-            requestId: launchCommandRequest.requestId,
-            error: error instanceof Error ? error.message : String(error),
+          this.sendRuntimeRpc({
+            response: {
+              launchCommand: {
+                requestId: launchRequest.requestId,
+                ok: false,
+                error: error instanceof Error ? error.message : String(error),
+              },
+            },
           });
         });
       return;
     }
 
-    const aiAskRequest = parseAiAskRequest(raw);
-    if (aiAskRequest) {
-      void this.handleAiAsk(aiAskRequest);
+    if (runtimeRpc?.request?.aiAsk) {
+      void this.handleAiAsk({
+        requestId: runtimeRpc.request.aiAsk.requestId,
+        streamRequestId: runtimeRpc.request.aiAsk.streamRequestId,
+        prompt: runtimeRpc.request.aiAsk.prompt,
+        options: toRecord(runtimeRpc.request.aiAsk.options),
+      });
       return;
     }
 
-    const parsed = SidecarMessageWithPluginsSchema.safeParse(raw);
-    if (!parsed.success) {
-      console.error(`[persistent-runner:${this.runnerId}] invalid stdout payload`, parsed.error.issues);
-      return;
-    }
-
-    const message = parsed.data;
-    if (message.type === "BATCH_UPDATE") {
-      this.tree = applyProtocolCommandsToRuntimeTree(this.tree, message.payload, this.propTemplates);
+    const runtimeRender = parseRuntimeRender(raw);
+    if (runtimeRender?.kind === "batch") {
+      this.tree = applyRuntimeCommandsToRuntimeTree(
+        this.tree,
+        runtimeRender.commands,
+        this.propTemplates,
+      );
       void this.syncMenuBarTray();
       return;
     }
 
-    if (
-      message.type === "CREATE_INSTANCE" ||
-      message.type === "CREATE_TEXT_INSTANCE" ||
-      message.type === "APPEND_CHILD" ||
-      message.type === "INSERT_BEFORE" ||
-      message.type === "REMOVE_CHILD" ||
-      message.type === "UPDATE_PROPS" ||
-      message.type === "UPDATE_TEXT" ||
-      message.type === "REPLACE_CHILDREN" ||
-      message.type === "CLEAR_CONTAINER" ||
-      message.type === "SHOW_TOAST" ||
-      message.type === "UPDATE_TOAST" ||
-      message.type === "HIDE_TOAST" ||
-      message.type === "DEFINE_PROPS_TEMPLATE" ||
-      message.type === "APPLY_PROPS_TEMPLATE"
-    ) {
-      this.tree = applyProtocolCommandsToRuntimeTree(this.tree, [message as ProtocolCommand], this.propTemplates);
+    if (runtimeRender?.kind === "command") {
+      this.tree = applyRuntimeCommandsToRuntimeTree(
+        this.tree,
+        [runtimeRender.command],
+        this.propTemplates,
+      );
       void this.syncMenuBarTray();
       return;
     }
 
-    switch (message.type) {
-      case "go-back-to-plugin-list":
-        this.onExit?.();
-        return;
-      case "open":
-        void shellOpen(message.payload.target, message.payload.application).catch((error) => {
-          console.error(`[persistent-runner:${this.runnerId}] open failed`, error);
-        });
-        return;
-      case "invoke_command":
-        void this.handleInvokeCommand({
-          requestId: message.payload.requestId,
-          command: message.payload.command,
-          params: message.payload.params ? toRecord(message.payload.params) : undefined,
-        });
-        return;
-      case "browser-extension-request":
-        void this.handleBrowserExtensionRequest(message.payload);
-        return;
-      case "oauth-authorize":
-        this.handleOauthAuthorize({ url: message.payload.url });
-        return;
-      case "oauth-get-tokens":
-        void this.handleOauthGetTokens(message.payload);
-        return;
-      case "oauth-set-tokens":
-        void this.handleOauthSetTokens(message.payload);
-        return;
-      case "oauth-remove-tokens":
-        void this.handleOauthRemoveTokens(message.payload);
-        return;
-      case "SHOW_HUD":
-        toast.message(message.payload.title);
-        return;
-      case "log":
-        console.log(`[persistent-runner:${this.runnerId}]`, message.payload);
-        return;
-      default:
-        return;
-    }
-  }
-
-  private consumeStdoutChunk(data: unknown): void {
-    const chunk = toByteChunk(data);
-    if (chunk.length === 0) {
+    if (runtimeRender?.kind === "log") {
+      console.log(`[persistent-runner:${this.runnerId}]`, runtimeRender.payload);
       return;
     }
 
-    this.pendingStdout = concatChunks(this.pendingStdout, chunk);
-    while (this.pendingStdout.length >= 4) {
-      const headerView = new DataView(this.pendingStdout.buffer, this.pendingStdout.byteOffset, 4);
-      const headerValue = headerView.getUint32(0, false);
-      const isCompressed = (headerValue & 0x8000_0000) !== 0;
-      const payloadLength = headerValue & 0x7fff_ffff;
-      const totalLength = 4 + payloadLength;
-
-      if (this.pendingStdout.length < totalLength) {
-        break;
-      }
-
-      const payloadSlice = this.pendingStdout.slice(4, totalLength);
-      this.pendingStdout = this.pendingStdout.slice(totalLength);
-
-      let decodedBytes: Uint8Array<ArrayBufferLike> = payloadSlice;
-      if (isCompressed) {
-        try {
-          decodedBytes = inflate(payloadSlice) as Uint8Array<ArrayBufferLike>;
-        } catch (error) {
-          console.error(`[persistent-runner:${this.runnerId}] failed to inflate payload`, error);
-          continue;
-        }
-      }
-
-      try {
-        const unpacked = this.unpackr.unpack(decodedBytes);
-        this.handleRawMessage(unpacked);
-      } catch (error) {
-        console.error(`[persistent-runner:${this.runnerId}] failed to decode payload`, error);
-      }
+    if (runtimeRender?.kind === "error") {
+      console.error(
+        `[persistent-runner:${this.runnerId}]`,
+        runtimeRender.message,
+        runtimeRender.stack,
+      );
+      return;
     }
+
+    console.error(`[persistent-runner:${this.runnerId}] invalid stdout payload`, raw);
   }
 }
 
 class PersistentExtensionRunnerManager {
   private callbacks: RunnerManagerCallbacks = {};
+  private activeSessions = new Map<string, PersistentRunnerSession>();
   private menuBarSessions = new Map<string, PersistentRunnerSession>();
   private scheduledTimers = new Map<string, ReturnType<typeof setInterval>>();
   private bootstrappedKey = "";
+  private runtimeMessageUnlisten: UnlistenFn | null = null;
+  private runtimeStderrUnlisten: UnlistenFn | null = null;
+  private runtimeExitUnlisten: UnlistenFn | null = null;
+  private bridgeListenersPromise: Promise<void> | null = null;
 
   setCallbacks(callbacks: RunnerManagerCallbacks): void {
     this.callbacks = callbacks;
   }
 
+  private async ensureBridgeListeners(): Promise<void> {
+    if (this.runtimeMessageUnlisten && this.runtimeStderrUnlisten && this.runtimeExitUnlisten) {
+      return;
+    }
+
+    if (this.bridgeListenersPromise) {
+      return this.bridgeListenersPromise;
+    }
+
+    this.bridgeListenersPromise = (async () => {
+      this.runtimeMessageUnlisten = await listenToExtensionRuntimeMessages((runtimeId, message) => {
+        this.activeSessions.get(runtimeId)?.handleRuntimeMessage(message);
+      });
+
+      this.runtimeStderrUnlisten = await listenToExtensionRuntimeStderr((runtimeId, line) => {
+        this.activeSessions.get(runtimeId)?.handleRuntimeStderr(line);
+      });
+
+      this.runtimeExitUnlisten = await listenToExtensionRuntimeExit((runtimeId) => {
+        const session = this.activeSessions.get(runtimeId);
+        if (!session) {
+          return;
+        }
+
+        this.activeSessions.delete(runtimeId);
+        if (this.menuBarSessions.get(runtimeId) === session) {
+          this.menuBarSessions.delete(runtimeId);
+        }
+
+        void session.handleRuntimeExit();
+      });
+    })();
+
+    try {
+      await this.bridgeListenersPromise;
+    } finally {
+      this.bridgeListenersPromise = null;
+    }
+  }
+
   async bootstrap(plugins: PluginInfo[]): Promise<void> {
+    await this.ensureBridgeListeners();
+
     const nextKey = plugins
       .map((plugin) => `${plugin.pluginPath}:${plugin.mode ?? ""}:${plugin.interval ?? ""}`)
       .sort()
@@ -717,7 +918,10 @@ class PersistentExtensionRunnerManager {
 
     const eligible = plugins.filter((plugin) => {
       const mode = plugin.mode?.trim().toLowerCase();
-      return mode === "menu-bar" || (mode === "no-view" && normalizeIntervalToMs(plugin.interval) !== null);
+      return (
+        mode === "menu-bar" ||
+        (mode === "no-view" && normalizeIntervalToMs(plugin.interval) !== null)
+      );
     });
 
     for (const plugin of eligible) {
@@ -738,6 +942,8 @@ class PersistentExtensionRunnerManager {
   }
 
   async runPlugin(plugin: PersistentPluginDescriptor, launchType: LaunchTypeValue): Promise<void> {
+    await this.ensureBridgeListeners();
+
     const mode = plugin.mode?.trim().toLowerCase();
     if (mode === "menu-bar") {
       await this.startMenuBar(plugin, launchType);
@@ -760,9 +966,23 @@ class PersistentExtensionRunnerManager {
 
   async stopAll(): Promise<void> {
     this.clearSchedules();
-    const stops = [...this.menuBarSessions.values()].map((session) => session.stop());
+    const stops = [...this.activeSessions.values()].map((session) => session.stop());
+    this.activeSessions.clear();
     this.menuBarSessions.clear();
     await Promise.all(stops);
+
+    if (this.runtimeMessageUnlisten) {
+      this.runtimeMessageUnlisten();
+      this.runtimeMessageUnlisten = null;
+    }
+    if (this.runtimeStderrUnlisten) {
+      this.runtimeStderrUnlisten();
+      this.runtimeStderrUnlisten = null;
+    }
+    if (this.runtimeExitUnlisten) {
+      this.runtimeExitUnlisten();
+      this.runtimeExitUnlisten = null;
+    }
   }
 
   private clearSchedules(): void {
@@ -772,24 +992,46 @@ class PersistentExtensionRunnerManager {
     this.scheduledTimers.clear();
   }
 
-  private async startMenuBar(plugin: PersistentPluginDescriptor, launchType: LaunchTypeValue): Promise<void> {
+  private async startMenuBar(
+    plugin: PersistentPluginDescriptor,
+    launchType: LaunchTypeValue,
+  ): Promise<void> {
     const runnerId = buildRunnerId(plugin);
     const existing = this.menuBarSessions.get(runnerId);
     if (existing) {
+      this.activeSessions.delete(existing.runtimeId);
       await existing.stop();
     }
 
-    const session = new PersistentRunnerSession(plugin, this.callbacks);
+    const session = new PersistentRunnerSession(runnerId, plugin, this.callbacks);
+    this.activeSessions.set(session.runtimeId, session);
     this.menuBarSessions.set(runnerId, session);
-    await session.start(launchType);
+    try {
+      await session.start(launchType);
+    } catch (error) {
+      this.activeSessions.delete(session.runtimeId);
+      this.menuBarSessions.delete(runnerId);
+      throw error;
+    }
   }
 
-  private async runBackgroundJob(plugin: PersistentPluginDescriptor, launchType: LaunchTypeValue): Promise<void> {
-    const session = new PersistentRunnerSession(plugin, this.callbacks, () => {
-      void session.stop();
+  private async runBackgroundJob(
+    plugin: PersistentPluginDescriptor,
+    launchType: LaunchTypeValue,
+  ): Promise<void> {
+    const runtimeId = buildBackgroundRuntimeId(plugin);
+    const session = new PersistentRunnerSession(runtimeId, plugin, this.callbacks, async () => {
+      this.activeSessions.delete(runtimeId);
+      await session.stop();
     });
 
-    await session.start(launchType);
+    this.activeSessions.set(runtimeId, session);
+    try {
+      await session.start(launchType);
+    } catch (error) {
+      this.activeSessions.delete(runtimeId);
+      throw error;
+    }
   }
 }
 

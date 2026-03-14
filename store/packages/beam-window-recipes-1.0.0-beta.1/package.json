@@ -1,0 +1,19 @@
+{
+  "name": "beam-window-recipes",
+  "version": "1.0.0-beta.1",
+  "description": "Beta local Beam store package with a separate release channel.",
+  "author": {
+    "name": "Beam Team"
+  },
+  "icon": "icons/window-recipes.png",
+  "commands": [
+    {
+      "name": "window-recipes",
+      "title": "Window Recipes",
+      "description": "A sample beta command from the local Beam store.",
+      "mode": "no-view"
+    }
+  ],
+  "owner": "beam",
+  "title": "Beam Window Recipes"
+}

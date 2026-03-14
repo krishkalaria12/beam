@@ -85,10 +85,7 @@ class BeamBridge {
       this._dbus.emit_signal("WindowsChanged", null);
     });
     this._workspaceSignalId = global.workspace_manager.connect("active-workspace-changed", () => {
-      this._dbus.emit_signal(
-        "WorkspaceChanged",
-        stringVariant(this.GetActiveWorkspace()),
-      );
+      this._dbus.emit_signal("WorkspaceChanged", stringVariant(this.GetActiveWorkspace()));
       this._dbus.emit_signal("WindowsChanged", null);
     });
   }
@@ -110,9 +107,10 @@ class BeamBridge {
   }
 
   _windowActors() {
-    return global.get_window_actors()
-      .map(actor => actor.metaWindow)
-      .filter(window => window && !window.skip_taskbar);
+    return global
+      .get_window_actors()
+      .map((actor) => actor.metaWindow)
+      .filter((window) => window && !window.skip_taskbar);
   }
 
   _isBeamWindow(window) {
@@ -135,7 +133,11 @@ class BeamBridge {
       return null;
     }
 
-    const app = window.get_gtk_application_id?.() || window.get_wm_class_instance?.() || window.get_wm_class?.() || "";
+    const app =
+      window.get_gtk_application_id?.() ||
+      window.get_wm_class_instance?.() ||
+      window.get_wm_class?.() ||
+      "";
     const pid = window.get_pid?.() ?? 0;
     return {
       id: Number(window.get_id()),
@@ -159,8 +161,8 @@ class BeamBridge {
 
   ListWindows() {
     const windows = this._windowActors()
-      .map(window => this._windowObject(window))
-      .filter(window => window && window.title);
+      .map((window) => this._windowObject(window))
+      .filter((window) => window && window.title);
     return JSON.stringify(windows);
   }
 
@@ -169,7 +171,9 @@ class BeamBridge {
   }
 
   FocusWindow(windowId) {
-    const target = this._windowActors().find(window => Number(window.get_id()) === Number(windowId));
+    const target = this._windowActors().find(
+      (window) => Number(window.get_id()) === Number(windowId),
+    );
     if (!target) {
       return false;
     }
@@ -178,7 +182,9 @@ class BeamBridge {
   }
 
   CloseWindow(windowId) {
-    const target = this._windowActors().find(window => Number(window.get_id()) === Number(windowId));
+    const target = this._windowActors().find(
+      (window) => Number(window.get_id()) === Number(windowId),
+    );
     if (!target) {
       return false;
     }

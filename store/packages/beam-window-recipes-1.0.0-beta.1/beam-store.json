@@ -1,0 +1,52 @@
+{
+  "packageId": "beam.window-recipes",
+  "title": "Beam Window Recipes",
+  "summary": "Sample package with stable and beta channels.",
+  "description": "A local Beam-native package used to validate release channel selection and artifact metadata.",
+  "author": {
+    "handle": "beam",
+    "name": "Beam Team",
+    "profileUrl": "https://beam.sh"
+  },
+  "categories": ["Window Management"],
+  "tags": ["beam", "sample", "beta"],
+  "verification": {
+    "status": "EXTENSION_VERIFICATION_STATUS_CURATED",
+    "label": "Beam Curated",
+    "verifiedBy": "Beam Store",
+    "summary": "Used to exercise release channel resolution."
+  },
+  "compatibility": {
+    "platforms": ["linux"],
+    "desktopEnvironments": ["gnome", "kde", "hyprland", "sway"],
+    "minimumBeamVersion": "1.0.0",
+    "linuxTested": true,
+    "waylandTested": true,
+    "x11Tested": true,
+    "notes": ["Stable and beta releases are both shipped for this package."]
+  },
+  "defaultChannel": "stable",
+  "packageFormatVersion": "1",
+  "downloadCount": 4,
+  "release": {
+    "channel": "beta",
+    "channelName": "beta",
+    "prerelease": true,
+    "publishedAt": "2026-03-10T09:00:00Z",
+    "publishedBy": "beam-ci",
+    "releaseNotes": {
+      "summary": "Preview release for beta users.",
+      "markdown": "## Beam Window Recipes 1.0.0-beta.1\n\nBeta release to exercise channel-aware resolution."
+    },
+    "artifact": {
+      "id": "linux-zip",
+      "kind": "zip",
+      "mimeType": "application/zip",
+      "platforms": ["linux"],
+      "verification": {
+        "signer": "beam-ci",
+        "provenanceUrl": "https://beam.sh/store/provenance/beam-window-recipes/1.0.0-beta.1"
+      }
+    }
+  }
+}

@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -8,11 +8,24 @@ interface LauncherTakeoverSurfaceProps {
 }
 
 export function LauncherTakeoverSurface({ children, className }: LauncherTakeoverSurfaceProps) {
+  const [isInteractive, setIsInteractive] = useState(false);
+
+  useEffect(() => {
+    const timerId = window.setTimeout(() => {
+      setIsInteractive(true);
+    }, 160);
+
+    return () => {
+      window.clearTimeout(timerId);
+    };
+  }, []);
+
   return (
     <div
       className={cn(
         "absolute inset-0 z-50",
         "animate-in fade-in zoom-in-[0.985] duration-200",
+        isInteractive ? "pointer-events-auto" : "pointer-events-none",
         className,
       )}
     >

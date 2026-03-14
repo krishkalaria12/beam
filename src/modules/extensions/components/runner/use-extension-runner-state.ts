@@ -1,13 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { invoke } from "@tauri-apps/api/core";
 
-import { extensionSidecarService } from "@/modules/extensions/sidecar-service";
+import { copyToClipboard } from "@/modules/clipboard/api/copy-to-clipboard";
+import { emitClipboardHistoryUpdated } from "@/modules/clipboard/lib/updates";
+import { isLauncherActionsHotkey } from "@/lib/launcher-actions";
+import { extensionManagerService } from "@/modules/extensions/extension-manager-service";
 import {
   type ExtensionToast,
   type ExtensionUiNode,
   type RunningExtensionSession,
   useExtensionRuntimeStore,
 } from "@/modules/extensions/runtime/store";
+import { requestExtensionRunnerActionsToggle } from "@/modules/extensions/components/runner/runner-actions-toggle";
 import type {
   FlattenedAction,
   FormField,
@@ -49,6 +53,7 @@ export interface UseExtensionRunnerStateResult {
   handleBack: () => void;
   handleRootKeyDownCapture: (event: KeyboardEvent<HTMLDivElement>) => void;
   handleRootKeyDown: (event: KeyboardEvent<HTMLDivElement>) => void;
+  handleSearchInputKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void;
   handleSearchInputChange: (value: string) => void;
   handleSetFormValue: (field: FormField, value: FormValue) => void;
   handleBlurFormField: (field: FormField) => void;
@@ -75,6 +80,10 @@ function isEditableTarget(target: EventTarget | null): target is HTMLElement {
   }
 
   return target.isContentEditable;
+}
+
+function isExtensionSearchInputTarget(target: EventTarget | null): target is HTMLElement {
+  return target instanceof HTMLElement && target.dataset.moduleSearchInput === "true";
 }
 
 function isMacPlatform(): boolean {
@@ -166,6 +175,7 @@ export function useExtensionRunnerState({
   const [focusElementId, setFocusElementId] = useState<number | null>(null);
   const [resetElementId, setResetElementId] = useState<number | null>(null);
   const fieldRefs = useRef<Map<number, HTMLElement>>(new Map());
+  const pendingControlledSearchTextRef = useRef<string | null>(null);
 
   const rootNode = rootNodeId ? uiTree.get(rootNodeId) : undefined;
   const rootType = rootNode?.type ?? "";
@@ -252,11 +262,28 @@ export function useExtensionRunnerState({
 
   useEffect(() => {
     if (rootNode?.type === "List" || rootNode?.type === "Grid") {
-      setSearchText(asString(rootNode.props.searchText));
+      const nextSearchText = asString(rootNode.props.searchText);
+      const isControlledSearch = asBoolean(rootNode.props.onSearchTextChange);
+
+      if (isControlledSearch) {
+        const pendingSearchText = pendingControlledSearchTextRef.current;
+        if (pendingSearchText !== null) {
+          if (nextSearchText === pendingSearchText) {
+            pendingControlledSearchTextRef.current = null;
+          } else if (searchText === pendingSearchText) {
+            return;
+          }
+        }
+      }
+
+      if (nextSearchText !== searchText) {
+        setSearchText(nextSearchText);
+      }
     } else {
+      pendingControlledSearchTextRef.current = null;
       setSearchText("");
     }
-  }, [rootNode?.id, rootNode?.type, rootNode?.props.searchText]);
+  }, [rootNode?.id, rootNode?.type, rootNode?.props.onSearchTextChange, rootNode?.props.searchText, searchText]);
 
   useEffect(() => {
     setSelectedIndex(0);
@@ -292,7 +319,7 @@ export function useExtensionRunnerState({
         (rootNode?.type === "List" || rootNode?.type === "Grid") &&
         asBoolean(rootNode.props.onSelectionChange)
       ) {
-        extensionSidecarService.dispatchEvent(rootNode.id, "onSelectionChange", [null]);
+        extensionManagerService.dispatchEvent(rootNode.id, "onSelectionChange", [null]);
       }
       return;
     }
@@ -302,7 +329,7 @@ export function useExtensionRunnerState({
       (rootNode?.type === "List" || rootNode?.type === "Grid") &&
       asBoolean(rootNode.props.onSelectionChange)
     ) {
-      extensionSidecarService.dispatchEvent(rootNode.id, "onSelectionChange", [
+      extensionManagerService.dispatchEvent(rootNode.id, "onSelectionChange", [
         selectedEntry.itemId,
       ]);
     }
@@ -352,7 +379,7 @@ export function useExtensionRunnerState({
   }, [rootNode?.type, formFields]);
 
   useEffect(() => {
-    return extensionSidecarService.subscribe((event) => {
+    return extensionManagerService.subscribe((event) => {
       if (event.type === "focus-element") {
         setFocusElementId(event.elementId);
       }
@@ -360,12 +387,13 @@ export function useExtensionRunnerState({
         setResetElementId(event.elementId);
       }
       if (event.type === "clear-search-bar") {
+        pendingControlledSearchTextRef.current = null;
         setSearchText("");
         if (
           (rootNode?.type === "List" || rootNode?.type === "Grid") &&
           asBoolean(rootNode.props.onSearchTextChange)
         ) {
-          extensionSidecarService.dispatchEvent(rootNode.id, "onSearchTextChange", [""]);
+          extensionManagerService.dispatchEvent(rootNode.id, "onSearchTextChange", [""]);
         }
       }
     });
@@ -391,13 +419,13 @@ export function useExtensionRunnerState({
       [field.key]: field.defaultValue,
     }));
     if (field.hasOnChange) {
-      extensionSidecarService.dispatchEvent(field.nodeId, "onChange", [field.defaultValue]);
+      extensionManagerService.dispatchEvent(field.nodeId, "onChange", [field.defaultValue]);
     }
   }, [resetElementId, formFieldByNodeId]);
 
   const handleBack = useCallback(() => {
     try {
-      extensionSidecarService.popView();
+      extensionManagerService.popView();
     } catch {
       onBack();
     }
@@ -409,9 +437,9 @@ export function useExtensionRunnerState({
         const target = asString(action.props.url, asString(action.props.target));
         if (target) {
           if (action.hasOnAction) {
-            extensionSidecarService.dispatchEvent(action.nodeId, "onAction", [target]);
+            extensionManagerService.dispatchEvent(action.nodeId, "onAction", [target]);
           } else {
-            extensionSidecarService.open(target);
+            extensionManagerService.open(target);
           }
           return;
         }
@@ -421,12 +449,9 @@ export function useExtensionRunnerState({
         const target = asString(action.props.target, asString(action.props.url));
         if (target) {
           if (action.hasOnAction) {
-            extensionSidecarService.dispatchEvent(action.nodeId, "onAction", [target]);
+            extensionManagerService.dispatchEvent(action.nodeId, "onAction", [target]);
           } else {
-            extensionSidecarService.open(
-              target,
-              readApplicationTarget(action.props.application),
-            );
+            extensionManagerService.open(target, readApplicationTarget(action.props.application));
           }
           return;
         }
@@ -436,7 +461,7 @@ export function useExtensionRunnerState({
         const target = asString(action.props.path, asString(action.props.target));
         if (target) {
           if (action.hasOnAction) {
-            extensionSidecarService.dispatchEvent(action.nodeId, "onAction", [target]);
+            extensionManagerService.dispatchEvent(action.nodeId, "onAction", [target]);
           } else {
             await invoke("show_in_finder", { path: target });
           }
@@ -446,7 +471,7 @@ export function useExtensionRunnerState({
 
       if (action.type === "Action.RunInTerminal") {
         if (action.hasOnAction) {
-          extensionSidecarService.dispatchEvent(action.nodeId, "onAction");
+          extensionManagerService.dispatchEvent(action.nodeId, "onAction");
         } else {
           console.warn("[extensions-runner] Action.RunInTerminal is unsupported without onAction");
         }
@@ -455,50 +480,53 @@ export function useExtensionRunnerState({
 
       if (action.type === "Action.CreateQuicklink") {
         if (action.hasOnAction) {
-          extensionSidecarService.dispatchEvent(action.nodeId, "onAction");
+          extensionManagerService.dispatchEvent(action.nodeId, "onAction");
         } else {
-          console.warn("[extensions-runner] Action.CreateQuicklink is unsupported without onAction");
+          console.warn(
+            "[extensions-runner] Action.CreateQuicklink is unsupported without onAction",
+          );
         }
         return;
       }
 
       if (action.type === "Action.CopyToClipboard") {
         if (action.hasOnAction) {
-          extensionSidecarService.dispatchEvent(action.nodeId, "onAction");
+          extensionManagerService.dispatchEvent(action.nodeId, "onAction");
           return;
         }
         const content = readClipboardText(action.props.content);
         if (content !== undefined) {
-          await navigator.clipboard.writeText(content);
+          await copyToClipboard(content, false);
         }
         return;
       }
 
       if (action.type === "Action.Paste") {
         if (action.hasOnAction) {
-          extensionSidecarService.dispatchEvent(action.nodeId, "onAction");
+          extensionManagerService.dispatchEvent(action.nodeId, "onAction");
           return;
         }
         const content = readClipboardText(action.props.content);
         if (content !== undefined) {
-          await navigator.clipboard.writeText(content);
+          await invoke("clipboard_paste", { content: { text: content } });
+          emitClipboardHistoryUpdated();
         }
         return;
       }
 
       if (action.type === "Action.SubmitForm") {
         if (action.hasOnSubmit) {
-          extensionSidecarService.dispatchEvent(action.nodeId, "onSubmit", [formValues]);
+          extensionManagerService.dispatchEvent(action.nodeId, "onSubmit", [formValues]);
           return;
         }
         if (action.hasOnAction) {
-          extensionSidecarService.dispatchEvent(action.nodeId, "onAction", [formValues]);
+          extensionManagerService.dispatchEvent(action.nodeId, "onAction", [formValues]);
         }
         return;
       }
 
       if (action.hasOnAction) {
-        extensionSidecarService.dispatchEvent(action.nodeId, "onAction");
+        extensionManagerService.dispatchEvent(action.nodeId, "onAction");
       }
     },
     [formValues],
@@ -511,7 +539,7 @@ export function useExtensionRunnerState({
       return;
     }
     if (selectedEntry?.hasOnAction) {
-      extensionSidecarService.dispatchEvent(selectedEntry.nodeId, "onAction");
+      extensionManagerService.dispatchEvent(selectedEntry.nodeId, "onAction");
     }
   }, [
     executeAction,
@@ -529,7 +557,8 @@ export function useExtensionRunnerState({
         rootNode &&
         asBoolean(rootNode.props.onSearchTextChange)
       ) {
-        extensionSidecarService.dispatchEvent(rootNode.id, "onSearchTextChange", [value]);
+        pendingControlledSearchTextRef.current = value;
+        extensionManagerService.dispatchEvent(rootNode.id, "onSearchTextChange", [value]);
       }
     },
     [rootNode, rootType],
@@ -538,7 +567,7 @@ export function useExtensionRunnerState({
   const handleSetFormValue = useCallback((field: FormField, value: FormValue) => {
     setFormValues((previous) => ({ ...previous, [field.key]: value }));
     if (field.hasOnChange) {
-      extensionSidecarService.dispatchEvent(field.nodeId, "onChange", [value]);
+      extensionManagerService.dispatchEvent(field.nodeId, "onChange", [value]);
     }
   }, []);
 
@@ -549,7 +578,7 @@ export function useExtensionRunnerState({
       }
 
       const currentValue = formValues[field.key];
-      extensionSidecarService.dispatchEvent(field.nodeId, "onBlur", [
+      extensionManagerService.dispatchEvent(field.nodeId, "onBlur", [
         {
           type: "blur",
           target: {
@@ -563,15 +592,15 @@ export function useExtensionRunnerState({
   );
 
   const handleToastAction = useCallback((toastId: number, actionType: "primary" | "secondary") => {
-    extensionSidecarService.dispatchToastAction(toastId, actionType);
+    extensionManagerService.dispatchToastAction(toastId, actionType);
   }, []);
 
   const handleToastHide = useCallback((toastId: number) => {
-    extensionSidecarService.triggerToastHide(toastId);
+    extensionManagerService.triggerToastHide(toastId);
   }, []);
 
   const handleRootKeyDownCapture = useCallback((event: KeyboardEvent<HTMLDivElement>) => {
-    if (isEditableTarget(event.target)) {
+    if (isEditableTarget(event.target) && !isExtensionSearchInputTarget(event.target)) {
       event.stopPropagation();
     }
   }, []);
@@ -591,18 +620,23 @@ export function useExtensionRunnerState({
 
       const availableActions = selectedEntryActions.length > 0 ? selectedEntryActions : rootActions;
 
+      if (availableActions.length > 0 && isLauncherActionsHotkey(event)) {
+        event.preventDefault();
+        event.stopPropagation();
+        requestExtensionRunnerActionsToggle();
+        return;
+      }
+
       if (
         event.key === "Enter" &&
         !event.ctrlKey &&
         !event.metaKey &&
         !event.shiftKey &&
-        !event.altKey &&
-        availableActions[0] &&
-        !availableActions[0].shortcutDefinition
+        !event.altKey
       ) {
         event.preventDefault();
         event.stopPropagation();
-        void executeAction(availableActions[0]);
+        runPrimarySelectionAction();
         return;
       }
 
@@ -612,8 +646,7 @@ export function useExtensionRunnerState({
         !event.metaKey &&
         !event.shiftKey &&
         !event.altKey &&
-        availableActions[1] &&
-        !availableActions[1].shortcutDefinition
+        availableActions[1]
       ) {
         event.preventDefault();
         event.stopPropagation();
@@ -645,13 +678,6 @@ export function useExtensionRunnerState({
           event.preventDefault();
           event.stopPropagation();
           setSelectedIndex((previous) => Math.max(previous - 1, 0));
-        }
-        if (event.key === "Enter") {
-          if (availableActions.length === 0) {
-            event.preventDefault();
-            event.stopPropagation();
-            runPrimarySelectionAction();
-          }
         }
         return;
       }
@@ -807,13 +833,6 @@ export function useExtensionRunnerState({
             setSelectedIndex(nextIndex);
           }
         }
-        if (event.key === "Enter") {
-          if (availableActions.length === 0) {
-            event.preventDefault();
-            event.stopPropagation();
-            runPrimarySelectionAction();
-          }
-        }
       }
     },
     [
@@ -828,6 +847,79 @@ export function useExtensionRunnerState({
     ],
   );
 
+  const handleSearchInputKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLInputElement>) => {
+      const availableActions = selectedEntryActions.length > 0 ? selectedEntryActions : rootActions;
+
+      if (event.key === "Escape" && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) {
+        event.preventDefault();
+        event.stopPropagation();
+        if (searchText.trim().length > 0) {
+          handleSearchInputChange("");
+          return;
+        }
+
+        handleBack();
+        return;
+      }
+
+      if (availableActions.length > 0 && isLauncherActionsHotkey(event)) {
+        event.preventDefault();
+        event.stopPropagation();
+        requestExtensionRunnerActionsToggle();
+        return;
+      }
+
+      if (
+        event.key === "Enter" &&
+        !event.ctrlKey &&
+        !event.metaKey &&
+        !event.shiftKey &&
+        !event.altKey
+      ) {
+        event.preventDefault();
+        event.stopPropagation();
+        runPrimarySelectionAction();
+        return;
+      }
+
+      if (
+        event.key === "Enter" &&
+        event.ctrlKey &&
+        !event.metaKey &&
+        !event.shiftKey &&
+        !event.altKey &&
+        availableActions[1]
+      ) {
+        event.preventDefault();
+        event.stopPropagation();
+        void executeAction(availableActions[1]);
+        return;
+      }
+
+      for (const action of availableActions) {
+        if (!action.shortcutDefinition) {
+          continue;
+        }
+        if (keyMatchesShortcut(event, action.shortcutDefinition)) {
+          event.preventDefault();
+          event.stopPropagation();
+          void executeAction(action);
+          return;
+        }
+      }
+    },
+    [
+      executeAction,
+      handleBack,
+      handleSearchInputChange,
+      rootActions,
+      runPrimarySelectionAction,
+      searchText,
+      selectedEntryActions,
+    ],
+  );
+
   const registerFieldRef = useCallback((nodeId: number, element: HTMLElement | null) => {
     if (!element) {
       fieldRefs.current.delete(nodeId);
@@ -838,7 +930,7 @@ export function useExtensionRunnerState({
 
   const dispatchNodeEvent = useCallback(
     (nodeId: number, handlerName: string, args: unknown[] = []) => {
-      extensionSidecarService.dispatchEvent(nodeId, handlerName, args);
+      extensionManagerService.dispatchEvent(nodeId, handlerName, args);
     },
     [],
   );
@@ -863,6 +955,7 @@ export function useExtensionRunnerState({
     handleBack,
     handleRootKeyDownCapture,
     handleRootKeyDown,
+    handleSearchInputKeyDown,
     handleSearchInputChange,
     handleSetFormValue,
     handleBlurFormField,

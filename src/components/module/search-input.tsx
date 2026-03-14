@@ -24,6 +24,7 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
     return (
       <div
         className={cn(
+          "module-search-input",
           "relative flex items-center",
           "h-10 w-full rounded-xl",
           "bg-[var(--launcher-card-hover-bg)]",
@@ -35,7 +36,7 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
       >
         {/* Left icon */}
         {leftIcon && (
-          <div className="pointer-events-none absolute left-3 flex items-center text-muted-foreground/50 [&_svg]:size-4">
+          <div className="module-search-input-left pointer-events-none absolute left-3 flex items-center text-muted-foreground/50 [&_svg]:size-4">
             {leftIcon}
           </div>
         )}
@@ -45,6 +46,7 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
           value={value}
           onChange={(e) => onChange(e.target.value)}
           className={cn(
+            "module-search-input-field",
             "h-full w-full bg-transparent dark:bg-transparent",
             "text-[14px] font-medium tracking-[-0.01em] text-foreground",
             "placeholder:text-muted-foreground/40 placeholder:font-normal",
@@ -57,7 +59,7 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
         />
 
         {/* Right slot */}
-        {rightSlot && <div className="absolute right-2 flex items-center">{rightSlot}</div>}
+        {rightSlot && <div className="module-search-input-right absolute right-2 flex items-center">{rightSlot}</div>}
       </div>
     );
   },

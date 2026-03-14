@@ -1,0 +1,29 @@
+{
+  "name": "beam-demo-tools",
+  "version": "1.1.0",
+  "description": "Updated local Beam store package used to exercise publishing and update flows.",
+  "author": {
+    "name": "Beam Team"
+  },
+  "icon": "icons/demo-tools.png",
+  "commands": [
+    {
+      "name": "demo-tools",
+      "title": "Demo Tools",
+      "description": "A simple Beam-native sample command with update metadata.",
+      "mode": "view"
+    }
+  ],
+  "owner": "beam",
+  "preferences": [
+    {
+      "name": "workspace",
+      "type": "textfield",
+      "title": "Workspace",
+      "description": "Workspace label used by the demo package.",
+      "required": false,
+      "default": "beam"
+    }
+  ],
+  "title": "Beam Demo Tools"
+}

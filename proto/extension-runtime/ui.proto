@@ -1,0 +1,119 @@
+syntax = "proto3";
+
+package beam.extension_runtime.v1;
+
+import "common.proto";
+
+message ToastAction {
+  string title = 1;
+  string callback_id = 2;
+}
+
+message ShowToastRequest {
+  uint32 id = 1;
+  ToastStyle style = 2;
+  string title = 3;
+  string message = 4;
+  ToastAction primary_action = 5;
+  ToastAction secondary_action = 6;
+}
+
+message ShowToastResponse {
+  bool ok = 1;
+}
+
+message UpdateToastRequest {
+  uint32 id = 1;
+  ToastStyle style = 2;
+  string title = 3;
+  string message = 4;
+}
+
+message UpdateToastResponse {
+  bool ok = 1;
+}
+
+message HideToastRequest {
+  uint32 id = 1;
+}
+
+message HideToastResponse {
+  bool ok = 1;
+}
+
+message ShowHudRequest {
+  string text = 1;
+  bool clear_root_search = 2;
+  PopToRootType pop_to_root = 3;
+}
+
+message ShowHudResponse {
+  bool ok = 1;
+}
+
+message ConfirmAlertAction {
+  string title = 1;
+  AlertActionStyle style = 2;
+}
+
+message ConfirmAlertRequest {
+  string title = 1;
+  string message = 2;
+  ConfirmAlertAction primary_action = 3;
+  ConfirmAlertAction dismiss_action = 4;
+}
+
+message ConfirmAlertResponse {
+  bool confirmed = 1;
+}
+
+message CloseMainWindowRequest {
+  bool clear_root_search = 1;
+  PopToRootType pop_to_root = 2;
+}
+
+message CloseMainWindowResponse {
+  bool ok = 1;
+}
+
+message SetSearchTextRequest {
+  string text = 1;
+}
+
+message SetSearchTextResponse {
+  bool ok = 1;
+}
+
+message GetSelectedTextRequest {}
+
+message GetSelectedTextResponse {
+  string text = 1;
+}
+
+message PopToRootRequest {
+  bool clear_search_bar = 1;
+}
+
+message PopToRootResponse {
+  bool ok = 1;
+}
+
+message PushViewRequest {}
+
+message PushViewResponse {
+  bool ok = 1;
+}
+
+message PopViewRequest {}
+
+message PopViewResponse {
+  bool ok = 1;
+}
+
+message UpdateCommandMetadataRequest {
+  optional string subtitle = 1;
+}
+
+message UpdateCommandMetadataResponse {
+  bool ok = 1;
+}

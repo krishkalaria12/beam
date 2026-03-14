@@ -16,6 +16,7 @@ import {
 import { useEffect, useState } from "react";
 
 import { ClipboardContentType, type ClipboardHistoryEntry } from "../types";
+import { isPreviewableImageValue } from "../lib/preview";
 
 interface ClipboardDetailsProps {
   entry: ClipboardHistoryEntry | null;
@@ -52,16 +53,19 @@ export function ClipboardDetails({
   onCopy,
   isLoading = false,
 }: ClipboardDetailsProps) {
-  const [isImageLoaded, setIsImageLoaded] = useState(false);
+  const [previewStatus, setPreviewStatus] = useState<"idle" | "loaded" | "error">("idle");
+
+  const previewUrl = entry && isPreviewableImageValue(entry.value) ? entry.value : null;
+  const showsImagePreview = previewUrl !== null;
 
   useEffect(() => {
-    if (!entry || entry.content_type !== ClipboardContentType.Image) {
-      setIsImageLoaded(false);
+    if (!previewUrl) {
+      setPreviewStatus("idle");
       return;
     }
 
-    setIsImageLoaded(false);
-  }, [entry]);
+    setPreviewStatus("idle");
+  }, [previewUrl]);
 
   if (isLoading) {
     return (
@@ -90,7 +94,8 @@ export function ClipboardDetails({
   }
 
   const isImageEntry = entry.content_type === ClipboardContentType.Image;
-  const isPreviewLoading = isImageEntry && !isImageLoaded;
+  const isPreviewLoading = showsImagePreview && previewStatus === "idle";
+  const shouldRenderPreview = showsImagePreview && previewStatus !== "error";
 
   const copiedAtLabel = formatDistanceToNow(new Date(entry.copied_at), { addSuffix: true });
 
@@ -100,7 +105,7 @@ export function ClipboardDetails({
     <div className="clipboard-details-panel flex flex-1 flex-col min-w-0 h-full">
       {/* Content Preview - Scrollable */}
       <div className="flex-1 overflow-y-auto p-6 [content-visibility:auto]">
-        {isImageEntry ? (
+        {shouldRenderPreview ? (
           <div className="flex w-full justify-center">
             <div className="relative max-w-full overflow-hidden rounded-xl ring-1 ring-[var(--launcher-card-border)] shadow-2xl">
               {isPreviewLoading && (
@@ -109,14 +114,15 @@ export function ClipboardDetails({
                 </div>
               )}
               <img
-                src={entry.value}
+                src={previewUrl}
                 alt="Preview"
                 loading="lazy"
                 decoding="async"
-                onLoad={() => setIsImageLoaded(true)}
+                onLoad={() => setPreviewStatus("loaded")}
+                onError={() => setPreviewStatus("error")}
                 className={cn(
                   "block h-auto max-w-full object-contain transition-opacity duration-150",
-                  isImageLoaded ? "opacity-100" : "opacity-0",
+                  previewStatus === "loaded" ? "opacity-100" : "opacity-0",
                 )}
               />
             </div>

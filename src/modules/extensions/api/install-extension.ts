@@ -11,15 +11,19 @@ export async function installExtension(input: InstallExtensionInput): Promise<In
     throw new Error("desktop runtime is required");
   }
 
-  const downloadUrl = input.downloadUrl.trim();
+  const packageId = input.packageId.trim();
   const slug = input.slug.trim();
-  if (!downloadUrl || !slug) {
-    throw new Error("downloadUrl and slug are required");
+  const releaseVersion = input.releaseVersion?.trim();
+  const channel = input.channel?.trim();
+
+  if (!packageId || !slug) {
+    throw new Error("packageId and slug are required");
   }
 
-  const response = await invoke<unknown>("install_extension", {
-    downloadUrl,
-    slug,
+  const response = await invoke<unknown>("install_store_extension", {
+    packageId,
+    releaseVersion: releaseVersion && releaseVersion.length > 0 ? releaseVersion : null,
+    channel: channel && channel.length > 0 ? channel : null,
     force: Boolean(input.force),
   });
 

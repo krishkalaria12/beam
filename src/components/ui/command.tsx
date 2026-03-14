@@ -72,13 +72,7 @@ function CommandInput({
   return (
     <div data-slot="command-input-wrapper" className="flex-none">
       <CommandPanelHeader className={minimal ? "border-b-0 bg-transparent" : undefined}>
-        {showLogo && (
-          <img
-            src={beamLogo}
-            alt="Beam"
-            className="size-6 shrink-0 object-contain"
-          />
-        )}
+        {showLogo && <img src={beamLogo} alt="Beam" className="size-6 shrink-0 object-contain" />}
         {showIcon && !showLogo && (
           <SearchIcon className="size-6 shrink-0 text-muted-foreground/60" />
         )}

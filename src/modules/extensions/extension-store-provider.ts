@@ -39,6 +39,25 @@ function parseStoreQuery(query: string): string | null {
   return searchTerm.length > 0 ? searchTerm : null;
 }
 
+function toReleaseChannelInput(channelName: string | undefined, channel: number): string | undefined {
+  if (channelName && channelName.trim().length > 0) {
+    return channelName.trim();
+  }
+
+  switch (channel) {
+    case 1:
+      return "stable";
+    case 2:
+      return "beta";
+    case 3:
+      return "nightly";
+    case 4:
+      return "custom";
+    default:
+      return undefined;
+  }
+}
+
 async function getStoreResults(query: string): Promise<ExtensionStoreListing[]> {
   const lowerCased = query.toLowerCase();
   const cached = queryCache.get(lowerCased);
@@ -68,11 +87,13 @@ async function getStoreResults(query: string): Promise<ExtensionStoreListing[]> 
 }
 
 function toInstallCommand(entry: ExtensionStoreListing): CommandDescriptor {
-  const slug = entry.name.trim();
+  const slug = entry.slug.trim();
   const author = entry.author.handle.trim();
   const fullSlug = `${author}/${slug}`;
   const iconReference =
     entry.icons?.light?.trim() || entry.icons?.dark?.trim() || entry.author.avatar?.trim() || "";
+  const sourceId = entry.source.id.trim().toLowerCase();
+  const sourceLabel = entry.source.label.trim();
 
   return {
     id: `extensions.store.install.${author}.${slug}`.toLowerCase(),
@@ -81,16 +102,20 @@ function toInstallCommand(entry: ExtensionStoreListing): CommandDescriptor {
     keywords: [
       "extension",
       "install extension",
+      "extension store",
       "raycast extension",
+      "raycast store",
       entry.title,
-      entry.name,
+      entry.slug,
       entry.description,
       author,
       fullSlug,
+      sourceLabel,
     ]
+      .filter((part): part is string => typeof part === "string")
       .map((part) => part.trim())
       .filter((part) => part.length > 0),
-    endText: "raycast store",
+    endText: sourceId === "raycast" ? "raycast store" : "store",
     icon: iconReference ? `extension-icon:${iconReference}` : "extension",
     kind: "provider-item",
     scope: EXTENSIONS_PROVIDER_SCOPE,
@@ -105,7 +130,12 @@ function toInstallCommand(entry: ExtensionStoreListing): CommandDescriptor {
           allowOpenUrl: false,
           allowReadQuery: false,
         },
-        extensionInstallDownloadUrl: entry.download_url.trim(),
+        extensionInstallPackageId: entry.id.trim(),
+        extensionInstallReleaseVersion: entry.latestRelease.version.trim(),
+        extensionInstallChannel: toReleaseChannelInput(
+          entry.latestRelease.channelName,
+          entry.latestRelease.channel,
+        ),
         extensionInstallSlug: slug,
         extensionInstallTitle: entry.title.trim(),
       },

@@ -12,6 +12,7 @@ interface GroupedInstalledExtension {
   title: string;
   owner: string;
   description: string;
+  version: string | null;
   commandCount: number;
   icon: string | null;
   pluginName: string | null;
@@ -179,6 +180,9 @@ export function toInstalledExtensionSummary(plugins: PluginInfo[]): InstalledExt
       if (!existing.icon && icon) {
         existing.icon = icon;
       }
+      if (!existing.version && plugin.version) {
+        existing.version = plugin.version.trim() || null;
+      }
       if (!existing.pluginName && pluginName) {
         existing.pluginName = pluginName;
       }
@@ -192,6 +196,7 @@ export function toInstalledExtensionSummary(plugins: PluginInfo[]): InstalledExt
       owner: owner || "extension",
       title: plugin.pluginTitle.trim() || plugin.title.trim() || slug,
       description: (plugin.description ?? "").trim(),
+      version: plugin.version?.trim() || null,
       commandCount: 1,
       icon,
       pluginName,
@@ -208,6 +213,7 @@ export function toInstalledExtensionSummary(plugins: PluginInfo[]): InstalledExt
       owner: group.owner,
       title: group.title,
       description: group.description,
+      version: group.version,
       commandCount: group.commandCount,
       icon: group.icon,
       pluginName: group.pluginName,
@@ -230,6 +236,7 @@ function toOptimisticInstalledEntry(slug: string): InstalledExtensionSummary {
     owner: "extension",
     title: toSlugLabel(slug),
     description: "",
+    version: null,
     commandCount: 0,
     icon: null,
     pluginName: null,

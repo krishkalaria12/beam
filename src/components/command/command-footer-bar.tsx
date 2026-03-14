@@ -24,6 +24,8 @@ interface CommandFooterBarProps {
   actionsButton?: FooterAction;
   /** Show default Cmd+K actions button when `actionsButton` is not supplied */
   showDefaultActionsButton?: boolean;
+  /** Show default Cmd+K actions hint when no explicit actions button is supplied */
+  showDefaultActionsHint?: boolean;
   /** Legacy: right slot for custom content */
   rightSlot?: ReactNode;
   /** Optional anchored overlay rendered above the footer (e.g. actions panel) */
@@ -84,30 +86,57 @@ function ActionButton({
   );
 }
 
+function ActionHint({ action }: { action: FooterAction }) {
+  const shortcuts = action.shortcut || [];
+
+  return (
+    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+      <span className="truncate max-w-[180px]">{action.label}</span>
+      {shortcuts.map((key) => (
+        <Kbd key={`${action.label}-${key}`} className={KEY_CLASS}>
+          {key}
+        </Kbd>
+      ))}
+    </div>
+  );
+}
+
 export function CommandFooterBar({
   leftSlot,
   primaryAction,
   secondaryActions,
   actionsButton,
-  showDefaultActionsButton = true,
+  showDefaultActionsButton = false,
+  showDefaultActionsHint = true,
   rightSlot,
   overlay,
   className,
   leftSlotClassName,
   rightSlotClassName,
 }: CommandFooterBarProps) {
+  const canUseDefaultActionsAffordance = rightSlot == null;
   const resolvedActionsButton =
     actionsButton ??
-    (showDefaultActionsButton
+    (canUseDefaultActionsAffordance && showDefaultActionsButton
       ? {
           label: "Actions",
-          shortcut: ["⌘ + K"],
+          shortcut: ["⌘", "K"],
           onClick: requestLauncherActionsToggle,
         }
       : undefined);
+  const resolvedActionsHint =
+    !resolvedActionsButton && canUseDefaultActionsAffordance && showDefaultActionsHint
+      ? {
+          label: "Actions",
+          shortcut: ["⌘", "K"],
+        }
+      : undefined;
 
-  const hasActions = primaryAction || secondaryActions?.length || resolvedActionsButton;
-  const showDivider = (primaryAction || secondaryActions?.length) && resolvedActionsButton;
+  const hasActions =
+    primaryAction || secondaryActions?.length || resolvedActionsButton || resolvedActionsHint;
+  const showDivider =
+    Boolean(primaryAction || secondaryActions?.length) &&
+    Boolean(resolvedActionsButton || resolvedActionsHint);
 
   return (
     <div
@@ -148,6 +177,8 @@ export function CommandFooterBar({
                 dataSlot="command-footer-actions-button"
               />
             )}
+
+            {resolvedActionsHint ? <ActionHint action={resolvedActionsHint} /> : null}
           </>
         ) : (
           rightSlot

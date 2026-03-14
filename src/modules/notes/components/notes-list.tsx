@@ -76,30 +76,26 @@ export function NotesList({
       </div>
 
       <div className="list-area custom-scrollbar min-h-0 flex-1 overflow-y-auto p-2">
-        {isLoading
-          ? (
-              <div className="space-y-1.5 px-1">
-                {[...Array(4)].map((_, index) => (
-                  <div
-                    key={index}
-                    className="h-16 animate-pulse rounded-xl bg-[var(--launcher-card-hover-bg)]"
-                    style={{ animationDelay: `${index * 50}ms` }}
-                  />
-                ))}
-              </div>
-            )
-          : null}
+        {isLoading ? (
+          <div className="space-y-1.5 px-1">
+            {[...Array(4)].map((_, index) => (
+              <div
+                key={index}
+                className="h-16 animate-pulse rounded-xl bg-[var(--launcher-card-hover-bg)]"
+                style={{ animationDelay: `${index * 50}ms` }}
+              />
+            ))}
+          </div>
+        ) : null}
 
-        {!isLoading && notes.length === 0
-          ? (
-              <div className="flex flex-col items-center justify-center px-4 py-10 text-center">
-                <div className="mb-3 size-10 rounded-xl bg-[var(--launcher-card-bg)] p-2">
-                  <Book className="size-full text-[var(--icon-primary-fg)]" />
-                </div>
-                <p className="text-[12px] text-muted-foreground">No notes found</p>
-              </div>
-            )
-          : null}
+        {!isLoading && notes.length === 0 ? (
+          <div className="flex flex-col items-center justify-center px-4 py-10 text-center">
+            <div className="mb-3 size-10 rounded-xl bg-[var(--launcher-card-bg)] p-2">
+              <Book className="size-full text-[var(--icon-primary-fg)]" />
+            </div>
+            <p className="text-[12px] text-muted-foreground">No notes found</p>
+          </div>
+        ) : null}
 
         {!isLoading &&
           notes.map((note, index) => {
@@ -139,9 +135,11 @@ export function NotesList({
                       : "bg-[var(--launcher-card-hover-bg)] group-hover:bg-[var(--launcher-chip-bg)]",
                   )}
                 >
-                  {note.pinned
-                    ? <Pin className="size-4 text-[var(--icon-orange-fg)]" />
-                    : <Book className="size-4 text-muted-foreground" />}
+                  {note.pinned ? (
+                    <Pin className="size-4 text-[var(--icon-orange-fg)]" />
+                  ) : (
+                    <Book className="size-4 text-muted-foreground" />
+                  )}
                 </div>
 
                 <div className="min-w-0 flex-1">
@@ -149,18 +147,18 @@ export function NotesList({
                     <p
                       className={cn(
                         "truncate text-[13px] font-medium tracking-[-0.01em] transition-colors duration-200",
-                        isSelected ? "text-foreground" : "text-muted-foreground group-hover:text-foreground",
+                        isSelected
+                          ? "text-foreground"
+                          : "text-muted-foreground group-hover:text-foreground",
                       )}
                     >
                       {note.title}
                     </p>
-                    {note.pinned
-                      ? (
-                          <span className="shrink-0 rounded-full bg-[var(--icon-orange-bg)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--icon-orange-fg)]">
-                            Pinned
-                          </span>
-                        )
-                      : null}
+                    {note.pinned ? (
+                      <span className="shrink-0 rounded-full bg-[var(--icon-orange-bg)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--icon-orange-fg)]">
+                        Pinned
+                      </span>
+                    ) : null}
                   </div>
                   <p className="mt-1 line-clamp-2 text-[11px] leading-5 text-muted-foreground">
                     {excerptContent(note.content)}

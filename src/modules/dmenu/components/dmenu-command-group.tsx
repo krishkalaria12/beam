@@ -1,16 +1,17 @@
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useDeferredValue, useEffect, useMemo, useRef, useState, startTransition } from "react";
 
-import {
-  completeCliDmenuRequest,
-  searchCliDmenuRequest,
-} from "@/modules/dmenu/api/bridge";
+import { completeCliDmenuRequest, searchCliDmenuRequest } from "@/modules/dmenu/api/bridge";
 import type { DmenuResolvePayload, DmenuSessionRow } from "@/modules/dmenu/types";
 import { useLauncherPanelBackHandler } from "@/modules/launcher/lib/back-navigation";
 import { cn } from "@/lib/utils";
 import { useLauncherUiStore } from "@/store/use-launcher-ui-store";
 
-function pickDefaultRowId(rows: DmenuSessionRow[], rankedRowIds: readonly string[], selectText?: string) {
+function pickDefaultRowId(
+  rows: DmenuSessionRow[],
+  rankedRowIds: readonly string[],
+  selectText?: string,
+) {
   if (selectText) {
     const normalizedSelectText = selectText.trim();
     const matchingSelected = rankedRowIds.find((rowId) => {

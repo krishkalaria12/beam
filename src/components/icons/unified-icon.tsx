@@ -8,7 +8,7 @@ import {
   type ResolvedPhosphorIcon,
 } from "@/components/icons/phosphor-runtime";
 import { cn } from "@/lib/utils";
-import { resolveExtensionIconSource } from "@/modules/extensions/lib/icon";
+import { resolveExtensionIconSources } from "@/modules/extensions/lib/icon";
 
 export interface ThemeableValue {
   light: string;
@@ -100,10 +100,13 @@ function isEmojiOrSymbol(value: string): boolean {
   return /^[^\w\s]{1,4}$/u.test(value);
 }
 
-function resolveDirectImageSource(rawValue: string): string | null {
+function resolveDirectImageSources(
+  rawValue: string,
+  extensionDirectory?: string | null,
+): string[] {
   const value = rawValue.trim();
   if (!value) {
-    return null;
+    return [];
   }
 
   const looksLikePath =
@@ -118,7 +121,7 @@ function resolveDirectImageSource(rawValue: string): string | null {
     /\.(svg|png|jpe?g|gif|webp|ico|tiff?)$/i.test(value);
 
   if (!looksLikePath) {
-    return null;
+    return [];
   }
 
   // Keep web-bundled asset paths as-is (Vite dev/build). Converting these to
@@ -129,40 +132,57 @@ function resolveDirectImageSource(rawValue: string): string | null {
     value.startsWith("/@fs/") ||
     value.startsWith("/@id/")
   ) {
-    return value;
+    return [value];
   }
 
-  const resolved = resolveExtensionIconSource(value);
-  if (resolved) {
+  const resolved = resolveExtensionIconSources(value, { baseDirectory: extensionDirectory });
+  if (resolved.length > 0) {
     return resolved;
   }
 
   if (value.startsWith("/") && (value.includes("/assets/") || value.includes("/src/"))) {
-    return value;
+    return [value];
+  }
+
+  if (extensionDirectory && !/^(?:[A-Za-z][A-Za-z\d+\-.]*:|\/|\\|[A-Za-z]:[\\/])/.test(value)) {
+    return [];
   }
 
   if (/\.(svg|png|jpe?g|gif|webp|ico|tiff?)$/i.test(value)) {
-    return value;
+    return [value];
   }
 
-  return null;
+  return [];
 }
 
 interface UnifiedIconProps {
   icon: unknown;
   className?: string;
   fallback?: React.ReactNode;
+  extensionDirectory?: string | null;
 }
 
-export function UnifiedIcon({ icon, className, fallback }: UnifiedIconProps) {
-  const [failedSource, setFailedSource] = useState<string | null>(null);
+export function UnifiedIcon({
+  icon,
+  className,
+  fallback,
+  extensionDirectory,
+}: UnifiedIconProps) {
+  const [failedImage, setFailedImage] = useState(false);
+  const [sourceIndex, setSourceIndex] = useState(0);
   const imageValue = useMemo(() => resolveImageValue(icon), [icon]);
-  const iconSource = imageValue ? resolveDirectImageSource(imageValue.value) : null;
+  const iconSources = useMemo(
+    () =>
+      imageValue ? resolveDirectImageSources(imageValue.value, extensionDirectory) : [],
+    [extensionDirectory, imageValue],
+  );
+  const iconSource = iconSources[sourceIndex] ?? null;
   const tokenCandidate = imageValue?.value?.trim() ?? "";
   const lucideIcon = tokenCandidate ? resolveLucideIconByToken(tokenCandidate) : null;
   const [phosphorIcon, setPhosphorIcon] = useState<ResolvedPhosphorIcon | null>(() =>
     tokenCandidate ? getCachedPhosphorIconByToken(tokenCandidate) : null,
   );
+  const iconSourcesKey = iconSources.join("\n");
 
   useEffect(() => {
     if (!tokenCandidate || lucideIcon) {
@@ -190,7 +210,12 @@ export function UnifiedIcon({ icon, className, fallback }: UnifiedIconProps) {
     };
   }, [tokenCandidate, lucideIcon]);
 
-  if (iconSource && failedSource !== iconSource) {
+  useEffect(() => {
+    setFailedImage(false);
+    setSourceIndex(0);
+  }, [iconSourcesKey]);
+
+  if (iconSource && !failedImage) {
     if (imageValue?.tintColor) {
       return (
         <span
@@ -218,7 +243,12 @@ export function UnifiedIcon({ icon, className, fallback }: UnifiedIconProps) {
         loading="lazy"
         className={cn("object-contain", imageValue?.maskClass, className)}
         onError={() => {
-          setFailedSource(iconSource);
+          if (sourceIndex < iconSources.length - 1) {
+            setSourceIndex((previous) => previous + 1);
+            return;
+          }
+
+          setFailedImage(true);
         }}
       />
     );

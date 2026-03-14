@@ -67,9 +67,7 @@ const WindowSwitcherCommandGroup = lazy(
 const ScriptCommandsCommandGroup = lazy(
   () => import("@/modules/script-commands/components/script-commands-command-group"),
 );
-const DmenuCommandGroup = lazy(
-  () => import("@/modules/dmenu/components/dmenu-command-group"),
-);
+const DmenuCommandGroup = lazy(() => import("@/modules/dmenu/components/dmenu-command-group"));
 const HyprWhsprView = lazy(() =>
   import("@/modules/hyprwhspr/components/hyprwhspr-view").then((mod) => ({
     default: mod.HyprWhsprView,
