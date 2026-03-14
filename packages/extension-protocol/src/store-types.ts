@@ -134,6 +134,8 @@ export interface ExtensionStoreUpdateRecord {
   latestRelease: ExtensionStoreReleaseRecord;
   verification: ExtensionStoreVerificationRecord;
   compatibility: ExtensionStoreCompatibilityRecord;
+  author: ExtensionStoreAuthorRecord;
+  source: ExtensionStoreSourceRecord;
 }
 
 function normalizeOptionalString(value: string | null | undefined): string | undefined {
@@ -365,8 +367,10 @@ function normalizeUpdate(entry: ExtensionStoreUpdate): ExtensionStoreUpdateRecor
   const installedVersion = normalizeOptionalString(entry.installedVersion);
   const latestVersion = normalizeOptionalString(entry.latestVersion);
   const latestRelease = normalizeRelease(entry.latestRelease);
+  const author = normalizeAuthor(entry.author);
+  const source = normalizeSource(entry.source);
 
-  if (!id || !slug || !title || !installedVersion || !latestVersion || !latestRelease) {
+  if (!id || !slug || !title || !installedVersion || !latestVersion || !latestRelease || !author || !source) {
     return null;
   }
 
@@ -379,6 +383,8 @@ function normalizeUpdate(entry: ExtensionStoreUpdate): ExtensionStoreUpdateRecor
     latestRelease,
     verification: normalizeVerification(entry.verification),
     compatibility: normalizeCompatibility(entry.compatibility),
+    author,
+    source,
   };
 }
 

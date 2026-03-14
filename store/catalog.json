@@ -64,9 +64,6 @@
         },
         "owner": "beam",
         "version": "1.0.0",
-        "packageId": "beam.demo-tools",
-        "minimumBeamVersion": "1.0.0",
-        "releaseChannel": "stable",
         "commands": [
           {
             "name": "demo-tools",
@@ -228,9 +225,6 @@
         },
         "owner": "beam",
         "version": "0.9.0",
-        "packageId": "beam.window-recipes",
-        "minimumBeamVersion": "1.0.0",
-        "releaseChannel": "stable",
         "commands": [
           {
             "name": "window-recipes",

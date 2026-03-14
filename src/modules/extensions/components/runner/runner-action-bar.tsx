@@ -1,8 +1,10 @@
+import { ChevronsUpDown } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { ActionListPanel, ModuleFooter } from "@/components/module";
-import { listenLauncherActionsToggle } from "@/lib/launcher-actions";
+import { Button } from "@/components/ui/button";
 import { RunnerToast } from "@/modules/extensions/components/runner/runner-toast";
+import { listenExtensionRunnerActionsToggle } from "@/modules/extensions/components/runner/runner-actions-toggle";
 import type { FlattenedAction } from "@/modules/extensions/components/runner/types";
 import type { ExtensionToast } from "@/modules/extensions/runtime/store";
 
@@ -22,6 +24,8 @@ export function RunnerActionBar({
   onExecuteAction,
 }: RunnerActionBarProps) {
   const [actionsOpen, setActionsOpen] = useState(false);
+  const primaryAction = actions[0];
+  const moreActionsCount = Math.max(0, actions.length - (primaryAction ? 1 : 0));
 
   const parseShortcut = (shortcut?: string): string[] => {
     if (!shortcut) {
@@ -40,7 +44,7 @@ export function RunnerActionBar({
   }, [actions.length]);
 
   useEffect(() => {
-    return listenLauncherActionsToggle(() => {
+    return listenExtensionRunnerActionsToggle(() => {
       if (actions.length === 0) {
         return;
       }
@@ -57,16 +61,36 @@ export function RunnerActionBar({
           <div className="ext-footer-status min-w-0">
             <RunnerToast toast={toast} onAction={onToastAction} onHide={onToastHide} />
           </div>
+        ) : actions.length > 0 ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="xs"
+            onClick={() => {
+              setActionsOpen((previous) => !previous);
+            }}
+            className="ext-footer-actions-toggle h-7 rounded-md px-2 text-[11px] font-medium text-muted-foreground hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground"
+          >
+            <span>{actions.length} action{actions.length === 1 ? "" : "s"}</span>
+            <ChevronsUpDown className="size-3 text-muted-foreground/70" />
+          </Button>
         ) : (
           <span className="ext-footer-status">Extension actions</span>
         )
       }
       shortcuts={[
         { keys: ["Esc"], label: "Back" },
-        ...actions
-          .filter((action) => action.shortcut)
-          .map((action) => ({ keys: parseShortcut(action.shortcut), label: action.title })),
+        ...(primaryAction ? [{ keys: ["↵"], label: primaryAction.title }] : []),
+        ...(actions.length > 0
+          ? [
+              {
+                keys: ["⌘", "K"],
+                label: moreActionsCount > 0 ? `${moreActionsCount} more` : "Actions",
+              },
+            ]
+          : []),
       ]}
+      showActionsShortcut={false}
       overlay={
         actions.length > 0 ? (
           <ActionListPanel

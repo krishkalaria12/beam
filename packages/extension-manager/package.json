@@ -16,6 +16,7 @@
     "@beam-launcher/api": "workspace:*",
     "@beam/extension-protocol": "workspace:*",
     "@beam/raycast-api-compat": "workspace:*",
+    "dequal": "^2.0.3",
     "msgpackr": "^1.11.4",
     "pako": "^2.1.0",
     "react": "^19.1.0",

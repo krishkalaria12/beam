@@ -8,6 +8,7 @@ enum ExtensionStoreSourceKind {
   EXTENSION_STORE_SOURCE_KIND_UNSPECIFIED = 0;
   EXTENSION_STORE_SOURCE_KIND_BEAM = 1;
   EXTENSION_STORE_SOURCE_KIND_COMMUNITY = 2;
+  EXTENSION_STORE_SOURCE_KIND_RAYCAST = 3;
 }
 
 enum ExtensionVerificationStatus {
@@ -164,6 +165,8 @@ message ExtensionStoreUpdate {
   ExtensionStoreRelease latest_release = 6;
   ExtensionStoreVerification verification = 7;
   ExtensionStoreCompatibility compatibility = 8;
+  ExtensionStoreAuthor author = 9;
+  ExtensionStoreSource source = 10;
 }
 
 message ExtensionStoreUpdateResult {

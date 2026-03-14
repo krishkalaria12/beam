@@ -100,11 +100,13 @@ export function matchExtensionPlugin(plugin: PluginInfo, query: string): boolean
 
   const searchableParts = [
     plugin.title,
+    plugin.subtitle ?? "",
     plugin.description ?? "",
     plugin.pluginTitle,
     plugin.pluginName,
     plugin.commandName,
     getPluginAuthorPrefix(plugin),
+    ...plugin.keywords,
   ];
 
   const haystack = searchableParts.join(" ").toLowerCase();
@@ -122,14 +124,16 @@ function toCommandMetadata(plugin: PluginInfo): ExtensionCommandMetadata {
     extensionId: toExtensionRuntimeId(plugin),
     commandId: plugin.commandName,
     title,
-    subtitle: subtitleParts.join(" - ") || undefined,
+    subtitle: plugin.subtitle?.trim() || subtitleParts.join(" - ") || undefined,
     keywords: [
       plugin.title,
+      plugin.subtitle ?? "",
       plugin.pluginTitle,
       plugin.pluginName,
       plugin.commandName,
       plugin.description ?? "",
       getPluginAuthorPrefix(plugin),
+      ...plugin.keywords,
       "raycast",
       "extension",
     ]

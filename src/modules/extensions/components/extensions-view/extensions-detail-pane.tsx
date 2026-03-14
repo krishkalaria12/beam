@@ -10,6 +10,30 @@ import type {
   InstalledExtensionSummary,
 } from "@/modules/extensions/types";
 
+function isSyntheticRaycastVersion(version: string | null | undefined): boolean {
+  return typeof version === "string" && /^0\.0\.\d{9,}$/.test(version.trim());
+}
+
+function formatInstalledVersion(version: string | null | undefined): string | null {
+  if (!version || isSyntheticRaycastVersion(version)) {
+    return null;
+  }
+
+  return `v${version}`;
+}
+
+function formatStoreHeaderMeta(entry: ExtensionStoreListing): string {
+  const sourceLabel = entry.source.label.trim();
+  const isRaycast = entry.source.id.trim().toLowerCase() === "raycast";
+  const version = entry.latestRelease.version.trim();
+
+  if (isRaycast || /^0\.0\.\d{9,}$/.test(version)) {
+    return `${entry.author.handle}/${entry.slug} · ${sourceLabel}`;
+  }
+
+  return `${entry.author.handle}/${entry.slug} · v${version}`;
+}
+
 function compactMetadataRows(rows: Array<{ label: string; value: string }>): MetadataBarItem[] {
   return rows
     .filter((entry) => entry.value.trim().length > 0)
@@ -80,6 +104,8 @@ export function ExtensionsDetailPane({
   storeDetailIsLoading,
   storeDetailError,
 }: ExtensionsDetailPaneProps) {
+  const installedVersionLabel = formatInstalledVersion(selectedInstalled?.version);
+
   if (!selectedInstalled && !selectedStoreDetail) {
     return (
       <DetailPanel className="h-full">
@@ -108,7 +134,7 @@ export function ExtensionsDetailPane({
                 <h2 className="text-[18px] font-semibold text-foreground">{selectedInstalled.title}</h2>
                 <p className="text-[12px] text-muted-foreground">
                   {selectedInstalled.owner}/{selectedInstalled.slug}
-                  {selectedInstalled.version ? ` · v${selectedInstalled.version}` : ""}
+                  {installedVersionLabel ? ` · ${installedVersionLabel}` : ""}
                 </p>
               </div>
             </div>
@@ -165,8 +191,12 @@ export function ExtensionsDetailPane({
                 Update available
               </div>
               <p className="mt-1 text-[12px] text-muted-foreground">
-                Installed v{selectedInstalled.version ?? "unknown"} · latest v
-                {selectedInstalledUpdate.latestVersion}
+                {installedVersionLabel
+                  ? `Installed ${installedVersionLabel}`
+                  : "Installed build"}
+                {selectedInstalledUpdate.id.startsWith("raycast:")
+                  ? " · latest Raycast Store build"
+                  : ` · latest v${selectedInstalledUpdate.latestVersion}`}
               </p>
             </section>
           ) : null}
@@ -175,7 +205,14 @@ export function ExtensionsDetailPane({
             <MetadataBar
               items={compactMetadataRows([
                 { label: "Commands", value: String(selectedInstalled.commandCount) },
-                { label: "Version", value: selectedInstalled.version ?? "Unknown" },
+                {
+                  label: "Version",
+                  value:
+                    installedVersionLabel?.replace(/^v/, "") ??
+                    (isSyntheticRaycastVersion(selectedInstalled.version)
+                      ? "Raycast Store build"
+                      : "Unknown"),
+                },
                 {
                   label: "Preferences",
                   value:
@@ -223,10 +260,7 @@ export function ExtensionsDetailPane({
             />
             <div>
               <h2 className="text-[18px] font-semibold text-foreground">{selectedStoreDetail.title}</h2>
-              <p className="text-[12px] text-muted-foreground">
-                {selectedStoreDetail.author.handle}/{selectedStoreDetail.slug} · v
-                {selectedStoreDetail.latestRelease.version}
-              </p>
+              <p className="text-[12px] text-muted-foreground">{formatStoreHeaderMeta(selectedStoreDetail)}</p>
             </div>
           </div>
           <Button

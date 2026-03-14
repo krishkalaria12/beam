@@ -28,10 +28,6 @@ type PackageJsonManifest = {
   author?: PackageJsonAuthor;
   owner?: string;
   version?: string;
-  schemaVersion?: string;
-  packageId?: string;
-  minimumBeamVersion?: string;
-  releaseChannel?: string;
   commands?: unknown[];
   preferences?: unknown[];
 };
@@ -198,10 +194,6 @@ function manifestFromPackageJson(packageJson: PackageJsonManifest): PackageJsonM
     author: normalizeAuthor(packageJson.author),
     owner: normalizeOptionalString(packageJson.owner),
     version: normalizeOptionalString(packageJson.version),
-    schemaVersion: normalizeOptionalString(packageJson.schemaVersion),
-    packageId: normalizeOptionalString(packageJson.packageId),
-    minimumBeamVersion: normalizeOptionalString(packageJson.minimumBeamVersion),
-    releaseChannel: normalizeOptionalString(packageJson.releaseChannel),
     commands: Array.isArray(packageJson.commands) ? packageJson.commands : [],
     preferences: Array.isArray(packageJson.preferences) ? packageJson.preferences : [],
   };
@@ -311,10 +303,10 @@ function validateCompatibilityPolicy(
 
   const minimumBeamVersion =
     normalizeOptionalString(compatibility.minimumBeamVersion) ??
-    normalizeOptionalString(manifest.minimumBeamVersion);
+    undefined;
 
   if (!minimumBeamVersion) {
-    throw new Error(`${sourceDir}: minimumBeamVersion is required either in beam-store.json compatibility or package.json.`);
+    throw new Error(`${sourceDir}: minimumBeamVersion is required in beam-store.json compatibility.`);
   }
 }
 
@@ -493,15 +485,7 @@ function publishPackage(
         sourceUrl: normalizeOptionalString(publishConfig.sourceUrl) ?? existingPackage.sourceUrl,
         screenshots: publishConfig.screenshots ?? existingPackage.screenshots ?? [],
         manifest: packageManifestShouldUpdate(existingPackage, releaseChannel, defaultChannel)
-          ? {
-              ...manifest,
-              packageId,
-              minimumBeamVersion:
-                normalizeOptionalString(compatibility.minimumBeamVersion) ??
-                manifest.minimumBeamVersion,
-              releaseChannel:
-                releaseChannel === "EXTENSION_RELEASE_CHANNEL_STABLE" ? "stable" : undefined,
-            }
+          ? manifest
           : existingPackage.manifest,
         releases: mergeRelease(existingPackage.releases ?? [], release),
       }
@@ -523,14 +507,7 @@ function publishPackage(
         readmeUrl: normalizeOptionalString(publishConfig.readmeUrl),
         sourceUrl: normalizeOptionalString(publishConfig.sourceUrl),
         screenshots: publishConfig.screenshots ?? [],
-        manifest: {
-          ...manifest,
-          packageId,
-          minimumBeamVersion:
-            normalizeOptionalString(compatibility.minimumBeamVersion) ?? manifest.minimumBeamVersion,
-          releaseChannel:
-            releaseChannel === "EXTENSION_RELEASE_CHANNEL_STABLE" ? "stable" : undefined,
-        },
+        manifest,
         releases: [release],
       };
 

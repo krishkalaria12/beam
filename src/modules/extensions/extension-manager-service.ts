@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { open as shellOpen } from "@tauri-apps/plugin-shell";
 import { parseRaycastDeepLink } from "@/modules/extensions/extension-manager/deep-link";
+import { emitClipboardHistoryUpdated } from "@/modules/clipboard/lib/updates";
 import {
   type ExtensionMode,
 } from "@/modules/extensions/extension-manager/discovery";
@@ -429,6 +430,13 @@ class ExtensionManagerService {
   }): Promise<void> {
     try {
       const result = await invoke(payload.command, payload.params ?? {});
+      if (
+        payload.command === "clipboard_copy" ||
+        payload.command === "clipboard_paste" ||
+        payload.command === "clipboard_clear"
+      ) {
+        emitClipboardHistoryUpdated();
+      }
       this.sendInvokeCommandResponse(payload.requestId, result);
     } catch (error) {
       const message = this.toErrorMessage(error);

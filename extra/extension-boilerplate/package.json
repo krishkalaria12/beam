@@ -6,10 +6,7 @@
   "icon": "icon.svg",
   "author": "beam",
   "owner": "beam",
-  "package_id": "beam.template",
   "version": "0.1.0",
-  "minimum_beam_version": "1.0.0",
-  "release_channel": "stable",
   "commands": [
     {
       "name": "list",

@@ -7,10 +7,7 @@
 	"author": "beam-launcher",
 	"owner": "beam-launcher",
 	"license": "MIT",
-	"package_id": "beam-launcher.aur-search",
 	"version": "0.1.0",
-	"minimum_beam_version": "1.0.0",
-	"release_channel": "stable",
 	"commands": [
 		{
 			"name": "search-aur",

@@ -81,7 +81,11 @@ fn resolve_extension_manager_dev_entry() -> Option<PathBuf> {
         .join("extension-manager")
         .join("dist")
         .join("index.js");
-    if entry.is_file() { Some(entry) } else { None }
+    if entry.is_file() {
+        Some(entry)
+    } else {
+        None
+    }
 }
 
 fn find_extension_manager_launcher_in_dir(directory: &Path) -> Option<PathBuf> {

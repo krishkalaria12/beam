@@ -45,23 +45,48 @@
     "owner": {
       "type": "string"
     },
-    "package_id": {
-      "type": "string"
-    },
     "version": {
       "type": "string"
     },
-    "minimum_beam_version": {
-      "type": "string"
-    },
-    "release_channel": {
+    "access": {
       "type": "string",
       "enum": [
-        "stable",
-        "beta",
-        "alpha",
-        "nightly"
+        "public",
+        "private"
       ]
+    },
+    "license": {
+      "type": "string"
+    },
+    "platforms": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "categories": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "contributors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "pastContributors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "keywords": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     },
     "commands": {
       "type": "array",
@@ -77,6 +102,9 @@
             "type": "string",
             "minLength": 1
           },
+          "subtitle": {
+            "type": "string"
+          },
           "description": {
             "type": "string"
           },
@@ -87,11 +115,27 @@
             "type": "string",
             "enum": [
               "view",
-              "no-view"
+              "no-view",
+              "menu-bar"
             ]
           },
           "interval": {
             "type": "string"
+          },
+          "keywords": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "arguments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/argument"
+            }
+          },
+          "disabledByDefault": {
+            "type": "boolean"
           },
           "preferences": {
             "$ref": "#/$defs/preferences"
@@ -144,6 +188,51 @@
       },
       "required": [
         "value"
+      ]
+    },
+    "argumentOption": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "value"
+      ]
+    },
+    "argument": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "placeholder": {
+          "type": "string"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/argumentOption"
+          }
+        }
+      },
+      "required": [
+        "name",
+        "type"
       ]
     },
     "preference": {

@@ -2,6 +2,9 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 
+use futures_util::future::join_all;
+use once_cell::sync::Lazy;
+use parking_lot::Mutex;
 use reqwest::Url;
 use semver::Version;
 use serde::Deserialize;
@@ -28,6 +31,13 @@ struct RawPreferenceData {
 
 #[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
+struct RawArgumentData {
+    title: String,
+    value: String,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
 struct RawPreference {
     name: String,
     #[serde(rename = "type")]
@@ -43,13 +53,28 @@ struct RawPreference {
 
 #[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
+struct RawArgument {
+    name: String,
+    #[serde(rename = "type")]
+    r#type: String,
+    placeholder: Option<String>,
+    required: Option<bool>,
+    data: Option<Vec<RawArgumentData>>,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
 struct RawCommandManifest {
     name: String,
     title: Option<String>,
+    subtitle: Option<String>,
     description: Option<String>,
     icon: Option<String>,
     mode: Option<String>,
     interval: Option<String>,
+    keywords: Option<Vec<String>>,
+    arguments: Option<Vec<RawArgument>>,
+    disabled_by_default: Option<bool>,
     preferences: Option<Vec<RawPreference>>,
 }
 
@@ -63,10 +88,13 @@ struct RawPackageManifest {
     author: Option<RawAuthor>,
     owner: Option<String>,
     version: Option<String>,
-    schema_version: Option<String>,
-    package_id: Option<String>,
-    minimum_beam_version: Option<String>,
-    release_channel: Option<String>,
+    access: Option<String>,
+    license: Option<String>,
+    platforms: Option<Vec<String>>,
+    categories: Option<Vec<String>>,
+    contributors: Option<Vec<String>>,
+    past_contributors: Option<Vec<String>>,
+    keywords: Option<Vec<String>>,
     commands: Option<Vec<RawCommandManifest>>,
     preferences: Option<Vec<RawPreference>>,
 }
@@ -221,6 +249,77 @@ struct RawStoreCatalog {
     format_version: Option<String>,
 }
 
+#[derive(Deserialize, Debug, Clone, Default)]
+#[serde(rename_all = "snake_case")]
+struct RawRaycastUser {
+    name: Option<String>,
+    handle: Option<String>,
+    avatar: Option<String>,
+    username: Option<String>,
+}
+
+#[derive(Deserialize, Debug, Clone, Default)]
+#[serde(rename_all = "snake_case")]
+struct RawRaycastIcons {
+    light: Option<String>,
+    dark: Option<String>,
+}
+
+#[derive(Deserialize, Debug, Clone, Default)]
+#[serde(rename_all = "snake_case")]
+struct RawRaycastCommand {
+    name: Option<String>,
+    title: Option<String>,
+    subtitle: Option<String>,
+    description: Option<String>,
+    #[serde(default)]
+    keywords: Vec<String>,
+    mode: Option<String>,
+    disabled_by_default: Option<bool>,
+    icons: Option<RawRaycastIcons>,
+}
+
+#[derive(Deserialize, Debug, Clone, Default)]
+#[serde(rename_all = "snake_case")]
+struct RawRaycastListing {
+    name: Option<String>,
+    title: Option<String>,
+    description: Option<String>,
+    #[serde(default)]
+    seo_categories: Vec<String>,
+    platforms: Option<Vec<String>>,
+    created_at: Option<i64>,
+    author: Option<RawRaycastUser>,
+    owner: Option<RawRaycastUser>,
+    access: Option<String>,
+    store_url: Option<String>,
+    download_count: Option<i64>,
+    api_version: Option<String>,
+    #[serde(default)]
+    categories: Vec<String>,
+    #[serde(default)]
+    prompt_examples: Vec<String>,
+    metadata_count: Option<i64>,
+    updated_at: Option<i64>,
+    source_url: Option<String>,
+    readme_url: Option<String>,
+    readme_assets_path: Option<String>,
+    icons: Option<RawRaycastIcons>,
+    download_url: Option<String>,
+    #[serde(default)]
+    commands: Vec<RawRaycastCommand>,
+    #[serde(default)]
+    contributors: Vec<RawRaycastUser>,
+    #[serde(default)]
+    tools: Vec<String>,
+}
+
+#[derive(Deserialize, Debug, Clone, Default)]
+struct RawRaycastSearchResponse {
+    #[serde(default)]
+    data: Vec<RawRaycastListing>,
+}
+
 #[derive(Debug, Clone)]
 enum CatalogBase {
     File(PathBuf),
@@ -233,6 +332,14 @@ pub(crate) struct ResolvedStoreArtifact {
     pub release: proto::ExtensionStoreRelease,
     pub artifact: proto::ExtensionStoreArtifact,
 }
+
+const RAYCAST_STORE_API_BASE: &str = "https://backend.raycast.com/api/v1";
+const RAYCAST_STORE_SOURCE_ID: &str = "raycast";
+const RAYCAST_STORE_SOURCE_LABEL: &str = "Raycast Store";
+const RAYCAST_STORE_DEFAULT_OWNER: &str = "raycast";
+
+static RAYCAST_PACKAGE_CACHE: Lazy<Mutex<HashMap<String, proto::ExtensionStorePackage>>> =
+    Lazy::new(|| Mutex::new(HashMap::new()));
 
 fn normalize_optional_string(value: Option<String>) -> Option<String> {
     value.and_then(|value| {
@@ -250,6 +357,136 @@ fn normalize_string_list(values: Vec<String>) -> Vec<String> {
         .into_iter()
         .filter_map(|value| normalize_optional_string(Some(value)))
         .collect()
+}
+
+fn timestamp_to_rfc3339(value: Option<i64>) -> Option<String> {
+    let seconds = value?;
+    chrono::DateTime::from_timestamp(seconds, 0).map(|timestamp| timestamp.to_rfc3339())
+}
+
+fn raycast_store_source() -> proto::ExtensionStoreSource {
+    proto::ExtensionStoreSource {
+        id: RAYCAST_STORE_SOURCE_ID.to_string(),
+        label: RAYCAST_STORE_SOURCE_LABEL.to_string(),
+        kind: proto::ExtensionStoreSourceKind::Raycast as i32,
+        homepage_url: Some("https://www.raycast.com/store".to_string()),
+    }
+}
+
+fn raycast_owner_handle(listing: &RawRaycastListing) -> String {
+    normalize_optional_string(
+        listing
+            .owner
+            .as_ref()
+            .and_then(|owner| owner.handle.clone()),
+    )
+    .unwrap_or_else(|| RAYCAST_STORE_DEFAULT_OWNER.to_string())
+}
+
+fn raycast_package_id(owner_handle: &str, slug: &str) -> String {
+    format!(
+        "{RAYCAST_STORE_SOURCE_ID}:{}",
+        format!("{owner_handle}/{slug}").to_lowercase()
+    )
+}
+
+fn parse_raycast_package_id(package_id: &str) -> Option<(String, String)> {
+    let normalized = package_id
+        .trim()
+        .strip_prefix(&format!("{RAYCAST_STORE_SOURCE_ID}:"))?;
+    let (owner, slug) = normalized.split_once('/')?;
+    let owner = owner.trim().to_lowercase();
+    let slug = slug.trim().to_lowercase();
+    if owner.is_empty() || slug.is_empty() {
+        return None;
+    }
+
+    Some((owner, slug))
+}
+
+fn synthetic_raycast_version(listing: &RawRaycastListing) -> String {
+    format!(
+        "0.0.{}",
+        listing.updated_at.or(listing.created_at).unwrap_or(0)
+    )
+}
+
+fn raycast_manifest_author(listing: &RawRaycastListing) -> Option<proto::ManifestAuthor> {
+    let author = listing.author.as_ref()?;
+    let handle = normalize_optional_string(author.handle.clone());
+    let name = normalize_optional_string(author.name.clone());
+
+    handle.or(name).map(|value| proto::ManifestAuthor {
+        author: Some(proto::manifest_author::Author::Simple(value)),
+    })
+}
+
+fn raycast_manifest_contributors(users: &[RawRaycastUser]) -> Vec<String> {
+    users
+        .iter()
+        .filter_map(|user| {
+            normalize_optional_string(user.handle.clone())
+                .or_else(|| normalize_optional_string(user.username.clone()))
+                .or_else(|| normalize_optional_string(user.name.clone()))
+        })
+        .collect()
+}
+
+fn raycast_manifest_commands(listing: &RawRaycastListing) -> Vec<proto::CommandManifest> {
+    listing
+        .commands
+        .iter()
+        .filter_map(|command| {
+            let name = normalize_optional_string(command.name.clone())?;
+            Some(proto::CommandManifest {
+                name,
+                title: normalize_optional_string(command.title.clone()),
+                subtitle: normalize_optional_string(command.subtitle.clone()),
+                description: normalize_optional_string(command.description.clone()),
+                icon: command
+                    .icons
+                    .as_ref()
+                    .and_then(|icons| normalize_optional_string(icons.light.clone()))
+                    .or_else(|| {
+                        command
+                            .icons
+                            .as_ref()
+                            .and_then(|icons| normalize_optional_string(icons.dark.clone()))
+                    }),
+                mode: normalize_optional_string(command.mode.clone()),
+                interval: None,
+                preferences: Vec::new(),
+                keywords: normalize_string_list(command.keywords.clone()),
+                arguments: Vec::new(),
+                disabled_by_default: command.disabled_by_default,
+            })
+        })
+        .collect()
+}
+
+fn raycast_screenshots(listing: &RawRaycastListing, slug: &str) -> Vec<String> {
+    let Some(base) = normalize_optional_string(listing.readme_assets_path.clone()) else {
+        return Vec::new();
+    };
+    let count = listing.metadata_count.unwrap_or(0).max(0) as usize;
+    if count == 0 {
+        return Vec::new();
+    }
+
+    (0..count)
+        .map(|index| format!("{base}metadata/{slug}-{}.png", index + 1))
+        .collect()
+}
+
+fn cache_raycast_packages(packages: &[proto::ExtensionStorePackage]) {
+    if packages.is_empty() {
+        return;
+    }
+
+    let mut cache = RAYCAST_PACKAGE_CACHE.lock();
+    for package in packages {
+        cache.insert(package.id.clone(), package.clone());
+    }
 }
 
 fn json_value_to_proto(value: JsonValue) -> ::prost_types::Value {
@@ -338,14 +575,41 @@ fn raw_preference_to_proto(preference: RawPreference) -> proto::PreferenceDefini
     }
 }
 
+fn raw_argument_to_proto(argument: RawArgument) -> proto::ArgumentDefinition {
+    proto::ArgumentDefinition {
+        name: argument.name.trim().to_string(),
+        r#type: argument.r#type.trim().to_string(),
+        placeholder: normalize_optional_string(argument.placeholder),
+        required: argument.required,
+        data: argument
+            .data
+            .unwrap_or_default()
+            .into_iter()
+            .map(|entry| proto::ArgumentOption {
+                title: entry.title,
+                value: entry.value,
+            })
+            .collect(),
+    }
+}
+
 fn raw_command_manifest_to_proto(command: RawCommandManifest) -> proto::CommandManifest {
     proto::CommandManifest {
         name: command.name.trim().to_string(),
         title: normalize_optional_string(command.title),
+        subtitle: normalize_optional_string(command.subtitle),
         description: normalize_optional_string(command.description),
         icon: normalize_optional_string(command.icon),
         mode: normalize_optional_string(command.mode),
         interval: normalize_optional_string(command.interval),
+        keywords: normalize_string_list(command.keywords.unwrap_or_default()),
+        arguments: command
+            .arguments
+            .unwrap_or_default()
+            .into_iter()
+            .map(raw_argument_to_proto)
+            .collect(),
+        disabled_by_default: command.disabled_by_default,
         preferences: command
             .preferences
             .unwrap_or_default()
@@ -376,10 +640,13 @@ fn raw_manifest_to_proto(manifest: RawPackageManifest) -> proto::ExtensionManife
             .map(raw_preference_to_proto)
             .collect(),
         version: normalize_optional_string(manifest.version),
-        schema_version: normalize_optional_string(manifest.schema_version),
-        package_id: normalize_optional_string(manifest.package_id),
-        minimum_beam_version: normalize_optional_string(manifest.minimum_beam_version),
-        release_channel: normalize_optional_string(manifest.release_channel),
+        access: normalize_optional_string(manifest.access),
+        license: normalize_optional_string(manifest.license),
+        platforms: normalize_string_list(manifest.platforms.unwrap_or_default()),
+        categories: normalize_string_list(manifest.categories.unwrap_or_default()),
+        contributors: normalize_string_list(manifest.contributors.unwrap_or_default()),
+        past_contributors: normalize_string_list(manifest.past_contributors.unwrap_or_default()),
+        keywords: normalize_string_list(manifest.keywords.unwrap_or_default()),
     }
 }
 
@@ -390,6 +657,9 @@ fn parse_source_kind(value: Option<&str>) -> i32 {
         }
         "EXTENSION_STORE_SOURCE_KIND_COMMUNITY" | "community" | "COMMUNITY" => {
             proto::ExtensionStoreSourceKind::Community as i32
+        }
+        "EXTENSION_STORE_SOURCE_KIND_RAYCAST" | "raycast" | "RAYCAST" => {
+            proto::ExtensionStoreSourceKind::Raycast as i32
         }
         _ => proto::ExtensionStoreSourceKind::Unspecified as i32,
     }
@@ -484,27 +754,11 @@ fn resolve_relative_reference(value: Option<String>, base: Option<&CatalogBase>)
 
 fn normalize_manifest_with_package_context(
     manifest: Option<RawPackageManifest>,
-    package_id: &str,
-    compatibility: Option<&RawStoreCompatibility>,
-    release: Option<&proto::ExtensionStoreRelease>,
+    _package_id: &str,
+    _compatibility: Option<&RawStoreCompatibility>,
+    _release: Option<&proto::ExtensionStoreRelease>,
 ) -> Option<proto::ExtensionManifest> {
-    manifest.map(|manifest| {
-        let mut normalized = raw_manifest_to_proto(manifest);
-        normalized.package_id = Some(package_id.to_string());
-        normalized.minimum_beam_version = compatibility.and_then(|compatibility| {
-            normalize_optional_string(compatibility.minimum_beam_version.clone())
-        });
-        normalized.release_channel = release
-            .and_then(|release| proto::ExtensionReleaseChannel::try_from(release.channel).ok())
-            .and_then(|channel| match channel {
-                proto::ExtensionReleaseChannel::Unspecified => None,
-                value => Some(value.as_str_name().to_string()),
-            });
-        if normalized.schema_version.is_none() {
-            normalized.schema_version = Some("1".to_string());
-        }
-        normalized
-    })
+    manifest.map(raw_manifest_to_proto)
 }
 
 fn raw_store_source_to_proto(source: Option<RawStoreSource>) -> proto::ExtensionStoreSource {
@@ -904,6 +1158,211 @@ fn raw_store_package_to_proto(
     })
 }
 
+fn raycast_listing_to_proto(listing: RawRaycastListing) -> Option<proto::ExtensionStorePackage> {
+    let slug = normalize_optional_string(listing.name.clone())?;
+    let title = normalize_optional_string(listing.title.clone())?;
+    let owner_handle = raycast_owner_handle(&listing);
+    let package_id = raycast_package_id(&owner_handle, &slug);
+    let synthetic_version = synthetic_raycast_version(&listing);
+    let release_published_at = timestamp_to_rfc3339(listing.updated_at)
+        .or_else(|| timestamp_to_rfc3339(listing.created_at));
+    let screenshots = raycast_screenshots(&listing, &slug);
+    let platforms = normalize_string_list(listing.platforms.clone().unwrap_or_default());
+    let manifest = proto::ExtensionManifest {
+        name: Some(slug.clone()),
+        title: Some(title.clone()),
+        description: normalize_optional_string(listing.description.clone()),
+        icon: listing
+            .icons
+            .as_ref()
+            .and_then(|icons| normalize_optional_string(icons.light.clone()))
+            .or_else(|| {
+                listing
+                    .icons
+                    .as_ref()
+                    .and_then(|icons| normalize_optional_string(icons.dark.clone()))
+            }),
+        author: raycast_manifest_author(&listing),
+        owner: Some(owner_handle.clone()),
+        commands: raycast_manifest_commands(&listing),
+        preferences: Vec::new(),
+        version: Some(synthetic_version.clone()),
+        access: normalize_optional_string(listing.access.clone()),
+        license: None,
+        platforms: platforms.clone(),
+        categories: normalize_string_list(listing.categories.clone()),
+        contributors: raycast_manifest_contributors(&listing.contributors),
+        past_contributors: Vec::new(),
+        keywords: normalize_string_list(listing.prompt_examples.clone()),
+    };
+
+    let release = proto::ExtensionStoreRelease {
+        version: synthetic_version,
+        download_url: normalize_optional_string(listing.download_url.clone())?,
+        published_at: release_published_at,
+        checksum_sha256: None,
+        changelog_url: normalize_optional_string(listing.source_url.clone()),
+        channel: proto::ExtensionReleaseChannel::Stable as i32,
+        channel_name: None,
+        prerelease: false,
+        artifacts: vec![proto::ExtensionStoreArtifact {
+            id: "raycast-zip".to_string(),
+            kind: proto::ExtensionPackageArtifactKind::Zip as i32,
+            download_url: normalize_optional_string(listing.download_url.clone())?,
+            file_name: Some(format!("{slug}.zip")),
+            mime_type: Some("application/zip".to_string()),
+            size_bytes: None,
+            checksums: Vec::new(),
+            verification: Some(proto::ExtensionStoreArtifactVerification {
+                signer: None,
+                signature: None,
+                provenance_url: None,
+                transparency_log_url: None,
+            }),
+            platforms: Vec::new(),
+            desktop_environments: Vec::new(),
+        }],
+        primary_artifact_id: Some("raycast-zip".to_string()),
+        release_notes: Some(proto::ExtensionStoreReleaseNotes {
+            summary: Some("Imported from the Raycast Store.".to_string()),
+            markdown: None,
+            changelog_url: normalize_optional_string(listing.source_url.clone()),
+        }),
+        published_by: normalize_optional_string(
+            listing
+                .author
+                .as_ref()
+                .and_then(|author| author.handle.clone())
+                .or_else(|| {
+                    listing
+                        .author
+                        .as_ref()
+                        .and_then(|author| author.name.clone())
+                }),
+        ),
+    };
+
+    let mut tags = listing.seo_categories.clone();
+    tags.extend(listing.tools.clone());
+
+    Some(proto::ExtensionStorePackage {
+        id: package_id,
+        slug: slug.clone(),
+        title,
+        summary: None,
+        description: normalize_optional_string(listing.description),
+        author: Some(proto::ExtensionStoreAuthor {
+            handle: owner_handle.clone(),
+            name: normalize_optional_string(
+                listing
+                    .owner
+                    .as_ref()
+                    .and_then(|owner| owner.name.clone()),
+            ),
+            avatar_url: normalize_optional_string(
+                listing
+                    .owner
+                    .as_ref()
+                    .and_then(|owner| owner.avatar.clone()),
+            ),
+            profile_url: listing.store_url.clone().map(|_| format!("https://www.raycast.com/{owner_handle}")),
+        }),
+        icons: Some(proto::ExtensionStoreIcons {
+            light: listing
+                .icons
+                .as_ref()
+                .and_then(|icons| normalize_optional_string(icons.light.clone())),
+            dark: listing
+                .icons
+                .and_then(|icons| normalize_optional_string(icons.dark)),
+        }),
+        categories: normalize_string_list(listing.categories),
+        tags: normalize_string_list(tags),
+        source: Some(raycast_store_source()),
+        verification: Some(proto::ExtensionStoreVerification {
+            status: proto::ExtensionVerificationStatus::Curated as i32,
+            label: Some("Raycast".to_string()),
+            verified_by: Some("Raycast Store".to_string()),
+            summary: Some(
+                "Imported from the official Raycast Store. Beam compatibility varies by extension."
+                    .to_string(),
+            ),
+        }),
+        compatibility: Some(proto::ExtensionStoreCompatibility {
+            platforms,
+            desktop_environments: Vec::new(),
+            minimum_beam_version: None,
+            maximum_beam_version: None,
+            linux_tested: false,
+            wayland_tested: false,
+            x11_tested: false,
+            notes: vec![
+                "Imported from the Raycast Store. Compatibility depends on Beam's Raycast API coverage."
+                    .to_string(),
+            ],
+        }),
+        latest_release: Some(release.clone()),
+        readme_url: normalize_optional_string(listing.readme_url.clone()),
+        source_url: normalize_optional_string(listing.source_url.clone()),
+        screenshots,
+        manifest: Some(manifest),
+        download_count: listing.download_count,
+        releases: vec![release],
+        default_channel: proto::ExtensionReleaseChannel::Stable as i32,
+        package_format_version: normalize_optional_string(listing.api_version),
+    })
+}
+
+async fn fetch_raycast_search_results(query: &str) -> Result<Vec<proto::ExtensionStorePackage>> {
+    let trimmed_query = query.trim();
+    if trimmed_query.is_empty() {
+        return Ok(Vec::new());
+    }
+
+    let endpoint = Url::parse_with_params(
+        &format!("{RAYCAST_STORE_API_BASE}/store_listings/search"),
+        &[("q", trimmed_query)],
+    )
+    .map_err(|error| {
+        ExtensionsError::Message(format!("invalid Raycast Store search URL: {error}"))
+    })?;
+    let response = reqwest::get(endpoint).await?;
+    if !response.status().is_success() {
+        return Err(ExtensionsError::Network(format!(
+            "Raycast Store search failed with status {}",
+            response.status()
+        )));
+    }
+
+    let payload: RawRaycastSearchResponse = response.json().await?;
+    let packages = payload
+        .data
+        .into_iter()
+        .filter_map(raycast_listing_to_proto)
+        .collect::<Vec<_>>();
+    cache_raycast_packages(&packages);
+    Ok(packages)
+}
+
+async fn fetch_raycast_package(
+    owner: &str,
+    slug: &str,
+) -> Result<Option<proto::ExtensionStorePackage>> {
+    let package_id = raycast_package_id(owner, slug);
+    if let Some(cached) = RAYCAST_PACKAGE_CACHE.lock().get(&package_id).cloned() {
+        return Ok(Some(cached));
+    }
+
+    let packages = fetch_raycast_search_results(slug).await?;
+    Ok(packages.into_iter().find(|package| {
+        package.slug.eq_ignore_ascii_case(slug)
+            && package
+                .author
+                .as_ref()
+                .is_some_and(|author| author.handle.eq_ignore_ascii_case(owner))
+    }))
+}
+
 fn load_catalog_from_str(
     content: &str,
     base: Option<&CatalogBase>,
@@ -1130,14 +1589,33 @@ fn preference_to_json(preference: &proto::PreferenceDefinition) -> JsonValue {
     })
 }
 
+fn argument_to_json(argument: &proto::ArgumentDefinition) -> JsonValue {
+    json!({
+        "name": argument.name,
+        "type": argument.r#type,
+        "placeholder": argument.placeholder,
+        "required": argument.required,
+        "data": argument.data.iter().map(|entry| {
+            json!({
+                "title": entry.title,
+                "value": entry.value,
+            })
+        }).collect::<Vec<_>>(),
+    })
+}
+
 fn command_manifest_to_json(command: &proto::CommandManifest) -> JsonValue {
     json!({
         "name": command.name,
         "title": command.title,
+        "subtitle": command.subtitle,
         "description": command.description,
         "icon": command.icon,
         "mode": command.mode,
         "interval": command.interval,
+        "keywords": command.keywords,
+        "arguments": command.arguments.iter().map(argument_to_json).collect::<Vec<_>>(),
+        "disabledByDefault": command.disabled_by_default,
         "preferences": command.preferences.iter().map(preference_to_json).collect::<Vec<_>>(),
     })
 }
@@ -1153,10 +1631,13 @@ fn manifest_to_json(manifest: &proto::ExtensionManifest) -> JsonValue {
         "commands": manifest.commands.iter().map(command_manifest_to_json).collect::<Vec<_>>(),
         "preferences": manifest.preferences.iter().map(preference_to_json).collect::<Vec<_>>(),
         "version": manifest.version,
-        "schemaVersion": manifest.schema_version,
-        "packageId": manifest.package_id,
-        "minimumBeamVersion": manifest.minimum_beam_version,
-        "releaseChannel": manifest.release_channel,
+        "access": manifest.access,
+        "license": manifest.license,
+        "platforms": manifest.platforms,
+        "categories": manifest.categories,
+        "contributors": manifest.contributors,
+        "pastContributors": manifest.past_contributors,
+        "keywords": manifest.keywords,
     })
 }
 
@@ -1196,6 +1677,8 @@ fn store_update_to_json(update: &proto::ExtensionStoreUpdate) -> JsonValue {
         "latestRelease": update.latest_release.as_ref().map(store_release_to_json),
         "verification": update.verification.as_ref().map(store_verification_to_json),
         "compatibility": update.compatibility.as_ref().map(store_compatibility_to_json),
+        "author": update.author.as_ref().map(store_author_to_json),
+        "source": update.source.as_ref().map(store_source_to_json),
     })
 }
 
@@ -1249,42 +1732,143 @@ fn package_key(package: &proto::ExtensionStorePackage) -> Option<String> {
     ))
 }
 
+fn package_search_priority(package: &proto::ExtensionStorePackage, query: &str) -> (i32, i32, i64) {
+    let normalized_query = query.trim().to_lowercase();
+    let slug = package.slug.trim().to_lowercase();
+    let title = package.title.trim().to_lowercase();
+    let author = package
+        .author
+        .as_ref()
+        .map(|author| author.handle.trim().to_lowercase())
+        .unwrap_or_default();
+
+    let match_score = if slug == normalized_query || title == normalized_query {
+        4
+    } else if slug.starts_with(&normalized_query)
+        || title.starts_with(&normalized_query)
+        || author.starts_with(&normalized_query)
+    {
+        3
+    } else if slug.contains(&normalized_query)
+        || title.contains(&normalized_query)
+        || author.contains(&normalized_query)
+    {
+        2
+    } else {
+        1
+    };
+
+    let source_score = match package.source.as_ref().map(|source| source.kind) {
+        Some(value) if value == proto::ExtensionStoreSourceKind::Beam as i32 => 3,
+        Some(value) if value == proto::ExtensionStoreSourceKind::Raycast as i32 => 2,
+        Some(value) if value == proto::ExtensionStoreSourceKind::Community as i32 => 1,
+        _ => 0,
+    };
+
+    (
+        match_score,
+        source_score,
+        package.download_count.unwrap_or_default(),
+    )
+}
+
+fn dedupe_packages(
+    packages: impl IntoIterator<Item = proto::ExtensionStorePackage>,
+) -> Vec<proto::ExtensionStorePackage> {
+    let mut deduped = HashMap::<String, proto::ExtensionStorePackage>::new();
+    for package in packages {
+        deduped.entry(package.id.clone()).or_insert(package);
+    }
+
+    deduped.into_values().collect()
+}
+
+fn find_catalog_package<'a>(
+    packages: &'a [proto::ExtensionStorePackage],
+    package_id_or_slug: &str,
+) -> Option<&'a proto::ExtensionStorePackage> {
+    let normalized_package_id = package_id_or_slug.trim().to_lowercase();
+    if normalized_package_id.is_empty() {
+        return None;
+    }
+
+    packages.iter().find(|package| {
+        package
+            .id
+            .trim()
+            .eq_ignore_ascii_case(&normalized_package_id)
+            || package
+                .slug
+                .trim()
+                .eq_ignore_ascii_case(&normalized_package_id)
+            || package_key(package)
+                .as_ref()
+                .is_some_and(|key| key == &normalized_package_id)
+    })
+}
+
+fn build_store_update(
+    package: &proto::ExtensionStorePackage,
+    installed_version: &str,
+) -> Option<proto::ExtensionStoreUpdate> {
+    let preferred_channel =
+        if package.default_channel == proto::ExtensionReleaseChannel::Unspecified as i32 {
+            proto::ExtensionReleaseChannel::Stable as i32
+        } else {
+            package.default_channel
+        };
+    let latest_release = select_preferred_release(&package.releases, preferred_channel)
+        .or_else(|| package.latest_release.clone())?;
+
+    let installed_version_semver = parse_version(installed_version)?;
+    let latest_version_semver = parse_version(&latest_release.version)?;
+    if latest_version_semver <= installed_version_semver {
+        return None;
+    }
+
+    Some(proto::ExtensionStoreUpdate {
+        id: package.id.clone(),
+        slug: package.slug.clone(),
+        title: package.title.clone(),
+        installed_version: installed_version.to_string(),
+        latest_version: latest_release.version.clone(),
+        latest_release: Some(latest_release),
+        verification: package.verification.clone(),
+        compatibility: package.compatibility.clone(),
+        author: package.author.clone(),
+        source: package.source.clone(),
+    })
+}
+
 pub(crate) async fn resolve_store_artifact(
     app: &AppHandle,
     package_id_or_slug: &str,
     release_version: Option<&str>,
     release_channel: Option<&str>,
 ) -> Result<ResolvedStoreArtifact> {
-    let catalog = load_catalog(app).await?;
-    let normalized_package_id = package_id_or_slug.trim().to_lowercase();
+    let normalized_package_id = package_id_or_slug.trim();
     if normalized_package_id.is_empty() {
         return Err(ExtensionsError::Message(
             "extension store package id is required".to_string(),
         ));
     }
 
-    let package = catalog
-        .packages
-        .iter()
-        .find(|package| {
-            package
-                .id
-                .trim()
-                .eq_ignore_ascii_case(&normalized_package_id)
-                || package
-                    .slug
-                    .trim()
-                    .eq_ignore_ascii_case(&normalized_package_id)
-                || package_key(package)
-                    .as_ref()
-                    .is_some_and(|key| key == &normalized_package_id)
-        })
-        .cloned()
-        .ok_or_else(|| {
+    let package = if let Some((owner, slug)) = parse_raycast_package_id(normalized_package_id) {
+        fetch_raycast_package(&owner, &slug).await?.ok_or_else(|| {
             ExtensionsError::Message(format!(
                 "extension store package not found: {package_id_or_slug}"
             ))
-        })?;
+        })?
+    } else {
+        let catalog = load_catalog(app).await?;
+        find_catalog_package(&catalog.packages, normalized_package_id)
+            .cloned()
+            .ok_or_else(|| {
+                ExtensionsError::Message(format!(
+                    "extension store package not found: {package_id_or_slug}"
+                ))
+            })?
+    };
 
     let requested_version = release_version
         .map(str::trim)
@@ -1336,15 +1920,24 @@ pub async fn search_extension_store(
     }
 
     let max_results = limit.unwrap_or(12).clamp(1, 100);
-    let packages = catalog
+    let mut packages = catalog
         .packages
         .iter()
         .filter(|package| search_matches(package, normalized_query))
-        .take(max_results)
-        .map(store_package_to_json)
+        .cloned()
         .collect::<Vec<_>>();
+    packages.extend(fetch_raycast_search_results(normalized_query).await?);
+    packages = dedupe_packages(packages);
+    packages.sort_by(|left, right| {
+        package_search_priority(right, normalized_query)
+            .cmp(&package_search_priority(left, normalized_query))
+            .then_with(|| left.title.cmp(&right.title))
+    });
+    packages.truncate(max_results);
 
-    Ok(json!({ "packages": packages }))
+    Ok(json!({
+        "packages": packages.iter().map(store_package_to_json).collect::<Vec<_>>(),
+    }))
 }
 
 #[tauri::command]
@@ -1352,17 +1945,19 @@ pub async fn get_extension_store_package(
     app: AppHandle,
     package_id: String,
 ) -> Result<Option<JsonValue>> {
-    let catalog = load_catalog(&app).await?;
     let normalized = package_id.trim();
     if normalized.is_empty() {
         return Ok(None);
     }
 
-    Ok(catalog
-        .packages
-        .iter()
-        .find(|package| package.id == normalized)
-        .map(store_package_to_json))
+    if let Some((owner, slug)) = parse_raycast_package_id(normalized) {
+        return fetch_raycast_package(&owner, &slug)
+            .await
+            .map(|package| package.map(|package| store_package_to_json(&package)));
+    }
+
+    let catalog = load_catalog(&app).await?;
+    Ok(find_catalog_package(&catalog.packages, normalized).map(store_package_to_json))
 }
 
 #[tauri::command]
@@ -1416,43 +2011,53 @@ pub async fn get_extension_store_updates(app: AppHandle) -> Result<JsonValue> {
     }
 
     let mut updates = Vec::new();
-    for (key, (_plugin, installed_version)) in installed_by_owner_and_slug {
-        let Some(package) = catalog_by_owner_and_slug.get(&key) else {
-            continue;
-        };
-        let preferred_channel =
-            if package.default_channel == proto::ExtensionReleaseChannel::Unspecified as i32 {
-                proto::ExtensionReleaseChannel::Stable as i32
-            } else {
-                package.default_channel
-            };
-        let Some(latest_release) = select_preferred_release(&package.releases, preferred_channel)
-            .or_else(|| package.latest_release.clone())
-        else {
-            continue;
-        };
-
-        let Some(installed_version_semver) = parse_version(&installed_version) else {
-            continue;
-        };
-        let Some(latest_version_semver) = parse_version(&latest_release.version) else {
-            continue;
-        };
-
-        if latest_version_semver <= installed_version_semver {
+    let mut raycast_candidates = Vec::<(String, String, String)>::new();
+    for (key, (plugin, installed_version)) in installed_by_owner_and_slug {
+        if let Some(package) = catalog_by_owner_and_slug.get(&key) {
+            if let Some(update) = build_store_update(package, &installed_version) {
+                updates.push(update);
+            }
             continue;
         }
 
-        updates.push(proto::ExtensionStoreUpdate {
-            id: package.id.clone(),
-            slug: package.slug.clone(),
-            title: package.title.clone(),
-            installed_version,
-            latest_version: latest_release.version.clone(),
-            latest_release: Some(latest_release),
-            verification: package.verification.clone(),
-            compatibility: package.compatibility.clone(),
-        });
+        let owner = plugin
+            .owner
+            .as_ref()
+            .map(|value| value.trim().to_lowercase())
+            .filter(|value| !value.is_empty());
+        let slug = plugin.plugin_name.trim().to_lowercase();
+        let Some(owner) = owner else {
+            continue;
+        };
+        if slug.is_empty() {
+            continue;
+        }
+
+        raycast_candidates.push((owner, slug, installed_version));
+    }
+
+    let raycast_updates = join_all(
+        raycast_candidates
+            .iter()
+            .map(|(owner, slug, _installed_version)| fetch_raycast_package(owner, slug)),
+    )
+    .await;
+
+    for ((owner, slug, installed_version), package_result) in
+        raycast_candidates.into_iter().zip(raycast_updates)
+    {
+        let package = match package_result {
+            Ok(Some(package)) => package,
+            Ok(None) => continue,
+            Err(error) => {
+                eprintln!("Failed to check Raycast update for {owner}/{slug}: {error}");
+                continue;
+            }
+        };
+
+        if let Some(update) = build_store_update(&package, &installed_version) {
+            updates.push(update);
+        }
     }
 
     Ok(json!({

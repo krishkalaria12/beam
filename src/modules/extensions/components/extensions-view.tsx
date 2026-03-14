@@ -62,6 +62,10 @@ function matchesInstalledSearch(entry: InstalledExtensionSummary, query: string)
     .includes(normalized);
 }
 
+function extensionKey(owner: string, slug: string): string {
+  return `${owner.trim().toLowerCase()}::${slug.trim().toLowerCase()}`;
+}
+
 function isMissingRequiredField(field: ExtensionPreferenceField, value: unknown): boolean {
   if (!field.required) {
     return false;
@@ -182,13 +186,18 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
 
     return (
       [...updateById.values()].find(
-        (entry) => entry.slug.toLowerCase() === selectedInstalled.slug.toLowerCase(),
+        (entry) =>
+          extensionKey(entry.author.handle, entry.slug) ===
+          extensionKey(selectedInstalled.owner, selectedInstalled.slug),
       ) ?? null
     );
   }, [selectedInstalled, updateById]);
 
-  const installedUpdateSlugs = useMemo(
-    () => new Set((storeUpdatesQuery.data ?? []).map((entry) => entry.slug.toLowerCase())),
+  const installedUpdateKeys = useMemo(
+    () =>
+      new Set(
+        (storeUpdatesQuery.data ?? []).map((entry) => extensionKey(entry.author.handle, entry.slug)),
+      ),
     [storeUpdatesQuery.data],
   );
 
@@ -436,7 +445,9 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
   const selectedStoreInstalled =
     selectedStoreDetail != null &&
     filteredInstalledExtensions.some(
-      (entry) => entry.slug.toLowerCase() === selectedStoreDetail.slug.toLowerCase(),
+      (entry) =>
+        extensionKey(entry.owner, entry.slug) ===
+        extensionKey(selectedStoreDetail.author.handle, selectedStoreDetail.slug),
     );
 
   return (
@@ -447,7 +458,7 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
         interactive
         value={extensionsUi.search}
         onChange={handleSearchChange}
-        placeholder="Search installed extensions or the Beam store"
+        placeholder="Search installed extensions or the extension store"
         rightSlot={
           <div className="flex items-center gap-2">
             <InlineBadge value={`${displayedInstalledExtensions.length} installed`} />
@@ -474,7 +485,7 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
             label="Search"
             value={
               normalizedSearch.length >= EXTENSIONS_STORE_SEARCH_MIN_LENGTH
-                ? "Catalog"
+                ? "Store"
                 : `Min ${EXTENSIONS_STORE_SEARCH_MIN_LENGTH}`
             }
           />
@@ -493,7 +504,7 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
               installedQuery.isError ? "Failed to load installed extensions." : null
             }
             selectedInstalledId={selectedRow?.kind === "installed" ? selectedRow.id : null}
-            installedUpdateSlugs={installedUpdateSlugs}
+            installedUpdateKeys={installedUpdateKeys}
             onSelectInstalled={(id) => setSelectedRow({ kind: "installed", id })}
             search={normalizedSearch}
             minimumSearchLength={EXTENSIONS_STORE_SEARCH_MIN_LENGTH}

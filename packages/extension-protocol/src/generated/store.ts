@@ -12,6 +12,7 @@ export enum ExtensionStoreSourceKind {
   EXTENSION_STORE_SOURCE_KIND_UNSPECIFIED = 0,
   EXTENSION_STORE_SOURCE_KIND_BEAM = 1,
   EXTENSION_STORE_SOURCE_KIND_COMMUNITY = 2,
+  EXTENSION_STORE_SOURCE_KIND_RAYCAST = 3,
   UNRECOGNIZED = -1,
 }
 
@@ -26,6 +27,9 @@ export function extensionStoreSourceKindFromJSON(object: any): ExtensionStoreSou
     case 2:
     case "EXTENSION_STORE_SOURCE_KIND_COMMUNITY":
       return ExtensionStoreSourceKind.EXTENSION_STORE_SOURCE_KIND_COMMUNITY;
+    case 3:
+    case "EXTENSION_STORE_SOURCE_KIND_RAYCAST":
+      return ExtensionStoreSourceKind.EXTENSION_STORE_SOURCE_KIND_RAYCAST;
     case -1:
     case "UNRECOGNIZED":
     default:
@@ -41,6 +45,8 @@ export function extensionStoreSourceKindToJSON(object: ExtensionStoreSourceKind)
       return "EXTENSION_STORE_SOURCE_KIND_BEAM";
     case ExtensionStoreSourceKind.EXTENSION_STORE_SOURCE_KIND_COMMUNITY:
       return "EXTENSION_STORE_SOURCE_KIND_COMMUNITY";
+    case ExtensionStoreSourceKind.EXTENSION_STORE_SOURCE_KIND_RAYCAST:
+      return "EXTENSION_STORE_SOURCE_KIND_RAYCAST";
     case ExtensionStoreSourceKind.UNRECOGNIZED:
     default:
       return "UNRECOGNIZED";
@@ -348,6 +354,8 @@ export interface ExtensionStoreUpdate {
   latestRelease: ExtensionStoreRelease | undefined;
   verification: ExtensionStoreVerification | undefined;
   compatibility: ExtensionStoreCompatibility | undefined;
+  author: ExtensionStoreAuthor | undefined;
+  source: ExtensionStoreSource | undefined;
 }
 
 export interface ExtensionStoreUpdateResult {
@@ -2435,6 +2443,8 @@ function createBaseExtensionStoreUpdate(): ExtensionStoreUpdate {
     latestRelease: undefined,
     verification: undefined,
     compatibility: undefined,
+    author: undefined,
+    source: undefined,
   };
 }
 
@@ -2463,6 +2473,12 @@ export const ExtensionStoreUpdate: MessageFns<ExtensionStoreUpdate> = {
     }
     if (message.compatibility !== undefined) {
       ExtensionStoreCompatibility.encode(message.compatibility, writer.uint32(66).fork()).join();
+    }
+    if (message.author !== undefined) {
+      ExtensionStoreAuthor.encode(message.author, writer.uint32(74).fork()).join();
+    }
+    if (message.source !== undefined) {
+      ExtensionStoreSource.encode(message.source, writer.uint32(82).fork()).join();
     }
     return writer;
   },
@@ -2538,6 +2554,22 @@ export const ExtensionStoreUpdate: MessageFns<ExtensionStoreUpdate> = {
           message.compatibility = ExtensionStoreCompatibility.decode(reader, reader.uint32());
           continue;
         }
+        case 9: {
+          if (tag !== 74) {
+            break;
+          }
+
+          message.author = ExtensionStoreAuthor.decode(reader, reader.uint32());
+          continue;
+        }
+        case 10: {
+          if (tag !== 82) {
+            break;
+          }
+
+          message.source = ExtensionStoreSource.decode(reader, reader.uint32());
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -2571,6 +2603,8 @@ export const ExtensionStoreUpdate: MessageFns<ExtensionStoreUpdate> = {
       compatibility: isSet(object.compatibility)
         ? ExtensionStoreCompatibility.fromJSON(object.compatibility)
         : undefined,
+      author: isSet(object.author) ? ExtensionStoreAuthor.fromJSON(object.author) : undefined,
+      source: isSet(object.source) ? ExtensionStoreSource.fromJSON(object.source) : undefined,
     };
   },
 
@@ -2600,6 +2634,12 @@ export const ExtensionStoreUpdate: MessageFns<ExtensionStoreUpdate> = {
     if (message.compatibility !== undefined) {
       obj.compatibility = ExtensionStoreCompatibility.toJSON(message.compatibility);
     }
+    if (message.author !== undefined) {
+      obj.author = ExtensionStoreAuthor.toJSON(message.author);
+    }
+    if (message.source !== undefined) {
+      obj.source = ExtensionStoreSource.toJSON(message.source);
+    }
     return obj;
   },
 
@@ -2621,6 +2661,12 @@ export const ExtensionStoreUpdate: MessageFns<ExtensionStoreUpdate> = {
       : undefined;
     message.compatibility = (object.compatibility !== undefined && object.compatibility !== null)
       ? ExtensionStoreCompatibility.fromPartial(object.compatibility)
+      : undefined;
+    message.author = (object.author !== undefined && object.author !== null)
+      ? ExtensionStoreAuthor.fromPartial(object.author)
+      : undefined;
+    message.source = (object.source !== undefined && object.source !== null)
+      ? ExtensionStoreSource.fromPartial(object.source)
       : undefined;
     return message;
   },

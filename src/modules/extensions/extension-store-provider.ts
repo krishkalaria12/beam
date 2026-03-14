@@ -92,6 +92,8 @@ function toInstallCommand(entry: ExtensionStoreListing): CommandDescriptor {
   const fullSlug = `${author}/${slug}`;
   const iconReference =
     entry.icons?.light?.trim() || entry.icons?.dark?.trim() || entry.author.avatar?.trim() || "";
+  const sourceId = entry.source.id.trim().toLowerCase();
+  const sourceLabel = entry.source.label.trim();
 
   return {
     id: `extensions.store.install.${author}.${slug}`.toLowerCase(),
@@ -100,17 +102,20 @@ function toInstallCommand(entry: ExtensionStoreListing): CommandDescriptor {
     keywords: [
       "extension",
       "install extension",
-      "beam extension",
+      "extension store",
+      "raycast extension",
+      "raycast store",
       entry.title,
       entry.slug,
       entry.description,
       author,
       fullSlug,
+      sourceLabel,
     ]
       .filter((part): part is string => typeof part === "string")
       .map((part) => part.trim())
       .filter((part) => part.length > 0),
-    endText: "beam store",
+    endText: sourceId === "raycast" ? "raycast store" : "store",
     icon: iconReference ? `extension-icon:${iconReference}` : "extension",
     kind: "provider-item",
     scope: EXTENSIONS_PROVIDER_SCOPE,

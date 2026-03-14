@@ -22,6 +22,11 @@ export interface PreferenceOption {
   value: string;
 }
 
+export interface ArgumentOption {
+  title: string;
+  value: string;
+}
+
 export interface PreferenceDefinition {
   name: string;
   type: string;
@@ -33,6 +38,14 @@ export interface PreferenceDefinition {
   label?: string | undefined;
 }
 
+export interface ArgumentDefinition {
+  name: string;
+  type: string;
+  placeholder?: string | undefined;
+  required?: boolean | undefined;
+  data: ArgumentOption[];
+}
+
 export interface CommandManifest {
   name: string;
   title?: string | undefined;
@@ -41,6 +54,10 @@ export interface CommandManifest {
   mode?: string | undefined;
   interval?: string | undefined;
   preferences: PreferenceDefinition[];
+  subtitle?: string | undefined;
+  keywords: string[];
+  arguments: ArgumentDefinition[];
+  disabledByDefault?: boolean | undefined;
 }
 
 export interface ExtensionManifest {
@@ -53,10 +70,13 @@ export interface ExtensionManifest {
   commands: CommandManifest[];
   preferences: PreferenceDefinition[];
   version?: string | undefined;
-  schemaVersion?: string | undefined;
-  packageId?: string | undefined;
-  minimumBeamVersion?: string | undefined;
-  releaseChannel?: string | undefined;
+  access?: string | undefined;
+  license?: string | undefined;
+  platforms: string[];
+  categories: string[];
+  contributors: string[];
+  pastContributors: string[];
+  keywords: string[];
 }
 
 export interface DiscoveredPlugin {
@@ -74,6 +94,16 @@ export interface DiscoveredPlugin {
   author: ManifestAuthor | undefined;
   owner?: string | undefined;
   version?: string | undefined;
+  subtitle?: string | undefined;
+  keywords: string[];
+  arguments: ArgumentDefinition[];
+  disabledByDefault?: boolean | undefined;
+  access?: string | undefined;
+  license?: string | undefined;
+  platforms: string[];
+  categories: string[];
+  contributors: string[];
+  pastContributors: string[];
 }
 
 function createBaseAuthorName(): AuthorName {
@@ -288,6 +318,82 @@ export const PreferenceOption: MessageFns<PreferenceOption> = {
   },
 };
 
+function createBaseArgumentOption(): ArgumentOption {
+  return { title: "", value: "" };
+}
+
+export const ArgumentOption: MessageFns<ArgumentOption> = {
+  encode(message: ArgumentOption, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.title !== "") {
+      writer.uint32(10).string(message.title);
+    }
+    if (message.value !== "") {
+      writer.uint32(18).string(message.value);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ArgumentOption {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseArgumentOption();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.title = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.value = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ArgumentOption {
+    return {
+      title: isSet(object.title) ? globalThis.String(object.title) : "",
+      value: isSet(object.value) ? globalThis.String(object.value) : "",
+    };
+  },
+
+  toJSON(message: ArgumentOption): unknown {
+    const obj: any = {};
+    if (message.title !== "") {
+      obj.title = message.title;
+    }
+    if (message.value !== "") {
+      obj.value = message.value;
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<ArgumentOption>): ArgumentOption {
+    return ArgumentOption.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<ArgumentOption>): ArgumentOption {
+    const message = createBaseArgumentOption();
+    message.title = object.title ?? "";
+    message.value = object.value ?? "";
+    return message;
+  },
+};
+
 function createBasePreferenceDefinition(): PreferenceDefinition {
   return {
     name: "",
@@ -473,6 +579,130 @@ export const PreferenceDefinition: MessageFns<PreferenceDefinition> = {
   },
 };
 
+function createBaseArgumentDefinition(): ArgumentDefinition {
+  return { name: "", type: "", placeholder: undefined, required: undefined, data: [] };
+}
+
+export const ArgumentDefinition: MessageFns<ArgumentDefinition> = {
+  encode(message: ArgumentDefinition, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.name !== "") {
+      writer.uint32(10).string(message.name);
+    }
+    if (message.type !== "") {
+      writer.uint32(18).string(message.type);
+    }
+    if (message.placeholder !== undefined) {
+      writer.uint32(26).string(message.placeholder);
+    }
+    if (message.required !== undefined) {
+      writer.uint32(32).bool(message.required);
+    }
+    for (const v of message.data) {
+      ArgumentOption.encode(v!, writer.uint32(42).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ArgumentDefinition {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseArgumentDefinition();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.name = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.type = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.placeholder = reader.string();
+          continue;
+        }
+        case 4: {
+          if (tag !== 32) {
+            break;
+          }
+
+          message.required = reader.bool();
+          continue;
+        }
+        case 5: {
+          if (tag !== 42) {
+            break;
+          }
+
+          message.data.push(ArgumentOption.decode(reader, reader.uint32()));
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ArgumentDefinition {
+    return {
+      name: isSet(object.name) ? globalThis.String(object.name) : "",
+      type: isSet(object.type) ? globalThis.String(object.type) : "",
+      placeholder: isSet(object.placeholder) ? globalThis.String(object.placeholder) : undefined,
+      required: isSet(object.required) ? globalThis.Boolean(object.required) : undefined,
+      data: globalThis.Array.isArray(object?.data) ? object.data.map((e: any) => ArgumentOption.fromJSON(e)) : [],
+    };
+  },
+
+  toJSON(message: ArgumentDefinition): unknown {
+    const obj: any = {};
+    if (message.name !== "") {
+      obj.name = message.name;
+    }
+    if (message.type !== "") {
+      obj.type = message.type;
+    }
+    if (message.placeholder !== undefined) {
+      obj.placeholder = message.placeholder;
+    }
+    if (message.required !== undefined) {
+      obj.required = message.required;
+    }
+    if (message.data?.length) {
+      obj.data = message.data.map((e) => ArgumentOption.toJSON(e));
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<ArgumentDefinition>): ArgumentDefinition {
+    return ArgumentDefinition.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<ArgumentDefinition>): ArgumentDefinition {
+    const message = createBaseArgumentDefinition();
+    message.name = object.name ?? "";
+    message.type = object.type ?? "";
+    message.placeholder = object.placeholder ?? undefined;
+    message.required = object.required ?? undefined;
+    message.data = object.data?.map((e) => ArgumentOption.fromPartial(e)) || [];
+    return message;
+  },
+};
+
 function createBaseCommandManifest(): CommandManifest {
   return {
     name: "",
@@ -482,6 +712,10 @@ function createBaseCommandManifest(): CommandManifest {
     mode: undefined,
     interval: undefined,
     preferences: [],
+    subtitle: undefined,
+    keywords: [],
+    arguments: [],
+    disabledByDefault: undefined,
   };
 }
 
@@ -507,6 +741,18 @@ export const CommandManifest: MessageFns<CommandManifest> = {
     }
     for (const v of message.preferences) {
       PreferenceDefinition.encode(v!, writer.uint32(58).fork()).join();
+    }
+    if (message.subtitle !== undefined) {
+      writer.uint32(66).string(message.subtitle);
+    }
+    for (const v of message.keywords) {
+      writer.uint32(74).string(v!);
+    }
+    for (const v of message.arguments) {
+      ArgumentDefinition.encode(v!, writer.uint32(82).fork()).join();
+    }
+    if (message.disabledByDefault !== undefined) {
+      writer.uint32(88).bool(message.disabledByDefault);
     }
     return writer;
   },
@@ -574,6 +820,38 @@ export const CommandManifest: MessageFns<CommandManifest> = {
           message.preferences.push(PreferenceDefinition.decode(reader, reader.uint32()));
           continue;
         }
+        case 8: {
+          if (tag !== 66) {
+            break;
+          }
+
+          message.subtitle = reader.string();
+          continue;
+        }
+        case 9: {
+          if (tag !== 74) {
+            break;
+          }
+
+          message.keywords.push(reader.string());
+          continue;
+        }
+        case 10: {
+          if (tag !== 82) {
+            break;
+          }
+
+          message.arguments.push(ArgumentDefinition.decode(reader, reader.uint32()));
+          continue;
+        }
+        case 11: {
+          if (tag !== 88) {
+            break;
+          }
+
+          message.disabledByDefault = reader.bool();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -594,6 +872,16 @@ export const CommandManifest: MessageFns<CommandManifest> = {
       preferences: globalThis.Array.isArray(object?.preferences)
         ? object.preferences.map((e: any) => PreferenceDefinition.fromJSON(e))
         : [],
+      subtitle: isSet(object.subtitle) ? globalThis.String(object.subtitle) : undefined,
+      keywords: globalThis.Array.isArray(object?.keywords) ? object.keywords.map((e: any) => globalThis.String(e)) : [],
+      arguments: globalThis.Array.isArray(object?.arguments)
+        ? object.arguments.map((e: any) => ArgumentDefinition.fromJSON(e))
+        : [],
+      disabledByDefault: isSet(object.disabledByDefault)
+        ? globalThis.Boolean(object.disabledByDefault)
+        : isSet(object.disabled_by_default)
+        ? globalThis.Boolean(object.disabled_by_default)
+        : undefined,
     };
   },
 
@@ -620,6 +908,18 @@ export const CommandManifest: MessageFns<CommandManifest> = {
     if (message.preferences?.length) {
       obj.preferences = message.preferences.map((e) => PreferenceDefinition.toJSON(e));
     }
+    if (message.subtitle !== undefined) {
+      obj.subtitle = message.subtitle;
+    }
+    if (message.keywords?.length) {
+      obj.keywords = message.keywords;
+    }
+    if (message.arguments?.length) {
+      obj.arguments = message.arguments.map((e) => ArgumentDefinition.toJSON(e));
+    }
+    if (message.disabledByDefault !== undefined) {
+      obj.disabledByDefault = message.disabledByDefault;
+    }
     return obj;
   },
 
@@ -635,6 +935,10 @@ export const CommandManifest: MessageFns<CommandManifest> = {
     message.mode = object.mode ?? undefined;
     message.interval = object.interval ?? undefined;
     message.preferences = object.preferences?.map((e) => PreferenceDefinition.fromPartial(e)) || [];
+    message.subtitle = object.subtitle ?? undefined;
+    message.keywords = object.keywords?.map((e) => e) || [];
+    message.arguments = object.arguments?.map((e) => ArgumentDefinition.fromPartial(e)) || [];
+    message.disabledByDefault = object.disabledByDefault ?? undefined;
     return message;
   },
 };
@@ -650,10 +954,13 @@ function createBaseExtensionManifest(): ExtensionManifest {
     commands: [],
     preferences: [],
     version: undefined,
-    schemaVersion: undefined,
-    packageId: undefined,
-    minimumBeamVersion: undefined,
-    releaseChannel: undefined,
+    access: undefined,
+    license: undefined,
+    platforms: [],
+    categories: [],
+    contributors: [],
+    pastContributors: [],
+    keywords: [],
   };
 }
 
@@ -686,17 +993,26 @@ export const ExtensionManifest: MessageFns<ExtensionManifest> = {
     if (message.version !== undefined) {
       writer.uint32(74).string(message.version);
     }
-    if (message.schemaVersion !== undefined) {
-      writer.uint32(82).string(message.schemaVersion);
+    if (message.access !== undefined) {
+      writer.uint32(114).string(message.access);
     }
-    if (message.packageId !== undefined) {
-      writer.uint32(90).string(message.packageId);
+    if (message.license !== undefined) {
+      writer.uint32(122).string(message.license);
     }
-    if (message.minimumBeamVersion !== undefined) {
-      writer.uint32(98).string(message.minimumBeamVersion);
+    for (const v of message.platforms) {
+      writer.uint32(130).string(v!);
     }
-    if (message.releaseChannel !== undefined) {
-      writer.uint32(106).string(message.releaseChannel);
+    for (const v of message.categories) {
+      writer.uint32(138).string(v!);
+    }
+    for (const v of message.contributors) {
+      writer.uint32(146).string(v!);
+    }
+    for (const v of message.pastContributors) {
+      writer.uint32(154).string(v!);
+    }
+    for (const v of message.keywords) {
+      writer.uint32(162).string(v!);
     }
     return writer;
   },
@@ -780,36 +1096,60 @@ export const ExtensionManifest: MessageFns<ExtensionManifest> = {
           message.version = reader.string();
           continue;
         }
-        case 10: {
-          if (tag !== 82) {
+        case 14: {
+          if (tag !== 114) {
             break;
           }
 
-          message.schemaVersion = reader.string();
+          message.access = reader.string();
           continue;
         }
-        case 11: {
-          if (tag !== 90) {
+        case 15: {
+          if (tag !== 122) {
             break;
           }
 
-          message.packageId = reader.string();
+          message.license = reader.string();
           continue;
         }
-        case 12: {
-          if (tag !== 98) {
+        case 16: {
+          if (tag !== 130) {
             break;
           }
 
-          message.minimumBeamVersion = reader.string();
+          message.platforms.push(reader.string());
           continue;
         }
-        case 13: {
-          if (tag !== 106) {
+        case 17: {
+          if (tag !== 138) {
             break;
           }
 
-          message.releaseChannel = reader.string();
+          message.categories.push(reader.string());
+          continue;
+        }
+        case 18: {
+          if (tag !== 146) {
+            break;
+          }
+
+          message.contributors.push(reader.string());
+          continue;
+        }
+        case 19: {
+          if (tag !== 154) {
+            break;
+          }
+
+          message.pastContributors.push(reader.string());
+          continue;
+        }
+        case 20: {
+          if (tag !== 162) {
+            break;
+          }
+
+          message.keywords.push(reader.string());
           continue;
         }
       }
@@ -836,26 +1176,25 @@ export const ExtensionManifest: MessageFns<ExtensionManifest> = {
         ? object.preferences.map((e: any) => PreferenceDefinition.fromJSON(e))
         : [],
       version: isSet(object.version) ? globalThis.String(object.version) : undefined,
-      schemaVersion: isSet(object.schemaVersion)
-        ? globalThis.String(object.schemaVersion)
-        : isSet(object.schema_version)
-        ? globalThis.String(object.schema_version)
-        : undefined,
-      packageId: isSet(object.packageId)
-        ? globalThis.String(object.packageId)
-        : isSet(object.package_id)
-        ? globalThis.String(object.package_id)
-        : undefined,
-      minimumBeamVersion: isSet(object.minimumBeamVersion)
-        ? globalThis.String(object.minimumBeamVersion)
-        : isSet(object.minimum_beam_version)
-        ? globalThis.String(object.minimum_beam_version)
-        : undefined,
-      releaseChannel: isSet(object.releaseChannel)
-        ? globalThis.String(object.releaseChannel)
-        : isSet(object.release_channel)
-        ? globalThis.String(object.release_channel)
-        : undefined,
+      access: isSet(object.access) ? globalThis.String(object.access) : undefined,
+      license: isSet(object.license) ? globalThis.String(object.license) : undefined,
+      platforms: globalThis.Array.isArray(object?.platforms)
+        ? object.platforms.map((e: any) => globalThis.String(e))
+        : [],
+      categories: globalThis.Array.isArray(object?.categories)
+        ? object.categories.map((e: any) => globalThis.String(e))
+        : [],
+      contributors: globalThis.Array.isArray(object?.contributors)
+        ? object.contributors.map((e: any) => globalThis.String(e))
+        : [],
+      pastContributors: globalThis.Array.isArray(object?.pastContributors)
+        ? object.pastContributors.map((e: any) => globalThis.String(e))
+        : globalThis.Array.isArray(object?.past_contributors)
+        ? object.past_contributors.map((e: any) => globalThis.String(e))
+        : [],
+      keywords: globalThis.Array.isArray(object?.keywords)
+        ? object.keywords.map((e: any) => globalThis.String(e))
+        : [],
     };
   },
 
@@ -888,17 +1227,26 @@ export const ExtensionManifest: MessageFns<ExtensionManifest> = {
     if (message.version !== undefined) {
       obj.version = message.version;
     }
-    if (message.schemaVersion !== undefined) {
-      obj.schemaVersion = message.schemaVersion;
+    if (message.access !== undefined) {
+      obj.access = message.access;
     }
-    if (message.packageId !== undefined) {
-      obj.packageId = message.packageId;
+    if (message.license !== undefined) {
+      obj.license = message.license;
     }
-    if (message.minimumBeamVersion !== undefined) {
-      obj.minimumBeamVersion = message.minimumBeamVersion;
+    if (message.platforms?.length) {
+      obj.platforms = message.platforms;
     }
-    if (message.releaseChannel !== undefined) {
-      obj.releaseChannel = message.releaseChannel;
+    if (message.categories?.length) {
+      obj.categories = message.categories;
+    }
+    if (message.contributors?.length) {
+      obj.contributors = message.contributors;
+    }
+    if (message.pastContributors?.length) {
+      obj.pastContributors = message.pastContributors;
+    }
+    if (message.keywords?.length) {
+      obj.keywords = message.keywords;
     }
     return obj;
   },
@@ -919,10 +1267,13 @@ export const ExtensionManifest: MessageFns<ExtensionManifest> = {
     message.commands = object.commands?.map((e) => CommandManifest.fromPartial(e)) || [];
     message.preferences = object.preferences?.map((e) => PreferenceDefinition.fromPartial(e)) || [];
     message.version = object.version ?? undefined;
-    message.schemaVersion = object.schemaVersion ?? undefined;
-    message.packageId = object.packageId ?? undefined;
-    message.minimumBeamVersion = object.minimumBeamVersion ?? undefined;
-    message.releaseChannel = object.releaseChannel ?? undefined;
+    message.access = object.access ?? undefined;
+    message.license = object.license ?? undefined;
+    message.platforms = object.platforms?.map((e) => e) || [];
+    message.categories = object.categories?.map((e) => e) || [];
+    message.contributors = object.contributors?.map((e) => e) || [];
+    message.pastContributors = object.pastContributors?.map((e) => e) || [];
+    message.keywords = object.keywords?.map((e) => e) || [];
     return message;
   },
 };
@@ -943,6 +1294,16 @@ function createBaseDiscoveredPlugin(): DiscoveredPlugin {
     author: undefined,
     owner: undefined,
     version: undefined,
+    subtitle: undefined,
+    keywords: [],
+    arguments: [],
+    disabledByDefault: undefined,
+    access: undefined,
+    license: undefined,
+    platforms: [],
+    categories: [],
+    contributors: [],
+    pastContributors: [],
   };
 }
 
@@ -989,6 +1350,36 @@ export const DiscoveredPlugin: MessageFns<DiscoveredPlugin> = {
     }
     if (message.version !== undefined) {
       writer.uint32(114).string(message.version);
+    }
+    if (message.subtitle !== undefined) {
+      writer.uint32(122).string(message.subtitle);
+    }
+    for (const v of message.keywords) {
+      writer.uint32(130).string(v!);
+    }
+    for (const v of message.arguments) {
+      ArgumentDefinition.encode(v!, writer.uint32(138).fork()).join();
+    }
+    if (message.disabledByDefault !== undefined) {
+      writer.uint32(144).bool(message.disabledByDefault);
+    }
+    if (message.access !== undefined) {
+      writer.uint32(154).string(message.access);
+    }
+    if (message.license !== undefined) {
+      writer.uint32(162).string(message.license);
+    }
+    for (const v of message.platforms) {
+      writer.uint32(170).string(v!);
+    }
+    for (const v of message.categories) {
+      writer.uint32(178).string(v!);
+    }
+    for (const v of message.contributors) {
+      writer.uint32(186).string(v!);
+    }
+    for (const v of message.pastContributors) {
+      writer.uint32(194).string(v!);
     }
     return writer;
   },
@@ -1112,6 +1503,86 @@ export const DiscoveredPlugin: MessageFns<DiscoveredPlugin> = {
           message.version = reader.string();
           continue;
         }
+        case 15: {
+          if (tag !== 122) {
+            break;
+          }
+
+          message.subtitle = reader.string();
+          continue;
+        }
+        case 16: {
+          if (tag !== 130) {
+            break;
+          }
+
+          message.keywords.push(reader.string());
+          continue;
+        }
+        case 17: {
+          if (tag !== 138) {
+            break;
+          }
+
+          message.arguments.push(ArgumentDefinition.decode(reader, reader.uint32()));
+          continue;
+        }
+        case 18: {
+          if (tag !== 144) {
+            break;
+          }
+
+          message.disabledByDefault = reader.bool();
+          continue;
+        }
+        case 19: {
+          if (tag !== 154) {
+            break;
+          }
+
+          message.access = reader.string();
+          continue;
+        }
+        case 20: {
+          if (tag !== 162) {
+            break;
+          }
+
+          message.license = reader.string();
+          continue;
+        }
+        case 21: {
+          if (tag !== 170) {
+            break;
+          }
+
+          message.platforms.push(reader.string());
+          continue;
+        }
+        case 22: {
+          if (tag !== 178) {
+            break;
+          }
+
+          message.categories.push(reader.string());
+          continue;
+        }
+        case 23: {
+          if (tag !== 186) {
+            break;
+          }
+
+          message.contributors.push(reader.string());
+          continue;
+        }
+        case 24: {
+          if (tag !== 194) {
+            break;
+          }
+
+          message.pastContributors.push(reader.string());
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -1159,6 +1630,34 @@ export const DiscoveredPlugin: MessageFns<DiscoveredPlugin> = {
       author: isSet(object.author) ? ManifestAuthor.fromJSON(object.author) : undefined,
       owner: isSet(object.owner) ? globalThis.String(object.owner) : undefined,
       version: isSet(object.version) ? globalThis.String(object.version) : undefined,
+      subtitle: isSet(object.subtitle) ? globalThis.String(object.subtitle) : undefined,
+      keywords: globalThis.Array.isArray(object?.keywords)
+        ? object.keywords.map((e: any) => globalThis.String(e))
+        : [],
+      arguments: globalThis.Array.isArray(object?.arguments)
+        ? object.arguments.map((e: any) => ArgumentDefinition.fromJSON(e))
+        : [],
+      disabledByDefault: isSet(object.disabledByDefault)
+        ? globalThis.Boolean(object.disabledByDefault)
+        : isSet(object.disabled_by_default)
+        ? globalThis.Boolean(object.disabled_by_default)
+        : undefined,
+      access: isSet(object.access) ? globalThis.String(object.access) : undefined,
+      license: isSet(object.license) ? globalThis.String(object.license) : undefined,
+      platforms: globalThis.Array.isArray(object?.platforms)
+        ? object.platforms.map((e: any) => globalThis.String(e))
+        : [],
+      categories: globalThis.Array.isArray(object?.categories)
+        ? object.categories.map((e: any) => globalThis.String(e))
+        : [],
+      contributors: globalThis.Array.isArray(object?.contributors)
+        ? object.contributors.map((e: any) => globalThis.String(e))
+        : [],
+      pastContributors: globalThis.Array.isArray(object?.pastContributors)
+        ? object.pastContributors.map((e: any) => globalThis.String(e))
+        : globalThis.Array.isArray(object?.past_contributors)
+        ? object.past_contributors.map((e: any) => globalThis.String(e))
+        : [],
     };
   },
 
@@ -1206,6 +1705,36 @@ export const DiscoveredPlugin: MessageFns<DiscoveredPlugin> = {
     if (message.version !== undefined) {
       obj.version = message.version;
     }
+    if (message.subtitle !== undefined) {
+      obj.subtitle = message.subtitle;
+    }
+    if (message.keywords?.length) {
+      obj.keywords = message.keywords;
+    }
+    if (message.arguments?.length) {
+      obj.arguments = message.arguments.map((e) => ArgumentDefinition.toJSON(e));
+    }
+    if (message.disabledByDefault !== undefined) {
+      obj.disabledByDefault = message.disabledByDefault;
+    }
+    if (message.access !== undefined) {
+      obj.access = message.access;
+    }
+    if (message.license !== undefined) {
+      obj.license = message.license;
+    }
+    if (message.platforms?.length) {
+      obj.platforms = message.platforms;
+    }
+    if (message.categories?.length) {
+      obj.categories = message.categories;
+    }
+    if (message.contributors?.length) {
+      obj.contributors = message.contributors;
+    }
+    if (message.pastContributors?.length) {
+      obj.pastContributors = message.pastContributors;
+    }
     return obj;
   },
 
@@ -1230,6 +1759,16 @@ export const DiscoveredPlugin: MessageFns<DiscoveredPlugin> = {
       : undefined;
     message.owner = object.owner ?? undefined;
     message.version = object.version ?? undefined;
+    message.subtitle = object.subtitle ?? undefined;
+    message.keywords = object.keywords?.map((e) => e) || [];
+    message.arguments = object.arguments?.map((e) => ArgumentDefinition.fromPartial(e)) || [];
+    message.disabledByDefault = object.disabledByDefault ?? undefined;
+    message.access = object.access ?? undefined;
+    message.license = object.license ?? undefined;
+    message.platforms = object.platforms?.map((e) => e) || [];
+    message.categories = object.categories?.map((e) => e) || [];
+    message.contributors = object.contributors?.map((e) => e) || [];
+    message.pastContributors = object.pastContributors?.map((e) => e) || [];
     return message;
   },
 };

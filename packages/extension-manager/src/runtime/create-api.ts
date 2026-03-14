@@ -9,7 +9,6 @@ type LocalStorageApi = {
 };
 
 export type BeamRuntimeApiDependencies = {
-  raycastUtils: Record<string, unknown>;
   LocalStorage: LocalStorageApi;
   randomId: () => string;
   Alert: Record<string, unknown>;
@@ -168,7 +167,6 @@ export const createRaycastRuntimeApi = (deps: BeamRuntimeApiDependencies) => {
   };
 
   return {
-    ...deps.raycastUtils,
     LocalStorage: deps.LocalStorage,
     allLocalStorageItems: deps.LocalStorage.allItems,
     getLocalStorageItem: deps.LocalStorage.getItem,

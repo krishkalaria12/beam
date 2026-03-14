@@ -67,6 +67,7 @@ export function ExtensionRuntimeShell({ state, onOpenExtensions }: ExtensionRunt
         style={searchBarStyle}
         value={showSearchInput ? state.searchText : ""}
         onChange={showSearchInput ? state.handleSearchInputChange : undefined}
+        onKeyDown={showSearchInput ? state.handleSearchInputKeyDown : undefined}
         placeholder={searchPlaceholder}
         inputContainerClassName={["ext-search-input-container", searchInputContainerClassName].filter(Boolean).join(" ")}
         inputClassName={["ext-search-input", searchInputClassName].filter(Boolean).join(" ")}

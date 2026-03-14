@@ -53,18 +53,15 @@ export function collectActions(
 
   const results: FlattenedAction[] = [];
   const visited = new Set<number>();
-  const stack = [rootActionNodeId];
-
-  while (stack.length > 0) {
-    const nodeId = stack.pop();
+  const visitNode = (nodeId?: number) => {
     if (!nodeId || visited.has(nodeId)) {
-      continue;
+      return;
     }
     visited.add(nodeId);
 
     const node = tree.get(nodeId);
     if (!node) {
-      continue;
+      return;
     }
 
     if (node.type === "Action" || node.type.startsWith("Action.")) {
@@ -105,15 +102,17 @@ export function collectActions(
       node.type.startsWith("Action.")
     ) {
       for (const childId of node.children) {
-        stack.push(childId);
+        visitNode(childId);
       }
       if (node.namedChildren) {
         for (const childId of Object.values(node.namedChildren)) {
-          stack.push(childId);
+          visitNode(childId);
         }
       }
     }
-  }
+  };
+
+  visitNode(rootActionNodeId);
 
   return results;
 }

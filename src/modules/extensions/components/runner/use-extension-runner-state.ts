@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { invoke } from "@tauri-apps/api/core";
 
+import { copyToClipboard } from "@/modules/clipboard/api/copy-to-clipboard";
+import { emitClipboardHistoryUpdated } from "@/modules/clipboard/lib/updates";
+import { isLauncherActionsHotkey } from "@/lib/launcher-actions";
 import { extensionManagerService } from "@/modules/extensions/extension-manager-service";
 import {
   type ExtensionToast,
@@ -8,6 +11,7 @@ import {
   type RunningExtensionSession,
   useExtensionRuntimeStore,
 } from "@/modules/extensions/runtime/store";
+import { requestExtensionRunnerActionsToggle } from "@/modules/extensions/components/runner/runner-actions-toggle";
 import type {
   FlattenedAction,
   FormField,
@@ -49,6 +53,7 @@ export interface UseExtensionRunnerStateResult {
   handleBack: () => void;
   handleRootKeyDownCapture: (event: KeyboardEvent<HTMLDivElement>) => void;
   handleRootKeyDown: (event: KeyboardEvent<HTMLDivElement>) => void;
+  handleSearchInputKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void;
   handleSearchInputChange: (value: string) => void;
   handleSetFormValue: (field: FormField, value: FormValue) => void;
   handleBlurFormField: (field: FormField) => void;
@@ -75,6 +80,10 @@ function isEditableTarget(target: EventTarget | null): target is HTMLElement {
   }
 
   return target.isContentEditable;
+}
+
+function isExtensionSearchInputTarget(target: EventTarget | null): target is HTMLElement {
+  return target instanceof HTMLElement && target.dataset.moduleSearchInput === "true";
 }
 
 function isMacPlatform(): boolean {
@@ -487,7 +496,7 @@ export function useExtensionRunnerState({
         }
         const content = readClipboardText(action.props.content);
         if (content !== undefined) {
-          await navigator.clipboard.writeText(content);
+          await copyToClipboard(content, false);
         }
         return;
       }
@@ -499,7 +508,8 @@ export function useExtensionRunnerState({
         }
         const content = readClipboardText(action.props.content);
         if (content !== undefined) {
-          await navigator.clipboard.writeText(content);
+          await invoke("clipboard_paste", { content: { text: content } });
+          emitClipboardHistoryUpdated();
         }
         return;
       }
@@ -590,7 +600,7 @@ export function useExtensionRunnerState({
   }, []);
 
   const handleRootKeyDownCapture = useCallback((event: KeyboardEvent<HTMLDivElement>) => {
-    if (isEditableTarget(event.target)) {
+    if (isEditableTarget(event.target) && !isExtensionSearchInputTarget(event.target)) {
       event.stopPropagation();
     }
   }, []);
@@ -610,18 +620,23 @@ export function useExtensionRunnerState({
 
       const availableActions = selectedEntryActions.length > 0 ? selectedEntryActions : rootActions;
 
+      if (availableActions.length > 0 && isLauncherActionsHotkey(event)) {
+        event.preventDefault();
+        event.stopPropagation();
+        requestExtensionRunnerActionsToggle();
+        return;
+      }
+
       if (
         event.key === "Enter" &&
         !event.ctrlKey &&
         !event.metaKey &&
         !event.shiftKey &&
-        !event.altKey &&
-        availableActions[0] &&
-        !availableActions[0].shortcutDefinition
+        !event.altKey
       ) {
         event.preventDefault();
         event.stopPropagation();
-        void executeAction(availableActions[0]);
+        runPrimarySelectionAction();
         return;
       }
 
@@ -631,8 +646,7 @@ export function useExtensionRunnerState({
         !event.metaKey &&
         !event.shiftKey &&
         !event.altKey &&
-        availableActions[1] &&
-        !availableActions[1].shortcutDefinition
+        availableActions[1]
       ) {
         event.preventDefault();
         event.stopPropagation();
@@ -664,13 +678,6 @@ export function useExtensionRunnerState({
           event.preventDefault();
           event.stopPropagation();
           setSelectedIndex((previous) => Math.max(previous - 1, 0));
-        }
-        if (event.key === "Enter") {
-          if (availableActions.length === 0) {
-            event.preventDefault();
-            event.stopPropagation();
-            runPrimarySelectionAction();
-          }
         }
         return;
       }
@@ -826,13 +833,6 @@ export function useExtensionRunnerState({
             setSelectedIndex(nextIndex);
           }
         }
-        if (event.key === "Enter") {
-          if (availableActions.length === 0) {
-            event.preventDefault();
-            event.stopPropagation();
-            runPrimarySelectionAction();
-          }
-        }
       }
     },
     [
@@ -844,6 +844,79 @@ export function useExtensionRunnerState({
       runPrimarySelectionAction,
       selectedEntryActions,
       selectedIndex,
+    ],
+  );
+
+  const handleSearchInputKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLInputElement>) => {
+      const availableActions = selectedEntryActions.length > 0 ? selectedEntryActions : rootActions;
+
+      if (event.key === "Escape" && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) {
+        event.preventDefault();
+        event.stopPropagation();
+        if (searchText.trim().length > 0) {
+          handleSearchInputChange("");
+          return;
+        }
+
+        handleBack();
+        return;
+      }
+
+      if (availableActions.length > 0 && isLauncherActionsHotkey(event)) {
+        event.preventDefault();
+        event.stopPropagation();
+        requestExtensionRunnerActionsToggle();
+        return;
+      }
+
+      if (
+        event.key === "Enter" &&
+        !event.ctrlKey &&
+        !event.metaKey &&
+        !event.shiftKey &&
+        !event.altKey
+      ) {
+        event.preventDefault();
+        event.stopPropagation();
+        runPrimarySelectionAction();
+        return;
+      }
+
+      if (
+        event.key === "Enter" &&
+        event.ctrlKey &&
+        !event.metaKey &&
+        !event.shiftKey &&
+        !event.altKey &&
+        availableActions[1]
+      ) {
+        event.preventDefault();
+        event.stopPropagation();
+        void executeAction(availableActions[1]);
+        return;
+      }
+
+      for (const action of availableActions) {
+        if (!action.shortcutDefinition) {
+          continue;
+        }
+        if (keyMatchesShortcut(event, action.shortcutDefinition)) {
+          event.preventDefault();
+          event.stopPropagation();
+          void executeAction(action);
+          return;
+        }
+      }
+    },
+    [
+      executeAction,
+      handleBack,
+      handleSearchInputChange,
+      rootActions,
+      runPrimarySelectionAction,
+      searchText,
+      selectedEntryActions,
     ],
   );
 
@@ -882,6 +955,7 @@ export function useExtensionRunnerState({
     handleBack,
     handleRootKeyDownCapture,
     handleRootKeyDown,
+    handleSearchInputKeyDown,
     handleSearchInputChange,
     handleSetFormValue,
     handleBlurFormField,

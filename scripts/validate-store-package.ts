@@ -18,9 +18,6 @@ type PackageJsonManifest = {
   description?: string;
   owner?: string;
   version?: string;
-  package_id?: string;
-  minimum_beam_version?: string;
-  release_channel?: string;
 };
 
 type StoreCompatibility = {
@@ -130,8 +127,7 @@ function assertCompatibleManifest(sourceDir: string, manifest: PackageJsonManife
   }
 
   if (
-    !normalizeOptionalString(publish.compatibility?.minimumBeamVersion) &&
-    !normalizeOptionalString(manifest.minimum_beam_version)
+    !normalizeOptionalString(publish.compatibility?.minimumBeamVersion)
   ) {
     throw new Error(`${sourceDir}: minimumBeamVersion is required.`);
   }

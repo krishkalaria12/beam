@@ -34,7 +34,6 @@ import { sendRuntimeRpcRequest } from "./rpc";
 import { LocalStorage } from "./localStorage";
 import { WindowManagement } from "./windowManagement";
 import { FileSearch } from "./fileSearch";
-import { getRaycastUtils } from "./raycastUtils";
 
 const Image = {
   Mask: {
@@ -175,7 +174,6 @@ const getPreferenceValues = () => {
 
 export const getBeamApi = () =>
   createBeamRuntimeApi({
-    raycastUtils: getRaycastUtils(),
     LocalStorage,
     randomId,
     Alert,

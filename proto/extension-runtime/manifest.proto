@@ -20,6 +20,11 @@ message PreferenceOption {
   string value = 2;
 }
 
+message ArgumentOption {
+  string title = 1;
+  string value = 2;
+}
+
 message PreferenceDefinition {
   string name = 1;
   string type = 2;
@@ -31,6 +36,14 @@ message PreferenceDefinition {
   optional string label = 8;
 }
 
+message ArgumentDefinition {
+  string name = 1;
+  string type = 2;
+  optional string placeholder = 3;
+  optional bool required = 4;
+  repeated ArgumentOption data = 5;
+}
+
 message CommandManifest {
   string name = 1;
   optional string title = 2;
@@ -39,6 +52,10 @@ message CommandManifest {
   optional string mode = 5;
   optional string interval = 6;
   repeated PreferenceDefinition preferences = 7;
+  optional string subtitle = 8;
+  repeated string keywords = 9;
+  repeated ArgumentDefinition arguments = 10;
+  optional bool disabled_by_default = 11;
 }
 
 message ExtensionManifest {
@@ -51,10 +68,15 @@ message ExtensionManifest {
   repeated CommandManifest commands = 7;
   repeated PreferenceDefinition preferences = 8;
   optional string version = 9;
-  optional string schema_version = 10;
-  optional string package_id = 11;
-  optional string minimum_beam_version = 12;
-  optional string release_channel = 13;
+  reserved 10 to 13;
+  reserved "schema_version", "package_id", "minimum_beam_version", "release_channel";
+  optional string access = 14;
+  optional string license = 15;
+  repeated string platforms = 16;
+  repeated string categories = 17;
+  repeated string contributors = 18;
+  repeated string past_contributors = 19;
+  repeated string keywords = 20;
 }
 
 message DiscoveredPlugin {
@@ -72,4 +94,14 @@ message DiscoveredPlugin {
   ManifestAuthor author = 12;
   optional string owner = 13;
   optional string version = 14;
+  optional string subtitle = 15;
+  repeated string keywords = 16;
+  repeated ArgumentDefinition arguments = 17;
+  optional bool disabled_by_default = 18;
+  optional string access = 19;
+  optional string license = 20;
+  repeated string platforms = 21;
+  repeated string categories = 22;
+  repeated string contributors = 23;
+  repeated string past_contributors = 24;
 }

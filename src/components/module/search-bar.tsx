@@ -82,9 +82,13 @@ export function SearchBar({
             onChange={onChange ?? (() => {})}
             placeholder={placeholder}
             leftIcon={<Search />}
+            data-module-search-input="true"
             className={cn("text-[13px]", inputClassName)}
             containerClassName={cn("h-10 rounded-xl", inputContainerClassName)}
-            onKeyDown={onKeyDown}
+            onKeyDown={(event) => {
+              event.stopPropagation();
+              onKeyDown?.(event);
+            }}
           />
         ) : (
           <div

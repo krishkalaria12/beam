@@ -10,10 +10,7 @@ type ExtensionManifest = {
   description?: string;
   author?: string;
   owner?: string;
-  package_id?: string;
   version?: string;
-  minimum_beam_version?: string;
-  release_channel?: string;
   scripts?: Record<string, string>;
   dependencies?: Record<string, string>;
 };
@@ -91,7 +88,6 @@ function updateManifest(
     description: string;
     owner: string;
     author: string;
-    packageId: string;
     sdkVersion: string;
   },
 ): void {
@@ -104,7 +100,6 @@ function updateManifest(
   manifest.description = options.description;
   manifest.owner = options.owner;
   manifest.author = options.author;
-  manifest.package_id = options.packageId;
   manifest.dependencies = {
     ...(manifest.dependencies ?? {}),
     "@beam-launcher/api": `^${options.sdkVersion}`,
@@ -147,15 +142,11 @@ export default class Create extends Command {
       required: false,
     }),
     owner: Flags.string({
-      description: "Owner handle used for package_id",
+      description: "Owner handle used for the store slug",
       required: false,
     }),
     author: Flags.string({
       description: "Author name written into the manifest",
-      required: false,
-    }),
-    packageId: Flags.string({
-      description: "Override the generated package_id",
       required: false,
     }),
     install: Flags.boolean({
@@ -180,15 +171,14 @@ export default class Create extends Command {
       throw new Error("Unable to derive an extension slug from the target directory.");
     }
 
-        const title = flags.title?.trim() || startCase(slug);
-        const owner = flags.owner?.trim() || "beam-launcher";
-        const author = flags.author?.trim() || owner;
-        const description = flags.description?.trim() || `${title} for Beam.`;
-        const packageId = flags.packageId?.trim() || `${owner}.${slug}`;
-        const sdkPackageJson = JSON.parse(
-            readFileSync(path.join(packageRoot, "package.json"), "utf8"),
-        ) as { version?: string };
-        const sdkVersion = sdkPackageJson.version?.trim() || "1.0.0";
+    const title = flags.title?.trim() || startCase(slug);
+    const owner = flags.owner?.trim() || "beam-launcher";
+    const author = flags.author?.trim() || owner;
+    const description = flags.description?.trim() || `${title} for Beam.`;
+    const sdkPackageJson = JSON.parse(
+      readFileSync(path.join(packageRoot, "package.json"), "utf8"),
+    ) as { version?: string };
+    const sdkVersion = sdkPackageJson.version?.trim() || "1.0.0";
 
     ensureTargetDir(targetDir, flags.force);
 
@@ -198,15 +188,14 @@ export default class Create extends Command {
       filter: (entry) => !entry.includes(`${path.sep}node_modules${path.sep}`) && !entry.endsWith(`${path.sep}node_modules`),
     });
 
-        updateManifest(path.join(targetDir, "package.json"), {
-            slug,
-            title,
-            description,
-            owner,
-            author,
-            packageId,
-            sdkVersion,
-        });
+    updateManifest(path.join(targetDir, "package.json"), {
+      slug,
+      title,
+      description,
+      owner,
+      author,
+      sdkVersion,
+    });
     updateReadme(path.join(targetDir, "README.md"), { title, description, slug });
 
     if (flags.install) {

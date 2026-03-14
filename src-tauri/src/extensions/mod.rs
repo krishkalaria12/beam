@@ -287,6 +287,172 @@ fn install_extension_archive(
     Ok(InstallResult::Success)
 }
 
+fn manifest_author_to_package_json(author: &proto::ManifestAuthor) -> Option<JsonValue> {
+    match &author.author {
+        Some(proto::manifest_author::Author::Simple(value)) => {
+            Some(JsonValue::String(value.clone()))
+        }
+        Some(proto::manifest_author::Author::Detailed(value)) => {
+            Some(json!({ "name": value.name }))
+        }
+        None => None,
+    }
+}
+
+fn set_manifest_string_field(
+    object: &mut serde_json::Map<String, JsonValue>,
+    key: &str,
+    value: Option<String>,
+) {
+    if let Some(value) = normalize_optional_string(value) {
+        object.insert(key.to_string(), JsonValue::String(value));
+    }
+}
+
+fn set_manifest_string_list_field(
+    object: &mut serde_json::Map<String, JsonValue>,
+    key: &str,
+    values: &[String],
+) {
+    if values.is_empty() {
+        return;
+    }
+
+    object.insert(
+        key.to_string(),
+        JsonValue::Array(
+            values
+                .iter()
+                .filter_map(|value| normalize_optional_string(Some(value.clone())))
+                .map(JsonValue::String)
+                .collect(),
+        ),
+    );
+}
+
+fn sync_installed_store_manifest(
+    app: &tauri::AppHandle,
+    slug: &str,
+    package: &proto::ExtensionStorePackage,
+) -> Result<()> {
+    let Some(source) = package.source.as_ref() else {
+        return Ok(());
+    };
+    if source.kind != proto::ExtensionStoreSourceKind::Raycast as i32 {
+        return Ok(());
+    }
+
+    let extension_dir = get_extension_dir(app, slug)?;
+    let package_json_path = extension_dir.join(EXTENSIONS_CONFIG.package_json_file_name);
+    let content = fs::read_to_string(&package_json_path)?;
+    let mut package_json: JsonValue = serde_json::from_str(&content)?;
+    let Some(object) = package_json.as_object_mut() else {
+        return Err(ExtensionsError::Message(format!(
+            "extension package.json is not an object: {}",
+            package_json_path.display()
+        )));
+    };
+
+    let manifest = package.manifest.as_ref();
+    set_manifest_string_field(
+        object,
+        "name",
+        manifest
+            .and_then(|manifest| manifest.name.clone())
+            .or_else(|| Some(package.slug.clone())),
+    );
+    set_manifest_string_field(
+        object,
+        "title",
+        manifest
+            .and_then(|manifest| manifest.title.clone())
+            .or_else(|| Some(package.title.clone())),
+    );
+    set_manifest_string_field(
+        object,
+        "description",
+        manifest
+            .and_then(|manifest| manifest.description.clone())
+            .or_else(|| package.description.clone())
+            .or_else(|| package.summary.clone()),
+    );
+    set_manifest_string_field(
+        object,
+        "icon",
+        manifest
+            .and_then(|manifest| manifest.icon.clone())
+            .or_else(|| {
+                package
+                    .icons
+                    .as_ref()
+                    .and_then(|icons| icons.light.clone().or_else(|| icons.dark.clone()))
+            }),
+    );
+    set_manifest_string_field(
+        object,
+        "owner",
+        manifest
+            .and_then(|manifest| manifest.owner.clone())
+            .or_else(|| package.author.as_ref().map(|author| author.handle.clone())),
+    );
+    set_manifest_string_field(
+        object,
+        "version",
+        manifest
+            .and_then(|manifest| manifest.version.clone())
+            .or_else(|| {
+                package
+                    .latest_release
+                    .as_ref()
+                    .map(|release| release.version.clone())
+            }),
+    );
+    set_manifest_string_field(
+        object,
+        "access",
+        manifest.and_then(|manifest| manifest.access.clone()),
+    );
+    set_manifest_string_field(
+        object,
+        "license",
+        manifest.and_then(|manifest| manifest.license.clone()),
+    );
+
+    if let Some(author) = manifest
+        .and_then(|manifest| manifest.author.as_ref())
+        .and_then(manifest_author_to_package_json)
+    {
+        object.insert("author".to_string(), author);
+    }
+
+    if let Some(manifest) = manifest {
+        set_manifest_string_list_field(object, "platforms", &manifest.platforms);
+        set_manifest_string_list_field(object, "categories", &manifest.categories);
+        set_manifest_string_list_field(object, "contributors", &manifest.contributors);
+        set_manifest_string_list_field(object, "pastContributors", &manifest.past_contributors);
+        set_manifest_string_list_field(object, "keywords", &manifest.keywords);
+    }
+
+    for legacy_key in [
+        "schemaVersion",
+        "schema_version",
+        "packageId",
+        "package_id",
+        "minimumBeamVersion",
+        "minimum_beam_version",
+        "releaseChannel",
+        "release_channel",
+    ] {
+        object.remove(legacy_key);
+    }
+
+    fs::write(
+        package_json_path,
+        format!("{}\n", serde_json::to_string_pretty(&package_json)?),
+    )?;
+    Ok(())
+}
+
 fn find_common_prefix(file_names: &[PathBuf]) -> Option<PathBuf> {
     if file_names.len() <= 1 {
         return None;
@@ -463,6 +629,13 @@ struct RawPreferenceData {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
+struct RawArgumentData {
+    pub title: String,
+    pub value: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
 struct RawPreference {
     pub name: String,
     #[serde(rename = "type")]
@@ -478,13 +651,28 @@ struct RawPreference {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
+struct RawArgument {
+    name: String,
+    #[serde(rename = "type")]
+    r#type: String,
+    placeholder: Option<String>,
+    required: Option<bool>,
+    data: Option<Vec<RawArgumentData>>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
 struct RawCommandInfo {
     name: String,
     title: Option<String>,
+    subtitle: Option<String>,
     description: Option<String>,
     icon: Option<String>,
     mode: Option<String>,
     interval: Option<String>,
+    keywords: Option<Vec<String>>,
+    arguments: Option<Vec<RawArgument>>,
+    disabled_by_default: Option<bool>,
     preferences: Option<Vec<RawPreference>>,
 }
 
@@ -498,10 +686,13 @@ struct RawPackageJson {
     author: Option<RawAuthor>,
     owner: Option<String>,
     version: Option<String>,
-    schema_version: Option<String>,
-    package_id: Option<String>,
-    minimum_beam_version: Option<String>,
-    release_channel: Option<String>,
+    access: Option<String>,
+    license: Option<String>,
+    platforms: Option<Vec<String>>,
+    categories: Option<Vec<String>>,
+    contributors: Option<Vec<String>>,
+    past_contributors: Option<Vec<String>>,
+    keywords: Option<Vec<String>>,
     commands: Option<Vec<RawCommandInfo>>,
     preferences: Option<Vec<RawPreference>>,
 }
@@ -515,6 +706,27 @@ fn normalize_optional_string(value: Option<String>) -> Option<String> {
             Some(trimmed)
         }
     })
+}
+
+fn normalize_string_list(values: Option<Vec<String>>) -> Vec<String> {
+    values
+        .unwrap_or_default()
+        .into_iter()
+        .filter_map(|value| normalize_optional_string(Some(value)))
+        .collect()
+}
+
+fn merge_string_lists(primary: &[String], secondary: &[String]) -> Vec<String> {
+    let mut merged = Vec::with_capacity(primary.len() + secondary.len());
+
+    for value in primary.iter().chain(secondary.iter()) {
+        if value.trim().is_empty() || merged.iter().any(|existing| existing == value) {
+            continue;
+        }
+        merged.push(value.clone());
+    }
+
+    merged
 }
 
 fn json_value_to_proto(value: JsonValue) -> ::prost_types::Value {
@@ -603,14 +815,41 @@ fn raw_preference_to_proto(preference: RawPreference) -> proto::PreferenceDefini
     }
 }
 
+fn raw_argument_to_proto(argument: RawArgument) -> proto::ArgumentDefinition {
+    proto::ArgumentDefinition {
+        name: argument.name.trim().to_string(),
+        r#type: argument.r#type.trim().to_string(),
+        placeholder: normalize_optional_string(argument.placeholder),
+        required: argument.required,
+        data: argument
+            .data
+            .unwrap_or_default()
+            .into_iter()
+            .map(|entry| proto::ArgumentOption {
+                title: entry.title,
+                value: entry.value,
+            })
+            .collect(),
+    }
+}
+
 fn raw_command_to_proto(command: RawCommandInfo) -> proto::CommandManifest {
     proto::CommandManifest {
         name: command.name.trim().to_string(),
         title: normalize_optional_string(command.title),
+        subtitle: normalize_optional_string(command.subtitle),
         description: normalize_optional_string(command.description),
         icon: normalize_optional_string(command.icon),
         mode: normalize_optional_string(command.mode),
         interval: normalize_optional_string(command.interval),
+        keywords: normalize_string_list(command.keywords),
+        arguments: command
+            .arguments
+            .unwrap_or_default()
+            .into_iter()
+            .map(raw_argument_to_proto)
+            .collect(),
+        disabled_by_default: command.disabled_by_default,
         preferences: command
             .preferences
             .unwrap_or_default()
@@ -629,10 +868,13 @@ fn raw_package_json_to_proto(package_json: RawPackageJson) -> proto::ExtensionMa
         author: raw_author_to_proto(package_json.author),
         owner: normalize_optional_string(package_json.owner),
         version: normalize_optional_string(package_json.version),
-        schema_version: normalize_optional_string(package_json.schema_version),
-        package_id: normalize_optional_string(package_json.package_id),
-        minimum_beam_version: normalize_optional_string(package_json.minimum_beam_version),
-        release_channel: normalize_optional_string(package_json.release_channel),
+        access: normalize_optional_string(package_json.access),
+        license: normalize_optional_string(package_json.license),
+        platforms: normalize_string_list(package_json.platforms),
+        categories: normalize_string_list(package_json.categories),
+        contributors: normalize_string_list(package_json.contributors),
+        past_contributors: normalize_string_list(package_json.past_contributors),
+        keywords: normalize_string_list(package_json.keywords),
         commands: package_json
             .commands
             .unwrap_or_default()
@@ -676,15 +918,34 @@ fn preference_to_json(preference: &proto::PreferenceDefinition) -> JsonValue {
     })
 }
 
+fn argument_to_json(argument: &proto::ArgumentDefinition) -> JsonValue {
+    json!({
+        "name": argument.name,
+        "type": argument.r#type,
+        "placeholder": argument.placeholder,
+        "required": argument.required,
+        "data": argument.data.iter().map(|entry| {
+            json!({
+                "title": entry.title,
+                "value": entry.value,
+            })
+        }).collect::<Vec<_>>(),
+    })
+}
+
 fn discovered_plugin_to_json(plugin: &proto::DiscoveredPlugin) -> JsonValue {
     json!({
         "title": plugin.title,
+        "subtitle": plugin.subtitle,
         "description": plugin.description,
         "pluginTitle": plugin.plugin_title,
         "pluginName": plugin.plugin_name,
         "commandName": plugin.command_name,
         "pluginPath": plugin.plugin_path,
         "icon": plugin.icon,
+        "keywords": plugin.keywords,
+        "arguments": plugin.arguments.iter().map(argument_to_json).collect::<Vec<_>>(),
+        "disabledByDefault": plugin.disabled_by_default,
         "preferences": plugin.preferences.iter().map(preference_to_json).collect::<Vec<_>>(),
         "commandPreferences": plugin.command_preferences.iter().map(preference_to_json).collect::<Vec<_>>(),
         "mode": plugin.mode,
@@ -692,6 +953,12 @@ fn discovered_plugin_to_json(plugin: &proto::DiscoveredPlugin) -> JsonValue {
         "author": plugin.author.as_ref().map(manifest_author_to_json),
         "owner": plugin.owner,
         "version": plugin.version,
+        "access": plugin.access,
+        "license": plugin.license,
+        "platforms": plugin.platforms,
+        "categories": plugin.categories,
+        "contributors": plugin.contributors,
+        "pastContributors": plugin.past_contributors,
     })
 }
 
@@ -764,6 +1031,7 @@ pub fn discover_plugins(app: &tauri::AppHandle) -> Result<Vec<proto::DiscoveredP
                         .title
                         .clone()
                         .unwrap_or_else(|| command.name.clone()),
+                    subtitle: command.subtitle.clone(),
                     description: command
                         .description
                         .clone()
@@ -773,6 +1041,9 @@ pub fn discover_plugins(app: &tauri::AppHandle) -> Result<Vec<proto::DiscoveredP
                     command_name: command.name.clone(),
                     plugin_path: command_file_path.to_string_lossy().to_string(),
                     icon: resolved_icon,
+                    keywords: merge_string_lists(&command.keywords, &manifest.keywords),
+                    arguments: command.arguments.clone(),
+                    disabled_by_default: command.disabled_by_default,
                     preferences: manifest.preferences.clone(),
                     command_preferences: command.preferences.clone(),
                     mode: command.mode.clone(),
@@ -780,6 +1051,12 @@ pub fn discover_plugins(app: &tauri::AppHandle) -> Result<Vec<proto::DiscoveredP
                     author: manifest.author.clone(),
                     owner: manifest.owner.clone(),
                     version: manifest.version.clone(),
+                    access: manifest.access.clone(),
+                    license: manifest.license.clone(),
+                    platforms: manifest.platforms.clone(),
+                    categories: manifest.categories.clone(),
+                    contributors: manifest.contributors.clone(),
+                    past_contributors: manifest.past_contributors.clone(),
                 });
             } else {
                 eprintln!(
@@ -836,7 +1113,12 @@ pub async fn install_store_extension(
             .or(resolved.release.checksum_sha256.as_deref()),
     )?;
 
-    install_extension_archive(&app, &resolved.package.slug, &content, force)
+    let install_result = install_extension_archive(&app, &resolved.package.slug, &content, force)?;
+    if matches!(install_result, InstallResult::Success) {
+        sync_installed_store_manifest(&app, &resolved.package.slug, &resolved.package)?;
+    }
+
+    Ok(install_result)
 }
 
 #[tauri::command]
