@@ -1,21 +1,105 @@
+import babel from "@rolldown/plugin-babel";
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
-import react from "@vitejs/plugin-react-swc";
+import react, { reactCompilerPreset } from "@vitejs/plugin-react";
 import path from "node:path";
 import { defineConfig } from "vite";
-import babel from "vite-plugin-babel";
+
+const VENDOR_CHUNK_GROUPS = [
+  {
+    name: "emoji-data",
+    test: (id: string) => id.includes("emojibase"),
+  },
+  {
+    name: "charts-vendor",
+    test: (id: string) =>
+      id.includes("recharts") || /[\\/]node_modules[\\/](d3-|victory-vendor)/.test(id),
+  },
+  {
+    name: "graph-vendor",
+    test: (id: string) => id.includes("cytoscape") || id.includes("cose-bilkent"),
+  },
+  {
+    name: "speedtest-vendor",
+    test: (id: string) => id.includes("@cloudflare/speedtest"),
+  },
+  {
+    name: "ai-vendor",
+    test: (id: string) => /[\\/]node_modules[\\/]ai[\\/]/.test(id) || id.includes("@ai-sdk"),
+  },
+  {
+    name: "tanstack-vendor",
+    test: (id: string) => id.includes("@tanstack"),
+  },
+  {
+    name: "icons-phosphor",
+    test: (id: string) => id.includes("@phosphor-icons/react"),
+  },
+  {
+    name: "icons-lucide",
+    test: (id: string) => id.includes("lucide-react"),
+  },
+  {
+    name: "tauri-vendor",
+    test: (id: string) => id.includes("@tauri-apps"),
+  },
+  {
+    name: "react-vendor",
+    test: (id: string) =>
+      id.includes("react/") ||
+      id.includes("react-dom") ||
+      id.includes("scheduler") ||
+      id.includes("use-sync-external-store") ||
+      id.includes("zustand") ||
+      id.includes("class-variance-authority") ||
+      id.includes("tailwind-merge") ||
+      id.includes("clsx") ||
+      id.includes("date-fns") ||
+      id.includes("next-themes") ||
+      id.includes("cmdk") ||
+      id.includes("@base-ui") ||
+      id.includes("sonner") ||
+      id.includes("@dnd-kit") ||
+      id.includes("motion") ||
+      id.includes("framer-motion"),
+  },
+] as const;
+
+function manualVendorChunks(id: string) {
+  if (!id.includes("node_modules")) {
+    return;
+  }
+
+  for (const group of VENDOR_CHUNK_GROUPS) {
+    if (group.test(id)) {
+      return group.name;
+    }
+  }
+}
+
+const reactCompiler = reactCompilerPreset();
+
+if (!reactCompiler.rolldown?.filter) {
+  throw new Error("reactCompilerPreset() must provide a Rolldown filter");
+}
+
+reactCompiler.rolldown.filter.id = {
+  include: ["src/**"],
+  exclude: [
+    "**/*.d.ts",
+    "src/assets/**",
+    "src/routeTree.gen.ts",
+    "src/styles/**",
+    "src/types/**",
+  ],
+};
 
 export default defineConfig({
   plugins: [
     tailwindcss(),
     tanstackRouter({}),
     react(),
-    babel({
-      exclude: [/node_modules/],
-      babelConfig: {
-        plugins: ["babel-plugin-react-compiler"],
-      },
-    }),
+    babel({ presets: [reactCompiler] }),
   ],
   resolve: {
     alias: {
@@ -36,54 +120,13 @@ export default defineConfig({
   },
   build: {
     target: "esnext",
-    minify: "esbuild",
-    cssMinify: "lightningcss",
+    modulePreload: {
+      polyfill: false,
+    },
     chunkSizeWarningLimit: 850,
-    rollupOptions: {
+    rolldownOptions: {
       output: {
-        manualChunks: (id) => {
-          if (!id.includes("node_modules")) {
-            return;
-          }
-          if (id.includes("emojibase")) {
-            return "emoji-data";
-          }
-          if (id.includes("zod")) {
-            return "zod-vendor";
-          }
-          if (id.includes("@tanstack")) {
-            return "tanstack-vendor";
-          }
-          if (id.includes("@phosphor-icons/react")) {
-            return "icons-phosphor";
-          }
-          if (id.includes("lucide-react")) {
-            return "icons-lucide";
-          }
-          if (id.includes("@tauri-apps")) {
-            return "tauri-vendor";
-          }
-          if (
-            id.includes("react/") ||
-            id.includes("react-dom") ||
-            id.includes("scheduler") ||
-            id.includes("use-sync-external-store") ||
-            id.includes("zustand") ||
-            id.includes("class-variance-authority") ||
-            id.includes("tailwind-merge") ||
-            id.includes("clsx") ||
-            id.includes("date-fns") ||
-            id.includes("next-themes") ||
-            id.includes("cmdk") ||
-            id.includes("@base-ui") ||
-            id.includes("sonner")
-          ) {
-            return "react-vendor";
-          }
-          // Let Rollup auto-place remaining dependencies to avoid forced
-          // cross-chunk cycles from over-manualized vendor grouping.
-          return;
-        },
+        manualChunks: manualVendorChunks,
       },
     },
   },

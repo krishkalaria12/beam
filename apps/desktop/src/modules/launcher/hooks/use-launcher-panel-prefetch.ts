@@ -13,24 +13,10 @@ type IdleWindow = Window & {
 };
 
 const launchPanelPreloaders = [
-  () => import("@/modules/clipboard/components/clipboard-command-group"),
-  () => import("@/modules/ai/components/ai-command-group"),
-  () => import("@/modules/todo/components/todo-command-group"),
-  () => import("@/modules/notes/components/notes-command-group"),
-  () => import("@/modules/snippets/components/snippets-command-group"),
-  () => import("@/modules/dictionary/components/dictionary-command-group"),
-  () => import("@/modules/file-search/components/file-search-command-group"),
-  () => import("@/modules/quicklinks/components/quicklinks-command-group"),
-  () => import("@/modules/speed-test/components/speed-test-command-group"),
-  () => import("@/modules/translation/components/translation-command-group"),
-  () => import("@/modules/integrations/spotify/components/spotify-command-group"),
-  () => import("@/modules/integrations/github/components/github-command-group"),
-  () => import("@/modules/extensions/components/extensions-command-group"),
-  () => import("@/modules/window-switcher/components/window-switcher-command-group"),
-  () => import("@/modules/script-commands/components/script-commands-command-group"),
-  () => import("@/modules/extensions/components/extension-runner-view"),
   () => import("@/modules/calculator-history/components/calculator-history-command-group"),
-  () => import("@/modules/emoji/components/emoji-command-group"),
+  () => import("@/modules/clipboard/components/clipboard-command-group"),
+  () => import("@/modules/notes/components/notes-command-group"),
+  () => import("@/modules/quicklinks/components/quicklinks-command-group"),
   () => import("@/modules/settings/components/settings-command-group"),
 ];
 

@@ -36,13 +36,12 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "rm -rf dist && bunx tsc --outDir dist",
+    "build": "tsdown --config-loader unrun --config tsdown.config.ts",
     "check-types": "bunx tsc --noEmit",
     "pack": "bun run build && bun pm pack",
     "docgen": "typedoc"
   },
   "dependencies": {
-    "@jgoz/esbuild-plugin-typecheck": "^4.0.3",
     "@oclif/core": "^4",
     "@oclif/plugin-help": "^6",
     "@oclif/plugin-plugins": "^5",
@@ -62,7 +61,7 @@
     "chai": "^4",
     "mocha": "^10",
     "oclif": "^4",
-    "shx": "^0.3.3",
+    "tsdown": "^0.21.3",
     "ts-node": "^10",
     "ts-proto": "^2.7.5",
     "typedoc": "^0.28.13",
