@@ -94,7 +94,7 @@ function updateManifest(
   const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as ExtensionManifest;
 
   manifest.$schema =
-    "https://raw.githubusercontent.com/krishkalaria12/beam/main/extra/schemas/extension.json";
+    "https://raw.githubusercontent.com/krishkalaria12/beam/main/resources/extra/schemas/extension.json";
   manifest.name = options.slug;
   manifest.title = options.title;
   manifest.description = options.description;

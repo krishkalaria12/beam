@@ -6,7 +6,7 @@ import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 
 const packageDir = resolve(import.meta.dirname, "..");
-const protoDir = resolve(packageDir, "../../proto/extension-runtime");
+const protoDir = resolve(packageDir, "../../infra/proto/extension-runtime");
 const generatedDir = resolve(packageDir, "src/generated");
 const pluginPath = require.resolve("ts-proto/protoc-gen-ts_proto");
 

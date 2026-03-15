@@ -8,12 +8,14 @@
   "main": "src/index.ts",
   "types": "src/index.ts",
   "scripts": {
-    "check": "bunx tsc --noEmit"
+    "check": "bunx tsc --noEmit",
+    "check-types": "bunx tsc --noEmit"
   },
   "dependencies": {
     "@beam-launcher/api": "workspace:*"
   },
   "devDependencies": {
+    "@beam/config": "workspace:*",
     "typescript": "^5.9.3"
   }
 }

@@ -37,6 +37,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "rm -rf dist && bunx tsc --outDir dist",
+    "check-types": "bunx tsc --noEmit",
     "pack": "bun run build && bun pm pack",
     "docgen": "typedoc"
   },
@@ -46,13 +47,14 @@
     "@oclif/plugin-help": "^6",
     "@oclif/plugin-plugins": "^5",
     "@types/node": ">=18",
-    "@types/react": "19.0.10",
+    "@types/react": "19.2.7",
     "chokidar": "^4.0.3",
     "esbuild": "^0.25.2",
-    "react": "19.0.0",
+    "react": "19.2.3",
     "zod": "^4.0.17"
   },
   "devDependencies": {
+    "@beam/config": "workspace:*",
     "@bufbuild/protobuf": "^2.7.0",
     "@oclif/test": "^4",
     "@types/chai": "^4",
@@ -70,7 +72,7 @@
   },
   "peerDependencies": {
     "@types/node": ">=18",
-    "@types/react": "19.0.10"
+    "@types/react": "19.2.7"
   },
   "oclif": {
     "bin": "beam-api",

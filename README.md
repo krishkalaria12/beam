@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="./src-tauri/icons/icon.png" width="120" height="120" alt="Beam logo" />
+<img src="./apps/desktop/src-tauri/icons/icon.png" width="120" height="120" alt="Beam logo" />
 
 # Beam
 
@@ -149,12 +149,12 @@ Use **Settings → Visual Style → Custom Themes** to select one.
 
 Starter examples:
 
-- `examples/themes/base`
-- `examples/themes/neo-brutalism`
+- `resources/examples/themes/base`
+- `resources/examples/themes/neo-brutalism`
 
 Theme authoring contract:
 
-- `docs/theme-contract.md`
+- `resources/docs/theme-contract.md`
 
 ---
 
@@ -162,14 +162,17 @@ Theme authoring contract:
 
 ```
 beam/
-├── src/                    React launcher UI, command registry, feature modules
-│   ├── command-registry/   Static commands, dynamic providers, dispatcher, ranker
-│   └── modules/            One directory per feature panel
-├── src-tauri/              Rust backend — IPC commands, persistence, system APIs
-│   └── src/                ~80 Tauri IPC commands across all feature modules
+├── apps/desktop/
+│   ├── src/                React launcher UI, command registry, feature modules
+│   │   ├── command-registry/ Static commands, dynamic providers, dispatcher, ranker
+│   │   └── modules/        One directory per feature panel
+│   └── src-tauri/          Rust backend — IPC commands, persistence, system APIs
+│       └── src/            ~80 Tauri IPC commands across all feature modules
+├── packages/config/        Shared TypeScript base config for the workspace
 ├── packages/extension-manager/ Node.js extension runtime (React reconciler + RPC)
 ├── packages/extension-protocol/ Shared protobuf-generated runtime contracts
-└── browser-extension/      Chrome + Firefox bridge extensions
+├── packages/browser-extension/ Chrome + Firefox bridge extensions
+└── infra/                  Desktop integrations, proto schemas, store data, and repo scripts
 ```
 
 **Frontend → Backend communication** happens entirely over Tauri's typed IPC. The extension manager runtime communicates with the main process over stdin/stdout using JSON + msgpack.
@@ -261,7 +264,7 @@ Beam's Linux snippet expander reads keyboard events from `/dev/input/event*` and
 Install the bundled udev rules once:
 
 ```bash
-sudo ./scripts/install-snippets-udev-rules.sh
+sudo ./infra/scripts/install-snippets-udev-rules.sh
 ```
 
 Then log out and back in before testing global snippet expansion.
@@ -335,9 +338,9 @@ Beam runs a local HTTP bridge at `http://127.0.0.1:38957` for browser extension 
 | `/bridge/health` | `GET`  | Health check           |
 | `/bridge/tabs`   | `POST` | Sync open browser tabs |
 
-- Chrome extension: `browser-extension/chrome/`
-- Firefox extension: `browser-extension/firefox/`
-- Full setup instructions: [`browser-extension/README.md`](./browser-extension/README.md)
+- Chrome extension: `packages/browser-extension/chrome/`
+- Firefox extension: `packages/browser-extension/firefox/`
+- Full setup instructions: [`packages/browser-extension/README.md`](./packages/browser-extension/README.md)
 
 ---
 

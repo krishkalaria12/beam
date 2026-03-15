@@ -1,5 +1,4 @@
 {
-  "extends": "@beam/config/tsconfig.base.json",
   "compilerOptions": {
     "target": "ES2022",
     "module": "ESNext",
@@ -8,13 +7,17 @@
     "jsx": "react-jsx",
     "strict": true,
     "skipLibCheck": true,
-    "declaration": false,
     "noEmit": true,
     "paths": {
       "@beam-launcher/api": [
-        "../beam-api/types/index.d.ts"
+        "../../../packages/beam-api/types/index.d.ts"
       ]
-    }
+    },
+    "types": [
+      "node"
+    ]
   },
-  "include": ["src"]
+  "include": [
+    "src"
+  ]
 }

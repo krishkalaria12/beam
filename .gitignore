@@ -15,6 +15,8 @@ node_modules/
 /.next/
 /out/
 /build/
+/target/
+**/target/
 /dist/
 **/dist/
 .vinxi
@@ -56,18 +58,16 @@ next-env.d.ts
 
 # Other
 dev-dist
-
+.turbo/
 .wrangler
 .dev.vars*
 
 .open-next
 
-flare-main/
-SuperCmd-main/
 vicinae-main/
 
 # Generated local store artifacts
-store/artifacts/*.zip
+infra/store/artifacts/*.zip
 
 # Generated Tauri app binaries
-src-tauri/binaries/app-*
+apps/desktop/src-tauri/binaries/app-*

@@ -9,8 +9,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "esbuild src/index.ts --bundle --outfile=dist/index.js --platform=node && pkg dist/index.js --targets node22-linux-x64 --output app --public --sea && bun run rename",
-    "rename": "mkdir -p ../../src-tauri/binaries && mv \"app$([[ \"$OSTYPE\" =~ msys|win32 ]] && echo .exe)\" \"../../src-tauri/binaries/app-$(rustc -vV | awk '/host:/ {print $2}')$([[ \"$OSTYPE\" =~ msys|win32 ]] && echo .exe)\"",
-    "check": "tsc --noEmit"
+    "rename": "mkdir -p ../../apps/desktop/src-tauri/binaries && mv \"app$([[ \"$OSTYPE\" =~ msys|win32 ]] && echo .exe)\" \"../../apps/desktop/src-tauri/binaries/app-$(rustc -vV | awk '/host:/ {print $2}')$([[ \"$OSTYPE\" =~ msys|win32 ]] && echo .exe)\"",
+    "check": "tsc --noEmit",
+    "check-types": "tsc --noEmit"
   },
   "dependencies": {
     "@beam-launcher/api": "workspace:*",
@@ -19,13 +20,14 @@
     "dequal": "^2.0.3",
     "msgpackr": "^1.11.4",
     "pako": "^2.1.0",
-    "react": "^19.1.0",
+    "react": "19.2.3",
     "react-reconciler": "^0.32.0"
   },
   "devDependencies": {
+    "@beam/config": "workspace:*",
     "@types/node": "^24.0.0",
     "@types/pako": "^2.0.3",
-    "@types/react": "^19.1.7",
+    "@types/react": "19.2.7",
     "@types/react-reconciler": "^0.32.0",
     "@yao-pkg/pkg": "^6.5.1",
     "esbuild": "^0.25.5",

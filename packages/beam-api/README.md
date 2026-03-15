@@ -30,7 +30,7 @@ bunx beam-api create \
   --install
 ```
 
-This command scaffolds from the same template source used by Beam’s repo boilerplate in [`extra/extension-boilerplate`](../../extra/extension-boilerplate).
+This command scaffolds from the same template source used by Beam’s repo boilerplate in [`resources/extra/extension-boilerplate`](../../resources/extra/extension-boilerplate).
 
 ## Local Development
 
@@ -67,12 +67,12 @@ Beam-native store packages are distributed as versioned release artifacts plus c
 
 In the Beam repo, the end-to-end flow is:
 
-1. Prepare a package source directory under `store/packages/<name-version>/`
+1. Prepare a package source directory under `infra/store/packages/<name-version>/`
 2. Add `beam-store.json` metadata alongside the extension `package.json`
 3. Publish the artifact and update the local catalog:
 
 ```bash
-bun run store:publish -- --source store/packages/beam-demo-tools-1.1.0
+bun run store:publish -- --source infra/store/packages/beam-demo-tools-1.1.0
 ```
 
 4. Validate all package sources and catalog rules:
@@ -85,7 +85,7 @@ The Beam store publisher generates:
 
 - zipped release artifacts
 - SHA-256 checksums
-- catalog entries in `store/catalog.json`
+- catalog entries in `infra/store/catalog.json`
 
 ## Release Workflow
 
@@ -106,7 +106,7 @@ NPM_CONFIG_TOKEN=... bun run publish:beam-api -- --publish
 
 ## Docs
 
-For the Beam repo’s full local workflow, see [../../docs/extensions/developer-workflow.md](../../docs/extensions/developer-workflow.md).
+For the Beam repo’s full local workflow, see [../../resources/docs/extensions/developer-workflow.md](../../resources/docs/extensions/developer-workflow.md).
 
 ## Versioning
 

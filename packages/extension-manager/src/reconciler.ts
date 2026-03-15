@@ -40,7 +40,7 @@ export const container = reconciler.createContainer(
 
 export const updateContainer = (element: React.ReactElement, callback?: () => void) => {
   setCurrentRootElement(element);
-  reconciler.updateContainer(element, container, null, callback);
+  reconciler.updateContainer(element as any, container, null, callback);
 };
 
 export const batchedUpdates = (callback: () => void) => {

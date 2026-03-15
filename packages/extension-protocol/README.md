@@ -6,7 +6,7 @@ It is intentionally introduced before code generation is wired up so the workspa
 
 Planned responsibilities:
 
-- generated TypeScript bindings from `proto/extension-runtime`
+- generated TypeScript bindings from `infra/proto/extension-runtime`
 - shared runtime message types for Beam SDK and extension manager
 - one place to version the native extension contract
 

@@ -6,12 +6,14 @@
   "types": "src/index.ts",
   "scripts": {
     "generate:ts": "node ./scripts/generate-ts.mjs",
-    "check": "bunx tsc --noEmit"
+    "check": "bunx tsc --noEmit",
+    "check-types": "bunx tsc --noEmit"
   },
   "dependencies": {
     "@bufbuild/protobuf": "^2.11.0"
   },
   "devDependencies": {
+    "@beam/config": "workspace:*",
     "ts-proto": "^2.11.5",
     "typescript": "^5.9.3"
   }
