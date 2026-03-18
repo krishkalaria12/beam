@@ -1,3 +1,5 @@
+import type { Ref } from "react";
+
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import type { Sense } from "../types";
@@ -9,6 +11,7 @@ interface SenseCardProps {
   isSelected: boolean;
   onSelect: () => void;
   onSynonymClick: (word: string) => void;
+  containerRef?: Ref<HTMLDivElement>;
 }
 
 export function SenseCard({
@@ -18,9 +21,11 @@ export function SenseCard({
   isSelected,
   onSelect,
   onSynonymClick,
+  containerRef,
 }: SenseCardProps) {
   return (
     <div
+      ref={containerRef}
       data-selected={isSelected}
       onClick={onSelect}
       className={cn(

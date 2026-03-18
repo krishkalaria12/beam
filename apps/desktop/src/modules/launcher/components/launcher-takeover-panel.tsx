@@ -11,7 +11,7 @@ import {
   Search,
   X,
 } from "lucide-react";
-import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
+import { lazy, Suspense, useRef, useState, type ReactNode } from "react";
 
 import { COMMAND_PANELS, TAKEOVER_COMMAND_PANELS } from "@/command-registry/panels";
 import {
@@ -20,6 +20,7 @@ import {
 } from "@/command-registry/panel-actions-registry";
 import type { CommandPanel } from "@/command-registry/types";
 import { CommandLoadingState } from "@/components/command/command-loading-state";
+import { useMountEffect } from "@/hooks/use-mount-effect";
 import { isLauncherActionsHotkey, listenLauncherActionsToggle } from "@/lib/launcher-actions";
 import type { LauncherActionItem } from "@/modules/launcher/components/launcher-actions-panel";
 import { LauncherActionsPanel } from "@/modules/launcher/components/launcher-actions-panel";
@@ -142,7 +143,16 @@ function getPrimaryShortcutLabel(panel: CommandPanel): string {
   return "↩";
 }
 
-export function LauncherTakeoverPanel({
+export function LauncherTakeoverPanel(props: LauncherTakeoverPanelProps) {
+  const { activePanel } = props;
+  if (!isTakeoverPanel(activePanel)) {
+    return null;
+  }
+
+  return <LauncherTakeoverPanelContent key={activePanel} {...props} />;
+}
+
+function LauncherTakeoverPanelContent({
   activePanel,
   fileSearchQuery,
   dictionaryQuery,
@@ -176,15 +186,19 @@ export function LauncherTakeoverPanel({
   backToCommands,
 }: LauncherTakeoverPanelProps) {
   const takeoverPanelIsOpen = isTakeoverPanel(activePanel);
-
   const [actionsOpen, setActionsOpen] = useState(false);
   const actionsPreviousFocusRef = useRef<HTMLElement | null>(null);
+  const actionsOpenRef = useRef(actionsOpen);
+  const shouldUseSharedActionsRef = useRef(false);
+  const handleActionsOpenChangeRef = useRef<(nextOpen: boolean) => void>(() => {});
   const shouldUseSharedActions =
     takeoverPanelIsOpen &&
     activePanel !== COMMAND_PANELS.DMENU &&
     activePanel !== COMMAND_PANELS.SETTINGS;
   const panelRegistration = getPanelCommandRegistration(activePanel, quicklinksView);
   const primaryActionLabel = getPanelPrimaryActionLabel(activePanel);
+  actionsOpenRef.current = actionsOpen;
+  shouldUseSharedActionsRef.current = shouldUseSharedActions;
 
   function handleActionsOpenChange(nextOpen: boolean) {
     if (nextOpen) {
@@ -204,35 +218,33 @@ export function LauncherTakeoverPanel({
     });
   }
 
-  useEffect(() => {
-    setActionsOpen(false);
-  }, [activePanel]);
+  handleActionsOpenChangeRef.current = handleActionsOpenChange;
 
-  useEffect(() => {
-    if (!shouldUseSharedActions) {
-      return;
-    }
-
+  useMountEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (!isLauncherActionsHotkey(event)) {
+      if (!shouldUseSharedActionsRef.current || !isLauncherActionsHotkey(event)) {
         return;
       }
 
       event.preventDefault();
       event.stopPropagation();
-      handleActionsOpenChange(!actionsOpen);
+      handleActionsOpenChangeRef.current(!actionsOpenRef.current);
     };
 
     window.addEventListener("keydown", onKeyDown, true);
     const unsubscribeToggle = listenLauncherActionsToggle(() => {
-      handleActionsOpenChange(!actionsOpen);
+      if (!shouldUseSharedActionsRef.current) {
+        return;
+      }
+
+      handleActionsOpenChangeRef.current(!actionsOpenRef.current);
     });
 
     return () => {
       window.removeEventListener("keydown", onKeyDown, true);
       unsubscribeToggle();
     };
-  }, [actionsOpen, shouldUseSharedActions]);
+  });
 
   function dispatchShortcut(options: {
     key: string;
@@ -525,11 +537,6 @@ export function LauncherTakeoverPanel({
       </LauncherTakeoverSurface>
     );
   }
-
-  if (!takeoverPanelIsOpen) {
-    return null;
-  }
-
   return (
     <div className="relative h-full w-full">
       <Suspense fallback={<TakeoverPanelFallback />}>{content}</Suspense>

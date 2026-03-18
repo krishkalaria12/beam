@@ -1,6 +1,7 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 
 import { CommandFooterBar, type FooterAction } from "@/components/command/command-footer-bar";
+import { useMountEffect } from "@/hooks/use-mount-effect";
 import { LauncherActionsPanel } from "@/modules/launcher/components/launcher-actions-panel";
 import { isLauncherActionsHotkey } from "@/lib/launcher-actions";
 
@@ -11,8 +12,10 @@ interface LauncherFooterProps {
 
 export function LauncherFooter({ leftSlot, primaryAction }: LauncherFooterProps) {
   const [actionsOpen, setActionsOpen] = useState(false);
+  const setActionsOpenRef = useRef(setActionsOpen);
+  setActionsOpenRef.current = setActionsOpen;
 
-  useEffect(() => {
+  useMountEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (!isLauncherActionsHotkey(event)) {
         return;
@@ -20,14 +23,14 @@ export function LauncherFooter({ leftSlot, primaryAction }: LauncherFooterProps)
 
       event.preventDefault();
       event.stopPropagation();
-      setActionsOpen((previous) => !previous);
+      setActionsOpenRef.current((previous) => !previous);
     };
 
     window.addEventListener("keydown", handleKeyDown, true);
     return () => {
       window.removeEventListener("keydown", handleKeyDown, true);
     };
-  }, []);
+  });
 
   return (
     <CommandFooterBar

@@ -1,8 +1,9 @@
 import { Trash2 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/module/kbd";
+import { useMountEffect } from "@/hooks/use-mount-effect";
 import { cn } from "@/lib/utils";
 
 interface HotkeyRecorderProps {
@@ -127,30 +128,38 @@ export default function HotkeyRecorder({
 }: HotkeyRecorderProps) {
   const [isRecording, setIsRecording] = useState(false);
   const isRecordingRef = useRef(false);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const disabledRef = useRef(disabled);
+  const onChangeRef = useRef(onChange);
+  const previousAutoRecordRef = useRef(autoRecord);
+  const previousDisabledRef = useRef(disabled);
 
-  useEffect(() => {
-    if (!autoRecord || disabled) {
-      return;
-    }
+  if (
+    autoRecord &&
+    !disabled &&
+    !isRecording &&
+    (!previousAutoRecordRef.current || previousDisabledRef.current)
+  ) {
     setIsRecording(true);
-  }, [autoRecord, disabled]);
+  }
 
-  useEffect(() => {
-    isRecordingRef.current = isRecording;
-    if (!isRecording) {
-      return;
-    }
-    containerRef.current?.focus();
-  }, [isRecording]);
+  previousAutoRecordRef.current = autoRecord;
+  previousDisabledRef.current = disabled;
+  isRecordingRef.current = isRecording;
+  disabledRef.current = disabled;
+  onChangeRef.current = onChange;
 
-  useEffect(() => {
-    if (!isRecording || disabled) {
-      return;
-    }
+  const containerRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (node && isRecording) {
+        node.focus();
+      }
+    },
+    [isRecording],
+  );
 
+  useMountEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (!isRecordingRef.current) {
+      if (!isRecordingRef.current || disabledRef.current) {
         return;
       }
 
@@ -169,7 +178,7 @@ export default function HotkeyRecorder({
         !event.altKey &&
         !event.shiftKey
       ) {
-        onChange("");
+        onChangeRef.current("");
         setIsRecording(false);
         return;
       }
@@ -179,7 +188,7 @@ export default function HotkeyRecorder({
         return;
       }
 
-      onChange(hotkey);
+      onChangeRef.current(hotkey);
       setIsRecording(false);
     };
 
@@ -187,7 +196,7 @@ export default function HotkeyRecorder({
     return () => {
       window.removeEventListener("keydown", handleKeyDown, true);
     };
-  }, [disabled, isRecording, onChange]);
+  });
 
   const hotkeyParts = value ? formatHotkeyLabel(value).split(" + ") : [];
 

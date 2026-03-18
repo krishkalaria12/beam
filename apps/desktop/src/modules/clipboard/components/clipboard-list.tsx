@@ -1,6 +1,6 @@
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { FileText, ImageIcon, Link, Clipboard } from "lucide-react";
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import { isToday, isYesterday, parseISO, format } from "date-fns";
 
 import { CommandLoadingState } from "@/components/command/command-loading-state";
@@ -11,6 +11,7 @@ interface ClipboardListItemProps {
   entry: ClipboardHistoryEntry;
   isSelected: boolean;
   onSelect: () => void;
+  itemRef?: (node: HTMLDivElement | null) => void;
 }
 
 const getEntryIconConfig = (type: ClipboardContentType) => {
@@ -36,11 +37,12 @@ const getEntryIconConfig = (type: ClipboardContentType) => {
   }
 };
 
-function ClipboardListItem({ entry, isSelected, onSelect }: ClipboardListItemProps) {
+function ClipboardListItem({ entry, isSelected, onSelect, itemRef }: ClipboardListItemProps) {
   const iconConfig = getEntryIconConfig(entry.content_type);
 
   return (
     <div
+      ref={itemRef}
       onClick={onSelect}
       className={cn(
         "group relative flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 transition-colors",
@@ -191,14 +193,16 @@ export function ClipboardList({ entries, selectedIndex, onSelect, isLoading }: C
       virtualRows.findIndex((row) => row.kind === "item" && row.originalIndex === selectedIndex),
     [selectedIndex, virtualRows],
   );
+  const selectedItemRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (!node || selectedVirtualIndex < 0 || isLoading || entries.length === 0) {
+        return;
+      }
 
-  useEffect(() => {
-    if (selectedVirtualIndex < 0 || isLoading || entries.length === 0) {
-      return;
-    }
-
-    rowVirtualizer.scrollToIndex(selectedVirtualIndex, { align: "auto" });
-  }, [entries.length, isLoading, rowVirtualizer, selectedVirtualIndex]);
+      node.scrollIntoView({ block: "nearest" });
+    },
+    [entries.length, isLoading, selectedVirtualIndex],
+  );
 
   return (
     <div className="clipboard-list-panel flex w-[42%] flex-col border-r border-[var(--launcher-card-border)]">
@@ -252,6 +256,7 @@ export function ClipboardList({ entries, selectedIndex, onSelect, isLoading }: C
                       entry={row.entry}
                       isSelected={row.originalIndex === selectedIndex}
                       onSelect={() => onSelect(row.originalIndex)}
+                      itemRef={row.originalIndex === selectedIndex ? selectedItemRef : undefined}
                     />
                   )}
                 </div>

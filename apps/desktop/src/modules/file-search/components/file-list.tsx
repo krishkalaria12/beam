@@ -1,5 +1,5 @@
 import { File, FileText, FileCode, FileJson, Image, Search, Loader2, Sparkles } from "lucide-react";
-import { useEffect, useRef, type ReactNode } from "react";
+import { useCallback, useRef, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { Kbd } from "@/components/module";
 import type { SearchResult } from "../types";
@@ -251,11 +251,7 @@ export function FileList({
   onOpen,
 }: FileListProps) {
   const listRef = useRef<HTMLDivElement>(null);
-  const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
-
-  // Scroll active item into view with proper boundary detection
-  useEffect(() => {
-    const activeItem = itemRefs.current[selectedIndex];
+  const setSelectedItemRef = useCallback((activeItem: HTMLDivElement | null) => {
     const container = listRef.current;
 
     if (activeItem && container) {
@@ -269,12 +265,7 @@ export function FileList({
         activeItem.scrollIntoView({ block: "end", behavior: "smooth" });
       }
     }
-  }, [selectedIndex]);
-
-  // Reset refs when results change
-  useEffect(() => {
-    itemRefs.current = itemRefs.current.slice(0, results.length);
-  }, [results.length]);
+  }, []);
 
   // Loading state - with character
   if (isLoading && results.length === 0) {
@@ -376,9 +367,7 @@ export function FileList({
           return (
             <div
               key={result.entry.path}
-              ref={(el) => {
-                itemRefs.current[index] = el;
-              }}
+              ref={isSelected ? setSelectedItemRef : undefined}
               data-selected={isSelected}
               data-index={index}
               className={cn(

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 
 import debounce from "@/lib/debounce";
 import { copyToClipboard } from "../api/copy-to-clipboard";
@@ -22,7 +22,7 @@ export function ClipboardView({ onBack, onToggleActions }: ClipboardViewProps) {
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<ClipboardTypeFilter>("all");
-  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [selectionState, setSelectionState] = useState({ key: "", index: 0 });
   const [copiedEntryIndex, setCopiedEntryIndex] = useState<number | null>(null);
   const [copyError, setCopyError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -56,30 +56,29 @@ export function ClipboardView({ onBack, onToggleActions }: ClipboardViewProps) {
     });
   }, [history, debouncedQuery, typeFilter]);
 
+  const selectionKey = `${query}\u0000${typeFilter}\u0000${filteredHistory.length}`;
+  if (selectionState.key !== selectionKey) {
+    setSelectionState({ key: selectionKey, index: 0 });
+  }
+
+  const selectedIndex = Math.min(selectionState.index, Math.max(filteredHistory.length - 1, 0));
+  const setSelectedIndex = (value: number | ((previous: number) => number)) => {
+    setSelectionState((previous) => ({
+      key: selectionKey,
+      index:
+        typeof value === "function"
+          ? value(previous.key === selectionKey ? previous.index : 0)
+          : value,
+    }));
+  };
+
   const selectedEntry = filteredHistory[selectedIndex] || null;
   const isInitialLoading = isLoading && history.length === 0;
-
-  // Auto-focus input
-  useEffect(() => {
-    inputRef.current?.focus();
+  const copyFeedbackTimerRef = useRef<number | null>(null);
+  const focusInputRef = useCallback((node: HTMLInputElement | null) => {
+    inputRef.current = node;
+    node?.focus();
   }, []);
-
-  // Reset selection when results change
-  useEffect(() => {
-    setSelectedIndex(0);
-  }, [filteredHistory.length, query, typeFilter]);
-
-  // Handle copy feedback timeout
-  useEffect(() => {
-    if (copiedEntryIndex === null && !copyError) return;
-
-    const timeout = setTimeout(() => {
-      setCopiedEntryIndex(null);
-      setCopyError(null);
-    }, 1400);
-
-    return () => clearTimeout(timeout);
-  }, [copiedEntryIndex, copyError]);
 
   const handleCopy = async (entry: ClipboardHistoryEntry, index: number) => {
     try {
@@ -91,6 +90,16 @@ export function ClipboardView({ onBack, onToggleActions }: ClipboardViewProps) {
       console.error("Failed to copy:", error);
       setCopiedEntryIndex(null);
       setCopyError("Could not copy entry");
+    } finally {
+      if (copyFeedbackTimerRef.current !== null) {
+        window.clearTimeout(copyFeedbackTimerRef.current);
+      }
+
+      copyFeedbackTimerRef.current = window.setTimeout(() => {
+        copyFeedbackTimerRef.current = null;
+        setCopiedEntryIndex(null);
+        setCopyError(null);
+      }, 1400);
     }
   };
 
@@ -151,7 +160,7 @@ export function ClipboardView({ onBack, onToggleActions }: ClipboardViewProps) {
         onBack={onBack}
         typeFilter={typeFilter}
         onTypeFilterChange={setTypeFilter}
-        inputRef={inputRef}
+        inputRef={focusInputRef}
       />
 
       <div className="flex min-h-0 flex-1 overflow-hidden">

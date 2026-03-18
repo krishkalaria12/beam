@@ -2,7 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { isTauri } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, lazy, useCallback, useEffectEvent, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { buildCommandContext } from "@/command-registry/context";
@@ -21,6 +21,7 @@ import type { CommandDescriptor } from "@/command-registry/types";
 import { useCommandPreferences } from "@/command-registry/use-command-preferences";
 import { CommandLoadingState } from "@/components/command/command-loading-state";
 import { Command, CommandInput, CommandList } from "@/components/ui/command";
+import { useMountEffect } from "@/hooks/use-mount-effect";
 import { isLauncherActionsHotkey, requestLauncherActionsToggle } from "@/lib/launcher-actions";
 import { cn } from "@/lib/utils";
 
@@ -137,7 +138,8 @@ interface HotkeyBackendStatusEventPayload {
 
 export default function LauncherCommand() {
   const queryClient = useQueryClient();
-  const [calculatorSessionId, setCalculatorSessionId] = useState(() => crypto.randomUUID());
+  const commandSearchSessionSeed = useLauncherUiStore((state) => state.commandSearchSessionSeed);
+  const calculatorSessionId = useMemo(() => crypto.randomUUID(), [commandSearchSessionSeed]);
   const commandSearch = useLauncherUiStore((state) => state.commandSearch);
   const activePanel = useLauncherUiStore((state) => state.activePanel);
   const fileSearchQuery = useLauncherUiStore((state) => state.fileSearchQuery);
@@ -320,12 +322,6 @@ export default function LauncherCommand() {
     fallbackCommandIds: commandPreferences.fallbackCommandIds,
   });
 
-  useEffect(() => {
-    if (trimmedCommandSearch.length === 0) {
-      setCalculatorSessionId(crypto.randomUUID());
-    }
-  }, [trimmedCommandSearch]);
-
   const handleRunShellCommand = useCallback(async () => {
     if (!isShellTrigger || shellCommand.length === 0 || runShellCommandMutation.isPending) {
       return;
@@ -395,26 +391,32 @@ export default function LauncherCommand() {
 
     return { query, result };
   }, [rankedRegistryCommands]);
+  const calculatorSaveTimerRef = useRef<number | null>(null);
+  const calculatorSaveKeyRef = useRef("");
+  const calculatorPreviewKey = calculatorPreview
+    ? `${calculatorPreview.query}\u0000${calculatorPreview.result}\u0000${calculatorSessionId}`
+    : "";
 
-  useEffect(() => {
-    if (!calculatorPreview) {
-      return;
+  if (calculatorPreviewKey && calculatorSaveKeyRef.current !== calculatorPreviewKey) {
+    calculatorSaveKeyRef.current = calculatorPreviewKey;
+    if (calculatorSaveTimerRef.current !== null) {
+      window.clearTimeout(calculatorSaveTimerRef.current);
     }
-
-    const timerId = window.setTimeout(() => {
+    calculatorSaveTimerRef.current = window.setTimeout(() => {
+      calculatorSaveTimerRef.current = null;
       void saveCalculatorHistory(
-        calculatorPreview.query,
-        calculatorPreview.result,
+        calculatorPreview!.query,
+        calculatorPreview!.result,
         calculatorSessionId,
       ).then(() => {
         queryClient.invalidateQueries({ queryKey: ["calculator", "history"] });
       });
     }, CALCULATOR_AUTO_SAVE_DEBOUNCE_MS);
-
-    return () => {
-      window.clearTimeout(timerId);
-    };
-  }, [calculatorPreview?.query, calculatorPreview?.result, calculatorSessionId, queryClient]);
+  } else if (!calculatorPreviewKey && calculatorSaveTimerRef.current !== null) {
+    window.clearTimeout(calculatorSaveTimerRef.current);
+    calculatorSaveTimerRef.current = null;
+    calculatorSaveKeyRef.current = "";
+  }
 
   const customActionHandler = useMemo(
     () =>
@@ -568,43 +570,40 @@ export default function LauncherCommand() {
     [handleRegistryCommandSelect, quicklinkKeyword, quicklinkQuery, quicklinks],
   );
 
-  const rankedCommandsRef = useRef(rankedRegistryCommands);
-  const handleRegistryCommandSelectRef = useRef(handleRegistryCommandSelect);
+  const handleHotkeyCommand = useEffectEvent((event: { payload?: HotkeyCommandEventPayload }) => {
+    const commandId =
+      typeof event.payload?.command_id === "string" ? event.payload.command_id.trim() : "";
+    if (!commandId) {
+      return;
+    }
 
-  useEffect(() => {
-    rankedCommandsRef.current = rankedRegistryCommands;
-  }, [rankedRegistryCommands]);
+    const dynamicFallback = rankedRegistryCommands.find((entry) => entry.command.id === commandId)
+      ?.command;
 
-  useEffect(() => {
-    handleRegistryCommandSelectRef.current = handleRegistryCommandSelect;
-  }, [handleRegistryCommandSelect]);
+    if (!dynamicFallback && !staticCommandRegistry.has(commandId)) {
+      toast.error(`Hotkey command not available: ${commandId}`);
+      return;
+    }
 
-  useEffect(() => {
+    void handleRegistryCommandSelect(commandId, dynamicFallback);
+  });
+
+  useMountEffect(() => {
     if (!isTauri()) {
       return;
     }
 
+    let disposed = false;
     let unlistenFn: UnlistenFn | null = null;
 
-    listen<HotkeyCommandEventPayload>(HOTKEY_COMMAND_EVENT, (event) => {
-      const commandId =
-        typeof event.payload?.command_id === "string" ? event.payload.command_id.trim() : "";
-      if (!commandId) {
-        return;
-      }
-
-      const dynamicFallback = rankedCommandsRef.current.find(
-        (entry) => entry.command.id === commandId,
-      )?.command;
-
-      if (!dynamicFallback && !staticCommandRegistry.has(commandId)) {
-        toast.error(`Hotkey command not available: ${commandId}`);
-        return;
-      }
-
-      void handleRegistryCommandSelectRef.current(commandId, dynamicFallback);
+    void listen<HotkeyCommandEventPayload>(HOTKEY_COMMAND_EVENT, (event) => {
+      handleHotkeyCommand(event);
     })
       .then((cleanup) => {
+        if (disposed) {
+          cleanup();
+          return;
+        }
         unlistenFn = cleanup;
       })
       .catch(() => {
@@ -612,18 +611,20 @@ export default function LauncherCommand() {
       });
 
     return () => {
+      disposed = true;
       unlistenFn?.();
     };
-  }, []);
+  });
 
-  useEffect(() => {
+  useMountEffect(() => {
     if (!isTauri()) {
       return;
     }
 
+    let disposed = false;
     let unlistenFn: UnlistenFn | null = null;
 
-    listen<HotkeyBackendStatusEventPayload>(HOTKEY_BACKEND_STATUS_EVENT, (event) => {
+    void listen<HotkeyBackendStatusEventPayload>(HOTKEY_BACKEND_STATUS_EVENT, (event) => {
       const message =
         typeof event.payload?.message === "string" ? event.payload.message.trim() : "";
       const hint = typeof event.payload?.hint === "string" ? event.payload.hint.trim() : "";
@@ -640,6 +641,10 @@ export default function LauncherCommand() {
       });
     })
       .then((cleanup) => {
+        if (disposed) {
+          cleanup();
+          return;
+        }
         unlistenFn = cleanup;
       })
       .catch(() => {
@@ -647,9 +652,10 @@ export default function LauncherCommand() {
       });
 
     return () => {
+      disposed = true;
       unlistenFn?.();
     };
-  }, []);
+  });
 
   const handleKeyDown = async (e: React.KeyboardEvent) => {
     if (e.defaultPrevented) {
@@ -689,12 +695,17 @@ export default function LauncherCommand() {
     }
   };
 
-  useEffect(() => {
-    if (activePanel === "commands") {
-      return;
-    }
+  const activePanelRef = useRef(activePanel);
+  const backToCommandsRef = useRef(backToCommands);
+  activePanelRef.current = activePanel;
+  backToCommandsRef.current = backToCommands;
 
+  useMountEffect(() => {
     const handleWindowBackHotkey = (event: KeyboardEvent) => {
+      if (activePanelRef.current === "commands") {
+        return;
+      }
+
       if (event.defaultPrevented || !isLauncherBackHotkey(event)) {
         return;
       }
@@ -702,9 +713,9 @@ export default function LauncherCommand() {
       event.preventDefault();
       event.stopPropagation();
 
-      const handledByPanel = runLauncherPanelBackHandler(activePanel);
+      const handledByPanel = runLauncherPanelBackHandler(activePanelRef.current);
       if (!handledByPanel) {
-        backToCommands();
+        backToCommandsRef.current();
       }
     };
 
@@ -712,7 +723,7 @@ export default function LauncherCommand() {
     return () => {
       window.removeEventListener("keydown", handleWindowBackHotkey);
     };
-  }, [activePanel, backToCommands]);
+  });
 
   const shouldCollapseToInputOnly =
     activePanel === "commands" && isCompressed && trimmedCommandSearch.length === 0;
@@ -737,7 +748,15 @@ export default function LauncherCommand() {
 
   useLauncherWindowSizeSync(activePanel === "commands", shouldCollapseToInputOnly);
 
-  useEffect(() => {
+  useMountEffect(() => {
+    return () => {
+      if (calculatorSaveTimerRef.current !== null) {
+        window.clearTimeout(calculatorSaveTimerRef.current);
+      }
+    };
+  });
+
+  useMountEffect(() => {
     let cancelled = false;
 
     const scheduleFocus = () => {
@@ -763,21 +782,30 @@ export default function LauncherCommand() {
       window.removeEventListener("focus", scheduleFocus);
       document.removeEventListener("visibilitychange", scheduleFocus);
     };
-  }, []);
-
-  useEffect(() => {
-    if (activePanel !== "commands" || isInputHidden) {
-      return;
+  });
+  const focusInputFrameRef = useRef<number | null>(null);
+  const focusInputKeyRef = useRef("");
+  const focusInputKey = `${activePanel}:${isInputHidden}`;
+  if (focusInputKeyRef.current !== focusInputKey) {
+    focusInputKeyRef.current = focusInputKey;
+    if (focusInputFrameRef.current !== null) {
+      window.cancelAnimationFrame(focusInputFrameRef.current);
     }
+    if (activePanel === "commands" && !isInputHidden) {
+      focusInputFrameRef.current = window.requestAnimationFrame(() => {
+        focusInputFrameRef.current = null;
+        focusLauncherInputElement();
+      });
+    }
+  }
 
-    const frameId = window.requestAnimationFrame(() => {
-      focusLauncherInputElement();
-    });
-
+  useMountEffect(() => {
     return () => {
-      window.cancelAnimationFrame(frameId);
+      if (focusInputFrameRef.current !== null) {
+        window.cancelAnimationFrame(focusInputFrameRef.current);
+      }
     };
-  }, [activePanel, isInputHidden]);
+  });
 
   return (
     <div className="relative h-full w-full bg-transparent">

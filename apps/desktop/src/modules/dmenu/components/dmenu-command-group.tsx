@@ -1,5 +1,6 @@
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { useDeferredValue, useEffect, useMemo, useRef, useState, startTransition } from "react";
+import { useDeferredValue, useMemo, useRef, useState, startTransition, useCallback } from "react";
+import { useQuery } from "@tanstack/react-query";
 
 import { completeCliDmenuRequest, searchCliDmenuRequest } from "@/modules/dmenu/api/bridge";
 import type { DmenuResolvePayload, DmenuSessionRow } from "@/modules/dmenu/types";
@@ -38,70 +39,69 @@ export default function DmenuCommandGroup() {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [rankedRowIds, setRankedRowIds] = useState<string[]>([]);
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
+  const [sessionRowsStateKey, setSessionRowsStateKey] = useState("");
 
   const rowsById = useMemo(
     () => new Map(dmenuSession?.rows.map((row) => [row.id, row]) ?? []),
     [dmenuSession?.rows],
   );
+  const initialRankedRowIds = useMemo(
+    () => dmenuSession?.rows.map((row) => row.id) ?? [],
+    [dmenuSession?.rows],
+  );
+  const nextSessionRowsStateKey = useMemo(
+    () => `${dmenuSession?.requestId ?? ""}\u0000${initialRankedRowIds.join("\u0001")}`,
+    [dmenuSession?.requestId, initialRankedRowIds],
+  );
 
-  useEffect(() => {
-    setRankedRowIds(dmenuSession?.rows.map((row) => row.id) ?? []);
+  if (sessionRowsStateKey !== nextSessionRowsStateKey) {
+    setSessionRowsStateKey(nextSessionRowsStateKey);
+    setRankedRowIds(initialRankedRowIds);
     setSelectedRowId(null);
-  }, [dmenuSession?.requestId, dmenuSession?.rows]);
+  }
 
-  useEffect(() => {
-    if (!dmenuSession) {
-      return;
-    }
+  const dmenuSearchQuery = useQuery({
+    queryKey: ["dmenu-search", dmenuSession?.requestId ?? "", deferredQuery],
+    queryFn: async () => searchCliDmenuRequest(dmenuSession!.requestId, deferredQuery),
+    enabled: Boolean(dmenuSession),
+    staleTime: 0,
+  });
 
-    let cancelled = false;
-    void searchCliDmenuRequest(dmenuSession.requestId, deferredQuery)
-      .then((nextRankedRowIds) => {
-        if (cancelled) {
-          return;
+  const resolvedRankedRowIds = dmenuSearchQuery.data ?? rankedRowIds;
+  if (rankedRowIds !== resolvedRankedRowIds) {
+    startTransition(() => {
+      setRankedRowIds(resolvedRankedRowIds);
+      setSelectedRowId((current) => {
+        if (current && resolvedRankedRowIds.includes(current)) {
+          const row = rowsById.get(current);
+          if (row && !row.nonselectable) {
+            return current;
+          }
         }
 
-        startTransition(() => {
-          setRankedRowIds(nextRankedRowIds);
-          setSelectedRowId((current) => {
-            if (current && nextRankedRowIds.includes(current)) {
-              const row = rowsById.get(current);
-              if (row && !row.nonselectable) {
-                return current;
-              }
-            }
-
-            return (
-              pickDefaultRowId(dmenuSession.rows, nextRankedRowIds, dmenuSession.selectText) ?? null
-            );
-          });
-        });
-      })
-      .catch((error) => {
-        if (!cancelled) {
-          console.error("Failed to search dmenu request:", error);
-        }
+        return (
+          dmenuSession
+            ? (pickDefaultRowId(dmenuSession.rows, resolvedRankedRowIds, dmenuSession.selectText) ??
+              null)
+            : null
+        );
       });
+    });
+  }
 
-    return () => {
-      cancelled = true;
-    };
-  }, [deferredQuery, dmenuSession, rowsById]);
-
-  useEffect(() => {
-    if (!dmenuSession) {
+  const inputMountRef = useCallback((node: HTMLInputElement | null) => {
+    inputRef.current = node;
+    if (!node || !dmenuSession) {
       return;
     }
 
-    const frameId = window.requestAnimationFrame(() => {
-      inputRef.current?.focus({ preventScroll: true });
-      inputRef.current?.select();
+    window.requestAnimationFrame(() => {
+      if (node.isConnected) {
+        node.focus({ preventScroll: true });
+        node.select();
+      }
     });
-
-    return () => {
-      window.cancelAnimationFrame(frameId);
-    };
-  }, [dmenuSession?.requestId]);
+  }, [dmenuSession]);
 
   const completeSession = async (payload: DmenuResolvePayload) => {
     await completeCliDmenuRequest(payload);
@@ -198,7 +198,7 @@ export default function DmenuCommandGroup() {
             </span>
           ) : null}
           <input
-            ref={inputRef}
+            ref={inputMountRef}
             type={dmenuSession.password ? "password" : "text"}
             value={dmenuQuery}
             onChange={(event) => {

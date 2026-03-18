@@ -2,8 +2,9 @@ import { isTauri } from "@tauri-apps/api/core";
 import { getName, getVersion } from "@tauri-apps/api/app";
 import { open as shellOpen } from "@tauri-apps/plugin-shell";
 import { BookOpen, Bug, Github, Info } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
+import { useMountEffect } from "@/hooks/use-mount-effect";
 import { AboutLink } from "./components/about-link";
 
 async function openExternal(target: string) {
@@ -18,7 +19,7 @@ export function AboutTab() {
   const [version, setVersion] = useState("0.1.0");
   const [productName, setProductName] = useState("beam");
 
-  useEffect(() => {
+  useMountEffect(() => {
     if (!isTauri()) {
       return;
     }
@@ -32,7 +33,7 @@ export function AboutTab() {
         setProductName("beam");
         setVersion("0.1.0");
       });
-  }, []);
+  });
 
   return (
     <div className="custom-scrollbar flex h-full min-h-0 flex-1 items-center justify-center overflow-y-auto px-8 py-10">

@@ -1,9 +1,9 @@
-import { useEffect } from "react";
 import { toast } from "sonner";
 
 import { extensionManagerService } from "@/modules/extensions/extension-manager-service";
 import { useExtensionRuntimeStore } from "@/modules/extensions/runtime/store";
 import { useSettingsPageStore } from "@/modules/settings/takeover/store/use-settings-page-store";
+import { useMountEffect } from "@/hooks/use-mount-effect";
 
 interface UseExtensionManagerEventsInput {
   backToCommands: () => void;
@@ -14,7 +14,7 @@ export function useExtensionManagerEvents({
   backToCommands,
   openSettings,
 }: UseExtensionManagerEventsInput) {
-  useEffect(() => {
+  useMountEffect(() => {
     const unsubscribe = extensionManagerService.subscribe((event) => {
       if (event.type === "go-back-to-plugin-list") {
         useExtensionRuntimeStore.getState().resetRuntime();
@@ -54,5 +54,5 @@ export function useExtensionManagerEvents({
       extensionManagerService.stop();
       useExtensionRuntimeStore.getState().resetRuntime();
     };
-  }, [backToCommands, openSettings]);
+  });
 }

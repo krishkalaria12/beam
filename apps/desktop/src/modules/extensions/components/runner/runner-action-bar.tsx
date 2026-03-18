@@ -1,5 +1,5 @@
 import { ChevronsUpDown } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useRef, useState } from "react";
 
 import { ActionListPanel, ModuleFooter } from "@/components/module";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,7 @@ import { RunnerToast } from "@/modules/extensions/components/runner/runner-toast
 import { listenExtensionRunnerActionsToggle } from "@/modules/extensions/components/runner/runner-actions-toggle";
 import type { FlattenedAction } from "@/modules/extensions/components/runner/types";
 import type { ExtensionToast } from "@/modules/extensions/runtime/store";
+import { useMountEffect } from "@/hooks/use-mount-effect";
 
 interface RunnerActionBarProps {
   actions: FlattenedAction[];
@@ -26,6 +27,9 @@ export function RunnerActionBar({
   const [actionsOpen, setActionsOpen] = useState(false);
   const primaryAction = actions[0];
   const moreActionsCount = Math.max(0, actions.length - (primaryAction ? 1 : 0));
+  const resolvedActionsOpen = actions.length > 0 && actionsOpen;
+  const actionsLengthRef = useRef(actions.length);
+  actionsLengthRef.current = actions.length;
 
   const parseShortcut = (shortcut?: string): string[] => {
     if (!shortcut) {
@@ -37,21 +41,15 @@ export function RunnerActionBar({
       .filter((part) => part.length > 0);
   };
 
-  useEffect(() => {
-    if (actions.length === 0) {
-      setActionsOpen(false);
-    }
-  }, [actions.length]);
-
-  useEffect(() => {
+  useMountEffect(() => {
     return listenExtensionRunnerActionsToggle(() => {
-      if (actions.length === 0) {
+      if (actionsLengthRef.current === 0) {
         return;
       }
 
       setActionsOpen((previous) => !previous);
     });
-  }, [actions.length]);
+  });
 
   return (
     <ModuleFooter
@@ -94,7 +92,7 @@ export function RunnerActionBar({
       overlay={
         actions.length > 0 ? (
           <ActionListPanel
-            open={actionsOpen}
+            open={resolvedActionsOpen}
             onOpenChange={setActionsOpen}
             showTrigger={false}
             className="ext-actions-control absolute top-0 right-4 h-0 w-0"

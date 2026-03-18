@@ -9,7 +9,7 @@ import {
   Wrench,
   XCircle,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { IconChip } from "@/components/module";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,7 @@ import {
   openGnomeShellExtensionDirectory,
   type DesktopIntegrationStatus,
 } from "@/modules/settings/api/desktop-integration";
+import { useMountEffect } from "@/hooks/use-mount-effect";
 
 type ActionState = "idle" | "refreshing" | "installing" | "enabling" | "opening";
 type StatusTone = "supported" | "unsupported";
@@ -97,9 +98,9 @@ export function GeneralDesktopIntegrationSection() {
     }
   }
 
-  useEffect(() => {
+  useMountEffect(() => {
     void refresh();
-  }, []);
+  });
 
   const capabilityItems: CapabilityItem[] = status
     ? [

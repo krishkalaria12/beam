@@ -11,7 +11,7 @@ import type { SaveFeedback } from "@/modules/launcher/types";
 
 interface LauncherActionsAliasPageProps {
   aliasInputId: string;
-  aliasInputRef: React.RefObject<HTMLInputElement | null>;
+  aliasInputRef: (node: HTMLInputElement | null) => void;
   aliasValue: string;
   saving: boolean;
   canSave: boolean;

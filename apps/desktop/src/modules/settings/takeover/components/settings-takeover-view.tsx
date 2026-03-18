@@ -1,8 +1,9 @@
 import { Blocks, ChevronLeft, Info, Keyboard, Settings } from "lucide-react";
 import { lazy, Suspense, type ComponentType } from "react";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { useMountEffect } from "@/hooks/use-mount-effect";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { LauncherTakeoverSurface } from "@/modules/launcher/components/launcher-takeover-surface";
@@ -102,16 +103,12 @@ export function SettingsTakeoverView({
   const initializedRef = useRef(false);
   const [phase, setPhase] = useState<"ready" | "closing">("ready");
 
-  useEffect(() => {
-    if (initializedRef.current) {
-      return;
-    }
-
+  if (!initializedRef.current) {
     initializedRef.current = true;
     if (!extensionTarget) {
       setActiveTab("general");
     }
-  }, [extensionTarget, setActiveTab]);
+  }
 
   function handleBack() {
     if (phase === "closing") {
@@ -124,7 +121,10 @@ export function SettingsTakeoverView({
     }, 110);
   }
 
-  useEffect(() => {
+  const handleBackRef = useRef(handleBack);
+  handleBackRef.current = handleBack;
+
+  useMountEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "Escape") {
         return;
@@ -132,14 +132,14 @@ export function SettingsTakeoverView({
 
       event.preventDefault();
       event.stopPropagation();
-      handleBack();
+      handleBackRef.current();
     };
 
     window.addEventListener("keydown", onKeyDown, true);
     return () => {
       window.removeEventListener("keydown", onKeyDown, true);
     };
-  }, [phase]);
+  });
 
   return (
     <LauncherTakeoverSurface className="h-full w-full bg-[var(--command-item-selected-bg)]/95 backdrop-blur-sm">

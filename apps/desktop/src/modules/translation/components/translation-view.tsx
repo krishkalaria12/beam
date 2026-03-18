@@ -1,5 +1,5 @@
 import { AlertCircle, ArrowRightLeft, Check, Copy, Languages, Loader2 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { useTranslationLanguages } from "../hooks/use-translation-languages";
 import { useTranslateText } from "../hooks/use-translate-text";
 import type { DetectedLanguage } from "../types";
+import { useMountEffect } from "@/hooks/use-mount-effect";
 
 interface TranslationViewProps {
   initialQuery: string;
@@ -21,6 +22,12 @@ const AUTO_LANGUAGE_CODE = "auto";
 const AUTO_TRANSLATE_DEBOUNCE_MS = 450;
 
 export function TranslationView({ initialQuery, onBack }: TranslationViewProps) {
+  return (
+    <TranslationViewContent key={initialQuery} initialQuery={initialQuery} onBack={onBack} />
+  );
+}
+
+function TranslationViewContent({ initialQuery, onBack }: TranslationViewProps) {
   const [sourceText, setSourceText] = useState(initialQuery);
   const [sourceLanguage, setSourceLanguage] = useState(AUTO_LANGUAGE_CODE);
   const [targetLanguage, setTargetLanguage] = useState("");
@@ -31,67 +38,30 @@ export function TranslationView({ initialQuery, onBack }: TranslationViewProps) 
   const [localError, setLocalError] = useState<string | null>(null);
 
   const requestSequenceRef = useRef(0);
-  const sourceInputRef = useRef<HTMLTextAreaElement>(null);
+  const autoTranslateTimerRef = useRef<number | null>(null);
+  const copiedResetTimerRef = useRef<number | null>(null);
 
   const { data: languages = [], error: languagesError } = useTranslationLanguages();
   const translateMutation = useTranslateText();
   const mutateTranslate = translateMutation.mutateAsync;
   const resetTranslateMutation = translateMutation.reset;
 
-  useEffect(() => {
-    setSourceText(initialQuery);
-  }, [initialQuery]);
-
-  useEffect(() => {
-    sourceInputRef.current?.focus();
-  }, []);
-
-  useEffect(() => {
-    if (!copied) {
-      return;
-    }
-
-    const timer = window.setTimeout(() => {
-      setCopied(false);
-    }, 1500);
-
-    return () => {
-      window.clearTimeout(timer);
-    };
-  }, [copied]);
-
-  useEffect(() => {
-    if (languages.length === 0) {
-      return;
-    }
-
-    setSourceLanguage((previous) => {
-      if (previous === AUTO_LANGUAGE_CODE) {
-        return previous;
-      }
-
-      return languages.some((language) => language.code === previous)
-        ? previous
-        : AUTO_LANGUAGE_CODE;
-    });
-
-    setTargetLanguage((previous) => {
-      if (previous && languages.some((language) => language.code === previous)) {
-        return previous;
-      }
-
-      const englishLanguage = languages.find((language) => language.code === "en");
-      return englishLanguage?.code ?? languages[0]?.code ?? "";
-    });
-  }, [languages]);
-
   const languageNamesByCode = useMemo(() => {
     return new Map(languages.map((language) => [language.code, language.name]));
   }, [languages]);
 
-  const sourceTextTrimmed = sourceText.trim();
-  const canTranslate = sourceTextTrimmed.length > 0 && targetLanguage.length > 0;
-  const isTranslating = translateMutation.isPending;
+  const clearPendingAutoTranslate = useCallback(() => {
+    if (autoTranslateTimerRef.current !== null) {
+      window.clearTimeout(autoTranslateTimerRef.current);
+      autoTranslateTimerRef.current = null;
+    }
+  }, []);
+
+  const sourceInputRef = useCallback((node: HTMLTextAreaElement | null) => {
+    if (node) {
+      node.focus();
+    }
+  }, []);
 
   const getLanguageLabel = useCallback(
     (languageCode: string) => {
@@ -105,9 +75,9 @@ export function TranslationView({ initialQuery, onBack }: TranslationViewProps) 
   );
 
   const runTranslation = useCallback(
-    async (inputText: string) => {
+    async (inputText: string, source = sourceLanguage, target = targetLanguage) => {
       const normalizedInputText = inputText.trim();
-      if (!normalizedInputText || !targetLanguage) {
+      if (!normalizedInputText || !target) {
         setTranslatedText("");
         setDetectedLanguage(null);
         setLocalError(null);
@@ -124,8 +94,8 @@ export function TranslationView({ initialQuery, onBack }: TranslationViewProps) 
       try {
         const response = await mutateTranslate({
           q: normalizedInputText,
-          source: sourceLanguage,
-          target: targetLanguage,
+          source,
+          target,
           format: "text",
         });
 
@@ -147,38 +117,88 @@ export function TranslationView({ initialQuery, onBack }: TranslationViewProps) 
     },
     [mutateTranslate, resetTranslateMutation, sourceLanguage, targetLanguage],
   );
+  const scheduleAutoTranslate = useCallback(
+    (
+      inputText: string,
+      nextSourceLanguage = sourceLanguage,
+      nextTargetLanguage = targetLanguage,
+      nextAutoTranslate = autoTranslate,
+    ) => {
+      clearPendingAutoTranslate();
 
-  useEffect(() => {
-    if (!autoTranslate) {
-      return;
-    }
+      if (!nextAutoTranslate) {
+        return;
+      }
 
-    if (!canTranslate) {
-      setTranslatedText("");
-      setDetectedLanguage(null);
-      setLocalError(null);
-      resetTranslateMutation();
-      return;
-    }
+      const normalizedInputText = inputText.trim();
+      if (!normalizedInputText || !nextTargetLanguage) {
+        setTranslatedText("");
+        setDetectedLanguage(null);
+        setLocalError(null);
+        resetTranslateMutation();
+        return;
+      }
 
-    const timer = window.setTimeout(() => {
-      void runTranslation(sourceText);
-    }, AUTO_TRANSLATE_DEBOUNCE_MS);
+      autoTranslateTimerRef.current = window.setTimeout(() => {
+        autoTranslateTimerRef.current = null;
+        void runTranslation(inputText, nextSourceLanguage, nextTargetLanguage);
+      }, AUTO_TRANSLATE_DEBOUNCE_MS);
+    },
+    [
+      autoTranslate,
+      clearPendingAutoTranslate,
+      resetTranslateMutation,
+      runTranslation,
+      sourceLanguage,
+      targetLanguage,
+    ],
+  );
 
+  const resolvedSourceLanguage =
+    sourceLanguage === AUTO_LANGUAGE_CODE ||
+    languages.some((language) => language.code === sourceLanguage)
+      ? sourceLanguage
+      : AUTO_LANGUAGE_CODE;
+  const fallbackTargetLanguage =
+    languages.find((language) => language.code === "en")?.code ?? languages[0]?.code ?? "";
+  const resolvedTargetLanguage =
+    targetLanguage && languages.some((language) => language.code === targetLanguage)
+      ? targetLanguage
+      : fallbackTargetLanguage;
+
+  if (sourceLanguage !== resolvedSourceLanguage) {
+    setSourceLanguage(resolvedSourceLanguage);
+    scheduleAutoTranslate(sourceText, resolvedSourceLanguage, resolvedTargetLanguage, autoTranslate);
+  }
+
+  if (targetLanguage !== resolvedTargetLanguage) {
+    setTargetLanguage(resolvedTargetLanguage);
+    scheduleAutoTranslate(sourceText, resolvedSourceLanguage, resolvedTargetLanguage, autoTranslate);
+  }
+
+  const sourceTextTrimmed = sourceText.trim();
+  const canTranslate = sourceTextTrimmed.length > 0 && resolvedTargetLanguage.length > 0;
+  const isTranslating = translateMutation.isPending;
+
+  useMountEffect(() => {
     return () => {
-      window.clearTimeout(timer);
+      clearPendingAutoTranslate();
+      if (copiedResetTimerRef.current !== null) {
+        window.clearTimeout(copiedResetTimerRef.current);
+      }
     };
-  }, [autoTranslate, canTranslate, resetTranslateMutation, runTranslation, sourceText]);
+  });
 
   const handleSwapLanguages = () => {
-    if (sourceLanguage === AUTO_LANGUAGE_CODE || !targetLanguage) {
+    if (resolvedSourceLanguage === AUTO_LANGUAGE_CODE || !resolvedTargetLanguage) {
       return;
     }
 
-    const previousSourceLanguage = sourceLanguage;
-    const previousTargetLanguage = targetLanguage;
+    const previousSourceLanguage = resolvedSourceLanguage;
+    const previousTargetLanguage = resolvedTargetLanguage;
     const previousSourceText = sourceText;
     const hasTranslationOutput = translatedText.trim().length > 0;
+    const nextSourceText = hasTranslationOutput ? translatedText : previousSourceText;
 
     setSourceLanguage(previousTargetLanguage);
     setTargetLanguage(previousSourceLanguage);
@@ -191,6 +211,7 @@ export function TranslationView({ initialQuery, onBack }: TranslationViewProps) 
 
     setLocalError(null);
     resetTranslateMutation();
+    scheduleAutoTranslate(nextSourceText, previousTargetLanguage, previousSourceLanguage, autoTranslate);
   };
 
   const handleCopyTranslatedText = async () => {
@@ -201,6 +222,13 @@ export function TranslationView({ initialQuery, onBack }: TranslationViewProps) 
     try {
       await navigator.clipboard.writeText(translatedText);
       setCopied(true);
+      if (copiedResetTimerRef.current !== null) {
+        window.clearTimeout(copiedResetTimerRef.current);
+      }
+      copiedResetTimerRef.current = window.setTimeout(() => {
+        copiedResetTimerRef.current = null;
+        setCopied(false);
+      }, 1500);
     } catch {
       setLocalError("Could not copy translated text");
     }
@@ -255,10 +283,11 @@ export function TranslationView({ initialQuery, onBack }: TranslationViewProps) 
               if (!value) return;
               setSourceLanguage(value);
               setDetectedLanguage(null);
+              scheduleAutoTranslate(sourceText, value, resolvedTargetLanguage, autoTranslate);
             }}
           >
             <SelectTrigger className="h-9 flex-1 border-none bg-transparent text-[13px] font-medium tracking-[-0.01em] text-foreground shadow-none ring-0 transition-colors hover:bg-[var(--launcher-card-hover-bg)] focus:ring-0">
-              <span className="truncate px-1">{getLanguageLabel(sourceLanguage)}</span>
+              <span className="truncate px-1">{getLanguageLabel(resolvedSourceLanguage)}</span>
             </SelectTrigger>
             <SelectContent className="max-h-[300px] border-[var(--launcher-card-border)] bg-[var(--popover)] text-foreground">
               <SelectItem value={AUTO_LANGUAGE_CODE}>Auto Detect</SelectItem>
@@ -273,7 +302,7 @@ export function TranslationView({ initialQuery, onBack }: TranslationViewProps) 
           <Button
             type="button"
             onClick={handleSwapLanguages}
-            disabled={sourceLanguage === AUTO_LANGUAGE_CODE || !targetLanguage}
+            disabled={resolvedSourceLanguage === AUTO_LANGUAGE_CODE || !resolvedTargetLanguage}
             size="icon-sm"
             variant="ghost"
             className="size-8 shrink-0 rounded-lg text-muted-foreground hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground disabled:opacity-30"
@@ -282,15 +311,16 @@ export function TranslationView({ initialQuery, onBack }: TranslationViewProps) 
           </Button>
 
           <Select
-            value={targetLanguage}
+            value={resolvedTargetLanguage}
             onValueChange={(value: string | null) => {
               if (!value) return;
               setTargetLanguage(value);
+              scheduleAutoTranslate(sourceText, resolvedSourceLanguage, value, autoTranslate);
             }}
           >
             <SelectTrigger className="h-9 flex-1 border-none bg-transparent text-[13px] font-medium tracking-[-0.01em] text-foreground shadow-none ring-0 transition-colors hover:bg-[var(--launcher-card-hover-bg)] focus:ring-0">
               <span className="truncate px-1">
-                {targetLanguage ? getLanguageLabel(targetLanguage) : "Select target"}
+                {resolvedTargetLanguage ? getLanguageLabel(resolvedTargetLanguage) : "Select target"}
               </span>
             </SelectTrigger>
             <SelectContent className="max-h-[300px] border-[var(--launcher-card-border)] bg-[var(--popover)] text-foreground">
@@ -314,7 +344,16 @@ export function TranslationView({ initialQuery, onBack }: TranslationViewProps) 
           <Textarea
             ref={sourceInputRef}
             value={sourceText}
-            onChange={(event) => setSourceText(event.target.value)}
+            onChange={(event) => {
+              const nextSourceText = event.target.value;
+              setSourceText(nextSourceText);
+              scheduleAutoTranslate(
+                nextSourceText,
+                resolvedSourceLanguage,
+                resolvedTargetLanguage,
+                autoTranslate,
+              );
+            }}
             onKeyDown={(event) => {
               if (event.key === "Escape") {
                 event.preventDefault();
@@ -323,7 +362,8 @@ export function TranslationView({ initialQuery, onBack }: TranslationViewProps) 
               }
               if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
                 event.preventDefault();
-                void runTranslation(sourceText);
+                clearPendingAutoTranslate();
+                void runTranslation(sourceText, resolvedSourceLanguage, resolvedTargetLanguage);
               }
             }}
             className="flex-1 resize-none border-none bg-transparent p-4 text-[15px] leading-relaxed tracking-[-0.01em] text-foreground placeholder:text-muted-foreground focus-visible:ring-0"
@@ -396,15 +436,23 @@ export function TranslationView({ initialQuery, onBack }: TranslationViewProps) 
           <label className="flex items-center gap-2 text-[11px] tracking-[-0.01em]">
             <Switch
               checked={autoTranslate}
-              onCheckedChange={setAutoTranslate}
+              onCheckedChange={(checked) => {
+                setAutoTranslate(checked);
+                scheduleAutoTranslate(
+                  sourceText,
+                  resolvedSourceLanguage,
+                  resolvedTargetLanguage,
+                  checked,
+                );
+              }}
               size="sm"
               aria-label="Toggle auto-translate"
             />
             <span>Auto-translate</span>
-            {targetLanguage && (
+            {resolvedTargetLanguage && (
               <>
                 <span className="text-muted-foreground">·</span>
-                <span>To {getLanguageLabel(targetLanguage)}</span>
+                <span>To {getLanguageLabel(resolvedTargetLanguage)}</span>
               </>
             )}
           </label>

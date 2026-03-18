@@ -4,7 +4,6 @@ import {
   type KeyboardEvent,
   type ReactNode,
   useCallback,
-  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -13,6 +12,7 @@ import {
 import { createPortal } from "react-dom";
 
 import { cn } from "@/lib/utils";
+import { useMountEffect } from "@/hooks/use-mount-effect";
 
 import { EmptyView } from "./empty-view";
 import { ListItem } from "./list-item";
@@ -80,6 +80,8 @@ export function SearchableDropdown({
   const [query, setQuery] = useState("");
   const [highlightedIndex, setHighlightedIndex] = useState(0);
   const [panelPositionStyle, setPanelPositionStyle] = useState<CSSProperties | null>(null);
+  const openRef = useRef(open);
+  openRef.current = open;
 
   const selectedItem = useMemo(
     () => sections.flatMap((section) => section.items).find((item) => item.value === value),
@@ -137,12 +139,12 @@ export function SearchableDropdown({
     setHighlightedIndex(0);
   }, []);
 
-  useEffect(() => {
-    if (!open) {
-      return;
-    }
-
+  useMountEffect(() => {
     const onPointerDown = (event: MouseEvent) => {
+      if (!openRef.current) {
+        return;
+      }
+
       const target = event.target as Node;
       if (rootRef.current?.contains(target) || panelRef.current?.contains(target)) {
         return;
@@ -154,18 +156,20 @@ export function SearchableDropdown({
     return () => {
       document.removeEventListener("mousedown", onPointerDown);
     };
-  }, [closeDropdown, open]);
+  });
 
-  useEffect(() => {
-    if (!open) {
-      return;
+  const selectedIndex = itemRows.findIndex((row) => row.item.value === value);
+  const desiredHighlightedIndex = selectedIndex >= 0 ? selectedIndex : 0;
+  if (open && highlightedIndex !== desiredHighlightedIndex) {
+    setHighlightedIndex(desiredHighlightedIndex);
+  }
+
+  const inputMountRef = useCallback((node: HTMLInputElement | null) => {
+    inputRef.current = node;
+    if (open && node) {
+      window.setTimeout(() => node.focus(), 0);
     }
-
-    const selectedIndex = itemRows.findIndex((row) => row.item.value === value);
-    setHighlightedIndex(selectedIndex >= 0 ? selectedIndex : 0);
-    const timer = window.setTimeout(() => inputRef.current?.focus(), 0);
-    return () => window.clearTimeout(timer);
-  }, [itemRows, open, value]);
+  }, [open]);
 
   useLayoutEffect(() => {
     if (!open) {
@@ -341,8 +345,8 @@ export function SearchableDropdown({
               style={panelPositionStyle ? { ...panelPositionStyle, ...panelStyle } : panelStyle}
             >
               <div className="module-searchable-dropdown-search border-b border-[var(--ui-divider)] p-2">
-                <SearchInput
-                  ref={inputRef}
+            <SearchInput
+              ref={inputMountRef}
                   value={query}
                   onChange={setQuery}
                   placeholder={searchPlaceholder}

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useMountEffect } from "@/hooks/use-mount-effect";
 
 import {
   LAUNCHER_THEME_CHANGE_EVENT,
@@ -70,7 +70,7 @@ interface LauncherThemeProviderProps {
 }
 
 export function LauncherThemeProvider({ children }: LauncherThemeProviderProps) {
-  useEffect(() => {
+  useMountEffect(() => {
     let mounted = true;
 
     const syncTheme = async () => {
@@ -102,7 +102,7 @@ export function LauncherThemeProvider({ children }: LauncherThemeProviderProps) 
       mounted = false;
       window.removeEventListener(LAUNCHER_THEME_CHANGE_EVENT, onThemeChanged);
     };
-  }, []);
+  });
 
   return <>{children}</>;
 }

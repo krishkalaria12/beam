@@ -1,15 +1,16 @@
 import { isTauri } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { startTransition, useEffect } from "react";
+import { startTransition } from "react";
 
 import { CLI_DMENU_REQUEST_EVENT, markCliDmenuUiReady } from "@/modules/dmenu/api/bridge";
 import type { DmenuSession } from "@/modules/dmenu/types";
 import { useLauncherUiStore } from "@/store/use-launcher-ui-store";
+import { useMountEffect } from "@/hooks/use-mount-effect";
 
 export function useCliDmenuRequests() {
   const openDmenuSession = useLauncherUiStore((state) => state.openDmenuSession);
 
-  useEffect(() => {
+  useMountEffect(() => {
     if (!isTauri()) {
       return;
     }
@@ -41,5 +42,5 @@ export function useCliDmenuRequests() {
       disposed = true;
       unlisten?.();
     };
-  }, [openDmenuSession]);
+  });
 }

@@ -1,6 +1,6 @@
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { RefreshCcw } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { GenericListView, SearchBar } from "@/components/module";
@@ -33,6 +33,7 @@ import type {
   InstalledExtensionSummary,
 } from "@/modules/extensions/types";
 import { useLauncherPanelBackHandler } from "@/modules/launcher/lib/back-navigation";
+import { useMountEffect } from "@/hooks/use-mount-effect";
 
 interface ExtensionsViewProps {
   onBack: () => void;
@@ -105,12 +106,18 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
   const [pendingUninstallSlug, setPendingUninstallSlug] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [optimisticInstalledSlugs, setOptimisticInstalledSlugs] = useState<string[]>([]);
-  const [preferenceValues, setPreferenceValues] = useState<Record<string, unknown>>({});
-  const [preferenceError, setPreferenceError] = useState<string | null>(null);
-  const [validationError, setValidationError] = useState<string | null>(null);
-  const [isPreferenceLoading, setIsPreferenceLoading] = useState(false);
   const [isPreferenceSaving, setIsPreferenceSaving] = useState(false);
-  const preferenceRequestIdRef = useRef(0);
+  const [preferenceDraftState, setPreferenceDraftState] = useState<{
+    key: string;
+    values: Record<string, unknown>;
+    validationError: string | null;
+    saveError: string | null;
+  }>({
+    key: "",
+    values: {},
+    validationError: null,
+    saveError: null,
+  });
 
   const normalizedSearch = extensionsUi.search.trim();
   const debouncedNormalizedSearch = extensionsUi.debouncedSearch.trim();
@@ -124,12 +131,12 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
     [],
   );
 
-  useEffect(() => {
+  useMountEffect(() => {
     return () => {
       applyDebouncedSearch.clear();
       useExtensionsUiStore.getState().resetAll();
     };
-  }, [applyDebouncedSearch]);
+  });
 
   const installedQuery = useInstalledExtensionsQuery();
   const storeSearchQuery = useStoreExtensionsSearchQuery(debouncedNormalizedSearch);
@@ -178,6 +185,14 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
 
   const selectedStorePackageQuery = useStoreExtensionPackageQuery(selectedStore?.id ?? null);
   const selectedStoreDetail = selectedStorePackageQuery.data ?? selectedStore;
+  const selectedInstalledPluginName = selectedInstalled?.pluginName?.trim() ?? "";
+  const selectedInstalledPreferences = selectedInstalled?.preferences ?? [];
+  const installedPreferencesQuery = useQuery({
+    queryKey: ["extension-preferences", selectedInstalledPluginName],
+    queryFn: async () => extensionManagerService.getPreferences(selectedInstalledPluginName),
+    enabled: selectedInstalledPluginName.length > 0 && selectedInstalledPreferences.length > 0,
+    staleTime: Number.POSITIVE_INFINITY,
+  });
 
   const selectedInstalledUpdate = useMemo(() => {
     if (!selectedInstalled) {
@@ -228,69 +243,58 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
     return firstStore ? { kind: "store", id: firstStore.id } : null;
   }, [filteredInstalledExtensions, selectedRow, storeSearchQuery.data]);
 
-  useEffect(() => {
-    if (!areSelectedRowsEqual(selectedRow, desiredSelectedRow)) {
-      setSelectedRow((current) =>
-        areSelectedRowsEqual(current, desiredSelectedRow) ? current : desiredSelectedRow,
-      );
-    }
-  }, [desiredSelectedRow, selectedRow]);
+  if (!areSelectedRowsEqual(selectedRow, desiredSelectedRow)) {
+    setSelectedRow((current) =>
+      areSelectedRowsEqual(current, desiredSelectedRow) ? current : desiredSelectedRow,
+    );
+  }
 
-  useEffect(() => {
-    if (!selectedInstalled?.pluginName || selectedInstalled.preferences.length === 0) {
-      setPreferenceValues({});
-      setPreferenceError(null);
-      setValidationError(null);
-      setIsPreferenceLoading(false);
-      return;
-    }
+  const seededPreferenceValues = useMemo(
+    () =>
+      selectedInstalledPluginName.length > 0 && selectedInstalledPreferences.length > 0
+        ? buildPreferenceValues(
+            selectedInstalledPreferences,
+            installedPreferencesQuery.data ?? {},
+          )
+        : {},
+    [installedPreferencesQuery.data, selectedInstalledPluginName, selectedInstalledPreferences],
+  );
+  const preferenceDraftKey = useMemo(
+    () =>
+      selectedInstalledPluginName.length > 0 && selectedInstalledPreferences.length > 0
+        ? `${selectedInstalledPluginName}:${installedPreferencesQuery.dataUpdatedAt}`
+        : "",
+    [
+      installedPreferencesQuery.dataUpdatedAt,
+      selectedInstalledPluginName,
+      selectedInstalledPreferences.length,
+    ],
+  );
 
-    preferenceRequestIdRef.current += 1;
-    const requestId = preferenceRequestIdRef.current;
-    setIsPreferenceLoading(true);
-    setPreferenceError(null);
-    setValidationError(null);
-    setPreferenceValues(buildPreferenceValues(selectedInstalled.preferences, {}));
+  if (preferenceDraftState.key !== preferenceDraftKey) {
+    setPreferenceDraftState({
+      key: preferenceDraftKey,
+      values: seededPreferenceValues,
+      validationError: null,
+      saveError: null,
+    });
+  }
 
-    extensionManagerService
-      .getPreferences(selectedInstalled.pluginName)
-      .then((savedValues) => {
-        if (requestId !== preferenceRequestIdRef.current) {
-          return;
-        }
-        setPreferenceValues(buildPreferenceValues(selectedInstalled.preferences, savedValues));
-      })
-      .catch((error) => {
-        if (requestId !== preferenceRequestIdRef.current) {
-          return;
-        }
-        setPreferenceError(
-          error instanceof Error ? error.message : "Failed to load extension preferences.",
-        );
-      })
-      .finally(() => {
-        if (requestId === preferenceRequestIdRef.current) {
-          setIsPreferenceLoading(false);
-        }
-      });
-  }, [selectedInstalled]);
-
-  useEffect(() => {
+  const resolvedOptimisticInstalledSlugs = useMemo(() => {
     if (optimisticInstalledSlugs.length === 0) {
-      return;
+      return optimisticInstalledSlugs;
     }
 
     const installedSlugSet = new Set(installedExtensions.map((entry) => entry.slug.toLowerCase()));
-    setOptimisticInstalledSlugs((current) =>
-      {
-        const next = current.filter((entry) => !installedSlugSet.has(entry.toLowerCase()));
-        return next.length === current.length &&
-          next.every((entry, index) => entry === current[index])
-          ? current
-          : next;
-      },
-    );
-  }, [installedExtensions, optimisticInstalledSlugs.length]);
+    return optimisticInstalledSlugs.filter((entry) => !installedSlugSet.has(entry.toLowerCase()));
+  }, [installedExtensions, optimisticInstalledSlugs]);
+
+  if (
+    resolvedOptimisticInstalledSlugs.length !== optimisticInstalledSlugs.length ||
+    resolvedOptimisticInstalledSlugs.some((entry, index) => entry !== optimisticInstalledSlugs[index])
+  ) {
+    setOptimisticInstalledSlugs(resolvedOptimisticInstalledSlugs);
+  }
 
   const handleRefreshInstalled = useCallback(async () => {
     invalidateDiscoveredExtensionsCache();
@@ -412,24 +416,39 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
     }
 
     const missingRequiredField = selectedInstalled.preferences.find((field) =>
-      isMissingRequiredField(field, preferenceValues[field.name]),
+      isMissingRequiredField(field, preferenceDraftState.values[field.name]),
     );
     if (missingRequiredField) {
-      setValidationError(`"${missingRequiredField.title}" is required.`);
+      setPreferenceDraftState((previous) => ({
+        ...previous,
+        validationError: `"${missingRequiredField.title}" is required.`,
+      }));
       return;
     }
 
-    setValidationError(null);
-    setPreferenceError(null);
+    setPreferenceDraftState((previous) => ({
+      ...previous,
+      validationError: null,
+      saveError: null,
+    }));
     setIsPreferenceSaving(true);
     try {
-      await extensionManagerService.setPreferences(selectedInstalled.pluginName, preferenceValues);
+      await extensionManagerService.setPreferences(
+        selectedInstalled.pluginName,
+        preferenceDraftState.values,
+      );
+      queryClient.setQueryData(
+        ["extension-preferences", selectedInstalled.pluginName],
+        preferenceDraftState.values,
+      );
       toast.success(`Saved setup for ${selectedInstalled.title}.`);
       await handleRefreshInstalled();
     } catch (error) {
-      setPreferenceError(
-        error instanceof Error ? error.message : "Failed to save extension preferences.",
-      );
+      setPreferenceDraftState((previous) => ({
+        ...previous,
+        saveError:
+          error instanceof Error ? error.message : "Failed to save extension preferences.",
+      }));
     } finally {
       setIsPreferenceSaving(false);
     }
@@ -533,14 +552,29 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
             pendingUninstallSlug={pendingUninstallSlug}
             onInstall={handleInstall}
             onUninstall={handleUninstall}
-            isPreferenceLoading={isPreferenceLoading}
+            isPreferenceLoading={
+              selectedInstalledPluginName.length > 0 &&
+              selectedInstalledPreferences.length > 0 &&
+              installedPreferencesQuery.isLoading
+            }
             isPreferenceSaving={isPreferenceSaving}
-            preferenceValues={preferenceValues}
-            preferenceError={preferenceError}
-            validationError={validationError}
+            preferenceValues={preferenceDraftState.values}
+            preferenceError={
+              preferenceDraftState.saveError ??
+              (installedPreferencesQuery.error instanceof Error
+                ? installedPreferencesQuery.error.message
+                : installedPreferencesQuery.isError
+                  ? "Failed to load extension preferences."
+                  : null)
+            }
+            validationError={preferenceDraftState.validationError}
             onChangePreference={(key, value) => {
-              setValidationError(null);
-              setPreferenceValues((previous) => ({ ...previous, [key]: value }));
+              setPreferenceDraftState((previous) => ({
+                ...previous,
+                validationError: null,
+                saveError: null,
+                values: { ...previous.values, [key]: value },
+              }));
             }}
             onSavePreferences={handleSavePreferences}
             storeDetailIsLoading={

@@ -6,7 +6,7 @@ import {
   type DragEndEvent,
 } from "@dnd-kit/core";
 import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ArrowLeft, CheckCircle2, ListTodo, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -87,35 +87,38 @@ export function TodoView({ onBack }: TodoViewProps) {
 
   useLauncherPanelBackHandler("todo", onBack);
 
-  const orderedTodos = orderTodos(todos, todoOrder);
-  const selectedTodo = orderedTodos.find((todo) => todo.id === selectedTodoId) ?? null;
-  const orderedSubTodos = selectedTodo ? orderSubTodos(selectedTodo.sub_todos, subTodoOrder) : [];
+  const resolvedSelectedTodoId = todos.some((todo) => todo.id === selectedTodoId)
+    ? selectedTodoId
+    : (todos[0]?.id ?? null);
+  const desiredTodoOrder = todos.map((todo) => todo.id);
+
+  if (selectedTodoId !== resolvedSelectedTodoId) {
+    setSelectedTodoId(resolvedSelectedTodoId);
+  }
+
+  if (!hasSameOrder(todoOrder, desiredTodoOrder)) {
+    setTodoOrder(desiredTodoOrder);
+  }
+
+  const orderedTodos = orderTodos(todos, hasSameOrder(todoOrder, desiredTodoOrder) ? todoOrder : desiredTodoOrder);
+  const selectedTodo = orderedTodos.find((todo) => todo.id === resolvedSelectedTodoId) ?? null;
+  const desiredSubTodoOrder = selectedTodo ? selectedTodo.sub_todos.map((subTodo) => subTodo.id) : [];
+
+  if (!hasSameOrder(subTodoOrder, desiredSubTodoOrder)) {
+    setSubTodoOrder(desiredSubTodoOrder);
+  }
+
+  const orderedSubTodos = selectedTodo
+    ? orderSubTodos(
+        selectedTodo.sub_todos,
+        hasSameOrder(subTodoOrder, desiredSubTodoOrder) ? subTodoOrder : desiredSubTodoOrder,
+      )
+    : [];
 
   const completedTodoCount = orderedTodos.reduce(
     (total, todo) => total + (todo.completed ? 1 : 0),
     0,
   );
-
-  useEffect(() => {
-    if (todos.length === 0) {
-      setSelectedTodoId(null);
-      return;
-    }
-
-    if (!selectedTodoId || !todos.some((todo) => todo.id === selectedTodoId)) {
-      setSelectedTodoId(todos[0]?.id ?? null);
-    }
-  }, [selectedTodoId, todos]);
-
-  useEffect(() => {
-    const nextOrder = todos.map((todo) => todo.id);
-    setTodoOrder((current) => (hasSameOrder(current, nextOrder) ? current : nextOrder));
-  }, [todos]);
-
-  useEffect(() => {
-    const nextOrder = selectedTodo ? selectedTodo.sub_todos.map((subTodo) => subTodo.id) : [];
-    setSubTodoOrder((current) => (hasSameOrder(current, nextOrder) ? current : nextOrder));
-  }, [selectedTodo]);
 
   async function handleCreateTodo() {
     const title = normalizeTitle(newTodoTitle);
@@ -149,7 +152,7 @@ export function TodoView({ onBack }: TodoViewProps) {
   async function handleDeleteTodo(todoId: string) {
     try {
       await deleteTodoMutation.mutateAsync(todoId);
-      if (selectedTodoId === todoId) {
+      if (resolvedSelectedTodoId === todoId) {
         setSelectedTodoId(null);
       }
       if (editingTodoId === todoId) {

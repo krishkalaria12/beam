@@ -1,4 +1,4 @@
-import { useDeferredValue, useEffect, useState } from "react";
+import { useDeferredValue, useState } from "react";
 import { ArrowLeft, Book, Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
 
@@ -68,20 +68,16 @@ export function NotesView({ onBack }: NotesViewProps) {
 
   const notes = notesQuery.data ?? [];
   const filteredNotes = filterNotes(notes, deferredSearchValue);
-  const selectedNote = filteredNotes.find((note) => note.id === selectedNoteId) ?? null;
   const isSubmitting =
     createNoteMutation.isPending || updateNoteMutation.isPending || deleteNoteMutation.isPending;
+  const resolvedSelectedNoteId = filteredNotes.some((note) => note.id === selectedNoteId)
+    ? selectedNoteId
+    : (filteredNotes[0]?.id ?? null);
+  const selectedNote = filteredNotes.find((note) => note.id === resolvedSelectedNoteId) ?? null;
 
-  useEffect(() => {
-    if (filteredNotes.length === 0) {
-      setSelectedNoteId(null);
-      return;
-    }
-
-    if (!selectedNoteId || !filteredNotes.some((note) => note.id === selectedNoteId)) {
-      setSelectedNoteId(filteredNotes[0]?.id ?? null);
-    }
-  }, [filteredNotes, selectedNoteId]);
+  if (selectedNoteId !== resolvedSelectedNoteId) {
+    setSelectedNoteId(resolvedSelectedNoteId);
+  }
 
   useLauncherPanelBackHandler("notes", () => {
     if (viewMode === "create" || viewMode === "edit") {
@@ -139,9 +135,9 @@ export function NotesView({ onBack }: NotesViewProps) {
         return;
       }
 
-      if (viewMode === "edit" && selectedNoteId) {
+      if (viewMode === "edit" && resolvedSelectedNoteId) {
         const updated = await updateNoteMutation.mutateAsync({
-          id: selectedNoteId,
+          id: resolvedSelectedNoteId,
           title,
           content: draft.content,
           pinned: draft.pinned,
@@ -156,12 +152,12 @@ export function NotesView({ onBack }: NotesViewProps) {
   }
 
   async function handleDeleteNote() {
-    if (!selectedNoteId) {
+    if (!resolvedSelectedNoteId) {
       return;
     }
 
     try {
-      await deleteNoteMutation.mutateAsync(selectedNoteId);
+      await deleteNoteMutation.mutateAsync(resolvedSelectedNoteId);
       setSelectedNoteId(null);
       setViewMode("view");
       toast.success("Note deleted.");
@@ -231,7 +227,7 @@ export function NotesView({ onBack }: NotesViewProps) {
       <div className="notes-content-enter flex min-h-0 flex-1 overflow-hidden">
         <NotesList
           notes={filteredNotes}
-          selectedNoteId={selectedNoteId}
+          selectedNoteId={resolvedSelectedNoteId}
           isLoading={notesQuery.isLoading}
           searchValue={searchValue}
           onSearchValueChange={setSearchValue}

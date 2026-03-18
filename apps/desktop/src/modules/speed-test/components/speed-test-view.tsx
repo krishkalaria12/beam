@@ -4,12 +4,12 @@ import {
   type KeyboardEvent,
   type SetStateAction,
   useCallback,
-  useEffect,
   useMemo,
   useRef,
   useState,
 } from "react";
 
+import { useMountEffect } from "@/hooks/use-mount-effect";
 import { createSpeedTestInstance, type SpeedTestInstance } from "../lib/cloudflare-speedtest";
 import {
   EMPTY_METRICS,
@@ -175,7 +175,7 @@ export function SpeedTestView({ onBack, autoStart = true }: SpeedTestViewProps) 
     void Promise.resolve(instance.pause()).catch(() => {});
   }, []);
 
-  useEffect(() => {
+  useMountEffect(() => {
     mountedRef.current = true;
     containerRef.current?.focus();
 
@@ -183,7 +183,7 @@ export function SpeedTestView({ onBack, autoStart = true }: SpeedTestViewProps) 
       mountedRef.current = false;
       teardownSpeedTest();
     };
-  }, [teardownSpeedTest]);
+  });
 
   const startFreshRun = useCallback(() => {
     setErrorMessage(null);
@@ -194,8 +194,7 @@ export function SpeedTestView({ onBack, autoStart = true }: SpeedTestViewProps) 
     setUploadHistory([]);
   }, []);
 
-  // Auto-start on mount
-  useEffect(() => {
+  useMountEffect(() => {
     if (!autoStart || hasAutoStartedRef.current) {
       return;
     }
@@ -219,7 +218,7 @@ export function SpeedTestView({ onBack, autoStart = true }: SpeedTestViewProps) 
         setErrorMessage(error instanceof Error ? error.message : "Could not start speed test.");
       }
     })();
-  }, [autoStart, setupSpeedTest, startFreshRun, syncFromSpeedTest]);
+  });
 
   const handleStart = useCallback(async () => {
     startFreshRun();

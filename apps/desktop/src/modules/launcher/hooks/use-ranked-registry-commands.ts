@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 
 import { createDefaultCommandProviders } from "@/command-registry/default-providers";
 import { hasStrongRegistryMatch, isFallbackMode } from "@/command-registry/fallback-commands";
@@ -29,6 +30,12 @@ function isTextQuery(query: string): boolean {
   return /[a-z]/i.test(query);
 }
 
+const EMPTY_RESOLUTION: CommandProviderResolution = {
+  commands: [],
+  errors: [],
+  telemetry: [],
+};
+
 interface UseRankedRegistryCommandsInput {
   commandContext: CommandContext;
   hiddenCommandIds: ReadonlySet<string>;
@@ -44,136 +51,103 @@ export function useRankedRegistryCommands({
   fallbackEnabled,
   fallbackCommandIds,
 }: UseRankedRegistryCommandsInput) {
-  const [rankedRegistryCommands, setRankedRegistryCommands] = useState<RankedCommand[]>([]);
-  const [fallbackRegistryCommands, setFallbackRegistryCommands] = useState<CommandDescriptor[]>([]);
-
   const [providerOrchestrator] = useState(() =>
     createCommandProviderOrchestrator({
       providers: createDefaultCommandProviders(),
     }),
   );
 
-  useEffect(() => {
-    let cancelled = false;
-    const staticCandidates = resolveStaticCommandCandidates(staticCommandRegistry, commandContext);
-
-    const applyRankedCommands = (dynamicResolution: CommandProviderResolution) => {
-      if (cancelled) {
-        return;
-      }
-
-      const dynamicCommands = dynamicResolution.commands.filter(
-        (command) => command.scope.includes("all") || command.scope.includes(commandContext.mode),
-      );
-      const candidateCommands = [...staticCandidates, ...dynamicCommands];
-      const scopedCandidates = commandContext.triggeredCommandId
-        ? candidateCommands.filter((command) => command.id === commandContext.triggeredCommandId)
-        : candidateCommands;
-      const visibleCommands = scopedCandidates.filter(
-        (command) => !hiddenCommandIds.has(command.id),
-      );
-      const ranked = rankCommands({
-        commands: visibleCommands,
-        context: commandContext,
-        signals: rankingSignals,
+  const dynamicResolutionQuery = useQuery<CommandProviderResolution>({
+    queryKey: ["ranked-registry", commandContext, [...hiddenCommandIds], rankingSignals, fallbackEnabled, fallbackCommandIds],
+    queryFn: async () => {
+      const result = await providerOrchestrator.resolve(commandContext);
+      logProviderResolution(result, {
+        mode: commandContext.mode,
+        activePanel: commandContext.activePanel,
+        query: commandContext.query,
       });
-      setRankedRegistryCommands(ranked);
+      return result;
+    },
+    staleTime: 0,
+  });
 
-      const normalizedQuery = commandContext.query.trim();
-      const shouldShowFallback =
-        fallbackEnabled &&
-        normalizedQuery.length > 0 &&
-        commandContext.triggeredCommandId === null &&
-        isFallbackMode(commandContext.mode) &&
-        !hasStrongRegistryMatch(ranked);
-
-      const availableById = new Map<string, CommandDescriptor>(
-        visibleCommands.map((command) => [command.id, command]),
-      );
-      const rankedCommandIds = new Set(ranked.map((entry) => entry.command.id));
-      const fallbackCommandsById = new Map<string, CommandDescriptor>();
-
-      const shouldShowMandatoryTextFallbacks =
-        normalizedQuery.length > 0 &&
-        commandContext.triggeredCommandId === null &&
-        isFallbackMode(commandContext.mode) &&
-        isTextQuery(normalizedQuery) &&
-        !looksLikeCalculationQuery(normalizedQuery);
-
-      if (shouldShowMandatoryTextFallbacks) {
-        for (const commandId of MANDATORY_TEXT_FALLBACK_COMMAND_IDS) {
-          if (rankedCommandIds.has(commandId)) {
-            continue;
-          }
-          const command = availableById.get(commandId);
-          if (command) {
-            fallbackCommandsById.set(command.id, command);
-          }
-        }
-      }
-
-      if (shouldShowFallback) {
-        for (const commandId of fallbackCommandIds) {
-          if (rankedCommandIds.has(commandId)) {
-            continue;
-          }
-          const command = availableById.get(commandId);
-          if (command) {
-            fallbackCommandsById.set(command.id, command);
-          }
-        }
-      }
-
-      const fallbackCommands = [...fallbackCommandsById.values()];
-      setFallbackRegistryCommands(fallbackCommands);
-    };
-
-    applyRankedCommands({
-      commands: [],
-      errors: [],
-      telemetry: [],
+  const resolution = dynamicResolutionQuery.data ?? EMPTY_RESOLUTION;
+  const derivedValues = useMemo(() => {
+    const staticCandidates = resolveStaticCommandCandidates(staticCommandRegistry, commandContext);
+    const dynamicCommands = resolution.commands.filter(
+      (command) => command.scope.includes("all") || command.scope.includes(commandContext.mode),
+    );
+    const candidateCommands = [...staticCandidates, ...dynamicCommands];
+    const scopedCandidates = commandContext.triggeredCommandId
+      ? candidateCommands.filter((command) => command.id === commandContext.triggeredCommandId)
+      : candidateCommands;
+    const visibleCommands = scopedCandidates.filter((command) => !hiddenCommandIds.has(command.id));
+    const ranked = rankCommands({
+      commands: visibleCommands,
+      context: commandContext,
+      signals: rankingSignals,
     });
 
-    void providerOrchestrator
-      .resolveIncremental(commandContext, (partialResolution) => {
-        applyRankedCommands(partialResolution);
-      })
-      .then((result) => {
-        if (cancelled) {
-          return;
-        }
+    const normalizedQuery = commandContext.query.trim();
+    const shouldShowFallback =
+      fallbackEnabled &&
+      normalizedQuery.length > 0 &&
+      commandContext.triggeredCommandId === null &&
+      isFallbackMode(commandContext.mode) &&
+      !hasStrongRegistryMatch(ranked);
 
-        applyRankedCommands(result);
-        logProviderResolution(result, {
-          mode: commandContext.mode,
-          activePanel: commandContext.activePanel,
-          query: commandContext.query,
-        });
-      })
-      .catch((error) => {
-        if (cancelled) {
-          return;
-        }
-        console.error("Failed to resolve registry commands:", error);
-        setRankedRegistryCommands([]);
-        setFallbackRegistryCommands([]);
-      });
+    const availableById = new Map<string, CommandDescriptor>(
+      visibleCommands.map((command) => [command.id, command]),
+    );
+    const rankedCommandIds = new Set(ranked.map((entry) => entry.command.id));
+    const fallbackCommandsById = new Map<string, CommandDescriptor>();
 
-    return () => {
-      cancelled = true;
-      providerOrchestrator.cancel();
+    const shouldShowMandatoryTextFallbacks =
+      normalizedQuery.length > 0 &&
+      commandContext.triggeredCommandId === null &&
+      isFallbackMode(commandContext.mode) &&
+      isTextQuery(normalizedQuery) &&
+      !looksLikeCalculationQuery(normalizedQuery);
+
+    if (shouldShowMandatoryTextFallbacks) {
+      for (const commandId of MANDATORY_TEXT_FALLBACK_COMMAND_IDS) {
+        if (rankedCommandIds.has(commandId)) {
+          continue;
+        }
+        const command = availableById.get(commandId);
+        if (command) {
+          fallbackCommandsById.set(command.id, command);
+        }
+      }
+    }
+
+    if (shouldShowFallback) {
+      for (const commandId of fallbackCommandIds) {
+        if (rankedCommandIds.has(commandId)) {
+          continue;
+        }
+        const command = availableById.get(commandId);
+        if (command) {
+          fallbackCommandsById.set(command.id, command);
+        }
+      }
+    }
+
+    return {
+      ranked,
+      fallback: [...fallbackCommandsById.values()],
     };
   }, [
     commandContext,
     fallbackCommandIds,
     fallbackEnabled,
     hiddenCommandIds,
-    providerOrchestrator,
     rankingSignals,
+    resolution,
   ]);
 
   return {
-    rankedRegistryCommands,
-    fallbackRegistryCommands,
+    rankedRegistryCommands: derivedValues.ranked,
+    fallbackRegistryCommands: derivedValues.fallback,
   };
 }

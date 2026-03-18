@@ -1,20 +1,18 @@
-import { useState, useEffect, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { EmojiData, EmojiDataItem } from "../types";
 import { CATEGORY_ORDER } from "../types";
 
 export function useRecentEmojis(isOpen: boolean) {
-  const [recentEmojis, setRecentEmojis] = useState<string[]>([]);
+  const [recentRefreshToken, setRecentRefreshToken] = useState(0);
+  const recentEmojis = useMemo(
+    () => (isOpen ? getRecentlyUsed() : []),
+    [isOpen, recentRefreshToken],
+  );
 
-  useEffect(() => {
-    if (isOpen) {
-      setRecentEmojis(getRecentlyUsed());
-    }
-  }, [isOpen]);
-
-  const saveEmoji = (emoji: string) => {
+  const saveEmoji = useCallback((emoji: string) => {
     saveRecentlyUsed(emoji);
-    setRecentEmojis(getRecentlyUsed());
-  };
+    setRecentRefreshToken((previous) => previous + 1);
+  }, []);
 
   return { recentEmojis, saveEmoji };
 }

@@ -1,30 +1,18 @@
 import { isTauri } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import debounce from "@/lib/debounce";
-import { useEffect, useState } from "react";
+import { useDeferredValue } from "react";
 
 import { searchApplications } from "../api/search-applications";
+import { useMountEffect } from "@/hooks/use-mount-effect";
 
 const APPLICATIONS_CACHE_UPDATED_EVENT = "applications-cache-updated";
 
 export function useApplicationSearch(query: string) {
   const queryClient = useQueryClient();
-  const [debouncedQuery, setDebouncedQuery] = useState(query.trim());
+  const debouncedQuery = useDeferredValue(query.trim());
 
-  useEffect(() => {
-    const updateQuery = debounce((nextQuery: string) => {
-      setDebouncedQuery(nextQuery);
-    }, 140);
-
-    updateQuery(query.trim());
-
-    return () => {
-      updateQuery.clear();
-    };
-  }, [query]);
-
-  useEffect(() => {
+  useMountEffect(() => {
     if (!isTauri()) {
       return;
     }
@@ -44,7 +32,7 @@ export function useApplicationSearch(query: string) {
     return () => {
       unlisten?.();
     };
-  }, [queryClient]);
+  });
 
   return useQuery({
     queryKey: ["applications", "search", debouncedQuery],

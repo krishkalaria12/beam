@@ -1,7 +1,7 @@
 import { isTauri } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { open as openExternal } from "@tauri-apps/plugin-shell";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 import { parseOauthDeepLink } from "@/modules/extensions/extension-manager/deep-link";
 
@@ -26,6 +26,7 @@ import {
 } from "../lib/oauth-session";
 import { isTokenExpired, toStoredTokens } from "../lib/token";
 import type { GithubStoredTokenSet, GithubUserProfile } from "../types";
+import { useMountEffect } from "@/hooks/use-mount-effect";
 
 async function openAuthUrl(url: string) {
   if (isTauri()) {
@@ -44,16 +45,10 @@ export function useGithubAuth() {
   const [isRefreshingToken, setIsRefreshingToken] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const tokensRef = useRef<GithubStoredTokenSet | null>(null);
+  const tokensRef = useRef<GithubStoredTokenSet | null>(tokens);
   const clientIdRef = useRef(clientId);
-
-  useEffect(() => {
-    tokensRef.current = tokens;
-  }, [tokens]);
-
-  useEffect(() => {
-    clientIdRef.current = clientId;
-  }, [clientId]);
+  tokensRef.current = tokens;
+  clientIdRef.current = clientId;
 
   const isConnected = !!tokens?.accessToken;
 
@@ -166,7 +161,7 @@ export function useGithubAuth() {
     }
   }
 
-  useEffect(() => {
+  useMountEffect(() => {
     let mounted = true;
 
     void (async () => {
@@ -208,9 +203,9 @@ export function useGithubAuth() {
     return () => {
       mounted = false;
     };
-  }, []);
+  });
 
-  useEffect(() => {
+  useMountEffect(() => {
     if (!isTauri()) {
       return;
     }
@@ -285,7 +280,7 @@ export function useGithubAuth() {
     return () => {
       unlisten?.();
     };
-  }, []);
+  });
 
   let statusLabel = "disconnected";
   if (isAuthorizing) {

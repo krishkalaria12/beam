@@ -1,5 +1,5 @@
 import { AppWindow, ChevronLeft, RefreshCcw, Search } from "lucide-react";
-import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useCallback, useDeferredValue, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { ModuleFooter } from "@/components/module";
@@ -10,6 +10,7 @@ import { WindowSwitcherList } from "@/modules/window-switcher/components/window-
 import { useCloseWindowMutation } from "@/modules/window-switcher/hooks/use-close-window-mutation";
 import { useFocusWindowMutation } from "@/modules/window-switcher/hooks/use-focus-window-mutation";
 import { useWindowEntriesQuery } from "@/modules/window-switcher/hooks/use-window-entries-query";
+import { useMountEffect } from "@/hooks/use-mount-effect";
 
 interface WindowSwitcherViewProps {
   onBack: () => void;
@@ -41,19 +42,22 @@ export function WindowSwitcherView({ onBack }: WindowSwitcherViewProps) {
   }, [normalizedQuery, windowsQuery.data]);
 
   const [selectedWindowId, setSelectedWindowId] = useState<string | null>(null);
+  const filteredWindowsRef = useRef(filteredWindows);
+  const selectedWindowIdRef = useRef<string | null>(selectedWindowId);
+  const busyRef = useRef(false);
 
-  useEffect(() => {
-    if (filteredWindows.length === 0) {
-      setSelectedWindowId(null);
-      return;
-    }
+  const resolvedSelectedWindowId = filteredWindows.some((entry) => entry.id === selectedWindowId)
+    ? selectedWindowId
+    : (filteredWindows[0]?.id ?? null);
 
-    if (!selectedWindowId || !filteredWindows.some((entry) => entry.id === selectedWindowId)) {
-      setSelectedWindowId(filteredWindows[0]?.id ?? null);
-    }
-  }, [filteredWindows, selectedWindowId]);
+  if (selectedWindowId !== resolvedSelectedWindowId) {
+    setSelectedWindowId(resolvedSelectedWindowId);
+  }
 
   const busy = focusMutation.isPending || closeMutation.isPending;
+  filteredWindowsRef.current = filteredWindows;
+  selectedWindowIdRef.current = resolvedSelectedWindowId;
+  busyRef.current = busy;
 
   const handleFocusWindow = useCallback(
     async (windowId: string) => {
@@ -89,13 +93,19 @@ export function WindowSwitcherView({ onBack }: WindowSwitcherViewProps) {
     void handleFocusWindow(selectedWindowId);
   }, [busy, handleFocusWindow, selectedWindowId]);
 
-  useEffect(() => {
+  const handleKeyboardFocusRef = useRef(handleKeyboardFocus);
+  const handleCloseWindowRef = useRef(handleCloseWindow);
+  handleKeyboardFocusRef.current = handleKeyboardFocus;
+  handleCloseWindowRef.current = handleCloseWindow;
+
+  useMountEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.defaultPrevented) {
         return;
       }
 
-      if (!filteredWindows.length) {
+      const currentFilteredWindows = filteredWindowsRef.current;
+      if (!currentFilteredWindows.length) {
         return;
       }
 
@@ -109,18 +119,20 @@ export function WindowSwitcherView({ onBack }: WindowSwitcherViewProps) {
 
       if (event.key === "ArrowDown" || event.key === "ArrowUp") {
         event.preventDefault();
-        const currentIndex = filteredWindows.findIndex((entry) => entry.id === selectedWindowId);
+        const currentIndex = currentFilteredWindows.findIndex(
+          (entry) => entry.id === selectedWindowIdRef.current,
+        );
         const hasSelection = currentIndex >= 0;
         const fallbackIndex = 0;
         const nextIndex =
           event.key === "ArrowDown"
             ? hasSelection
-              ? Math.min(filteredWindows.length - 1, currentIndex + 1)
+              ? Math.min(currentFilteredWindows.length - 1, currentIndex + 1)
               : fallbackIndex
             : hasSelection
               ? Math.max(0, currentIndex - 1)
               : fallbackIndex;
-        const next = filteredWindows[nextIndex];
+        const next = currentFilteredWindows[nextIndex];
         if (next) {
           setSelectedWindowId(next.id);
         }
@@ -128,21 +140,21 @@ export function WindowSwitcherView({ onBack }: WindowSwitcherViewProps) {
 
       if (event.key === "Enter" && !event.shiftKey) {
         const isInput = target instanceof HTMLInputElement;
-        if (isInput && target.value.length > 0 && selectedWindowId) {
+        if (isInput && target.value.length > 0 && selectedWindowIdRef.current) {
           event.preventDefault();
-          handleKeyboardFocus();
+          handleKeyboardFocusRef.current();
           return;
         }
 
-        if (!isInput && selectedWindowId) {
+        if (!isInput && selectedWindowIdRef.current) {
           event.preventDefault();
-          handleKeyboardFocus();
+          handleKeyboardFocusRef.current();
         }
       }
 
-      if (event.key === "Enter" && event.shiftKey && selectedWindowId && !busy) {
+      if (event.key === "Enter" && event.shiftKey && selectedWindowIdRef.current && !busyRef.current) {
         event.preventDefault();
-        void handleCloseWindow(selectedWindowId);
+        void handleCloseWindowRef.current(selectedWindowIdRef.current);
       }
     };
 
@@ -150,7 +162,7 @@ export function WindowSwitcherView({ onBack }: WindowSwitcherViewProps) {
     return () => {
       window.removeEventListener("keydown", onKeyDown);
     };
-  }, [busy, filteredWindows, handleCloseWindow, handleKeyboardFocus, selectedWindowId]);
+  });
 
   useLauncherPanelBackHandler("window-switcher", onBack);
 
@@ -252,7 +264,7 @@ export function WindowSwitcherView({ onBack }: WindowSwitcherViewProps) {
       ) : (
         <WindowSwitcherList
           windows={filteredWindows}
-          selectedWindowId={selectedWindowId}
+          selectedWindowId={resolvedSelectedWindowId}
           isBusy={busy}
           onSelect={setSelectedWindowId}
           onFocus={handleFocusWindow}

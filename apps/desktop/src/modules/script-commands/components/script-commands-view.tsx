@@ -1,5 +1,5 @@
 import { ChevronLeft, FolderOpen, Play, Plus, Search, Terminal } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { ModuleFooter } from "@/components/module";
@@ -14,6 +14,7 @@ import { ScriptCommandsOutput } from "@/modules/script-commands/components/scrip
 import { useCreateScriptCommandMutation } from "@/modules/script-commands/hooks/use-create-script-command-mutation";
 import { useRunScriptCommandMutation } from "@/modules/script-commands/hooks/use-run-script-command-mutation";
 import { useScriptCommandsQuery } from "@/modules/script-commands/hooks/use-script-commands-query";
+import { useMountEffect } from "@/hooks/use-mount-effect";
 import type {
   CreateScriptCommandRequest,
   ScriptCommandSummary,
@@ -41,6 +42,7 @@ export function ScriptCommandsView({ onBack }: ScriptCommandsViewProps) {
   const [createErrorMessage, setCreateErrorMessage] = useState<string | null>(null);
   const [runErrorMessage, setRunErrorMessage] = useState<string | null>(null);
   const [executionResult, setExecutionResult] = useState<ScriptExecutionResult | null>(null);
+  const viewModeRef = useRef(viewMode);
 
   const scripts = scriptsQuery.data ?? [];
   const normalizedSearch = search.trim().toLowerCase();
@@ -58,20 +60,17 @@ export function ScriptCommandsView({ onBack }: ScriptCommandsViewProps) {
     [normalizedSearch, scripts],
   );
 
-  useEffect(() => {
-    if (filteredScripts.length === 0) {
-      setSelectedScriptId(null);
-      return;
-    }
+  const resolvedSelectedScriptId = filteredScripts.some((script) => script.id === selectedScriptId)
+    ? selectedScriptId
+    : (filteredScripts[0]?.id ?? null);
 
-    if (!selectedScriptId || !filteredScripts.some((script) => script.id === selectedScriptId)) {
-      setSelectedScriptId(filteredScripts[0]?.id ?? null);
-    }
-  }, [filteredScripts, selectedScriptId]);
+  if (selectedScriptId !== resolvedSelectedScriptId) {
+    setSelectedScriptId(resolvedSelectedScriptId);
+  }
 
   const selectedScript = useMemo(
-    () => filteredScripts.find((script) => script.id === selectedScriptId) ?? null,
-    [filteredScripts, selectedScriptId],
+    () => filteredScripts.find((script) => script.id === resolvedSelectedScriptId) ?? null,
+    [filteredScripts, resolvedSelectedScriptId],
   );
 
   const argumentScript = useMemo(
@@ -79,15 +78,13 @@ export function ScriptCommandsView({ onBack }: ScriptCommandsViewProps) {
     [argumentScriptId, scripts],
   );
 
-  useEffect(() => {
-    if (viewMode !== "arguments") {
-      return;
-    }
+  const resolvedViewMode = viewMode === "arguments" && !argumentScript ? "manage" : viewMode;
 
-    if (!argumentScript) {
-      setViewMode("manage");
-    }
-  }, [argumentScript, viewMode]);
+  if (viewMode !== resolvedViewMode) {
+    setViewMode(resolvedViewMode);
+  }
+
+  viewModeRef.current = resolvedViewMode;
 
   const executeScriptById = useCallback(
     async (scriptId: string, argumentValues?: Record<string, string>) => {
@@ -208,12 +205,12 @@ export function ScriptCommandsView({ onBack }: ScriptCommandsViewProps) {
 
   useLauncherPanelBackHandler("script-commands", handleBack);
 
-  useEffect(() => {
-    if (viewMode !== "manage") {
-      return;
-    }
-
+  useMountEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (viewModeRef.current !== "manage") {
+        return;
+      }
+
       if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== "n") {
         return;
       }
@@ -234,9 +231,9 @@ export function ScriptCommandsView({ onBack }: ScriptCommandsViewProps) {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [openCreateView, viewMode]);
+  });
 
-  if (viewMode === "create") {
+  if (resolvedViewMode === "create") {
     return (
       <ScriptCommandCreateForm
         onBack={handleBack}
@@ -247,7 +244,7 @@ export function ScriptCommandsView({ onBack }: ScriptCommandsViewProps) {
     );
   }
 
-  if (viewMode === "arguments" && argumentScript) {
+  if (resolvedViewMode === "arguments" && argumentScript) {
     return (
       <ScriptCommandArgumentsForm
         key={argumentScript.id}

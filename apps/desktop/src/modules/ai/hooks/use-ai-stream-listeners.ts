@@ -1,10 +1,10 @@
 import { isTauri } from "@tauri-apps/api/core";
 import type { UnlistenFn } from "@tauri-apps/api/event";
-import { useEffect } from "react";
 import { toast } from "sonner";
 
 import { listenAiStreamChunk, listenAiStreamEnd, listenAiStreamError } from "../api/ai";
 import { useAiChatStore } from "@/store/use-ai-chat-store";
+import { useMountEffect } from "@/hooks/use-mount-effect";
 
 interface UseAiStreamListenersOptions {
   refreshConversations: (showToast?: boolean) => Promise<void>;
@@ -15,7 +15,7 @@ export function useAiStreamListeners({ refreshConversations }: UseAiStreamListen
   const completeStream = useAiChatStore((state) => state.completeStream);
   const failStream = useAiChatStore((state) => state.failStream);
 
-  useEffect(() => {
+  useMountEffect(() => {
     if (!isTauri()) {
       return;
     }
@@ -69,5 +69,5 @@ export function useAiStreamListeners({ refreshConversations }: UseAiStreamListen
         unlisten();
       }
     };
-  }, [appendStreamChunk, completeStream, failStream, refreshConversations]);
+  });
 }

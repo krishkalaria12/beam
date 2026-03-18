@@ -10,7 +10,7 @@ import { code } from "@streamdown/code";
 import { math } from "@streamdown/math";
 import { mermaid } from "@streamdown/mermaid";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
-import { createContext, memo, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { Children, createContext, isValidElement, memo, useCallback, useContext, useMemo, useState } from "react";
 import { Streamdown } from "streamdown";
 
 export type MessageProps = HTMLAttributes<HTMLDivElement> & {
@@ -93,8 +93,6 @@ interface MessageBranchContextType {
   totalBranches: number;
   goToPrevious: () => void;
   goToNext: () => void;
-  branches: ReactElement[];
-  setBranches: (branches: ReactElement[]) => void;
 }
 
 const MessageBranchContext = createContext<MessageBranchContextType | null>(null);
@@ -118,44 +116,68 @@ export const MessageBranch = ({
   defaultBranch = 0,
   onBranchChange,
   className,
+  children,
   ...props
 }: MessageBranchProps) => {
   const [currentBranch, setCurrentBranch] = useState(defaultBranch);
-  const [branches, setBranches] = useState<ReactElement[]>([]);
+  const totalBranches = useMemo(() => {
+    let branchCount = 0;
+
+    Children.forEach(children, (child) => {
+      if (!isValidElement(child) || child.type !== MessageBranchContent) {
+        return;
+      }
+
+      const branchContent = child as ReactElement<MessageBranchContentProps>;
+      branchCount = Children.toArray(branchContent.props.children).filter(isValidElement).length;
+    });
+
+    return branchCount;
+  }, [children]);
+  const resolvedCurrentBranch =
+    totalBranches > 0 ? Math.min(currentBranch, totalBranches - 1) : 0;
 
   const handleBranchChange = useCallback(
     (newBranch: number) => {
-      setCurrentBranch(newBranch);
-      onBranchChange?.(newBranch);
+      const boundedBranch =
+        totalBranches > 0 ? Math.max(0, Math.min(newBranch, totalBranches - 1)) : 0;
+      setCurrentBranch(boundedBranch);
+      onBranchChange?.(boundedBranch);
     },
-    [onBranchChange],
+    [onBranchChange, totalBranches],
   );
 
   const goToPrevious = useCallback(() => {
-    const newBranch = currentBranch > 0 ? currentBranch - 1 : branches.length - 1;
+    if (totalBranches === 0) {
+      return;
+    }
+    const newBranch = resolvedCurrentBranch > 0 ? resolvedCurrentBranch - 1 : totalBranches - 1;
     handleBranchChange(newBranch);
-  }, [currentBranch, branches.length, handleBranchChange]);
+  }, [handleBranchChange, resolvedCurrentBranch, totalBranches]);
 
   const goToNext = useCallback(() => {
-    const newBranch = currentBranch < branches.length - 1 ? currentBranch + 1 : 0;
+    if (totalBranches === 0) {
+      return;
+    }
+    const newBranch = resolvedCurrentBranch < totalBranches - 1 ? resolvedCurrentBranch + 1 : 0;
     handleBranchChange(newBranch);
-  }, [currentBranch, branches.length, handleBranchChange]);
+  }, [handleBranchChange, resolvedCurrentBranch, totalBranches]);
 
   const contextValue = useMemo<MessageBranchContextType>(
     () => ({
-      branches,
-      currentBranch,
+      currentBranch: resolvedCurrentBranch,
       goToNext,
       goToPrevious,
-      setBranches,
-      totalBranches: branches.length,
+      totalBranches,
     }),
-    [branches, currentBranch, goToNext, goToPrevious],
+    [goToNext, goToPrevious, resolvedCurrentBranch, totalBranches],
   );
 
   return (
     <MessageBranchContext.Provider value={contextValue}>
-      <div className={cn("grid w-full gap-2 [&>div]:pb-0", className)} {...props} />
+      <div className={cn("grid w-full gap-2 [&>div]:pb-0", className)} {...props}>
+        {children}
+      </div>
     </MessageBranchContext.Provider>
   );
 };
@@ -163,18 +185,11 @@ export const MessageBranch = ({
 export type MessageBranchContentProps = HTMLAttributes<HTMLDivElement>;
 
 export const MessageBranchContent = ({ children, ...props }: MessageBranchContentProps) => {
-  const { currentBranch, setBranches, branches } = useMessageBranch();
+  const { currentBranch } = useMessageBranch();
   const childrenArray = useMemo(
-    () => (Array.isArray(children) ? children : [children]),
+    () => Children.toArray(children).filter(isValidElement) as ReactElement[],
     [children],
   );
-
-  // Use useEffect to update branches when they change
-  useEffect(() => {
-    if (branches.length !== childrenArray.length) {
-      setBranches(childrenArray);
-    }
-  }, [childrenArray, branches, setBranches]);
 
   return childrenArray.map((branch, index) => (
     <div

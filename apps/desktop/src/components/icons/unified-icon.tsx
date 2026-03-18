@@ -1,5 +1,6 @@
+import { useQuery } from "@tanstack/react-query";
 import { ImageIcon } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import { resolveLucideIconByToken } from "@/components/icons/icon-registry";
 import {
@@ -168,52 +169,52 @@ export function UnifiedIcon({
   fallback,
   extensionDirectory,
 }: UnifiedIconProps) {
-  const [failedImage, setFailedImage] = useState(false);
-  const [sourceIndex, setSourceIndex] = useState(0);
   const imageValue = useMemo(() => resolveImageValue(icon), [icon]);
   const iconSources = useMemo(
     () =>
       imageValue ? resolveDirectImageSources(imageValue.value, extensionDirectory) : [],
     [extensionDirectory, imageValue],
   );
+  const iconSourcesKey = iconSources.join("\n");
+
+  return (
+    <UnifiedIconInner
+      key={iconSourcesKey}
+      className={className}
+      fallback={fallback}
+      imageValue={imageValue}
+      iconSources={iconSources}
+    />
+  );
+}
+
+interface UnifiedIconInnerProps {
+  className?: string;
+  fallback?: React.ReactNode;
+  imageValue: ReturnType<typeof resolveImageValue>;
+  iconSources: string[];
+}
+
+function UnifiedIconInner({
+  className,
+  fallback,
+  imageValue,
+  iconSources,
+}: UnifiedIconInnerProps) {
+  const [failedImage, setFailedImage] = useState(false);
+  const [sourceIndex, setSourceIndex] = useState(0);
   const iconSource = iconSources[sourceIndex] ?? null;
   const tokenCandidate = imageValue?.value?.trim() ?? "";
   const lucideIcon = tokenCandidate ? resolveLucideIconByToken(tokenCandidate) : null;
-  const [phosphorIcon, setPhosphorIcon] = useState<ResolvedPhosphorIcon | null>(() =>
-    tokenCandidate ? getCachedPhosphorIconByToken(tokenCandidate) : null,
-  );
-  const iconSourcesKey = iconSources.join("\n");
-
-  useEffect(() => {
-    if (!tokenCandidate || lucideIcon) {
-      setPhosphorIcon(null);
-      return;
-    }
-
-    const cached = getCachedPhosphorIconByToken(tokenCandidate);
-    if (cached) {
-      setPhosphorIcon(cached);
-      return;
-    }
-
-    setPhosphorIcon(null);
-
-    let cancelled = false;
-    void ensurePhosphorIconByToken(tokenCandidate).then((resolved) => {
-      if (!cancelled) {
-        setPhosphorIcon(resolved);
-      }
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [tokenCandidate, lucideIcon]);
-
-  useEffect(() => {
-    setFailedImage(false);
-    setSourceIndex(0);
-  }, [iconSourcesKey]);
+  const { data: phosphorIcon = null } = useQuery<ResolvedPhosphorIcon | null>({
+    queryKey: ["phosphor-icon", tokenCandidate],
+    queryFn: async () => ensurePhosphorIconByToken(tokenCandidate),
+    enabled: tokenCandidate.length > 0 && !lucideIcon,
+    initialData: () =>
+      tokenCandidate && !lucideIcon ? getCachedPhosphorIconByToken(tokenCandidate) : null,
+    staleTime: Number.POSITIVE_INFINITY,
+    gcTime: Number.POSITIVE_INFINITY,
+  });
 
   if (iconSource && !failedImage) {
     if (imageValue?.tintColor) {

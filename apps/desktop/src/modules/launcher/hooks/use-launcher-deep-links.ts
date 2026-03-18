@@ -1,6 +1,6 @@
 import { isTauri } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { useCallback, useEffect } from "react";
+import { useCallback } from "react";
 import { toast } from "sonner";
 
 import type { CommandPanel } from "@/command-registry/types";
@@ -10,6 +10,7 @@ import { extensionManagerService } from "@/modules/extensions/extension-manager-
 import { parseRaycastDeepLink } from "@/modules/extensions/extension-manager/deep-link";
 import { useExtensionRuntimeStore } from "@/modules/extensions/runtime/store";
 import { useExtensionsUiStore } from "@/modules/extensions/store/use-extensions-ui-store";
+import { useMountEffect } from "@/hooks/use-mount-effect";
 
 interface UseLauncherDeepLinksInput {
   openPanel: (panel: CommandPanel, takeover?: boolean) => void;
@@ -104,7 +105,7 @@ export function useLauncherDeepLinks({ openPanel, backToCommands }: UseLauncherD
     [backToCommands, openExtensionsFromDeepLink, openPanel],
   );
 
-  useEffect(() => {
+  useMountEffect(() => {
     if (!isTauri()) {
       return;
     }
@@ -151,5 +152,5 @@ export function useLauncherDeepLinks({ openPanel, backToCommands }: UseLauncherD
       disposed = true;
       unlisten?.();
     };
-  }, [openExtensionsFromDeepLink, runExtensionCommandFromDeepLink]);
+  });
 }

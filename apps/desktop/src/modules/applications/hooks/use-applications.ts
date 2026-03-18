@@ -1,15 +1,15 @@
 import { isTauri } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
 import { getApplications } from "../api/get-applications";
+import { useMountEffect } from "@/hooks/use-mount-effect";
 
 const APPLICATIONS_CACHE_UPDATED_EVENT = "applications-cache-updated";
 
 export function useApplications() {
   const queryClient = useQueryClient();
 
-  useEffect(() => {
+  useMountEffect(() => {
     if (!isTauri()) {
       return;
     }
@@ -29,7 +29,7 @@ export function useApplications() {
     return () => {
       unlisten?.();
     };
-  }, [queryClient]);
+  });
 
   return useQuery({
     queryKey: ["applications"],

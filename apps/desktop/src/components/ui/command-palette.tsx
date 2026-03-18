@@ -243,81 +243,72 @@ export function CommandPalette({
     return pages[0]?.id ?? "";
   }, [initialPageId, pages, pagesById]);
 
-  const [pageStack, setPageStack] = React.useState<string[]>(() =>
+  const [storedPageStack, setStoredPageStack] = React.useState<string[]>(() =>
     fallbackInitialPageId ? [fallbackInitialPageId] : [],
   );
-  const [queriesByPage, setQueriesByPage] = React.useState<Record<string, string>>({});
-  const [pendingItemId, setPendingItemId] = React.useState<string | null>(null);
+  const [storedQueriesByPage, setStoredQueriesByPage] = React.useState<Record<string, string>>({});
+  const [storedPendingItemId, setStoredPendingItemId] = React.useState<string | null>(null);
+
+  const pageStack = React.useMemo(() => {
+    const baseStack = !open && resetOnClose ? [] : storedPageStack;
+    const nextStack = baseStack.filter((pageId) => pagesById.has(pageId));
+    if (nextStack.length > 0) {
+      return nextStack;
+    }
+    return fallbackInitialPageId ? [fallbackInitialPageId] : [];
+  }, [fallbackInitialPageId, open, pagesById, resetOnClose, storedPageStack]);
+
+  const queriesByPage = React.useMemo(
+    () => (!open && resetOnClose ? {} : storedQueriesByPage),
+    [open, resetOnClose, storedQueriesByPage],
+  );
+  const pendingItemId = open || !resetOnClose ? storedPendingItemId : null;
 
   const currentPageId = pageStack[pageStack.length - 1] ?? fallbackInitialPageId;
   const currentPage = currentPageId ? pagesById.get(currentPageId) : undefined;
   const currentQuery = queriesByPage[currentPageId] ?? "";
   const searchInputId = React.useId();
 
-  const closePalette = React.useCallback(
-    (reason: CommandPaletteCloseReason) => {
-      onOpenChange(false, reason);
-    },
-    [onOpenChange],
-  );
-
   const resetNavigation = React.useCallback(() => {
-    setQueriesByPage({});
-    setPendingItemId(null);
-    setPageStack(fallbackInitialPageId ? [fallbackInitialPageId] : []);
+    setStoredQueriesByPage({});
+    setStoredPendingItemId(null);
+    setStoredPageStack(fallbackInitialPageId ? [fallbackInitialPageId] : []);
   }, [fallbackInitialPageId]);
 
-  React.useEffect(() => {
-    if (open) {
-      if (pageStack.length === 0 && fallbackInitialPageId) {
-        setPageStack([fallbackInitialPageId]);
+  const closePalette = React.useCallback(
+    (reason: CommandPaletteCloseReason) => {
+      if (resetOnClose) {
+        resetNavigation();
       }
-      return;
-    }
-    if (resetOnClose) {
-      resetNavigation();
-    }
-  }, [fallbackInitialPageId, open, pageStack.length, resetNavigation, resetOnClose]);
-
-  React.useEffect(() => {
-    if (!currentPageId || pagesById.has(currentPageId)) {
-      return;
-    }
-    setPageStack(fallbackInitialPageId ? [fallbackInitialPageId] : []);
-  }, [currentPageId, fallbackInitialPageId, pagesById]);
+      onOpenChange(false, reason);
+    },
+    [onOpenChange, resetNavigation, resetOnClose],
+  );
 
   const navigate = React.useCallback(
     (pageId: string) => {
       if (!pagesById.has(pageId)) {
         return;
       }
-      setPageStack((previous) => {
-        if (previous[previous.length - 1] === pageId) {
-          return previous;
-        }
-        return [...previous, pageId];
-      });
+      setStoredPageStack(
+        pageStack[pageStack.length - 1] === pageId ? pageStack : [...pageStack, pageId],
+      );
     },
-    [pagesById],
+    [pageStack, pagesById],
   );
 
   const goBack = React.useCallback(() => {
-    setPageStack((previous) => {
-      if (previous.length <= 1) {
-        return previous;
-      }
-      return previous.slice(0, -1);
-    });
-  }, []);
+    setStoredPageStack(pageStack.length <= 1 ? pageStack : pageStack.slice(0, -1));
+  }, [pageStack]);
 
   const handleInputChange = React.useCallback(
     (value: string) => {
       if (!currentPageId) {
         return;
       }
-      setQueriesByPage((previous) => ({ ...previous, [currentPageId]: value }));
+      setStoredQueriesByPage({ ...queriesByPage, [currentPageId]: value });
     },
-    [currentPageId],
+    [currentPageId, queriesByPage],
   );
 
   const handleCommandKeyDown = React.useCallback(
@@ -359,11 +350,11 @@ export function CommandPalette({
         pageId: currentPageId,
       };
 
-      setPendingItemId(item.id);
+      setStoredPendingItemId(item.id);
       try {
         await item.onSelect?.(selectionContext);
       } finally {
-        setPendingItemId(null);
+        setStoredPendingItemId(null);
       }
 
       if (item.nextPageId) {

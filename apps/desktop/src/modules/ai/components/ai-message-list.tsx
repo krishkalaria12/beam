@@ -1,5 +1,5 @@
 import { Bot, Loader2, User, Sparkles, FileText } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useCallback, useMemo } from "react";
 
 import { ShimmeringText } from "@/components/ui/shimmering-text";
 import { MessageResponse } from "@/modules/ai/components/ai-message";
@@ -21,11 +21,19 @@ export function AiMessageList({
   isStreaming,
   activeAssistantMessageId,
 }: AiMessageListProps) {
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [messages, isStreaming]);
+  const scrollAnchorKey = useMemo(() => {
+    const lastMessage = messages[messages.length - 1];
+    return [
+      activeAssistantMessageId ?? "",
+      isStreaming ? "streaming" : "idle",
+      messages.length,
+      lastMessage?.id ?? "",
+      lastMessage?.content?.length ?? 0,
+    ].join(":");
+  }, [activeAssistantMessageId, isStreaming, messages]);
+  const setMessagesEndRef = useCallback((node: HTMLDivElement | null) => {
+    node?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, []);
 
   return (
     <div className="ai-messages-enter flex-1 min-h-0 overflow-y-auto px-3 py-6 scrollbar-hidden-until-hover">
@@ -198,7 +206,7 @@ export function AiMessageList({
               </div>
             );
           })}
-          <div ref={messagesEndRef} />
+          <div key={scrollAnchorKey} ref={setMessagesEndRef} />
         </div>
       )}
     </div>

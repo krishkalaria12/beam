@@ -1,422 +1,160 @@
 <div align="center">
+  <img src="./apps/desktop/src-tauri/icons/icon.png" width="160" height="160" alt="Beam logo" />
 
-<img src="./apps/desktop/src-tauri/icons/icon.png" width="120" height="120" alt="Beam logo" />
+  <h1 align="center">Beam</h1>
 
-# Beam
+  <p align="center">
+    <strong>A blazing-fast, open-source command launcher for Linux 🚀</strong>
+    <br />
+    <em>Raycast-inspired. Native speed. Endlessly extensible.</em>
+  </p>
 
-**A blazing-fast, open-source command launcher for Linux**
+  <p align="center">
+    <a href="https://github.com/krishkalaria12/beam"><img src="https://img.shields.io/badge/github-krishkalaria12%2Fbeam-181717?logo=github&logoColor=white&style=for-the-badge" alt="GitHub" /></a>
+    <a href="https://tauri.app/"><img src="https://img.shields.io/badge/tauri-v2-24C8DB?logo=tauri&logoColor=white&style=for-the-badge" alt="Tauri v2" /></a>
+    <a href="https://react.dev/"><img src="https://img.shields.io/badge/react-19-149ECA?logo=react&logoColor=white&style=for-the-badge" alt="React 19" /></a>
+    <a href="https://bun.sh/"><img src="https://img.shields.io/badge/runtime-bun-black?logo=bun&logoColor=white&style=for-the-badge" alt="Bun" /></a>
+    <a href="./LICENSE"><img src="https://img.shields.io/github/license/krishkalaria12/beam?style=for-the-badge&color=blue" alt="License" /></a>
+  </p>
 
-_Raycast-inspired. Native speed. Endlessly extensible._
-
-<br/>
-
-[![GitHub](https://img.shields.io/badge/github-krishkalaria12%2Fbeam-181717?logo=github&logoColor=white&style=for-the-badge)](https://github.com/krishkalaria12/beam)
-[![Tauri v2](https://img.shields.io/badge/tauri-v2-24C8DB?logo=tauri&logoColor=white&style=for-the-badge)](https://tauri.app/)
-[![React 19](https://img.shields.io/badge/react-19-149ECA?logo=react&logoColor=white&style=for-the-badge)](https://react.dev/)
-[![Bun](https://img.shields.io/badge/runtime-bun-black?logo=bun&logoColor=white&style=for-the-badge)](https://bun.sh/)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen?style=for-the-badge)](http://makeapullrequest.com)
-[![License](https://img.shields.io/github/license/krishkalaria12/beam?style=for-the-badge)](./LICENSE)
-
-<br/>
-
-> Press `Super + Space`. Type anything. Get things done.
-
-<br/>
-
+  <p>
+    <b>Press <kbd>Super</kbd> + <kbd>Space</kbd>. Type anything. Get things done.</b>
+  </p>
 </div>
 
----
+<hr />
 
-## What is Beam?
+## ✨ What is Beam?
 
 Beam is a keyboard-first command launcher desktop app built on **Tauri v2 + React 19**. It lives silently in the background as a transparent, borderless overlay window — always a single hotkey away.
 
-It combines a command palette, productivity tools, integrations, and a Raycast-compatible extension runtime into one unified interface. No Electron overhead. No macOS lock-in. Native Linux performance.
+Bringing the beloved **Raycast-like experience to Linux**, it combines a command palette, deep system integrations, productivity tools, and a Raycast-compatible extension runtime into one unified interface.  
+**No Electron overhead. No macOS lock-in. Native Linux performance.**
 
 ---
 
-## Features
+## 🔥 Key Features
 
-### Command Palette
-
-The core of Beam is a registry-first command system with smart ranking, fuzzy matching, and trigger modes.
-
-- **Fuzzy search** across all commands, apps, files, and custom entries
-- **Smart ranking** — frequency, recency, pinned boosts, alias & keyword matching
-- **Trigger prefixes** — route to sub-modes instantly:
+### 🎯 Smart Command Palette
+The core of Beam is a lightning-fast, registry-first command system.
+- 🔍 **Fuzzy Search:** Instantly find apps, files, commands, and custom entries.
+- 🧠 **Smart Ranking:** Learns from your usage—factors in frequency, recency, and pinned items.
+- ⚡ **Trigger Modes:** Quickly route to specific tools using configurable prefixes:
   - `!` → Quicklinks
-  - `$` → System actions
-  - `>` → Script commands
-  - (all symbols are user-configurable)
-- **Pinned commands** — pin any command to the top of results
-- **Recent commands** — surfaces your most-used commands automatically
-- **Per-command hotkeys** — bind any command to a keyboard shortcut
+  - `$` → System Actions
+  - `>` → Script Commands
+- ⌨️ **Per-Command Hotkeys:** Bind any action directly to a keyboard shortcut.
+
+### 🛠️ Built-in Productivity Suite
+Forget opening multiple apps. Beam comes with powerful, native panels:
+- 📦 **App Launcher:** Discovers and launches `.desktop` entries effortlessly.
+- 🧮 **Smart Calculator:** Natural language math, conversions, dates, and live rates.
+- 📋 **Clipboard Manager:** Persistent, searchable, AES-GCM encrypted clipboard history (Text & Images).
+- 📁 **File Engine:** Real-time indexed file search powered by `nucleo`.
+- ✅ **Task Manager:** SQLite-backed todo lists with nested sub-todos.
+- 📝 **Text Snippets:** Rapid text expansion with delimiter/instant triggers.
+- 🌐 **Quicklinks:** Custom URL shortcuts with keyword triggers.
+- 🗣️ **AI Chat (Multi-Provider):** Chat with OpenRouter, OpenAI, Anthropic, or Gemini directly.
+- 🔮 **And more:** Emoji Picker, Dictionary, Translation, Wi-Fi Speed Test, Window Switcher, System Actions.
+
+### 🧩 Raycast-Compatible Extensions
+Beam isn't just a basic launcher—it's a platform. It ships with a **Node.js extension runtime** offering a custom React reconciler.
+- 🛍️ **Extension Store:** Browse, install, and manage extensions directly inside Beam.
+- 🔄 **Raycast Compatibility:** Run existing Raycast script-commands natively!
+- 🌉 **Browser Bridge:** Connects with Chrome/Firefox to push tab data locally.
+
+### 🔌 Deep Integrations
+- 🎵 **Spotify:** OAuth authentication, playback controls, and library search.
+- 🐙 **GitHub:** Manage PRs, assignments, and search repositories deeply.
+
+### 🎨 Fully Customizable
+Make Beam yours with powerful theming support:
+- **Default, Glassy, or Solid** visual styles.
+- **Custom CSS Themes:** Build your own look (`theme.json` + `theme.css`).
+- Automatically syncs with your system's Light/Dark mode.
 
 ---
 
-### Built-in Panels
-
-| Panel                  | Description                                                                                                  |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------ |
-| **Application Search** | Discovers and launches installed apps via freedesktop `.desktop` files with icon resolution                  |
-| **Calculator**         | Natural language math, conversions, time, dates, and rates via smart-calculator with expression history      |
-| **Clipboard History**  | Persistent clipboard monitor — stores up to 100 entries (text + images), AES-GCM encrypted, fuzzy searchable |
-| **File Search**        | Real-time indexed search powered by nucleo fuzzy matching and a background file watcher                      |
-| **Todo**               | Full todo list with sub-todos, ordering, and CRUD — stored in SQLite                                         |
-| **Snippets**           | Text expansion with delimiter/instant triggers, Markdown + Code support                                      |
-| **Quicklinks**         | User-defined URL shortcuts with keyword triggers and favicon previews                                        |
-| **Emoji Picker**       | Full emoji library with 10 categories via `emojibase-data`                                                   |
-| **Dictionary**         | Word definitions from the Free Dictionary API                                                                |
-| **Translation**        | Auto-detecting text translation via Google Translate (unofficial API)                                        |
-| **Speed Test**         | Network speed test powered by `@cloudflare/speedtest`                                                        |
-| **Window Switcher**    | Lists and focuses open windows via Hyprland IPC or SwayIPC                                                   |
-| **Script Commands**    | Discover and run local scripts with Raycast-compatible argument metadata                                     |
-| **System Actions**     | Shutdown, reboot, sleep, hibernate, and keep-awake controls                                                  |
-| **Calculator History** | Browse and re-use past calculator results (up to 50 entries)                                                 |
-
----
-
-### AI Chat
-
-A full-featured AI assistant panel with first-class multi-provider support.
-
-- **Providers**: OpenRouter, OpenAI, Anthropic, Gemini
-- **Streaming responses** with live markdown rendering
-- **File attachments** — up to 8 files, 25 MB each (base64 encoded)
-- **Conversation history** with automatic context compaction
-- **Token usage tracking** per conversation
-- **API keys stored securely** in the system keyring
-- All conversations persisted in `chat.sqlite3`
-
----
-
-### Integrations
-
-#### Spotify
-
-- Full OAuth2 PKCE authentication flow
-- Playback controls: play, pause, next, previous
-- Search tracks, artists, and albums
-- Multi-device management
-- Token stored securely in system keyring
-
-#### GitHub
-
-- OAuth2 PKCE authentication flow
-- View assigned issues
-- Search pull requests and issues
-- Token stored securely in system keyring
-
----
-
-### Extensions
-
-Beam ships a **Raycast-compatible extension runtime** — a compiled Node.js extension manager process that runs extensions using a custom React reconciler.
-
-- **Extension Store** — browse, install, and uninstall extensions
-- **React-based extension UIs** rendered inside the launcher
-- **Preferences system** per extension
-- **OAuth forwarding** — extensions can initiate OAuth flows via `beam://oauth`
-- **Browser Extension Bridge** — Chrome/Firefox extensions push tab data to Beam via a local HTTP server at `127.0.0.1:38957`
-
----
-
-### Voice Dictation
-
-Push-to-talk voice dictation via the `hyprwhspr` CLI (Linux only).
-
-- Start, stop, cancel, and toggle recording
-- Status feedback within the launcher
-
----
-
-### UI & Theming
-
-- **Three visual styles**: Default, Glassy (blur + transparency), Solid
-- **Two layout modes**: Expanded (full list) and Compressed (input-only when idle)
-- **Custom launcher themes** from filesystem (`theme.json` + `theme.css`)
-- **System theme support** — follows light/dark OS preference
-- Transparent, borderless, always-on-top overlay window (800 × 580 px)
-
-### Custom Launcher Themes
-
-Beam discovers external themes from:
-
-- `<app-config-dir>/themes/<theme-id>/theme.json`
-- `<app-config-dir>/themes/<theme-id>/theme.css`
-
-Use **Settings → Visual Style → Custom Themes** to select one.
-
-Starter examples:
-
-- `resources/examples/themes/base`
-- `resources/examples/themes/neo-brutalism`
-
-Theme authoring contract:
-
-- `resources/docs/theme-contract.md`
-
----
-
-## Architecture
-
-```
-beam/
-├── apps/desktop/
-│   ├── src/                React launcher UI, command registry, feature modules
-│   │   ├── command-registry/ Static commands, dynamic providers, dispatcher, ranker
-│   │   └── modules/        One directory per feature panel
-│   └── src-tauri/          Rust backend — IPC commands, persistence, system APIs
-│       └── src/            ~80 Tauri IPC commands across all feature modules
-├── packages/config/        Shared TypeScript base config for the workspace
-├── packages/extension-manager/ Node.js extension runtime (React reconciler + RPC)
-├── packages/extension-protocol/ Shared protobuf-generated runtime contracts
-├── packages/browser-extension/ Chrome + Firefox bridge extensions
-└── infra/                  Desktop integrations, proto schemas, store data, and repo scripts
-```
-
-**Frontend → Backend communication** happens entirely over Tauri's typed IPC. The extension manager runtime communicates with the main process over stdin/stdout using JSON + msgpack.
-
----
-
-## Tech Stack
-
-### Frontend
-
-|                  |                                 |
-| ---------------- | ------------------------------- |
-| UI Framework     | React 19.2                      |
-| Routing          | TanStack Router v1 (file-based) |
-| Data Fetching    | TanStack Query v5               |
-| Forms            | TanStack Form                   |
-| State Management | Zustand v5                      |
-| Styling          | Tailwind CSS v4                 |
-| Animation        | Framer Motion                   |
-| Command Palette  | cmdk                            |
-| Drag & Drop      | @dnd-kit                        |
-| Charts           | Recharts                        |
-| AI SDK           | Vercel AI SDK v6                |
-| Toasts           | Sonner                          |
-| Icons            | @phosphor-icons, lucide-react   |
-| Validation       | Zod v4                          |
-| Markdown         | streamdown (streaming)          |
-
-### Backend (Rust)
-
-|                   |                                |
-| ----------------- | ------------------------------ |
-| Desktop Framework | Tauri v2.10                    |
-| Async Runtime     | tokio                          |
-| Database          | SQLx 0.8 + SQLite              |
-| Fuzzy Search      | nucleo                         |
-| Concurrent Map    | papaya                         |
-| Clipboard         | arboard (Wayland support)      |
-| Keyring           | keyring                        |
-| Encryption        | aes-gcm                        |
-| HTTP Client       | reqwest + rustls               |
-| File Watching     | notify + notify-debouncer-mini |
-| File Walking      | walkdir + ignore               |
-| Wayland Portal    | ashpd                          |
-| Window Management | hyprland + swayipc             |
-| AI Backend        | rig-core                       |
-| Serialization     | serde, rkyv, msgpackr          |
-
-### Tooling
-
-- **Package Manager / Runtime**: Bun
-- **Build Tool**: Vite 6 + @vitejs/plugin-react-swc
-- **React Compiler**: babel-plugin-react-compiler
-- **Linting**: oxlint
-- **Formatting**: oxfmt (JS/TS), cargo fmt (Rust)
-- **Extension Manager Bundling**: esbuild + @yao-pkg/pkg + patchelf
-
----
-
-## Getting Started
+## 🚀 Getting Started
 
 ### Prerequisites
+Beam is built **Linux-first** and deeply integrates with freedesktop standards and Wayland APIs.
+1. [Bun](https://bun.sh/) (Latest stable)
+2. [Rust Toolchain](https://rustup.rs/)
+3. [Tauri System Dependencies](https://tauri.app/start/prerequisites/)
+4. `patchelf` (Required for Linux build linking)
 
-- [Bun](https://bun.sh/) (latest stable)
-- [Rust toolchain](https://rustup.rs/) (`rustup`, Cargo)
-- Tauri system dependencies — see [Tauri prerequisites](https://tauri.app/start/prerequisites/)
-- `patchelf` (recommended on Linux, used during build)
+### Installation & Development
 
-> **Note**: Beam is Linux-first. It uses freedesktop app discovery and Wayland compositor hotkey APIs. Cross-platform support is planned but not yet complete.
-
-### Install dependencies
-
+Clone the repository and install dependencies:
 ```bash
+git clone https://github.com/krishkalaria12/beam.git
+cd beam
 bun install
 ```
 
-### Development
-
+Start the development server (runs Vite + Tauri concurrently):
 ```bash
 bun run desktop:dev
 ```
 
-Starts Vite (on `http://localhost:3001`) and Tauri together in development mode.
-
-### Snippet Runtime Permissions
-
-Beam's Linux snippet expander reads keyboard events from `/dev/input/event*` and injects paste/backspace events through `/dev/uinput`.
-
-Install the bundled udev rules once:
-
-```bash
-sudo ./infra/scripts/install-snippets-udev-rules.sh
-```
-
-Then log out and back in before testing global snippet expansion.
-
-### Build
-
+### Production Build
 ```bash
 bun run desktop:build
 ```
 
-### All available commands
-
-```bash
-bun run dev               # Vite frontend only
-bun run desktop:dev       # Tauri + Vite (full app)
-bun run build             # Frontend build only
-bun run desktop:build     # Full desktop app build
-bun run check-types       # TypeScript type check
-bun run extension-manager:check # Extension Manager TypeScript check
-bun run extension-manager:build # Rebuild extension manager binary
-bun run fmt:check         # JS/TS format check
-bun run rust:fmt:check    # Rust format check
-```
+> **Note on Snippets:** For Beam's snippet expander to work (which reads keyboard events and injects text), you need to set up udev rules. Run `sudo ./infra/scripts/install-snippets-udev-rules.sh` and re-login.
 
 ---
 
-## Configuration
+## ⚙️ Configuration
 
-### Global Hotkey
+Beam is highly configurable through its internal settings panel (`Super + Space` -> Type "Settings").
 
-Default: `Super + Space`. Configurable from `Settings → Hotkeys`.
-
-On Wayland, Beam uses the XDG Desktop Portal for global shortcut registration. If your compositor does not support the portal, you can bind the hotkey manually and launch Beam with the `--toggle` flag.
-
-### Trigger Symbols
-
-Change the prefix symbols for quicklinks (`!`), system actions (`$`), and script commands (`>`) from `Settings → Trigger Symbols`.
-
-### UI Style
-
-Three options available from `Settings → Style`:
-
-- **Default** — follows system appearance
-- **Glassy** — frosted glass with background blur
-- **Solid** — fully opaque surfaces
+* **Global Hotkey:** Customize the main activation key (Default: `Super + Space`).
+* **Trigger Symbols:** Overwrite prefixes (e.g., change `!` for Quicklinks to something else).
+* **Window Style:** Toggle between Default, Glassy (Frosted Glass), or Solid.
 
 ---
 
-## Integrations Setup
+## 🤝 Contributing
 
-### Spotify & GitHub OAuth
+We welcome contributions! Beam is rapidly evolving, and we'd love your help.
 
-1. Create an OAuth application on [Spotify Developer Dashboard](https://developer.spotify.com/dashboard) or [GitHub Developer Settings](https://github.com/settings/developers).
-2. Set the redirect URI to:
+1. Fork the repository.
+2. Create a feature branch.
+3. Ensure you follow existing patterns (especially regarding the Command Registry).
+4. Run validation checks:
+   ```bash
+   bun run check-types
+   bun run fmt:check
+   bun run rust:fmt:check
    ```
-   beam://oauth
-   ```
-3. Open the Spotify or GitHub panel in Beam and enter your Client ID.
-4. Complete the browser authentication flow.
+5. Submit a pull request detailing your changes.
 
-Tokens are stored securely in the system keyring.
-
----
-
-## Browser Extension Bridge
-
-Beam runs a local HTTP bridge at `http://127.0.0.1:38957` for browser extension APIs.
-
-| Endpoint         | Method | Description            |
-| ---------------- | ------ | ---------------------- |
-| `/bridge/health` | `GET`  | Health check           |
-| `/bridge/tabs`   | `POST` | Sync open browser tabs |
-
-- Chrome extension: `packages/browser-extension/chrome/`
-- Firefox extension: `packages/browser-extension/firefox/`
-- Full setup instructions: [`packages/browser-extension/README.md`](./packages/browser-extension/README.md)
+**Current Priorities:**
+* Expanding cross-platform support (macOS/Windows).
+* Improving test coverage.
+* Enhancing the Raycast Extension compatibility layer.
 
 ---
 
-## Script Commands
+## 🔒 Privacy & Persistence
 
-Place scripts in Beam's script-commands directory. Beam auto-discovers them and supports Raycast-compatible argument metadata:
-
-```bash
-#!/bin/bash
-
-# @raycast.argument1 {"type":"text","placeholder":"Name","required":true}
-# @raycast.argument2 {"type":"dropdown","placeholder":"Environment","required":false,"data":[{"title":"Dev","value":"dev"},{"title":"Prod","value":"prod"}]}
-
-echo "Hello, $1 in $2!"
-```
-
-Supported argument types: `text`, `password`, `dropdown`. Scripts time out after 60 seconds.
+Beam keeps your data secure and local:
+- **Encrypted Local Storage:** Clipboard entries are AES-GCM encrypted.
+- **Keyring Integration:** AI API keys and OAuth tokens are stored in the secure OS system keyring.
+- **SQLite DBs:** Persistent storage for Todos, Chat, and Snippets is managed locally. No tracking. No telemetry.
 
 ---
 
-## Contributing
+## 🌟 Support the Project
 
-1. Fork the repository and create a feature branch.
-2. Keep changes aligned with the existing command registry and extension runtime patterns.
-3. Run all checks before opening a PR:
-
-```bash
-bun run check-types
-bun run fmt:check
-bun run rust:fmt:check
-```
-
-4. Your PR description should cover: what changed, why it changed, compatibility impact, and how you tested it.
-
-### Current focus areas
-
-- Broader test coverage across frontend and backend modules
-- Cross-platform parity beyond Linux-first integrations
-- Extension API and runtime compatibility improvements
-- Hotkey and compositor fallback hardening
-
----
-
-## Persistence
-
-Beam stores data across multiple backends depending on sensitivity:
-
-| Data                                                | Storage                                           |
-| --------------------------------------------------- | ------------------------------------------------- |
-| Settings, quicklinks, clipboard, calculator history | `tauri-plugin-store` (JSON files in app data dir) |
-| AI conversations                                    | `chat.sqlite3`                                    |
-| Todos & sub-todos                                   | `todo.sqlite3`                                    |
-| Snippets                                            | `snippets.sqlite3`                                |
-| Clipboard entries                                   | AES-GCM encrypted JSON                            |
-| AI API keys, OAuth tokens                           | System keyring                                    |
-| Extension OAuth tokens                              | `oauth_tokens.json`                               |
-| UI preferences, trigger symbols                     | `localStorage`                                    |
-
----
-
-## References
-
-- [Tauri documentation](https://tauri.app/)
-- [TanStack Router documentation](https://tanstack.com/router/latest)
-- [Raycast Extension API reference](https://developers.raycast.com/api-reference/)
-
----
-
-## Star History
+If you love Beam, consider leaving a star here on GitHub! It helps a lot.
 
 [![Star History Chart](https://api.star-history.com/svg?repos=krishkalaria12/beam&type=Date)](https://star-history.com/#krishkalaria12/beam&Date)
 
----
-
-<div align="center">
-
-Built with Tauri + React + Rust &nbsp;·&nbsp; Linux-first, open-source
-
-</div>
+<p align="center">
+  Built with ❤️ using Tauri + React + Rust <br>
+  <b>A Linux-first open-source initiative.</b>
+</p>

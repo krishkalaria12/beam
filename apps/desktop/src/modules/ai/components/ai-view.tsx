@@ -91,9 +91,30 @@ export function AiView({ onBack }: AiViewProps) {
     ];
   }, [activeConversationId, conversations, messages]);
 
-  const { refreshApiKeyStatus, refreshConversations } = useAiChatBootstrap();
+  const { refreshApiKeyStatus, refreshConversations, loadConversationHistory } =
+    useAiChatBootstrap();
   useAiStreamListeners({ refreshConversations });
   useAiWindowSizer(); // Window stays at 1100×750
+
+  const handleProviderChange = useCallback(
+    (providerId: typeof selectedProvider) => {
+      selectProvider(providerId);
+      void refreshApiKeyStatus(false, providerId).catch(() => undefined);
+    },
+    [refreshApiKeyStatus, selectProvider],
+  );
+
+  const handleSelectConversation = useCallback(
+    (conversationId: string) => {
+      setActiveConversationId(conversationId);
+      void loadConversationHistory(conversationId, false);
+    },
+    [loadConversationHistory, setActiveConversationId],
+  );
+
+  const handleStartNewChat = useCallback(() => {
+    startNewChat();
+  }, [startNewChat]);
 
   const handleSaveApiKey = useCallback(async () => {
     const normalizedApiKey = apiKeyInput.trim();
@@ -264,7 +285,7 @@ export function AiView({ onBack }: AiViewProps) {
         isCheckingApiKey={isCheckingApiKey}
         isApiKeySetForProvider={isApiKeySetForProvider}
         isSavingApiKey={isSavingApiKey}
-        onProviderChange={selectProvider}
+        onProviderChange={handleProviderChange}
         onApiKeyInputChange={setApiKeyInput}
         onSaveApiKey={handleSaveApiKey}
         onClearApiKey={handleClearApiKey}
@@ -284,8 +305,8 @@ export function AiView({ onBack }: AiViewProps) {
         isStreaming={isStreaming}
         isOpen={isSidebarOpen}
         onToggle={() => setIsSidebarOpen((prev) => !prev)}
-        onStartNewChat={startNewChat}
-        onSelectConversation={setActiveConversationId}
+        onStartNewChat={handleStartNewChat}
+        onSelectConversation={handleSelectConversation}
         onOpenSettings={() => setShowSetup(true)}
       />
 
@@ -298,7 +319,7 @@ export function AiView({ onBack }: AiViewProps) {
           providerDefinition={providerDefinition}
           isClearingChat={isClearingChat}
           isStreaming={isStreaming}
-          onProviderChange={selectProvider}
+          onProviderChange={handleProviderChange}
           onModelChange={setSelectedModel}
           onClearChat={handleClearChat}
         />

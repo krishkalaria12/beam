@@ -1,5 +1,6 @@
 import { isTauri } from "@tauri-apps/api/core";
 import { open as openExternal } from "@tauri-apps/plugin-shell";
+import { useQuery } from "@tanstack/react-query";
 import {
   ArrowUpRight,
   ChevronLeft,
@@ -12,7 +13,7 @@ import {
   Unplug,
   User,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
 
 import { ModuleFooter } from "@/components/module";
@@ -60,13 +61,19 @@ function repositoryNameFromUrl(url: string | undefined) {
 }
 
 export function GithubView({ initialQuery, onBack }: GithubViewProps) {
-  const [searchInput, setSearchInput] = useState(initialQuery);
+  const [searchInputState, setSearchInputState] = useState({
+    key: initialQuery,
+    value: initialQuery,
+  });
   const [assignedItems, setAssignedItems] = useState<GithubIssueItem[]>([]);
   const [searchItems, setSearchItems] = useState<GithubIssueItem[]>([]);
   const [isLoadingAssigned, setIsLoadingAssigned] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
-  const clientIdInputRef = useRef<HTMLInputElement>(null);
+  if (searchInputState.key !== initialQuery) {
+    setSearchInputState({ key: initialQuery, value: initialQuery });
+  }
+  const searchInput = searchInputState.value;
 
   const {
     clientId,
@@ -82,6 +89,14 @@ export function GithubView({ initialQuery, onBack }: GithubViewProps) {
     ensureAccessToken,
     refreshUserProfile,
   } = useGithubAuth();
+  const setClientIdInputRef = useCallback(
+    (node: HTMLInputElement | null) => {
+      if (node && clientId.trim().length === 0) {
+        node.focus();
+      }
+    },
+    [clientId],
+  );
 
   function clearErrors() {
     setLocalError(null);
@@ -98,61 +113,37 @@ export function GithubView({ initialQuery, onBack }: GithubViewProps) {
       page: 1,
     });
   }
-
-  useEffect(() => {
-    setSearchInput(initialQuery);
-  }, [initialQuery]);
-
-  useEffect(() => {
-    if (clientId.trim()) {
-      return;
-    }
-
-    clientIdInputRef.current?.focus();
-  }, [clientId]);
-
-  useEffect(() => {
-    if (!isConnected) {
-      setAssignedItems([]);
-      return;
-    }
-
-    let disposed = false;
-
-    void (async () => {
-      try {
-        setIsLoadingAssigned(true);
-        const accessToken = await ensureAccessToken();
-        if (!accessToken || disposed) {
-          return;
-        }
-
-        const issues = await fetchAssignedItems(accessToken);
-
-        if (disposed) {
-          return;
-        }
-
-        setAssignedItems(issues);
-      } catch (loadError) {
-        if (disposed) {
-          return;
-        }
-
-        setLocalError(
-          loadError instanceof Error ? loadError.message : "Failed to load assigned items.",
-        );
-      } finally {
-        if (!disposed) {
-          setIsLoadingAssigned(false);
-        }
+  const assignedItemsQuery = useQuery({
+    queryKey: ["github-assigned-items", isConnected],
+    queryFn: async () => {
+      const accessToken = await ensureAccessToken();
+      if (!accessToken) {
+        return [];
       }
-    })();
 
-    return () => {
-      disposed = true;
-    };
-  }, [isConnected]);
+      return fetchAssignedItems(accessToken);
+    },
+    enabled: isConnected,
+    staleTime: 0,
+  });
+
+  if (!isConnected && assignedItems.length > 0) {
+    setAssignedItems([]);
+  } else if (assignedItems !== (assignedItemsQuery.data ?? assignedItems)) {
+    setAssignedItems(assignedItemsQuery.data ?? []);
+  }
+
+  if (assignedItemsQuery.error && !localError) {
+    setLocalError(
+      assignedItemsQuery.error instanceof Error
+        ? assignedItemsQuery.error.message
+        : "Failed to load assigned items.",
+    );
+  }
+
+  if (isLoadingAssigned !== assignedItemsQuery.isLoading) {
+    setIsLoadingAssigned(assignedItemsQuery.isLoading);
+  }
 
   async function handleConnect() {
     clearErrors();
@@ -341,7 +332,7 @@ export function GithubView({ initialQuery, onBack }: GithubViewProps) {
 
             <div className="space-y-3">
               <Input
-                ref={clientIdInputRef}
+                ref={setClientIdInputRef}
                 value={clientId}
                 onChange={(event) => {
                   setClientId(event.target.value);
@@ -493,7 +484,9 @@ export function GithubView({ initialQuery, onBack }: GithubViewProps) {
                 <Input
                   type="text"
                   value={searchInput}
-                  onChange={(event) => setSearchInput(event.target.value)}
+                  onChange={(event) =>
+                    setSearchInputState({ key: initialQuery, value: event.target.value })
+                  }
                   onKeyDown={(event) => {
                     if (event.key === "Enter") {
                       event.preventDefault();

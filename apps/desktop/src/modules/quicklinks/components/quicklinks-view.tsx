@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useForm } from "@tanstack/react-form";
 import { File, Folder, FolderOpen, Link2, Loader2, Pencil, Plus, Trash2, Zap } from "lucide-react";
 import { z } from "zod";
@@ -29,6 +29,7 @@ import {
 } from "../api/quicklinks";
 import type { Quicklink } from "../types";
 import { QuicklinkIcon } from "./quicklink-icon";
+import { useMountEffect } from "@/hooks/use-mount-effect";
 
 const quicklinkSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -168,13 +169,13 @@ function QuicklinkCreateForm({
     },
   });
 
-  useEffect(() => {
+  useMountEffect(() => {
     return () => {
       if (fetchTimerRef.current) {
         clearTimeout(fetchTimerRef.current);
       }
     };
-  }, []);
+  });
 
   const syncTargetState = (value: string) => {
     const isFileTargetValue = isFileQuicklinkTarget(value);

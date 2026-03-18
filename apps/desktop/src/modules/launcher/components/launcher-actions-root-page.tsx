@@ -9,7 +9,7 @@ import type { LauncherActionItem } from "@/modules/launcher/types";
 
 interface LauncherActionsRootPageProps {
   inputId: string;
-  inputRef: React.RefObject<HTMLInputElement | null>;
+  inputRef: (node: HTMLInputElement | null) => void;
   query: string;
   searchPlaceholder: string;
   items: LauncherActionItem[];

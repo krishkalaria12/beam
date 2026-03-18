@@ -1,5 +1,5 @@
 import { Loader2, Terminal, TimerReset } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useCallback } from "react";
 
 import { cn } from "@/lib/utils";
 import type { ShellExecutionEntry } from "@/modules/shell/types";
@@ -68,20 +68,15 @@ export function ShellCommandPanel({
   currentCommand,
   history,
 }: ShellCommandPanelProps) {
-  const scrollRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    const node = scrollRef.current;
-    if (!node) {
-      return;
+  const scrollAnchorRef = useCallback((node: HTMLDivElement | null) => {
+    if (node) {
+      node.scrollIntoView({ block: "end" });
     }
-
-    node.scrollTop = node.scrollHeight;
-  }, [history.length, currentCommand]);
+  }, []);
 
   return (
     <div className="flex h-full w-full min-h-0 flex-1 flex-col overflow-hidden bg-[rgba(9,9,11,0.98)] font-mono">
-      <div ref={scrollRef} className="custom-scrollbar min-h-0 flex-1 overflow-y-auto px-4 py-4">
+      <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto px-4 py-4">
         {history.length === 0 ? (
           <div className="flex h-full min-h-[240px] flex-col items-center justify-center gap-3 text-center">
             <div className="flex size-10 items-center justify-center rounded-md bg-white/5">
@@ -134,6 +129,7 @@ export function ShellCommandPanel({
                 </div>
               </section>
             ))}
+            <div ref={scrollAnchorRef} data-command={currentCommand} />
           </div>
         )}
       </div>

@@ -13,7 +13,7 @@ import {
   Link,
   Clipboard,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { ClipboardContentType, type ClipboardHistoryEntry } from "../types";
 import { isPreviewableImageValue } from "../lib/preview";
@@ -53,19 +53,8 @@ export function ClipboardDetails({
   onCopy,
   isLoading = false,
 }: ClipboardDetailsProps) {
-  const [previewStatus, setPreviewStatus] = useState<"idle" | "loaded" | "error">("idle");
-
   const previewUrl = entry && isPreviewableImageValue(entry.value) ? entry.value : null;
   const showsImagePreview = previewUrl !== null;
-
-  useEffect(() => {
-    if (!previewUrl) {
-      setPreviewStatus("idle");
-      return;
-    }
-
-    setPreviewStatus("idle");
-  }, [previewUrl]);
 
   if (isLoading) {
     return (
@@ -94,9 +83,6 @@ export function ClipboardDetails({
   }
 
   const isImageEntry = entry.content_type === ClipboardContentType.Image;
-  const isPreviewLoading = showsImagePreview && previewStatus === "idle";
-  const shouldRenderPreview = showsImagePreview && previewStatus !== "error";
-
   const copiedAtLabel = formatDistanceToNow(new Date(entry.copied_at), { addSuffix: true });
 
   const iconConfig = getEntryIconConfig(entry.content_type);
@@ -105,27 +91,9 @@ export function ClipboardDetails({
     <div className="clipboard-details-panel flex flex-1 flex-col min-w-0 h-full">
       {/* Content Preview - Scrollable */}
       <div className="flex-1 overflow-y-auto p-6 [content-visibility:auto]">
-        {shouldRenderPreview ? (
+        {showsImagePreview ? (
           <div className="flex w-full justify-center">
-            <div className="relative max-w-full overflow-hidden rounded-xl ring-1 ring-[var(--launcher-card-border)] shadow-2xl">
-              {isPreviewLoading && (
-                <div className="absolute inset-0 z-10 flex items-center justify-center bg-[var(--launcher-card-bg)]/75">
-                  <Loader2 className="size-5 animate-spin text-muted-foreground" />
-                </div>
-              )}
-              <img
-                src={previewUrl}
-                alt="Preview"
-                loading="lazy"
-                decoding="async"
-                onLoad={() => setPreviewStatus("loaded")}
-                onError={() => setPreviewStatus("error")}
-                className={cn(
-                  "block h-auto max-w-full object-contain transition-opacity duration-150",
-                  previewStatus === "loaded" ? "opacity-100" : "opacity-0",
-                )}
-              />
-            </div>
+            <ClipboardImagePreview key={previewUrl} previewUrl={previewUrl} />
           </div>
         ) : (
           <div className="w-full text-[14px] font-normal leading-relaxed tracking-[-0.01em] text-muted-foreground whitespace-pre-wrap break-words">
@@ -241,6 +209,36 @@ export function ClipboardDetails({
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function ClipboardImagePreview({ previewUrl }: { previewUrl: string }) {
+  const [previewStatus, setPreviewStatus] = useState<"idle" | "loaded" | "error">("idle");
+
+  if (previewStatus === "error") {
+    return null;
+  }
+
+  return (
+    <div className="relative max-w-full overflow-hidden rounded-xl ring-1 ring-[var(--launcher-card-border)] shadow-2xl">
+      {previewStatus === "idle" && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-[var(--launcher-card-bg)]/75">
+          <Loader2 className="size-5 animate-spin text-muted-foreground" />
+        </div>
+      )}
+      <img
+        src={previewUrl}
+        alt="Preview"
+        loading="lazy"
+        decoding="async"
+        onLoad={() => setPreviewStatus("loaded")}
+        onError={() => setPreviewStatus("error")}
+        className={cn(
+          "block h-auto max-w-full object-contain transition-opacity duration-150",
+          previewStatus === "loaded" ? "opacity-100" : "opacity-0",
+        )}
+      />
     </div>
   );
 }

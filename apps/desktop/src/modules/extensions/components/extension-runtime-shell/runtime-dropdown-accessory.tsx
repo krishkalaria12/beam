@@ -1,4 +1,4 @@
-import { type CSSProperties, useEffect, useRef, useState } from "react";
+import { type CSSProperties, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 import { SearchableDropdown } from "@/components/module";
@@ -37,20 +37,16 @@ export function RuntimeDropdownAccessory({ nodeId, state }: RuntimeDropdownAcces
   const [internalValue, setInternalValue] = useState<string | undefined>(resolvedValue);
   const pendingValueRef = useRef<string | null>(null);
 
-  useEffect(() => {
-    const pendingValue = pendingValueRef.current;
-    if (pendingValue !== null) {
-      if (resolvedValue === pendingValue) {
-        pendingValueRef.current = null;
-      } else if (internalValue === pendingValue) {
-        return;
-      }
-    }
+  if (pendingValueRef.current !== null && resolvedValue === pendingValueRef.current) {
+    pendingValueRef.current = null;
+  }
 
-    if (resolvedValue !== internalValue) {
-      setInternalValue(resolvedValue);
-    }
-  }, [internalValue, resolvedValue]);
+  if (
+    (pendingValueRef.current === null || internalValue !== pendingValueRef.current) &&
+    resolvedValue !== internalValue
+  ) {
+    setInternalValue(resolvedValue);
+  }
 
   const placeholder = asString(node.props.placeholder, "Select option");
   const displayTitle =

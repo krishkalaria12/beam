@@ -1,5 +1,5 @@
 import { useCommandState } from "cmdk";
-import { useEffect, useState } from "react";
+import { useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
 
 import { OpenModuleCommandRow } from "@/components/command/open-module-command-row";
@@ -42,20 +42,7 @@ export default function CalculatorHistoryCommandGroup({
   const history = data ?? [];
   const [copiedEntryIndex, setCopiedEntryIndex] = useState<number | null>(null);
   const [copyError, setCopyError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (copiedEntryIndex === null) {
-      return;
-    }
-
-    const timeout = window.setTimeout(() => {
-      setCopiedEntryIndex(null);
-    }, HISTORY_COPY_FEEDBACK_MS);
-
-    return () => {
-      window.clearTimeout(timeout);
-    };
-  }, [copiedEntryIndex]);
+  const copiedResetTimerRef = useRef<number | null>(null);
 
   if (!isOpen) {
     const shouldShowOpenHistory = matchesCommandKeywords(query, CALCULATOR_HISTORY_KEYWORDS);
@@ -123,6 +110,13 @@ export default function CalculatorHistoryCommandGroup({
                   .then(() => {
                     setCopiedEntryIndex(index);
                     setCopyError(null);
+                    if (copiedResetTimerRef.current !== null) {
+                      window.clearTimeout(copiedResetTimerRef.current);
+                    }
+                    copiedResetTimerRef.current = window.setTimeout(() => {
+                      copiedResetTimerRef.current = null;
+                      setCopiedEntryIndex(null);
+                    }, HISTORY_COPY_FEEDBACK_MS);
                   })
                   .catch(() => {
                     setCopyError("Could not copy to clipboard");

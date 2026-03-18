@@ -1,7 +1,7 @@
 import { isTauri } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { open as openExternal } from "@tauri-apps/plugin-shell";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 
 import { parseOauthDeepLink } from "@/modules/extensions/extension-manager/deep-link";
 
@@ -26,6 +26,7 @@ import {
 } from "../lib/oauth-session";
 import { isTokenExpired, toStoredTokens } from "../lib/token";
 import type { OAuthStoredTokenSet, SpotifyUserProfile } from "../types";
+import { useMountEffect } from "@/hooks/use-mount-effect";
 
 async function openAuthUrl(url: string) {
   if (isTauri()) {
@@ -204,7 +205,12 @@ export function useSpotifyAuth() {
     setIsAuthorizing(false);
   }, []);
 
-  useEffect(() => {
+  const handleOauthSuccessRef = useRef(handleOauthSuccess);
+  const handleOauthErrorRef = useRef(handleOauthError);
+  handleOauthSuccessRef.current = handleOauthSuccess;
+  handleOauthErrorRef.current = handleOauthError;
+
+  useMountEffect(() => {
     let mounted = true;
 
     void (async () => {
@@ -235,9 +241,9 @@ export function useSpotifyAuth() {
     return () => {
       mounted = false;
     };
-  }, [refreshUserProfile]);
+  });
 
-  useEffect(() => {
+  useMountEffect(() => {
     if (!isTauri()) {
       return;
     }
@@ -251,11 +257,11 @@ export function useSpotifyAuth() {
       }
 
       if (parsed.kind === "success") {
-        void handleOauthSuccess(parsed.state, parsed.code);
+        void handleOauthSuccessRef.current(parsed.state, parsed.code);
         return;
       }
 
-      handleOauthError(parsed.state, parsed.error);
+      handleOauthErrorRef.current(parsed.state, parsed.error);
     })
       .then((cleanup) => {
         unlisten = cleanup;
@@ -267,7 +273,7 @@ export function useSpotifyAuth() {
     return () => {
       unlisten?.();
     };
-  }, [handleOauthError, handleOauthSuccess]);
+  });
 
   const statusLabel = useMemo(() => {
     if (isAuthorizing) {

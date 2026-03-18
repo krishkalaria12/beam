@@ -1,5 +1,5 @@
 import { ArrowLeft, AtSign, Calculator, CornerDownLeft, Keyboard, Smile } from "lucide-react";
-import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
+import { lazy, Suspense, useRef, useState, type ReactNode } from "react";
 
 import { CommandLoadingState } from "@/components/command/command-loading-state";
 import {
@@ -8,6 +8,7 @@ import {
 } from "@/command-registry/panel-actions-registry";
 import { isLauncherActionsHotkey, listenLauncherActionsToggle } from "@/lib/launcher-actions";
 import type { CommandPanel } from "@/command-registry/types";
+import { useMountEffect } from "@/hooks/use-mount-effect";
 import type { LauncherActionItem } from "@/modules/launcher/components/launcher-actions-panel";
 import { LauncherActionsPanel } from "@/modules/launcher/components/launcher-actions-panel";
 import { dispatchKeyboardShortcutToTarget, dispatchEnterToTarget } from "@/modules/launcher/helper";
@@ -47,7 +48,16 @@ function SecondaryPanelFallback() {
   return <CommandLoadingState label="Loading..." className="px-4 py-6 text-xs" />;
 }
 
-export function LauncherSecondaryPanel({
+export function LauncherSecondaryPanel(props: LauncherSecondaryPanelProps) {
+  const { activePanel } = props;
+  if (!isSecondaryPanel(activePanel)) {
+    return null;
+  }
+
+  return <LauncherSecondaryPanelContent key={activePanel} {...props} />;
+}
+
+function LauncherSecondaryPanelContent({
   activePanel,
   onOpenCalculatorHistory,
   onOpenEmoji,
@@ -65,8 +75,13 @@ export function LauncherSecondaryPanel({
   const secondaryPanelIsOpen = isSecondaryPanel(activePanel);
   const [actionsOpen, setActionsOpen] = useState(false);
   const actionsPreviousFocusRef = useRef<HTMLElement | null>(null);
+  const actionsOpenRef = useRef(actionsOpen);
+  const secondaryPanelIsOpenRef = useRef(secondaryPanelIsOpen);
+  const handleActionsOpenChangeRef = useRef<(nextOpen: boolean) => void>(() => {});
   const panelRegistration = getPanelCommandRegistration(activePanel);
   const primaryActionLabel = getPanelPrimaryActionLabel(activePanel);
+  actionsOpenRef.current = actionsOpen;
+  secondaryPanelIsOpenRef.current = secondaryPanelIsOpen;
 
   function handleActionsOpenChange(nextOpen: boolean) {
     if (nextOpen) {
@@ -86,35 +101,33 @@ export function LauncherSecondaryPanel({
     });
   }
 
-  useEffect(() => {
-    setActionsOpen(false);
-  }, [activePanel]);
+  handleActionsOpenChangeRef.current = handleActionsOpenChange;
 
-  useEffect(() => {
-    if (!secondaryPanelIsOpen) {
-      return;
-    }
-
+  useMountEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (!isLauncherActionsHotkey(event)) {
+      if (!secondaryPanelIsOpenRef.current || !isLauncherActionsHotkey(event)) {
         return;
       }
 
       event.preventDefault();
       event.stopPropagation();
-      handleActionsOpenChange(!actionsOpen);
+      handleActionsOpenChangeRef.current(!actionsOpenRef.current);
     };
 
     window.addEventListener("keydown", onKeyDown, true);
     const unsubscribeToggle = listenLauncherActionsToggle(() => {
-      handleActionsOpenChange(!actionsOpen);
+      if (!secondaryPanelIsOpenRef.current) {
+        return;
+      }
+
+      handleActionsOpenChangeRef.current(!actionsOpenRef.current);
     });
 
     return () => {
       window.removeEventListener("keydown", onKeyDown, true);
       unsubscribeToggle();
     };
-  }, [actionsOpen, secondaryPanelIsOpen]);
+  });
 
   function dispatchShortcut(options: {
     key: string;

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useMountEffect } from "@/hooks/use-mount-effect";
 
 type IdleCallbackHandle = number;
 type IdleCallbackOptions = { timeout?: number };
@@ -28,7 +28,7 @@ function preloadLauncherPanels() {
 }
 
 export function useLauncherPanelPrefetch() {
-  useEffect(() => {
+  useMountEffect(() => {
     if (typeof window === "undefined") {
       return;
     }
@@ -60,5 +60,5 @@ export function useLauncherPanelPrefetch() {
         window.clearTimeout(timeoutHandle);
       }
     };
-  }, []);
+  });
 }

@@ -1,14 +1,14 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
 import { onClipboardUpdate, startListening } from "tauri-plugin-clipboard-api";
 
+import { useMountEffect } from "@/hooks/use-mount-effect";
 import { getClipboardHistory } from "../api/get-clipboard-history";
 import { CLIPBOARD_HISTORY_UPDATED_EVENT } from "../lib/updates";
 
 export function useClipboardHistory(enabled: boolean) {
   const queryClient = useQueryClient();
 
-  useEffect(() => {
+  useMountEffect(() => {
     if (!enabled) return;
 
     let unlistenClipboard: (() => void) | undefined;
@@ -40,7 +40,7 @@ export function useClipboardHistory(enabled: boolean) {
         void stopListening();
       }
     };
-  }, [enabled, queryClient]);
+  });
 
   return useQuery({
     queryKey: ["clipboard", "history"],

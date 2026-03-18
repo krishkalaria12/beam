@@ -1,9 +1,10 @@
 import { ArrowLeft, CircleDot, FilePlus2, Loader2, NotebookTabs } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { ModuleFooter } from "@/components/module";
 import { Button } from "@/components/ui/button";
+import { useMountEffect } from "@/hooks/use-mount-effect";
 import { cn } from "@/lib/utils";
 import { useLauncherPanelBackHandler } from "@/modules/launcher/lib/back-navigation";
 import { SnippetEditor } from "@/modules/snippets/components/snippet-editor";
@@ -122,33 +123,31 @@ export function SnippetsView({ onBack }: SnippetsViewProps) {
   const [selectedTag, setSelectedTag] = useState("all");
   const [selectedSnippetId, setSelectedSnippetId] = useState<string | null>(null);
   const [draft, setDraft] = useState<SnippetEditorDraft>(createEmptyDraft);
+  const viewModeRef = useRef<SnippetsMode>(viewMode);
+  const selectedSnippetRef = useRef<Snippet | null>(null);
 
   const snippets = snippetsQuery.data ?? [];
   const availableTags = collectAvailableTags(snippets);
   const filteredSnippets = filterSnippets(snippets, searchValue, selectedTag);
+  const resolvedSelectedSnippetId = filteredSnippets.some((snippet) => snippet.id === selectedSnippetId)
+    ? selectedSnippetId
+    : (filteredSnippets[0]?.id ?? null);
   const selectedSnippet =
-    filteredSnippets.find((snippet) => snippet.id === selectedSnippetId) ?? null;
+    filteredSnippets.find((snippet) => snippet.id === resolvedSelectedSnippetId) ?? null;
 
-  useEffect(() => {
-    if (filteredSnippets.length === 0) {
-      setSelectedSnippetId(null);
-      return;
-    }
+  if (selectedSnippetId !== resolvedSelectedSnippetId) {
+    setSelectedSnippetId(resolvedSelectedSnippetId);
+  }
 
-    if (
-      !selectedSnippetId ||
-      !filteredSnippets.some((snippet) => snippet.id === selectedSnippetId)
-    ) {
-      setSelectedSnippetId(filteredSnippets[0]?.id ?? null);
-    }
-  }, [filteredSnippets, selectedSnippetId]);
+  viewModeRef.current = viewMode;
+  selectedSnippetRef.current = selectedSnippet;
 
-  useEffect(() => {
-    if (viewMode !== "view") {
-      return;
-    }
-
+  useMountEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (viewModeRef.current !== "view") {
+        return;
+      }
+
       const isMeta = event.metaKey || event.ctrlKey;
       const key = event.key.toLowerCase();
 
@@ -167,9 +166,9 @@ export function SnippetsView({ onBack }: SnippetsViewProps) {
         return;
       }
 
-      if (isMeta && key === "e" && selectedSnippet) {
+      if (isMeta && key === "e" && selectedSnippetRef.current) {
         event.preventDefault();
-        setDraft(buildDraftFromSnippet(selectedSnippet));
+        setDraft(buildDraftFromSnippet(selectedSnippetRef.current));
         setViewMode("edit");
       }
     };
@@ -178,7 +177,7 @@ export function SnippetsView({ onBack }: SnippetsViewProps) {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [selectedSnippet, viewMode]);
+  });
 
   useLauncherPanelBackHandler("snippets", () => {
     if (viewMode === "create" || viewMode === "edit") {
@@ -222,9 +221,9 @@ export function SnippetsView({ onBack }: SnippetsViewProps) {
         return;
       }
 
-      if (viewMode === "edit" && selectedSnippetId) {
+      if (viewMode === "edit" && resolvedSelectedSnippetId) {
         const updated = await updateSnippetMutation.mutateAsync({
-          id: selectedSnippetId,
+          id: resolvedSelectedSnippetId,
           name,
           trigger,
           template,
@@ -246,12 +245,12 @@ export function SnippetsView({ onBack }: SnippetsViewProps) {
   }
 
   async function handleDeleteSnippet() {
-    if (!selectedSnippetId) {
+    if (!resolvedSelectedSnippetId) {
       return;
     }
 
     try {
-      await deleteSnippetMutation.mutateAsync(selectedSnippetId);
+      await deleteSnippetMutation.mutateAsync(resolvedSelectedSnippetId);
       toast.success("Snippet deleted.");
       setSelectedSnippetId(null);
       setViewMode("view");
@@ -371,7 +370,7 @@ export function SnippetsView({ onBack }: SnippetsViewProps) {
         <div className="snippets-content-enter flex min-h-0 flex-1 overflow-hidden">
           <SnippetList
             snippets={filteredSnippets}
-            selectedSnippetId={selectedSnippetId}
+            selectedSnippetId={resolvedSelectedSnippetId}
             isLoading={snippetsQuery.isLoading}
             searchValue={searchValue}
             selectedTag={selectedTag}

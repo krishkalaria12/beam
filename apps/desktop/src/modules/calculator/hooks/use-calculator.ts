@@ -1,24 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
-import debounce from "@/lib/debounce";
-import { useEffect, useState } from "react";
+import { useDeferredValue } from "react";
 
 import { calculateExpression } from "../api/calculate-expression";
 import { looksLikeCalculationQuery } from "../lib/query-match";
 
 export function useCalculator(query: string) {
-  const [debouncedQuery, setDebouncedQuery] = useState(query.trim());
-
-  useEffect(() => {
-    const updateQuery = debounce((nextQuery: string) => {
-      setDebouncedQuery(nextQuery.trim());
-    }, 160);
-
-    updateQuery(query);
-
-    return () => {
-      updateQuery.clear();
-    };
-  }, [query]);
+  const debouncedQuery = useDeferredValue(query.trim());
 
   const normalizedQuery = debouncedQuery.trim().replace(/\s+/g, " ");
   const shouldRunCalculator = looksLikeCalculationQuery(normalizedQuery);

@@ -16,6 +16,7 @@ import {
   removeCommandHotkey,
   updateCommandHotkey,
 } from "@/modules/settings/api/hotkeys";
+import { useMountEffect } from "@/hooks/use-mount-effect";
 
 import { LauncherActionsAliasPage } from "./launcher-actions-alias-page";
 import { LauncherActionsHotkeyPage } from "./launcher-actions-hotkey-page";
@@ -77,6 +78,16 @@ function createEmptySelectionByPage(): Record<ActionPageId, string> {
 
 export function LauncherActionsPanel({
   open,
+  ...props
+}: LauncherActionsPanelProps) {
+  if (!open) {
+    return null;
+  }
+
+  return <LauncherActionsPanelContent key={props.targetCommandId ?? "__all__"} {...props} />;
+}
+
+function LauncherActionsPanelContent({
   onOpenChange,
   containerClassName,
   rootTitle,
@@ -84,10 +95,11 @@ export function LauncherActionsPanel({
   rootItems,
   targetCommandId,
   targetCommandTitle,
-}: LauncherActionsPanelProps) {
+}: Omit<LauncherActionsPanelProps, "open">) {
   const panelRef = React.useRef<HTMLDivElement | null>(null);
-  const inputRef = React.useRef<HTMLInputElement>(null);
-  const aliasInputRef = React.useRef<HTMLInputElement>(null);
+  const inputRef = React.useRef<HTMLInputElement | null>(null);
+  const aliasInputRef = React.useRef<HTMLInputElement | null>(null);
+  const onOpenChangeRef = React.useRef(onOpenChange);
   const inputId = React.useId();
   const aliasInputId = React.useId();
 
@@ -100,7 +112,6 @@ export function LauncherActionsPanel({
   const [savingPage, setSavingPage] = React.useState<"hotkey" | "alias" | null>(null);
   const [hotkeyFeedback, setHotkeyFeedback] = React.useState<SaveFeedback | null>(null);
   const [aliasFeedback, setAliasFeedback] = React.useState<SaveFeedback | null>(null);
-  const [selectedItemId, setSelectedItemId] = React.useState("");
   const [selectedItemByPage, setSelectedItemByPage] = React.useState<Record<ActionPageId, string>>(
     createEmptySelectionByPage,
   );
@@ -129,6 +140,13 @@ export function LauncherActionsPanel({
     aliasValue,
     aliasConflictCommandId,
   });
+  const preferredRootItemId = selectedItemByPage.root;
+  const hasPreferredRootItem = filteredRootItems.some(
+    (item) => item.id === preferredRootItemId && !item.disabled,
+  );
+  const selectedRootItemId = hasPreferredRootItem
+    ? preferredRootItemId
+    : (filteredRootItems.find((item) => !item.disabled)?.id ?? "");
 
   const panelTitle =
     currentPageId === "hotkey"
@@ -143,20 +161,7 @@ export function LauncherActionsPanel({
       : currentPageId === "alias"
         ? (targetCommandTitle ?? "Create quick trigger phrases.")
         : undefined;
-
-  function resetState() {
-    setPageStack(["root"]);
-    setRootQuery("");
-    setHotkeyValue("");
-    setAliasValue("");
-    setHotkeyMap({});
-    setAliasesById({});
-    setSavingPage(null);
-    setHotkeyFeedback(null);
-    setAliasFeedback(null);
-    setSelectedItemId("");
-    setSelectedItemByPage(createEmptySelectionByPage());
-  }
+  onOpenChangeRef.current = onOpenChange;
 
   function goBack() {
     setPageStack((previous) => {
@@ -170,6 +175,38 @@ export function LauncherActionsPanel({
   function openNextPage(nextPageId: ActionPageId) {
     setPageStack((previous) => [...previous, nextPageId]);
   }
+
+  const rootInputMountRef = React.useCallback(
+    (node: HTMLInputElement | null) => {
+      inputRef.current = node;
+      if (!node || currentPageId !== "root") {
+        return;
+      }
+
+      window.requestAnimationFrame(() => {
+        if (node.isConnected) {
+          node.focus({ preventScroll: true });
+        }
+      });
+    },
+    [currentPageId],
+  );
+
+  const aliasInputMountRef = React.useCallback(
+    (node: HTMLInputElement | null) => {
+      aliasInputRef.current = node;
+      if (!node || currentPageId !== "alias") {
+        return;
+      }
+
+      window.requestAnimationFrame(() => {
+        if (node.isConnected) {
+          node.focus({ preventScroll: true });
+        }
+      });
+    },
+    [currentPageId],
+  );
 
   async function saveHotkey() {
     if (savingPage) {
@@ -322,12 +359,7 @@ export function LauncherActionsPanel({
     }
   }
 
-  React.useEffect(() => {
-    if (!open) {
-      resetState();
-      return;
-    }
-
+  useMountEffect(() => {
     const commandPreferences = readCommandPreferences();
     setAliasesById(commandPreferences.aliasesById);
     setAliasValue(
@@ -362,13 +394,9 @@ export function LauncherActionsPanel({
     return () => {
       isCancelled = true;
     };
-  }, [open, targetCommandId]);
+  });
 
-  React.useEffect(() => {
-    if (!open) {
-      return;
-    }
-
+  useMountEffect(() => {
     const handlePointerDown = (event: PointerEvent) => {
       const target = event.target;
       if (!(target instanceof HTMLElement)) {
@@ -383,63 +411,14 @@ export function LauncherActionsPanel({
         return;
       }
 
-      onOpenChange(false);
+      onOpenChangeRef.current(false);
     };
 
     window.addEventListener("pointerdown", handlePointerDown);
     return () => {
       window.removeEventListener("pointerdown", handlePointerDown);
     };
-  }, [onOpenChange, open]);
-
-  React.useEffect(() => {
-    if (!open || currentPageId !== "root") {
-      return;
-    }
-
-    const preferredId = selectedItemByPage.root;
-    const hasPreferred = filteredRootItems.some(
-      (item) => item.id === preferredId && !item.disabled,
-    );
-    const nextSelection = hasPreferred
-      ? preferredId
-      : (filteredRootItems.find((item) => !item.disabled)?.id ?? "");
-
-    setSelectedItemId((previous) => (previous === nextSelection ? previous : nextSelection));
-    setSelectedItemByPage((previous) =>
-      previous.root === nextSelection
-        ? previous
-        : {
-            ...previous,
-            root: nextSelection,
-          },
-    );
-  }, [currentPageId, filteredRootItems, open, selectedItemByPage.root]);
-
-  React.useEffect(() => {
-    if (!open) {
-      return;
-    }
-
-    const frameId = window.requestAnimationFrame(() => {
-      if (currentPageId === "root") {
-        inputRef.current?.focus({ preventScroll: true });
-        return;
-      }
-
-      if (currentPageId === "alias") {
-        aliasInputRef.current?.focus({ preventScroll: true });
-      }
-    });
-
-    return () => {
-      window.cancelAnimationFrame(frameId);
-    };
-  }, [currentPageId, open]);
-
-  if (!open) {
-    return null;
-  }
+  });
 
   return (
     <div
@@ -454,13 +433,12 @@ export function LauncherActionsPanel({
     >
       <Command
         shouldFilter={false}
-        value={selectedItemId}
+        value={currentPageId === "root" ? selectedRootItemId : ""}
         onValueChange={(value) => {
           if (currentPageId !== "root") {
             return;
           }
 
-          setSelectedItemId(value);
           setSelectedItemByPage((previous) =>
             previous.root === value
               ? previous
@@ -552,7 +530,7 @@ export function LauncherActionsPanel({
         {currentPageId === "root" ? (
           <LauncherActionsRootPage
             inputId={inputId}
-            inputRef={inputRef}
+            inputRef={rootInputMountRef}
             query={rootQuery}
             searchPlaceholder={rootSearchPlaceholder ?? "Search actions..."}
             items={filteredRootItems}
@@ -600,7 +578,7 @@ export function LauncherActionsPanel({
         ) : (
           <LauncherActionsAliasPage
             aliasInputId={aliasInputId}
-            aliasInputRef={aliasInputRef}
+            aliasInputRef={aliasInputMountRef}
             aliasValue={aliasValue}
             saving={savingPage === "alias"}
             canSave={

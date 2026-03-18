@@ -7,6 +7,7 @@ export type QuicklinksView = "create" | "manage";
 
 interface LauncherUiSnapshot {
   commandSearch: string;
+  commandSearchSessionSeed: number;
   activePanel: CommandPanel;
   fileSearchQuery: string;
   dictionaryQuery: string;
@@ -44,6 +45,7 @@ const FOOTER_HIDDEN_PANELS = new Set<CommandPanel>([...TAKEOVER_PANELS, "emoji"]
 
 export interface LauncherUiState {
   commandSearch: string;
+  commandSearchSessionSeed: number;
   activePanel: CommandPanel;
   fileSearchQuery: string;
   dictionaryQuery: string;
@@ -76,6 +78,7 @@ export interface LauncherUiState {
 
 function createSnapshot(state: {
   commandSearch: string;
+  commandSearchSessionSeed: number;
   activePanel: CommandPanel;
   fileSearchQuery: string;
   dictionaryQuery: string;
@@ -86,6 +89,7 @@ function createSnapshot(state: {
 }): LauncherUiSnapshot {
   return {
     commandSearch: state.commandSearch,
+    commandSearchSessionSeed: state.commandSearchSessionSeed,
     activePanel: state.activePanel,
     fileSearchQuery: state.fileSearchQuery,
     dictionaryQuery: state.dictionaryQuery,
@@ -96,8 +100,19 @@ function createSnapshot(state: {
   };
 }
 
+function nextCommandSearchSessionSeed(
+  previousSearch: string,
+  nextSearch: string,
+  previousSeed: number,
+): number {
+  return nextSearch.trim().length === 0 && previousSearch.trim().length > 0
+    ? previousSeed + 1
+    : previousSeed;
+}
+
 export const useLauncherUiStore = create<LauncherUiState>((set) => ({
   commandSearch: "",
+  commandSearchSessionSeed: 0,
   activePanel: "commands",
   fileSearchQuery: "",
   dictionaryQuery: "",
@@ -108,7 +123,15 @@ export const useLauncherUiStore = create<LauncherUiState>((set) => ({
   dmenuSession: null,
   dmenuQuery: "",
   dmenuSnapshot: null,
-  setCommandSearch: (value) => set({ commandSearch: value }),
+  setCommandSearch: (value) =>
+    set((state) => ({
+      commandSearch: value,
+      commandSearchSessionSeed: nextCommandSearchSessionSeed(
+        state.commandSearch,
+        value,
+        state.commandSearchSessionSeed,
+      ),
+    })),
   setActivePanel: (panel) => set({ activePanel: panel }),
   setFileSearchQuery: (query) => set({ fileSearchQuery: query }),
   setDictionaryQuery: (query) => set({ dictionaryQuery: query }),
@@ -121,6 +144,13 @@ export const useLauncherUiStore = create<LauncherUiState>((set) => ({
     set((state) => ({
       activePanel: panel,
       commandSearch: clearCommandSearch ? "" : state.commandSearch,
+      commandSearchSessionSeed: clearCommandSearch
+        ? nextCommandSearchSessionSeed(
+            state.commandSearch,
+            "",
+            state.commandSearchSessionSeed,
+          )
+        : state.commandSearchSessionSeed,
     })),
   openFileSearch: (query) =>
     set({
@@ -161,6 +191,11 @@ export const useLauncherUiStore = create<LauncherUiState>((set) => ({
         return {
           activePanel: "commands" as CommandPanel,
           commandSearch: "",
+          commandSearchSessionSeed: nextCommandSearchSessionSeed(
+            state.commandSearch,
+            "",
+            state.commandSearchSessionSeed,
+          ),
           dmenuSession: null,
           dmenuQuery: "",
           dmenuSnapshot: null,
@@ -170,6 +205,7 @@ export const useLauncherUiStore = create<LauncherUiState>((set) => ({
       return {
         activePanel: snapshot.activePanel,
         commandSearch: snapshot.commandSearch,
+        commandSearchSessionSeed: snapshot.commandSearchSessionSeed,
         fileSearchQuery: snapshot.fileSearchQuery,
         dictionaryQuery: snapshot.dictionaryQuery,
         translationQuery: snapshot.translationQuery,
@@ -182,13 +218,18 @@ export const useLauncherUiStore = create<LauncherUiState>((set) => ({
       };
     }),
   backToCommands: () =>
-    set({
+    set((state) => ({
       activePanel: "commands",
       commandSearch: "",
+      commandSearchSessionSeed: nextCommandSearchSessionSeed(
+        state.commandSearch,
+        "",
+        state.commandSearchSessionSeed,
+      ),
       dmenuSession: null,
       dmenuQuery: "",
       dmenuSnapshot: null,
-    }),
+    })),
 }));
 
 export function isLauncherInputHidden(panel: CommandPanel): boolean {

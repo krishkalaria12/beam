@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 
 import { buildPreferenceValues } from "@/modules/extensions/components/extensions-view-model";
 import { getDiscoveredPlugins } from "@/modules/extensions/api/get-discovered-plugins";
@@ -15,6 +16,21 @@ import {
 } from "./lib/build-extension-settings-groups";
 import type { SelectedExtensionEntry, SettingsExtensionsTabProps } from "./types";
 
+function areSelectionsEqual(
+  left: SelectedExtensionEntry | null,
+  right: SelectedExtensionEntry | null,
+) {
+  if (left === right) {
+    return true;
+  }
+
+  if (!left || !right || left.kind !== right.kind || left.groupId !== right.groupId) {
+    return false;
+  }
+
+  return left.kind === "group" || right.kind === "group" || left.commandId === right.commandId;
+}
+
 export function ExtensionsTab({
   isActive,
   hiddenCommandIds,
@@ -24,72 +40,51 @@ export function ExtensionsTab({
 }: SettingsExtensionsTabProps) {
   const extensionTarget = useSettingsPageStore((state) => state.extensionTarget);
   const clearExtensionTarget = useSettingsPageStore((state) => state.clearExtensionTarget);
-  const [plugins, setPlugins] = useState<PluginInfo[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [expandedGroupIds, setExpandedGroupIds] = useState<Set<string>>(new Set());
   const [selected, setSelected] = useState<SelectedExtensionEntry | null>(null);
-  const [isPreferenceLoading, setIsPreferenceLoading] = useState(false);
   const [isPreferenceSaving, setIsPreferenceSaving] = useState(false);
-  const [preferenceValues, setPreferenceValues] = useState<Record<string, unknown>>({});
-  const [preferenceError, setPreferenceError] = useState<string | null>(null);
-  const [validationError, setValidationError] = useState<string | null>(null);
-  const hasInitializedExpandedGroupsRef = useRef(false);
-  const requestIdRef = useRef(0);
+  const [preferenceDraftState, setPreferenceDraftState] = useState<{
+    key: string;
+    values: Record<string, unknown>;
+    validationError: string | null;
+    saveError: string | null;
+  }>({
+    key: "",
+    values: {},
+    validationError: null,
+    saveError: null,
+  });
 
-  useEffect(() => {
-    let mounted = true;
-
-    const loadPlugins = async () => {
-      setIsLoading(true);
-      try {
-        const nextPlugins = await getDiscoveredPlugins();
-        if (mounted) {
-          setPlugins(nextPlugins);
-        }
-      } finally {
-        if (mounted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    void loadPlugins().catch(() => {
-      if (mounted) {
-        setPlugins([]);
-      }
-    });
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
+  const pluginsQuery = useQuery<PluginInfo[]>({
+    queryKey: ["settings-extension-plugins"],
+    queryFn: getDiscoveredPlugins,
+    staleTime: Number.POSITIVE_INFINITY,
+  });
+  const plugins = pluginsQuery.data ?? [];
+  const isLoading = pluginsQuery.isLoading;
 
   const groups = buildExtensionSettingsGroups(plugins);
 
-  useEffect(() => {
-    if (groups.length === 0 || hasInitializedExpandedGroupsRef.current) {
-      return;
-    }
-
-    hasInitializedExpandedGroupsRef.current = true;
-    setExpandedGroupIds(new Set(groups.map((group) => group.id)));
-  }, [groups]);
-
   const filteredGroups = filterExtensionSettingsGroups(groups, query);
+  const defaultExpandedGroupIds = useMemo(
+    () =>
+      new Set(
+        (query.trim().length > 0 ? filteredGroups : groups).map((group) => group.id),
+      ),
+    [filteredGroups, groups, query],
+  );
 
-  useEffect(() => {
-    if (query.trim().length === 0) {
-      return;
-    }
+  if (expandedGroupIds.size === 0 && defaultExpandedGroupIds.size > 0) {
+    setExpandedGroupIds(defaultExpandedGroupIds);
+  }
 
-    setExpandedGroupIds(new Set(filteredGroups.map((group) => group.id)));
-  }, [filteredGroups, query]);
+  const resolvedExpandedGroupIds =
+    query.trim().length > 0 ? defaultExpandedGroupIds : expandedGroupIds;
 
-  useEffect(() => {
+  const desiredSelected = useMemo<SelectedExtensionEntry | null>(() => {
     if (filteredGroups.length === 0) {
-      setSelected(null);
-      return;
+      return null;
     }
 
     if (
@@ -98,25 +93,28 @@ export function ExtensionsTab({
         if (selected.kind === "group") {
           return group.id === selected.groupId;
         }
+
         return group.commands.some((command) => command.commandId === selected.commandId);
       })
     ) {
-      return;
+      return selected;
     }
 
     const firstGroup = filteredGroups[0];
-    if (firstGroup.commands.length > 0) {
-      setSelected({ kind: "command", groupId: firstGroup.id, commandId: firstGroup.commands[0].commandId });
-    } else {
-      setSelected({ kind: "group", groupId: firstGroup.id });
-    }
+    return firstGroup.commands.length > 0
+      ? {
+          kind: "command",
+          groupId: firstGroup.id,
+          commandId: firstGroup.commands[0].commandId,
+        }
+      : { kind: "group", groupId: firstGroup.id };
   }, [filteredGroups, selected]);
 
-  useEffect(() => {
-    if (!isActive || !extensionTarget || filteredGroups.length === 0) {
-      return;
-    }
+  if (!areSelectionsEqual(selected, desiredSelected)) {
+    setSelected(desiredSelected);
+  }
 
+  if (isActive && extensionTarget && filteredGroups.length > 0) {
     const targetPluginName = extensionTarget.pluginName?.toLowerCase() ?? "";
     const targetCommandName = extensionTarget.commandName?.toLowerCase() ?? "";
 
@@ -125,32 +123,32 @@ export function ExtensionsTab({
         continue;
       }
 
-      setExpandedGroupIds((previous) => {
-        const next = new Set(previous);
-        next.add(group.id);
-        return next;
-      });
-
-      if (targetCommandName) {
-        const matchedCommand = group.commands.find(
-          (command) => command.commandName.toLowerCase() === targetCommandName,
-        );
-        if (matchedCommand) {
-          setSelected({
-            kind: "command",
-            groupId: group.id,
-            commandId: matchedCommand.commandId,
-          });
-          clearExtensionTarget();
-          return;
-        }
+      if (!resolvedExpandedGroupIds.has(group.id)) {
+        setExpandedGroupIds((previous) => new Set(previous).add(group.id));
       }
 
-      setSelected({ kind: "group", groupId: group.id });
+      const targetSelection =
+        targetCommandName.length > 0
+          ? (() => {
+              const matchedCommand = group.commands.find(
+                (command) => command.commandName.toLowerCase() === targetCommandName,
+              );
+
+              return matchedCommand
+                ? {
+                    kind: "command" as const,
+                    groupId: group.id,
+                    commandId: matchedCommand.commandId,
+                  }
+                : null;
+            })()
+          : null;
+
+      setSelected(targetSelection ?? { kind: "group", groupId: group.id });
       clearExtensionTarget();
-      return;
+      break;
     }
-  }, [clearExtensionTarget, extensionTarget, filteredGroups, isActive]);
+  }
 
   let selectedGroup = null;
   if (selected) {
@@ -166,45 +164,40 @@ export function ExtensionsTab({
   const selectedFields: ExtensionPreferenceField[] =
     selectedCommand?.fields ?? selectedGroup?.fields ?? [];
   const selectedPluginName = selectedCommand?.pluginName ?? selectedGroup?.pluginName ?? null;
+  const selectedPreferencesQuery = useQuery({
+    queryKey: ["settings-extension-preferences", selectedPluginName],
+    queryFn: async () => extensionManagerService.getPreferences(selectedPluginName!),
+    enabled: Boolean(selectedPluginName) && selectedFields.length > 0,
+    staleTime: Number.POSITIVE_INFINITY,
+  });
+  const preferenceSeedValues = useMemo(
+    () =>
+      selectedPluginName && selectedFields.length > 0
+        ? buildPreferenceValues(selectedFields, selectedPreferencesQuery.data ?? {})
+        : {},
+    [selectedFields, selectedPluginName, selectedPreferencesQuery.data],
+  );
+  const preferenceDraftKey =
+    selectedPluginName && selectedFields.length > 0
+      ? `${selectedPluginName}:${selectedPreferencesQuery.dataUpdatedAt}`
+      : "";
 
-  useEffect(() => {
-    if (!selectedPluginName || selectedFields.length === 0) {
-      setPreferenceValues({});
-      setPreferenceError(null);
-      setValidationError(null);
-      setIsPreferenceLoading(false);
-      return;
-    }
+  if (preferenceDraftState.key !== preferenceDraftKey) {
+    setPreferenceDraftState({
+      key: preferenceDraftKey,
+      values: preferenceSeedValues,
+      validationError: null,
+      saveError: null,
+    });
+  }
 
-    requestIdRef.current += 1;
-    const requestId = requestIdRef.current;
-    setIsPreferenceLoading(true);
-    setPreferenceError(null);
-    setValidationError(null);
-    setPreferenceValues(buildPreferenceValues(selectedFields, {}));
-
-    extensionManagerService
-      .getPreferences(selectedPluginName)
-      .then((savedValues) => {
-        if (requestId !== requestIdRef.current) {
-          return;
-        }
-
-        setPreferenceValues(buildPreferenceValues(selectedFields, savedValues));
-      })
-      .catch((error) => {
-        if (requestId !== requestIdRef.current) {
-          return;
-        }
-
-        setPreferenceError(error instanceof Error ? error.message : "Failed to load preferences.");
-      })
-      .finally(() => {
-        if (requestId === requestIdRef.current) {
-          setIsPreferenceLoading(false);
-        }
-      });
-  }, [selectedFields, selectedPluginName]);
+  const isPreferenceLoading = selectedPreferencesQuery.isLoading;
+  const preferenceError =
+    preferenceDraftState.saveError ??
+    (selectedPreferencesQuery.error instanceof Error
+      ? selectedPreferencesQuery.error.message
+      : null);
+  const validationError = preferenceDraftState.validationError;
 
   const handleSavePreferences = async () => {
     if (!selectedPluginName || selectedFields.length === 0) {
@@ -212,20 +205,29 @@ export function ExtensionsTab({
     }
 
     const missingField = selectedFields.find((field) =>
-      isMissingRequiredField(field, preferenceValues[field.name]),
+      isMissingRequiredField(field, preferenceDraftState.values[field.name]),
     );
     if (missingField) {
-      setValidationError(`"${missingField.title}" is required.`);
+      setPreferenceDraftState((previous) => ({
+        ...previous,
+        validationError: `"${missingField.title}" is required.`,
+      }));
       return;
     }
 
-    setValidationError(null);
-    setPreferenceError(null);
+    setPreferenceDraftState((previous) => ({
+      ...previous,
+      validationError: null,
+      saveError: null,
+    }));
     setIsPreferenceSaving(true);
     try {
-      await extensionManagerService.setPreferences(selectedPluginName, preferenceValues);
+      await extensionManagerService.setPreferences(selectedPluginName, preferenceDraftState.values);
     } catch (error) {
-      setPreferenceError(error instanceof Error ? error.message : "Failed to save preferences.");
+      setPreferenceDraftState((previous) => ({
+        ...previous,
+        saveError: error instanceof Error ? error.message : "Failed to save preferences.",
+      }));
     } finally {
       setIsPreferenceSaving(false);
     }
@@ -238,7 +240,7 @@ export function ExtensionsTab({
           isLoading={isLoading}
           query={query}
           groups={filteredGroups}
-          expandedGroupIds={expandedGroupIds}
+          expandedGroupIds={resolvedExpandedGroupIds}
           hiddenCommandIds={hiddenCommandIds}
           aliasesById={aliasesById}
           selected={selected}
@@ -263,17 +265,21 @@ export function ExtensionsTab({
           selectedGroup={selectedGroup}
           selectedCommand={selectedCommand}
           selectedFields={selectedFields}
-          preferenceValues={preferenceValues}
+          preferenceValues={preferenceDraftState.values}
           isPreferenceLoading={isPreferenceLoading}
           isPreferenceSaving={isPreferenceSaving}
           preferenceError={preferenceError}
           validationError={validationError}
           onChangePreference={(key, value) => {
-            setPreferenceValues((previous) => ({
+            setPreferenceDraftState((previous) => ({
               ...previous,
-              [key]: value,
+              values: {
+                ...previous.values,
+                [key]: value,
+              },
+              validationError: null,
+              saveError: null,
             }));
-            setValidationError(null);
           }}
           onSavePreferences={handleSavePreferences}
         />

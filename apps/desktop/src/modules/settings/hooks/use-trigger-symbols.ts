@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import {
   getTriggerSymbols,
@@ -10,11 +10,12 @@ import {
   type TriggerSymbolTarget,
   type TriggerSymbols,
 } from "@/modules/settings/api/trigger-symbols";
+import { useMountEffect } from "@/hooks/use-mount-effect";
 
 export function useTriggerSymbols() {
   const [symbols, setSymbols] = useState<TriggerSymbols>(() => getTriggerSymbols());
 
-  useEffect(() => {
+  useMountEffect(() => {
     const syncFromStorage = () => {
       setSymbols(getTriggerSymbols());
     };
@@ -26,7 +27,7 @@ export function useTriggerSymbols() {
       window.removeEventListener("storage", syncFromStorage);
       window.removeEventListener(TRIGGER_SYMBOLS_CHANGE_EVENT, syncFromStorage);
     };
-  }, []);
+  });
 
   const updateSymbol = (target: TriggerSymbolTarget, symbol: string) => {
     setTriggerSymbol(target, symbol);

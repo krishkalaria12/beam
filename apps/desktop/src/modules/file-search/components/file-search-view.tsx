@@ -1,5 +1,5 @@
 import { Search, ArrowLeft, FolderSearch } from "lucide-react";
-import { useEffect, useState, useRef, useMemo, useCallback } from "react";
+import { useState, useRef, useMemo, useCallback } from "react";
 import debounce from "@/lib/debounce";
 
 import { CommandFooterBar } from "@/components/command/command-footer-bar";
@@ -18,7 +18,7 @@ interface FileSearchViewProps {
 export function FileSearchView({ initialQuery, onBack }: FileSearchViewProps) {
   const [query, setQuery] = useState(initialQuery);
   const [debouncedQuery, setDebouncedQuery] = useState(initialQuery);
-  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [selectionState, setSelectionState] = useState({ key: "", index: 0 });
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -31,17 +31,29 @@ export function FileSearchView({ initialQuery, onBack }: FileSearchViewProps) {
   );
 
   const results = data?.results || [];
+  const selectionKey = `${query}\u0000${results.length}`;
+  if (selectionState.key !== selectionKey) {
+    setSelectionState({ key: selectionKey, index: 0 });
+  }
+
+  const selectedIndex = Math.min(selectionState.index, Math.max(results.length - 1, 0));
+  const setSelectedIndex = useCallback(
+    (value: number | ((previous: number) => number)) => {
+      setSelectionState((previous) => ({
+        key: selectionKey,
+        index:
+          typeof value === "function"
+            ? value(previous.key === selectionKey ? previous.index : 0)
+            : value,
+      }));
+    },
+    [selectionKey],
+  );
   const selectedFile = results[selectedIndex]?.entry || null;
-
-  // Auto-focus input
-  useEffect(() => {
-    inputRef.current?.focus();
+  const focusInputRef = useCallback((node: HTMLInputElement | null) => {
+    inputRef.current = node;
+    node?.focus();
   }, []);
-
-  // Reset selection when results change
-  useEffect(() => {
-    setSelectedIndex(0);
-  }, [results.length, query]);
 
   // Centralized keyboard handler
   const handleKeyDown = useCallback(
@@ -105,7 +117,7 @@ export function FileSearchView({ initialQuery, onBack }: FileSearchViewProps) {
         <div className="relative flex-1 min-w-0">
           <Search className="absolute left-0 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/40 pointer-events-none" />
           <SearchInput
-            ref={inputRef}
+            ref={focusInputRef}
             value={query}
             onChange={handleChange}
             className="w-full h-10 pl-7 pr-4 

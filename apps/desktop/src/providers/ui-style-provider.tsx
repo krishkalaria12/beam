@@ -1,9 +1,10 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useMemo, useState } from "react";
 
 import {
   LAUNCHER_THEME_CHANGE_EVENT,
   getSelectedLauncherThemeId,
 } from "@/modules/settings/api/launcher-theme";
+import { useMountEffect } from "@/hooks/use-mount-effect";
 
 export type UiStylePreference = "default" | "glassy" | "solid";
 
@@ -165,7 +166,7 @@ export function UiStyleProvider({
   );
   const [customThemeActive, setCustomThemeActive] = useState<boolean>(false);
 
-  useEffect(() => {
+  useMountEffect(() => {
     let mounted = true;
 
     const syncCustomThemeState = async () => {
@@ -199,19 +200,14 @@ export function UiStyleProvider({
       mounted = false;
       window.removeEventListener(LAUNCHER_THEME_CHANGE_EVENT, onLauncherThemeChanged);
     };
-  }, []);
+  });
 
-  useEffect(() => {
-    applyUiStyle(uiStyle, customThemeActive);
-  }, [uiStyle, customThemeActive]);
-
-  useEffect(() => {
-    if (customThemeActive) {
-      document.documentElement.style.removeProperty("--sc-base-rgb");
-      return;
-    }
+  applyUiStyle(uiStyle, customThemeActive);
+  if (customThemeActive) {
+    document.documentElement.style.removeProperty("--sc-base-rgb");
+  } else {
     applyBaseColor(baseColor);
-  }, [baseColor, customThemeActive]);
+  }
 
   const setUiStyle = (style: UiStylePreference) => {
     localStorage.setItem(styleStorageKey, style);

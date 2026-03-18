@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useRef } from "react";
 
 import {
   listenForPersistentMenuBarEvents,
@@ -8,6 +8,7 @@ import {
   getExtensionCatalogPlugins,
   isPersistentExtensionPlugin,
 } from "@/modules/extensions/extension-catalog";
+import { useMountEffect } from "@/hooks/use-mount-effect";
 
 interface PersistentExtensionsHostProps {
   launchCommand: (payload: {
@@ -25,14 +26,19 @@ export function PersistentExtensionsHost({
   launchCommand,
   openExtensions,
 }: PersistentExtensionsHostProps) {
-  useEffect(() => {
+  const launchCommandRef = useRef(launchCommand);
+  const openExtensionsRef = useRef(openExtensions);
+  launchCommandRef.current = launchCommand;
+  openExtensionsRef.current = openExtensions;
+
+  useMountEffect(() => {
     let disposed = false;
     let removeMenuBarListener: (() => void) | undefined;
     let refreshTimerId: ReturnType<typeof setInterval> | undefined;
 
     persistentExtensionRunnerManager.setCallbacks({
-      launchCommand,
-      openExtensions,
+      launchCommand: (payload) => launchCommandRef.current(payload),
+      openExtensions: openExtensionsRef.current,
     });
 
     void listenForPersistentMenuBarEvents().then((cleanup) => {
@@ -69,7 +75,7 @@ export function PersistentExtensionsHost({
       }
       void persistentExtensionRunnerManager.stopAll();
     };
-  }, [launchCommand, openExtensions]);
+  });
 
   return null;
 }

@@ -1,5 +1,6 @@
+import { useQuery } from "@tanstack/react-query";
 import { useCommandState } from "cmdk";
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useMemo, useRef, useState } from "react";
 
 import { OpenModuleCommandRow } from "@/components/command/open-module-command-row";
 import { CommandIcon } from "@/components/icons/command-icon";
@@ -88,35 +89,20 @@ export default function EmojiCommandGroup({ isOpen, onOpen, onBack }: EmojiComma
   const searchInput = useCommandState((state) => state.search);
   const query = normalizeCommandQuery(searchInput);
 
-  const [emojis, setEmojis] = useState<EmojiData[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [copyError, setCopyError] = useState<string | null>(null);
+  const copyErrorTimerRef = useRef<number | null>(null);
+  const { data: emojis = [], isLoading } = useQuery({
+    queryKey: ["emoji-data"],
+    queryFn: loadEmojiData,
+    enabled: isOpen,
+    staleTime: Number.POSITIVE_INFINITY,
+    gcTime: Number.POSITIVE_INFINITY,
+  });
 
   const { recentEmojis, saveEmoji } = useRecentEmojis(isOpen);
   const filteredEmojis = useFilteredEmojis(emojis, searchValue, selectedCategory);
-
-  // Load emoji data when picker opens
-  const loadEmojis = useCallback(async () => {
-    if (emojis.length > 0 || isLoading) return;
-
-    setIsLoading(true);
-    try {
-      const data = await loadEmojiData();
-      setEmojis(data);
-    } catch (error) {
-      console.error("Failed to load emojis:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [emojis.length, isLoading]);
-
-  useEffect(() => {
-    if (isOpen && emojis.length === 0 && !isLoading) {
-      loadEmojis();
-    }
-  }, [isOpen, emojis.length, isLoading, loadEmojis]);
 
   // Get recent emoji objects
   const recentEmojiObjects = useMemo(() => {
@@ -124,20 +110,23 @@ export default function EmojiCommandGroup({ isOpen, onOpen, onBack }: EmojiComma
       .map((emoji) => emojis.find((e) => e.emoji === emoji))
       .filter((e): e is EmojiData => e !== undefined);
   }, [recentEmojis, emojis]);
-
-  // Clear copy error after timeout
-  useEffect(() => {
-    if (!copyError) return;
-    const timeout = setTimeout(() => setCopyError(null), 1500);
-    return () => clearTimeout(timeout);
-  }, [copyError]);
-
   const handleEmojiClick = async (emojiData: EmojiData) => {
     try {
       await copyEmojiToClipboard(emojiData.emoji);
       saveEmoji(emojiData.emoji);
+      if (copyErrorTimerRef.current !== null) {
+        window.clearTimeout(copyErrorTimerRef.current);
+      }
+      setCopyError(null);
     } catch {
       setCopyError("Could not copy emoji");
+      if (copyErrorTimerRef.current !== null) {
+        window.clearTimeout(copyErrorTimerRef.current);
+      }
+      copyErrorTimerRef.current = window.setTimeout(() => {
+        copyErrorTimerRef.current = null;
+        setCopyError(null);
+      }, 1500);
     }
   };
 
@@ -161,7 +150,7 @@ export default function EmojiCommandGroup({ isOpen, onOpen, onBack }: EmojiComma
   }
 
   // Show skeleton loading state
-  if (emojis.length === 0) {
+  if (isLoading || emojis.length === 0) {
     return <EmojiPickerLoading />;
   }
 

@@ -1,6 +1,8 @@
 import { invoke, isTauri } from "@tauri-apps/api/core";
 import { getCurrentWindow, LogicalSize } from "@tauri-apps/api/window";
-import { useEffect, useLayoutEffect } from "react";
+import { useLayoutEffect, useRef } from "react";
+
+import { useMountEffect } from "@/hooks/use-mount-effect";
 
 interface LauncherWindowSize {
   width: number;
@@ -40,6 +42,9 @@ export function useLauncherWindowSizer(
   activeSize: LauncherWindowSize,
   resetSize: LauncherWindowSize,
 ) {
+  const resetSizeRef = useRef(resetSize);
+  resetSizeRef.current = resetSize;
+
   useLayoutEffect(() => {
     if (!isTauri()) {
       return;
@@ -67,16 +72,16 @@ export function useLauncherWindowSizer(
     };
   }, [activeSize.height, activeSize.width]);
 
-  useEffect(() => {
+  useMountEffect(() => {
     return () => {
       if (!isTauri()) {
         return;
       }
 
-      void resizeLauncherWindow(resetSize.width, resetSize.height);
+      void resizeLauncherWindow(resetSizeRef.current.width, resetSizeRef.current.height);
       window.setTimeout(() => {
-        void resizeLauncherWindow(resetSize.width, resetSize.height);
+        void resizeLauncherWindow(resetSizeRef.current.width, resetSizeRef.current.height);
       }, 48);
     };
-  }, [resetSize.height, resetSize.width]);
+  });
 }

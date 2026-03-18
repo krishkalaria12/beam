@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { getUiLayoutMode, setUiLayoutMode } from "../api/ui-layout-mode";
+import { useMountEffect } from "@/hooks/use-mount-effect";
 
 export type UiLayoutMode = "expanded" | "compressed";
 
@@ -9,7 +10,7 @@ const UI_LAYOUT_CHANGE_EVENT = "beam-ui-layout-mode-change";
 export function useUiLayout() {
   const [layoutMode, setLayoutMode] = useState<UiLayoutMode>("expanded");
 
-  useEffect(() => {
+  useMountEffect(() => {
     let mounted = true;
 
     const syncFromSource = async () => {
@@ -39,7 +40,7 @@ export function useUiLayout() {
       window.removeEventListener("storage", syncOnEvent);
       window.removeEventListener(UI_LAYOUT_CHANGE_EVENT, syncOnEvent);
     };
-  }, []);
+  });
 
   const setMode = async (mode: UiLayoutMode) => {
     setLayoutMode(mode);

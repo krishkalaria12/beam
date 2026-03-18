@@ -1,5 +1,5 @@
 import { AlertCircle, ArrowLeft, BookOpen, Check, Copy, Loader2, Search } from "lucide-react";
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { IconChip, ModuleFooter, SearchInput } from "@/components/module";
 import { useDictionary } from "../hooks/use-dictionary";
@@ -16,7 +16,7 @@ interface DictionaryViewProps {
 export function DictionaryView({ initialQuery, onBack }: DictionaryViewProps) {
   const [query, setQuery] = useState(initialQuery);
   const [debouncedQuery, setDebouncedQuery] = useState(initialQuery);
-  const [selectedSenseIndex, setSelectedSenseIndex] = useState(0);
+  const [senseSelectionState, setSenseSelectionState] = useState({ wordKey: "", index: 0 });
   const [copied, setCopied] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -43,28 +43,34 @@ export function DictionaryView({ initialQuery, onBack }: DictionaryViewProps) {
 
   const allSenses = getAllSenses();
   const totalSenses = allSenses.length;
+  const currentWordKey = data?.word ?? "";
+  if (senseSelectionState.wordKey !== currentWordKey) {
+    setSenseSelectionState({ wordKey: currentWordKey, index: 0 });
+  }
+  const selectedSenseIndex =
+    totalSenses > 0 ? Math.min(senseSelectionState.index, totalSenses - 1) : 0;
 
   const contentRef = useRef<HTMLDivElement>(null);
-
-  // Auto-focus input
-  useEffect(() => {
-    inputRef.current?.focus();
+  const copiedResetTimerRef = useRef<number | null>(null);
+  const setSelectedSenseIndex = useCallback(
+    (value: number | ((previous: number) => number)) => {
+      setSenseSelectionState((previous) => ({
+        wordKey: currentWordKey,
+        index:
+          typeof value === "function"
+            ? value(previous.wordKey === currentWordKey ? previous.index : 0)
+            : value,
+      }));
+    },
+    [currentWordKey],
+  );
+  const setSelectedSenseRef = useCallback((node: HTMLDivElement | null) => {
+    node?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, []);
-
-  // Reset selection when data changes
-  useEffect(() => {
-    setSelectedSenseIndex(0);
-  }, [data?.word]);
-
-  // Scroll selected sense into view
-  useEffect(() => {
-    if (selectedSenseIndex >= 0) {
-      const selectedElement = contentRef.current?.querySelector(`[data-selected="true"]`);
-      if (selectedElement) {
-        selectedElement.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      }
-    }
-  }, [selectedSenseIndex]);
+  const focusInputRef = useCallback((node: HTMLInputElement | null) => {
+    inputRef.current = node;
+    node?.focus();
+  }, []);
 
   const handleInputChange = (value: string) => {
     setQuery(value);
@@ -86,7 +92,13 @@ export function DictionaryView({ initialQuery, onBack }: DictionaryViewProps) {
       if (selectedSense) {
         navigator.clipboard.writeText(selectedSense.sense.definition);
         setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+        if (copiedResetTimerRef.current !== null) {
+          window.clearTimeout(copiedResetTimerRef.current);
+        }
+        copiedResetTimerRef.current = window.setTimeout(() => {
+          copiedResetTimerRef.current = null;
+          setCopied(false);
+        }, 2000);
       }
     } else if (e.key === "Escape") {
       e.preventDefault();
@@ -98,7 +110,13 @@ export function DictionaryView({ initialQuery, onBack }: DictionaryViewProps) {
     if (data?.word) {
       navigator.clipboard.writeText(data.word);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      if (copiedResetTimerRef.current !== null) {
+        window.clearTimeout(copiedResetTimerRef.current);
+      }
+      copiedResetTimerRef.current = window.setTimeout(() => {
+        copiedResetTimerRef.current = null;
+        setCopied(false);
+      }, 2000);
     }
   };
 
@@ -130,7 +148,7 @@ export function DictionaryView({ initialQuery, onBack }: DictionaryViewProps) {
         </Button>
 
         <SearchInput
-          ref={inputRef}
+          ref={focusInputRef}
           value={query}
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
@@ -272,6 +290,9 @@ export function DictionaryView({ initialQuery, onBack }: DictionaryViewProps) {
                           senseNumber={senseIdx + 1}
                           entryNumber={entryIdx + 1}
                           isSelected={globalIdx === selectedSenseIndex}
+                          containerRef={
+                            globalIdx === selectedSenseIndex ? setSelectedSenseRef : undefined
+                          }
                           onSelect={() => setSelectedSenseIndex(globalIdx)}
                           onSynonymClick={handleSynonymClick}
                         />

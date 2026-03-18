@@ -16,7 +16,7 @@ import {
   Unplug,
   Volume2,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
 
 import { ModuleFooter } from "@/components/module";
@@ -72,10 +72,13 @@ function toArtists(track?: SpotifyTrack | null) {
 }
 
 export function SpotifyView({ initialQuery, onBack }: SpotifyViewProps) {
+  return <SpotifyViewContent key={initialQuery} initialQuery={initialQuery} onBack={onBack} />;
+}
+
+function SpotifyViewContent({ initialQuery, onBack }: SpotifyViewProps) {
   const [searchInput, setSearchInput] = useState(initialQuery);
   const [selectedDeviceId, setSelectedDeviceId] = useState<string>("");
   const [localError, setLocalError] = useState<string | null>(null);
-  const clientIdInputRef = useRef<HTMLInputElement>(null);
 
   const {
     clientId,
@@ -120,17 +123,14 @@ export function SpotifyView({ initialQuery, onBack }: SpotifyViewProps) {
     search,
   } = useSpotifySearch({ ensureAccessToken });
 
-  useEffect(() => {
-    setSearchInput(initialQuery);
-  }, [initialQuery]);
-
-  useEffect(() => {
-    if (clientId.trim()) {
-      return;
-    }
-
-    clientIdInputRef.current?.focus();
-  }, [clientId]);
+  const clientIdInputRef = useCallback(
+    (node: HTMLInputElement | null) => {
+      if (node && !clientId.trim()) {
+        node.focus();
+      }
+    },
+    [clientId],
+  );
 
   const mergedError =
     localError ||
@@ -139,25 +139,14 @@ export function SpotifyView({ initialQuery, onBack }: SpotifyViewProps) {
     (searchError instanceof Error ? searchError.message : null);
 
   const nowPlaying = playback?.item ?? null;
-  const nowPlayingArtists = useMemo(() => toArtists(nowPlaying), [nowPlaying]);
+  const nowPlayingArtists = toArtists(nowPlaying);
   const nowPlayingImage = nowPlaying?.album?.images?.[0]?.url;
-  const selectedDevice = devices.find((device) => device.id === selectedDeviceId) ?? null;
+  const resolvedSelectedDeviceId = selectedDeviceId || playback?.device?.id || devices[0]?.id || "";
+  const selectedDevice = devices.find((device) => device.id === resolvedSelectedDeviceId) ?? null;
 
-  useEffect(() => {
-    if (selectedDeviceId) {
-      return;
-    }
-
-    const activeDeviceId = playback?.device?.id;
-    if (activeDeviceId) {
-      setSelectedDeviceId(activeDeviceId);
-      return;
-    }
-
-    if (devices.length > 0) {
-      setSelectedDeviceId(devices[0]?.id ?? "");
-    }
-  }, [devices, playback?.device?.id, selectedDeviceId]);
+  if (!selectedDeviceId && resolvedSelectedDeviceId) {
+    setSelectedDeviceId(resolvedSelectedDeviceId);
+  }
 
   const handleConnect = useCallback(async () => {
     setLocalError(null);
@@ -474,7 +463,7 @@ export function SpotifyView({ initialQuery, onBack }: SpotifyViewProps) {
                 </span>
               </div>
               <Select
-                value={selectedDeviceId || playback?.device?.id || ""}
+                value={resolvedSelectedDeviceId}
                 onValueChange={(value: string | null) => {
                   if (!value) return;
                   setSelectedDeviceId(value);

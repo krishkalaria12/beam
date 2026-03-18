@@ -1,7 +1,9 @@
 import { isTauri } from "@tauri-apps/api/core";
-import { useCallback, useEffect } from "react";
+import { useCallback } from "react";
 import { toast } from "sonner";
 
+import { useMountEffect } from "@/hooks/use-mount-effect";
+import { useAiChatStore } from "@/store/use-ai-chat-store";
 import {
   getAiChatHistory,
   getAiConversations,
@@ -10,10 +12,10 @@ import {
   type AiPersistedMessage,
 } from "../api/ai";
 import { AI_CONVERSATION_LIST_LIMIT, AI_HISTORY_DEFAULT_LIMIT } from "../constants";
-import { useAiChatStore } from "@/store/use-ai-chat-store";
 import type { AttachedFile, MessageWithFiles } from "../types";
 import { isImageMimeType } from "../utils/ai-file-type";
 import { toErrorMessage } from "../utils/ai-chat-utils";
+import type { AiProviderId } from "../constants";
 
 function parseStructuredAttachments(message: AiPersistedMessage): AttachedFile[] | undefined {
   if (!Array.isArray(message.attachments) || message.attachments.length === 0) {
@@ -161,7 +163,7 @@ export function useAiChatBootstrap() {
   const setIsApiKeySetForProvider = useAiChatStore((state) => state.setIsApiKeySetForProvider);
 
   const refreshApiKeyStatus = useCallback(
-    async (showToast = true): Promise<boolean> => {
+    async (showToast = true, providerId: AiProviderId = selectedProvider): Promise<boolean> => {
       if (!isTauri()) {
         setIsApiKeySetForProvider(false);
         return false;
@@ -169,7 +171,7 @@ export function useAiChatBootstrap() {
 
       setIsCheckingApiKey(true);
       try {
-        const isSet = await isAiApiKeySet(selectedProvider);
+        const isSet = await isAiApiKeySet(providerId);
         setIsApiKeySetForProvider(isSet);
         return isSet;
       } catch (error) {
@@ -229,11 +231,11 @@ export function useAiChatBootstrap() {
     [setIsLoadingHistory, setMessages],
   );
 
-  useEffect(() => {
+  useMountEffect(() => {
     void refreshApiKeyStatus().catch(() => undefined);
-  }, [refreshApiKeyStatus]);
+  });
 
-  useEffect(() => {
+  useMountEffect(() => {
     if (!isTauri()) {
       setIsLoadingSettings(false);
       return;
@@ -264,18 +266,19 @@ export function useAiChatBootstrap() {
     return () => {
       cancelled = true;
     };
-  }, [setEnabled, setIsLoadingSettings]);
+  });
 
-  useEffect(() => {
+  useMountEffect(() => {
     void refreshConversations(false);
-  }, [refreshConversations]);
+  });
 
-  useEffect(() => {
+  useMountEffect(() => {
     void loadConversationHistory(activeConversationId, false);
-  }, [activeConversationId, loadConversationHistory]);
+  });
 
   return {
     refreshApiKeyStatus,
     refreshConversations,
+    loadConversationHistory,
   };
 }

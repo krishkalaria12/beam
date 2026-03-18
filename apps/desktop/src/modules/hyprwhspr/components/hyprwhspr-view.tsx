@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 
 import {
   executeHyprWhsprRecord,
@@ -11,6 +11,7 @@ import { HyprWhsprFooter } from "./hyprwhspr-footer";
 import { HyprWhsprHeader } from "./hyprwhspr-header";
 import { HyprWhsprOutputCard } from "./hyprwhspr-output-card";
 import { HyprWhsprRecordControlsCard } from "./hyprwhspr-record-controls-card";
+import { useMountEffect } from "@/hooks/use-mount-effect";
 
 interface HyprWhsprViewProps {
   onBack: () => void | Promise<void>;
@@ -90,7 +91,14 @@ export function HyprWhsprView({ onBack }: HyprWhsprViewProps) {
     [queryClient],
   );
 
-  useEffect(() => {
+  const onBackRef = useRef(onBack);
+  const refreshRecordStatusRef = useRef(refreshRecordStatus);
+  const runRecordActionRef = useRef(runRecordAction);
+  onBackRef.current = onBack;
+  refreshRecordStatusRef.current = refreshRecordStatus;
+  runRecordActionRef.current = runRecordAction;
+
+  useMountEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.defaultPrevented) {
         return;
@@ -98,7 +106,7 @@ export function HyprWhsprView({ onBack }: HyprWhsprViewProps) {
 
       if (event.key.toLowerCase() === "escape") {
         event.preventDefault();
-        void onBack();
+        void onBackRef.current();
         return;
       }
 
@@ -108,19 +116,19 @@ export function HyprWhsprView({ onBack }: HyprWhsprViewProps) {
           return;
         }
         spaceHeldRef.current = true;
-        void runRecordAction("start");
+        void runRecordActionRef.current("start");
         return;
       }
 
       if (event.key.toLowerCase() === "enter") {
         event.preventDefault();
-        void runRecordAction("toggle");
+        void runRecordActionRef.current("toggle");
         return;
       }
 
       if (event.key.toLowerCase() === "r") {
         event.preventDefault();
-        void refreshRecordStatus();
+        void refreshRecordStatusRef.current();
       }
     };
 
@@ -135,7 +143,7 @@ export function HyprWhsprView({ onBack }: HyprWhsprViewProps) {
 
       event.preventDefault();
       spaceHeldRef.current = false;
-      void runRecordAction("stop");
+      void runRecordActionRef.current("stop");
     };
 
     window.addEventListener("keydown", handleKeyDown);
@@ -146,7 +154,7 @@ export function HyprWhsprView({ onBack }: HyprWhsprViewProps) {
       window.removeEventListener("keyup", handleKeyUp);
       spaceHeldRef.current = false;
     };
-  }, [onBack, refreshRecordStatus, runRecordAction]);
+  });
 
   const statusTone = resolveStatusTone(recordState);
   const statusLabel = resolveStatusLabel(recordState);

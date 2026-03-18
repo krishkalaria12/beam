@@ -1,5 +1,6 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
+import { useMountEffect } from "@/hooks/use-mount-effect";
 import { cn } from "@/lib/utils";
 
 interface LauncherTakeoverSurfaceProps {
@@ -10,7 +11,7 @@ interface LauncherTakeoverSurfaceProps {
 export function LauncherTakeoverSurface({ children, className }: LauncherTakeoverSurfaceProps) {
   const [isInteractive, setIsInteractive] = useState(false);
 
-  useEffect(() => {
+  useMountEffect(() => {
     const timerId = window.setTimeout(() => {
       setIsInteractive(true);
     }, 160);
@@ -18,7 +19,7 @@ export function LauncherTakeoverSurface({ children, className }: LauncherTakeove
     return () => {
       window.clearTimeout(timerId);
     };
-  }, []);
+  });
 
   return (
     <div

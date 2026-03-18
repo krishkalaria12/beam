@@ -1,5 +1,5 @@
 import { isTauri } from "@tauri-apps/api/core";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 
 import {
   createDefaultCommandPreferencesState,
@@ -25,6 +25,7 @@ import {
   isNonHideableCommandId,
   setCommandHidden as persistCommandHidden,
 } from "@/modules/settings/api/command-items";
+import { useMountEffect } from "@/hooks/use-mount-effect";
 
 type CommandPreferencesUpdater = (previous: CommandPreferencesState) => CommandPreferencesState;
 
@@ -79,11 +80,11 @@ export function useCommandPreferences() {
     applyPinnedIds(pinnedCommandIds);
   }, [applyPinnedIds]);
 
-  useEffect(() => {
+  useMountEffect(() => {
     void syncPinnedFromBackend().catch(() => {
       // Keep local preferences if backend sync fails.
     });
-  }, [syncPinnedFromBackend]);
+  });
 
   const syncHiddenFromBackend = useCallback(async () => {
     if (!isTauri()) {
@@ -94,11 +95,11 @@ export function useCommandPreferences() {
     applyHiddenIds(hiddenCommandIds);
   }, [applyHiddenIds]);
 
-  useEffect(() => {
+  useMountEffect(() => {
     void syncHiddenFromBackend().catch(() => {
       // Keep local preferences if backend sync fails.
     });
-  }, [syncHiddenFromBackend]);
+  });
 
   const reset = useCallback(() => {
     const defaults = createDefaultCommandPreferencesState();

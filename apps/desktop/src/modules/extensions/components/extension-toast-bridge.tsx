@@ -1,6 +1,7 @@
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { toast, type ExternalToast } from "sonner";
 
+import { useMountEffect } from "@/hooks/use-mount-effect";
 import { extensionManagerService } from "@/modules/extensions/extension-manager-service";
 import { type ExtensionToast, useExtensionRuntimeStore } from "@/modules/extensions/runtime/store";
 
@@ -71,35 +72,44 @@ function showOrUpdateToast(entry: ExtensionToast) {
   toast.message(title, options);
 }
 
+function reconcileDisplayedToasts(
+  nextToasts: ExtensionToast[],
+  displayedToastIdsRef: React.MutableRefObject<Set<number>>,
+) {
+  const nextIds = new Set<number>();
+
+  for (const entry of nextToasts) {
+    nextIds.add(entry.id);
+    showOrUpdateToast(entry);
+  }
+
+  for (const toastId of displayedToastIdsRef.current) {
+    if (!nextIds.has(toastId)) {
+      toast.dismiss(toastId);
+    }
+  }
+
+  displayedToastIdsRef.current = nextIds;
+}
+
 export function ExtensionToastBridge() {
-  const toasts = useExtensionRuntimeStore((state) => state.toasts);
   const displayedToastIdsRef = useRef<Set<number>>(new Set());
 
-  useEffect(() => {
-    const nextIds = new Set<number>();
+  useMountEffect(() => {
+    reconcileDisplayedToasts(useExtensionRuntimeStore.getState().toasts, displayedToastIdsRef);
 
-    for (const entry of toasts) {
-      nextIds.add(entry.id);
-      showOrUpdateToast(entry);
-    }
+    const unsubscribe = useExtensionRuntimeStore.subscribe((state) => {
+      reconcileDisplayedToasts(state.toasts, displayedToastIdsRef);
+    });
 
-    for (const toastId of displayedToastIdsRef.current) {
-      if (!nextIds.has(toastId)) {
-        toast.dismiss(toastId);
-      }
-    }
-
-    displayedToastIdsRef.current = nextIds;
-  }, [toasts]);
-
-  useEffect(() => {
     return () => {
+      unsubscribe();
       for (const toastId of displayedToastIdsRef.current) {
         toast.dismiss(toastId);
       }
       displayedToastIdsRef.current.clear();
     };
-  }, []);
+  });
 
   return null;
 }

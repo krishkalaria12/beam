@@ -19,7 +19,7 @@ interface ClipboardHeaderProps {
   onBack: () => void;
   typeFilter: ClipboardTypeFilter;
   onTypeFilterChange: (value: ClipboardTypeFilter) => void;
-  inputRef?: React.RefObject<HTMLInputElement | null>;
+  inputRef?: React.Ref<HTMLInputElement>;
 }
 
 const TYPE_FILTER_OPTIONS: { value: ClipboardTypeFilter; label: string; icon: React.ReactNode }[] =

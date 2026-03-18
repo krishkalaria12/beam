@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import {
   getHotkeyCapabilities,
@@ -11,6 +11,7 @@ import {
   type HotkeyCapabilities,
   type HotkeySettings,
 } from "@/modules/settings/api/hotkeys";
+import { useMountEffect } from "@/hooks/use-mount-effect";
 
 import { KeybindsDetailPane } from "./components/keybinds-detail-pane";
 import { KeybindsHeader } from "./components/keybinds-header";
@@ -42,7 +43,7 @@ export function KeybindsTab({ isActive }: KeybindsTabProps) {
   const [savingId, setSavingId] = useState<string | null>(null);
   const [status, setStatus] = useState<KeybindStatus>({ tone: "idle", text: "" });
 
-  useEffect(() => {
+  useMountEffect(() => {
     if (!isActive) {
       return;
     }
@@ -82,23 +83,19 @@ export function KeybindsTab({ isActive }: KeybindsTabProps) {
     return () => {
       cancelled = true;
     };
-  }, [isActive]);
+  });
 
   const rows = buildKeybindRows(settings);
   const filteredRows = filterKeybindRows(rows, query);
+  const resolvedSelectedId = filteredRows.some((row) => row.id === selectedId)
+    ? selectedId
+    : (filteredRows[0]?.id ?? "");
 
-  useEffect(() => {
-    if (filteredRows.length === 0) {
-      setSelectedId("");
-      return;
-    }
+  if (selectedId !== resolvedSelectedId) {
+    setSelectedId(resolvedSelectedId);
+  }
 
-    if (!filteredRows.some((row) => row.id === selectedId)) {
-      setSelectedId(filteredRows[0]?.id ?? "");
-    }
-  }, [filteredRows, selectedId]);
-
-  const selectedRow = filteredRows.find((row) => row.id === selectedId) ?? null;
+  const selectedRow = filteredRows.find((row) => row.id === resolvedSelectedId) ?? null;
 
   async function refreshKeybinds() {
     setIsLoading(true);

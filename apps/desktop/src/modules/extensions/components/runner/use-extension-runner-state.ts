@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { useCallback, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { invoke } from "@tauri-apps/api/core";
 
 import { copyToClipboard } from "@/modules/clipboard/api/copy-to-clipboard";
@@ -28,6 +28,7 @@ import {
   collectListEntries,
   type ListModel,
 } from "@/modules/extensions/components/runner/nodes/list/list-model";
+import { useMountEffect } from "@/hooks/use-mount-effect";
 
 interface UseExtensionRunnerStateInput {
   onBack: () => void;
@@ -61,7 +62,7 @@ export interface UseExtensionRunnerStateResult {
   handleToastHide: (toastId: number) => void;
   runPrimarySelectionAction: () => void;
   executeAction: (action: FlattenedAction) => Promise<void>;
-  setSelectedIndex: (index: number) => void;
+  setSelectedIndex: (index: number | ((previous: number) => number)) => void;
   registerFieldRef: (nodeId: number, element: HTMLElement | null) => void;
   dispatchNodeEvent: (nodeId: number, handlerName: string, args?: unknown[]) => void;
 }
@@ -169,16 +170,53 @@ export function useExtensionRunnerState({
   const runningSession = useExtensionRuntimeStore((state) => state.runningSession);
   const setSelectedNodeId = useExtensionRuntimeStore((state) => state.setSelectedNodeId);
 
-  const [searchText, setSearchText] = useState("");
-  const [selectedIndex, setSelectedIndex] = useState(0);
-  const [formValues, setFormValues] = useState<Record<string, FormValue>>({});
+  const [searchState, setSearchState] = useState<{ key: string; value: string }>({
+    key: "",
+    value: "",
+  });
+  const [selectionState, setSelectionState] = useState<{ key: string; index: number }>({
+    key: "",
+    index: 0,
+  });
+  const [formState, setFormState] = useState<{
+    key: string;
+    values: Record<string, FormValue>;
+  }>({
+    key: "",
+    values: {},
+  });
   const [focusElementId, setFocusElementId] = useState<number | null>(null);
-  const [resetElementId, setResetElementId] = useState<number | null>(null);
   const fieldRefs = useRef<Map<number, HTMLElement>>(new Map());
   const pendingControlledSearchTextRef = useRef<string | null>(null);
 
   const rootNode = rootNodeId ? uiTree.get(rootNodeId) : undefined;
   const rootType = rootNode?.type ?? "";
+  const isSearchableRoot = rootType === "List" || rootType === "Grid";
+  const controlledSearchText = isSearchableRoot && rootNode ? asString(rootNode.props.searchText) : "";
+  const isControlledSearch =
+    isSearchableRoot && rootNode ? asBoolean(rootNode.props.onSearchTextChange) : false;
+  const searchStateKey = `${rootNode?.id ?? 0}:${rootType}`;
+
+  if (!isSearchableRoot) {
+    pendingControlledSearchTextRef.current = null;
+    if (searchState.key !== searchStateKey || searchState.value.length > 0) {
+      setSearchState({ key: searchStateKey, value: "" });
+    }
+  } else if (searchState.key !== searchStateKey) {
+    setSearchState({ key: searchStateKey, value: controlledSearchText });
+  } else if (isControlledSearch) {
+    const pendingSearchText = pendingControlledSearchTextRef.current;
+    if (pendingSearchText !== null && controlledSearchText === pendingSearchText) {
+      pendingControlledSearchTextRef.current = null;
+    } else if (
+      !(pendingSearchText !== null && searchState.value === pendingSearchText) &&
+      controlledSearchText !== searchState.value
+    ) {
+      setSearchState({ key: searchStateKey, value: controlledSearchText });
+    }
+  }
+
+  const searchText = searchState.value;
 
   const listModel = useMemo(
     () => (rootNode?.type === "List" ? collectListEntries(uiTree, rootNode) : null),
@@ -208,6 +246,56 @@ export function useExtensionRunnerState({
     }
     return next;
   }, [formFields]);
+  const seededFormValues = useMemo(() => {
+    if (rootNode?.type !== "Form") {
+      return {};
+    }
+
+    const next = { ...formInitialValues };
+    for (const field of formFields) {
+      if (field.controlledValue !== undefined) {
+        next[field.key] = field.controlledValue;
+      }
+    }
+    return next;
+  }, [formFields, formInitialValues, rootNode?.type]);
+  const formStateKey = useMemo(
+    () =>
+      rootNode?.type === "Form"
+        ? `${rootNode.id}:${formFields
+            .map((field) => `${field.nodeId}:${JSON.stringify(field.controlledValue ?? null)}`)
+            .join("|")}`
+        : "",
+    [formFields, rootNode?.id, rootNode?.type],
+  );
+
+  if (formState.key !== formStateKey) {
+    setFormState({ key: formStateKey, values: seededFormValues });
+  } else if (rootNode?.type === "Form") {
+    let changed = false;
+    const next = { ...formState.values };
+
+    for (const field of formFields) {
+      if (field.controlledValue !== undefined) {
+        if (next[field.key] !== field.controlledValue) {
+          next[field.key] = field.controlledValue;
+          changed = true;
+        }
+        continue;
+      }
+
+      if (!(field.key in next)) {
+        next[field.key] = field.defaultValue;
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      setFormState({ key: formStateKey, values: next });
+    }
+  }
+
+  const formValues = formState.values;
 
   const currentEntries = useMemo(() => {
     if (rootType === "List") {
@@ -240,6 +328,46 @@ export function useExtensionRunnerState({
     rootNode?.props.onSearchTextChange,
     searchText,
   ]);
+  const controlledSelectedIndex = useMemo(() => {
+    if (!rootNode || (rootType !== "List" && rootType !== "Grid")) {
+      return -1;
+    }
+
+    const selectedItemId = asString(rootNode.props.selectedItemId).trim();
+    if (!selectedItemId) {
+      return -1;
+    }
+
+    return currentEntries.findIndex((entry) => entry.itemId === selectedItemId);
+  }, [currentEntries, rootNode, rootType]);
+  const selectionStateKey = `${rootNode?.id ?? 0}:${currentEntries.length}`;
+
+  if (selectionState.key !== selectionStateKey) {
+    setSelectionState({
+      key: selectionStateKey,
+      index: controlledSelectedIndex >= 0 ? controlledSelectedIndex : 0,
+    });
+  } else if (controlledSelectedIndex >= 0 && selectionState.index !== controlledSelectedIndex) {
+    setSelectionState((previous) =>
+      previous.key === selectionStateKey
+        ? { key: selectionStateKey, index: controlledSelectedIndex }
+        : previous,
+    );
+  }
+
+  const selectedIndex = Math.min(selectionState.index, Math.max(0, currentEntries.length - 1));
+  const setSelectedIndex = useCallback(
+    (value: number | ((previous: number) => number)) => {
+      setSelectionState((previous) => ({
+        key: selectionStateKey,
+        index:
+          typeof value === "function"
+            ? value(previous.key === selectionStateKey ? previous.index : 0)
+            : value,
+      }));
+    },
+    [selectionStateKey],
+  );
 
   const selectedEntry = currentEntries[selectedIndex];
   const selectedEntryActions = useMemo(
@@ -259,60 +387,10 @@ export function useExtensionRunnerState({
       ),
     [toasts],
   );
-
-  useEffect(() => {
-    if (rootNode?.type === "List" || rootNode?.type === "Grid") {
-      const nextSearchText = asString(rootNode.props.searchText);
-      const isControlledSearch = asBoolean(rootNode.props.onSearchTextChange);
-
-      if (isControlledSearch) {
-        const pendingSearchText = pendingControlledSearchTextRef.current;
-        if (pendingSearchText !== null) {
-          if (nextSearchText === pendingSearchText) {
-            pendingControlledSearchTextRef.current = null;
-          } else if (searchText === pendingSearchText) {
-            return;
-          }
-        }
-      }
-
-      if (nextSearchText !== searchText) {
-        setSearchText(nextSearchText);
-      }
-    } else {
-      pendingControlledSearchTextRef.current = null;
-      setSearchText("");
-    }
-  }, [rootNode?.id, rootNode?.type, rootNode?.props.onSearchTextChange, rootNode?.props.searchText, searchText]);
-
-  useEffect(() => {
-    setSelectedIndex(0);
-  }, [rootNode?.id, currentEntries.length]);
-
-  useEffect(() => {
-    const cappedIndex = Math.min(selectedIndex, Math.max(0, currentEntries.length - 1));
-    if (cappedIndex !== selectedIndex) {
-      setSelectedIndex(cappedIndex);
-    }
-  }, [selectedIndex, currentEntries.length]);
-
-  useEffect(() => {
-    if ((rootNode?.type !== "List" && rootNode?.type !== "Grid") || !rootNode) {
-      return;
-    }
-
-    const selectedItemId = asString(rootNode.props.selectedItemId).trim();
-    if (!selectedItemId) {
-      return;
-    }
-
-    const nextIndex = currentEntries.findIndex((entry) => entry.itemId === selectedItemId);
-    if (nextIndex >= 0 && nextIndex !== selectedIndex) {
-      setSelectedIndex(nextIndex);
-    }
-  }, [currentEntries, rootNode, rootNode?.props.selectedItemId, rootNode?.type, selectedIndex]);
-
-  useEffect(() => {
+  const selectionSyncKey = `${rootNode?.id ?? 0}:${selectedEntry?.nodeId ?? ""}:${selectedEntry?.itemId ?? ""}`;
+  const selectionSyncRef = useRef("");
+  if (selectionSyncRef.current !== selectionSyncKey) {
+    selectionSyncRef.current = selectionSyncKey;
     if (!selectedEntry) {
       setSelectedNodeId(undefined);
       if (
@@ -321,107 +399,60 @@ export function useExtensionRunnerState({
       ) {
         extensionManagerService.dispatchEvent(rootNode.id, "onSelectionChange", [null]);
       }
-      return;
-    }
-
-    setSelectedNodeId(selectedEntry.nodeId);
-    if (
-      (rootNode?.type === "List" || rootNode?.type === "Grid") &&
-      asBoolean(rootNode.props.onSelectionChange)
-    ) {
-      extensionManagerService.dispatchEvent(rootNode.id, "onSelectionChange", [
-        selectedEntry.itemId,
-      ]);
-    }
-  }, [
-    selectedEntry?.nodeId,
-    selectedEntry?.itemId,
-    rootNode?.id,
-    rootNode?.type,
-    rootNode?.props.onSelectionChange,
-    setSelectedNodeId,
-  ]);
-
-  useEffect(() => {
-    if (rootNode?.type !== "Form") {
-      setFormValues({});
-      return;
-    }
-    setFormValues(formInitialValues);
-  }, [rootNode?.id, rootNode?.type, formInitialValues]);
-
-  useEffect(() => {
-    if (rootNode?.type !== "Form") {
-      return;
-    }
-
-    setFormValues((previous) => {
-      let changed = false;
-      const next = { ...previous };
-
-      for (const field of formFields) {
-        if (field.controlledValue !== undefined) {
-          if (next[field.key] !== field.controlledValue) {
-            next[field.key] = field.controlledValue;
-            changed = true;
-          }
-          continue;
-        }
-
-        if (!(field.key in next)) {
-          next[field.key] = field.defaultValue;
-          changed = true;
-        }
+    } else {
+      setSelectedNodeId(selectedEntry.nodeId);
+      if (
+        (rootNode?.type === "List" || rootNode?.type === "Grid") &&
+        asBoolean(rootNode.props.onSelectionChange)
+      ) {
+        extensionManagerService.dispatchEvent(rootNode.id, "onSelectionChange", [
+          selectedEntry.itemId,
+        ]);
       }
+    }
+  }
 
-      return changed ? next : previous;
-    });
-  }, [rootNode?.type, formFields]);
+  const formFieldByNodeIdRef = useRef(formFieldByNodeId);
+  const rootNodeRef = useRef(rootNode);
+  const searchStateKeyRef = useRef(searchStateKey);
+  formFieldByNodeIdRef.current = formFieldByNodeId;
+  rootNodeRef.current = rootNode;
+  searchStateKeyRef.current = searchStateKey;
 
-  useEffect(() => {
+  useMountEffect(() => {
     return extensionManagerService.subscribe((event) => {
       if (event.type === "focus-element") {
         setFocusElementId(event.elementId);
+        fieldRefs.current.get(event.elementId)?.focus();
       }
       if (event.type === "reset-element") {
-        setResetElementId(event.elementId);
+        const field = formFieldByNodeIdRef.current.get(event.elementId);
+        if (!field) {
+          return;
+        }
+        setFormState((previous) => ({
+          ...previous,
+          values: {
+            ...previous.values,
+            [field.key]: field.defaultValue,
+          },
+        }));
+        if (field.hasOnChange) {
+          extensionManagerService.dispatchEvent(field.nodeId, "onChange", [field.defaultValue]);
+        }
       }
       if (event.type === "clear-search-bar") {
         pendingControlledSearchTextRef.current = null;
-        setSearchText("");
+        setSearchState({ key: searchStateKeyRef.current, value: "" });
         if (
-          (rootNode?.type === "List" || rootNode?.type === "Grid") &&
-          asBoolean(rootNode.props.onSearchTextChange)
+          (rootNodeRef.current?.type === "List" || rootNodeRef.current?.type === "Grid") &&
+          asBoolean(rootNodeRef.current.props.onSearchTextChange)
         ) {
-          extensionManagerService.dispatchEvent(rootNode.id, "onSearchTextChange", [""]);
+          extensionManagerService.dispatchEvent(rootNodeRef.current.id, "onSearchTextChange", [""]);
         }
       }
     });
-  }, [rootNode?.id, rootNode?.props, rootNode?.type]);
-
-  useEffect(() => {
-    if (!focusElementId) {
-      return;
-    }
-    fieldRefs.current.get(focusElementId)?.focus();
-  }, [focusElementId]);
-
-  useEffect(() => {
-    if (!resetElementId) {
-      return;
-    }
-    const field = formFieldByNodeId.get(resetElementId);
-    if (!field) {
-      return;
-    }
-    setFormValues((previous) => ({
-      ...previous,
-      [field.key]: field.defaultValue,
-    }));
-    if (field.hasOnChange) {
-      extensionManagerService.dispatchEvent(field.nodeId, "onChange", [field.defaultValue]);
-    }
-  }, [resetElementId, formFieldByNodeId]);
+  });
 
   const handleBack = useCallback(() => {
     try {
@@ -551,7 +582,7 @@ export function useExtensionRunnerState({
 
   const handleSearchInputChange = useCallback(
     (value: string) => {
-      setSearchText(value);
+      setSearchState({ key: searchStateKey, value });
       if (
         (rootType === "List" || rootType === "Grid") &&
         rootNode &&
@@ -561,11 +592,14 @@ export function useExtensionRunnerState({
         extensionManagerService.dispatchEvent(rootNode.id, "onSearchTextChange", [value]);
       }
     },
-    [rootNode, rootType],
+    [rootNode, rootType, searchStateKey],
   );
 
   const handleSetFormValue = useCallback((field: FormField, value: FormValue) => {
-    setFormValues((previous) => ({ ...previous, [field.key]: value }));
+    setFormState((previous) => ({
+      ...previous,
+      values: { ...previous.values, [field.key]: value },
+    }));
     if (field.hasOnChange) {
       extensionManagerService.dispatchEvent(field.nodeId, "onChange", [value]);
     }
@@ -926,7 +960,10 @@ export function useExtensionRunnerState({
       return;
     }
     fieldRefs.current.set(nodeId, element);
-  }, []);
+    if (focusElementId === nodeId) {
+      element.focus();
+    }
+  }, [focusElementId]);
 
   const dispatchNodeEvent = useCallback(
     (nodeId: number, handlerName: string, args: unknown[] = []) => {

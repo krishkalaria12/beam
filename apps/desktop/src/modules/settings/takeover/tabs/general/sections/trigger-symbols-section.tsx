@@ -1,5 +1,5 @@
 import type { ElementType } from "react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Check,
   ChevronDown,
@@ -158,18 +158,27 @@ function CommandSelector({
 
 export function GeneralTriggerSymbolsSection() {
   const { symbols, updateSymbol, updateCustomBindings, resetSymbols } = useTriggerSymbols();
-  const [draft, setDraft] = useState<TriggerSymbols>(symbols);
+  const [draftState, setDraftState] = useState<{ key: string; value: TriggerSymbols }>(() => ({
+    key: JSON.stringify(symbols),
+    value: symbols,
+  }));
   const [newCustomSymbol, setNewCustomSymbol] = useState("");
   const [newCustomCommandId, setNewCustomCommandId] = useState(DEFAULT_CUSTOM_COMMAND_ID);
 
-  useEffect(() => {
-    setDraft(symbols);
-  }, [symbols]);
+  const draftKey = JSON.stringify(symbols);
+  if (draftState.key !== draftKey) {
+    setDraftState({ key: draftKey, value: symbols });
+  }
+
+  const draft = draftState.value;
 
   const handleDraftChange = (target: TriggerSymbolTarget, value: string) => {
-    setDraft((previous) => ({
+    setDraftState((previous) => ({
       ...previous,
-      [target]: toSingleCharacter(value),
+      value: {
+        ...previous.value,
+        [target]: toSingleCharacter(value),
+      },
     }));
   };
 
@@ -242,11 +251,14 @@ export function GeneralTriggerSymbolsSection() {
   };
 
   const updateCustomBindingCommand = (index: number, commandId: string) => {
-    setDraft((previous) => ({
+    setDraftState((previous) => ({
       ...previous,
-      customBindings: previous.customBindings.map((entry, entryIndex) =>
-        entryIndex === index ? { ...entry, commandId } : entry,
-      ),
+      value: {
+        ...previous.value,
+        customBindings: previous.value.customBindings.map((entry, entryIndex) =>
+          entryIndex === index ? { ...entry, commandId } : entry,
+        ),
+      },
     }));
   };
 
@@ -396,11 +408,14 @@ export function GeneralTriggerSymbolsSection() {
                       value={binding.symbol}
                       onChange={(event) => {
                         const value = toSingleCharacter(event.target.value);
-                        setDraft((previous) => ({
+                        setDraftState((previous) => ({
                           ...previous,
-                          customBindings: previous.customBindings.map((entry, entryIndex) =>
-                            entryIndex === index ? { ...entry, symbol: value } : entry,
-                          ),
+                          value: {
+                            ...previous.value,
+                            customBindings: previous.value.customBindings.map((entry, entryIndex) =>
+                              entryIndex === index ? { ...entry, symbol: value } : entry,
+                            ),
+                          },
                         }));
                       }}
                       maxLength={1}

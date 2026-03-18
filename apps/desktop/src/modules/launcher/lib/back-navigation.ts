@@ -1,4 +1,6 @@
-import { useEffect } from "react";
+import { useRef } from "react";
+
+import { useMountEffect } from "@/hooks/use-mount-effect";
 
 import type { CommandPanel } from "@/command-registry/types";
 
@@ -74,13 +76,35 @@ export function useLauncherPanelBackHandler(
   handler: LauncherBackHandler,
   enabled = true,
 ) {
-  useEffect(() => {
-    if (!enabled) {
-      return;
-    }
+  const registrationRef = useRef<{
+    panel: CommandPanel;
+    handler: LauncherBackHandler;
+    enabled: boolean;
+    cleanup?: () => void;
+  } | null>(null);
 
-    return registerLauncherPanelBackHandler(panel, handler);
-  }, [enabled, handler, panel]);
+  const currentRegistration = registrationRef.current;
+  const needsUpdate =
+    !currentRegistration ||
+    currentRegistration.panel !== panel ||
+    currentRegistration.handler !== handler ||
+    currentRegistration.enabled !== enabled;
+
+  if (needsUpdate) {
+    currentRegistration?.cleanup?.();
+    registrationRef.current = {
+      panel,
+      handler,
+      enabled,
+      cleanup: enabled ? registerLauncherPanelBackHandler(panel, handler) : undefined,
+    };
+  }
+
+  useMountEffect(() => {
+    return () => {
+      registrationRef.current?.cleanup?.();
+    };
+  });
 }
 
 export function isLauncherBackHotkey(event: BackHotkeyEventLike): boolean {

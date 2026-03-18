@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 
 import {
   LAUNCHER_THEME_CHANGE_EVENT,
@@ -7,6 +7,7 @@ import {
   setSelectedLauncherThemeId,
   type LauncherThemeSummary,
 } from "@/modules/settings/api/launcher-theme";
+import { useMountEffect } from "@/hooks/use-mount-effect";
 
 interface UseLauncherThemeResult {
   themes: LauncherThemeSummary[];
@@ -56,9 +57,9 @@ export function useLauncherTheme(): UseLauncherThemeResult {
     }
   }, []);
 
-  useEffect(() => {
+  useMountEffect(() => {
     void refresh();
-  }, [refresh]);
+  });
 
   return {
     themes,
