@@ -3,7 +3,7 @@ import { CheckCircle2, Loader2 } from "lucide-react";
 import { Kbd } from "@/components/module";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import HotkeyRecorder from "@/modules/settings/components/HotkeyRecorder";
+import HotkeyRecorder from "@/modules/settings/takeover/components/hotkey-recorder";
 
 import { HOTKEY_EXAMPLE } from "@/modules/launcher/helper";
 import type { SaveFeedback } from "@/modules/launcher/types";

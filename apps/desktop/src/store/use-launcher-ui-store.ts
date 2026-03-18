@@ -17,6 +17,7 @@ interface LauncherUiSnapshot {
 }
 
 const TAKEOVER_PANELS = new Set<CommandPanel>([
+  "settings",
   "todo",
   "notes",
   "ai",

@@ -34,6 +34,7 @@ export function isCommandPanel(value: unknown): value is CommandPanelValue {
 }
 
 export const TAKEOVER_COMMAND_PANELS = [
+  COMMAND_PANELS.SETTINGS,
   COMMAND_PANELS.TODO,
   COMMAND_PANELS.NOTES,
   COMMAND_PANELS.AI,

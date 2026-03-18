@@ -78,7 +78,11 @@ const ExtensionRunnerView = lazy(() =>
     default: mod.ExtensionRunnerView,
   })),
 );
-
+const SettingsTakeoverView = lazy(() =>
+  import("@/modules/settings/takeover/components/settings-takeover-view").then((mod) => ({
+    default: mod.SettingsTakeoverView,
+  })),
+);
 type TakeoverPanel = (typeof TAKEOVER_COMMAND_PANELS)[number];
 
 function isTakeoverPanel(panel: CommandPanel): panel is TakeoverPanel {
@@ -106,7 +110,15 @@ interface TakeoverPanelRendererInput {
   openNotes: () => void;
   openSnippets: () => void;
   openExtensions: () => void;
+  openSettings: () => void;
   openScriptCommands: () => void;
+  pinnedCommandIds: readonly string[];
+  hiddenCommandIds: ReadonlySet<string>;
+  aliasesById: Record<string, string[]>;
+  onSetPinned: (commandId: string, pinned: boolean) => void;
+  onSetHidden: (commandId: string, hidden: boolean) => void;
+  onSetAliases: (commandId: string, aliases: readonly string[]) => void;
+  onMovePinned: (commandId: string, direction: "up" | "down") => void;
   backToCommands: () => void;
 }
 
@@ -152,14 +164,25 @@ export function LauncherTakeoverPanel({
   openNotes,
   openSnippets,
   openExtensions,
+  openSettings,
   openScriptCommands,
+  pinnedCommandIds,
+  hiddenCommandIds,
+  aliasesById,
+  onSetPinned,
+  onSetHidden,
+  onSetAliases,
+  onMovePinned,
   backToCommands,
 }: LauncherTakeoverPanelProps) {
   const takeoverPanelIsOpen = isTakeoverPanel(activePanel);
 
   const [actionsOpen, setActionsOpen] = useState(false);
   const actionsPreviousFocusRef = useRef<HTMLElement | null>(null);
-  const shouldUseSharedActions = takeoverPanelIsOpen && activePanel !== COMMAND_PANELS.DMENU;
+  const shouldUseSharedActions =
+    takeoverPanelIsOpen &&
+    activePanel !== COMMAND_PANELS.DMENU &&
+    activePanel !== COMMAND_PANELS.SETTINGS;
   const panelRegistration = getPanelCommandRegistration(activePanel, quicklinksView);
   const primaryActionLabel = getPanelPrimaryActionLabel(activePanel);
 
@@ -391,7 +414,20 @@ export function LauncherTakeoverPanel({
 
   let content: ReactNode = null;
 
-  if (activePanel === COMMAND_PANELS.TODO) {
+  if (activePanel === COMMAND_PANELS.SETTINGS) {
+    content = (
+      <SettingsTakeoverView
+        onBack={backToCommands}
+        pinnedCommandIds={pinnedCommandIds}
+        hiddenCommandIds={hiddenCommandIds}
+        aliasesById={aliasesById}
+        onSetPinned={onSetPinned}
+        onSetHidden={onSetHidden}
+        onSetAliases={onSetAliases}
+        onMovePinned={onMovePinned}
+      />
+    );
+  } else if (activePanel === COMMAND_PANELS.TODO) {
     content = <TodoCommandGroup isOpen onOpen={openTodo} onBack={backToCommands} />;
   } else if (activePanel === COMMAND_PANELS.NOTES) {
     content = <NotesCommandGroup isOpen onOpen={openNotes} onBack={backToCommands} />;

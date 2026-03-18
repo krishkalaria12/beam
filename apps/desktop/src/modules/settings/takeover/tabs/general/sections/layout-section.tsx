@@ -1,13 +1,14 @@
+import type { ElementType } from "react";
 import { Check, Maximize2, Minimize2 } from "lucide-react";
 
 import { IconChip } from "@/components/module";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useUiLayout } from "../hooks/use-ui-layout";
+import { useUiLayout } from "@/modules/settings/hooks/use-ui-layout";
 
 interface LayoutOption {
   id: "expanded" | "compressed";
-  icon: React.ElementType;
+  icon: ElementType;
   title: string;
   description: string;
   preview: string[];
@@ -30,11 +31,11 @@ const LAYOUT_OPTIONS: LayoutOption[] = [
   },
 ];
 
-export function LayoutSettings() {
+export function GeneralLayoutSection() {
   const { layoutMode, setMode } = useUiLayout();
 
   return (
-    <div className="settings-panel px-4 py-6 space-y-5">
+    <div className="settings-panel space-y-5 rounded-2xl bg-[var(--launcher-card-hover-bg)] px-4 py-5 ring-1 ring-[var(--launcher-card-border)]">
       {/* Section header */}
       <div className="flex items-center gap-3 px-1">
         <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
@@ -62,7 +63,7 @@ export function LayoutSettings() {
                 "transition-all duration-200",
                 isSelected
                   ? "bg-[var(--launcher-card-selected-bg)] ring-1 ring-[var(--launcher-card-selected-border)]"
-                  : "bg-[var(--launcher-card-bg)] hover:bg-[var(--launcher-card-hover-bg)]",
+                  : "bg-[var(--launcher-card-bg)] ring-1 ring-[var(--launcher-card-border)] hover:bg-[var(--launcher-card-bg)]",
               )}
             >
               {/* Icon */}
@@ -118,8 +119,7 @@ export function LayoutSettings() {
               {isSelected && (
                 <div
                   className="absolute top-3.5 right-3.5 size-5 rounded-full 
-                  bg-[var(--ring)] flex items-center justify-center
-                  shadow-lg shadow-[var(--ring)]/30"
+                  bg-[var(--ring)] flex items-center justify-center"
                 >
                   <Check className="size-3 text-background" strokeWidth={3} />
                 </div>

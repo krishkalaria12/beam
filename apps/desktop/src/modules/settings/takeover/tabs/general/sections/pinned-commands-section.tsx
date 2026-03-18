@@ -1,5 +1,4 @@
 import { ArrowDown, ArrowUp, GripVertical, Pin, PinOff } from "lucide-react";
-import { useMemo } from "react";
 
 import { IconChip } from "@/components/module";
 import { Button } from "@/components/ui/button";
@@ -15,34 +14,30 @@ function getPinnedSubtitle(commandId: string): string {
   return "Command";
 }
 
-interface PinnedCommandsSettingsProps {
+interface GeneralPinnedCommandsSectionProps {
   pinnedCommandIds: readonly string[];
   onSetPinned: (commandId: string, pinned: boolean) => void;
   onMovePinned: (commandId: string, direction: "up" | "down") => void;
 }
 
-export function PinnedCommandsSettings({
+export function GeneralPinnedCommandsSection({
   pinnedCommandIds,
   onSetPinned,
   onMovePinned,
-}: PinnedCommandsSettingsProps) {
-  const pinnedCommands = useMemo(
-    () =>
-      pinnedCommandIds.map((commandId, index) => {
-        const command = staticCommandRegistry.getById(commandId);
-        return {
-          commandId,
-          title: command?.title ?? commandId,
-          subtitle: command?.subtitle ?? getPinnedSubtitle(commandId),
-          canMoveUp: index > 0,
-          canMoveDown: index < pinnedCommandIds.length - 1,
-        };
-      }),
-    [pinnedCommandIds],
-  );
+}: GeneralPinnedCommandsSectionProps) {
+  const pinnedCommands = pinnedCommandIds.map((commandId, index) => {
+    const command = staticCommandRegistry.getById(commandId);
+    return {
+      commandId,
+      title: command?.title ?? commandId,
+      subtitle: command?.subtitle ?? getPinnedSubtitle(commandId),
+      canMoveUp: index > 0,
+      canMoveDown: index < pinnedCommandIds.length - 1,
+    };
+  });
 
   return (
-    <div className="settings-panel px-4 py-6 space-y-5">
+    <div className="settings-panel space-y-5 rounded-2xl bg-[var(--launcher-card-hover-bg)] px-4 py-5 ring-1 ring-[var(--launcher-card-border)]">
       {/* Section header */}
       <div className="flex items-center gap-3 px-1">
         <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
@@ -71,8 +66,7 @@ export function PinnedCommandsSettings({
           {pinnedCommands.map((entry, index) => (
             <div
               key={entry.commandId}
-              className="pinned-item group flex items-center gap-3 px-3 py-3 rounded-xl
-                bg-[var(--launcher-card-bg)] hover:bg-[var(--launcher-card-hover-bg)] transition-all duration-200"
+              className="pinned-item group flex items-center gap-3 rounded-xl bg-[var(--launcher-card-bg)] px-3 py-3 ring-1 ring-[var(--launcher-card-border)] transition-all duration-200 hover:bg-[var(--launcher-card-bg)]"
               style={{ animationDelay: `${index * 30}ms` }}
             >
               {/* Drag handle */}

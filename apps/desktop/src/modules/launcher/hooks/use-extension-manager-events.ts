@@ -3,15 +3,16 @@ import { toast } from "sonner";
 
 import { extensionManagerService } from "@/modules/extensions/extension-manager-service";
 import { useExtensionRuntimeStore } from "@/modules/extensions/runtime/store";
+import { useSettingsPageStore } from "@/modules/settings/takeover/store/use-settings-page-store";
 
 interface UseExtensionManagerEventsInput {
   backToCommands: () => void;
-  openExtensions?: () => void;
+  openSettings?: () => void;
 }
 
 export function useExtensionManagerEvents({
   backToCommands,
-  openExtensions,
+  openSettings,
 }: UseExtensionManagerEventsInput) {
   useEffect(() => {
     const unsubscribe = extensionManagerService.subscribe((event) => {
@@ -37,8 +38,11 @@ export function useExtensionManagerEvents({
         event.type === "open-extension-preferences" ||
         event.type === "open-command-preferences"
       ) {
-        if (openExtensions) {
-          openExtensions();
+        if (openSettings) {
+          useSettingsPageStore
+            .getState()
+            .openExtensions(event.extensionName, event.type === "open-command-preferences" ? event.commandName : null);
+          openSettings();
         } else {
           backToCommands();
         }
@@ -50,5 +54,5 @@ export function useExtensionManagerEvents({
       extensionManagerService.stop();
       useExtensionRuntimeStore.getState().resetRuntime();
     };
-  }, [backToCommands, openExtensions]);
+  }, [backToCommands, openSettings]);
 }

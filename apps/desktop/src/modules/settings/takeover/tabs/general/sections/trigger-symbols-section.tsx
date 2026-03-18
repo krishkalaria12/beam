@@ -1,5 +1,5 @@
+import type { ElementType } from "react";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
 import {
   Check,
   ChevronDown,
@@ -11,6 +11,7 @@ import {
   Trash2,
   Zap,
 } from "lucide-react";
+import { toast } from "sonner";
 
 import { staticCommandRegistry } from "@/command-registry/registry";
 import { IconChip, type IconChipVariant } from "@/components/module";
@@ -34,7 +35,7 @@ type TriggerSymbolRow = {
   key: TriggerSymbolTarget;
   title: string;
   description: string;
-  icon: React.ElementType;
+  icon: ElementType;
   iconVariant: IconChipVariant;
 };
 
@@ -155,7 +156,7 @@ function CommandSelector({
   );
 }
 
-export function TriggerSymbolsSettings() {
+export function GeneralTriggerSymbolsSection() {
   const { symbols, updateSymbol, updateCustomBindings, resetSymbols } = useTriggerSymbols();
   const [draft, setDraft] = useState<TriggerSymbols>(symbols);
   const [newCustomSymbol, setNewCustomSymbol] = useState("");
@@ -250,7 +251,7 @@ export function TriggerSymbolsSettings() {
   };
 
   return (
-    <div className="settings-panel space-y-6 px-4 py-6">
+    <div className="settings-panel space-y-6 rounded-2xl bg-[var(--launcher-card-hover-bg)] px-4 py-5 ring-1 ring-[var(--launcher-card-border)]">
       {/* Trigger Symbols Section */}
       <section className="space-y-3">
         <div className="flex items-center gap-3 px-1">

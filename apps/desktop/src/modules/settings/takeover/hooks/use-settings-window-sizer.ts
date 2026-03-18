@@ -1,15 +1,15 @@
 import { useLauncherWindowSizer } from "@/modules/launcher/hooks/use-launcher-window-sizer";
 
-const AI_WINDOW_WIDTH = 1100;
-const AI_WINDOW_HEIGHT = 750;
+const SETTINGS_WINDOW_WIDTH = 1240;
+const SETTINGS_WINDOW_HEIGHT = 760;
 const LAUNCHER_DEFAULT_WIDTH = 960;
 const LAUNCHER_DEFAULT_HEIGHT = 520;
 
-export function useAiWindowSizer() {
+export function useSettingsWindowSizer() {
   useLauncherWindowSizer(
     {
-      width: AI_WINDOW_WIDTH,
-      height: AI_WINDOW_HEIGHT,
+      width: SETTINGS_WINDOW_WIDTH,
+      height: SETTINGS_WINDOW_HEIGHT,
     },
     {
       width: LAUNCHER_DEFAULT_WIDTH,

@@ -13,8 +13,7 @@ import { isNonHideableCommandId } from "@/modules/settings/api/command-items";
 import type {
   CommandItemsEntry,
   CommandItemsFilter,
-  CommandItemsSettingsProps,
-} from "@/modules/settings/types";
+} from "../types";
 
 const FILTER_LABELS: Record<CommandItemsFilter, string> = {
   all: "All",
@@ -60,7 +59,13 @@ function getCommandItems(): CommandItemsEntry[] {
 
 const COMMAND_ITEMS = getCommandItems();
 
-export function CommandItemsSettings({ hiddenCommandIds, onSetHidden }: CommandItemsSettingsProps) {
+export function GeneralCommandItemsSection({
+  hiddenCommandIds,
+  onSetHidden,
+}: {
+  hiddenCommandIds: ReadonlySet<string>;
+  onSetHidden: (commandId: string, hidden: boolean) => void;
+}) {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<CommandItemsFilter>("all");
 
@@ -103,7 +108,7 @@ export function CommandItemsSettings({ hiddenCommandIds, onSetHidden }: CommandI
   const hiddenCount = hiddenCommandIds.size;
 
   return (
-    <div className="settings-panel space-y-5 px-4 py-6">
+    <div className="settings-panel space-y-5 rounded-2xl bg-[var(--launcher-card-hover-bg)] px-4 py-5 ring-1 ring-[var(--launcher-card-border)]">
       <div className="flex items-center gap-3 px-1">
         <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
           Command Items
@@ -126,7 +131,7 @@ export function CommandItemsSettings({ hiddenCommandIds, onSetHidden }: CommandI
           />
         </div>
 
-        <div className="flex items-center gap-1 rounded-xl bg-[var(--launcher-card-bg)] p-1">
+        <div className="flex items-center gap-1 rounded-xl bg-[var(--launcher-card-bg)] p-1 ring-1 ring-[var(--launcher-card-border)]">
           {(["all", "enabled", "disabled"] as CommandItemsFilter[]).map((value) => (
             <Button
               key={value}
@@ -169,7 +174,7 @@ export function CommandItemsSettings({ hiddenCommandIds, onSetHidden }: CommandI
             return (
               <div
                 key={item.id}
-                className="group flex items-center gap-3 rounded-xl bg-[var(--launcher-card-bg)] px-3 py-3 transition-all duration-200 hover:bg-[var(--launcher-card-hover-bg)]"
+                className="group flex items-center gap-3 rounded-xl bg-[var(--launcher-card-bg)] px-3 py-3 ring-1 ring-[var(--launcher-card-border)] transition-all duration-200 hover:bg-[var(--launcher-card-bg)]"
                 style={{ animationDelay: `${index * 14}ms` }}
               >
                 <CommandIcon icon={item.icon} commandId={item.id} className="size-9 rounded-xl" />

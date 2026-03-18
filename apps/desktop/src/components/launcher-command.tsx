@@ -53,6 +53,7 @@ import { useQuicklinks } from "@/modules/quicklinks/hooks/use-quicklinks";
 import { HOTKEY_BACKEND_STATUS_EVENT, HOTKEY_COMMAND_EVENT } from "@/modules/settings/api/hotkeys";
 import { useTriggerSymbols } from "@/modules/settings/hooks/use-trigger-symbols";
 import { useUiLayout } from "@/modules/settings/hooks/use-ui-layout";
+import { useSettingsPageStore } from "@/modules/settings/takeover/store/use-settings-page-store";
 import { useAwakeStore } from "@/modules/system-actions/store/awake-store";
 import {
   isLauncherCommandListExpandedPanel,
@@ -163,6 +164,9 @@ export default function LauncherCommand() {
   const openExtensions = useCallback(() => {
     openPanel("extensions", true);
   }, [openPanel]);
+  const openSettings = useCallback(() => {
+    openPanel("settings", true);
+  }, [openPanel]);
 
   const { data: quicklinks = [] } = useQuicklinks();
   const { isCompressed } = useUiLayout();
@@ -176,12 +180,13 @@ export default function LauncherCommand() {
     markUsed,
     setPinned,
     setHidden,
+    setAliases,
     movePinned,
     setFallbackActionsEnabled,
     setFallbackCommandIds,
   } = useCommandPreferences();
   useLauncherDeepLinks({ openPanel, backToCommands });
-  useExtensionManagerEvents({ backToCommands, openExtensions });
+  useExtensionManagerEvents({ backToCommands, openSettings });
   useCliDmenuRequests();
   useLauncherPanelPrefetch();
 
@@ -841,9 +846,20 @@ export default function LauncherCommand() {
               openExtensions={() => {
                 openPanel("extensions", true);
               }}
+              openSettings={() => {
+                useSettingsPageStore.getState().openGeneral();
+                openSettings();
+              }}
               openScriptCommands={() => {
                 openPanel("script-commands", true);
               }}
+              pinnedCommandIds={commandPreferences.pinnedCommandIds}
+              hiddenCommandIds={hiddenCommandIds}
+              aliasesById={commandPreferences.aliasesById}
+              onSetPinned={setPinned}
+              onSetHidden={setHidden}
+              onSetAliases={setAliases}
+              onMovePinned={movePinned}
               backToCommands={backToCommands}
             />
           </Suspense>
@@ -900,9 +916,6 @@ export default function LauncherCommand() {
                 }}
                 onOpenEmoji={() => {
                   openPanel("emoji", true);
-                }}
-                onOpenSettings={() => {
-                  openPanel("settings", true);
                 }}
                 onBack={backToCommands}
                 pinnedCommandIds={commandPreferences.pinnedCommandIds}

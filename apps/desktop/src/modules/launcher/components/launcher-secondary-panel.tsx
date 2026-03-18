@@ -16,11 +16,7 @@ const CalculatorHistoryCommandGroup = lazy(
   () => import("@/modules/calculator-history/components/calculator-history-command-group"),
 );
 const EmojiCommandGroup = lazy(() => import("@/modules/emoji/components/emoji-command-group"));
-const SettingsCommandGroup = lazy(
-  () => import("@/modules/settings/components/settings-command-group"),
-);
-
-const SECONDARY_PANELS = ["calculator-history", "emoji", "settings"] as const;
+const SECONDARY_PANELS = ["calculator-history", "emoji"] as const;
 
 type SecondaryPanel = (typeof SECONDARY_PANELS)[number];
 
@@ -31,7 +27,6 @@ function isSecondaryPanel(panel: CommandPanel): panel is SecondaryPanel {
 interface SecondaryPanelRendererInput {
   onOpenCalculatorHistory: () => void;
   onOpenEmoji: () => void;
-  onOpenSettings: () => void;
   onBack: () => void;
   pinnedCommandIds: readonly string[];
   hiddenCommandIds: ReadonlySet<string>;
@@ -56,7 +51,6 @@ export function LauncherSecondaryPanel({
   activePanel,
   onOpenCalculatorHistory,
   onOpenEmoji,
-  onOpenSettings,
   onBack,
   pinnedCommandIds,
   hiddenCommandIds,
@@ -143,24 +137,6 @@ export function LauncherSecondaryPanel({
   }
 
   const panelSpecificRootItems: LauncherActionItem[] = [];
-  if (activePanel === "settings") {
-    panelSpecificRootItems.push(
-      {
-        id: "settings-open-calculator-history",
-        label: "Open Calculator History",
-        icon: <Calculator className="size-4" />,
-        keywords: ["settings", "calculator", "history"],
-        onSelect: onOpenCalculatorHistory,
-      },
-      {
-        id: "settings-open-emoji",
-        label: "Open Emoji Picker",
-        icon: <Smile className="size-4" />,
-        keywords: ["settings", "emoji", "picker"],
-        onSelect: onOpenEmoji,
-      },
-    );
-  }
 
   const sharedRootItems: LauncherActionItem[] = secondaryPanelIsOpen
     ? [
@@ -217,23 +193,6 @@ export function LauncherSecondaryPanel({
     content = <CalculatorHistoryCommandGroup isOpen onOpen={onOpenCalculatorHistory} />;
   } else if (activePanel === "emoji") {
     content = <EmojiCommandGroup isOpen onOpen={onOpenEmoji} onBack={onBack} />;
-  } else if (activePanel === "settings") {
-    content = (
-      <SettingsCommandGroup
-        isOpen
-        onOpen={onOpenSettings}
-        onBack={onBack}
-        pinnedCommandIds={pinnedCommandIds}
-        hiddenCommandIds={hiddenCommandIds}
-        fallbackEnabled={fallbackEnabled}
-        fallbackCommandIds={fallbackCommandIds}
-        onSetPinned={onSetPinned}
-        onSetHidden={onSetHidden}
-        onMovePinned={onMovePinned}
-        onSetFallbackEnabled={onSetFallbackEnabled}
-        onSetFallbackCommandIds={onSetFallbackCommandIds}
-      />
-    );
   }
 
   if (!secondaryPanelIsOpen) {

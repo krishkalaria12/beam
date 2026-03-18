@@ -1,3 +1,4 @@
+import type { ComponentType } from "react";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -8,7 +9,7 @@ import {
   Wrench,
   XCircle,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { IconChip } from "@/components/module";
 import { Button } from "@/components/ui/button";
@@ -37,8 +38,8 @@ function StatusPill({ supported }: { supported: boolean }) {
       className={cn(
         "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-semibold tracking-[-0.01em]",
         tone === "supported"
-          ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-300"
-          : "border-white/10 bg-white/5 text-muted-foreground",
+          ? "border-[var(--launcher-card-selected-border)] bg-[var(--launcher-card-selected-bg)] text-foreground"
+          : "border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] text-muted-foreground",
       )}
     >
       {supported ? <CheckCircle2 className="size-3.5" /> : <XCircle className="size-3.5" />}
@@ -54,13 +55,13 @@ function SummaryCard({
 }: {
   label: string;
   value: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: ComponentType<{ className?: string }>;
 }) {
   return (
     <div
       className={cn(
-        "rounded-2xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)]/75",
-        "px-4 py-4 shadow-[0_18px_42px_-32px_rgba(0,0,0,0.85)]",
+        "rounded-xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)]",
+        "px-4 py-4",
       )}
     >
       <div className="flex items-start gap-3">
@@ -78,7 +79,7 @@ function SummaryCard({
   );
 }
 
-export function DesktopIntegrationSettings() {
+export function GeneralDesktopIntegrationSection() {
   const [status, setStatus] = useState<DesktopIntegrationStatus | null>(null);
   const [actionState, setActionState] = useState<ActionState>("idle");
   const [errorMessage, setErrorMessage] = useState<string>("");
@@ -100,38 +101,33 @@ export function DesktopIntegrationSettings() {
     void refresh();
   }, []);
 
-  const capabilityItems = useMemo<CapabilityItem[]>(() => {
-    if (!status) {
-      return [];
-    }
-
-    return [
-      { label: "Window listing", supported: status.supportsWindowListing },
-      { label: "Window focus", supported: status.supportsWindowFocus },
-      { label: "Window close", supported: status.supportsWindowClose },
-      { label: "Frontmost app", supported: status.supportsFrontmostApplication },
-      { label: "Default app", supported: status.supportsDefaultApplication },
-      { label: "Clipboard read", supported: status.supportsClipboardRead },
-      { label: "Clipboard write", supported: status.supportsClipboardWrite },
-      { label: "Clipboard paste", supported: status.supportsClipboardPaste },
-      { label: "Selected text", supported: status.supportsSelectedText },
-      { label: "Selected files", supported: status.supportsSelectedFileItems },
-    ];
-  }, [status]);
+  const capabilityItems: CapabilityItem[] = status
+    ? [
+        { label: "Window listing", supported: status.supportsWindowListing },
+        { label: "Window focus", supported: status.supportsWindowFocus },
+        { label: "Window close", supported: status.supportsWindowClose },
+        { label: "Frontmost app", supported: status.supportsFrontmostApplication },
+        { label: "Default app", supported: status.supportsDefaultApplication },
+        { label: "Clipboard read", supported: status.supportsClipboardRead },
+        { label: "Clipboard write", supported: status.supportsClipboardWrite },
+        { label: "Clipboard paste", supported: status.supportsClipboardPaste },
+        { label: "Selected text", supported: status.supportsSelectedText },
+        { label: "Selected files", supported: status.supportsSelectedFileItems },
+      ]
+    : [];
 
   const gnomeExtension = status?.gnomeExtension ?? null;
   const isBusy = actionState !== "idle";
 
   return (
-    <div className="px-4 py-4">
+    <div className="rounded-2xl bg-[var(--launcher-card-hover-bg)] px-4 py-5 ring-1 ring-[var(--launcher-card-border)]">
       <div className="space-y-4">
         <div
           className={cn(
-            "rounded-[24px] border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)]/90",
-            "overflow-hidden shadow-[0_22px_70px_-46px_rgba(0,0,0,0.95)]",
+            "overflow-hidden rounded-2xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)]",
           )}
         >
-          <div className="border-b border-[var(--launcher-card-border)] bg-[linear-gradient(135deg,rgba(24,29,36,0.92),rgba(14,18,24,0.76))] px-4 py-4">
+          <div className="border-b border-[var(--launcher-card-border)] bg-[var(--launcher-card-hover-bg)] px-4 py-4">
             <div className="flex items-start justify-between gap-4">
               <div className="flex min-w-0 items-start gap-3">
                 <IconChip variant="green" size="lg" className="rounded-2xl">
@@ -220,7 +216,7 @@ export function DesktopIntegrationSettings() {
           </div>
         ) : null}
 
-        <div className="rounded-[22px] border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)]/75 px-4 py-4">
+        <div className="rounded-2xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-4 py-4">
           <div className="mb-3 flex items-center justify-between gap-3">
             <div>
               <p className="text-[13px] font-semibold tracking-[-0.02em] text-foreground">
@@ -236,7 +232,7 @@ export function DesktopIntegrationSettings() {
             {capabilityItems.map((item) => (
               <div
                 key={item.label}
-                className="flex items-center justify-between rounded-xl border border-white/6 bg-black/10 px-3 py-3"
+                className="flex items-center justify-between rounded-xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-hover-bg)] px-3 py-3"
               >
                 <span className="text-[13px] tracking-[-0.01em] text-foreground">{item.label}</span>
                 <StatusPill supported={item.supported} />
@@ -246,7 +242,7 @@ export function DesktopIntegrationSettings() {
         </div>
 
         {status?.desktopEnvironment === "gnome" ? (
-          <div className="rounded-[22px] border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)]/75 px-4 py-4">
+          <div className="rounded-2xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-4 py-4">
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
                 <p className="text-[13px] font-semibold tracking-[-0.02em] text-foreground">
@@ -260,7 +256,7 @@ export function DesktopIntegrationSettings() {
             </div>
 
             <div className="mt-4 grid gap-2 md:grid-cols-2">
-              <div className="rounded-xl border border-white/6 bg-black/10 px-3 py-3">
+              <div className="rounded-xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-hover-bg)] px-3 py-3">
                 <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
                   Installed
                 </p>

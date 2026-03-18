@@ -17,7 +17,8 @@ const launchPanelPreloaders = [
   () => import("@/modules/clipboard/components/clipboard-command-group"),
   () => import("@/modules/notes/components/notes-command-group"),
   () => import("@/modules/quicklinks/components/quicklinks-command-group"),
-  () => import("@/modules/settings/components/settings-command-group"),
+  () => import("@/modules/settings/takeover/components/settings-takeover-view"),
+  () => import("@/modules/settings/takeover/tabs/general/general-tab"),
 ];
 
 function preloadLauncherPanels() {

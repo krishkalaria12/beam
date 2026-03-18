@@ -1,3 +1,4 @@
+import type { ElementType } from "react";
 import { Check, Layers, Loader2, PaintBucket, RefreshCw, Sparkles } from "lucide-react";
 
 import { IconChip } from "@/components/module";
@@ -8,7 +9,7 @@ import { useUiStyle, type UiStylePreference } from "@/providers/ui-style-provide
 
 interface StyleOption {
   id: UiStylePreference;
-  icon: React.ElementType;
+  icon: ElementType;
   title: string;
   description: string;
 }
@@ -19,12 +20,12 @@ const STYLE_OPTIONS: StyleOption[] = [
   { id: "solid", icon: Layers, title: "Solid", description: "Opaque surfaces" },
 ];
 
-export function VisualStyleSettings() {
+export function GeneralAppearanceSection() {
   const { uiStyle, setUiStyle } = useUiStyle();
   const { themes, selectedThemeId, isLoading, error, refresh, setTheme } = useLauncherTheme();
 
   return (
-    <div className="settings-panel px-4 py-6 space-y-5">
+    <div className="settings-panel space-y-5 rounded-2xl bg-[var(--launcher-card-hover-bg)] px-4 py-5 ring-1 ring-[var(--launcher-card-border)]">
       {/* Section header */}
       <div className="flex items-center gap-3 px-1">
         <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
@@ -52,7 +53,7 @@ export function VisualStyleSettings() {
                 "transition-all duration-200",
                 isSelected
                   ? "bg-[var(--launcher-card-selected-bg)] ring-1 ring-[var(--launcher-card-selected-border)]"
-                  : "bg-[var(--launcher-card-bg)] hover:bg-[var(--launcher-card-hover-bg)]",
+                  : "bg-[var(--launcher-card-bg)] ring-1 ring-[var(--launcher-card-border)] hover:bg-[var(--launcher-card-bg)]",
               )}
             >
               {/* Icon */}
@@ -93,8 +94,7 @@ export function VisualStyleSettings() {
               {isSelected && (
                 <div
                   className="absolute top-2.5 right-2.5 size-5 rounded-full
-                  bg-[var(--ring)] flex items-center justify-center
-                  shadow-lg shadow-[var(--ring)]/30"
+                  bg-[var(--ring)] flex items-center justify-center"
                 >
                   <Check className="size-3 text-background" strokeWidth={3} />
                 </div>
@@ -121,7 +121,7 @@ export function VisualStyleSettings() {
           }}
           size="icon-xs"
           variant="ghost"
-          className="size-6 rounded-md bg-[var(--launcher-card-hover-bg)] text-muted-foreground hover:bg-[var(--launcher-card-selected-bg)] hover:text-foreground"
+          className="size-6 rounded-md bg-[var(--launcher-card-bg)] text-muted-foreground ring-1 ring-[var(--launcher-card-border)] hover:bg-[var(--launcher-card-bg)] hover:text-foreground"
           aria-label="Refresh theme list"
           title="Refresh theme list"
         >
@@ -146,7 +146,7 @@ export function VisualStyleSettings() {
               "h-auto w-full items-start justify-start rounded-xl px-3 py-3 text-left transition-all duration-200",
               selectedThemeId === null
                 ? "bg-[var(--launcher-card-selected-bg)] ring-1 ring-[var(--launcher-card-selected-border)]"
-                : "bg-[var(--launcher-card-bg)] hover:bg-[var(--launcher-card-hover-bg)]",
+                : "bg-[var(--launcher-card-bg)] ring-1 ring-[var(--launcher-card-border)] hover:bg-[var(--launcher-card-bg)]",
             )}
           >
             <p
@@ -181,7 +181,7 @@ export function VisualStyleSettings() {
                   "h-auto w-full items-start justify-start rounded-xl px-3 py-3 text-left transition-all duration-200",
                   isSelected
                     ? "bg-[var(--launcher-card-selected-bg)] ring-1 ring-[var(--launcher-card-selected-border)]"
-                    : "bg-[var(--launcher-card-bg)] hover:bg-[var(--launcher-card-hover-bg)]",
+                    : "bg-[var(--launcher-card-bg)] ring-1 ring-[var(--launcher-card-border)] hover:bg-[var(--launcher-card-bg)]",
                 )}
               >
                 <div className="flex items-start justify-between gap-3">
