@@ -40,11 +40,11 @@ export function GeneralPinnedCommandsSection({
     <div className="settings-panel space-y-5 rounded-2xl bg-[var(--launcher-card-hover-bg)] px-4 py-5 ring-1 ring-[var(--launcher-card-border)]">
       {/* Section header */}
       <div className="flex items-center gap-3 px-1">
-        <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+        <span className="text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
           Pinned Commands
         </span>
         <div className="h-px flex-1 bg-[var(--launcher-chip-bg)]" />
-        <span className="text-[11px] tabular-nums text-muted-foreground">
+        <span className="text-launcher-xs tabular-nums text-muted-foreground">
           {pinnedCommands.length} {pinnedCommands.length === 1 ? "item" : "items"}
         </span>
       </div>
@@ -55,8 +55,8 @@ export function GeneralPinnedCommandsSection({
           <IconChip variant="orange" size="lg" className="mb-4 size-14 rounded-2xl">
             <Pin className="size-6" />
           </IconChip>
-          <p className="mb-1.5 text-[14px] font-medium text-muted-foreground">No pinned commands</p>
-          <p className="max-w-[220px] text-[12px] leading-relaxed text-muted-foreground">
+          <p className="mb-1.5 text-launcher-lg font-medium text-muted-foreground">No pinned commands</p>
+          <p className="max-w-[220px] text-launcher-sm leading-relaxed text-muted-foreground">
             Pin commands from the main launcher to access them quickly
           </p>
         </div>
@@ -78,17 +78,17 @@ export function GeneralPinnedCommandsSection({
               <div
                 className="flex size-7 items-center justify-center rounded-lg 
                 bg-[var(--icon-orange-bg)] text-[var(--icon-orange-fg)]
-                text-[11px] font-bold tabular-nums"
+                text-launcher-xs font-bold tabular-nums"
               >
                 {index + 1}
               </div>
 
               {/* Content */}
               <div className="flex-1 min-w-0">
-                <p className="truncate text-[13px] font-medium tracking-[-0.01em] text-foreground">
+                <p className="truncate text-launcher-md font-medium tracking-[-0.01em] text-foreground">
                   {entry.title}
                 </p>
-                <p className="truncate text-[11px] text-muted-foreground">{entry.subtitle}</p>
+                <p className="truncate text-launcher-xs text-muted-foreground">{entry.subtitle}</p>
               </div>
 
               {/* Actions */}
@@ -162,7 +162,7 @@ export function GeneralPinnedCommandsSection({
       )}
 
       {/* Hint */}
-      <p className="px-1 text-[12px] leading-relaxed text-muted-foreground">
+      <p className="px-1 text-launcher-sm leading-relaxed text-muted-foreground">
         Pinned commands appear at the top of your launcher. Drag or use arrows to reorder.
       </p>
     </div>

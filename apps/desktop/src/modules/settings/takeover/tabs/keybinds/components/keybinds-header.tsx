@@ -23,10 +23,10 @@ export function KeybindsHeader({
     <div className="border-b border-[var(--launcher-card-border)] px-4 py-3">
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <div className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+          <div className="font-mono text-launcher-xs uppercase tracking-[0.16em] text-muted-foreground">
             Keybind Registry
           </div>
-          <div className="mt-1 text-[13px] text-foreground">
+          <div className="mt-1 text-launcher-md text-foreground">
             {capabilities
               ? `${capabilities.backend} · ${capabilities.sessionType} · ${capabilities.compositor}`
               : "Loading backend capabilities..."}
@@ -37,7 +37,7 @@ export function KeybindsHeader({
           variant="ghost"
           size="sm"
           onClick={onRefresh}
-          className="h-8 rounded-lg border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-3 text-[11px]"
+          className="h-8 rounded-lg border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-3 text-launcher-xs"
         >
           {isLoading ? <Loader2 className="size-3.5 animate-spin" /> : <RefreshCw className="size-3.5" />}
           Refresh
@@ -46,7 +46,7 @@ export function KeybindsHeader({
       {status.text ? (
         <div
           className={cn(
-            "mt-3 rounded-lg border px-3 py-2 text-[12px]",
+            "mt-3 rounded-lg border px-3 py-2 text-launcher-sm",
             status.tone === "error"
               ? "border-red-500/20 bg-red-500/10 text-red-200"
               : status.tone === "success"

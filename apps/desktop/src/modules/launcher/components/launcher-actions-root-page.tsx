@@ -1,5 +1,4 @@
 import { ChevronRight, Search } from "lucide-react";
-import type React from "react";
 
 import { CommandGroup, CommandItem, CommandList, CommandShortcut } from "@/components/ui/command";
 import { Input } from "@/components/ui/input";
@@ -42,15 +41,15 @@ export function LauncherActionsRootPage({
             >
               <div className="mr-2 text-muted-foreground/80 [&_svg]:size-4">{item.icon}</div>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[13px] font-medium text-foreground">{item.label}</p>
+                <p className="truncate text-launcher-md font-medium text-foreground">{item.label}</p>
                 {item.description ? (
-                  <p className="truncate text-[11px] text-muted-foreground/70">
+                  <p className="truncate text-launcher-xs text-muted-foreground/70">
                     {item.description}
                   </p>
                 ) : null}
               </div>
               {item.shortcut ? (
-                <CommandShortcut className="ml-2 text-[10px] tracking-[0.08em] text-muted-foreground/70">
+                <CommandShortcut className="ml-2 text-launcher-2xs tracking-[0.08em] text-muted-foreground/70">
                   {item.shortcut}
                 </CommandShortcut>
               ) : null}
@@ -60,7 +59,7 @@ export function LauncherActionsRootPage({
             </CommandItem>
           ))}
           {items.length === 0 ? (
-            <div className="px-3 py-6 text-center text-[12px] text-muted-foreground/75">
+            <div className="px-3 py-6 text-center text-launcher-sm text-muted-foreground/75">
               No actions found.
             </div>
           ) : null}
@@ -82,7 +81,7 @@ export function LauncherActionsRootPage({
             placeholder={searchPlaceholder}
             minimal
             leftIcon={<Search className="size-4" />}
-            className="h-7 border-none bg-transparent px-0 py-0 text-[12px]"
+            className="h-7 border-none bg-transparent px-0 py-0 text-launcher-sm"
           />
         </div>
       </div>

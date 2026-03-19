@@ -46,7 +46,12 @@ export function BaseCommandRow({
       {icon ?? null}
       <div className="min-w-0 flex-1 leading-tight">
         {typeof title === "string" ? (
-          <p className={cn("truncate text-foreground text-base font-medium", titleClassName)}>
+          <p
+            className={cn(
+              "truncate text-[length:calc(var(--beam-font-size-base)*1.3846)] text-foreground font-medium",
+              titleClassName,
+            )}
+          >
             {title}
           </p>
         ) : (
@@ -54,7 +59,7 @@ export function BaseCommandRow({
         )}
         {subtitle ? (
           typeof subtitle === "string" ? (
-            <p className={cn("truncate text-sm text-muted-foreground", subtitleClassName)}>
+            <p className={cn("truncate text-launcher-sm text-muted-foreground", subtitleClassName)}>
               {subtitle}
             </p>
           ) : (

@@ -81,7 +81,7 @@ function isMissingRequiredField(field: ExtensionPreferenceField, value: unknown)
 
 function InlineBadge({ value }: { value: string | number }) {
   return (
-    <span className="inline-flex h-8 items-center rounded-md border border-[var(--launcher-chip-border)] bg-[var(--launcher-chip-bg)] px-2.5 text-[11px] font-medium text-muted-foreground">
+    <span className="inline-flex h-8 items-center rounded-md border border-[var(--launcher-chip-border)] bg-[var(--launcher-chip-bg)] px-2.5 text-launcher-xs font-medium text-muted-foreground">
       {value}
     </span>
   );
@@ -90,10 +90,10 @@ function InlineBadge({ value }: { value: string | number }) {
 function SummaryMetric({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-3 py-2">
-      <div className="text-[10px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
+      <div className="text-launcher-2xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
         {label}
       </div>
-      <div className="mt-1 text-[14px] font-semibold text-foreground">{value}</div>
+      <div className="mt-1 text-launcher-lg font-semibold text-foreground">{value}</div>
     </div>
   );
 }
@@ -485,7 +485,7 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
               type="button"
               variant="outline"
               size="sm"
-              className="h-8 rounded-md px-2.5 text-[11px]"
+              className="h-8 rounded-md px-2.5 text-launcher-xs"
               onClick={() => void handleRefreshInstalled()}
             >
               <RefreshCcw className="size-3.5" />
@@ -592,7 +592,7 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
       />
 
       {actionError ? (
-        <div className="border-t border-[var(--ui-divider)] px-4 py-2 text-[12px] text-[var(--icon-red-fg)]">
+        <div className="border-t border-[var(--ui-divider)] px-4 py-2 text-launcher-sm text-[var(--icon-red-fg)]">
           {actionError}
         </div>
       ) : null}

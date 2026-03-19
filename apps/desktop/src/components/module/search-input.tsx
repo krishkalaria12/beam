@@ -48,7 +48,7 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
           className={cn(
             "module-search-input-field",
             "h-full w-full bg-transparent dark:bg-transparent",
-            "text-[14px] font-medium tracking-[-0.01em] text-foreground",
+            "text-launcher-lg font-medium tracking-[-0.01em] text-foreground",
             "placeholder:text-muted-foreground/40 placeholder:font-normal",
             "outline-none border-none focus-visible:ring-0 focus-visible:border-0 focus-visible:border-transparent",
             leftIcon ? "pl-9" : "pl-3.5",
@@ -59,7 +59,11 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
         />
 
         {/* Right slot */}
-        {rightSlot && <div className="module-search-input-right absolute right-2 flex items-center">{rightSlot}</div>}
+        {rightSlot && (
+          <div className="module-search-input-right absolute right-2 flex items-center">
+            {rightSlot}
+          </div>
+        )}
       </div>
     );
   },

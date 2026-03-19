@@ -44,22 +44,22 @@ export function KeybindsDetailPane({
               className="size-11 rounded-xl"
             />
             <div className="min-w-0">
-              <div className="truncate font-mono text-[18px] text-foreground">{selectedRow.title}</div>
-              <div className="mt-1 text-[12px] text-muted-foreground">
+              <div className="truncate font-mono text-launcher-3xl text-foreground">{selectedRow.title}</div>
+              <div className="mt-1 text-launcher-sm text-muted-foreground">
                 {selectedRow.kind === "global" ? "Launcher shortcut" : selectedRow.id}
               </div>
             </div>
           </div>
 
           <div className="space-y-2">
-            <div className="font-mono text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+            <div className="font-mono text-launcher-xs uppercase tracking-[0.14em] text-muted-foreground">
               Description
             </div>
-            <p className="text-[13px] leading-6 text-foreground/90">{selectedRow.description}</p>
+            <p className="text-launcher-md leading-6 text-foreground/90">{selectedRow.description}</p>
           </div>
 
           <div className="space-y-2">
-            <div className="font-mono text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+            <div className="font-mono text-launcher-xs uppercase tracking-[0.14em] text-muted-foreground">
               Record Shortcut
             </div>
             <HotkeyRecorder
@@ -72,10 +72,10 @@ export function KeybindsDetailPane({
 
           {selectedRow.kind === "global" && bindings ? (
             <div className="space-y-2 rounded-lg border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] p-4">
-              <div className="font-mono text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+              <div className="font-mono text-launcher-xs uppercase tracking-[0.14em] text-muted-foreground">
                 Compositor Hints
               </div>
-              <div className="space-y-2 text-[12px] text-muted-foreground">
+              <div className="space-y-2 text-launcher-sm text-muted-foreground">
                 <div>Command prefix: {bindings.commandPrefix}</div>
                 {bindings.launcherBindingExamples[0] ? (
                   <div>Example: {bindings.launcherBindingExamples[0]}</div>
@@ -91,7 +91,7 @@ export function KeybindsDetailPane({
           ) : null}
 
           {savingId === selectedRow.id ? (
-            <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
+            <div className="flex items-center gap-2 text-launcher-sm text-muted-foreground">
               <Loader2 className="size-3.5 animate-spin" />
               Saving shortcut...
             </div>

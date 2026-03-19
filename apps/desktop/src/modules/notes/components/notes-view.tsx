@@ -205,11 +205,11 @@ export function NotesView({ onBack }: NotesViewProps) {
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <Book className="size-4 text-[var(--icon-primary-fg)]" />
-            <h2 className="truncate text-[14px] font-semibold tracking-[-0.02em] text-foreground">
+            <h2 className="truncate text-launcher-lg font-semibold tracking-[-0.02em] text-foreground">
               Notes
             </h2>
           </div>
-          <p className="truncate text-[11px] text-muted-foreground">Quick notes and drafts</p>
+          <p className="truncate text-launcher-xs text-muted-foreground">Quick notes and drafts</p>
         </div>
 
         <Button
@@ -217,7 +217,7 @@ export function NotesView({ onBack }: NotesViewProps) {
           variant="ghost"
           size="sm"
           onClick={handleCreateMode}
-          className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-3 text-[12px] text-muted-foreground hover:bg-[var(--launcher-chip-bg)] hover:text-foreground"
+          className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-3 text-launcher-sm text-muted-foreground hover:bg-[var(--launcher-chip-bg)] hover:text-foreground"
         >
           <Plus className="size-3.5" />
           New note
@@ -237,7 +237,7 @@ export function NotesView({ onBack }: NotesViewProps) {
 
         {notesQuery.isLoading && notes.length === 0 ? (
           <section className="flex min-h-0 flex-1 items-center justify-center">
-            <div className="flex items-center gap-2 text-[13px] text-muted-foreground">
+            <div className="flex items-center gap-2 text-launcher-md text-muted-foreground">
               <Loader2 className="size-4 animate-spin" />
               Loading notes...
             </div>

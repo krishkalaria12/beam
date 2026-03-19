@@ -48,11 +48,11 @@ export function ExtensionsListPane({
           value={query}
           onChange={(event) => onQueryChange(event.target.value)}
           placeholder="Search extensions..."
-          className="h-10 rounded-lg border-[var(--launcher-card-border)] bg-[var(--launcher-card-hover-bg)] font-mono text-[13px]"
+          className="h-10 rounded-lg border-[var(--launcher-card-border)] bg-[var(--launcher-card-hover-bg)] font-mono text-launcher-md"
         />
       </div>
 
-      <div className="grid grid-cols-[1fr_116px_120px_72px] border-b border-[var(--launcher-card-border)] px-4 py-2 font-mono text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+      <div className="grid grid-cols-[1fr_116px_120px_72px] border-b border-[var(--launcher-card-border)] px-4 py-2 font-mono text-launcher-xs uppercase tracking-[0.14em] text-muted-foreground">
         <div>Name</div>
         <div>Type</div>
         <div>Alias</div>
@@ -61,7 +61,7 @@ export function ExtensionsListPane({
 
       <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain">
         {isLoading ? (
-          <div className="flex items-center gap-2 px-6 py-10 text-[12px] text-muted-foreground">
+          <div className="flex items-center gap-2 px-6 py-10 text-launcher-sm text-muted-foreground">
             <Loader2 className="size-3.5 animate-spin" />
             Loading installed extensions...
           </div>
@@ -123,24 +123,24 @@ export function ExtensionsListPane({
                         className="size-8 rounded-lg"
                       />
                       <div className="min-w-0">
-                        <div className="truncate font-mono text-[13px] text-foreground">
+                        <div className="truncate font-mono text-launcher-md text-foreground">
                           {group.title}
                         </div>
-                        <div className="truncate text-[11px] text-muted-foreground">{group.owner}</div>
+                        <div className="truncate text-launcher-xs text-muted-foreground">{group.owner}</div>
                       </div>
                     </button>
                   </div>
 
-                  <div className="font-mono text-[12px] text-muted-foreground">
+                  <div className="font-mono text-launcher-sm text-muted-foreground">
                     {group.sourceKind === "beam" ? "Built-in" : "Extension"}
                   </div>
-                  <div className="font-mono text-[12px] text-muted-foreground">--</div>
+                  <div className="font-mono text-launcher-sm text-muted-foreground">--</div>
                   <div className="flex justify-center">
                     <Switch
                       checked={groupEnabled}
                       onCheckedChange={(checked) => {
                         for (const command of group.commands) {
-                          onSetHidden(command.commandId, !Boolean(checked));
+                          onSetHidden(command.commandId, !checked);
                         }
                       }}
                       aria-label={`Toggle ${group.title}`}
@@ -186,16 +186,16 @@ export function ExtensionsListPane({
                               className="size-8 rounded-lg"
                             />
                             <div className="min-w-0">
-                              <div className="truncate font-mono text-[13px] text-foreground">
+                              <div className="truncate font-mono text-launcher-md text-foreground">
                                 {command.title}
                               </div>
-                              <div className="truncate text-[11px] text-muted-foreground">
+                              <div className="truncate text-launcher-xs text-muted-foreground">
                                 {command.commandName}
                               </div>
                             </div>
                           </button>
 
-                          <div className="font-mono text-[12px] text-muted-foreground">
+                          <div className="font-mono text-launcher-sm text-muted-foreground">
                             {command.sourceKind === "beam" ? "Built-in" : "Command"}
                           </div>
 
@@ -203,7 +203,7 @@ export function ExtensionsListPane({
                             <Input
                               defaultValue={aliasValue}
                               placeholder="Add alias"
-                              className="h-9 rounded-md border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-2.5 font-mono text-[12px]"
+                              className="h-9 rounded-md border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-2.5 font-mono text-launcher-sm"
                               onClick={(event) => event.stopPropagation()}
                               onBlur={(event) => {
                                 const nextAlias = event.currentTarget.value.trim();
@@ -224,7 +224,7 @@ export function ExtensionsListPane({
                             <Switch
                               checked={!hiddenCommandIds.has(command.commandId)}
                               onCheckedChange={(checked) => {
-                                onSetHidden(command.commandId, !Boolean(checked));
+                                onSetHidden(command.commandId, !checked);
                               }}
                               aria-label={`Toggle ${command.title}`}
                             />

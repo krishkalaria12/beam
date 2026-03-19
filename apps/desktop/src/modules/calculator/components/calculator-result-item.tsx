@@ -86,10 +86,10 @@ export function CalculatorResultItem({
           <div className="size-6 rounded-lg bg-[var(--launcher-card-bg)] p-1">
             <Calculator className="size-full text-[var(--icon-orange-fg)]" />
           </div>
-          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+          <span className="text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
             Calculator
           </span>
-          <span className="text-[10px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
+          <span className="text-launcher-2xs font-medium uppercase tracking-[0.06em] text-muted-foreground">
             {shortcutText}
           </span>
         </div>
@@ -98,7 +98,7 @@ export function CalculatorResultItem({
         <div className="flex items-center justify-center gap-4 mb-5">
           {/* Expression */}
           <div className="min-w-0 max-w-[40%]">
-            <p className="truncate text-center font-mono text-[18px] font-medium tracking-[-0.01em] text-muted-foreground">
+            <p className="truncate text-center font-mono text-launcher-3xl font-medium tracking-[-0.01em] text-muted-foreground">
               {calculatorQuery || "Expression"}
             </p>
           </div>
@@ -110,7 +110,7 @@ export function CalculatorResultItem({
 
           {/* Result */}
           <div className="min-w-0 max-w-[40%]">
-            <p className="truncate text-center font-mono text-[32px] font-bold tracking-[-0.02em] text-foreground">
+            <p className="truncate text-center font-mono text-[calc(var(--beam-font-size-base)*2.4615)] font-bold tracking-[-0.02em] text-foreground">
               {calculatorResult}
             </p>
           </div>
@@ -119,13 +119,13 @@ export function CalculatorResultItem({
         {/* Tags */}
         <div className="flex items-center justify-center gap-2">
           {/* Calculation kind tag */}
-          <span className="inline-flex items-center rounded-full bg-[var(--icon-orange-bg)] px-2.5 py-1 text-[10px] font-medium text-[var(--icon-orange-fg)]">
+          <span className="inline-flex items-center rounded-full bg-[var(--icon-orange-bg)] px-2.5 py-1 text-launcher-2xs font-medium text-[var(--icon-orange-fg)]">
             {calculationKind}
           </span>
 
           {/* Text representation tag */}
           {textRepresentation && (
-            <span className="inline-flex max-w-[200px] items-center truncate rounded-full bg-[var(--launcher-card-hover-bg)] px-2.5 py-1 text-[10px] font-medium text-muted-foreground">
+            <span className="inline-flex max-w-[200px] items-center truncate rounded-full bg-[var(--launcher-card-hover-bg)] px-2.5 py-1 text-launcher-2xs font-medium text-muted-foreground">
               {textRepresentation}
             </span>
           )}
@@ -133,7 +133,7 @@ export function CalculatorResultItem({
           {/* Copy hint on selection */}
           <span
             className={cn(
-              "inline-flex items-center gap-1 rounded-full bg-[var(--ring)]/15 px-2.5 py-1 text-[10px] font-medium text-[var(--ring)] transition-all duration-200",
+              "inline-flex items-center gap-1 rounded-full bg-[var(--ring)]/15 px-2.5 py-1 text-launcher-2xs font-medium text-[var(--ring)] transition-all duration-200",
               "opacity-0 scale-95 group-data-[selected=true]:opacity-100 group-data-[selected=true]:scale-100",
             )}
           >

@@ -80,7 +80,7 @@ function ClipboardListItem({ entry, isSelected, onSelect, itemRef }: ClipboardLi
       <div className="flex-1 min-w-0">
         <p
           className={cn(
-            "truncate text-[13px] font-medium leading-tight tracking-[-0.01em]",
+            "truncate text-launcher-md font-medium leading-tight tracking-[-0.01em]",
             isSelected ? "text-foreground" : "text-muted-foreground group-hover:text-foreground",
           )}
         >
@@ -89,7 +89,7 @@ function ClipboardListItem({ entry, isSelected, onSelect, itemRef }: ClipboardLi
             : entry.value.replace(/\s+/g, " ").trim()}
         </p>
         {entry.content_type !== ClipboardContentType.Image && (
-          <p className="mt-0.5 text-[11px] text-muted-foreground truncate">
+          <p className="mt-0.5 text-launcher-xs text-muted-foreground truncate">
             {entry.character_count} characters
           </p>
         )}
@@ -217,8 +217,8 @@ export function ClipboardList({ entries, selectedIndex, onSelect, isLoading }: C
               <Clipboard className="size-6 text-muted-foreground" />
             </div>
             <div className="text-center">
-              <p className="text-[13px] font-medium text-muted-foreground">No entries found</p>
-              <p className="mt-1 text-[11px] text-muted-foreground">
+              <p className="text-launcher-md font-medium text-muted-foreground">No entries found</p>
+              <p className="mt-1 text-launcher-xs text-muted-foreground">
                 Copy something to see it here
               </p>
             </div>
@@ -246,7 +246,7 @@ export function ClipboardList({ entries, selectedIndex, onSelect, isLoading }: C
                 >
                   {row.kind === "header" ? (
                     <div className="flex items-center gap-3 px-3 py-1">
-                      <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                      <h3 className="text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
                         {row.title}
                       </h3>
                       <div className="h-px flex-1 bg-[var(--launcher-card-hover-bg)]" />

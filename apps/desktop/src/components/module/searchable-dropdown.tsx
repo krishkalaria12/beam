@@ -164,12 +164,15 @@ export function SearchableDropdown({
     setHighlightedIndex(desiredHighlightedIndex);
   }
 
-  const inputMountRef = useCallback((node: HTMLInputElement | null) => {
-    inputRef.current = node;
-    if (open && node) {
-      window.setTimeout(() => node.focus(), 0);
-    }
-  }, [open]);
+  const inputMountRef = useCallback(
+    (node: HTMLInputElement | null) => {
+      inputRef.current = node;
+      if (open && node) {
+        window.setTimeout(() => node.focus(), 0);
+      }
+    },
+    [open],
+  );
 
   useLayoutEffect(() => {
     if (!open) {
@@ -191,10 +194,7 @@ export function SearchableDropdown({
 
       const triggerRect = trigger.getBoundingClientRect();
       const maxPanelWidth = Math.max(0, window.innerWidth - PANEL_VIEWPORT_MARGIN * 2);
-      const minPanelWidth = Math.min(
-        Math.max(triggerRect.width, PANEL_MIN_WIDTH),
-        maxPanelWidth,
-      );
+      const minPanelWidth = Math.min(Math.max(triggerRect.width, PANEL_MIN_WIDTH), maxPanelWidth);
       const measuredPanelWidth = panelRef.current?.offsetWidth ?? minPanelWidth;
       const resolvedPanelWidth = matchTriggerWidth
         ? minPanelWidth
@@ -213,8 +213,7 @@ export function SearchableDropdown({
         window.innerHeight - triggerRect.bottom - PANEL_GAP - PANEL_VIEWPORT_MARGIN,
       );
       const availableAbove = Math.max(0, triggerRect.top - PANEL_GAP - PANEL_VIEWPORT_MARGIN);
-      const shouldOpenAbove =
-        availableBelow < PANEL_MIN_HEIGHT && availableAbove > availableBelow;
+      const shouldOpenAbove = availableBelow < PANEL_MIN_HEIGHT && availableAbove > availableBelow;
       const maxHeight = Math.min(
         PANEL_MAX_HEIGHT,
         shouldOpenAbove ? availableAbove : availableBelow,
@@ -305,7 +304,11 @@ export function SearchableDropdown({
   };
 
   return (
-    <div ref={rootRef} className={cn("module-searchable-dropdown relative", className)} style={style}>
+    <div
+      ref={rootRef}
+      className={cn("module-searchable-dropdown relative", className)}
+      style={style}
+    >
       <button
         ref={triggerRef}
         type="button"
@@ -324,12 +327,14 @@ export function SearchableDropdown({
         className={cn(
           "module-searchable-dropdown-trigger",
           "flex w-full items-center justify-between gap-2 rounded-lg border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-3 text-left text-foreground transition-colors hover:bg-[var(--launcher-card-hover-bg)] disabled:opacity-50",
-          compact ? "h-8 text-[12px]" : "h-10 text-[13px]",
+          compact ? "text-launcher-sm h-8" : "text-launcher-md h-10",
           triggerClassName,
         )}
         style={triggerStyle}
       >
-        <span className="module-searchable-dropdown-trigger-label min-w-0 truncate text-inherit">{selectedItem?.title || placeholder}</span>
+        <span className="module-searchable-dropdown-trigger-label min-w-0 truncate text-inherit">
+          {selectedItem?.title || placeholder}
+        </span>
         <ChevronDown className="size-3.5 shrink-0 text-muted-foreground" />
       </button>
 
@@ -345,13 +350,13 @@ export function SearchableDropdown({
               style={panelPositionStyle ? { ...panelPositionStyle, ...panelStyle } : panelStyle}
             >
               <div className="module-searchable-dropdown-search border-b border-[var(--ui-divider)] p-2">
-            <SearchInput
-              ref={inputMountRef}
+                <SearchInput
+                  ref={inputMountRef}
                   value={query}
                   onChange={setQuery}
                   placeholder={searchPlaceholder}
                   leftIcon={<Search />}
-                  className="text-[12px]"
+                  className="text-launcher-sm"
                   containerClassName="h-9 rounded-lg"
                   onKeyDown={handleKeyDown}
                 />
@@ -393,7 +398,9 @@ export function SearchableDropdown({
                           }
                           className="module-searchable-dropdown-row rounded-lg px-2.5 py-2"
                         >
-                          <ListItem.Title className="text-[12px]">{row.item.title}</ListItem.Title>
+                          <ListItem.Title className="text-launcher-sm">
+                            {row.item.title}
+                          </ListItem.Title>
                         </ListItem>
                       );
                     })}

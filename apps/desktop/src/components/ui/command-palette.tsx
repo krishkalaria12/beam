@@ -62,10 +62,10 @@ const DEFAULT_CLASS_NAMES: CommandPaletteClassNames = {
     "size-8 rounded-md text-muted-foreground/75 hover:text-foreground",
     "hover:bg-[var(--launcher-card-hover-bg)]",
   ),
-  breadcrumbs: "truncate text-[11px] uppercase tracking-[0.11em] text-muted-foreground/60",
+  breadcrumbs: "text-launcher-xs truncate uppercase tracking-[0.11em] text-muted-foreground/60",
   titleBlock: "min-w-0 flex-1",
-  title: "truncate text-[15px] font-semibold tracking-[-0.02em] text-foreground",
-  subtitle: "truncate text-[12px] tracking-[-0.01em] text-muted-foreground/75",
+  title: "text-launcher-xl truncate font-semibold tracking-[-0.02em] text-foreground",
+  subtitle: "text-launcher-sm truncate tracking-[-0.01em] text-muted-foreground/75",
   searchRow: cn(
     "flex h-10 items-center gap-2 rounded-xl border border-[var(--launcher-card-border)]",
     "bg-[var(--launcher-card-hover-bg)] px-3 transition-colors",
@@ -74,14 +74,14 @@ const DEFAULT_CLASS_NAMES: CommandPaletteClassNames = {
   searchLabel: "sr-only",
   searchIcon: "size-4 shrink-0 text-muted-foreground/60",
   searchInput: cn(
-    "h-full border-none bg-transparent p-0 text-[14px] font-medium text-foreground",
+    "text-launcher-lg h-full border-none bg-transparent p-0 font-medium text-foreground",
     "placeholder:text-muted-foreground/45 focus-visible:ring-0",
   ),
   list: "custom-scrollbar min-h-0 flex-1 px-2 pb-2 pt-2",
   group: cn(
     "overflow-hidden",
     "[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:pb-1.5 [&_[cmdk-group-heading]]:pt-3",
-    "[&_[cmdk-group-heading]]:text-[10px] [&_[cmdk-group-heading]]:font-semibold",
+    "[&_[cmdk-group-heading]]:text-[length:var(--beam-text-2xs)] [&_[cmdk-group-heading]]:font-semibold",
     "[&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-[0.14em]",
     "[&_[cmdk-group-heading]]:text-muted-foreground/55",
   ),
@@ -91,17 +91,17 @@ const DEFAULT_CLASS_NAMES: CommandPaletteClassNames = {
   ),
   itemIcon: "mt-0.5 shrink-0 text-muted-foreground/80 [&_svg]:size-4.5",
   itemBody: "min-w-0 flex-1",
-  itemTitle: "truncate text-[13px] font-medium tracking-[-0.01em] text-foreground",
-  itemDescription: "truncate text-[11px] text-muted-foreground/70",
+  itemTitle: "text-launcher-md truncate font-medium tracking-[-0.01em] text-foreground",
+  itemDescription: "text-launcher-xs truncate text-muted-foreground/70",
   itemEnd: "ml-2 flex shrink-0 items-center gap-2",
-  itemShortcut: "ml-0 text-[10px] uppercase tracking-[0.1em] text-muted-foreground/65",
+  itemShortcut: "text-launcher-2xs ml-0 uppercase tracking-[0.1em] text-muted-foreground/65",
   itemChevron: "size-4 text-muted-foreground/45",
   empty: "py-12 text-center",
   footer: cn(
     "flex h-10 shrink-0 items-center justify-between gap-2 border-t border-[var(--footer-border)] px-4",
     "bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01)),var(--card)]",
   ),
-  footerHint: "flex items-center gap-1.5 text-[11px] text-muted-foreground/65",
+  footerHint: "text-launcher-xs flex items-center gap-1.5 text-muted-foreground/65",
 };
 
 export interface CommandPaletteEmptyState {
@@ -474,10 +474,10 @@ export function CommandPalette({
 
         <CommandList data-slot="command-palette-list" className={mergedClassNames.list}>
           <CommandEmpty data-slot="command-palette-empty" className={mergedClassNames.empty}>
-            <p className="text-sm font-medium text-muted-foreground">
+            <p className="text-launcher-sm font-medium text-muted-foreground">
               {currentPage.emptyState?.title ?? "No matches found"}
             </p>
-            <p className="mt-1 text-xs text-muted-foreground/70">
+            <p className="mt-1 text-launcher-xs text-muted-foreground/70">
               {currentPage.emptyState?.description ?? "Try a different search term."}
             </p>
           </CommandEmpty>

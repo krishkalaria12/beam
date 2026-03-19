@@ -37,7 +37,7 @@ function StatusPill({ supported }: { supported: boolean }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-semibold tracking-[-0.01em]",
+        "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-launcher-xs font-semibold tracking-[-0.01em]",
         tone === "supported"
           ? "border-[var(--launcher-card-selected-border)] bg-[var(--launcher-card-selected-bg)] text-foreground"
           : "border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] text-muted-foreground",
@@ -70,8 +70,8 @@ function SummaryCard({
           <Icon className="size-4" />
         </IconChip>
         <div className="min-w-0">
-          <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">{label}</p>
-          <p className="mt-1 text-[15px] font-semibold tracking-[-0.02em] text-foreground">
+          <p className="text-launcher-xs uppercase tracking-[0.16em] text-muted-foreground">{label}</p>
+          <p className="mt-1 text-launcher-xl font-semibold tracking-[-0.02em] text-foreground">
             {value}
           </p>
         </div>
@@ -135,13 +135,13 @@ export function GeneralDesktopIntegrationSection() {
                   <Monitor className="size-5" />
                 </IconChip>
                 <div className="min-w-0">
-                  <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+                  <p className="text-launcher-xs uppercase tracking-[0.18em] text-muted-foreground">
                     Linux Desktop Integration
                   </p>
-                  <h3 className="mt-1 text-[18px] font-semibold tracking-[-0.03em] text-foreground">
+                  <h3 className="mt-1 text-launcher-3xl font-semibold tracking-[-0.03em] text-foreground">
                     Session-aware backends and capability reporting
                   </h3>
-                  <p className="mt-1 max-w-[520px] text-[12px] leading-5 text-muted-foreground">
+                  <p className="mt-1 max-w-[520px] text-launcher-sm leading-5 text-muted-foreground">
                     Beam now detects the active Linux desktop backend instead of assuming Hyprland
                     or Sway.
                   </p>
@@ -212,7 +212,7 @@ export function GeneralDesktopIntegrationSection() {
         </div>
 
         {errorMessage ? (
-          <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-[12px] text-red-200">
+          <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-launcher-sm text-red-200">
             {errorMessage}
           </div>
         ) : null}
@@ -220,10 +220,10 @@ export function GeneralDesktopIntegrationSection() {
         <div className="rounded-2xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-4 py-4">
           <div className="mb-3 flex items-center justify-between gap-3">
             <div>
-              <p className="text-[13px] font-semibold tracking-[-0.02em] text-foreground">
+              <p className="text-launcher-md font-semibold tracking-[-0.02em] text-foreground">
                 Capability Matrix
               </p>
-              <p className="text-[12px] text-muted-foreground">
+              <p className="text-launcher-sm text-muted-foreground">
                 These are the capabilities Beam can actually provide in the current Linux session.
               </p>
             </div>
@@ -235,7 +235,7 @@ export function GeneralDesktopIntegrationSection() {
                 key={item.label}
                 className="flex items-center justify-between rounded-xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-hover-bg)] px-3 py-3"
               >
-                <span className="text-[13px] tracking-[-0.01em] text-foreground">{item.label}</span>
+                <span className="text-launcher-md tracking-[-0.01em] text-foreground">{item.label}</span>
                 <StatusPill supported={item.supported} />
               </div>
             ))}
@@ -246,10 +246,10 @@ export function GeneralDesktopIntegrationSection() {
           <div className="rounded-2xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-4 py-4">
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
-                <p className="text-[13px] font-semibold tracking-[-0.02em] text-foreground">
+                <p className="text-launcher-md font-semibold tracking-[-0.02em] text-foreground">
                   GNOME Shell Extension
                 </p>
-                <p className="mt-1 text-[12px] leading-5 text-muted-foreground">
+                <p className="mt-1 text-launcher-sm leading-5 text-muted-foreground">
                   GNOME window management and selection support depend on Beam&apos;s Shell bridge.
                 </p>
               </div>
@@ -258,34 +258,34 @@ export function GeneralDesktopIntegrationSection() {
 
             <div className="mt-4 grid gap-2 md:grid-cols-2">
               <div className="rounded-xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-hover-bg)] px-3 py-3">
-                <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+                <p className="text-launcher-xs uppercase tracking-[0.16em] text-muted-foreground">
                   Installed
                 </p>
-                <p className="mt-1 text-[14px] font-medium text-foreground">
+                <p className="mt-1 text-launcher-lg font-medium text-foreground">
                   {gnomeExtension?.installed ? "Yes" : "No"}
                 </p>
               </div>
               <div className="rounded-xl border border-white/6 bg-black/10 px-3 py-3">
-                <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+                <p className="text-launcher-xs uppercase tracking-[0.16em] text-muted-foreground">
                   Enabled
                 </p>
-                <p className="mt-1 text-[14px] font-medium text-foreground">
+                <p className="mt-1 text-launcher-lg font-medium text-foreground">
                   {gnomeExtension?.enabled ? "Yes" : "No"}
                 </p>
               </div>
               <div className="rounded-xl border border-white/6 bg-black/10 px-3 py-3">
-                <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+                <p className="text-launcher-xs uppercase tracking-[0.16em] text-muted-foreground">
                   Version
                 </p>
-                <p className="mt-1 text-[14px] font-medium text-foreground">
+                <p className="mt-1 text-launcher-lg font-medium text-foreground">
                   {gnomeExtension?.version ?? "Unknown"}
                 </p>
               </div>
               <div className="rounded-xl border border-white/6 bg-black/10 px-3 py-3">
-                <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+                <p className="text-launcher-xs uppercase tracking-[0.16em] text-muted-foreground">
                   Update Required
                 </p>
-                <p className="mt-1 text-[14px] font-medium text-foreground">
+                <p className="mt-1 text-launcher-lg font-medium text-foreground">
                   {gnomeExtension?.updateRequired ? "Yes" : "No"}
                 </p>
               </div>
@@ -373,7 +373,7 @@ export function GeneralDesktopIntegrationSection() {
             </div>
 
             {gnomeExtension?.path ? (
-              <p className="mt-3 break-all text-[11px] text-muted-foreground">
+              <p className="mt-3 break-all text-launcher-xs text-muted-foreground">
                 {gnomeExtension.path}
               </p>
             ) : null}
@@ -386,13 +386,13 @@ export function GeneralDesktopIntegrationSection() {
               <AlertTriangle className="size-4" />
             </IconChip>
             <div className="min-w-0">
-              <p className="text-[13px] font-semibold tracking-[-0.02em] text-foreground">Notes</p>
+              <p className="text-launcher-md font-semibold tracking-[-0.02em] text-foreground">Notes</p>
               <div className="mt-2 space-y-2">
                 {(status?.notes.length ? status.notes : ["No additional integration notes."]).map(
                   (note) => (
                     <div
                       key={note}
-                      className="rounded-xl border border-white/6 bg-black/10 px-3 py-3 text-[12px] leading-5 text-muted-foreground"
+                      className="rounded-xl border border-white/6 bg-black/10 px-3 py-3 text-launcher-sm leading-5 text-muted-foreground"
                     >
                       {note}
                     </div>

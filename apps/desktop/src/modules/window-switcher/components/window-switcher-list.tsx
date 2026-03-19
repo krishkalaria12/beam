@@ -28,10 +28,10 @@ export function WindowSwitcherList({
         <div className="flex size-12 items-center justify-center rounded-xl bg-[var(--launcher-card-hover-bg)]">
           <Focus className="size-5 text-muted-foreground" />
         </div>
-        <p className="text-[13px] font-medium tracking-[-0.01em] text-muted-foreground">
+        <p className="text-launcher-md font-medium tracking-[-0.01em] text-muted-foreground">
           No windows found
         </p>
-        <p className="text-[12px] tracking-[-0.01em] text-muted-foreground">
+        <p className="text-launcher-sm tracking-[-0.01em] text-muted-foreground">
           No windows match your current search.
         </p>
       </div>
@@ -83,21 +83,21 @@ export function WindowSwitcherList({
               {/* Title & App Name */}
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="truncate text-[13px] font-medium tracking-[-0.01em] text-foreground">
+                  <span className="truncate text-launcher-md font-medium tracking-[-0.01em] text-foreground">
                     {windowEntry.title || windowEntry.appName || "Untitled window"}
                   </span>
                   {windowEntry.isFocused && (
-                    <span className="shrink-0 rounded-full bg-[var(--icon-green-bg)] px-2 py-0.5 text-[10px] font-medium tracking-[-0.01em] text-[var(--icon-green-fg)]">
+                    <span className="shrink-0 rounded-full bg-[var(--icon-green-bg)] px-2 py-0.5 text-launcher-2xs font-medium tracking-[-0.01em] text-[var(--icon-green-fg)]">
                       focused
                     </span>
                   )}
                 </div>
-                <div className="mt-0.5 flex items-center gap-2 text-[11px] tracking-[-0.01em] text-muted-foreground">
+                <div className="mt-0.5 flex items-center gap-2 text-launcher-xs tracking-[-0.01em] text-muted-foreground">
                   <span className="truncate">{windowEntry.appName || "Unknown app"}</span>
                   {windowEntry.workspace && (
                     <>
                       <span className="text-muted-foreground">·</span>
-                      <span className="shrink-0 font-mono text-[10px] uppercase tracking-wide text-muted-foreground">
+                      <span className="shrink-0 font-mono text-launcher-2xs uppercase tracking-wide text-muted-foreground">
                         {windowEntry.workspace}
                       </span>
                     </>
@@ -116,7 +116,7 @@ export function WindowSwitcherList({
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="flex h-7 items-center gap-1.5 rounded-lg bg-[var(--ring)]/15 px-2.5 text-[11px] font-medium tracking-[-0.01em] text-[var(--ring)] transition-colors hover:bg-[var(--ring)]/25"
+                  className="flex h-7 items-center gap-1.5 rounded-lg bg-[var(--ring)]/15 px-2.5 text-launcher-xs font-medium tracking-[-0.01em] text-[var(--ring)] transition-colors hover:bg-[var(--ring)]/25"
                   onClick={(event) => {
                     event.preventDefault();
                     event.stopPropagation();

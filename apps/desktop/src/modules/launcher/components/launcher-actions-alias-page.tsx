@@ -1,5 +1,4 @@
 import { CheckCircle2, Loader2 } from "lucide-react";
-import type React from "react";
 
 import { Kbd } from "@/components/module";
 import { Button } from "@/components/ui/button";
@@ -38,7 +37,7 @@ export function LauncherActionsAliasPage({
     <>
       <div className="flex max-h-[210px] min-h-[210px] flex-col justify-center gap-3 px-4 py-4">
         <div className="space-y-1">
-          <Label htmlFor={aliasInputId} className="text-[11px] text-muted-foreground/80">
+          <Label htmlFor={aliasInputId} className="text-launcher-xs text-muted-foreground/80">
             Alias
           </Label>
           <Input
@@ -51,13 +50,13 @@ export function LauncherActionsAliasPage({
             placeholder="Type alias..."
             minimal
             aria-invalid={(feedback ?? availability).tone === "error"}
-            className="h-8 text-[12px]"
+            className="h-8 text-launcher-sm"
           />
         </div>
 
         <p
           className={cn(
-            "text-[11px]",
+            "text-launcher-xs",
             (feedback ?? availability).tone === "error" && "text-[var(--icon-red-fg)]",
             (feedback ?? availability).tone === "success" && "text-[var(--icon-green-fg)]",
             (feedback ?? availability).tone === "neutral" && "text-muted-foreground/75",
@@ -73,7 +72,7 @@ export function LauncherActionsAliasPage({
           variant="ghost"
           size="sm"
           onClick={onBack}
-          className="h-7 rounded-md px-2.5 text-[12px] text-muted-foreground hover:text-foreground"
+          className="h-7 rounded-md px-2.5 text-launcher-sm text-muted-foreground hover:text-foreground"
         >
           Close
           <Kbd className="ml-1.5">Esc</Kbd>
@@ -83,7 +82,7 @@ export function LauncherActionsAliasPage({
           size="sm"
           disabled={!canSave}
           onClick={onSave}
-          className={cn("h-7 rounded-md px-2.5 text-[12px]", saving && "animate-pulse")}
+          className={cn("h-7 rounded-md px-2.5 text-launcher-sm", saving && "animate-pulse")}
         >
           {saving ? (
             <Loader2 className="mr-1.5 size-3.5 animate-spin" />

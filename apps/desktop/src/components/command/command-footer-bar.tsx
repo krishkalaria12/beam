@@ -36,8 +36,8 @@ interface CommandFooterBarProps {
 }
 
 const KEY_CLASS = cn(
-  "inline-flex items-center justify-center min-w-[22px] h-[22px] px-1.5 rounded",
-  "bg-[var(--kbd-bg)] text-[11px] text-muted-foreground font-medium font-mono",
+  "inline-flex items-center justify-center min-w-5 h-4.5 px-1.25 rounded",
+  "bg-[var(--kbd-bg)] text-[length:calc(var(--beam-font-size-base)*0.6923)] text-muted-foreground font-medium font-mono",
 );
 
 function ActionButton({
@@ -73,7 +73,10 @@ function ActionButton({
       )}
     >
       <span
-        className={cn("text-xs truncate max-w-[180px]", isPrimary ? "font-medium" : "font-normal")}
+        className={cn(
+          "text-[length:calc(var(--beam-font-size-base)*0.7692)] truncate max-w-[180px]",
+          isPrimary ? "font-medium" : "font-normal",
+        )}
       >
         {action.label}
       </span>
@@ -90,7 +93,7 @@ function ActionHint({ action }: { action: FooterAction }) {
   const shortcuts = action.shortcut || [];
 
   return (
-    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+    <div className="flex items-center gap-1.5 text-[length:calc(var(--beam-font-size-base)*0.7692)] text-muted-foreground">
       <span className="truncate max-w-[180px]">{action.label}</span>
       {shortcuts.map((key) => (
         <Kbd key={`${action.label}-${key}`} className={KEY_CLASS}>
@@ -148,7 +151,7 @@ export function CommandFooterBar({
       {/* Left slot: app name or context */}
       <div
         className={cn(
-          "flex min-w-0 flex-1 items-center gap-2 text-xs font-normal text-muted-foreground",
+          "flex min-w-0 flex-1 items-center gap-2 text-[length:calc(var(--beam-font-size-base)*0.7692)] font-normal text-muted-foreground",
           leftSlotClassName,
         )}
       >

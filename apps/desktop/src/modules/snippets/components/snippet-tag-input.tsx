@@ -105,7 +105,7 @@ export function SnippetTagInput({ value, suggestions, onChange, className }: Sni
               variant="ghost"
               size="xs"
               onClick={() => removeTag(tag)}
-              className="group inline-flex h-6 items-center gap-1 rounded-full bg-[var(--launcher-chip-bg)] px-2 text-[11px] font-medium text-muted-foreground transition-all hover:bg-[var(--launcher-card-selected-bg)] hover:text-foreground"
+              className="group inline-flex h-6 items-center gap-1 rounded-full bg-[var(--launcher-chip-bg)] px-2 text-launcher-xs font-medium text-muted-foreground transition-all hover:bg-[var(--launcher-card-selected-bg)] hover:text-foreground"
             >
               <span>{tag}</span>
               <X className="size-3 text-muted-foreground transition-colors group-hover:text-muted-foreground" />
@@ -122,7 +122,7 @@ export function SnippetTagInput({ value, suggestions, onChange, className }: Sni
         onKeyDown={handleDraftTagKeyDown}
         placeholder="Add tag"
         className={cn(
-          "h-10 w-full rounded-xl bg-[var(--launcher-card-hover-bg)] px-3 text-[13px] text-foreground placeholder:text-muted-foreground",
+          "h-10 w-full rounded-xl bg-[var(--launcher-card-hover-bg)] px-3 text-launcher-md text-foreground placeholder:text-muted-foreground",
           "ring-1 ring-[var(--launcher-card-border)] transition-all duration-200",
           "focus:outline-none focus:ring-[var(--ring)]",
         )}
@@ -137,7 +137,7 @@ export function SnippetTagInput({ value, suggestions, onChange, className }: Sni
               variant="ghost"
               size="sm"
               onClick={() => addTag(draftTag)}
-              className="flex w-full items-center gap-2 rounded-t-xl px-3 py-2 text-[12px] text-muted-foreground transition-colors hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground"
+              className="flex w-full items-center gap-2 rounded-t-xl px-3 py-2 text-launcher-sm text-muted-foreground transition-colors hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground"
             >
               <Plus className="size-3.5 text-muted-foreground" />
               <span className="truncate">Create: {normalizedDraftTag}</span>
@@ -152,7 +152,7 @@ export function SnippetTagInput({ value, suggestions, onChange, className }: Sni
               size="sm"
               onClick={() => addTag(tag)}
               className={cn(
-                "flex w-full items-center gap-2 px-3 py-2 text-[12px] text-muted-foreground transition-colors hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground",
+                "flex w-full items-center gap-2 px-3 py-2 text-launcher-sm text-muted-foreground transition-colors hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground",
                 index === filteredSuggestions.length - 1 && !canCreateDraftTag && "rounded-b-xl",
                 index === 0 && !canCreateDraftTag && "rounded-t-xl",
               )}

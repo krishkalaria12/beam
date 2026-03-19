@@ -234,8 +234,8 @@ export function FileDetails({ selectedFile }: FileDetailsProps) {
           </div>
         </div>
         <div className="mt-5 text-center max-w-[200px]">
-          <p className="text-[13px] font-semibold text-muted-foreground">No file selected</p>
-          <p className="mt-1.5 text-[11px] text-muted-foreground/50 leading-relaxed">
+          <p className="text-launcher-md font-semibold text-muted-foreground">No file selected</p>
+          <p className="mt-1.5 text-launcher-xs text-muted-foreground/50 leading-relaxed">
             Select a file from the list to view its details
           </p>
         </div>
@@ -275,7 +275,7 @@ export function FileDetails({ selectedFile }: FileDetailsProps) {
 
         {/* File name - prominent */}
         <h2
-          className="max-w-full text-center text-[18px] font-bold leading-tight text-foreground 
+          className="max-w-full text-center text-launcher-3xl font-bold leading-tight text-foreground 
           break-all tracking-[-0.02em]"
         >
           {selectedFile.name}
@@ -285,14 +285,14 @@ export function FileDetails({ selectedFile }: FileDetailsProps) {
         <div className="mt-3 flex items-center gap-2">
           <span
             className={cn(
-              "px-2.5 py-1 rounded-lg text-[11px] font-semibold",
+              "px-2.5 py-1 rounded-lg text-launcher-xs font-semibold",
               "bg-[var(--command-item-hover-bg)] border border-[var(--ui-divider)]",
               "text-foreground",
             )}
           >
             {fileInfo.type}
           </span>
-          <span className="text-[11px] text-muted-foreground/50">
+          <span className="text-launcher-xs text-muted-foreground/50">
             {formatBytes(selectedFile.size)}
           </span>
         </div>
@@ -308,11 +308,11 @@ export function FileDetails({ selectedFile }: FileDetailsProps) {
           <div className="rounded-xl bg-[var(--command-item-hover-bg)]/50 p-3 border border-[var(--ui-divider)]">
             <div className="flex items-center gap-2 mb-1.5">
               <HardDrive className="size-3.5 text-muted-foreground/50" />
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/50">
+              <span className="text-launcher-2xs font-semibold uppercase tracking-wider text-muted-foreground/50">
                 Size
               </span>
             </div>
-            <p className="text-[14px] font-bold text-foreground">
+            <p className="text-launcher-lg font-bold text-foreground">
               {formatBytes(selectedFile.size)}
             </p>
           </div>
@@ -320,11 +320,11 @@ export function FileDetails({ selectedFile }: FileDetailsProps) {
           <div className="rounded-xl bg-[var(--command-item-hover-bg)]/50 p-3 border border-[var(--ui-divider)]">
             <div className="flex items-center gap-2 mb-1.5">
               <Calendar className="size-3.5 text-muted-foreground/50" />
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/50">
+              <span className="text-launcher-2xs font-semibold uppercase tracking-wider text-muted-foreground/50">
                 Modified
               </span>
             </div>
-            <p className="text-[13px] font-semibold text-foreground">
+            <p className="text-launcher-md font-semibold text-foreground">
               {formatDate(selectedFile.modified)}
             </p>
           </div>
@@ -334,11 +334,11 @@ export function FileDetails({ selectedFile }: FileDetailsProps) {
         <div className="rounded-xl bg-[var(--command-item-hover-bg)]/50 p-3 border border-[var(--ui-divider)]">
           <div className="flex items-center gap-2 mb-2">
             <FolderOpen className="size-3.5 text-muted-foreground/50" />
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/50">
+            <span className="text-launcher-2xs font-semibold uppercase tracking-wider text-muted-foreground/50">
               Location
             </span>
           </div>
-          <p className="text-[12px] font-medium text-muted-foreground break-all leading-relaxed">
+          <p className="text-launcher-sm font-medium text-muted-foreground break-all leading-relaxed">
             {directory}
           </p>
         </div>
@@ -346,7 +346,7 @@ export function FileDetails({ selectedFile }: FileDetailsProps) {
         {/* Full path - expandable */}
         <div className="rounded-xl bg-[var(--launcher-card-bg)]/50 p-3 border border-[var(--ui-divider)]">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/50">
+            <span className="text-launcher-2xs font-semibold uppercase tracking-wider text-muted-foreground/50">
               Full Path
             </span>
             <Button
@@ -354,7 +354,7 @@ export function FileDetails({ selectedFile }: FileDetailsProps) {
               variant="ghost"
               size="xs"
               className="flex items-center gap-1 px-1.5 py-0.5 rounded 
-              text-[10px] font-medium text-muted-foreground/60 
+              text-launcher-2xs font-medium text-muted-foreground/60 
               hover:bg-[var(--command-item-hover-bg)] hover:text-foreground
               transition-colors"
             >
@@ -363,7 +363,7 @@ export function FileDetails({ selectedFile }: FileDetailsProps) {
             </Button>
           </div>
           <code
-            className="block text-[11px] font-mono text-muted-foreground/70 break-all leading-relaxed
+            className="block text-launcher-xs font-mono text-muted-foreground/70 break-all leading-relaxed
             selection:bg-[var(--ring)]/30"
           >
             {selectedFile.path}
@@ -379,7 +379,7 @@ export function FileDetails({ selectedFile }: FileDetailsProps) {
             className="flex-1 flex items-center justify-center gap-2 
             h-9 rounded-xl border border-[var(--ui-divider)]
             bg-[var(--command-item-hover-bg)]/50
-            text-[12px] font-medium text-muted-foreground
+            text-launcher-sm font-medium text-muted-foreground
             hover:bg-[var(--command-item-selected-bg)] hover:text-foreground
             transition-all duration-150 active:scale-[0.98]"
           >

@@ -248,10 +248,10 @@ function SpotifyViewContent({ initialQuery, onBack }: SpotifyViewProps) {
             <Music className="size-4 text-[var(--ring)]" />
           </div>
           <div className="flex flex-col">
-            <h1 className="text-[14px] font-semibold tracking-[-0.02em] text-foreground">
+            <h1 className="text-launcher-lg font-semibold tracking-[-0.02em] text-foreground">
               Spotify
             </h1>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-launcher-xs text-muted-foreground">
               Now playing, playback controls & search
             </p>
           </div>
@@ -261,7 +261,7 @@ function SpotifyViewContent({ initialQuery, onBack }: SpotifyViewProps) {
         <div className="ml-auto">
           <div
             className={cn(
-              "flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.06em]",
+              "flex items-center gap-1.5 rounded-full px-2.5 py-1 text-launcher-2xs font-semibold uppercase tracking-[0.06em]",
               statusTone === "success" &&
                 "bg-[var(--launcher-card-selected-bg)] text-[var(--ring)]",
               statusTone === "info" && "bg-[var(--icon-cyan-bg)] text-[var(--icon-cyan-fg)]",
@@ -289,7 +289,7 @@ function SpotifyViewContent({ initialQuery, onBack }: SpotifyViewProps) {
                 <div className="flex size-6 items-center justify-center rounded-lg bg-[var(--launcher-chip-bg)]">
                   <Radio className="size-3 text-muted-foreground" />
                 </div>
-                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                <span className="text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
                   Connection
                 </span>
               </div>
@@ -300,7 +300,7 @@ function SpotifyViewContent({ initialQuery, onBack }: SpotifyViewProps) {
                   variant="ghost"
                   size="sm"
                   onClick={handleDisconnect}
-                  className="flex items-center gap-1.5 rounded-lg bg-[var(--launcher-card-hover-bg)] px-3 py-1.5 text-[12px] font-medium text-muted-foreground ring-1 ring-[var(--launcher-card-border)] transition-all hover:bg-[var(--launcher-chip-bg)] hover:text-muted-foreground"
+                  className="flex items-center gap-1.5 rounded-lg bg-[var(--launcher-card-hover-bg)] px-3 py-1.5 text-launcher-sm font-medium text-muted-foreground ring-1 ring-[var(--launcher-card-border)] transition-all hover:bg-[var(--launcher-chip-bg)] hover:text-muted-foreground"
                 >
                   <Unplug className="size-3.5" />
                   Disconnect
@@ -312,7 +312,7 @@ function SpotifyViewContent({ initialQuery, onBack }: SpotifyViewProps) {
                   size="sm"
                   onClick={handleConnect}
                   disabled={isAuthorizing || !clientId.trim()}
-                  className="flex items-center gap-1.5 rounded-lg bg-[var(--launcher-card-selected-bg)] px-3 py-1.5 text-[12px] font-medium text-[var(--ring)] ring-1 ring-[var(--launcher-card-selected-border)] transition-all hover:bg-[var(--command-item-selected-bg)] disabled:opacity-50"
+                  className="flex items-center gap-1.5 rounded-lg bg-[var(--launcher-card-selected-bg)] px-3 py-1.5 text-launcher-sm font-medium text-[var(--ring)] ring-1 ring-[var(--launcher-card-selected-border)] transition-all hover:bg-[var(--command-item-selected-bg)] disabled:opacity-50"
                 >
                   {isAuthorizing ? (
                     <Loader2 className="size-3.5 animate-spin" />
@@ -333,11 +333,11 @@ function SpotifyViewContent({ initialQuery, onBack }: SpotifyViewProps) {
                   setStoredSpotifyClientId(event.target.value);
                 }}
                 placeholder="Spotify Client ID"
-                className="h-10 w-full rounded-xl bg-[var(--launcher-card-hover-bg)] px-4 text-[13px] text-foreground placeholder:text-muted-foreground ring-1 ring-[var(--launcher-card-border)] transition-all focus:outline-none focus:ring-[var(--ring)]"
+                className="h-10 w-full rounded-xl bg-[var(--launcher-card-hover-bg)] px-4 text-launcher-md text-foreground placeholder:text-muted-foreground ring-1 ring-[var(--launcher-card-border)] transition-all focus:outline-none focus:ring-[var(--ring)]"
               />
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-launcher-xs text-muted-foreground">
                 Create a Spotify app and add{" "}
-                <code className="rounded bg-[var(--launcher-chip-bg)] px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
+                <code className="rounded bg-[var(--launcher-chip-bg)] px-1.5 py-0.5 font-mono text-launcher-2xs text-muted-foreground">
                   beam://oauth
                 </code>{" "}
                 as redirect URI.
@@ -350,11 +350,11 @@ function SpotifyViewContent({ initialQuery, onBack }: SpotifyViewProps) {
                   <Music className="size-3.5" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-[12px] font-medium text-muted-foreground">
+                  <span className="text-launcher-sm font-medium text-muted-foreground">
                     {user.display_name || user.id}
                   </span>
                   {user.email && (
-                    <span className="text-[11px] text-muted-foreground">{user.email}</span>
+                    <span className="text-launcher-xs text-muted-foreground">{user.email}</span>
                   )}
                 </div>
               </div>
@@ -371,7 +371,7 @@ function SpotifyViewContent({ initialQuery, onBack }: SpotifyViewProps) {
                 <div className="flex size-6 items-center justify-center rounded-lg bg-[var(--launcher-chip-bg)]">
                   <Disc3 className="size-3 text-muted-foreground" />
                 </div>
-                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                <span className="text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
                   Now Playing
                 </span>
               </div>
@@ -386,7 +386,7 @@ function SpotifyViewContent({ initialQuery, onBack }: SpotifyViewProps) {
                     void refreshUserProfile();
                   }}
                   disabled={!isConnected || isLoadingPlayback}
-                  className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-muted-foreground transition-all hover:bg-[var(--launcher-card-hover-bg)] hover:text-muted-foreground disabled:opacity-50"
+                  className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-launcher-xs font-medium text-muted-foreground transition-all hover:bg-[var(--launcher-card-hover-bg)] hover:text-muted-foreground disabled:opacity-50"
                 >
                   <RefreshCw className={cn("size-3", isLoadingPlayback && "animate-spin")} />
                   Refresh
@@ -396,7 +396,7 @@ function SpotifyViewContent({ initialQuery, onBack }: SpotifyViewProps) {
                   variant="ghost"
                   size="sm"
                   onClick={() => void openUrl("https://open.spotify.com/")}
-                  className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-muted-foreground transition-all hover:bg-[var(--launcher-card-hover-bg)] hover:text-muted-foreground"
+                  className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-launcher-xs font-medium text-muted-foreground transition-all hover:bg-[var(--launcher-card-hover-bg)] hover:text-muted-foreground"
                 >
                   <ExternalLink className="size-3" />
                   Web Player
@@ -443,12 +443,12 @@ function SpotifyViewContent({ initialQuery, onBack }: SpotifyViewProps) {
               </div>
 
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[14px] font-medium tracking-[-0.01em] text-foreground">
+                <p className="truncate text-launcher-lg font-medium tracking-[-0.01em] text-foreground">
                   {nowPlaying?.name ||
                     (isConnected ? "Nothing playing" : "Connect Spotify to view playback")}
                 </p>
-                <p className="truncate text-[12px] text-muted-foreground">{nowPlayingArtists}</p>
-                <p className="mt-1 text-[11px] text-muted-foreground">
+                <p className="truncate text-launcher-sm text-muted-foreground">{nowPlayingArtists}</p>
+                <p className="mt-1 text-launcher-xs text-muted-foreground">
                   {nowPlaying ? formatDuration(nowPlaying.duration_ms) : "--:--"}
                 </p>
               </div>
@@ -458,7 +458,7 @@ function SpotifyViewContent({ initialQuery, onBack }: SpotifyViewProps) {
             <div className="mt-4 space-y-2">
               <div className="flex items-center gap-2">
                 <Volume2 className="size-3 text-muted-foreground" />
-                <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                <span className="text-launcher-2xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
                   Playback Device
                 </span>
               </div>
@@ -469,7 +469,7 @@ function SpotifyViewContent({ initialQuery, onBack }: SpotifyViewProps) {
                   setSelectedDeviceId(value);
                 }}
               >
-                <SelectTrigger className="h-10 w-full rounded-xl border-0 bg-[var(--launcher-card-hover-bg)] text-[12px] font-medium text-muted-foreground ring-1 ring-[var(--launcher-card-border)] hover:bg-[var(--launcher-chip-bg)] focus:ring-[var(--ring)]">
+                <SelectTrigger className="h-10 w-full rounded-xl border-0 bg-[var(--launcher-card-hover-bg)] text-launcher-sm font-medium text-muted-foreground ring-1 ring-[var(--launcher-card-border)] hover:bg-[var(--launcher-chip-bg)] focus:ring-[var(--ring)]">
                   <div className="flex items-center gap-2">
                     <Radio className="size-3.5 text-muted-foreground" />
                     <SelectValue>
@@ -482,7 +482,7 @@ function SpotifyViewContent({ initialQuery, onBack }: SpotifyViewProps) {
                     <SelectItem
                       key={device.id}
                       value={device.id}
-                      className="rounded-lg text-[12px] text-muted-foreground focus:bg-[var(--launcher-chip-bg)] focus:text-foreground"
+                      className="rounded-lg text-launcher-sm text-muted-foreground focus:bg-[var(--launcher-chip-bg)] focus:text-foreground"
                     >
                       {device.name}
                     </SelectItem>
@@ -490,9 +490,9 @@ function SpotifyViewContent({ initialQuery, onBack }: SpotifyViewProps) {
                 </SelectContent>
               </Select>
               {isLoadingDevices ? (
-                <p className="text-[11px] text-muted-foreground">Loading devices…</p>
+                <p className="text-launcher-xs text-muted-foreground">Loading devices…</p>
               ) : devices.length === 0 ? (
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-launcher-xs text-muted-foreground">
                   No active devices. Open Spotify on a device first.
                 </p>
               ) : null}
@@ -548,7 +548,7 @@ function SpotifyViewContent({ initialQuery, onBack }: SpotifyViewProps) {
               <div className="flex size-6 items-center justify-center rounded-lg bg-[var(--launcher-chip-bg)]">
                 <Search className="size-3 text-muted-foreground" />
               </div>
-              <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+              <span className="text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
                 Search Tracks
               </span>
             </div>
@@ -566,7 +566,7 @@ function SpotifyViewContent({ initialQuery, onBack }: SpotifyViewProps) {
                       void runSearch();
                     }
                   }}
-                  className="h-full w-full border-none bg-transparent text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none"
+                  className="h-full w-full border-none bg-transparent text-launcher-md text-foreground placeholder:text-muted-foreground focus:outline-none"
                   placeholder="Search tracks, artists, albums..."
                 />
               </div>
@@ -590,7 +590,7 @@ function SpotifyViewContent({ initialQuery, onBack }: SpotifyViewProps) {
             {/* Search results */}
             <div className="mt-4 space-y-2">
               {searchResults.length === 0 ? (
-                <p className="text-[12px] text-muted-foreground">
+                <p className="text-launcher-sm text-muted-foreground">
                   {isConnected
                     ? "Search for a song to see results."
                     : "Connect Spotify first, then search tracks."}
@@ -627,10 +627,10 @@ function SpotifyViewContent({ initialQuery, onBack }: SpotifyViewProps) {
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-[13px] font-medium text-muted-foreground">
+                      <p className="truncate text-launcher-md font-medium text-muted-foreground">
                         {track.name}
                       </p>
-                      <p className="truncate text-[11px] text-muted-foreground">
+                      <p className="truncate text-launcher-xs text-muted-foreground">
                         {toArtists(track)}
                       </p>
                     </div>
@@ -644,7 +644,7 @@ function SpotifyViewContent({ initialQuery, onBack }: SpotifyViewProps) {
 
           {/* Error display */}
           {mergedError && (
-            <div className="rounded-xl border border-[var(--destructive)] bg-[var(--command-item-selected-bg)] px-4 py-3 text-[12px] text-[var(--destructive)]">
+            <div className="rounded-xl border border-[var(--destructive)] bg-[var(--command-item-selected-bg)] px-4 py-3 text-launcher-sm text-[var(--destructive)]">
               {mergedError}
             </div>
           )}
@@ -654,7 +654,7 @@ function SpotifyViewContent({ initialQuery, onBack }: SpotifyViewProps) {
       <ModuleFooter
         className="spotify-footer h-11 border-[var(--footer-border)] px-5"
         leftSlot={
-          <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+          <div className="flex items-center gap-2 text-launcher-xs text-muted-foreground">
             <div className="flex size-5 items-center justify-center rounded-md bg-[var(--launcher-chip-bg)]">
               <Music className="size-3 text-[var(--ring)]" />
             </div>

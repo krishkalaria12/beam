@@ -34,8 +34,8 @@ function Input({
       type={type}
       data-slot="input"
       className={cn(
-        "h-8 w-full min-w-0 rounded-none text-xs outline-none transition-colors md:text-xs",
-        "file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-xs file:font-medium file:text-foreground",
+        "text-launcher-xs h-8 w-full min-w-0 rounded-none outline-none transition-colors",
+        "file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-[length:var(--beam-text-xs)] file:font-medium file:text-foreground",
         "placeholder:text-muted-foreground",
         "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",
         minimal

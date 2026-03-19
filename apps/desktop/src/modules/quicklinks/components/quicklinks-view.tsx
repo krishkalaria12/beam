@@ -273,7 +273,7 @@ function QuicklinkCreateForm({
                     fallbackClassName="size-12 rounded-xl bg-[var(--launcher-card-hover-bg)]"
                   />
                 )}
-                <div className="absolute -bottom-2 rounded-full bg-[var(--popover)] px-2 py-0.5 text-[10px] font-medium text-muted-foreground ring-1 ring-[var(--launcher-card-selected-border)]">
+                <div className="absolute -bottom-2 rounded-full bg-[var(--popover)] px-2 py-0.5 text-launcher-2xs font-medium text-muted-foreground ring-1 ring-[var(--launcher-card-selected-border)]">
                   {isFetchingIcon ? "Fetching..." : isFileTarget ? "File" : "Auto"}
                 </div>
               </div>
@@ -289,7 +289,7 @@ function QuicklinkCreateForm({
                 <div className="space-y-2">
                   <label
                     htmlFor="name"
-                    className="block text-[12px] font-medium text-muted-foreground"
+                    className="block text-launcher-sm font-medium text-muted-foreground"
                   >
                     Name
                   </label>
@@ -299,12 +299,12 @@ function QuicklinkCreateForm({
                     value={field.state.value}
                     onChange={(event) => field.handleChange(event.target.value)}
                     className={cn(
-                      "h-11 rounded-xl border-[var(--launcher-card-border)] bg-[var(--launcher-card-hover-bg)] px-4 text-[14px] font-medium tracking-[-0.01em] text-foreground placeholder:text-muted-foreground",
+                      "h-11 rounded-xl border-[var(--launcher-card-border)] bg-[var(--launcher-card-hover-bg)] px-4 text-launcher-lg font-medium tracking-[-0.01em] text-foreground placeholder:text-muted-foreground",
                       "focus-visible:border-[var(--ring)] focus-visible:ring-[var(--ring)]/40",
                       error && "border-destructive/60",
                     )}
                   />
-                  {error && <p className="text-[11px] text-destructive">{error}</p>}
+                  {error && <p className="text-launcher-xs text-destructive">{error}</p>}
                 </div>
               );
             }}
@@ -319,12 +319,12 @@ function QuicklinkCreateForm({
                 <div className="space-y-2">
                   <label
                     htmlFor="keyword"
-                    className="block text-[12px] font-medium text-muted-foreground"
+                    className="block text-launcher-sm font-medium text-muted-foreground"
                   >
                     Keyword
                   </label>
                   <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[14px] font-semibold text-[var(--ring)]">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-launcher-lg font-semibold text-[var(--ring)]">
                       !
                     </span>
                     <Input
@@ -333,13 +333,13 @@ function QuicklinkCreateForm({
                       value={field.state.value}
                       onChange={(event) => field.handleChange(event.target.value.toLowerCase())}
                       className={cn(
-                        "h-11 rounded-xl border-[var(--launcher-card-border)] bg-[var(--launcher-card-hover-bg)] pl-8 pr-4 font-mono text-[14px] font-medium text-foreground placeholder:text-muted-foreground",
+                        "h-11 rounded-xl border-[var(--launcher-card-border)] bg-[var(--launcher-card-hover-bg)] pl-8 pr-4 font-mono text-launcher-lg font-medium text-foreground placeholder:text-muted-foreground",
                         "focus-visible:border-[var(--ring)] focus-visible:ring-[var(--ring)]/40",
                         error && "border-destructive/60",
                       )}
                     />
                   </div>
-                  {error && <p className="text-[11px] text-destructive">{error}</p>}
+                  {error && <p className="text-launcher-xs text-destructive">{error}</p>}
                 </div>
               );
             }}
@@ -354,7 +354,7 @@ function QuicklinkCreateForm({
                 <div className="space-y-2">
                   <label
                     htmlFor="url"
-                    className="block text-[12px] font-medium text-muted-foreground"
+                    className="block text-launcher-sm font-medium text-muted-foreground"
                   >
                     Target
                   </label>
@@ -369,7 +369,7 @@ function QuicklinkCreateForm({
                         syncTargetState(nextValue);
                       }}
                       className={cn(
-                        "h-11 rounded-xl border-[var(--launcher-card-border)] bg-[var(--launcher-card-hover-bg)] px-4 pr-12 font-mono text-[12px] text-foreground placeholder:text-muted-foreground",
+                        "h-11 rounded-xl border-[var(--launcher-card-border)] bg-[var(--launcher-card-hover-bg)] px-4 pr-12 font-mono text-launcher-sm text-foreground placeholder:text-muted-foreground",
                         "focus-visible:border-[var(--ring)] focus-visible:ring-[var(--ring)]/40",
                         error && "border-destructive/60",
                       )}
@@ -384,14 +384,14 @@ function QuicklinkCreateForm({
                       >
                         <DropdownMenuItem
                           onClick={handlePickFile}
-                          className="cursor-pointer rounded-lg px-2.5 py-2 text-[12px] font-medium"
+                          className="cursor-pointer rounded-lg px-2.5 py-2 text-launcher-sm font-medium"
                         >
                           <File className="size-4" />
                           Pick File
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={handlePickFolder}
-                          className="cursor-pointer rounded-lg px-2.5 py-2 text-[12px] font-medium"
+                          className="cursor-pointer rounded-lg px-2.5 py-2 text-launcher-sm font-medium"
                         >
                           <FolderOpen className="size-4" />
                           Pick Folder
@@ -399,8 +399,8 @@ function QuicklinkCreateForm({
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
-                  {error && <p className="text-[11px] text-destructive">{error}</p>}
-                  <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  {error && <p className="text-launcher-xs text-destructive">{error}</p>}
+                  <p className="text-launcher-xs text-muted-foreground leading-relaxed">
                     Web links must include{" "}
                     <span className="font-semibold text-[var(--ring)]">{"{query}"}</span>{" "}
                     placeholder.
@@ -411,7 +411,7 @@ function QuicklinkCreateForm({
           />
 
           {mutationError && (
-            <div className="rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-[12px] font-medium text-destructive">
+            <div className="rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-launcher-sm font-medium text-destructive">
               {mutationError.message}
             </div>
           )}
@@ -505,7 +505,7 @@ function QuicklinksManageView({ onBack, onCreate, onEdit }: QuicklinksManageView
         )}
 
         {error && (
-          <div className="rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-[12px] font-medium text-destructive">
+          <div className="rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-launcher-sm font-medium text-destructive">
             Failed to load quicklinks: {error.message}
           </div>
         )}
@@ -516,8 +516,8 @@ function QuicklinksManageView({ onBack, onCreate, onEdit }: QuicklinksManageView
               <Link2 className="size-7" />
             </IconChip>
             <div className="text-center">
-              <p className="text-[13px] font-medium text-muted-foreground">No quicklinks yet</p>
-              <p className="mt-1 text-[11px] text-muted-foreground">
+              <p className="text-launcher-md font-medium text-muted-foreground">No quicklinks yet</p>
+              <p className="mt-1 text-launcher-xs text-muted-foreground">
                 Add your first shortcut to get started
               </p>
             </div>
@@ -554,10 +554,10 @@ function QuicklinksManageView({ onBack, onCreate, onEdit }: QuicklinksManageView
                 </IconChip>
 
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[13px] font-medium tracking-[-0.01em] text-foreground">
+                  <p className="truncate text-launcher-md font-medium tracking-[-0.01em] text-foreground">
                     {quicklink.name}
                   </p>
-                  <p className="text-[11px] font-mono text-[var(--ring)]">!{quicklink.keyword}</p>
+                  <p className="text-launcher-xs font-mono text-[var(--ring)]">!{quicklink.keyword}</p>
                 </div>
 
                 <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
@@ -594,7 +594,7 @@ function QuicklinksManageView({ onBack, onCreate, onEdit }: QuicklinksManageView
         )}
 
         {deleteMutation.error && (
-          <div className="mt-3 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-[12px] font-medium text-destructive">
+          <div className="mt-3 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-launcher-sm font-medium text-destructive">
             {deleteMutation.error.message}
           </div>
         )}

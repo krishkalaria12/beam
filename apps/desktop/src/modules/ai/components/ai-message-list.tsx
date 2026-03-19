@@ -41,7 +41,7 @@ export function AiMessageList({
         <div className="flex h-full items-center justify-center">
           <div className="flex flex-col items-center gap-3">
             <Loader2 className="size-6 animate-spin text-[var(--ring)]/70" />
-            <span className="text-[12px] tracking-[-0.01em] text-muted-foreground">
+            <span className="text-launcher-sm tracking-[-0.01em] text-muted-foreground">
               Loading conversation...
             </span>
           </div>
@@ -52,10 +52,10 @@ export function AiMessageList({
             <div className="mb-5 flex size-14 items-center justify-center rounded-2xl bg-[var(--launcher-card-bg)] ring-1 ring-[var(--launcher-card-border)] shadow-lg shadow-[var(--ring)]/10">
               <Sparkles className="size-6 text-[var(--ring)]/80" />
             </div>
-            <h3 className="text-[15px] font-semibold tracking-[-0.02em] text-foreground">
+            <h3 className="text-launcher-xl font-semibold tracking-[-0.02em] text-foreground">
               Start a conversation
             </h3>
-            <p className="mx-auto mt-2.5 max-w-[280px] text-[13px] leading-[1.6] tracking-[-0.01em] text-muted-foreground">
+            <p className="mx-auto mt-2.5 max-w-[280px] text-launcher-md leading-[1.6] tracking-[-0.01em] text-muted-foreground">
               Ask anything, attach images or documents, and let AI assist you.
             </p>
           </div>
@@ -136,10 +136,10 @@ export function AiMessageList({
                                     <FileText className="size-4 text-foreground" />
                                   </div>
                                   <div className="min-w-0 flex-1">
-                                    <p className="truncate text-[13px] font-medium tracking-[-0.01em] text-foreground">
+                                    <p className="truncate text-launcher-md font-medium tracking-[-0.01em] text-foreground">
                                       {file.name}
                                     </p>
-                                    <p className="text-[11px] tracking-[-0.01em] text-muted-foreground">
+                                    <p className="text-launcher-xs tracking-[-0.01em] text-muted-foreground">
                                       {getFileTypeLabel(file)}
                                     </p>
                                   </div>
@@ -165,16 +165,16 @@ export function AiMessageList({
                     {/* Content */}
                     {message.content ? (
                       isUser ? (
-                        <p className="whitespace-pre-wrap break-words text-[14px] leading-[1.65] tracking-[-0.01em] text-foreground">
+                        <p className="whitespace-pre-wrap break-words text-launcher-lg leading-[1.65] tracking-[-0.01em] text-foreground">
                           {message.content}
                         </p>
                       ) : extractedError ? (
-                        <p className="whitespace-pre-wrap break-words text-[14px] leading-[1.65] tracking-[-0.01em] text-[var(--icon-red-fg)]">
+                        <p className="whitespace-pre-wrap break-words text-launcher-lg leading-[1.65] tracking-[-0.01em] text-[var(--icon-red-fg)]">
                           {extractedError}
                         </p>
                       ) : (
                         <MessageResponse
-                          className="ai-prose prose prose-sm prose-invert max-w-none break-words text-[14px] leading-[1.7] tracking-[-0.01em] text-foreground [&>*:first-child]:mt-0 [&>*:last-child]:mb-0"
+                          className="ai-prose prose prose-sm prose-invert max-w-none break-words text-launcher-lg leading-[1.7] tracking-[-0.01em] text-foreground [&>*:first-child]:mt-0 [&>*:last-child]:mb-0"
                           isAnimating={isActiveAssistantMessage}
                         >
                           {message.content}
@@ -189,7 +189,7 @@ export function AiMessageList({
                           spread={1.5}
                           color="var(--muted-foreground)"
                           shimmerColor="var(--foreground)"
-                          className="text-[13px] tracking-[-0.01em]"
+                          className="text-launcher-md tracking-[-0.01em]"
                           startOnView={false}
                         />
                       </div>

@@ -48,7 +48,7 @@ export function SenseCard({
         {/* Sense Number Badge */}
         <span
           className={cn(
-            "mt-0.5 flex h-5 shrink-0 items-center justify-center rounded px-1.5 font-mono text-[10px] font-semibold transition-colors duration-200",
+            "mt-0.5 flex h-5 shrink-0 items-center justify-center rounded px-1.5 font-mono text-launcher-2xs font-semibold transition-colors duration-200",
             isSelected
               ? "bg-[var(--ring)]/20 text-[var(--ring)]"
               : "bg-[var(--launcher-chip-bg)] text-muted-foreground",
@@ -61,7 +61,7 @@ export function SenseCard({
           {/* Definition */}
           <p
             className={cn(
-              "text-[13px] leading-relaxed transition-colors duration-200",
+              "text-launcher-md leading-relaxed transition-colors duration-200",
               isSelected ? "text-foreground" : "text-muted-foreground",
             )}
           >
@@ -72,7 +72,7 @@ export function SenseCard({
           {sense.examples && sense.examples.length > 0 && (
             <div className="space-y-1.5 border-l-2 border-[var(--launcher-card-border)] pl-3">
               {sense.examples.map((example, idx) => (
-                <p key={idx} className="text-[12px] italic text-muted-foreground leading-snug">
+                <p key={idx} className="text-launcher-sm italic text-muted-foreground leading-snug">
                   "{example}"
                 </p>
               ))}
@@ -84,7 +84,7 @@ export function SenseCard({
             <div className="flex flex-wrap gap-4 pt-1">
               {sense.synonyms.length > 0 && (
                 <div className="space-y-1.5">
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
+                  <span className="text-launcher-2xs font-semibold uppercase tracking-[0.06em] text-muted-foreground">
                     Synonyms
                   </span>
                   <div className="flex flex-wrap gap-1.5">
@@ -99,7 +99,7 @@ export function SenseCard({
                           onSynonymClick(synonym);
                         }}
                         className={cn(
-                          "rounded-full px-2 py-0.5 text-[10px] font-medium transition-all duration-200",
+                          "rounded-full px-2 py-0.5 text-launcher-2xs font-medium transition-all duration-200",
                           "bg-[var(--icon-green-bg)] text-[var(--icon-green-fg)]",
                           "hover:brightness-110",
                         )}
@@ -113,7 +113,7 @@ export function SenseCard({
 
               {sense.antonyms.length > 0 && (
                 <div className="space-y-1.5">
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
+                  <span className="text-launcher-2xs font-semibold uppercase tracking-[0.06em] text-muted-foreground">
                     Antonyms
                   </span>
                   <div className="flex flex-wrap gap-1.5">
@@ -128,7 +128,7 @@ export function SenseCard({
                           onSynonymClick(antonym);
                         }}
                         className={cn(
-                          "rounded-full px-2 py-0.5 text-[10px] font-medium transition-all duration-200",
+                          "rounded-full px-2 py-0.5 text-launcher-2xs font-medium transition-all duration-200",
                           "bg-[var(--icon-red-bg)] text-[var(--icon-red-fg)]",
                           "hover:brightness-110",
                         )}

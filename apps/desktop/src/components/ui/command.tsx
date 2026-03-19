@@ -79,7 +79,7 @@ function CommandInput({
         <CommandPrimitive.Input
           data-slot="command-input"
           className={cn(
-            "w-full bg-transparent text-lg font-medium tracking-[0.005em] text-foreground outline-hidden placeholder:text-muted-foreground/55 disabled:cursor-not-allowed disabled:opacity-50",
+            "text-launcher-2xl w-full bg-transparent font-medium tracking-[0.005em] text-foreground outline-hidden placeholder:text-muted-foreground/55 disabled:cursor-not-allowed disabled:opacity-50",
             minimal && "focus:ring-0 focus:outline-none",
             className,
           )}
@@ -117,8 +117,10 @@ function CommandEmpty({
       {children || (
         <>
           <SearchIcon className="size-8 mb-3 text-muted-foreground/30" />
-          <p className="text-sm font-medium text-muted-foreground">No results found</p>
-          <p className="text-xs mt-1 text-muted-foreground/60">Try a different search term</p>
+          <p className="text-launcher-lg font-medium text-muted-foreground">No results found</p>
+          <p className="text-launcher-xs mt-1 text-muted-foreground/60">
+            Try a different search term
+          </p>
         </>
       )}
     </CommandPrimitive.Empty>
@@ -133,7 +135,7 @@ function CommandGroup({
     <CommandPrimitive.Group
       data-slot="command-group"
       className={cn(
-        "text-foreground **:[[cmdk-group-heading]]:text-[10px] **:[[cmdk-group-heading]]:font-bold **:[[cmdk-group-heading]]:uppercase **:[[cmdk-group-heading]]:tracking-[0.2em] **:[[cmdk-group-heading]]:text-muted-foreground/50 overflow-hidden **:[[cmdk-group-heading]]:px-4 **:[[cmdk-group-heading]]:py-3",
+        "text-foreground **:[[cmdk-group-heading]]:text-[length:var(--beam-text-2xs)] **:[[cmdk-group-heading]]:font-bold **:[[cmdk-group-heading]]:uppercase **:[[cmdk-group-heading]]:tracking-[0.2em] **:[[cmdk-group-heading]]:text-muted-foreground/50 overflow-hidden **:[[cmdk-group-heading]]:px-4 **:[[cmdk-group-heading]]:py-3",
         className,
       )}
       {...props}
@@ -163,7 +165,7 @@ function CommandItem({
     <CommandPrimitive.Item
       data-slot="command-item"
       className={cn(
-        "command-item group/command-item relative flex cursor-default items-center gap-4 rounded-lg px-3 py-3 text-sm outline-hidden select-none",
+        "command-item text-launcher-md group/command-item relative flex cursor-default items-center gap-4 rounded-lg px-3 py-3 outline-hidden select-none",
         className,
       )}
       {...props}
@@ -179,7 +181,7 @@ function CommandShortcut({ className, ...props }: React.ComponentProps<"span">) 
     <span
       data-slot="command-shortcut"
       className={cn(
-        "text-muted-foreground/50 group-data-selected/command-item:text-foreground/60 ml-auto text-xs font-mono uppercase tracking-widest shrink-0",
+        "text-launcher-2xs text-muted-foreground/50 group-data-selected/command-item:text-foreground/60 ml-auto font-mono uppercase tracking-widest shrink-0",
         className,
       )}
       {...props}

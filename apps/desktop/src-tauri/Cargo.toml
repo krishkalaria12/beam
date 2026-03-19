@@ -67,6 +67,7 @@ keepawake = "0.6.0"
 sysinfo = "0.29"
 hyprland = "0.4.0-beta.3"
 swayipc = "4.0.0"
+fontdb = "0.23.0"
 
 # Security & Cryptography
 keyring = { version = "3.6.3", features = [

@@ -36,11 +36,11 @@ export function LauncherActionsHotkeyPage({
           {saving ? (
             <div className="flex min-h-10 items-center gap-2">
               <Loader2 className="size-4 animate-spin text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">Saving...</span>
+              <span className="text-launcher-sm text-muted-foreground">Saving...</span>
             </div>
           ) : feedback?.tone === "success" ? (
             <div className="flex flex-col items-center gap-2">
-              <span className="text-sm font-medium text-[var(--icon-green-fg)]">Hotkey Saved</span>
+              <span className="text-launcher-sm font-medium text-[var(--icon-green-fg)]">Hotkey Saved</span>
               <HotkeyRecorder
                 value={hotkeyValue}
                 onChange={onHotkeyChange}
@@ -61,7 +61,7 @@ export function LauncherActionsHotkeyPage({
         {feedback?.tone !== "success" ? (
           <p
             className={cn(
-              "text-center text-[11px]",
+              "text-center text-launcher-xs",
               availability.tone === "error" && "text-[var(--icon-red-fg)]",
               availability.tone === "success" && "text-[var(--icon-green-fg)]",
               availability.tone === "neutral" && "text-muted-foreground/65",
@@ -72,7 +72,7 @@ export function LauncherActionsHotkeyPage({
         ) : null}
 
         {!hotkeyValue.trim() && !feedback ? (
-          <p className="text-[10px] tracking-wide text-muted-foreground/50">
+          <p className="text-launcher-2xs tracking-wide text-muted-foreground/50">
             Example: {HOTKEY_EXAMPLE}
           </p>
         ) : null}
@@ -84,7 +84,7 @@ export function LauncherActionsHotkeyPage({
           variant="ghost"
           size="sm"
           onClick={onBack}
-          className="h-7 rounded-md px-2.5 text-[12px] text-muted-foreground hover:text-foreground"
+          className="h-7 rounded-md px-2.5 text-launcher-sm text-muted-foreground hover:text-foreground"
         >
           Close
           <Kbd className="ml-1.5">Esc</Kbd>
@@ -94,7 +94,7 @@ export function LauncherActionsHotkeyPage({
           size="sm"
           disabled={!canSave}
           onClick={onSave}
-          className={cn("h-7 rounded-md px-2.5 text-[12px]", saving && "animate-pulse")}
+          className={cn("h-7 rounded-md px-2.5 text-launcher-sm", saving && "animate-pulse")}
         >
           {saving ? (
             <Loader2 className="mr-1.5 size-3.5 animate-spin" />

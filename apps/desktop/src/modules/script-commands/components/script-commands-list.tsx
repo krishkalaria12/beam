@@ -24,7 +24,7 @@ export function ScriptCommandsList({
       <div className="scripts-loading flex h-full items-center justify-center p-4">
         <div className="flex flex-col items-center gap-3 text-muted-foreground">
           <div className="size-8 animate-spin rounded-full border-2 border-[var(--launcher-card-border)] border-t-white/40" />
-          <span className="text-[12px]">Loading scripts...</span>
+          <span className="text-launcher-sm">Loading scripts...</span>
         </div>
       </div>
     );
@@ -37,8 +37,8 @@ export function ScriptCommandsList({
           <Terminal className="size-5 text-muted-foreground" />
         </div>
         <div>
-          <p className="text-[13px] font-medium text-muted-foreground">No scripts found</p>
-          <p className="mt-1 text-[12px] text-muted-foreground">
+          <p className="text-launcher-md font-medium text-muted-foreground">No scripts found</p>
+          <p className="mt-1 text-launcher-sm text-muted-foreground">
             Add scripts to your commands folder
           </p>
         </div>
@@ -80,10 +80,10 @@ export function ScriptCommandsList({
                   <Terminal className="size-3.5 text-[var(--icon-green-fg)]" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <span className="block truncate text-[13px] font-medium text-foreground tracking-[-0.01em]">
+                  <span className="block truncate text-launcher-md font-medium text-foreground tracking-[-0.01em]">
                     {script.title}
                   </span>
-                  <div className="mt-0.5 flex items-center gap-2 text-[11px] text-muted-foreground">
+                  <div className="mt-0.5 flex items-center gap-2 text-launcher-xs text-muted-foreground">
                     <FileCode2 className="size-3" />
                     <span className="truncate">{script.scriptName}</span>
                   </div>
@@ -93,12 +93,12 @@ export function ScriptCommandsList({
               {/* Badges */}
               <div className="flex items-center gap-1.5 pl-10">
                 {script.argumentDefinitions.length > 0 && (
-                  <span className="rounded-md bg-[var(--icon-orange-bg)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--icon-orange-fg)]">
+                  <span className="rounded-md bg-[var(--icon-orange-bg)] px-1.5 py-0.5 text-launcher-2xs font-medium text-[var(--icon-orange-fg)]">
                     {script.argumentDefinitions.length} args
                   </span>
                 )}
                 {script.hasShebang && (
-                  <span className="rounded-md bg-[var(--icon-cyan-bg)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--icon-cyan-fg)]">
+                  <span className="rounded-md bg-[var(--icon-cyan-bg)] px-1.5 py-0.5 text-launcher-2xs font-medium text-[var(--icon-cyan-fg)]">
                     shebang
                   </span>
                 )}

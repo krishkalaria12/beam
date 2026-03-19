@@ -13,7 +13,7 @@ export function RecentlyUsed({ emojis, onEmojiClick }: RecentlyUsedProps) {
     <div className="emoji-recent">
       {/* Section header - minimal */}
       <div className="mb-3 flex items-center gap-2">
-        <span className="text-[11px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
+        <span className="text-launcher-xs font-medium uppercase tracking-[0.06em] text-muted-foreground">
           Recent
         </span>
         <div className="h-px flex-1 bg-[var(--ui-divider)]" />

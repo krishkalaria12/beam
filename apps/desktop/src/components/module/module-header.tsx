@@ -58,11 +58,11 @@ export function ModuleHeader({
 
       {/* Title block */}
       <div className="min-w-0 flex-1">
-        <h1 className="truncate text-[14px] font-semibold tracking-[-0.02em] text-foreground">
+        <h1 className="text-launcher-lg truncate font-semibold tracking-[-0.02em] text-foreground">
           {title}
         </h1>
         {subtitle && (
-          <p className="truncate text-[12px] tracking-[-0.01em] text-muted-foreground">
+          <p className="text-launcher-sm truncate tracking-[-0.01em] text-muted-foreground">
             {subtitle}
           </p>
         )}
@@ -89,7 +89,7 @@ function Badge({ children, className }: BadgeProps) {
     <span
       className={cn(
         "rounded-full bg-[var(--launcher-chip-bg)] border border-[var(--launcher-chip-border)]",
-        "px-2.5 py-1 text-[11px] font-medium text-muted-foreground",
+        "text-launcher-xs px-2.5 py-1 font-medium text-muted-foreground",
         className,
       )}
     >

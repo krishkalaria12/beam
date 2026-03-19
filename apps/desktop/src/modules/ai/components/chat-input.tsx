@@ -23,7 +23,7 @@ function FieldInfo({ field }: { field: AnyFieldApi }) {
   return (
     <>
       {field.state.meta.isTouched && field.state.meta.errors.length > 0 ? (
-        <div className="px-4 text-[11px] tracking-[-0.01em] text-[var(--icon-red-fg)]">
+        <div className="px-4 text-launcher-xs tracking-[-0.01em] text-[var(--icon-red-fg)]">
           {field.state.meta.errors.map((error, i) => (
             <p key={i}>{error}</p>
           ))}
@@ -127,7 +127,7 @@ export function ChatInput({ onSubmit, isLoading, supportsFiles = true }: ChatInp
                   ) : (
                     <div className="flex h-16 w-16 flex-col items-center justify-center gap-1 bg-[var(--launcher-card-hover-bg)] p-2">
                       <FileText className="size-5 text-muted-foreground" />
-                      <span className="w-full truncate text-center text-[9px] font-medium tracking-tight text-muted-foreground">
+                      <span className="w-full truncate text-center text-launcher-2xs font-medium tracking-tight text-muted-foreground">
                         {file.name.split(".").pop()?.toUpperCase()}
                       </span>
                     </div>
@@ -192,7 +192,7 @@ export function ChatInput({ onSubmit, isLoading, supportsFiles = true }: ChatInp
                     onBlur={field.handleBlur}
                     onKeyDown={handleKeyDown}
                     placeholder="Type a message..."
-                    className="w-full resize-none bg-transparent text-[14px] leading-[1.5] tracking-[-0.01em] text-foreground placeholder:text-muted-foreground focus:outline-none min-h-[24px] max-h-[140px] py-1"
+                    className="w-full resize-none bg-transparent text-launcher-lg leading-[1.5] tracking-[-0.01em] text-foreground placeholder:text-muted-foreground focus:outline-none min-h-[24px] max-h-[140px] py-1"
                     rows={1}
                     disabled={isLoading}
                   />

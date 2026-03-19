@@ -15,7 +15,7 @@ export const MarkdownView = memo(
   ({ className, ...props }: MarkdownViewProps) => (
     <Streamdown
       className={cn(
-        "module-markdown size-full text-[13px] leading-6 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
+        "module-markdown size-full text-launcher-md leading-6 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
         className,
       )}
       plugins={markdownPlugins}

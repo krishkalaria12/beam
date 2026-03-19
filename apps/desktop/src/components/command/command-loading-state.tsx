@@ -15,9 +15,9 @@ interface CommandLoadingStateProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 const sizeConfig = {
-  sm: { icon: "size-3.5", text: "text-xs", gap: "gap-1.5", minH: "min-h-[80px]" },
-  md: { icon: "size-4", text: "text-sm", gap: "gap-2", minH: "min-h-[120px]" },
-  lg: { icon: "size-5", text: "text-base", gap: "gap-2.5", minH: "min-h-[160px]" },
+  sm: { icon: "size-3.5", text: "text-launcher-xs", gap: "gap-1.5", minH: "min-h-[80px]" },
+  md: { icon: "size-4", text: "text-launcher-sm", gap: "gap-2", minH: "min-h-[120px]" },
+  lg: { icon: "size-5", text: "text-launcher-2xl", gap: "gap-2.5", minH: "min-h-[160px]" },
 };
 
 export function CommandLoadingState({
@@ -61,7 +61,7 @@ export function CommandInlineLoading({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 text-[10px] text-muted-foreground",
+        "inline-flex items-center gap-1.5 text-launcher-2xs text-muted-foreground",
         className,
       )}
       {...props}

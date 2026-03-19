@@ -11,8 +11,8 @@ export function CalculatorHistoryEmpty() {
         </div>
 
         {/* Text */}
-        <p className="text-[13px] font-medium text-muted-foreground mb-1">No history yet</p>
-        <p className="text-[11px] text-muted-foreground">Your calculations will appear here</p>
+        <p className="text-launcher-md font-medium text-muted-foreground mb-1">No history yet</p>
+        <p className="text-launcher-xs text-muted-foreground">Your calculations will appear here</p>
       </div>
     </CommandItem>
   );

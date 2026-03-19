@@ -284,8 +284,8 @@ export function FileList({
           </div>
         </div>
         <div className="text-center">
-          <p className="text-[13px] font-semibold text-muted-foreground">Searching...</p>
-          <p className="mt-1 text-[11px] text-muted-foreground/60">Scanning local files</p>
+          <p className="text-launcher-md font-semibold text-muted-foreground">Searching...</p>
+          <p className="mt-1 text-launcher-xs text-muted-foreground/60">Scanning local files</p>
         </div>
       </div>
     );
@@ -306,8 +306,8 @@ export function FileList({
           </div>
         </div>
         <div className="text-center max-w-[180px]">
-          <p className="text-[13px] font-semibold text-muted-foreground">Search your files</p>
-          <p className="mt-1.5 text-[11px] text-muted-foreground/60 leading-relaxed">
+          <p className="text-launcher-md font-semibold text-muted-foreground">Search your files</p>
+          <p className="mt-1.5 text-launcher-xs text-muted-foreground/60 leading-relaxed">
             Type a filename or path to get started
           </p>
         </div>
@@ -329,8 +329,8 @@ export function FileList({
           </div>
         </div>
         <div className="text-center max-w-[200px]">
-          <p className="text-[13px] font-semibold text-muted-foreground">No matches found</p>
-          <p className="mt-1.5 text-[11px] text-muted-foreground/60 leading-relaxed">
+          <p className="text-launcher-md font-semibold text-muted-foreground">No matches found</p>
+          <p className="mt-1.5 text-launcher-xs text-muted-foreground/60 leading-relaxed">
             Try different keywords or check the spelling
           </p>
         </div>
@@ -348,11 +348,11 @@ export function FileList({
       >
         <div className="flex items-center gap-2">
           <Sparkles className="size-3 text-[var(--ring)]/60" />
-          <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+          <span className="text-launcher-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
             Results
           </span>
         </div>
-        <span className="text-[10px] font-bold text-muted-foreground/40 tabular-nums">
+        <span className="text-launcher-2xs font-bold text-muted-foreground/40 tabular-nums">
           {results.length}
         </span>
       </div>
@@ -406,7 +406,7 @@ export function FileList({
                 {typeInfo.label && (
                   <span
                     className={cn(
-                      "absolute -bottom-0.5 -right-0.5 px-1 py-px rounded text-[7px] font-bold",
+                      "absolute -bottom-0.5 -right-0.5 px-1 py-px rounded text-[length:calc(var(--beam-font-size-base)*0.5385)] font-bold",
                       "bg-[var(--launcher-card-bg)] border border-[var(--ui-divider)]",
                       typeInfo.color,
                       "uppercase tracking-wide",
@@ -422,7 +422,7 @@ export function FileList({
                 {/* File name - prominent */}
                 <span
                   className={cn(
-                    "truncate text-[13px] font-semibold leading-tight tracking-[-0.01em]",
+                    "truncate text-launcher-md font-semibold leading-tight tracking-[-0.01em]",
                     isSelected ? "text-secondary-foreground" : "text-foreground",
                   )}
                 >
@@ -432,7 +432,7 @@ export function FileList({
                 {/* Location - subtle with folder icon */}
                 <span
                   className={cn(
-                    "truncate text-[11px] leading-tight mt-0.5",
+                    "truncate text-launcher-xs leading-tight mt-0.5",
                     "flex items-center gap-1",
                     isSelected ? "text-secondary-foreground/80" : "text-muted-foreground/50",
                   )}
@@ -453,7 +453,7 @@ export function FileList({
                 <div className="flex items-center gap-1 opacity-60">
                   <Kbd
                     className="flex size-5 items-center justify-center rounded
-                    text-[10px] font-medium text-secondary-foreground/70"
+                    text-launcher-2xs font-medium text-secondary-foreground/70"
                   >
                     ↵
                   </Kbd>

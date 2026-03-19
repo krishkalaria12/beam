@@ -1,4 +1,4 @@
-import { ArrowLeft, AtSign, Calculator, CornerDownLeft, Keyboard, Smile } from "lucide-react";
+import { ArrowLeft, AtSign, CornerDownLeft, Keyboard } from "lucide-react";
 import { lazy, Suspense, useRef, useState, type ReactNode } from "react";
 
 import { CommandLoadingState } from "@/components/command/command-loading-state";
@@ -11,7 +11,7 @@ import type { CommandPanel } from "@/command-registry/types";
 import { useMountEffect } from "@/hooks/use-mount-effect";
 import type { LauncherActionItem } from "@/modules/launcher/components/launcher-actions-panel";
 import { LauncherActionsPanel } from "@/modules/launcher/components/launcher-actions-panel";
-import { dispatchKeyboardShortcutToTarget, dispatchEnterToTarget } from "@/modules/launcher/helper";
+import { dispatchEnterToTarget } from "@/modules/launcher/helper";
 
 const CalculatorHistoryCommandGroup = lazy(
   () => import("@/modules/calculator-history/components/calculator-history-command-group"),
@@ -45,7 +45,7 @@ interface LauncherSecondaryPanelProps extends SecondaryPanelRendererInput {
 }
 
 function SecondaryPanelFallback() {
-  return <CommandLoadingState label="Loading..." className="px-4 py-6 text-xs" />;
+  return <CommandLoadingState label="Loading..." className="px-4 py-6 text-launcher-xs" />;
 }
 
 export function LauncherSecondaryPanel(props: LauncherSecondaryPanelProps) {
@@ -62,15 +62,15 @@ function LauncherSecondaryPanelContent({
   onOpenCalculatorHistory,
   onOpenEmoji,
   onBack,
-  pinnedCommandIds,
-  hiddenCommandIds,
-  fallbackEnabled,
-  fallbackCommandIds,
-  onSetPinned,
-  onSetHidden,
-  onMovePinned,
-  onSetFallbackEnabled,
-  onSetFallbackCommandIds,
+  pinnedCommandIds: _pinnedCommandIds,
+  hiddenCommandIds: _hiddenCommandIds,
+  fallbackEnabled: _fallbackEnabled,
+  fallbackCommandIds: _fallbackCommandIds,
+  onSetPinned: _onSetPinned,
+  onSetHidden: _onSetHidden,
+  onMovePinned: _onMovePinned,
+  onSetFallbackEnabled: _onSetFallbackEnabled,
+  onSetFallbackCommandIds: _onSetFallbackCommandIds,
 }: LauncherSecondaryPanelProps) {
   const secondaryPanelIsOpen = isSecondaryPanel(activePanel);
   const [actionsOpen, setActionsOpen] = useState(false);
@@ -128,26 +128,6 @@ function LauncherSecondaryPanelContent({
       unsubscribeToggle();
     };
   });
-
-  function dispatchShortcut(options: {
-    key: string;
-    code?: string;
-    metaKey?: boolean;
-    ctrlKey?: boolean;
-    altKey?: boolean;
-    shiftKey?: boolean;
-  }) {
-    const previousFocusElement = actionsPreviousFocusRef.current;
-    if (previousFocusElement && previousFocusElement.isConnected) {
-      previousFocusElement.focus({ preventScroll: true });
-      dispatchKeyboardShortcutToTarget(previousFocusElement, options);
-      return;
-    }
-
-    const activeElement =
-      document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    dispatchKeyboardShortcutToTarget(activeElement, options);
-  }
 
   const panelSpecificRootItems: LauncherActionItem[] = [];
 

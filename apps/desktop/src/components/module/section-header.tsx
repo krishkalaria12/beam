@@ -14,7 +14,7 @@ export function SectionHeader({ title, className, style, titleClassName }: Secti
     <div className={cn("module-section-header flex h-7 items-center px-2", className)} style={style}>
       <div
         className={cn(
-          "module-section-header-title text-[11px] font-medium text-muted-foreground",
+          "module-section-header-title text-launcher-xs font-medium text-muted-foreground",
           titleClassName,
         )}
       >

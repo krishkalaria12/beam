@@ -36,7 +36,7 @@ export function NotePreview({
         <div className="mb-4 size-12 rounded-xl bg-[var(--launcher-card-bg)] p-2.5">
           <Book className="size-full text-[var(--icon-primary-fg)]" />
         </div>
-        <p className="text-[13px] text-muted-foreground">Select a note to preview</p>
+        <p className="text-launcher-md text-muted-foreground">Select a note to preview</p>
       </section>
     );
   }
@@ -54,22 +54,22 @@ export function NotePreview({
               )}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-[16px] font-semibold tracking-[-0.02em] text-foreground">
+              <p className="truncate text-launcher-2xl font-semibold tracking-[-0.02em] text-foreground">
                 {note.title}
               </p>
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-launcher-xs text-muted-foreground">
                 Updated {formatTimestamp(note.updated_at)}
               </p>
             </div>
             {note.pinned ? (
-              <span className="rounded-full bg-[var(--icon-orange-bg)] px-2 py-0.5 text-[10px] font-medium text-[var(--icon-orange-fg)]">
+              <span className="rounded-full bg-[var(--icon-orange-bg)] px-2 py-0.5 text-launcher-2xs font-medium text-[var(--icon-orange-fg)]">
                 Pinned
               </span>
             ) : null}
           </div>
 
           <div className="rounded-xl bg-[var(--launcher-card-hover-bg)] p-4">
-            <pre className="whitespace-pre-wrap break-words font-sans text-[13px] leading-6 text-muted-foreground">
+            <pre className="whitespace-pre-wrap break-words font-sans text-launcher-md leading-6 text-muted-foreground">
               {note.content.trim() ? note.content : "This note is empty."}
             </pre>
           </div>
@@ -77,13 +77,13 @@ export function NotePreview({
 
         <section className="mt-4 rounded-xl bg-[var(--launcher-card-bg)] p-4 ring-1 ring-[var(--launcher-card-border)]">
           <div className="mb-3 flex items-center gap-3">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+            <span className="text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
               Information
             </span>
             <div className="h-px flex-1 bg-[var(--launcher-chip-bg)]" />
           </div>
 
-          <dl className="space-y-2.5 text-[12px]">
+          <dl className="space-y-2.5 text-launcher-sm">
             <div className="flex items-center justify-between gap-3">
               <dt className="text-muted-foreground">Created</dt>
               <dd className="text-muted-foreground">{formatTimestamp(note.created_at)}</dd>
@@ -111,7 +111,7 @@ export function NotePreview({
           size="sm"
           onClick={onEdit}
           className={cn(
-            "inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--launcher-card-border)] px-3 text-[12px] font-medium transition-all duration-200",
+            "inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--launcher-card-border)] px-3 text-launcher-sm font-medium transition-all duration-200",
             "bg-[var(--launcher-card-bg)] text-muted-foreground hover:bg-[var(--launcher-chip-bg)] hover:text-foreground",
           )}
         >
@@ -127,7 +127,7 @@ export function NotePreview({
             onClick={onTogglePinned}
             disabled={isTogglingPinned}
             className={cn(
-              "inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--launcher-card-border)] px-3 text-[12px] font-medium transition-all duration-200",
+              "inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--launcher-card-border)] px-3 text-launcher-sm font-medium transition-all duration-200",
               "bg-[var(--launcher-card-bg)] text-muted-foreground hover:bg-[var(--launcher-chip-bg)] hover:text-foreground",
             )}
           >
@@ -141,7 +141,7 @@ export function NotePreview({
             size="sm"
             onClick={onDelete}
             disabled={isDeleting}
-            className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-3 text-[12px] font-medium text-destructive transition-all duration-200 hover:bg-destructive/10 hover:text-destructive"
+            className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-3 text-launcher-sm font-medium text-destructive transition-all duration-200 hover:bg-destructive/10 hover:text-destructive"
           >
             <Trash2 className="size-3.5" />
             Delete

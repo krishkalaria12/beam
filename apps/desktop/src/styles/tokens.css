@@ -73,7 +73,19 @@
   --scrollbar-thumb-hover: rgba(118, 130, 149, 0.34);
   --sc-base-rgb: 16, 17, 19;
   --beam-launcher-opacity: 0.96;
-  --font-sans: "Manrope", "Ubuntu", "Noto Sans", "Segoe UI", sans-serif;
+  --beam-font-sans-default: "Manrope", "Ubuntu", "Noto Sans", "Segoe UI", sans-serif;
+  --beam-font-sans: var(--beam-font-sans-default);
+  --beam-font-size-base: 13px;
+  --beam-text-2xs: calc(var(--beam-font-size-base) * 0.7692);
+  --beam-text-xs: calc(var(--beam-font-size-base) * 0.8462);
+  --beam-text-sm: calc(var(--beam-font-size-base) * 0.9231);
+  --beam-text-md: var(--beam-font-size-base);
+  --beam-text-lg: calc(var(--beam-font-size-base) * 1.0769);
+  --beam-text-xl: calc(var(--beam-font-size-base) * 1.1538);
+  --beam-text-2xl: calc(var(--beam-font-size-base) * 1.2308);
+  --beam-text-3xl: calc(var(--beam-font-size-base) * 1.3846);
+  --beam-text-display: calc(var(--beam-font-size-base) * 1.5385);
+  --font-sans: var(--beam-font-sans);
   --font-mono: "JetBrains Mono", "Fira Code", "Cascadia Mono", monospace;
 }
 
@@ -150,7 +162,7 @@
 }
 
 @theme inline {
-  --font-sans: "Manrope", "Ubuntu", "Noto Sans", "Segoe UI", sans-serif;
+  --font-sans: var(--beam-font-sans);
   --font-mono: "JetBrains Mono", "Fira Code", "Cascadia Mono", monospace;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);

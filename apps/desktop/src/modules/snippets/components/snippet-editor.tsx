@@ -64,7 +64,7 @@ export function SnippetEditor({
       <div className="flex min-h-0 flex-1 gap-4 overflow-hidden p-4">
         {/* Left: Snippet Content Editor */}
         <div className="flex min-h-0 w-[47%] flex-col">
-          <label className="mb-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+          <label className="mb-2 text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
             Snippet Content
           </label>
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl bg-[var(--launcher-card-bg)] ring-1 ring-[var(--launcher-card-border)]">
@@ -78,7 +78,7 @@ export function SnippetEditor({
               }}
               placeholder="Type snippet content..."
               className={cn(
-                "min-h-0 flex-1 resize-none bg-transparent p-4 text-[14px] leading-6 text-foreground placeholder:text-muted-foreground",
+                "min-h-0 flex-1 resize-none bg-transparent p-4 text-launcher-lg leading-6 text-foreground placeholder:text-muted-foreground",
                 "focus:outline-none",
               )}
             />
@@ -99,7 +99,7 @@ export function SnippetEditor({
             </div>
           </div>
 
-          <p className="mt-2 text-[11px] text-muted-foreground">
+          <p className="mt-2 text-launcher-xs text-muted-foreground">
             Include dynamic placeholders for context values like date and copied text.
           </p>
         </div>
@@ -109,7 +109,7 @@ export function SnippetEditor({
           <div className="grid gap-4">
             {/* Name */}
             <div>
-              <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+              <label className="mb-2 block text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
                 Name
               </label>
               <Input
@@ -123,7 +123,7 @@ export function SnippetEditor({
                 }}
                 placeholder="Snippet name"
                 className={cn(
-                  "h-10 w-full rounded-xl bg-[var(--launcher-card-hover-bg)] px-3 text-[13px] text-foreground placeholder:text-muted-foreground",
+                  "h-10 w-full rounded-xl bg-[var(--launcher-card-hover-bg)] px-3 text-launcher-md text-foreground placeholder:text-muted-foreground",
                   "ring-1 ring-[var(--launcher-card-border)] transition-all duration-200",
                   "focus:outline-none focus:ring-[var(--ring)]",
                 )}
@@ -132,7 +132,7 @@ export function SnippetEditor({
 
             {/* Keyword */}
             <div>
-              <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+              <label className="mb-2 block text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
                 Keyword
               </label>
               <Input
@@ -146,7 +146,7 @@ export function SnippetEditor({
                 }}
                 placeholder=";keyword"
                 className={cn(
-                  "h-10 w-full rounded-xl bg-[var(--launcher-card-hover-bg)] px-3 font-mono text-[13px] text-foreground placeholder:text-muted-foreground",
+                  "h-10 w-full rounded-xl bg-[var(--launcher-card-hover-bg)] px-3 font-mono text-launcher-md text-foreground placeholder:text-muted-foreground",
                   "ring-1 ring-[var(--launcher-card-border)] transition-all duration-200",
                   "focus:outline-none focus:ring-[var(--ring)]",
                 )}
@@ -155,7 +155,7 @@ export function SnippetEditor({
 
             {/* Tags */}
             <div>
-              <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+              <label className="mb-2 block text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
                 Tags
               </label>
               <SnippetTagInput
@@ -173,11 +173,11 @@ export function SnippetEditor({
             {/* Content Type & Placeholders */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                <label className="mb-2 block text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
                   Content Type
                 </label>
                 <DropdownMenu>
-                  <DropdownMenuTrigger className="flex h-10 w-full items-center justify-between gap-2 rounded-xl bg-[var(--launcher-card-hover-bg)] px-3 text-[13px] font-medium text-muted-foreground ring-1 ring-[var(--launcher-card-border)] transition-all hover:bg-[var(--launcher-chip-bg)] hover:text-foreground">
+                  <DropdownMenuTrigger className="flex h-10 w-full items-center justify-between gap-2 rounded-xl bg-[var(--launcher-card-hover-bg)] px-3 text-launcher-md font-medium text-muted-foreground ring-1 ring-[var(--launcher-card-border)] transition-all hover:bg-[var(--launcher-chip-bg)] hover:text-foreground">
                     <div className="flex items-center gap-2">
                       <currentContentType.icon className="size-3.5 text-muted-foreground" />
                       <span>{currentContentType.label}</span>
@@ -201,7 +201,7 @@ export function SnippetEditor({
                         <DropdownMenuRadioItem
                           key={option.value}
                           value={option.value}
-                          className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-[var(--launcher-chip-bg)] hover:text-foreground focus:bg-[var(--launcher-chip-bg)] data-[state=checked]:text-foreground"
+                          className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-launcher-sm font-medium text-muted-foreground transition-colors hover:bg-[var(--launcher-chip-bg)] hover:text-foreground focus:bg-[var(--launcher-chip-bg)] data-[state=checked]:text-foreground"
                         >
                           <option.icon className="size-3.5 text-muted-foreground" />
                           {option.label}
@@ -218,7 +218,7 @@ export function SnippetEditor({
                   variant="ghost"
                   size="sm"
                   className={cn(
-                    "inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-[var(--launcher-card-border)] text-[12px] font-medium transition-all duration-200",
+                    "inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-[var(--launcher-card-border)] text-launcher-sm font-medium transition-all duration-200",
                     "bg-[var(--launcher-card-bg)] text-muted-foreground hover:bg-[var(--launcher-chip-bg)] hover:text-muted-foreground",
                   )}
                 >
@@ -231,13 +231,13 @@ export function SnippetEditor({
             {/* Behavior Section */}
             <div className="rounded-xl bg-[var(--launcher-card-bg)] p-4 ring-1 ring-[var(--launcher-card-border)]">
               <div className="mb-3 flex items-center gap-3">
-                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                <span className="text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
                   Behavior
                 </span>
                 <div className="h-px flex-1 bg-[var(--launcher-chip-bg)]" />
               </div>
 
-              <div className="space-y-3 text-[12px]">
+              <div className="space-y-3 text-launcher-sm">
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-muted-foreground">Enabled</span>
                   <Switch
@@ -306,7 +306,7 @@ export function SnippetEditor({
           size="sm"
           onClick={onCancel}
           className={cn(
-            "inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--launcher-card-border)] px-4 text-[12px] font-medium transition-all duration-200",
+            "inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--launcher-card-border)] px-4 text-launcher-sm font-medium transition-all duration-200",
             "bg-[var(--launcher-card-bg)] text-muted-foreground hover:bg-[var(--launcher-chip-bg)] hover:text-muted-foreground",
           )}
         >
@@ -319,7 +319,7 @@ export function SnippetEditor({
           onClick={onSubmit}
           disabled={isSubmitting}
           className={cn(
-            "inline-flex h-8 items-center gap-1.5 rounded-lg px-4 text-[12px] font-medium transition-all duration-200",
+            "inline-flex h-8 items-center gap-1.5 rounded-lg px-4 text-launcher-sm font-medium transition-all duration-200",
             "bg-[var(--ring)]/20 text-[var(--ring)] hover:bg-[var(--ring)]/30",
             "disabled:opacity-50 disabled:pointer-events-none",
           )}

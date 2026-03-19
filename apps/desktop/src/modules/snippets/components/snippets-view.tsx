@@ -333,10 +333,10 @@ export function SnippetsView({ onBack }: SnippetsViewProps) {
             <NotebookTabs className="size-full text-[var(--icon-orange-fg)]" />
           </div>
           <div className="min-w-0 flex-1">
-            <h1 className="text-[14px] font-semibold tracking-[-0.02em] text-foreground">
+            <h1 className="text-launcher-lg font-semibold tracking-[-0.02em] text-foreground">
               Snippets
             </h1>
-            <p className="text-[12px] tracking-[-0.01em] text-muted-foreground">
+            <p className="text-launcher-sm tracking-[-0.01em] text-muted-foreground">
               Create, preview, and paste text snippets
             </p>
           </div>
@@ -346,7 +346,7 @@ export function SnippetsView({ onBack }: SnippetsViewProps) {
           {snippetsQuery.isFetching && (
             <Loader2 className="size-3.5 animate-spin text-muted-foreground" />
           )}
-          <span className="rounded-full bg-[var(--launcher-chip-bg)] px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
+          <span className="rounded-full bg-[var(--launcher-chip-bg)] px-2.5 py-1 text-launcher-xs font-medium text-muted-foreground">
             {snippets.length} {snippets.length === 1 ? "snippet" : "snippets"}
           </span>
         </div>
@@ -419,7 +419,7 @@ export function SnippetsView({ onBack }: SnippetsViewProps) {
                 size="sm"
                 onClick={openCreateView}
                 className={cn(
-                  "inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-[12px] font-medium transition-all duration-200",
+                  "inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-launcher-sm font-medium transition-all duration-200",
                   "bg-[var(--ring)]/20 text-[var(--ring)] hover:bg-[var(--ring)]/30",
                 )}
               >
@@ -436,7 +436,7 @@ export function SnippetsView({ onBack }: SnippetsViewProps) {
                 }}
                 disabled={!selectedSnippet || pasteSnippetMutation.isPending}
                 className={cn(
-                  "inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--launcher-card-border)] px-3 text-[12px] font-medium transition-all duration-200",
+                  "inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--launcher-card-border)] px-3 text-launcher-sm font-medium transition-all duration-200",
                   "bg-[var(--launcher-card-bg)] text-muted-foreground hover:bg-[var(--launcher-chip-bg)] hover:text-muted-foreground",
                   "disabled:opacity-40 disabled:pointer-events-none",
                 )}

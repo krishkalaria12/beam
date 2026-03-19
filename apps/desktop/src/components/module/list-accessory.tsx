@@ -25,7 +25,7 @@ export function ListAccessory({
     <span
       className={cn(
         "module-list-accessory",
-        "inline-flex items-center gap-1 text-[11px] text-muted-foreground",
+        "inline-flex items-center gap-1 text-launcher-xs text-muted-foreground",
         fill &&
           "module-list-accessory-filled rounded-md border border-[var(--launcher-chip-border)] bg-[var(--launcher-chip-bg)] px-2 py-0.5",
         className,

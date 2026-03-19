@@ -31,7 +31,7 @@ function Header({ children, className }: DetailPanelHeaderProps) {
     <div
       className={cn(
         "flex h-11 shrink-0 items-center border-b border-[var(--ui-divider)] px-4",
-        "text-[12px] font-semibold uppercase tracking-[0.06em] text-muted-foreground",
+        "text-launcher-sm font-semibold uppercase tracking-[0.06em] text-muted-foreground",
         className,
       )}
     >
@@ -89,8 +89,8 @@ function Empty({
       )}
     >
       {icon && <div className="mb-1 text-muted-foreground/30 [&_svg]:size-10">{icon}</div>}
-      <p className="text-[13px] font-medium text-muted-foreground/60">{title}</p>
-      {description && <p className="text-[12px] text-muted-foreground/40">{description}</p>}
+      <p className="text-launcher-md font-medium text-muted-foreground/60">{title}</p>
+      {description && <p className="text-launcher-sm text-muted-foreground/40">{description}</p>}
     </div>
   );
 }

@@ -64,8 +64,8 @@ export function NotesPreviewGroup({ query, onOpenNotes }: NotesPreviewGroupProps
       >
         <Book className="size-4" />
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium">Open notes</p>
-          <p className="text-xs text-muted-foreground">
+          <p className="truncate text-launcher-sm font-medium">Open notes</p>
+          <p className="text-launcher-xs text-muted-foreground">
             {notes.length === 0
               ? "No notes yet"
               : `${notes.length} saved note${notes.length === 1 ? "" : "s"}`}
@@ -90,8 +90,8 @@ export function NotesPreviewGroup({ query, onOpenNotes }: NotesPreviewGroupProps
           >
             {note.pinned ? <Pin className="size-4" /> : <Book className="size-4" />}
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm">{note.title}</p>
-              <p className="truncate text-xs text-muted-foreground">
+              <p className="truncate text-launcher-sm">{note.title}</p>
+              <p className="truncate text-launcher-xs text-muted-foreground">
                 {excerptContent(note.content)}
               </p>
             </div>

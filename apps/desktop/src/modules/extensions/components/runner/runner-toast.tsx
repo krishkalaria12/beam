@@ -33,16 +33,16 @@ export function RunnerToast({ toast, onAction, onHide }: RunnerToastProps) {
     <div className="flex min-w-0 items-center gap-2 rounded-lg border border-[var(--launcher-card-border)] bg-[var(--launcher-card-hover-bg)] px-2.5 py-1.5">
       <ToastIcon style={toast.style} />
       <div className="min-w-0">
-        <p className="truncate text-[12px] font-medium text-foreground">{toast.title}</p>
+        <p className="truncate text-launcher-sm font-medium text-foreground">{toast.title}</p>
         {toast.message ? (
-          <p className="truncate text-[11px] text-muted-foreground">{toast.message}</p>
+          <p className="truncate text-launcher-xs text-muted-foreground">{toast.message}</p>
         ) : null}
       </div>
       {secondaryAction ? (
         <Button
           size="sm"
           variant="ghost"
-          className="h-7 text-[11px] px-2"
+          className="h-7 text-launcher-xs px-2"
           onClick={() => onAction(toast.id, "secondary")}
         >
           {secondaryAction.title}
@@ -52,7 +52,7 @@ export function RunnerToast({ toast, onAction, onHide }: RunnerToastProps) {
         <Button
           size="sm"
           variant="outline"
-          className="h-7 text-[11px] px-2 bg-[var(--launcher-card-bg)] border-[var(--launcher-card-border)]"
+          className="h-7 text-launcher-xs px-2 bg-[var(--launcher-card-bg)] border-[var(--launcher-card-border)]"
           onClick={() => onAction(toast.id, "primary")}
         >
           {primaryAction.title}
@@ -61,7 +61,7 @@ export function RunnerToast({ toast, onAction, onHide }: RunnerToastProps) {
       <Button
         size="sm"
         variant="ghost"
-        className="h-7 px-2 text-[11px] text-muted-foreground"
+        className="h-7 px-2 text-launcher-xs text-muted-foreground"
         onClick={() => onHide(toast.id)}
       >
         Dismiss

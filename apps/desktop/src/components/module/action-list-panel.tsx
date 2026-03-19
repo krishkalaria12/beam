@@ -215,7 +215,7 @@ export function ActionListPanel({
               onChange={setQuery}
               placeholder="Filter actions…"
               leftIcon={<Search />}
-              className="text-[12px]"
+              className="text-launcher-sm"
               containerClassName="h-9 rounded-lg"
               onKeyDown={handleKeyDown}
             />
@@ -223,7 +223,7 @@ export function ActionListPanel({
 
           <div className="module-action-list-content custom-scrollbar max-h-[320px] overflow-y-auto overscroll-contain p-2">
             {itemRows.length === 0 ? (
-              <div className="module-action-list-empty px-3 py-10 text-center text-[12px] text-muted-foreground">
+              <div className="module-action-list-empty px-3 py-10 text-center text-launcher-sm text-muted-foreground">
                 No matching actions
               </div>
             ) : (
@@ -263,7 +263,7 @@ export function ActionListPanel({
                     >
                       <ListItem.Title
                         className={cn(
-                          "text-[12px]",
+                          "text-launcher-sm",
                           row.item.danger && "text-[var(--icon-red-fg)]",
                         )}
                       >

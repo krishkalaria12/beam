@@ -157,7 +157,7 @@ export function SettingsTakeoverView({
             size="sm"
             onClick={handleBack}
             disabled={phase === "closing"}
-            className="absolute left-5 top-1/2 h-9 -translate-y-1/2 rounded-lg border border-[var(--launcher-card-border)] bg-[var(--launcher-card-hover-bg)] px-3 text-[12px] hover:bg-[var(--launcher-card-bg)]"
+            className="absolute left-5 top-1/2 h-9 -translate-y-1/2 rounded-lg border border-[var(--launcher-card-border)] bg-[var(--launcher-card-hover-bg)] px-3 text-launcher-sm hover:bg-[var(--launcher-card-bg)]"
           >
             <ChevronLeft className="size-4" />
             Back
@@ -183,7 +183,7 @@ export function SettingsTakeoverView({
                   )}
                 >
                   <Icon className="size-4.5" />
-                  <span className="font-mono text-[12px] tracking-[0.04em]">{tab.label}</span>
+                  <span className="font-mono text-launcher-sm tracking-[0.04em]">{tab.label}</span>
                 </button>
               );
             })}

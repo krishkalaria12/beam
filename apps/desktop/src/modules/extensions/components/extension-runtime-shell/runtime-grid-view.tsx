@@ -132,7 +132,7 @@ export function RuntimeGridView({ state }: RuntimeGridViewProps) {
             )}
             contentStyle={readStyle(emptyViewNode?.props.contentStyle)}
             titleClassName={cn(
-              isAnimatedEmptyViewIcon(emptyViewNode?.props.icon) ? "text-[14px]" : undefined,
+              isAnimatedEmptyViewIcon(emptyViewNode?.props.icon) ? "text-launcher-lg" : undefined,
               readClassName(emptyViewNode?.props.titleClassName),
             )}
             descriptionClassName={readClassName(emptyViewNode?.props.descriptionClassName)}
@@ -213,7 +213,7 @@ export function RuntimeGridView({ state }: RuntimeGridViewProps) {
                         <div className="min-w-0">
                           <div
                             className={cn(
-                              "ext-grid-item-title truncate text-[13px] font-medium text-foreground",
+                              "ext-grid-item-title truncate text-launcher-md font-medium text-foreground",
                               titleClassName,
                             )}
                           >
@@ -222,7 +222,7 @@ export function RuntimeGridView({ state }: RuntimeGridViewProps) {
                           {entry.subtitle ? (
                             <div
                               className={cn(
-                                "ext-grid-item-subtitle truncate text-[11px] text-muted-foreground",
+                                "ext-grid-item-subtitle truncate text-launcher-xs text-muted-foreground",
                                 subtitleClassName,
                               )}
                             >

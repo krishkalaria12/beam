@@ -51,7 +51,7 @@ export function AsyncCommandRow({
       endSlot={endSlot}
       shortcut={!endSlot ? (isBusy ? busyShortcut : idleShortcut) : undefined}
       titleClassName={titleClassName ?? "truncate text-foreground capitalize"}
-      subtitleClassName={subtitleClassName ?? "truncate text-sm text-muted-foreground"}
+      subtitleClassName={subtitleClassName ?? "truncate text-launcher-sm text-muted-foreground"}
     />
   );
 }

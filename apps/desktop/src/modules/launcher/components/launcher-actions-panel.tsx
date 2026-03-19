@@ -518,9 +518,9 @@ function LauncherActionsPanelContent({
                 </Button>
               ) : null}
               <div className="min-w-0">
-                <p className="truncate text-[13px] font-medium text-foreground">{panelTitle}</p>
+                <p className="truncate text-launcher-md font-medium text-foreground">{panelTitle}</p>
                 {panelSubtitle ? (
-                  <p className="truncate text-[11px] text-muted-foreground">{panelSubtitle}</p>
+                  <p className="truncate text-launcher-xs text-muted-foreground">{panelSubtitle}</p>
                 ) : null}
               </div>
             </div>

@@ -86,7 +86,7 @@ function Title({ children, className }: TitleProps) {
     <p
       className={cn(
         "module-list-item-title",
-        "truncate text-[13px] font-medium tracking-[-0.01em] text-foreground",
+        "text-launcher-md truncate font-medium tracking-[-0.01em] text-foreground",
         className,
       )}
     >
@@ -101,7 +101,16 @@ interface DescriptionProps {
 }
 
 function Description({ children, className }: DescriptionProps) {
-  return <p className={cn("module-list-item-description truncate text-[11px] text-muted-foreground", className)}>{children}</p>;
+  return (
+    <p
+      className={cn(
+        "module-list-item-description text-launcher-xs truncate text-muted-foreground",
+        className,
+      )}
+    >
+      {children}
+    </p>
+  );
 }
 
 ListItem.Title = Title;

@@ -130,7 +130,7 @@ interface LauncherTakeoverPanelProps extends TakeoverPanelRendererInput {
 function TakeoverPanelFallback() {
   return (
     <LauncherTakeoverSurface>
-      <CommandLoadingState label="Loading..." className="text-xs" />
+      <CommandLoadingState label="Loading..." className="text-launcher-xs" />
     </LauncherTakeoverSurface>
   );
 }
@@ -174,7 +174,7 @@ function LauncherTakeoverPanelContent({
   openNotes,
   openSnippets,
   openExtensions,
-  openSettings,
+  openSettings: _openSettings,
   openScriptCommands,
   pinnedCommandIds,
   hiddenCommandIds,

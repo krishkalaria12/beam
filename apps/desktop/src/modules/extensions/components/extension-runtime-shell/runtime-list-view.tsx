@@ -89,7 +89,7 @@ export function RuntimeListView({ state }: RuntimeListViewProps) {
         contentStyle={readStyle(emptyViewNode.props.contentStyle)}
         descriptionClassName={readClassName(emptyViewNode.props.descriptionClassName)}
         titleClassName={cn(
-          isAnimatedEmptyViewIcon(emptyViewNode.props.icon) ? "text-[14px]" : undefined,
+          isAnimatedEmptyViewIcon(emptyViewNode.props.icon) ? "text-launcher-lg" : undefined,
           readClassName(emptyViewNode.props.titleClassName),
         )}
       />

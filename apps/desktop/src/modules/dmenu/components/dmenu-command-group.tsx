@@ -193,7 +193,7 @@ export default function DmenuCommandGroup() {
       <div className="border-b border-[var(--launcher-card-border)] px-5 py-4">
         <div className="flex items-center gap-3">
           {dmenuSession.prompt ? (
-            <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/70">
+            <span className="text-launcher-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground/70">
               {dmenuSession.prompt}
             </span>
           ) : null}
@@ -231,11 +231,11 @@ export default function DmenuCommandGroup() {
               }
             }}
             placeholder="Type to search..."
-            className="min-w-0 flex-1 bg-transparent text-lg font-medium text-foreground outline-hidden placeholder:text-muted-foreground/45"
+            className="min-w-0 flex-1 bg-transparent text-launcher-lg font-medium text-foreground outline-hidden placeholder:text-muted-foreground/45"
           />
         </div>
         {dmenuSession.message ? (
-          <p className="mt-3 text-xs text-muted-foreground/80">{dmenuSession.message}</p>
+          <p className="mt-3 text-launcher-xs text-muted-foreground/80">{dmenuSession.message}</p>
         ) : null}
       </div>
 
@@ -246,7 +246,7 @@ export default function DmenuCommandGroup() {
         }}
       >
         {visibleRows.length === 0 ? (
-          <div className="px-3 py-8 text-center text-sm text-muted-foreground">
+          <div className="px-3 py-8 text-center text-launcher-sm text-muted-foreground">
             No matching results
           </div>
         ) : (
@@ -283,14 +283,14 @@ export default function DmenuCommandGroup() {
                 )}
               >
                 {row.icon ? (
-                  <span className="flex size-8 items-center justify-center rounded-lg border border-[var(--launcher-card-border)] bg-[var(--command-item-hover-bg)] text-[10px] font-semibold uppercase text-muted-foreground">
+                  <span className="flex size-8 items-center justify-center rounded-lg border border-[var(--launcher-card-border)] bg-[var(--command-item-hover-bg)] text-launcher-2xs font-semibold uppercase text-muted-foreground">
                     {row.icon.slice(0, 2)}
                   </span>
                 ) : null}
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{row.displayText}</p>
+                  <p className="truncate text-launcher-sm font-medium">{row.displayText}</p>
                   {row.meta ? (
-                    <p className="truncate text-[11px] text-muted-foreground/75">{row.meta}</p>
+                    <p className="truncate text-launcher-xs text-muted-foreground/75">{row.meta}</p>
                   ) : null}
                 </div>
               </button>

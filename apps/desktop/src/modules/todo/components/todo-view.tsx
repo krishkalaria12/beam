@@ -437,8 +437,8 @@ export function TodoView({ onBack }: TodoViewProps) {
 
         {/* Title block */}
         <div className="flex-1 min-w-0">
-          <h1 className="text-[14px] font-semibold tracking-[-0.01em] text-foreground">Todos</h1>
-          <p className="text-[11px] text-muted-foreground">
+          <h1 className="text-launcher-lg font-semibold tracking-[-0.01em] text-foreground">Todos</h1>
+          <p className="text-launcher-xs text-muted-foreground">
             {completedTodoCount}/{orderedTodos.length} completed
           </p>
         </div>
@@ -450,7 +450,7 @@ export function TodoView({ onBack }: TodoViewProps) {
         {orderedTodos.length > 0 && completedTodoCount === orderedTodos.length && (
           <div className="flex items-center gap-1.5 rounded-full bg-[var(--icon-green-bg)] px-2.5 py-1 text-[var(--icon-green-fg)]">
             <CheckCircle2 className="size-3.5" />
-            <span className="text-[11px] font-medium">All done!</span>
+            <span className="text-launcher-xs font-medium">All done!</span>
           </div>
         )}
       </header>
@@ -508,7 +508,7 @@ export function TodoView({ onBack }: TodoViewProps) {
       <ModuleFooter
         className="todo-footer-enter border-[var(--launcher-card-border)] py-2"
         leftSlot={
-          <span className="text-[11px] text-muted-foreground">
+          <span className="text-launcher-xs text-muted-foreground">
             {orderedTodos.length} {orderedTodos.length === 1 ? "todo" : "todos"}
           </span>
         }

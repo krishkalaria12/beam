@@ -133,13 +133,13 @@ export function TodoSortableRow({
                 onCancelEdit();
               }
             }}
-            className="w-full bg-transparent text-[13px] font-medium tracking-[-0.01em] text-foreground outline-none placeholder:text-muted-foreground"
+            className="w-full bg-transparent text-launcher-md font-medium tracking-[-0.01em] text-foreground outline-none placeholder:text-muted-foreground"
           />
         ) : (
           <div>
             <p
               className={cn(
-                "truncate text-[13px] font-medium tracking-[-0.01em] transition-colors",
+                "truncate text-launcher-md font-medium tracking-[-0.01em] transition-colors",
                 todo.completed ? "text-muted-foreground line-through" : "text-foreground",
               )}
               onDoubleClick={() => onStartEdit(todo)}
@@ -148,7 +148,7 @@ export function TodoSortableRow({
               {todo.title}
             </p>
             <div className="mt-1 flex items-center gap-2">
-              <span className="text-[11px] text-muted-foreground">
+              <span className="text-launcher-xs text-muted-foreground">
                 {subTodoCompleted}/{todo.sub_todos.length} subtasks
               </span>
               {todo.sub_todos.length > 0 && (

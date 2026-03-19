@@ -93,7 +93,7 @@ export function QuicklinkPreview({
           {quicklinkSymbol}
           {quicklink.keyword}
         </span>
-        {query && <span className="ml-2 text-xs text-muted-foreground">→ {query}</span>}
+        {query && <span className="ml-2 text-launcher-xs text-muted-foreground">→ {query}</span>}
         <CommandShortcut>quicklink</CommandShortcut>
       </CommandItem>
     </CommandGroup>

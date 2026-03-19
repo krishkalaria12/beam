@@ -133,10 +133,10 @@ export function ScriptCommandCreateForm({
         </div>
 
         <div className="flex-1 min-w-0">
-          <h1 className="text-[14px] font-semibold tracking-[-0.02em] text-foreground">
+          <h1 className="text-launcher-lg font-semibold tracking-[-0.02em] text-foreground">
             Create Script Command
           </h1>
-          <p className="text-[12px] text-muted-foreground tracking-[-0.01em]">
+          <p className="text-launcher-sm text-muted-foreground tracking-[-0.01em]">
             Add a new script to your Beam commands folder
           </p>
         </div>
@@ -157,20 +157,20 @@ export function ScriptCommandCreateForm({
           <section className="rounded-xl bg-[var(--launcher-card-hover-bg)] p-4 ring-1 ring-[var(--launcher-card-border)]">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                <p className="text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
                   Scripts Folder
                 </p>
                 {directoryQuery.isLoading ? (
-                  <p className="mt-1.5 inline-flex items-center gap-2 text-[12px] text-muted-foreground">
+                  <p className="mt-1.5 inline-flex items-center gap-2 text-launcher-sm text-muted-foreground">
                     <Loader2 className="size-3.5 animate-spin" />
                     Resolving script commands directory...
                   </p>
                 ) : directoryQuery.error ? (
-                  <p className="mt-1.5 text-[12px] text-[var(--icon-red-fg)]">
+                  <p className="mt-1.5 text-launcher-sm text-[var(--icon-red-fg)]">
                     Unable to load scripts directory.
                   </p>
                 ) : (
-                  <p className="mt-1.5 break-all font-mono text-[12px] text-muted-foreground">
+                  <p className="mt-1.5 break-all font-mono text-launcher-sm text-muted-foreground">
                     {directoryQuery.data}
                   </p>
                 )}
@@ -181,7 +181,7 @@ export function ScriptCommandCreateForm({
                 variant="ghost"
                 size="sm"
                 onClick={() => void handleOpenFolder()}
-                className="flex h-9 items-center gap-2 rounded-lg bg-[var(--launcher-card-hover-bg)] px-3 text-[12px] font-medium text-muted-foreground ring-1 ring-[var(--launcher-card-border)] transition-all duration-200 hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground"
+                className="flex h-9 items-center gap-2 rounded-lg bg-[var(--launcher-card-hover-bg)] px-3 text-launcher-sm font-medium text-muted-foreground ring-1 ring-[var(--launcher-card-border)] transition-all duration-200 hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground"
               >
                 <FolderOpen className="size-3.5" />
                 Open Folder
@@ -197,7 +197,7 @@ export function ScriptCommandCreateForm({
                 <div className="space-y-2">
                   <Label
                     htmlFor="script-file-name"
-                    className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground"
+                    className="text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground"
                   >
                     File Name
                   </Label>
@@ -210,17 +210,17 @@ export function ScriptCommandCreateForm({
                     onKeyDown={stopFieldKeyPropagation}
                     placeholder="example.sh"
                     className={cn(
-                      "h-10 w-full rounded-xl bg-[var(--launcher-card-hover-bg)] px-4 font-mono text-[13px] text-foreground placeholder:text-muted-foreground ring-1 ring-[var(--launcher-card-border)] transition-all duration-200 focus:outline-none focus:ring-[var(--ring)]",
+                      "h-10 w-full rounded-xl bg-[var(--launcher-card-hover-bg)] px-4 font-mono text-launcher-md text-foreground placeholder:text-muted-foreground ring-1 ring-[var(--launcher-card-border)] transition-all duration-200 focus:outline-none focus:ring-[var(--ring)]",
                       field.state.meta.errors.length > 0 && "ring-[var(--icon-red-bg)]",
                     )}
                     autoFocus
                   />
                   {field.state.meta.errors.length > 0 ? (
-                    <p className="text-[11px] text-[var(--icon-red-fg)]">
+                    <p className="text-launcher-xs text-[var(--icon-red-fg)]">
                       {readFieldError(field.state.meta.errors[0])}
                     </p>
                   ) : (
-                    <p className="text-[11px] text-muted-foreground">
+                    <p className="text-launcher-xs text-muted-foreground">
                       Use a file name only, for example `deploy.sh` or `cleanup.py`.
                     </p>
                   )}
@@ -237,7 +237,7 @@ export function ScriptCommandCreateForm({
                 <div className="space-y-2">
                   <Label
                     htmlFor="script-content"
-                    className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground"
+                    className="inline-flex items-center gap-2 text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground"
                   >
                     <FileCode2 className="size-3.5" />
                     Script Content
@@ -249,17 +249,17 @@ export function ScriptCommandCreateForm({
                     onKeyDownCapture={stopFieldKeyPropagation}
                     onKeyDown={stopFieldKeyPropagation}
                     className={cn(
-                      "min-h-[260px] w-full resize-y rounded-xl bg-[var(--launcher-card-hover-bg)] p-4 font-mono text-[12px] leading-relaxed text-foreground placeholder:text-muted-foreground ring-1 ring-[var(--launcher-card-border)] transition-all duration-200 focus:outline-none focus:ring-[var(--ring)]",
+                      "min-h-[260px] w-full resize-y rounded-xl bg-[var(--launcher-card-hover-bg)] p-4 font-mono text-launcher-sm leading-relaxed text-foreground placeholder:text-muted-foreground ring-1 ring-[var(--launcher-card-border)] transition-all duration-200 focus:outline-none focus:ring-[var(--ring)]",
                       field.state.meta.errors.length > 0 && "ring-[var(--icon-red-bg)]",
                     )}
                     placeholder="#!/usr/bin/env bash"
                   />
                   {field.state.meta.errors.length > 0 ? (
-                    <p className="text-[11px] text-[var(--icon-red-fg)]">
+                    <p className="text-launcher-xs text-[var(--icon-red-fg)]">
                       {readFieldError(field.state.meta.errors[0])}
                     </p>
                   ) : (
-                    <p className="text-[11px] text-muted-foreground">
+                    <p className="text-launcher-xs text-muted-foreground">
                       Add a shebang for portable execution and keep scripts self-contained.
                     </p>
                   )}
@@ -284,12 +284,12 @@ export function ScriptCommandCreateForm({
                     />
                     <Label
                       htmlFor="script-make-executable"
-                      className="text-[13px] font-medium text-muted-foreground"
+                      className="text-launcher-md font-medium text-muted-foreground"
                     >
                       Mark file as executable
                     </Label>
                   </div>
-                  <p className="mt-2 pl-7 text-[11px] text-muted-foreground">
+                  <p className="mt-2 pl-7 text-launcher-xs text-muted-foreground">
                     Recommended for shell scripts that should run directly.
                   </p>
                 </div>
@@ -310,12 +310,12 @@ export function ScriptCommandCreateForm({
                     />
                     <Label
                       htmlFor="script-overwrite"
-                      className="text-[13px] font-medium text-muted-foreground"
+                      className="text-launcher-md font-medium text-muted-foreground"
                     >
                       Overwrite if file exists
                     </Label>
                   </div>
-                  <p className="mt-2 pl-7 text-[11px] text-muted-foreground">
+                  <p className="mt-2 pl-7 text-launcher-xs text-muted-foreground">
                     Keep this off if you want Beam to block duplicate file names.
                   </p>
                 </div>
@@ -327,7 +327,7 @@ export function ScriptCommandCreateForm({
           {errorMessage && (
             <div className="flex items-center gap-2.5 rounded-xl bg-[var(--icon-red-bg)] px-4 py-3 ring-1 ring-[var(--icon-red-bg)]">
               <AlertTriangle className="size-4 text-[var(--icon-red-fg)]" />
-              <span className="text-[12px] text-[var(--icon-red-fg)]">{errorMessage}</span>
+              <span className="text-launcher-sm text-[var(--icon-red-fg)]">{errorMessage}</span>
             </div>
           )}
         </form>
@@ -352,7 +352,7 @@ export function ScriptCommandCreateForm({
             size="sm"
             onClick={() => void form.handleSubmit()}
             disabled={isSubmitting}
-            className="flex h-8 items-center gap-1.5 rounded-lg bg-[var(--ring)]/20 px-3.5 text-[12px] font-medium text-[var(--ring)] transition-all duration-200 hover:bg-[var(--ring)]/30 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex h-8 items-center gap-1.5 rounded-lg bg-[var(--ring)]/20 px-3.5 text-launcher-sm font-medium text-[var(--ring)] transition-all duration-200 hover:bg-[var(--ring)]/30 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {isSubmitting ? (
               <Loader2 className="size-3.5 animate-spin" />

@@ -46,7 +46,7 @@ function renderFormField(state: UseExtensionRunnerStateResult, field: RunnerForm
               state.handleBlurFormField(field);
             }}
           />
-          <Label className="text-[13px] font-medium text-foreground">{field.title}</Label>
+          <Label className="text-launcher-md font-medium text-foreground">{field.title}</Label>
         </div>
       </ModuleFormField>
     );
@@ -57,7 +57,7 @@ function renderFormField(state: UseExtensionRunnerStateResult, field: RunnerForm
       <ModuleFormField
         key={field.nodeId}
         label={
-          <Label className="ext-form-label text-[12px] font-medium text-muted-foreground">{field.title}</Label>
+          <Label className="ext-form-label text-launcher-sm font-medium text-muted-foreground">{field.title}</Label>
         }
         description={field.info}
         error={field.error}
@@ -90,7 +90,7 @@ function renderFormField(state: UseExtensionRunnerStateResult, field: RunnerForm
       <ModuleFormField
         key={field.nodeId}
         label={
-          <Label className="ext-form-label text-[12px] font-medium text-muted-foreground">{field.title}</Label>
+          <Label className="ext-form-label text-launcher-sm font-medium text-muted-foreground">{field.title}</Label>
         }
         description={field.info}
         error={field.error}
@@ -110,7 +110,7 @@ function renderFormField(state: UseExtensionRunnerStateResult, field: RunnerForm
           onBlur={() => {
             state.handleBlurFormField(field);
           }}
-          className="ext-form-input ext-form-textarea min-h-[120px] rounded-lg border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] text-[13px]"
+          className="ext-form-input ext-form-textarea min-h-[120px] rounded-lg border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] text-launcher-md"
         />
       </ModuleFormField>
     );
@@ -121,7 +121,7 @@ function renderFormField(state: UseExtensionRunnerStateResult, field: RunnerForm
       <ModuleFormField
         key={field.nodeId}
         label={
-          <Label className="ext-form-label text-[12px] font-medium text-muted-foreground">{field.title}</Label>
+          <Label className="ext-form-label text-launcher-sm font-medium text-muted-foreground">{field.title}</Label>
         }
         description={field.info}
         error={field.error}
@@ -145,7 +145,7 @@ function renderFormField(state: UseExtensionRunnerStateResult, field: RunnerForm
           onBlur={() => {
             state.handleBlurFormField(field);
           }}
-          className="ext-form-input h-10 rounded-lg border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] text-[13px]"
+          className="ext-form-input h-10 rounded-lg border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] text-launcher-md"
         />
       </ModuleFormField>
     );
@@ -156,7 +156,7 @@ function renderFormField(state: UseExtensionRunnerStateResult, field: RunnerForm
   return (
     <ModuleFormField
       key={field.nodeId}
-      label={<Label className="ext-form-label text-[12px] font-medium text-muted-foreground">{field.title}</Label>}
+      label={<Label className="ext-form-label text-launcher-sm font-medium text-muted-foreground">{field.title}</Label>}
       description={field.info}
       error={field.error}
       className="ext-form-field"
@@ -176,7 +176,7 @@ function renderFormField(state: UseExtensionRunnerStateResult, field: RunnerForm
         onBlur={() => {
           state.handleBlurFormField(field);
         }}
-        className="ext-form-input h-10 rounded-lg border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] text-[13px]"
+        className="ext-form-input h-10 rounded-lg border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] text-launcher-md"
       />
     </ModuleFormField>
   );
@@ -229,7 +229,7 @@ export function RuntimeFormView({ state }: RuntimeFormViewProps) {
               {title ? (
                 <div
                   className={[
-                    "text-[12px] font-medium text-muted-foreground",
+                    "text-launcher-sm font-medium text-muted-foreground",
                     "ext-form-description-title",
                     readClassName(child.props.titleClassName),
                   ]
@@ -242,7 +242,7 @@ export function RuntimeFormView({ state }: RuntimeFormViewProps) {
               {text ? (
                 <div
                   className={[
-                    "text-[13px] leading-6 text-foreground",
+                    "text-launcher-md leading-6 text-foreground",
                     "ext-form-description-text",
                     readClassName(child.props.textClassName),
                   ]

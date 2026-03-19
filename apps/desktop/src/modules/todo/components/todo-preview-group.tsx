@@ -50,8 +50,8 @@ export function TodoPreviewGroup({ query, onOpenTodo }: TodoPreviewGroupProps) {
       >
         <ListTodo className="size-4" />
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium">Open todo board</p>
-          <p className="text-xs text-muted-foreground">
+          <p className="truncate text-launcher-sm font-medium">Open todo board</p>
+          <p className="text-launcher-xs text-muted-foreground">
             {pendingTodos.length} pending, {completedCount}/{totalCount} completed
           </p>
         </div>
@@ -82,8 +82,8 @@ export function TodoPreviewGroup({ query, onOpenTodo }: TodoPreviewGroupProps) {
             >
               <Circle className={cn("size-4", "text-muted-foreground")} />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm">{todo.title}</p>
-                <p className="truncate text-xs text-muted-foreground">
+                <p className="truncate text-launcher-sm">{todo.title}</p>
+                <p className="truncate text-launcher-xs text-muted-foreground">
                   {completedSubTodos}/{todo.sub_todos.length} subtasks done
                 </p>
               </div>

@@ -176,23 +176,23 @@ export function DictionaryView({ initialQuery, onBack }: DictionaryViewProps) {
               <>
                 <div className="mb-3 flex items-center gap-2 text-destructive">
                   <AlertCircle className="size-5" />
-                  <h3 className="text-[14px] font-semibold">Error loading definition</h3>
+                  <h3 className="text-launcher-lg font-semibold">Error loading definition</h3>
                 </div>
-                <p className="max-w-xs text-[12px] text-muted-foreground">{error.message}</p>
+                <p className="max-w-xs text-launcher-sm text-muted-foreground">{error.message}</p>
               </>
             ) : isLoading ? (
               <>
-                <h3 className="mb-2 text-[14px] font-semibold text-foreground">Searching...</h3>
-                <p className="text-[12px] text-muted-foreground">
+                <h3 className="mb-2 text-launcher-lg font-semibold text-foreground">Searching...</h3>
+                <p className="text-launcher-sm text-muted-foreground">
                   Finding the perfect definition for you.
                 </p>
               </>
             ) : (
               <>
-                <h3 className="mb-2 text-[14px] font-semibold text-foreground">
+                <h3 className="mb-2 text-launcher-lg font-semibold text-foreground">
                   {query.trim() ? "Word not found" : "Dictionary"}
                 </h3>
-                <p className="max-w-xs text-[12px] text-muted-foreground">
+                <p className="max-w-xs text-launcher-sm text-muted-foreground">
                   {query.trim()
                     ? `We couldn't find "${query.trim()}" in our database.`
                     : "Type a word above to explore its meanings, synonyms, and more."}
@@ -202,7 +202,7 @@ export function DictionaryView({ initialQuery, onBack }: DictionaryViewProps) {
                     type="button"
                     size="sm"
                     variant="ghost"
-                    className="mt-4 text-[12px] font-medium text-[var(--ring)] hover:text-[var(--ring)]"
+                    className="mt-4 text-launcher-sm font-medium text-[var(--ring)] hover:text-[var(--ring)]"
                     onClick={() => {
                       setQuery("");
                       setDebouncedQuery("");
@@ -221,14 +221,14 @@ export function DictionaryView({ initialQuery, onBack }: DictionaryViewProps) {
             <div className="flex items-end justify-between pb-3">
               <div className="space-y-1">
                 <div className="flex items-center gap-3">
-                  <h2 className="text-[28px] font-bold tracking-[-0.02em] capitalize text-foreground">
+                  <h2 className="text-[length:calc(var(--beam-font-size-base)*2.1538)] font-bold tracking-[-0.02em] capitalize text-foreground">
                     {data.word}
                   </h2>
-                  <span className="rounded-full bg-[var(--ring)]/15 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-[var(--ring)]">
+                  <span className="rounded-full bg-[var(--ring)]/15 px-2.5 py-0.5 text-launcher-2xs font-semibold uppercase tracking-[0.06em] text-[var(--ring)]">
                     Word
                   </span>
                 </div>
-                <p className="text-[12px] text-muted-foreground">
+                <p className="text-launcher-sm text-muted-foreground">
                   {data.entries.length} meaning{data.entries.length !== 1 ? "s" : ""} •{" "}
                   {totalSenses} sense
                   {totalSenses !== 1 ? "s" : ""}
@@ -240,7 +240,7 @@ export function DictionaryView({ initialQuery, onBack }: DictionaryViewProps) {
                 variant="outline"
                 onClick={handleCopyWord}
                 className={cn(
-                  "h-8 gap-2 rounded-lg px-3 text-[12px] font-medium",
+                  "h-8 gap-2 rounded-lg px-3 text-launcher-sm font-medium",
                   copied
                     ? "bg-[var(--icon-green-bg)] text-[var(--icon-green-fg)] border-transparent"
                     : "border-[var(--launcher-card-border)] bg-[var(--launcher-card-hover-bg)] text-muted-foreground hover:text-foreground hover:bg-[var(--launcher-card-hover-bg)]",
@@ -267,7 +267,7 @@ export function DictionaryView({ initialQuery, onBack }: DictionaryViewProps) {
                   {/* Part of Speech Header */}
                   <div className="flex items-center gap-4">
                     <div className="h-px flex-1 bg-[var(--ui-divider)]" />
-                    <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--ring)]">
+                    <span className="text-launcher-xs font-semibold uppercase tracking-[0.08em] text-[var(--ring)]">
                       {entry.part_of_speech}
                     </span>
                     <div className="h-px flex-1 bg-[var(--ui-divider)]" />

@@ -43,11 +43,13 @@ export function AboutTab() {
         </div>
 
         <div className="space-y-2">
-          <div className="font-mono text-[24px] text-foreground">{productName}</div>
-          <div className="text-[14px] text-foreground/90">
+          <div className="font-mono text-[length:calc(var(--beam-font-size-base)*1.8462)] text-foreground">
+            {productName}
+          </div>
+          <div className="text-launcher-lg text-foreground/90">
             Beam’s launcher settings, command registry controls, and extension runtime configuration.
           </div>
-          <div className="font-mono text-[12px] uppercase tracking-[0.14em] text-muted-foreground">
+          <div className="font-mono text-launcher-sm uppercase tracking-[0.14em] text-muted-foreground">
             Version {version}
           </div>
         </div>

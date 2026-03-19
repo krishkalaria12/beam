@@ -51,7 +51,7 @@ export function SnippetPreview({
         <div className="mb-4 size-12 rounded-xl bg-[var(--launcher-card-bg)] p-2.5">
           <FileText className="size-full text-[var(--icon-purple-fg)]" />
         </div>
-        <p className="text-[13px] text-muted-foreground">Select a snippet to preview</p>
+        <p className="text-launcher-md text-muted-foreground">Select a snippet to preview</p>
       </section>
     );
   }
@@ -65,16 +65,16 @@ export function SnippetPreview({
             <div className="size-6 rounded-lg bg-[var(--launcher-card-bg)] p-1">
               <FileText className="size-full text-[var(--icon-purple-fg)]" />
             </div>
-            <p className="text-[13px] font-medium tracking-[-0.01em] text-foreground">
+            <p className="text-launcher-md font-medium tracking-[-0.01em] text-foreground">
               {snippet.name}
             </p>
             {!snippet.enabled && (
-              <span className="rounded-full bg-[var(--icon-orange-bg)] px-2 py-0.5 text-[10px] font-medium text-[var(--icon-orange-fg)]">
+              <span className="rounded-full bg-[var(--icon-orange-bg)] px-2 py-0.5 text-launcher-2xs font-medium text-[var(--icon-orange-fg)]">
                 Disabled
               </span>
             )}
           </div>
-          <pre className="whitespace-pre-wrap break-words font-mono text-[13px] leading-6 text-muted-foreground">
+          <pre className="whitespace-pre-wrap break-words font-mono text-launcher-md leading-6 text-muted-foreground">
             {snippet.template}
           </pre>
         </article>
@@ -82,13 +82,13 @@ export function SnippetPreview({
         {/* Information Section */}
         <section className="mt-4 rounded-xl bg-[var(--launcher-card-bg)] p-4 ring-1 ring-[var(--launcher-card-border)]">
           <div className="mb-3 flex items-center gap-3">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+            <span className="text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
               Information
             </span>
             <div className="h-px flex-1 bg-[var(--launcher-chip-bg)]" />
           </div>
 
-          <dl className="space-y-2.5 text-[12px]">
+          <dl className="space-y-2.5 text-launcher-sm">
             <div className="flex items-center justify-between gap-3">
               <dt className="text-muted-foreground">Keyword</dt>
               <dd className="font-mono text-[var(--ring)]">{snippet.trigger}</dd>
@@ -102,7 +102,7 @@ export function SnippetPreview({
                   snippet.tags.map((tag) => (
                     <span
                       key={tag}
-                      className="rounded-full bg-[var(--launcher-chip-bg)] px-2 py-0.5 text-[10px] font-medium text-muted-foreground"
+                      className="rounded-full bg-[var(--launcher-chip-bg)] px-2 py-0.5 text-launcher-2xs font-medium text-muted-foreground"
                     >
                       {tag}
                     </span>
@@ -149,7 +149,7 @@ export function SnippetPreview({
           onClick={onCopyAndCount}
           disabled={isCopying}
           className={cn(
-            "inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-[12px] font-medium transition-all duration-200",
+            "inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-launcher-sm font-medium transition-all duration-200",
             "bg-[var(--ring)]/20 text-[var(--ring)] hover:bg-[var(--ring)]/30",
             "disabled:opacity-50 disabled:pointer-events-none",
           )}
@@ -165,7 +165,7 @@ export function SnippetPreview({
             size="sm"
             onClick={onEdit}
             className={cn(
-              "inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--launcher-card-border)] px-3 text-[12px] font-medium transition-all duration-200",
+              "inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--launcher-card-border)] px-3 text-launcher-sm font-medium transition-all duration-200",
               "bg-[var(--launcher-card-bg)] text-muted-foreground hover:bg-[var(--launcher-chip-bg)] hover:text-muted-foreground",
             )}
           >
@@ -181,7 +181,7 @@ export function SnippetPreview({
                   variant="ghost"
                   size="sm"
                   className={cn(
-                    "inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--launcher-card-border)] px-2.5 text-[12px] font-medium transition-all duration-200",
+                    "inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--launcher-card-border)] px-2.5 text-launcher-sm font-medium transition-all duration-200",
                     "bg-[var(--launcher-card-bg)] text-muted-foreground hover:bg-[var(--launcher-chip-bg)] hover:text-muted-foreground",
                   )}
                 />

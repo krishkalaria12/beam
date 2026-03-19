@@ -74,7 +74,7 @@ export function AiChatSidebar({
     <aside className="ai-sidebar-enter flex h-full w-[240px] shrink-0 flex-col border-r border-[var(--launcher-card-border)] bg-[var(--launcher-card-hover-bg)]">
       {/* Header - refined typography */}
       <header className="flex h-14 shrink-0 items-center justify-between border-b border-[var(--launcher-card-border)] px-4">
-        <span className="text-[12px] font-semibold tracking-[-0.01em] text-muted-foreground">
+        <span className="text-launcher-sm font-semibold tracking-[-0.01em] text-muted-foreground">
           Conversations
         </span>
         <div className="flex items-center gap-1">
@@ -125,10 +125,10 @@ export function AiChatSidebar({
             <div className="mb-4 flex size-11 items-center justify-center rounded-xl bg-[var(--launcher-card-hover-bg)] ring-1 ring-[var(--launcher-card-border)]">
               <MessageCircle className="size-5 text-muted-foreground" />
             </div>
-            <p className="text-[12px] font-medium tracking-[-0.01em] text-muted-foreground">
+            <p className="text-launcher-sm font-medium tracking-[-0.01em] text-muted-foreground">
               No conversations yet
             </p>
-            <p className="mt-1.5 text-[11px] tracking-[-0.01em] text-muted-foreground">
+            <p className="mt-1.5 text-launcher-xs tracking-[-0.01em] text-muted-foreground">
               Start a new chat to begin
             </p>
           </div>
@@ -163,18 +163,18 @@ export function AiChatSidebar({
                   {/* Title row - improved typography */}
                   <div className="flex items-center gap-2">
                     <span
-                      className={`flex-1 truncate text-[12px] font-medium tracking-[-0.01em] ${isActive ? "text-foreground" : "text-muted-foreground"}`}
+                      className={`flex-1 truncate text-launcher-sm font-medium tracking-[-0.01em] ${isActive ? "text-foreground" : "text-muted-foreground"}`}
                     >
                       {conversation.title || "New Chat"}
                     </span>
-                    <span className="shrink-0 text-[10px] tabular-nums tracking-tight text-muted-foreground">
+                    <span className="shrink-0 text-launcher-2xs tabular-nums tracking-tight text-muted-foreground">
                       {formatConversationTimestamp(conversation.updatedAt)}
                     </span>
                   </div>
 
                   {/* Preview - refined */}
                   <p
-                    className={`truncate text-[11px] tracking-[-0.01em] ${isActive ? "text-muted-foreground" : "text-muted-foreground"}`}
+                    className={`truncate text-launcher-xs tracking-[-0.01em] ${isActive ? "text-muted-foreground" : "text-muted-foreground"}`}
                   >
                     {conversation.lastMessagePreview || "No messages yet"}
                   </p>

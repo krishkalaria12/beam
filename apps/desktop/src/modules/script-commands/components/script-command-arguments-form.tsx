@@ -120,10 +120,10 @@ export function ScriptCommandArgumentsForm({
         </div>
 
         <div className="flex-1 min-w-0">
-          <h1 className="text-[14px] font-semibold tracking-[-0.02em] text-foreground">
+          <h1 className="text-launcher-lg font-semibold tracking-[-0.02em] text-foreground">
             Run {script.title}
           </h1>
-          <p className="text-[12px] text-muted-foreground tracking-[-0.01em]">
+          <p className="text-launcher-sm text-muted-foreground tracking-[-0.01em]">
             Provide arguments before execution
           </p>
         </div>
@@ -134,11 +134,11 @@ export function ScriptCommandArgumentsForm({
         <div className="mx-auto w-full max-w-2xl space-y-4">
           {/* Script info */}
           <div className="rounded-xl bg-[var(--launcher-card-hover-bg)] p-4 ring-1 ring-[var(--launcher-card-border)]">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+            <p className="text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
               Script
             </p>
-            <p className="mt-1.5 text-[14px] font-medium text-foreground">{script.title}</p>
-            <p className="mt-1 break-all font-mono text-[11px] text-muted-foreground">
+            <p className="mt-1.5 text-launcher-lg font-medium text-foreground">{script.title}</p>
+            <p className="mt-1 break-all font-mono text-launcher-xs text-muted-foreground">
               {script.scriptPath}
             </p>
           </div>
@@ -167,7 +167,7 @@ export function ScriptCommandArgumentsForm({
                     >
                       <Label
                         htmlFor={`script-argument-${argument.name}`}
-                        className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground"
+                        className="text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground"
                       >
                         {label}
                         {argument.required && (
@@ -187,7 +187,7 @@ export function ScriptCommandArgumentsForm({
                             <SelectTrigger
                               id={`script-argument-${argument.name}`}
                               onKeyDown={stopFieldKeyPropagation}
-                              className="h-10 rounded-xl border-0 bg-[var(--launcher-card-hover-bg)] ring-1 ring-[var(--launcher-card-border)] text-[13px] text-muted-foreground focus:ring-[var(--ring)]"
+                              className="h-10 rounded-xl border-0 bg-[var(--launcher-card-hover-bg)] ring-1 ring-[var(--launcher-card-border)] text-launcher-md text-muted-foreground focus:ring-[var(--ring)]"
                             >
                               <SelectValue placeholder={argument.placeholder || "Select value"} />
                             </SelectTrigger>
@@ -199,7 +199,7 @@ export function ScriptCommandArgumentsForm({
                                   <SelectItem
                                     key={`${argument.name}:${idx}:${value}`}
                                     value={value}
-                                    className="text-[12px] text-muted-foreground focus:bg-[var(--launcher-card-hover-bg)] focus:text-foreground"
+                                    className="text-launcher-sm text-muted-foreground focus:bg-[var(--launcher-card-hover-bg)] focus:text-foreground"
                                   >
                                     {title}
                                   </SelectItem>
@@ -219,7 +219,7 @@ export function ScriptCommandArgumentsForm({
                             onKeyDown={stopFieldKeyPropagation}
                             onKeyDownCapture={stopFieldKeyPropagation}
                             placeholder={argument.placeholder || argument.name}
-                            className="h-10 w-full rounded-xl bg-[var(--launcher-card-hover-bg)] px-4 font-mono text-[13px] text-foreground placeholder:text-muted-foreground ring-1 ring-[var(--launcher-card-border)] transition-all duration-200 focus:outline-none focus:ring-[var(--ring)]"
+                            className="h-10 w-full rounded-xl bg-[var(--launcher-card-hover-bg)] px-4 font-mono text-launcher-md text-foreground placeholder:text-muted-foreground ring-1 ring-[var(--launcher-card-border)] transition-all duration-200 focus:outline-none focus:ring-[var(--ring)]"
                             autoFocus={argument.index === 1}
                           />
                         )}
@@ -234,7 +234,7 @@ export function ScriptCommandArgumentsForm({
             {(validationError || errorMessage) && (
               <div className="flex items-center gap-2.5 rounded-xl bg-[var(--icon-red-bg)] px-4 py-3 ring-1 ring-[var(--icon-red-bg)]">
                 <AlertTriangle className="size-4 text-[var(--icon-red-fg)]" />
-                <span className="text-[12px] text-[var(--icon-red-fg)]">
+                <span className="text-launcher-sm text-[var(--icon-red-fg)]">
                   {validationError ?? errorMessage}
                 </span>
               </div>
@@ -266,7 +266,7 @@ export function ScriptCommandArgumentsForm({
             size="sm"
             onClick={() => void form.handleSubmit()}
             disabled={isSubmitting}
-            className="flex h-8 items-center gap-1.5 rounded-lg bg-[var(--ring)]/20 px-3.5 text-[12px] font-medium text-[var(--ring)] transition-all duration-200 hover:bg-[var(--ring)]/30 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex h-8 items-center gap-1.5 rounded-lg bg-[var(--ring)]/20 px-3.5 text-launcher-sm font-medium text-[var(--ring)] transition-all duration-200 hover:bg-[var(--ring)]/30 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {isSubmitting ? (
               <Loader2 className="size-3.5 animate-spin" />

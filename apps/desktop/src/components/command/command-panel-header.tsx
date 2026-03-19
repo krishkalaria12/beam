@@ -60,8 +60,8 @@ export function CommandPanelHeader({
       {/* Title Block */}
       {(title || subtitle) && (
         <div className="min-w-0 flex-1">
-          {title && <p className="truncate text-sm font-medium text-foreground">{title}</p>}
-          {subtitle && <p className="truncate text-xs text-muted-foreground">{subtitle}</p>}
+          {title && <p className="truncate text-launcher-sm font-medium text-foreground">{title}</p>}
+          {subtitle && <p className="truncate text-launcher-xs text-muted-foreground">{subtitle}</p>}
         </div>
       )}
 
@@ -132,9 +132,9 @@ export function CommandPanelTitleBlock({
 }: CommandPanelTitleBlockProps) {
   return (
     <div className={cn("min-w-0", className)}>
-      <p className={cn("truncate text-sm font-medium text-foreground", titleClassName)}>{title}</p>
+      <p className={cn("truncate text-launcher-sm font-medium text-foreground", titleClassName)}>{title}</p>
       {subtitle && (
-        <p className={cn("truncate text-xs text-muted-foreground", subtitleClassName)}>
+        <p className={cn("truncate text-launcher-xs text-muted-foreground", subtitleClassName)}>
           {subtitle}
         </p>
       )}

@@ -73,8 +73,8 @@ export function AiSetupView({
           <ChevronLeft className="size-4" />
         </Button>
         <div className="flex flex-col gap-0.5">
-          <h1 className="text-[13px] font-semibold tracking-[-0.01em] text-foreground">AI Setup</h1>
-          <p className="text-[11px] tracking-[-0.01em] text-muted-foreground">
+          <h1 className="text-launcher-md font-semibold tracking-[-0.01em] text-foreground">AI Setup</h1>
+          <p className="text-launcher-xs tracking-[-0.01em] text-muted-foreground">
             Configure your AI provider
           </p>
         </div>
@@ -88,10 +88,10 @@ export function AiSetupView({
             <div className="mx-auto mb-5 flex size-14 items-center justify-center rounded-2xl bg-[var(--launcher-card-bg)] ring-1 ring-[var(--launcher-card-border)] shadow-lg shadow-[var(--ring)]/10">
               <Sparkles className="size-6 text-[var(--ring)]" />
             </div>
-            <h2 className="text-[20px] font-semibold tracking-[-0.025em] text-foreground">
+            <h2 className="text-launcher-display font-semibold tracking-[-0.025em] text-foreground">
               Connect your AI
             </h2>
-            <p className="mx-auto mt-2.5 max-w-xs text-[13px] leading-[1.6] tracking-[-0.01em] text-muted-foreground">
+            <p className="mx-auto mt-2.5 max-w-xs text-launcher-md leading-[1.6] tracking-[-0.01em] text-muted-foreground">
               Add your API key to start chatting with AI models. Your key is stored securely on your
               device.
             </p>
@@ -100,7 +100,7 @@ export function AiSetupView({
           {/* Provider selection - refined card styles */}
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+              <span className="text-launcher-2xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
                 Provider
               </span>
               <div className="h-px flex-1 bg-[var(--launcher-card-bg)]" />
@@ -129,17 +129,17 @@ export function AiSetupView({
                     <div
                       className={`flex size-9 items-center justify-center rounded-lg bg-[var(--launcher-card-bg)] ${style.gradient} ring-1 ring-[var(--launcher-card-border)]`}
                     >
-                      <span className={`text-[11px] font-bold tracking-tight ${style.color}`}>
+                      <span className={`text-launcher-xs font-bold tracking-tight ${style.color}`}>
                         {style.icon}
                       </span>
                     </div>
                     <div className="flex-1 min-w-0">
                       <span
-                        className={`block text-[13px] font-medium tracking-[-0.01em] truncate ${isSelected ? "text-foreground" : "text-muted-foreground"}`}
+                        className={`block text-launcher-md font-medium tracking-[-0.01em] truncate ${isSelected ? "text-foreground" : "text-muted-foreground"}`}
                       >
                         {provider.label}
                       </span>
-                      <span className="text-[11px] tracking-[-0.01em] text-muted-foreground">
+                      <span className="text-launcher-xs tracking-[-0.01em] text-muted-foreground">
                         {provider.models.length} model{provider.models.length !== 1 ? "s" : ""}
                       </span>
                     </div>
@@ -157,12 +157,12 @@ export function AiSetupView({
           {/* API Key input - refined input styling */}
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+              <span className="text-launcher-2xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
                 API Key
               </span>
               <div className="h-px flex-1 bg-[var(--launcher-card-bg)]" />
               {isApiKeySetForProvider && (
-                <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.05em] text-[var(--icon-green-fg)]">
+                <span className="flex items-center gap-1.5 text-launcher-2xs font-semibold uppercase tracking-[0.05em] text-[var(--icon-green-fg)]">
                   <Check className="size-3" strokeWidth={2.5} />
                   Configured
                 </span>
@@ -183,7 +183,7 @@ export function AiSetupView({
                       ? "API key already configured"
                       : `Enter your ${providerDefinition.label} API key`
                   }
-                  className="h-11 w-full rounded-xl bg-[var(--launcher-card-hover-bg)] pl-11 pr-4 text-[13px] tracking-[-0.01em] text-foreground placeholder:text-muted-foreground ring-1 ring-[var(--launcher-card-border)] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/70 focus:bg-[var(--launcher-card-hover-bg)]"
+                  className="h-11 w-full rounded-xl bg-[var(--launcher-card-hover-bg)] pl-11 pr-4 text-launcher-md tracking-[-0.01em] text-foreground placeholder:text-muted-foreground ring-1 ring-[var(--launcher-card-border)] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/70 focus:bg-[var(--launcher-card-hover-bg)]"
                   disabled={isSavingApiKey}
                 />
               </div>
@@ -195,7 +195,7 @@ export function AiSetupView({
                   size="sm"
                   onClick={onSaveApiKey}
                   disabled={isSavingApiKey || apiKeyInput.trim().length === 0}
-                  className="flex h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-[var(--ring)]/15 text-[12px] font-semibold tracking-[-0.01em] text-[var(--ring)] ring-1 ring-[var(--ring)]/25 transition-all duration-200 hover:bg-[var(--ring)]/25 hover:ring-[var(--ring)]/40 disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="flex h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-[var(--ring)]/15 text-launcher-sm font-semibold tracking-[-0.01em] text-[var(--ring)] ring-1 ring-[var(--ring)]/25 transition-all duration-200 hover:bg-[var(--ring)]/25 hover:ring-[var(--ring)]/40 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   {isSavingApiKey ? (
                     <Loader2 className="size-4 animate-spin" />
@@ -213,7 +213,7 @@ export function AiSetupView({
                     size="sm"
                     onClick={onClearApiKey}
                     disabled={isSavingApiKey}
-                    className="flex h-10 items-center justify-center gap-2 rounded-xl bg-[var(--launcher-card-hover-bg)] px-4 text-[12px] font-medium tracking-[-0.01em] text-muted-foreground ring-1 ring-[var(--launcher-card-border)] transition-all duration-200 hover:bg-[var(--launcher-card-hover-bg)] hover:text-muted-foreground disabled:opacity-40"
+                    className="flex h-10 items-center justify-center gap-2 rounded-xl bg-[var(--launcher-card-hover-bg)] px-4 text-launcher-sm font-medium tracking-[-0.01em] text-muted-foreground ring-1 ring-[var(--launcher-card-border)] transition-all duration-200 hover:bg-[var(--launcher-card-hover-bg)] hover:text-muted-foreground disabled:opacity-40"
                   >
                     Clear
                   </Button>
@@ -225,7 +225,7 @@ export function AiSetupView({
                 href={`https://console.${selectedProvider === "openai" ? "openai" : selectedProvider === "anthropic" ? "anthropic" : selectedProvider === "gemini" ? "cloud.google" : "openrouter"}.com`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center gap-1.5 pt-1 text-[11px] tracking-[-0.01em] text-muted-foreground transition-colors hover:text-muted-foreground"
+                className="flex items-center justify-center gap-1.5 pt-1 text-launcher-xs tracking-[-0.01em] text-muted-foreground transition-colors hover:text-muted-foreground"
               >
                 Get your {providerDefinition.label} API key
                 <ExternalLink className="size-3" />
@@ -238,7 +238,7 @@ export function AiSetupView({
       <ModuleFooter
         className="h-14 border-[var(--launcher-card-border)] px-5"
         leftSlot={
-          <div className="flex items-center gap-2 text-[11px] tracking-[-0.01em] text-muted-foreground">
+          <div className="flex items-center gap-2 text-launcher-xs tracking-[-0.01em] text-muted-foreground">
             {isCheckingApiKey ? (
               <>
                 <Loader2 className="size-3.5 animate-spin text-muted-foreground" />
@@ -264,7 +264,7 @@ export function AiSetupView({
             size="sm"
             onClick={onContinue}
             disabled={!canContinue}
-            className="flex h-9 items-center gap-2 rounded-xl bg-[var(--ring)] px-5 text-[12px] font-semibold tracking-[-0.01em] text-foreground shadow-lg shadow-[var(--ring)]/25 transition-all duration-200 hover:shadow-xl hover:shadow-[var(--ring)]/35 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
+            className="flex h-9 items-center gap-2 rounded-xl bg-[var(--ring)] px-5 text-launcher-sm font-semibold tracking-[-0.01em] text-foreground shadow-lg shadow-[var(--ring)]/25 transition-all duration-200 hover:shadow-xl hover:shadow-[var(--ring)]/35 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
           >
             Continue to Chat
             <ChevronLeft className="size-4 rotate-180" />

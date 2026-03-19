@@ -84,14 +84,14 @@ export function MetadataBar({
                 className={cn("metadata-row module-metadata-row flex items-start justify-between gap-4", rowClassName, item.className)}
                 style={item.style}
               >
-                <span className={cn("module-metadata-label text-[12px] text-muted-foreground", item.labelClassName)}>
+                <span className={cn("module-metadata-label text-launcher-sm text-muted-foreground", item.labelClassName)}>
                   {item.label}
                 </span>
                 <div className={cn("module-metadata-tags flex max-w-[68%] flex-wrap justify-end gap-1.5", item.tagsClassName)}>
                   {item.tags.map((tag, tagIndex) => (
                     <span
                       key={`tag:${index}:${tagIndex}`}
-                      className="module-metadata-tag inline-flex items-center gap-1 rounded-md border border-[var(--launcher-chip-border)] bg-[var(--launcher-chip-bg)] px-2 py-0.5 text-[11px] text-muted-foreground"
+                      className="module-metadata-tag inline-flex items-center gap-1 rounded-md border border-[var(--launcher-chip-border)] bg-[var(--launcher-chip-bg)] px-2 py-0.5 text-launcher-xs text-muted-foreground"
                       style={tag.color ? { color: tag.color } : undefined}
                     >
                       {tag.icon ? <span className="[&_svg]:size-3.5">{tag.icon}</span> : null}
@@ -109,7 +109,7 @@ export function MetadataBar({
                 type="button"
                 className={cn(
                   "module-metadata-value module-metadata-link",
-                  "max-w-[68%] truncate text-right text-[12px] text-foreground underline-offset-4 hover:underline",
+                  "max-w-[68%] truncate text-right text-launcher-sm text-foreground underline-offset-4 hover:underline",
                   item.valueClassName,
                 )}
                 style={item.valueStyle}
@@ -123,7 +123,7 @@ export function MetadataBar({
               <div
                 className={cn(
                   "module-metadata-value",
-                  "flex max-w-[68%] items-center justify-end gap-1.5 text-right text-[12px] text-foreground",
+                  "flex max-w-[68%] items-center justify-end gap-1.5 text-right text-launcher-sm text-foreground",
                   item.valueClassName,
                 )}
                 style={item.valueStyle}
@@ -139,7 +139,7 @@ export function MetadataBar({
               className={cn("metadata-row module-metadata-row flex items-start justify-between gap-4", rowClassName, item.className)}
               style={item.style}
             >
-              <span className={cn("module-metadata-label text-[12px] text-muted-foreground", item.labelClassName)}>
+              <span className={cn("module-metadata-label text-launcher-sm text-muted-foreground", item.labelClassName)}>
                 {item.label}
               </span>
               {value}

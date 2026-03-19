@@ -37,7 +37,7 @@ function extensionKey(owner: string, slug: string): string {
 
 function CountBadge({ value }: { value: string | number }) {
   return (
-    <span className="inline-flex min-w-6 items-center justify-center rounded-md border border-[var(--launcher-chip-border)] bg-[var(--launcher-chip-bg)] px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+    <span className="inline-flex min-w-6 items-center justify-center rounded-md border border-[var(--launcher-chip-border)] bg-[var(--launcher-chip-bg)] px-1.5 py-0.5 text-launcher-2xs font-medium text-muted-foreground">
       {value}
     </span>
   );
@@ -97,7 +97,7 @@ export function ExtensionsSidebar({
       <section className="space-y-2">
         <SidebarSectionHeader title="Installed" count={installedExtensions.length} />
         {installedErrorMessage ? (
-          <div className="rounded-lg border border-[var(--icon-red-bg)] bg-[var(--icon-red-bg)] px-3 py-2 text-[12px] text-[var(--icon-red-fg)]">
+          <div className="rounded-lg border border-[var(--icon-red-bg)] bg-[var(--icon-red-bg)] px-3 py-2 text-launcher-sm text-[var(--icon-red-fg)]">
             {installedErrorMessage}
           </div>
         ) : installedExtensions.length === 0 ? (
@@ -150,12 +150,12 @@ export function ExtensionsSidebar({
             title={`Type at least ${minimumSearchLength} characters to search the extension store.`}
           />
         ) : isStoreLoading || isSearchDebouncing ? (
-          <div className="flex items-center gap-2 px-2 py-2 text-[12px] text-muted-foreground">
+          <div className="flex items-center gap-2 px-2 py-2 text-launcher-sm text-muted-foreground">
             <Loader2 className="size-3.5 animate-spin" />
             Searching store…
           </div>
         ) : isStoreError ? (
-          <div className="rounded-lg border border-[var(--icon-red-bg)] bg-[var(--icon-red-bg)] px-3 py-2 text-[12px] text-[var(--icon-red-fg)]">
+          <div className="rounded-lg border border-[var(--icon-red-bg)] bg-[var(--icon-red-bg)] px-3 py-2 text-launcher-sm text-[var(--icon-red-fg)]">
             {storeErrorMessage || "Store search failed."}
           </div>
         ) : storeResults.length === 0 ? (

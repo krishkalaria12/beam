@@ -35,7 +35,7 @@ export function CalculatorHistoryItem({
         <div className="flex items-center gap-4">
           {/* Expression */}
           <div className="min-w-0 flex-1">
-            <p className="truncate font-mono text-[13px] font-medium tracking-[-0.01em] text-muted-foreground group-data-[selected=true]:text-muted-foreground">
+            <p className="truncate font-mono text-launcher-md font-medium tracking-[-0.01em] text-muted-foreground group-data-[selected=true]:text-muted-foreground">
               {entry.query}
             </p>
           </div>
@@ -48,7 +48,7 @@ export function CalculatorHistoryItem({
             {/* Copy hint - shows on selection */}
             <span
               className={cn(
-                "hidden sm:flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-[0.06em] transition-all duration-200",
+                "hidden sm:flex items-center gap-1.5 text-launcher-2xs font-medium uppercase tracking-[0.06em] transition-all duration-200",
                 "opacity-0 translate-x-2 group-data-[selected=true]:opacity-100 group-data-[selected=true]:translate-x-0",
                 isCopied ? "text-[var(--icon-green-fg)]" : "text-muted-foreground",
               )}
@@ -67,7 +67,7 @@ export function CalculatorHistoryItem({
             </span>
 
             {/* Result value */}
-            <p className="truncate font-mono text-[18px] font-bold tracking-[-0.02em] text-foreground">
+            <p className="truncate font-mono text-launcher-3xl font-bold tracking-[-0.02em] text-foreground">
               {entry.result}
             </p>
           </div>

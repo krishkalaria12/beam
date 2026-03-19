@@ -38,7 +38,7 @@ export function GeneralLayoutSection() {
     <div className="settings-panel space-y-5 rounded-2xl bg-[var(--launcher-card-hover-bg)] px-4 py-5 ring-1 ring-[var(--launcher-card-border)]">
       {/* Section header */}
       <div className="flex items-center gap-3 px-1">
-        <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+        <span className="text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
           Density
         </span>
         <div className="h-px flex-1 bg-[var(--launcher-chip-bg)]" />
@@ -82,7 +82,7 @@ export function GeneralLayoutSection() {
               <div className="flex-1 min-w-0">
                 <p
                   className={cn(
-                    "text-[14px] font-semibold tracking-[-0.02em]",
+                    "text-launcher-lg font-semibold tracking-[-0.02em]",
                     isSelected ? "text-secondary-foreground" : "text-foreground",
                   )}
                 >
@@ -90,7 +90,7 @@ export function GeneralLayoutSection() {
                 </p>
                 <p
                   className={cn(
-                    "mt-0.5 text-[12px]",
+                    "mt-0.5 text-launcher-sm",
                     isSelected ? "text-secondary-foreground/80" : "text-muted-foreground",
                   )}
                 >
@@ -130,7 +130,7 @@ export function GeneralLayoutSection() {
       </div>
 
       {/* Info */}
-      <p className="px-1 text-[12px] leading-relaxed text-muted-foreground">
+      <p className="px-1 text-launcher-sm leading-relaxed text-muted-foreground">
         Changes how much content fits on screen. Choose expanded for readability or compressed to
         see more items at once.
       </p>

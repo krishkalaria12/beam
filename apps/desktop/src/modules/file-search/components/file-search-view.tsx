@@ -122,7 +122,7 @@ export function FileSearchView({ initialQuery, onBack }: FileSearchViewProps) {
             onChange={handleChange}
             className="w-full h-10 pl-7 pr-4 
               bg-transparent border-none
-              text-[16px] text-foreground font-medium tracking-[-0.02em]
+              text-launcher-2xl text-foreground font-medium tracking-[-0.02em]
               outline-none
               placeholder:text-muted-foreground/40 placeholder:font-normal"
             placeholder="Search files by name..."
@@ -136,7 +136,7 @@ export function FileSearchView({ initialQuery, onBack }: FileSearchViewProps) {
           bg-[var(--command-item-hover-bg)] border border-[var(--ui-divider)]"
         >
           <FolderSearch className="size-3.5 text-muted-foreground/60" />
-          <span className="text-[11px] font-medium text-muted-foreground/80 tracking-wide">
+          <span className="text-launcher-xs font-medium text-muted-foreground/80 tracking-wide">
             Local
           </span>
         </div>
@@ -168,7 +168,7 @@ export function FileSearchView({ initialQuery, onBack }: FileSearchViewProps) {
           <div className="flex items-center gap-2.5">
             <div className="flex items-center gap-1.5">
               <div className="size-1.5 rounded-full bg-[var(--solid-success)] animate-pulse" />
-              <span className="text-[12px] font-medium text-muted-foreground/80">
+              <span className="text-launcher-sm font-medium text-muted-foreground/80">
                 {results.length} {results.length === 1 ? "file" : "files"}
               </span>
             </div>

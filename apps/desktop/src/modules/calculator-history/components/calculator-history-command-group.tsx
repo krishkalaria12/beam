@@ -79,7 +79,7 @@ export default function CalculatorHistoryCommandGroup({
             <div className="size-10 rounded-xl bg-[var(--launcher-card-bg)] p-2.5 mb-3">
               <Loader2 className="size-full text-[var(--icon-orange-fg)] animate-spin" />
             </div>
-            <p className="text-[12px] text-muted-foreground">Loading history...</p>
+            <p className="text-launcher-sm text-muted-foreground">Loading history...</p>
           </div>
         </CommandItem>
       )}

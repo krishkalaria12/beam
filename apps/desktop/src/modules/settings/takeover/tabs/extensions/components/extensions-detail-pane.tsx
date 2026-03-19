@@ -50,10 +50,10 @@ export function ExtensionsDetailPane({
               className="size-11 rounded-xl"
             />
             <div className="min-w-0">
-              <div className="truncate font-mono text-[18px] text-foreground">
+              <div className="truncate font-mono text-launcher-3xl text-foreground">
                 {selectedCommand?.title ?? selectedGroup.title}
               </div>
-              <div className="mt-1 text-[12px] text-muted-foreground">
+              <div className="mt-1 text-launcher-sm text-muted-foreground">
                 {selectedCommand
                   ? `${selectedGroup.sourceKind === "beam" ? "beam/core" : `${selectedGroup.owner}/${selectedGroup.pluginName}`} · ${selectedCommand.commandName}`
                   : selectedGroup.sourceKind === "beam"
@@ -65,10 +65,10 @@ export function ExtensionsDetailPane({
 
           {(selectedCommand?.description || selectedGroup.description) ? (
             <div className="space-y-2">
-              <div className="font-mono text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+              <div className="font-mono text-launcher-xs uppercase tracking-[0.14em] text-muted-foreground">
                 Description
               </div>
-              <p className="text-[13px] leading-6 text-foreground/90">
+              <p className="text-launcher-md leading-6 text-foreground/90">
                 {selectedCommand?.description || selectedGroup.description}
               </p>
             </div>
@@ -101,10 +101,10 @@ export function ExtensionsDetailPane({
                 },
               ].map((item) => (
                 <div key={item.label} className="bg-[var(--launcher-card-bg)] px-4 py-3">
-                  <div className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+                  <div className="font-mono text-launcher-2xs uppercase tracking-[0.12em] text-muted-foreground">
                     {item.label}
                   </div>
-                  <div className="mt-1 text-[13px] text-foreground">{item.value}</div>
+                  <div className="mt-1 text-launcher-md text-foreground">{item.value}</div>
                 </div>
               ))}
             </div>

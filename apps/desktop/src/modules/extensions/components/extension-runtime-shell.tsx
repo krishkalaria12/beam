@@ -88,7 +88,7 @@ export function ExtensionRuntimeShell({ state, onOpenExtensions }: ExtensionRunt
                 variant="ghost"
                 size="sm"
                 onClick={onOpenExtensions}
-                className="ext-search-settings h-8 rounded-lg border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-2.5 text-xs"
+                className="ext-search-settings h-8 rounded-lg border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-2.5 text-launcher-xs"
               >
                 <Settings2 className="size-3.5" />
               </Button>

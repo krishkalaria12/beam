@@ -121,7 +121,7 @@ function CommandSelector({
         disabled={disabled}
         className={cn(
           "flex h-11 flex-1 min-w-0 items-center justify-between gap-2 rounded-xl px-3.5",
-          "bg-[var(--launcher-card-hover-bg)] text-[13px] font-medium tracking-[-0.01em]",
+          "bg-[var(--launcher-card-hover-bg)] text-launcher-md font-medium tracking-[-0.01em]",
           "ring-1 ring-[var(--launcher-card-border)] transition-all",
           "hover:bg-[var(--launcher-chip-bg)]",
           disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer",
@@ -142,7 +142,7 @@ function CommandSelector({
             onClick={() => onChange(command.id)}
             className={cn(
               "flex items-center justify-between gap-2 rounded-lg px-2.5 py-2",
-              "text-[12px] font-medium transition-colors cursor-pointer",
+              "text-launcher-sm font-medium transition-colors cursor-pointer",
               "hover:bg-[var(--launcher-chip-bg)] focus:bg-[var(--launcher-chip-bg)]",
               command.id === value ? "text-foreground" : "text-muted-foreground",
             )}
@@ -267,13 +267,13 @@ export function GeneralTriggerSymbolsSection() {
       {/* Trigger Symbols Section */}
       <section className="space-y-3">
         <div className="flex items-center gap-3 px-1">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+          <span className="text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
             Trigger Symbols
           </span>
           <div className="h-px flex-1 bg-[var(--launcher-chip-bg)]" />
         </div>
 
-        <p className="px-1 text-[12px] leading-relaxed text-muted-foreground">
+        <p className="px-1 text-launcher-sm leading-relaxed text-muted-foreground">
           Map launcher prefixes to command groups.
         </p>
 
@@ -302,10 +302,10 @@ export function GeneralTriggerSymbolsSection() {
 
                   {/* Info */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-[14px] font-medium tracking-[-0.02em] text-foreground">
+                    <p className="text-launcher-lg font-medium tracking-[-0.02em] text-foreground">
                       {row.title}
                     </p>
-                    <p className="text-[12px] text-muted-foreground">{row.description}</p>
+                    <p className="text-launcher-sm text-muted-foreground">{row.description}</p>
                   </div>
 
                   {/* Input and Save */}
@@ -319,7 +319,7 @@ export function GeneralTriggerSymbolsSection() {
                       maxLength={1}
                       placeholder="#"
                       className={cn(
-                        "size-11 rounded-lg border-[var(--launcher-card-border)] bg-[var(--launcher-card-hover-bg)] px-0 text-center text-[16px] font-semibold text-foreground placeholder:text-muted-foreground",
+                        "size-11 rounded-lg border-[var(--launcher-card-border)] bg-[var(--launcher-card-hover-bg)] px-0 text-center text-launcher-2xl font-semibold text-foreground placeholder:text-muted-foreground",
                         "focus-visible:border-[var(--ring)] focus-visible:ring-[var(--ring)]/40",
                         "transition-all duration-150",
                       )}
@@ -331,7 +331,7 @@ export function GeneralTriggerSymbolsSection() {
                       disabled={!hasChanges}
                       size="sm"
                       className={cn(
-                        "rounded-lg px-3.5 text-[12px] font-medium transition-all duration-150",
+                        "rounded-lg px-3.5 text-launcher-sm font-medium transition-all duration-150",
                         hasChanges
                           ? "bg-[var(--ring)]/20 text-[var(--ring)] hover:bg-[var(--ring)]/30"
                           : "bg-[var(--launcher-card-bg)] text-muted-foreground cursor-not-allowed",
@@ -350,13 +350,13 @@ export function GeneralTriggerSymbolsSection() {
       {/* Custom Symbol Mappings */}
       <section className="space-y-3">
         <div className="flex items-center gap-3 px-1">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+          <span className="text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
             Custom Mappings
           </span>
           <div className="h-px flex-1 bg-[var(--launcher-chip-bg)]" />
         </div>
 
-        <p className="px-1 text-[12px] leading-relaxed text-muted-foreground">
+        <p className="px-1 text-launcher-sm leading-relaxed text-muted-foreground">
           Choose any launcher item and map a symbol to it.
         </p>
 
@@ -373,8 +373,8 @@ export function GeneralTriggerSymbolsSection() {
               <div className="flex size-12 items-center justify-center rounded-xl bg-[var(--launcher-card-hover-bg)] mb-3">
                 <Plus className="size-5 text-muted-foreground" />
               </div>
-              <p className="text-[13px] text-muted-foreground">No custom mappings yet</p>
-              <p className="mt-0.5 text-[11px] text-muted-foreground">
+              <p className="text-launcher-md text-muted-foreground">No custom mappings yet</p>
+              <p className="mt-0.5 text-launcher-xs text-muted-foreground">
                 Add one below to get started
               </p>
             </div>
@@ -398,7 +398,7 @@ export function GeneralTriggerSymbolsSection() {
                 >
                   <div className="flex items-center gap-3">
                     {/* Order number */}
-                    <div className="flex size-7 items-center justify-center rounded-lg bg-[var(--launcher-card-hover-bg)] text-[11px] font-semibold tabular-nums text-muted-foreground">
+                    <div className="flex size-7 items-center justify-center rounded-lg bg-[var(--launcher-card-hover-bg)] text-launcher-xs font-semibold tabular-nums text-muted-foreground">
                       {index + 1}
                     </div>
 
@@ -421,7 +421,7 @@ export function GeneralTriggerSymbolsSection() {
                       maxLength={1}
                       placeholder="#"
                       className={cn(
-                        "size-11 shrink-0 rounded-lg border-[var(--launcher-card-border)] bg-[var(--launcher-card-hover-bg)] px-0 text-center text-[16px] font-semibold text-foreground placeholder:text-muted-foreground",
+                        "size-11 shrink-0 rounded-lg border-[var(--launcher-card-border)] bg-[var(--launcher-card-hover-bg)] px-0 text-center text-launcher-2xl font-semibold text-foreground placeholder:text-muted-foreground",
                         "focus-visible:border-[var(--ring)] focus-visible:ring-[var(--ring)]/40",
                         "transition-all duration-150",
                       )}
@@ -442,7 +442,7 @@ export function GeneralTriggerSymbolsSection() {
                         disabled={!hasChanges}
                         size="sm"
                         className={cn(
-                          "rounded-lg px-3.5 text-[12px] font-medium transition-all duration-150",
+                          "rounded-lg px-3.5 text-launcher-sm font-medium transition-all duration-150",
                           hasChanges
                             ? "bg-[var(--ring)]/20 text-[var(--ring)] hover:bg-[var(--ring)]/30"
                             : "bg-[var(--launcher-card-bg)] text-muted-foreground cursor-not-allowed",
@@ -475,7 +475,7 @@ export function GeneralTriggerSymbolsSection() {
 
         {/* Add new mapping */}
         <div className="rounded-xl bg-[var(--launcher-card-bg)] ring-1 ring-[var(--launcher-card-border)] p-4">
-          <p className="mb-3 text-[12px] font-medium text-muted-foreground">Add new mapping</p>
+          <p className="mb-3 text-launcher-sm font-medium text-muted-foreground">Add new mapping</p>
 
           <div className="flex items-center gap-3">
             {/* Symbol input */}
@@ -488,7 +488,7 @@ export function GeneralTriggerSymbolsSection() {
               maxLength={1}
               placeholder="#"
               className={cn(
-                "size-11 shrink-0 rounded-lg border-[var(--launcher-card-border)] bg-[var(--launcher-card-hover-bg)] px-0 text-center text-[16px] font-semibold text-foreground placeholder:text-muted-foreground",
+                "size-11 shrink-0 rounded-lg border-[var(--launcher-card-border)] bg-[var(--launcher-card-hover-bg)] px-0 text-center text-launcher-2xl font-semibold text-foreground placeholder:text-muted-foreground",
                 "focus-visible:border-[var(--ring)] focus-visible:ring-[var(--ring)]/40",
                 "transition-all duration-150",
               )}
@@ -510,7 +510,7 @@ export function GeneralTriggerSymbolsSection() {
               disabled={!HAS_COMMAND_OPTIONS || !newCustomSymbol}
               size="sm"
               className={cn(
-                "gap-1.5 rounded-lg px-4 text-[12px] font-medium transition-all duration-150",
+                "gap-1.5 rounded-lg px-4 text-launcher-sm font-medium transition-all duration-150",
                 HAS_COMMAND_OPTIONS && newCustomSymbol
                   ? "bg-[var(--ring)]/20 text-[var(--ring)] hover:bg-[var(--ring)]/30"
                   : "bg-[var(--launcher-card-bg)] text-muted-foreground cursor-not-allowed",
@@ -531,7 +531,7 @@ export function GeneralTriggerSymbolsSection() {
           variant="outline"
           size="sm"
           className={cn(
-            "gap-2 rounded-lg border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-4 text-[12px] font-medium text-muted-foreground",
+            "gap-2 rounded-lg border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-4 text-launcher-sm font-medium text-muted-foreground",
             "hover:bg-[var(--launcher-chip-bg)]",
             "transition-all duration-150",
             "hover:text-foreground",

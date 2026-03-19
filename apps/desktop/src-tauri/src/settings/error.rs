@@ -16,6 +16,12 @@ pub enum SettingsError {
 
     #[error("invalid icon theme")]
     InvalidIconTheme,
+
+    #[error("invalid launcher font family")]
+    InvalidLauncherFontFamily,
+
+    #[error("invalid launcher font size")]
+    InvalidLauncherFontSize,
 }
 
 impl Serialize for SettingsError {

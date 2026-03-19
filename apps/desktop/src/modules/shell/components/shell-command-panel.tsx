@@ -13,7 +13,7 @@ interface ShellCommandPanelProps {
 function StatusChip({ entry }: { entry: ShellExecutionEntry }) {
   if (entry.status === "running") {
     return (
-      <span className="inline-flex items-center gap-1.5 text-[11px] text-zinc-500">
+      <span className="inline-flex items-center gap-1.5 text-launcher-xs text-zinc-500">
         <Loader2 className="size-3 animate-spin" />
         Running
       </span>
@@ -24,14 +24,14 @@ function StatusChip({ entry }: { entry: ShellExecutionEntry }) {
     const toneClass = entry.result.success ? "text-emerald-300" : "text-amber-300";
 
     return (
-      <span className={cn("inline-flex items-center gap-1.5 text-[11px]", toneClass)}>
+      <span className={cn("inline-flex items-center gap-1.5 text-launcher-xs", toneClass)}>
         <TimerReset className="size-3" />
         {entry.result.timedOut ? "Timed out" : `Exit ${entry.result.exitCode ?? "signal"}`}
       </span>
     );
   }
 
-  return <span className="inline-flex items-center text-[11px] text-rose-300">Failed</span>;
+  return <span className="inline-flex items-center text-launcher-xs text-rose-300">Failed</span>;
 }
 
 function OutputBlock({
@@ -48,13 +48,13 @@ function OutputBlock({
       return null;
     }
 
-    return <p className="text-[12px] text-zinc-500">{emptyLabel}</p>;
+    return <p className="text-launcher-sm text-zinc-500">{emptyLabel}</p>;
   }
 
   return (
     <pre
       className={cn(
-        "overflow-x-auto whitespace-pre-wrap break-words border-l border-[var(--launcher-card-border)] pl-3 font-mono text-[12px] leading-5 text-zinc-100",
+        "overflow-x-auto whitespace-pre-wrap break-words border-l border-[var(--launcher-card-border)] pl-3 font-mono text-launcher-sm leading-5 text-zinc-100",
         toneClassName,
       )}
     >
@@ -83,8 +83,8 @@ export function ShellCommandPanel({
               <Terminal className="size-4 text-zinc-400" />
             </div>
             <div className="space-y-1">
-              <p className="text-[13px] text-zinc-100">Inline shell mode</p>
-              <p className="text-[12px] leading-5 text-zinc-500">
+              <p className="text-launcher-md text-zinc-100">Inline shell mode</p>
+              <p className="text-launcher-sm leading-5 text-zinc-500">
                 Type a command after <span className="text-zinc-300">{shellSymbol}</span> and press
                 Enter.
               </p>
@@ -94,7 +94,7 @@ export function ShellCommandPanel({
           <div className="space-y-5">
             {history.map((entry) => (
               <section key={entry.id} className="space-y-2">
-                <div className="flex items-start gap-3 text-[12px] leading-5">
+                <div className="flex items-start gap-3 text-launcher-sm leading-5">
                   <span className="shrink-0 pt-px text-emerald-300">{shellSymbol}</span>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-3">
@@ -102,7 +102,7 @@ export function ShellCommandPanel({
                       <StatusChip entry={entry} />
                     </div>
                     {entry.result ? (
-                      <p className="mt-1 text-[11px] text-zinc-500">
+                      <p className="mt-1 text-launcher-xs text-zinc-500">
                         {entry.result.shellProgram} • {entry.result.durationMs} ms
                       </p>
                     ) : null}

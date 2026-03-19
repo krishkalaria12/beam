@@ -73,7 +73,7 @@ export function TodoListPanel({
           }}
           placeholder="Add a new todo..."
           disabled={isBusy}
-          className="text-[13px] placeholder:text-muted-foreground/70"
+          className="text-launcher-md placeholder:text-muted-foreground/70"
           rightSlot={
             <Button
               type="button"
@@ -104,15 +104,15 @@ export function TodoListPanel({
             <div className="size-10 rounded-xl bg-[var(--launcher-card-bg)] p-2.5 mb-3">
               <ListTodo className="size-full text-[var(--icon-red-fg)]" />
             </div>
-            <p className="text-[12px] text-muted-foreground">Loading todos...</p>
+            <p className="text-launcher-sm text-muted-foreground">Loading todos...</p>
           </div>
         ) : todos.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <div className="size-12 rounded-xl bg-[var(--launcher-card-bg)] p-3 mb-3">
               <ListTodo className="size-full text-[var(--icon-red-fg)]" />
             </div>
-            <p className="text-[13px] font-medium text-muted-foreground mb-1">No todos yet</p>
-            <p className="text-[11px] text-muted-foreground">Create your first todo above</p>
+            <p className="text-launcher-md font-medium text-muted-foreground mb-1">No todos yet</p>
+            <p className="text-launcher-xs text-muted-foreground">Create your first todo above</p>
           </div>
         ) : (
           <DndContext

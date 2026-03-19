@@ -86,8 +86,8 @@ export function SubTodoDetailPanell({
         <div className="size-14 rounded-2xl bg-[var(--launcher-card-bg)] p-3.5 mb-4">
           <ListChecks className="size-full text-[var(--icon-red-fg)]" />
         </div>
-        <p className="text-[13px] text-muted-foreground mb-1">Select a todo</p>
-        <p className="text-[11px] text-muted-foreground">to manage its subtasks</p>
+        <p className="text-launcher-md text-muted-foreground mb-1">Select a todo</p>
+        <p className="text-launcher-xs text-muted-foreground">to manage its subtasks</p>
       </section>
     );
   }
@@ -127,7 +127,7 @@ export function SubTodoDetailPanell({
               </Button>
               <p
                 className={cn(
-                  "flex-1 truncate text-[14px] font-semibold tracking-[-0.01em]",
+                  "flex-1 truncate text-launcher-lg font-semibold tracking-[-0.01em]",
                   selectedTodo.completed ? "text-muted-foreground line-through" : "text-foreground",
                 )}
                 onDoubleClick={() => onStartTodoEdit(selectedTodo)}
@@ -145,7 +145,7 @@ export function SubTodoDetailPanell({
                   style={{ width: `${progress}%` }}
                 />
               </div>
-              <span className="text-[11px] text-muted-foreground">
+              <span className="text-launcher-xs text-muted-foreground">
                 {completedSubTodoCount}/{selectedTodo.sub_todos.length} subtasks
               </span>
             </div>
@@ -160,7 +160,7 @@ export function SubTodoDetailPanell({
                   variant="ghost"
                   size="sm"
                   className={cn(
-                    "flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12px] font-medium transition-all",
+                    "flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-launcher-sm font-medium transition-all",
                     "bg-[var(--launcher-card-hover-bg)] text-muted-foreground ring-1 ring-[var(--launcher-card-border)]",
                     "hover:bg-[var(--launcher-card-hover-bg)] hover:text-muted-foreground",
                   )}
@@ -230,7 +230,7 @@ export function SubTodoDetailPanell({
           placeholder="Add a subtask..."
           disabled={isBusy}
           containerClassName="h-9 rounded-lg"
-          className="text-[12px] placeholder:text-muted-foreground/70"
+          className="text-launcher-sm placeholder:text-muted-foreground/70"
           rightSlot={
             <Button
               type="button"
@@ -261,8 +261,8 @@ export function SubTodoDetailPanell({
             <div className="size-10 rounded-xl bg-[var(--launcher-card-bg)] p-2.5 mb-3">
               <ListChecks className="size-full text-[var(--icon-red-fg)]" />
             </div>
-            <p className="text-[12px] text-muted-foreground mb-0.5">No subtasks yet</p>
-            <p className="text-[11px] text-muted-foreground">Add your first subtask above</p>
+            <p className="text-launcher-sm text-muted-foreground mb-0.5">No subtasks yet</p>
+            <p className="text-launcher-xs text-muted-foreground">Add your first subtask above</p>
           </div>
         ) : (
           <DndContext

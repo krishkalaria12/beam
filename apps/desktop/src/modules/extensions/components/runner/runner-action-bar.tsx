@@ -67,7 +67,7 @@ export function RunnerActionBar({
             onClick={() => {
               setActionsOpen((previous) => !previous);
             }}
-            className="ext-footer-actions-toggle h-7 rounded-md px-2 text-[11px] font-medium text-muted-foreground hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground"
+            className="ext-footer-actions-toggle h-7 rounded-md px-2 text-launcher-xs font-medium text-muted-foreground hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground"
           >
             <span>{actions.length} action{actions.length === 1 ? "" : "s"}</span>
             <ChevronsUpDown className="size-3 text-muted-foreground/70" />

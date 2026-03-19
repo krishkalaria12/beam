@@ -38,10 +38,10 @@ export function NotesList({
       <div className="space-y-2 border-b border-[var(--launcher-card-border)] px-3 py-3">
         <div className="flex items-center justify-between gap-2">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+            <p className="text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
               Notes
             </p>
-            <p className="text-[12px] text-muted-foreground">
+            <p className="text-launcher-sm text-muted-foreground">
               {notes.length} note{notes.length === 1 ? "" : "s"}
             </p>
           </div>
@@ -50,7 +50,7 @@ export function NotesList({
             variant="ghost"
             size="sm"
             onClick={onCreateNote}
-            className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-3 text-[12px] text-muted-foreground hover:bg-[var(--launcher-chip-bg)] hover:text-foreground"
+            className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-3 text-launcher-sm text-muted-foreground hover:bg-[var(--launcher-chip-bg)] hover:text-foreground"
           >
             <Plus className="size-3.5" />
             New
@@ -67,7 +67,7 @@ export function NotesList({
             }}
             placeholder="Search notes..."
             className={cn(
-              "h-10 w-full rounded-xl bg-[var(--launcher-card-hover-bg)] pl-9 pr-3 text-[13px] text-foreground placeholder:text-muted-foreground",
+              "h-10 w-full rounded-xl bg-[var(--launcher-card-hover-bg)] pl-9 pr-3 text-launcher-md text-foreground placeholder:text-muted-foreground",
               "ring-1 ring-[var(--launcher-card-border)] transition-all duration-200",
               "focus:outline-none focus:ring-[var(--ring)]",
             )}
@@ -93,7 +93,7 @@ export function NotesList({
             <div className="mb-3 size-10 rounded-xl bg-[var(--launcher-card-bg)] p-2">
               <Book className="size-full text-[var(--icon-primary-fg)]" />
             </div>
-            <p className="text-[12px] text-muted-foreground">No notes found</p>
+            <p className="text-launcher-sm text-muted-foreground">No notes found</p>
           </div>
         ) : null}
 
@@ -146,7 +146,7 @@ export function NotesList({
                   <div className="flex items-center gap-2">
                     <p
                       className={cn(
-                        "truncate text-[13px] font-medium tracking-[-0.01em] transition-colors duration-200",
+                        "truncate text-launcher-md font-medium tracking-[-0.01em] transition-colors duration-200",
                         isSelected
                           ? "text-foreground"
                           : "text-muted-foreground group-hover:text-foreground",
@@ -155,12 +155,12 @@ export function NotesList({
                       {note.title}
                     </p>
                     {note.pinned ? (
-                      <span className="shrink-0 rounded-full bg-[var(--icon-orange-bg)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--icon-orange-fg)]">
+                      <span className="shrink-0 rounded-full bg-[var(--icon-orange-bg)] px-1.5 py-0.5 text-launcher-2xs font-medium text-[var(--icon-orange-fg)]">
                         Pinned
                       </span>
                     ) : null}
                   </div>
-                  <p className="mt-1 line-clamp-2 text-[11px] leading-5 text-muted-foreground">
+                  <p className="mt-1 line-clamp-2 text-launcher-xs leading-5 text-muted-foreground">
                     {excerptContent(note.content)}
                   </p>
                 </div>

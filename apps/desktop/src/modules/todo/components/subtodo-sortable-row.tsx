@@ -110,12 +110,12 @@ export function SubTodoSortableRow({
                 onCancelEdit();
               }
             }}
-            className="w-full bg-transparent text-[12px] text-muted-foreground outline-none placeholder:text-muted-foreground"
+            className="w-full bg-transparent text-launcher-sm text-muted-foreground outline-none placeholder:text-muted-foreground"
           />
         ) : (
           <p
             className={cn(
-              "truncate text-[12px] transition-colors",
+              "truncate text-launcher-sm transition-colors",
               subTodo.completed ? "text-muted-foreground line-through" : "text-muted-foreground",
             )}
             onDoubleClick={() => onStartEdit(subTodo)}

@@ -28,7 +28,7 @@ export function CommandStatusChip({
   return (
     <div
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.14em]",
+        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-mono text-launcher-2xs uppercase tracking-[0.14em]",
         STATUS_TONE_CLASSNAMES[tone],
         className,
       )}

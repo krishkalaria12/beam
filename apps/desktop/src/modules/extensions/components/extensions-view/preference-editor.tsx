@@ -52,7 +52,7 @@ export function PreferenceEditor({
       return (
         <FormField
           key={field.name}
-          label={<Label className="text-[12px] font-medium text-muted-foreground">{label}</Label>}
+          label={<Label className="text-launcher-sm font-medium text-muted-foreground">{label}</Label>}
           description={field.description}
         >
           <SearchableDropdown
@@ -83,10 +83,10 @@ export function PreferenceEditor({
               checked={Boolean(value)}
               onCheckedChange={(checked) => onChange(field.name, Boolean(checked))}
             />
-            <Label className="text-[13px] font-medium text-foreground">{label}</Label>
+            <Label className="text-launcher-md font-medium text-foreground">{label}</Label>
           </div>
           {field.description ? (
-            <p className="text-[11px] text-muted-foreground">{field.description}</p>
+            <p className="text-launcher-xs text-muted-foreground">{field.description}</p>
           ) : null}
         </div>
       );
@@ -96,7 +96,7 @@ export function PreferenceEditor({
       return (
         <FormField
           key={field.name}
-          label={<Label className="text-[12px] font-medium text-muted-foreground">{label}</Label>}
+          label={<Label className="text-launcher-sm font-medium text-muted-foreground">{label}</Label>}
           description={field.description}
         >
           <Textarea
@@ -104,7 +104,7 @@ export function PreferenceEditor({
             onChange={(event) => onChange(field.name, event.target.value)}
             onKeyDownCapture={stopFieldKeyPropagation}
             onKeyDown={stopFieldKeyPropagation}
-            className="min-h-[110px] rounded-lg border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] text-[13px]"
+            className="min-h-[110px] rounded-lg border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] text-launcher-md"
           />
         </FormField>
       );
@@ -113,7 +113,7 @@ export function PreferenceEditor({
     return (
       <FormField
         key={field.name}
-        label={<Label className="text-[12px] font-medium text-muted-foreground">{label}</Label>}
+        label={<Label className="text-launcher-sm font-medium text-muted-foreground">{label}</Label>}
         description={field.description}
       >
         <Input
@@ -122,7 +122,7 @@ export function PreferenceEditor({
           onChange={(event) => onChange(field.name, event.target.value)}
           onKeyDownCapture={stopFieldKeyPropagation}
           onKeyDown={stopFieldKeyPropagation}
-          className="h-10 rounded-lg border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] text-[13px]"
+          className="h-10 rounded-lg border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] text-launcher-md"
         />
       </FormField>
     );
@@ -132,8 +132,8 @@ export function PreferenceEditor({
     <section className="space-y-3 rounded-xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] p-4">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h3 className="text-[13px] font-medium text-foreground">Preferences</h3>
-          <p className="text-[12px] text-muted-foreground">Extension-level configuration.</p>
+          <h3 className="text-launcher-md font-medium text-foreground">Preferences</h3>
+          <p className="text-launcher-sm text-muted-foreground">Extension-level configuration.</p>
         </div>
         <Button
           size="sm"
@@ -146,18 +146,18 @@ export function PreferenceEditor({
       </div>
 
       {error || validationError ? (
-        <div className="rounded-lg border border-[var(--icon-red-bg)] bg-[var(--icon-red-bg)] px-3 py-2 text-[12px] text-[var(--icon-red-fg)]">
+        <div className="rounded-lg border border-[var(--icon-red-bg)] bg-[var(--icon-red-bg)] px-3 py-2 text-launcher-sm text-[var(--icon-red-fg)]">
           {validationError || error}
         </div>
       ) : null}
 
       {isLoading ? (
-        <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
+        <div className="flex items-center gap-2 text-launcher-sm text-muted-foreground">
           <Loader2 className="size-3.5 animate-spin" />
           Loading preferences…
         </div>
       ) : fields.length === 0 ? (
-        <div className="text-[12px] text-muted-foreground">
+        <div className="text-launcher-sm text-muted-foreground">
           No preferences declared by this extension.
         </div>
       ) : (

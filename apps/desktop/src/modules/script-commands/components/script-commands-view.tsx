@@ -283,16 +283,16 @@ export function ScriptCommandsView({ onBack }: ScriptCommandsViewProps) {
         </div>
 
         <div className="flex-1 min-w-0">
-          <h1 className="text-[14px] font-semibold tracking-[-0.02em] text-foreground">
+          <h1 className="text-launcher-lg font-semibold tracking-[-0.02em] text-foreground">
             Script Commands
           </h1>
-          <p className="text-[12px] text-muted-foreground tracking-[-0.01em]">
+          <p className="text-launcher-sm text-muted-foreground tracking-[-0.01em]">
             Run local scripts from Beam
           </p>
         </div>
 
         {/* Status badge */}
-        <div className="flex items-center gap-1.5 rounded-full bg-[var(--launcher-card-hover-bg)] px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
+        <div className="flex items-center gap-1.5 rounded-full bg-[var(--launcher-card-hover-bg)] px-2.5 py-1 text-launcher-xs font-medium text-muted-foreground">
           <Terminal className="size-3" />
           <span>{scripts.length > 0 ? `${scripts.length} scripts` : "No scripts"}</span>
         </div>
@@ -307,7 +307,7 @@ export function ScriptCommandsView({ onBack }: ScriptCommandsViewProps) {
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search scripts..."
-            className="h-10 w-full rounded-xl bg-[var(--launcher-card-hover-bg)] pl-9 pr-4 text-[13px] text-foreground placeholder:text-muted-foreground ring-1 ring-[var(--launcher-card-border)] transition-all duration-200 focus:outline-none focus:ring-[var(--ring)] focus:bg-[var(--launcher-card-hover-bg)]"
+            className="h-10 w-full rounded-xl bg-[var(--launcher-card-hover-bg)] pl-9 pr-4 text-launcher-md text-foreground placeholder:text-muted-foreground ring-1 ring-[var(--launcher-card-border)] transition-all duration-200 focus:outline-none focus:ring-[var(--ring)] focus:bg-[var(--launcher-card-hover-bg)]"
           />
         </div>
         <Button
@@ -315,7 +315,7 @@ export function ScriptCommandsView({ onBack }: ScriptCommandsViewProps) {
           variant="ghost"
           size="sm"
           onClick={openCreateView}
-          className="flex h-10 items-center gap-2 rounded-xl bg-[var(--launcher-card-hover-bg)] px-3.5 text-[12px] font-medium text-muted-foreground ring-1 ring-[var(--launcher-card-border)] transition-all duration-200 hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground"
+          className="flex h-10 items-center gap-2 rounded-xl bg-[var(--launcher-card-hover-bg)] px-3.5 text-launcher-sm font-medium text-muted-foreground ring-1 ring-[var(--launcher-card-border)] transition-all duration-200 hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground"
         >
           <Plus className="size-3.5" />
           New
@@ -325,7 +325,7 @@ export function ScriptCommandsView({ onBack }: ScriptCommandsViewProps) {
           variant="ghost"
           size="sm"
           onClick={() => void handleOpenFolder()}
-          className="flex h-10 items-center gap-2 rounded-xl bg-[var(--launcher-card-hover-bg)] px-3.5 text-[12px] font-medium text-muted-foreground ring-1 ring-[var(--launcher-card-border)] transition-all duration-200 hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground"
+          className="flex h-10 items-center gap-2 rounded-xl bg-[var(--launcher-card-hover-bg)] px-3.5 text-launcher-sm font-medium text-muted-foreground ring-1 ring-[var(--launcher-card-border)] transition-all duration-200 hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground"
         >
           <FolderOpen className="size-3.5" />
           Folder
@@ -378,7 +378,7 @@ export function ScriptCommandsView({ onBack }: ScriptCommandsViewProps) {
             size="sm"
             onClick={handleRunSelected}
             disabled={!selectedScript || runMutation.isPending}
-            className="flex h-7 items-center gap-1.5 rounded-lg bg-[var(--ring)]/20 px-3 text-[12px] font-medium text-[var(--ring)] transition-all duration-200 hover:bg-[var(--ring)]/30 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex h-7 items-center gap-1.5 rounded-lg bg-[var(--ring)]/20 px-3 text-launcher-sm font-medium text-[var(--ring)] transition-all duration-200 hover:bg-[var(--ring)]/30 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <Play className="size-3.5" />
             {selectedScriptNeedsArguments ? "Args & Run" : "Run"}

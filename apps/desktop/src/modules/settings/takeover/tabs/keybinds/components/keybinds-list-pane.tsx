@@ -28,7 +28,7 @@ export function KeybindsListPane({
           value={query}
           onChange={(event) => onQueryChange(event.target.value)}
           placeholder="Search keybinds..."
-          className="h-10 rounded-lg border-[var(--launcher-card-border)] bg-[var(--launcher-card-hover-bg)] font-mono text-[13px]"
+          className="h-10 rounded-lg border-[var(--launcher-card-border)] bg-[var(--launcher-card-hover-bg)] font-mono text-launcher-md"
           onKeyDown={(event) => {
             if (rows.length === 0) {
               return;
@@ -50,7 +50,7 @@ export function KeybindsListPane({
         />
       </div>
 
-      <div className="grid grid-cols-[1fr_180px] border-b border-[var(--launcher-card-border)] px-4 py-2 font-mono text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+      <div className="grid grid-cols-[1fr_180px] border-b border-[var(--launcher-card-border)] px-4 py-2 font-mono text-launcher-xs uppercase tracking-[0.14em] text-muted-foreground">
         <div>Name</div>
         <div>Shortcut</div>
       </div>
@@ -83,14 +83,14 @@ export function KeybindsListPane({
                     className="size-8 rounded-lg"
                   />
                   <div className="min-w-0">
-                    <div className="truncate font-mono text-[13px] text-foreground">{row.title}</div>
-                    <div className="truncate text-[11px] text-muted-foreground">
+                    <div className="truncate font-mono text-launcher-md text-foreground">{row.title}</div>
+                    <div className="truncate text-launcher-xs text-muted-foreground">
                       {row.kind === "global" ? "Global" : row.id}
                     </div>
                   </div>
                 </div>
                 <div className="pl-3">
-                  <div className="inline-flex min-h-8 items-center rounded-md border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-2.5 font-mono text-[11px] text-muted-foreground">
+                  <div className="inline-flex min-h-8 items-center rounded-md border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-2.5 font-mono text-launcher-xs text-muted-foreground">
                     {formatShortcutLabel(row.shortcut)}
                   </div>
                 </div>

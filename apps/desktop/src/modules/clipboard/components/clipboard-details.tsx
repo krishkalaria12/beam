@@ -71,10 +71,10 @@ export function ClipboardDetails({
           <Clipboard className="size-7 text-muted-foreground" />
         </div>
         <div className="text-center">
-          <p className="text-[13px] font-medium tracking-[-0.01em] text-muted-foreground">
+          <p className="text-launcher-md font-medium tracking-[-0.01em] text-muted-foreground">
             Select an entry
           </p>
-          <p className="mt-1 text-[11px] text-muted-foreground">
+          <p className="mt-1 text-launcher-xs text-muted-foreground">
             View details and copy to clipboard
           </p>
         </div>
@@ -82,7 +82,6 @@ export function ClipboardDetails({
     );
   }
 
-  const isImageEntry = entry.content_type === ClipboardContentType.Image;
   const copiedAtLabel = formatDistanceToNow(new Date(entry.copied_at), { addSuffix: true });
 
   const iconConfig = getEntryIconConfig(entry.content_type);
@@ -96,7 +95,7 @@ export function ClipboardDetails({
             <ClipboardImagePreview key={previewUrl} previewUrl={previewUrl} />
           </div>
         ) : (
-          <div className="w-full text-[14px] font-normal leading-relaxed tracking-[-0.01em] text-muted-foreground whitespace-pre-wrap break-words">
+          <div className="w-full text-launcher-lg font-normal leading-relaxed tracking-[-0.01em] text-muted-foreground whitespace-pre-wrap break-words">
             {entry.value}
           </div>
         )}
@@ -116,10 +115,10 @@ export function ClipboardDetails({
               {iconConfig.icon}
             </div>
             <div>
-              <p className="text-[12px] font-semibold text-muted-foreground capitalize">
+              <p className="text-launcher-sm font-semibold text-muted-foreground capitalize">
                 {entry.content_type}
               </p>
-              <p className="text-[11px] text-muted-foreground">{copiedAtLabel}</p>
+              <p className="text-launcher-xs text-muted-foreground">{copiedAtLabel}</p>
             </div>
           </div>
 
@@ -128,7 +127,7 @@ export function ClipboardDetails({
             variant="ghost"
             size="sm"
             className={cn(
-              "flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-medium transition-all duration-200",
+              "flex items-center gap-2 px-4 py-2 rounded-lg text-launcher-sm font-medium transition-all duration-200",
               isCopied
                 ? "bg-[var(--icon-green-bg)] text-[var(--icon-green-fg)] ring-1 ring-[var(--icon-green-bg)]"
                 : "bg-[var(--ring)]/15 text-[var(--ring)] ring-1 ring-[var(--ring)]/20 hover:bg-[var(--ring)]/25",
@@ -150,7 +149,7 @@ export function ClipboardDetails({
 
         {/* Status Messages */}
         {copyError && (
-          <div className="mb-4 rounded-lg bg-[var(--icon-red-bg)] px-3 py-2 text-[11px] font-medium text-[var(--icon-red-fg)] ring-1 ring-[var(--icon-red-bg)]">
+          <div className="mb-4 rounded-lg bg-[var(--icon-red-bg)] px-3 py-2 text-launcher-xs font-medium text-[var(--icon-red-fg)] ring-1 ring-[var(--icon-red-bg)]">
             {copyError}
           </div>
         )}
@@ -159,7 +158,7 @@ export function ClipboardDetails({
         <div className="space-y-3">
           {/* Divider with label */}
           <div className="flex items-center gap-3">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+            <span className="text-launcher-2xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
               Details
             </span>
             <div className="h-px flex-1 bg-[var(--launcher-card-hover-bg)]" />
@@ -168,8 +167,8 @@ export function ClipboardDetails({
           {/* Metadata rows */}
           <div className="grid gap-2">
             <div className="flex items-center justify-between">
-              <span className="text-[12px] text-muted-foreground">Copied</span>
-              <span className="flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground">
+              <span className="text-launcher-sm text-muted-foreground">Copied</span>
+              <span className="flex items-center gap-1.5 text-launcher-sm font-medium text-muted-foreground">
                 <Clock className="size-3 text-muted-foreground" />
                 {copiedAtLabel}
               </span>
@@ -178,14 +177,14 @@ export function ClipboardDetails({
             {entry.content_type !== ClipboardContentType.Image && (
               <>
                 <div className="flex items-center justify-between">
-                  <span className="text-[12px] text-muted-foreground">Characters</span>
-                  <span className="text-[12px] font-mono font-medium text-muted-foreground">
+                  <span className="text-launcher-sm text-muted-foreground">Characters</span>
+                  <span className="text-launcher-sm font-mono font-medium text-muted-foreground">
                     {entry.character_count.toLocaleString()}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[12px] text-muted-foreground">Words</span>
-                  <span className="text-[12px] font-mono font-medium text-muted-foreground">
+                  <span className="text-launcher-sm text-muted-foreground">Words</span>
+                  <span className="text-launcher-sm font-mono font-medium text-muted-foreground">
                     {entry.word_count.toLocaleString()}
                   </span>
                 </div>
@@ -194,12 +193,12 @@ export function ClipboardDetails({
 
             {entry.content_type === ClipboardContentType.Link && (
               <div className="flex items-center justify-between pt-2 border-t border-[var(--launcher-card-border)]">
-                <span className="text-[12px] text-muted-foreground">Action</span>
+                <span className="text-launcher-sm text-muted-foreground">Action</span>
                 <a
                   href={entry.value}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 text-[12px] font-medium text-[var(--ring)] hover:underline transition-colors"
+                  className="flex items-center gap-1.5 text-launcher-sm font-medium text-[var(--ring)] hover:underline transition-colors"
                 >
                   Open Link
                   <ArrowUpRight className="size-3" />

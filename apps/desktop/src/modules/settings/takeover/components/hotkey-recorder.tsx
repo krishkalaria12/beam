@@ -215,7 +215,7 @@ export default function HotkeyRecorder({
           setIsRecording(false);
         }}
         className={cn(
-          "inline-flex min-h-10 min-w-36 items-center justify-center gap-1.5 rounded-xl px-4 py-2 text-sm font-medium transition-all duration-150 outline-none",
+          "inline-flex min-h-10 min-w-36 items-center justify-center gap-1.5 rounded-xl px-4 py-2 text-launcher-sm font-medium transition-all duration-150 outline-none",
           disabled
             ? "cursor-not-allowed bg-[var(--launcher-card-bg)] text-muted-foreground/50"
             : isRecording
@@ -230,7 +230,7 @@ export default function HotkeyRecorder({
         ) : value ? (
           <span className="flex items-center gap-1.5">
             {hotkeyParts.map((part, index) => (
-              <Kbd key={index} className="min-w-7 h-6 px-2 text-xs text-foreground">
+              <Kbd key={index} className="min-w-7 h-6 px-2 text-launcher-xs text-foreground">
                 {part}
               </Kbd>
             ))}

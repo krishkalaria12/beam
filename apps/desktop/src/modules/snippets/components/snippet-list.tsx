@@ -51,7 +51,7 @@ export function SnippetList({
             }}
             placeholder="Search snippets..."
             className={cn(
-              "h-10 w-full rounded-xl bg-[var(--launcher-card-hover-bg)] pl-9 pr-3 text-[13px] text-foreground placeholder:text-muted-foreground",
+              "h-10 w-full rounded-xl bg-[var(--launcher-card-hover-bg)] pl-9 pr-3 text-launcher-md text-foreground placeholder:text-muted-foreground",
               "ring-1 ring-[var(--launcher-card-border)] transition-all duration-200",
               "focus:outline-none focus:ring-[var(--ring)]",
             )}
@@ -60,7 +60,7 @@ export function SnippetList({
 
         {/* Tag Filter Dropdown */}
         <DropdownMenu>
-          <DropdownMenuTrigger className="flex h-9 w-full items-center gap-2 rounded-lg bg-[var(--launcher-card-hover-bg)] px-3 text-[12px] font-medium text-muted-foreground ring-1 ring-[var(--launcher-card-border)] transition-all hover:bg-[var(--launcher-chip-bg)] hover:text-foreground">
+          <DropdownMenuTrigger className="flex h-9 w-full items-center gap-2 rounded-lg bg-[var(--launcher-card-hover-bg)] px-3 text-launcher-sm font-medium text-muted-foreground ring-1 ring-[var(--launcher-card-border)] transition-all hover:bg-[var(--launcher-chip-bg)] hover:text-foreground">
             <Tag className="size-3.5 text-muted-foreground" />
             <span className="flex-1 truncate text-left">{currentTagLabel}</span>
             <ChevronDown className="size-3.5 text-muted-foreground" />
@@ -75,7 +75,7 @@ export function SnippetList({
             >
               <DropdownMenuRadioItem
                 value="all"
-                className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-[var(--launcher-chip-bg)] hover:text-foreground focus:bg-[var(--launcher-chip-bg)] data-[state=checked]:text-foreground"
+                className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-launcher-sm font-medium text-muted-foreground transition-colors hover:bg-[var(--launcher-chip-bg)] hover:text-foreground focus:bg-[var(--launcher-chip-bg)] data-[state=checked]:text-foreground"
               >
                 All tags
               </DropdownMenuRadioItem>
@@ -83,7 +83,7 @@ export function SnippetList({
                 <DropdownMenuRadioItem
                   key={tag}
                   value={tag}
-                  className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-[var(--launcher-chip-bg)] hover:text-foreground focus:bg-[var(--launcher-chip-bg)] data-[state=checked]:text-foreground"
+                  className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-launcher-sm font-medium text-muted-foreground transition-colors hover:bg-[var(--launcher-chip-bg)] hover:text-foreground focus:bg-[var(--launcher-chip-bg)] data-[state=checked]:text-foreground"
                 >
                   {tag}
                 </DropdownMenuRadioItem>
@@ -97,7 +97,7 @@ export function SnippetList({
       <div className="list-area custom-scrollbar min-h-0 flex-1 overflow-y-auto p-2">
         {/* Section Header */}
         <div className="mb-2 flex items-center gap-3 px-2 pt-1">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+          <span className="text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
             Snippets
           </span>
           <div className="h-px flex-1 bg-[var(--launcher-chip-bg)]" />
@@ -122,7 +122,7 @@ export function SnippetList({
             <div className="mb-3 size-10 rounded-xl bg-[var(--launcher-card-bg)] p-2">
               <FileText className="size-full text-[var(--icon-orange-fg)]" />
             </div>
-            <p className="text-[12px] text-muted-foreground">No snippets found</p>
+            <p className="text-launcher-sm text-muted-foreground">No snippets found</p>
           </div>
         )}
 
@@ -180,7 +180,7 @@ export function SnippetList({
                 <div className="min-w-0 flex-1">
                   <p
                     className={cn(
-                      "truncate text-[13px] font-medium tracking-[-0.01em] transition-colors duration-200",
+                      "truncate text-launcher-md font-medium tracking-[-0.01em] transition-colors duration-200",
                       isSelected
                         ? "text-foreground"
                         : "text-muted-foreground group-hover:text-foreground",
@@ -188,12 +188,12 @@ export function SnippetList({
                   >
                     {snippet.name}
                   </p>
-                  <p className="truncate text-[11px] text-muted-foreground">{snippet.trigger}</p>
+                  <p className="truncate text-launcher-xs text-muted-foreground">{snippet.trigger}</p>
                 </div>
 
                 {/* Tags indicator */}
                 {snippet.tags.length > 0 && (
-                  <span className="shrink-0 rounded-full bg-[var(--launcher-chip-bg)] px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                  <span className="shrink-0 rounded-full bg-[var(--launcher-chip-bg)] px-1.5 py-0.5 text-launcher-2xs text-muted-foreground">
                     {snippet.tags.length}
                   </span>
                 )}

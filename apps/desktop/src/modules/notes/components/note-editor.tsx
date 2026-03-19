@@ -28,7 +28,7 @@ export function NoteEditor({
     <section className="note-editor-enter relative flex min-h-0 flex-1 flex-col overflow-hidden">
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden p-4">
         <div>
-          <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+          <label className="mb-2 block text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
             Title
           </label>
           <Input
@@ -42,7 +42,7 @@ export function NoteEditor({
             }}
             placeholder="Note title"
             className={cn(
-              "h-10 w-full rounded-xl bg-[var(--launcher-card-hover-bg)] px-3 text-[13px] text-foreground placeholder:text-muted-foreground",
+              "h-10 w-full rounded-xl bg-[var(--launcher-card-hover-bg)] px-3 text-launcher-md text-foreground placeholder:text-muted-foreground",
               "ring-1 ring-[var(--launcher-card-border)] transition-all duration-200",
               "focus:outline-none focus:ring-[var(--ring)]",
             )}
@@ -50,7 +50,7 @@ export function NoteEditor({
         </div>
 
         <div className="min-h-0 flex-1">
-          <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+          <label className="mb-2 block text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
             Content
           </label>
           <div className="flex h-full min-h-0 flex-col rounded-xl bg-[var(--launcher-card-bg)] ring-1 ring-[var(--launcher-card-border)]">
@@ -63,7 +63,7 @@ export function NoteEditor({
                 });
               }}
               placeholder="Write your note here..."
-              className="min-h-0 flex-1 resize-none border-none bg-transparent p-4 text-[14px] leading-6 text-foreground placeholder:text-muted-foreground focus-visible:ring-0"
+              className="min-h-0 flex-1 resize-none border-none bg-transparent p-4 text-launcher-lg leading-6 text-foreground placeholder:text-muted-foreground focus-visible:ring-0"
             />
           </div>
         </div>
@@ -75,8 +75,8 @@ export function NoteEditor({
                 <Pin className="size-full text-[var(--icon-orange-fg)]" />
               </div>
               <div>
-                <p className="text-[13px] font-medium text-foreground">Pin note</p>
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-launcher-md font-medium text-foreground">Pin note</p>
+                <p className="text-launcher-xs text-muted-foreground">
                   Pinned notes stay at the top of the list.
                 </p>
               </div>
@@ -100,7 +100,7 @@ export function NoteEditor({
           variant="ghost"
           size="sm"
           onClick={onCancel}
-          className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-3 text-[12px] text-muted-foreground hover:bg-[var(--launcher-chip-bg)] hover:text-foreground"
+          className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-3 text-launcher-sm text-muted-foreground hover:bg-[var(--launcher-chip-bg)] hover:text-foreground"
         >
           Cancel
         </Button>
@@ -109,7 +109,7 @@ export function NoteEditor({
           size="sm"
           onClick={onSubmit}
           disabled={isSubmitting}
-          className="inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-[12px]"
+          className="inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-launcher-sm"
         >
           {isSubmitting ? "Saving..." : mode === "create" ? "Create note" : "Save changes"}
         </Button>

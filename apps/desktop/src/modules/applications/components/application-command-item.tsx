@@ -34,7 +34,7 @@ export default function ApplicationCommandItem({
       icon={<CommandIcon icon={`app-icon:${application.icon}`} />}
       title={application.name}
       subtitle={launchErrorMessage ?? undefined}
-      subtitleClassName="truncate text-[10px] text-destructive"
+      subtitleClassName="truncate text-launcher-2xs text-destructive"
       busyShortcut="launching"
       idleShortcut={isLaunchable ? "app" : "unavailable"}
     />

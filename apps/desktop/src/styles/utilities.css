@@ -117,7 +117,7 @@
   min-width: 22px;
   height: 22px;
   padding: 0 6px;
-  font-size: 11px;
+  font-size: var(--beam-text-xs);
   font-weight: 500;
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
   background: var(--kbd-bg);
@@ -129,6 +129,105 @@
   background: var(--solid-kbd-bg);
   border: 1px solid var(--solid-kbd-border);
   color: var(--solid-kbd-text);
+}
+
+.text-launcher-2xs {
+  font-size: var(--beam-text-2xs);
+  line-height: 1.2;
+}
+
+.text-launcher-xs {
+  font-size: var(--beam-text-xs);
+  line-height: 1.25;
+}
+
+.text-launcher-sm {
+  font-size: var(--beam-text-sm);
+  line-height: 1.3;
+}
+
+.text-launcher-md {
+  font-size: var(--beam-text-md);
+  line-height: 1.35;
+}
+
+.text-launcher-lg {
+  font-size: var(--beam-text-lg);
+  line-height: 1.35;
+}
+
+.text-launcher-xl {
+  font-size: var(--beam-text-xl);
+  line-height: 1.3;
+}
+
+.text-launcher-2xl {
+  font-size: var(--beam-text-2xl);
+  line-height: 1.25;
+}
+
+.text-launcher-3xl {
+  font-size: var(--beam-text-3xl);
+  line-height: 1.2;
+}
+
+.text-launcher-display {
+  font-size: var(--beam-text-display);
+  line-height: 1.1;
+}
+
+/*
+ * Typography compatibility layer:
+ * remap the most common fixed Tailwind text utilities used across modules/* and
+ * components/* onto launcher font tokens so the global font-size preference
+ * applies broadly before every file is manually converted.
+ */
+:where(.text-\[9px\]) {
+  font-size: calc(var(--beam-font-size-base) * 0.6923) !important;
+}
+
+:where(.text-\[10px\]) {
+  font-size: var(--beam-text-2xs) !important;
+}
+
+:where(.text-\[11px\], .text-xs) {
+  font-size: var(--beam-text-xs) !important;
+}
+
+:where(.text-\[12px\], .text-sm) {
+  font-size: var(--beam-text-sm) !important;
+}
+
+:where(.text-\[13px\]) {
+  font-size: var(--beam-text-md) !important;
+}
+
+:where(.text-\[14px\], .text-lg) {
+  font-size: var(--beam-text-lg) !important;
+}
+
+:where(.text-\[15px\]) {
+  font-size: var(--beam-text-xl) !important;
+}
+
+:where(.text-\[16px\], .text-xl) {
+  font-size: var(--beam-text-2xl) !important;
+}
+
+:where(.text-\[18px\]) {
+  font-size: var(--beam-text-3xl) !important;
+}
+
+:where(.text-\[20px\]) {
+  font-size: var(--beam-text-display) !important;
+}
+
+:where(.text-\[32px\]) {
+  font-size: calc(var(--beam-font-size-base) * 2.4615) !important;
+}
+
+:where(.text-\[40px\]) {
+  font-size: calc(var(--beam-font-size-base) * 3.0769) !important;
 }
 
 /* Section dividers */

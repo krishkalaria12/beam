@@ -35,10 +35,10 @@ export function EmojiGrid({
   if (emojis.length === 0) {
     return (
       <div className="emoji-empty flex h-48 flex-col items-center justify-center gap-3 text-muted-foreground">
-        <span className="text-4xl opacity-60">😕</span>
+        <span className="text-[length:calc(var(--beam-font-size-base)*3.0769)] opacity-60">😕</span>
         <div className="flex flex-col items-center gap-0.5">
-          <span className="text-[13px] font-medium">{emptyMessage}</span>
-          <span className="text-[11px]">Try a different search term</span>
+          <span className="text-launcher-md font-medium">{emptyMessage}</span>
+          <span className="text-launcher-xs">Try a different search term</span>
         </div>
       </div>
     );
@@ -54,7 +54,7 @@ export function EmojiGrid({
         >
           {/* Category header - minimal */}
           <div className="mb-3 flex items-center gap-2">
-            <span className="text-[11px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
+            <span className="text-launcher-xs font-medium uppercase tracking-[0.06em] text-muted-foreground">
               {CATEGORY_LABELS[group]}
             </span>
             <div className="h-px flex-1 bg-[var(--ui-divider)]" />

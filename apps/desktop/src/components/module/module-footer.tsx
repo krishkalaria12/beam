@@ -59,7 +59,7 @@ export function ModuleFooter({
       style={style}
     >
       {/* Left: status / context */}
-      <div className="module-footer-left flex min-w-0 items-center gap-2 text-[12px] text-muted-foreground">
+      <div className="module-footer-left flex min-w-0 items-center gap-2 text-launcher-sm text-muted-foreground">
         {leftSlot}
       </div>
 
@@ -71,7 +71,7 @@ export function ModuleFooter({
             {resolvedShortcuts.map((shortcut) => (
               <span
                 key={shortcut.keys.join("+")}
-                className="flex items-center gap-1 text-[11px] text-muted-foreground/60"
+                className="flex items-center gap-1 text-launcher-xs text-muted-foreground/60"
               >
                 {shortcut.keys.map((key) => (
                   <Kbd key={key}>{key}</Kbd>

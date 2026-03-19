@@ -83,7 +83,7 @@ export function SearchBar({
             placeholder={placeholder}
             leftIcon={<Search />}
             data-module-search-input="true"
-            className={cn("text-[13px]", inputClassName)}
+            className={cn("text-launcher-md", inputClassName)}
             containerClassName={cn("h-10 rounded-xl", inputContainerClassName)}
             onKeyDown={(event) => {
               event.stopPropagation();
@@ -99,11 +99,22 @@ export function SearchBar({
             )}
           >
             <div className="module-search-bar-copy min-w-0">
-              <div className={cn("module-search-bar-title truncate text-[14px] font-semibold text-foreground", titleClassName, inputClassName)}>
+              <div
+                className={cn(
+                  "module-search-bar-title text-launcher-lg truncate font-semibold text-foreground",
+                  titleClassName,
+                  inputClassName,
+                )}
+              >
                 {title}
               </div>
               {subtitle ? (
-                <div className={cn("module-search-bar-subtitle truncate text-[12px] text-muted-foreground", subtitleClassName)}>
+                <div
+                  className={cn(
+                    "module-search-bar-subtitle text-launcher-sm truncate text-muted-foreground",
+                    subtitleClassName,
+                  )}
+                >
                   {subtitle}
                 </div>
               ) : null}
@@ -112,7 +123,16 @@ export function SearchBar({
         )}
       </div>
 
-      {rightSlot ? <div className={cn("module-search-bar-right flex shrink-0 items-center gap-2", rightSlotClassName)}>{rightSlot}</div> : null}
+      {rightSlot ? (
+        <div
+          className={cn(
+            "module-search-bar-right flex shrink-0 items-center gap-2",
+            rightSlotClassName,
+          )}
+        >
+          {rightSlot}
+        </div>
+      ) : null}
     </div>
   );
 }

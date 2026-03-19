@@ -68,7 +68,7 @@ export function ClipboardHeader({
           value={query}
           onChange={onQueryChange}
           onKeyDown={onKeyDown}
-          className="h-10 w-full rounded-xl bg-[var(--launcher-card-hover-bg)] pl-10 pr-4 text-[14px] font-medium tracking-[-0.01em] text-foreground outline-none ring-1 ring-[var(--launcher-card-border)] transition-all placeholder:text-muted-foreground focus:bg-[var(--launcher-card-hover-bg)] focus:ring-[var(--launcher-card-border)]"
+          className="h-10 w-full rounded-xl bg-[var(--launcher-card-hover-bg)] pl-10 pr-4 text-launcher-lg font-medium tracking-[-0.01em] text-foreground outline-none ring-1 ring-[var(--launcher-card-border)] transition-all placeholder:text-muted-foreground focus:bg-[var(--launcher-card-hover-bg)] focus:ring-[var(--launcher-card-border)]"
           placeholder="Search clipboard history..."
           autoFocus
         />
@@ -77,7 +77,7 @@ export function ClipboardHeader({
       {/* Type Filter Dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger
-          className="flex h-10 items-center gap-2 rounded-xl bg-[var(--launcher-card-hover-bg)] px-3.5 text-[12px] font-medium tracking-[-0.01em] text-muted-foreground ring-1 ring-[var(--launcher-card-border)] transition-all hover:bg-[var(--launcher-card-hover-bg)] hover:text-muted-foreground"
+          className="flex h-10 items-center gap-2 rounded-xl bg-[var(--launcher-card-hover-bg)] px-3.5 text-launcher-sm font-medium tracking-[-0.01em] text-muted-foreground ring-1 ring-[var(--launcher-card-border)] transition-all hover:bg-[var(--launcher-card-hover-bg)] hover:text-muted-foreground"
           onKeyDown={(event) => event.stopPropagation()}
         >
           {currentFilter?.icon && (
@@ -98,7 +98,7 @@ export function ClipboardHeader({
               <DropdownMenuRadioItem
                 key={option.value}
                 value={option.value}
-                className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground focus:bg-[var(--launcher-card-hover-bg)] data-[state=checked]:text-foreground"
+                className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-launcher-sm font-medium text-muted-foreground transition-colors hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground focus:bg-[var(--launcher-card-hover-bg)] data-[state=checked]:text-foreground"
               >
                 {option.icon && <span className="text-muted-foreground">{option.icon}</span>}
                 {option.label}

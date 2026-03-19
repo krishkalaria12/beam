@@ -266,7 +266,7 @@ function TranslationViewContent({ initialQuery, onBack }: TranslationViewProps) 
           isTranslating ? (
             <div className="flex items-center gap-1.5 rounded-full bg-[var(--launcher-chip-bg)] px-2.5 py-1">
               <Loader2 className="size-3 animate-spin text-[var(--ring)]" />
-              <span className="text-[11px] font-medium tracking-[-0.01em] text-muted-foreground">
+              <span className="text-launcher-xs font-medium tracking-[-0.01em] text-muted-foreground">
                 Translating
               </span>
             </div>
@@ -286,7 +286,7 @@ function TranslationViewContent({ initialQuery, onBack }: TranslationViewProps) 
               scheduleAutoTranslate(sourceText, value, resolvedTargetLanguage, autoTranslate);
             }}
           >
-            <SelectTrigger className="h-9 flex-1 border-none bg-transparent text-[13px] font-medium tracking-[-0.01em] text-foreground shadow-none ring-0 transition-colors hover:bg-[var(--launcher-card-hover-bg)] focus:ring-0">
+            <SelectTrigger className="h-9 flex-1 border-none bg-transparent text-launcher-md font-medium tracking-[-0.01em] text-foreground shadow-none ring-0 transition-colors hover:bg-[var(--launcher-card-hover-bg)] focus:ring-0">
               <span className="truncate px-1">{getLanguageLabel(resolvedSourceLanguage)}</span>
             </SelectTrigger>
             <SelectContent className="max-h-[300px] border-[var(--launcher-card-border)] bg-[var(--popover)] text-foreground">
@@ -318,7 +318,7 @@ function TranslationViewContent({ initialQuery, onBack }: TranslationViewProps) 
               scheduleAutoTranslate(sourceText, resolvedSourceLanguage, value, autoTranslate);
             }}
           >
-            <SelectTrigger className="h-9 flex-1 border-none bg-transparent text-[13px] font-medium tracking-[-0.01em] text-foreground shadow-none ring-0 transition-colors hover:bg-[var(--launcher-card-hover-bg)] focus:ring-0">
+            <SelectTrigger className="h-9 flex-1 border-none bg-transparent text-launcher-md font-medium tracking-[-0.01em] text-foreground shadow-none ring-0 transition-colors hover:bg-[var(--launcher-card-hover-bg)] focus:ring-0">
               <span className="truncate px-1">
                 {resolvedTargetLanguage ? getLanguageLabel(resolvedTargetLanguage) : "Select target"}
               </span>
@@ -338,7 +338,7 @@ function TranslationViewContent({ initialQuery, onBack }: TranslationViewProps) 
       <div className="translate-content-enter flex min-h-0 flex-1 flex-col gap-px overflow-hidden rounded-2xl mx-4 mb-4 bg-[var(--launcher-card-hover-bg)] ring-1 ring-[var(--launcher-card-border)]">
         {/* Source Input */}
         <div className="group relative flex min-h-[45%] flex-1 flex-col">
-          <div className="pointer-events-none absolute right-4 top-3 z-10 text-[10px] font-mono tracking-[-0.01em] text-muted-foreground transition-opacity group-hover:text-foreground">
+          <div className="pointer-events-none absolute right-4 top-3 z-10 text-launcher-2xs font-mono tracking-[-0.01em] text-muted-foreground transition-opacity group-hover:text-foreground">
             {sourceText.length} chars
           </div>
           <Textarea
@@ -366,12 +366,12 @@ function TranslationViewContent({ initialQuery, onBack }: TranslationViewProps) 
                 void runTranslation(sourceText, resolvedSourceLanguage, resolvedTargetLanguage);
               }
             }}
-            className="flex-1 resize-none border-none bg-transparent p-4 text-[15px] leading-relaxed tracking-[-0.01em] text-foreground placeholder:text-muted-foreground focus-visible:ring-0"
+            className="flex-1 resize-none border-none bg-transparent p-4 text-launcher-xl leading-relaxed tracking-[-0.01em] text-foreground placeholder:text-muted-foreground focus-visible:ring-0"
             placeholder="Enter text to translate..."
             spellCheck={false}
           />
           {languagesError && (
-            <div className="absolute bottom-3 left-3 right-3 flex items-center gap-2 rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-2 text-[11px] text-destructive">
+            <div className="absolute bottom-3 left-3 right-3 flex items-center gap-2 rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-2 text-launcher-xs text-destructive">
               <AlertCircle className="size-3.5 shrink-0" />
               <span className="truncate">Could not load languages: {languagesError.message}</span>
             </div>
@@ -386,7 +386,7 @@ function TranslationViewContent({ initialQuery, onBack }: TranslationViewProps) 
           {/* Detected Language Badge */}
           {detectedLanguageLabel && (
             <div className="absolute left-4 top-3 z-10">
-              <span className="rounded-full bg-[var(--ring)]/15 px-2 py-0.5 text-[10px] font-medium tracking-[-0.01em] text-[var(--ring)]">
+              <span className="rounded-full bg-[var(--ring)]/15 px-2 py-0.5 text-launcher-2xs font-medium tracking-[-0.01em] text-[var(--ring)]">
                 {detectedLanguageLabel} {detectedConfidence ? `(${detectedConfidence})` : ""}
               </span>
             </div>
@@ -415,14 +415,14 @@ function TranslationViewContent({ initialQuery, onBack }: TranslationViewProps) 
             value={translatedText}
             readOnly
             className={cn(
-              "flex-1 resize-none border-none bg-transparent p-4 text-[15px] leading-relaxed tracking-[-0.01em] text-foreground focus-visible:ring-0",
+              "flex-1 resize-none border-none bg-transparent p-4 text-launcher-xl leading-relaxed tracking-[-0.01em] text-foreground focus-visible:ring-0",
               detectedLanguageLabel && "pt-10",
             )}
             placeholder={canTranslate ? "Translation will appear here..." : ""}
           />
 
           {mutationErrorMessage && (
-            <div className="absolute bottom-3 left-3 right-3 flex items-center gap-2 rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-2 text-[11px] text-destructive">
+            <div className="absolute bottom-3 left-3 right-3 flex items-center gap-2 rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-2 text-launcher-xs text-destructive">
               <AlertCircle className="size-3.5 shrink-0" />
               <span className="truncate">{mutationErrorMessage}</span>
             </div>
@@ -433,7 +433,7 @@ function TranslationViewContent({ initialQuery, onBack }: TranslationViewProps) 
       <ModuleFooter
         className="translate-footer-enter"
         leftSlot={
-          <label className="flex items-center gap-2 text-[11px] tracking-[-0.01em]">
+          <label className="flex items-center gap-2 text-launcher-xs tracking-[-0.01em]">
             <Switch
               checked={autoTranslate}
               onCheckedChange={(checked) => {

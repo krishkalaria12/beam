@@ -39,12 +39,12 @@ export function HyprWhsprRecordControlsCard({
           {isRecording ? <Mic className="size-5" /> : <MicOff className="size-5" />}
         </div>
         <div className="flex flex-col min-w-0 flex-1">
-          <p className="text-sm font-medium text-foreground">
+          <p className="text-launcher-sm font-medium text-foreground">
             {isRecording ? "Recording in progress" : "Ready to dictate"}
           </p>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-launcher-xs text-muted-foreground">
             Hold{" "}
-            <Kbd className="rounded px-1 py-0.5 text-[10px] font-medium border border-border/40">
+            <Kbd className="rounded px-1 py-0.5 text-launcher-2xs font-medium border border-border/40">
               Space
             </Kbd>{" "}
             to speak, release to stop.
@@ -58,7 +58,7 @@ export function HyprWhsprRecordControlsCard({
           size="sm"
           onClick={onToggle}
           disabled={runningAction !== null}
-          className="w-full justify-center gap-2 text-xs"
+          className="w-full justify-center gap-2 text-launcher-xs"
         >
           {runningAction === "toggle" ? (
             <Loader2 className="size-3.5 animate-spin" />
@@ -72,7 +72,7 @@ export function HyprWhsprRecordControlsCard({
           size="sm"
           onClick={onStop}
           disabled={runningAction !== null}
-          className="w-full justify-center gap-2 text-xs"
+          className="w-full justify-center gap-2 text-launcher-xs"
         >
           {runningAction === "stop" ? (
             <Loader2 className="size-3.5 animate-spin" />
@@ -86,7 +86,7 @@ export function HyprWhsprRecordControlsCard({
           size="sm"
           onClick={onCancel}
           disabled={runningAction !== null}
-          className="w-full justify-center gap-2 text-xs"
+          className="w-full justify-center gap-2 text-launcher-xs"
         >
           {runningAction === "cancel" ? (
             <Loader2 className="size-3.5 animate-spin" />
@@ -100,7 +100,7 @@ export function HyprWhsprRecordControlsCard({
           size="sm"
           onClick={onRefresh}
           disabled={isRecordStatusFetching}
-          className="w-full justify-center gap-2 text-xs"
+          className="w-full justify-center gap-2 text-launcher-xs"
         >
           {isRecordStatusFetching ? (
             <Loader2 className="size-3.5 animate-spin" />

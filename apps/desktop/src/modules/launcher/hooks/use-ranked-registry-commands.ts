@@ -7,7 +7,6 @@ import { createCommandProviderOrchestrator } from "@/command-registry/providers"
 import {
   rankCommands,
   type CommandRankingSignals,
-  type RankedCommand,
 } from "@/command-registry/ranker";
 import { staticCommandRegistry } from "@/command-registry/registry";
 import { resolveStaticCommandCandidates } from "@/command-registry/static-candidates";

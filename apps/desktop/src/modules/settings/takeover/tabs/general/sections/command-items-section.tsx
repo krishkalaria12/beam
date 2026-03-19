@@ -110,11 +110,11 @@ export function GeneralCommandItemsSection({
   return (
     <div className="settings-panel space-y-5 rounded-2xl bg-[var(--launcher-card-hover-bg)] px-4 py-5 ring-1 ring-[var(--launcher-card-border)]">
       <div className="flex items-center gap-3 px-1">
-        <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+        <span className="text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
           Command Items
         </span>
         <div className="h-px flex-1 bg-[var(--launcher-chip-bg)]" />
-        <span className="text-[11px] tabular-nums text-muted-foreground">
+        <span className="text-launcher-xs tabular-nums text-muted-foreground">
           {hiddenCount} disabled
         </span>
       </div>
@@ -127,7 +127,7 @@ export function GeneralCommandItemsSection({
             placeholder="Search commands..."
             leftIcon={<Search className="size-3.5" />}
             minimal
-            className="h-9 border-none bg-transparent px-0 py-0 text-[12px]"
+            className="h-9 border-none bg-transparent px-0 py-0 text-launcher-sm"
           />
         </div>
 
@@ -140,7 +140,7 @@ export function GeneralCommandItemsSection({
               variant="ghost"
               onClick={() => setFilter(value)}
               className={cn(
-                "h-7 flex-1 rounded-lg text-[11px] font-medium tracking-[-0.01em]",
+                "h-7 flex-1 rounded-lg text-launcher-xs font-medium tracking-[-0.01em]",
                 filter === value
                   ? "bg-[var(--launcher-card-hover-bg)] text-foreground"
                   : "text-muted-foreground hover:text-foreground",
@@ -157,10 +157,10 @@ export function GeneralCommandItemsSection({
           <IconChip variant="neutral" size="lg" className="mb-4 size-14 rounded-2xl">
             <Search className="size-6" />
           </IconChip>
-          <p className="mb-1.5 text-[14px] font-medium text-muted-foreground">
+          <p className="mb-1.5 text-launcher-lg font-medium text-muted-foreground">
             No command items found
           </p>
-          <p className="max-w-[230px] text-[12px] leading-relaxed text-muted-foreground">
+          <p className="max-w-[230px] text-launcher-sm leading-relaxed text-muted-foreground">
             Try a different search query or filter.
           </p>
         </div>
@@ -180,16 +180,16 @@ export function GeneralCommandItemsSection({
                 <CommandIcon icon={item.icon} commandId={item.id} className="size-9 rounded-xl" />
 
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[13px] font-medium tracking-[-0.01em] text-foreground capitalize">
+                  <p className="truncate text-launcher-md font-medium tracking-[-0.01em] text-foreground capitalize">
                     {item.title}
                   </p>
-                  <p className="truncate text-[11px] text-muted-foreground">
+                  <p className="truncate text-launcher-xs text-muted-foreground">
                     {item.subtitle || item.groupLabel}
                   </p>
                 </div>
 
                 <div className="flex items-center gap-2 pl-2">
-                  <span className="hidden text-[10px] font-medium uppercase tracking-[0.06em] text-muted-foreground sm:block">
+                  <span className="hidden text-launcher-2xs font-medium uppercase tracking-[0.06em] text-muted-foreground sm:block">
                     {isLocked ? "Required" : isEnabled ? "Enabled" : "Disabled"}
                   </span>
                   {isLocked ? (
@@ -203,7 +203,7 @@ export function GeneralCommandItemsSection({
                     checked={isEnabled}
                     disabled={isLocked}
                     onCheckedChange={(checked) => {
-                      onSetHidden(item.id, !Boolean(checked));
+                      onSetHidden(item.id, !checked);
                     }}
                     aria-label={`Toggle ${item.title}`}
                   />
@@ -214,7 +214,7 @@ export function GeneralCommandItemsSection({
         </div>
       )}
 
-      <p className="px-1 text-[12px] leading-relaxed text-muted-foreground">
+      <p className="px-1 text-launcher-sm leading-relaxed text-muted-foreground">
         Disabled commands are removed from launcher results and blocked from command hotkeys.
       </p>
     </div>

@@ -5,6 +5,7 @@ use std::collections::HashSet;
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use fontdb::Database;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter};
 use tauri_plugin_store::StoreExt;
@@ -15,6 +16,10 @@ use crate::applications::config::CONFIG as APPLICATIONS_CONFIG;
 use crate::config::CONFIG as APP_CONFIG;
 
 const AUTO_ICON_THEME_ID: &str = "auto";
+const DEFAULT_FONT_FAMILY_ID: &str = "default";
+const SYSTEM_FONT_FAMILY_ID: &str = "system";
+const MIN_LAUNCHER_FONT_SIZE: f64 = 10.0;
+const MAX_LAUNCHER_FONT_SIZE: f64 = 18.0;
 
 #[derive(Debug, Clone, Copy, Default, Deserialize, Serialize, Eq, PartialEq)]
 #[serde(rename_all = "snake_case")]
@@ -27,6 +32,13 @@ pub enum UiLayoutMode {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct IconThemeSummary {
+    pub id: String,
+    pub name: String,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FontFamilySummary {
     pub id: String,
     pub name: String,
 }
@@ -51,6 +63,15 @@ fn normalize_icon_theme_id(value: &str) -> Option<String> {
     Some(normalized.to_string())
 }
 
+fn normalize_launcher_font_family_id(value: &str) -> Option<String> {
+    let normalized = value.trim();
+    if normalized.is_empty() {
+        return None;
+    }
+
+    Some(normalized.to_string())
+}
+
 fn parse_launcher_opacity(value: Option<serde_json::Value>) -> f64 {
     let stored = value.and_then(|raw| match raw {
         serde_json::Value::Number(number) => number.as_f64(),
@@ -65,6 +86,71 @@ fn normalize_launcher_opacity(value: Option<f64>) -> Option<f64> {
     value
         .filter(|opacity| opacity.is_finite())
         .map(|opacity| opacity.clamp(0.0, 1.0))
+}
+
+fn parse_launcher_font_family(value: Option<serde_json::Value>) -> String {
+    value
+        .and_then(|raw| raw.as_str().map(str::to_string))
+        .and_then(|raw| normalize_launcher_font_family_id(&raw))
+        .unwrap_or_else(|| SETTINGS_CONFIG.default_launcher_font_family.to_string())
+}
+
+fn is_builtin_font_family_id(value: &str) -> bool {
+    value.eq_ignore_ascii_case(DEFAULT_FONT_FAMILY_ID)
+        || value.eq_ignore_ascii_case(SYSTEM_FONT_FAMILY_ID)
+}
+
+fn parse_launcher_font_size(value: Option<serde_json::Value>) -> f64 {
+    let stored = value.and_then(|raw| match raw {
+        serde_json::Value::Number(number) => number.as_f64(),
+        serde_json::Value::String(text) => text.trim().parse::<f64>().ok(),
+        _ => None,
+    });
+
+    normalize_launcher_font_size(stored).unwrap_or(SETTINGS_CONFIG.default_launcher_font_size)
+}
+
+fn normalize_launcher_font_size(value: Option<f64>) -> Option<f64> {
+    value
+        .filter(|size| size.is_finite())
+        .map(|size| (size * 2.0).round() / 2.0)
+        .map(|size| size.clamp(MIN_LAUNCHER_FONT_SIZE, MAX_LAUNCHER_FONT_SIZE))
+}
+
+fn list_font_family_summaries_internal() -> Vec<FontFamilySummary> {
+    let mut db = Database::new();
+    db.load_system_fonts();
+
+    let mut seen = HashSet::new();
+    let mut fonts = Vec::new();
+
+    for face in db.faces() {
+        for (family_name, _) in &face.families {
+            let normalized = family_name.trim();
+            if normalized.is_empty() {
+                continue;
+            }
+
+            let dedupe_key = normalized.to_lowercase();
+            if !seen.insert(dedupe_key) {
+                continue;
+            }
+
+            fonts.push(FontFamilySummary {
+                id: normalized.to_string(),
+                name: normalized.to_string(),
+            });
+        }
+    }
+
+    fonts.sort_by(|left, right| left.name.to_lowercase().cmp(&right.name.to_lowercase()));
+    fonts
+}
+
+fn is_available_font_family(family_id: &str) -> bool {
+    list_font_family_summaries_internal()
+        .iter()
+        .any(|family| family.id == family_id)
 }
 
 fn expand_home(path: &str) -> PathBuf {
@@ -239,6 +325,53 @@ pub fn set_launcher_opacity(app: AppHandle, opacity: f64) -> Result<f64> {
         normalize_launcher_opacity(Some(opacity)).ok_or(SettingsError::InvalidLauncherOpacity)?;
     let store = open_store(&app)?;
     store.set(SETTINGS_CONFIG.launcher_opacity_key, normalized);
+    save_store(&store)?;
+    Ok(normalized)
+}
+
+#[tauri::command]
+pub fn list_font_families() -> Vec<FontFamilySummary> {
+    list_font_family_summaries_internal()
+}
+
+#[tauri::command]
+pub fn get_launcher_font_family(app: AppHandle) -> Result<String> {
+    let store = open_store(&app)?;
+    let selected = parse_launcher_font_family(store.get(SETTINGS_CONFIG.launcher_font_family_key));
+    if is_builtin_font_family_id(&selected) || is_available_font_family(&selected) {
+        Ok(selected)
+    } else {
+        Ok(SETTINGS_CONFIG.default_launcher_font_family.to_string())
+    }
+}
+
+#[tauri::command]
+pub fn set_launcher_font_family(app: AppHandle, family: String) -> Result<String> {
+    let normalized = normalize_launcher_font_family_id(&family)
+        .ok_or(SettingsError::InvalidLauncherFontFamily)?;
+    if !is_builtin_font_family_id(&normalized) && !is_available_font_family(&normalized) {
+        return Err(SettingsError::InvalidLauncherFontFamily);
+    }
+    let store = open_store(&app)?;
+    store.set(SETTINGS_CONFIG.launcher_font_family_key, normalized.clone());
+    save_store(&store)?;
+    Ok(normalized)
+}
+
+#[tauri::command]
+pub fn get_launcher_font_size(app: AppHandle) -> Result<f64> {
+    let store = open_store(&app)?;
+    Ok(parse_launcher_font_size(
+        store.get(SETTINGS_CONFIG.launcher_font_size_key),
+    ))
+}
+
+#[tauri::command]
+pub fn set_launcher_font_size(app: AppHandle, size: f64) -> Result<f64> {
+    let normalized =
+        normalize_launcher_font_size(Some(size)).ok_or(SettingsError::InvalidLauncherFontSize)?;
+    let store = open_store(&app)?;
+    store.set(SETTINGS_CONFIG.launcher_font_size_key, normalized);
     save_store(&store)?;
     Ok(normalized)
 }

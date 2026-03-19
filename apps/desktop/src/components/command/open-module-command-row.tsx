@@ -37,7 +37,7 @@ export function OpenModuleCommandRow({
       onFocus={onFocus}
       shortcut={shortcut}
       titleClassName="truncate text-foreground capitalize"
-      subtitleClassName="truncate text-xs text-muted-foreground"
+      subtitleClassName="truncate text-launcher-xs text-muted-foreground"
     />
   );
 }

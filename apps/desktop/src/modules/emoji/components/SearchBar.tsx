@@ -75,7 +75,7 @@ export function SearchBar({
               className="rounded-md text-muted-foreground hover:text-foreground"
               aria-label="Clear search"
             >
-              <span className="text-[12px] leading-none">x</span>
+              <span className="text-launcher-sm leading-none">x</span>
             </Button>
           ) : null
         }
@@ -87,9 +87,9 @@ export function SearchBar({
           value={selectedCategory}
           onValueChange={(value) => value && onCategoryChange(value)}
         >
-          <SelectTrigger className="h-10 min-w-[150px] gap-2 rounded-xl border-0 bg-[var(--launcher-card-hover-bg)] ring-1 ring-[var(--launcher-card-border)] px-3 text-[12px] font-medium text-foreground hover:bg-[var(--launcher-card-hover-bg)] focus:ring-[var(--ring)] transition-all duration-200">
+          <SelectTrigger className="h-10 min-w-[150px] gap-2 rounded-xl border-0 bg-[var(--launcher-card-hover-bg)] ring-1 ring-[var(--launcher-card-border)] px-3 text-launcher-sm font-medium text-foreground hover:bg-[var(--launcher-card-hover-bg)] focus:ring-[var(--ring)] transition-all duration-200">
             <div className="flex items-center gap-2">
-              <span className="text-sm">{selectedCategoryIcon}</span>
+              <span className="text-launcher-sm">{selectedCategoryIcon}</span>
               <SelectValue>
                 {selectedCategory === "all"
                   ? "All Categories"
@@ -100,7 +100,7 @@ export function SearchBar({
           <SelectContent className="max-h-[320px] rounded-xl border-[var(--launcher-card-border)] bg-[var(--popover)] p-1 shadow-xl">
             <SelectItem
               value="all"
-              className="rounded-lg text-[12px] font-medium focus:bg-[var(--launcher-card-hover-bg)]"
+              className="rounded-lg text-launcher-sm font-medium focus:bg-[var(--launcher-card-hover-bg)]"
             >
               <div className="flex items-center gap-2">
                 <span>📚</span>
@@ -111,7 +111,7 @@ export function SearchBar({
               <SelectItem
                 key={groupNum}
                 value={groupNum.toString()}
-                className="rounded-lg text-[12px] focus:bg-[var(--launcher-card-hover-bg)]"
+                className="rounded-lg text-launcher-sm focus:bg-[var(--launcher-card-hover-bg)]"
               >
                 <div className="flex items-center gap-2">
                   <span>{CATEGORY_ICONS[groupNum]}</span>

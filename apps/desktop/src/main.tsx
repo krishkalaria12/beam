@@ -7,6 +7,7 @@ import "streamdown/styles.css";
 import { CommandLoadingState } from "./components/command/command-loading-state";
 import { Toaster } from "./components/ui/sonner";
 import { TooltipProvider } from "./components/ui/tooltip";
+import { LauncherFontProvider } from "./providers/launcher-font-provider";
 import { LauncherThemeProvider } from "./providers/launcher-theme-provider";
 import { LauncherOpacityProvider } from "./providers/launcher-opacity-provider";
 import { QueryProvider } from "./providers/query-provider";
@@ -40,12 +41,14 @@ if (!rootElement.innerHTML) {
       <ThemeProvider>
         <UiStyleProvider>
           <LauncherThemeProvider>
-            <LauncherOpacityProvider>
-              <TooltipProvider>
-                <RouterProvider router={router} />
-                <Toaster position="top-right" richColors />
-              </TooltipProvider>
-            </LauncherOpacityProvider>
+            <LauncherFontProvider>
+              <LauncherOpacityProvider>
+                <TooltipProvider>
+                  <RouterProvider router={router} />
+                  <Toaster position="top-right" richColors />
+                </TooltipProvider>
+              </LauncherOpacityProvider>
+            </LauncherFontProvider>
           </LauncherThemeProvider>
         </UiStyleProvider>
       </ThemeProvider>

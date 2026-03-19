@@ -188,10 +188,10 @@ export function WindowSwitcherView({ onBack }: WindowSwitcherViewProps) {
             <AppWindow className="size-[18px] text-[var(--icon-primary-fg)]" />
           </div>
           <div className="flex flex-col">
-            <h1 className="text-[14px] font-semibold tracking-[-0.02em] text-foreground">
+            <h1 className="text-launcher-lg font-semibold tracking-[-0.02em] text-foreground">
               Window Switcher
             </h1>
-            <p className="text-[12px] tracking-[-0.01em] text-muted-foreground">
+            <p className="text-launcher-sm tracking-[-0.01em] text-muted-foreground">
               Focus or close open windows
             </p>
           </div>
@@ -202,13 +202,13 @@ export function WindowSwitcherView({ onBack }: WindowSwitcherViewProps) {
           {(windowsQuery.isLoading || windowsQuery.isRefetching) && (
             <div className="flex items-center gap-1.5 rounded-full bg-[var(--launcher-card-hover-bg)] px-2.5 py-1">
               <div className="size-1.5 animate-pulse rounded-full bg-[var(--ring)]" />
-              <span className="text-[11px] font-medium tracking-[-0.01em] text-muted-foreground">
+              <span className="text-launcher-xs font-medium tracking-[-0.01em] text-muted-foreground">
                 {windowsQuery.isLoading ? "Loading" : "Refreshing"}
               </span>
             </div>
           )}
           {!windowsQuery.isLoading && !windowsQuery.isRefetching && (
-            <span className="text-[11px] font-medium tracking-[-0.01em] text-muted-foreground">
+            <span className="text-launcher-xs font-medium tracking-[-0.01em] text-muted-foreground">
               {filteredWindows.length} {filteredWindows.length === 1 ? "window" : "windows"}
             </span>
           )}
@@ -224,7 +224,7 @@ export function WindowSwitcherView({ onBack }: WindowSwitcherViewProps) {
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search open windows..."
-            className="h-10 w-full rounded-xl bg-[var(--launcher-card-hover-bg)] pl-10 pr-4 text-[13px] tracking-[-0.01em] text-foreground ring-1 ring-[var(--launcher-card-border)] transition-all placeholder:text-muted-foreground focus:outline-none focus:ring-[var(--ring)]"
+            className="h-10 w-full rounded-xl bg-[var(--launcher-card-hover-bg)] pl-10 pr-4 text-launcher-md tracking-[-0.01em] text-foreground ring-1 ring-[var(--launcher-card-border)] transition-all placeholder:text-muted-foreground focus:outline-none focus:ring-[var(--ring)]"
             autoFocus
           />
         </div>
@@ -251,10 +251,10 @@ export function WindowSwitcherView({ onBack }: WindowSwitcherViewProps) {
             <div className="flex size-12 items-center justify-center rounded-xl bg-[var(--icon-red-bg)]">
               <AppWindow className="size-6 text-[var(--icon-red-fg)]" />
             </div>
-            <p className="text-[13px] font-medium tracking-[-0.01em] text-muted-foreground">
+            <p className="text-launcher-md font-medium tracking-[-0.01em] text-muted-foreground">
               Failed to load windows
             </p>
-            <p className="max-w-xs text-[12px] tracking-[-0.01em] text-muted-foreground">
+            <p className="max-w-xs text-launcher-sm tracking-[-0.01em] text-muted-foreground">
               {windowsQuery.error instanceof Error
                 ? windowsQuery.error.message
                 : "An error occurred while fetching open windows."}
@@ -275,7 +275,7 @@ export function WindowSwitcherView({ onBack }: WindowSwitcherViewProps) {
       <ModuleFooter
         className="windows-footer-enter border-[var(--launcher-card-border)]"
         leftSlot={
-          <div className="flex items-center gap-1 text-[11px] tracking-[-0.01em] text-muted-foreground">
+          <div className="flex items-center gap-1 text-launcher-xs tracking-[-0.01em] text-muted-foreground">
             {windowsQuery.isError && (
               <span className="text-[var(--icon-red-fg)]">Window switcher backend error</span>
             )}

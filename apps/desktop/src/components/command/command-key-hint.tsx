@@ -27,7 +27,7 @@ export function CommandKeyHint({
         <Kbd
           key={`key:${index}`}
           className={cn(
-            "h-[22px] min-w-[22px] px-1.5 text-[11px] font-medium text-muted-foreground",
+            "h-[22px] min-w-[22px] px-1.5 text-launcher-xs font-medium text-muted-foreground",
             keyClassName,
           )}
         >
@@ -38,7 +38,7 @@ export function CommandKeyHint({
   );
 
   const labelNode = (
-    <span className={cn("text-xs font-normal text-muted-foreground", labelClassName)}>{label}</span>
+    <span className={cn("text-launcher-xs font-normal text-muted-foreground", labelClassName)}>{label}</span>
   );
 
   return (
