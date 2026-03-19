@@ -24,7 +24,7 @@ export function LauncherTakeoverSurface({ children, className }: LauncherTakeove
   return (
     <div
       className={cn(
-        "absolute inset-0 z-50",
+        "beam-window-overlay absolute inset-0 z-50",
         "animate-in fade-in zoom-in-[0.985] duration-200",
         isInteractive ? "pointer-events-auto" : "pointer-events-none",
         className,

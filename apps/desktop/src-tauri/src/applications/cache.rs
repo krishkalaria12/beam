@@ -13,6 +13,7 @@ use super::{
 
 use crate::applications::config::CONFIG as APPLICATIONS_CONFIG;
 use crate::config::CONFIG as APP_CONFIG;
+use crate::settings;
 
 static APPLICATIONS_REFRESH_IN_PROGRESS: AtomicBool = AtomicBool::new(false);
 
@@ -61,7 +62,9 @@ fn refresh_applications_cache_in_background(app: AppHandle<Wry>) {
 
     tauri::async_runtime::spawn_blocking(move || {
         let refresh_result = (|| -> Result<()> {
-            let applications = collect_applications()?;
+            let selected_icon_theme = settings::get_selected_icon_theme(&app)
+                .map_err(|e| ApplicationsError::StoreOpeningError(e.to_string()))?;
+            let applications = collect_applications(selected_icon_theme)?;
             let store = app
                 .store(&APP_CONFIG.store_file_name)
                 .map_err(|e| ApplicationsError::StoreOpeningError(e.to_string()))?;
@@ -95,7 +98,9 @@ pub fn get_applications_with_cache(app: AppHandle<Wry>) -> Result<Vec<AppEntry>>
         return Ok(cached_apps);
     }
 
-    let applications = collect_applications()?;
+    let selected_icon_theme = settings::get_selected_icon_theme(&app)
+        .map_err(|e| ApplicationsError::StoreOpeningError(e.to_string()))?;
+    let applications = collect_applications(selected_icon_theme)?;
     write_applications_cache(store, &applications)?;
 
     Ok(applications)

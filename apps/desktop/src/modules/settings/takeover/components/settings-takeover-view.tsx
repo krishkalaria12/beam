@@ -142,10 +142,10 @@ export function SettingsTakeoverView({
   });
 
   return (
-    <LauncherTakeoverSurface className="h-full w-full bg-[var(--command-item-selected-bg)]/95 backdrop-blur-sm">
+    <LauncherTakeoverSurface className="h-full w-full backdrop-blur-sm">
       <div
         className={cn(
-          "flex h-full w-full flex-col overflow-hidden border border-[var(--launcher-card-border)] bg-[var(--command-item-selected-bg)]/95",
+          "beam-takeover-shell flex h-full w-full flex-col overflow-hidden border border-[var(--launcher-card-border)]",
           "transition-[opacity,transform] duration-140 ease-out",
           phase === "closing" ? "opacity-0 scale-[0.988]" : "opacity-100",
         )}

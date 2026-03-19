@@ -729,9 +729,13 @@ impl WindowProvider for GenericWaylandWindowProvider {
         }
     }
 
-    fn list_windows(&self, state: &AppState) -> Result<Vec<WindowEntry>> {
+    fn list_windows(
+        &self,
+        state: &AppState,
+        selected_icon_theme: Option<&str>,
+    ) -> Result<Vec<WindowEntry>> {
         let (_, windows) = snapshot_windows()?;
-        let mut icon_resolver = IconResolver::new();
+        let mut icon_resolver = IconResolver::new(selected_icon_theme.map(str::to_string));
         Ok(windows
             .into_iter()
             .filter(|window| !window.title.is_empty() || !window.app_id.is_empty())

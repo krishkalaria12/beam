@@ -49,7 +49,11 @@ impl WindowProvider for GnomeWindowProvider {
         WindowBackendCapabilities::standard_with_close()
     }
 
-    fn list_windows(&self, _state: &AppState) -> Result<Vec<WindowEntry>> {
+    fn list_windows(
+        &self,
+        _state: &AppState,
+        _selected_icon_theme: Option<&str>,
+    ) -> Result<Vec<WindowEntry>> {
         let windows = Self::list_windows_json()?;
         Ok(windows
             .into_iter()

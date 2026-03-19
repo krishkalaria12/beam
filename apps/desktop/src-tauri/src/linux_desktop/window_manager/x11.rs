@@ -255,12 +255,16 @@ impl WindowProvider for X11WindowProvider {
         WindowBackendCapabilities::standard_with_close()
     }
 
-    fn list_windows(&self, state: &AppState) -> Result<Vec<WindowEntry>> {
+    fn list_windows(
+        &self,
+        state: &AppState,
+        selected_icon_theme: Option<&str>,
+    ) -> Result<Vec<WindowEntry>> {
         let (connection, screen_num, atoms) = open_connection()?;
         let root = root_window(&connection, screen_num);
         let active = active_window(&connection, root, &atoms)?;
         let names = workspace_names(&connection, root, &atoms);
-        let mut icon_resolver = IconResolver::new();
+        let mut icon_resolver = IconResolver::new(selected_icon_theme.map(str::to_string));
         let mut entries = Vec::new();
 
         for window in read_property_u32(

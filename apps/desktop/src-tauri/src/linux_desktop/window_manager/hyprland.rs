@@ -30,7 +30,11 @@ impl WindowProvider for HyprlandWindowProvider {
         WindowBackendCapabilities::standard_with_close()
     }
 
-    fn list_windows(&self, state: &AppState) -> Result<Vec<WindowEntry>> {
+    fn list_windows(
+        &self,
+        state: &AppState,
+        selected_icon_theme: Option<&str>,
+    ) -> Result<Vec<WindowEntry>> {
         #[cfg(not(target_os = "linux"))]
         {
             let _ = state;
@@ -44,7 +48,7 @@ impl WindowProvider for HyprlandWindowProvider {
             let clients = Clients::get().map_err(|error| {
                 WindowManagerError::QueryError(format!("failed to query Hyprland clients: {error}"))
             })?;
-            let mut icon_resolver = IconResolver::new();
+            let mut icon_resolver = IconResolver::new(selected_icon_theme.map(str::to_string));
             let entries = clients
                 .iter()
                 .map(|entry| {

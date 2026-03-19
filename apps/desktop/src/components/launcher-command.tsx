@@ -577,8 +577,9 @@ export default function LauncherCommand() {
       return;
     }
 
-    const dynamicFallback = rankedRegistryCommands.find((entry) => entry.command.id === commandId)
-      ?.command;
+    const dynamicFallback = rankedRegistryCommands.find(
+      (entry) => entry.command.id === commandId,
+    )?.command;
 
     if (!dynamicFallback && !staticCommandRegistry.has(commandId)) {
       toast.error(`Hotkey command not available: ${commandId}`);
@@ -819,7 +820,7 @@ export default function LauncherCommand() {
       <Command
         shouldFilter={false}
         onKeyDown={handleKeyDown}
-        className="glass-effect h-full w-full overflow-hidden text-foreground"
+        className="glass-effect beam-main-shell h-full w-full overflow-hidden text-foreground"
       >
         {!isInputHidden && (
           <CommandInput

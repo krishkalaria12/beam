@@ -10,9 +10,11 @@ mod wayland;
 mod x11;
 
 use serde::{Deserialize, Serialize};
+use tauri::AppHandle;
 
 use self::config::CONFIG as WINDOW_MANAGER_CONFIG;
 use crate::applications::icon_resolver::IconResolver;
+use crate::settings;
 use crate::state::AppState;
 use crate::window_switcher::WindowEntry;
 
@@ -44,7 +46,11 @@ pub trait WindowProvider {
     fn backend_kind(&self) -> DesktopBackendKind;
     fn is_activatable(&self, env: &LinuxDesktopEnvironment) -> bool;
     fn capabilities(&self) -> WindowBackendCapabilities;
-    fn list_windows(&self, state: &AppState) -> Result<Vec<WindowEntry>>;
+    fn list_windows(
+        &self,
+        state: &AppState,
+        selected_icon_theme: Option<&str>,
+    ) -> Result<Vec<WindowEntry>>;
     fn focus_window(&self, window_id: &str) -> Result<()>;
     fn close_window(&self, window_id: &str) -> Result<()>;
     fn frontmost_window(&self, state: &AppState) -> Result<Option<FocusedWindowInfo>>;
@@ -79,9 +85,10 @@ pub fn active_capabilities() -> WindowBackendCapabilities {
     select_provider(&env).capabilities()
 }
 
-pub fn list_windows(state: &AppState) -> Result<Vec<WindowEntry>> {
+pub fn list_windows(app: &AppHandle, state: &AppState) -> Result<Vec<WindowEntry>> {
     let env = detect_environment();
-    select_provider(&env).list_windows(state)
+    let selected_icon_theme = settings::get_selected_icon_theme(app).ok().flatten();
+    select_provider(&env).list_windows(state, selected_icon_theme.as_deref())
 }
 
 pub fn focus_window(window_id: &str) -> Result<()> {

@@ -22,7 +22,11 @@ impl WindowProvider for UnsupportedWindowProvider {
         WindowBackendCapabilities::unsupported()
     }
 
-    fn list_windows(&self, _state: &AppState) -> Result<Vec<WindowEntry>> {
+    fn list_windows(
+        &self,
+        _state: &AppState,
+        _selected_icon_theme: Option<&str>,
+    ) -> Result<Vec<WindowEntry>> {
         Err(WindowManagerError::UnsupportedSession(
             "window management is unavailable on this desktop session".to_string(),
         ))

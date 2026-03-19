@@ -10,6 +10,12 @@ pub enum SettingsError {
 
     #[error("failed to save settings store: {0}")]
     StoreSave(String),
+
+    #[error("invalid launcher opacity")]
+    InvalidLauncherOpacity,
+
+    #[error("invalid icon theme")]
+    InvalidIconTheme,
 }
 
 impl Serialize for SettingsError {

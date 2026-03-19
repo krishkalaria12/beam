@@ -5,6 +5,8 @@ use std::path::{Path, PathBuf};
 
 use crate::applications::config::CONFIG as APPLICATIONS_CONFIG;
 
+const ICON_LOOKUP_SIZES: [u16; 6] = [24, 32, 48, 64, 96, 128];
+
 fn canonicalize_path(path: &Path) -> PathBuf {
     path.canonicalize().unwrap_or_else(|_| path.to_path_buf())
 }
@@ -46,10 +48,11 @@ pub struct IconResolver {
     allowed_icon_directories: Vec<PathBuf>,
     home_local_directory: PathBuf,
     icon_lookup_cache: HashMap<String, String>,
+    selected_theme: Option<String>,
 }
 
 impl IconResolver {
-    pub fn new() -> Self {
+    pub fn new(selected_theme: Option<String>) -> Self {
         let allowed_icon_directories = APPLICATIONS_CONFIG
             .icon_directories
             .iter()
@@ -60,7 +63,45 @@ impl IconResolver {
             allowed_icon_directories,
             home_local_directory: canonicalize_path(&expand_home("~/.local")),
             icon_lookup_cache: HashMap::new(),
+            selected_theme: selected_theme
+                .map(|theme| theme.trim().to_string())
+                .filter(|theme| !theme.is_empty()),
         }
+    }
+
+    fn allowed_icon_path(&self, path: PathBuf) -> String {
+        to_allowed_icon_path(
+            path,
+            &self.allowed_icon_directories,
+            &self.home_local_directory,
+        )
+        .unwrap_or_default()
+    }
+
+    fn lookup_by_name(&self, icon_name: &str, size: u16) -> Option<PathBuf> {
+        let mut lookup = freedesktop_icons::lookup(icon_name)
+            .with_size(size)
+            .with_scale(1)
+            .with_cache();
+
+        if let Some(theme) = self.selected_theme.as_deref() {
+            lookup = lookup.with_theme(theme);
+        }
+
+        lookup.find()
+    }
+
+    fn lookup_named_icon_path(&self, icon_name: &str) -> String {
+        for size in ICON_LOOKUP_SIZES {
+            if let Some(path) = self.lookup_by_name(icon_name, size) {
+                let allowed_path = self.allowed_icon_path(path);
+                if !allowed_path.is_empty() {
+                    return allowed_path;
+                }
+            }
+        }
+
+        String::new()
     }
 
     pub fn resolve(&mut self, icon: Option<&IconString>, desktop_file_path: &Path) -> String {
@@ -93,21 +134,11 @@ impl IconResolver {
         }
 
         let resolved_icon_path = if let Some(path) = icon.get_icon_path() {
-            to_allowed_icon_path(
-                path,
-                &self.allowed_icon_directories,
-                &self.home_local_directory,
-            )
-            .unwrap_or_default()
+            self.allowed_icon_path(path)
         } else if let Some(local_path) = raw_icon.strip_prefix("file://") {
             let local_path = PathBuf::from(local_path);
             if local_path.exists() {
-                to_allowed_icon_path(
-                    local_path,
-                    &self.allowed_icon_directories,
-                    &self.home_local_directory,
-                )
-                .unwrap_or_default()
+                self.allowed_icon_path(local_path)
             } else {
                 String::new()
             }
@@ -115,44 +146,14 @@ impl IconResolver {
             let absolute_path = PathBuf::from(raw_icon);
 
             if absolute_path.is_absolute() && absolute_path.exists() {
-                to_allowed_icon_path(
-                    absolute_path,
-                    &self.allowed_icon_directories,
-                    &self.home_local_directory,
-                )
-                .unwrap_or_default()
+                self.allowed_icon_path(absolute_path)
             } else if let Some(parent_dir) = desktop_file_path.parent() {
                 let relative_path = parent_dir.join(raw_icon);
 
                 if relative_path.exists() {
-                    to_allowed_icon_path(
-                        relative_path,
-                        &self.allowed_icon_directories,
-                        &self.home_local_directory,
-                    )
-                    .unwrap_or_default()
+                    self.allowed_icon_path(relative_path)
                 } else {
-                    let mut icon_path = String::new();
-
-                    for size in [24, 32, 48, 64, 96, 128] {
-                        if let Some(path) = freedesktop_icons::lookup(raw_icon)
-                            .with_size(size)
-                            .with_scale(1)
-                            .with_cache()
-                            .find()
-                        {
-                            if let Some(path) = to_allowed_icon_path(
-                                path,
-                                &self.allowed_icon_directories,
-                                &self.home_local_directory,
-                            ) {
-                                icon_path = path;
-                                break;
-                            }
-                        }
-                    }
-
-                    icon_path
+                    self.lookup_named_icon_path(raw_icon)
                 }
             } else {
                 String::new()
@@ -174,24 +175,7 @@ impl IconResolver {
             return cached_icon_path.clone();
         }
 
-        let mut icon_path = String::new();
-        for size in [24, 32, 48, 64, 96, 128] {
-            if let Some(path) = freedesktop_icons::lookup(normalized_name)
-                .with_size(size)
-                .with_scale(1)
-                .with_cache()
-                .find()
-            {
-                if let Some(path) = to_allowed_icon_path(
-                    path,
-                    &self.allowed_icon_directories,
-                    &self.home_local_directory,
-                ) {
-                    icon_path = path;
-                    break;
-                }
-            }
-        }
+        let icon_path = self.lookup_named_icon_path(normalized_name);
 
         self.icon_lookup_cache
             .insert(normalized_name.to_string(), icon_path.clone());

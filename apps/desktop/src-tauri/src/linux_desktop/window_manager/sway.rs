@@ -151,7 +151,11 @@ impl WindowProvider for SwayWindowProvider {
         WindowBackendCapabilities::standard_with_close()
     }
 
-    fn list_windows(&self, state: &AppState) -> Result<Vec<WindowEntry>> {
+    fn list_windows(
+        &self,
+        state: &AppState,
+        selected_icon_theme: Option<&str>,
+    ) -> Result<Vec<WindowEntry>> {
         #[cfg(not(target_os = "linux"))]
         {
             let _ = state;
@@ -163,7 +167,7 @@ impl WindowProvider for SwayWindowProvider {
         #[cfg(target_os = "linux")]
         {
             let tree = parse_tree()?;
-            let mut icon_resolver = IconResolver::new();
+            let mut icon_resolver = IconResolver::new(selected_icon_theme.map(str::to_string));
             let mut entries = Vec::new();
             collect_windows(&tree, "", state, &mut icon_resolver, &mut entries);
             Ok(entries)

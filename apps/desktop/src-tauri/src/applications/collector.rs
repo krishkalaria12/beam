@@ -82,10 +82,10 @@ fn iterate_through_application_directories() -> Result<Vec<PathBuf>> {
     Ok(files)
 }
 
-pub fn collect_applications() -> Result<Vec<AppEntry>> {
+pub fn collect_applications(selected_icon_theme: Option<String>) -> Result<Vec<AppEntry>> {
     let files = iterate_through_application_directories()
         .map_err(|e| ApplicationsError::CollectingDesktopFilesError(e.to_string()))?;
-    let mut icon_resolver = IconResolver::new();
+    let mut icon_resolver = IconResolver::new(selected_icon_theme);
     let mut applications = Vec::new();
 
     for path in files {

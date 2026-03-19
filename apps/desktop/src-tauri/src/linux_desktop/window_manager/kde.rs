@@ -113,11 +113,15 @@ impl WindowProvider for KdeWindowProvider {
         }
     }
 
-    fn list_windows(&self, state: &AppState) -> Result<Vec<WindowEntry>> {
+    fn list_windows(
+        &self,
+        state: &AppState,
+        selected_icon_theme: Option<&str>,
+    ) -> Result<Vec<WindowEntry>> {
         let windows = kde_bridge::list_windows().map_err(|error| {
             WindowManagerError::QueryError(format!("failed to read KDE windows: {error}"))
         })?;
-        let mut icon_resolver = IconResolver::new();
+        let mut icon_resolver = IconResolver::new(selected_icon_theme.map(str::to_string));
         Ok(windows
             .iter()
             .map(|window| metadata_to_window_entry(state, &mut icon_resolver, window))
@@ -148,7 +152,7 @@ impl WindowProvider for KdeWindowProvider {
         let windows = kde_bridge::list_windows().map_err(|error| {
             WindowManagerError::QueryError(format!("failed to read KDE windows: {error}"))
         })?;
-        let mut icon_resolver = IconResolver::new();
+        let mut icon_resolver = IconResolver::new(None);
 
         Ok(windows
             .iter()

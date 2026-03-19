@@ -1,7 +1,7 @@
 mod error;
 
 use serde::{Deserialize, Serialize};
-use tauri::{command, State};
+use tauri::{command, AppHandle, State};
 
 use self::error::{Result, WindowSwitcherError};
 use crate::{linux_desktop, state::AppState};
@@ -17,7 +17,7 @@ pub struct WindowEntry {
 }
 
 #[command]
-pub fn list_windows(state: State<'_, AppState>) -> Result<Vec<WindowEntry>> {
+pub fn list_windows(app: AppHandle, state: State<'_, AppState>) -> Result<Vec<WindowEntry>> {
     #[cfg(not(target_os = "linux"))]
     {
         let _ = state;
@@ -26,7 +26,7 @@ pub fn list_windows(state: State<'_, AppState>) -> Result<Vec<WindowEntry>> {
 
     #[cfg(target_os = "linux")]
     {
-        linux_desktop::window_manager::list_windows(&state)
+        linux_desktop::window_manager::list_windows(&app, &state)
             .map_err(|error| WindowSwitcherError::ClientError(error.to_string()))
     }
 }

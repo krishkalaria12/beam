@@ -8,6 +8,7 @@ import { CommandLoadingState } from "./components/command/command-loading-state"
 import { Toaster } from "./components/ui/sonner";
 import { TooltipProvider } from "./components/ui/tooltip";
 import { LauncherThemeProvider } from "./providers/launcher-theme-provider";
+import { LauncherOpacityProvider } from "./providers/launcher-opacity-provider";
 import { QueryProvider } from "./providers/query-provider";
 import { ThemeProvider } from "./providers/theme-provider";
 import { UiStyleProvider } from "./providers/ui-style-provider";
@@ -39,10 +40,12 @@ if (!rootElement.innerHTML) {
       <ThemeProvider>
         <UiStyleProvider>
           <LauncherThemeProvider>
-            <TooltipProvider>
-              <RouterProvider router={router} />
-              <Toaster position="top-right" richColors />
-            </TooltipProvider>
+            <LauncherOpacityProvider>
+              <TooltipProvider>
+                <RouterProvider router={router} />
+                <Toaster position="top-right" richColors />
+              </TooltipProvider>
+            </LauncherOpacityProvider>
           </LauncherThemeProvider>
         </UiStyleProvider>
       </ThemeProvider>

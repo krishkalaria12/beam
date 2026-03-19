@@ -136,7 +136,11 @@
 /* Main glass container - fully opaque */
 .sc-solid .glass-effect {
   --glass-radius: 12px;
-  background: var(--solid-bg-base) !important;
+  background: color-mix(
+    in srgb,
+    var(--solid-bg-base) calc(var(--beam-launcher-opacity) * 100%),
+    transparent
+  ) !important;
   box-shadow: 0 8px 32px #00000066;
 }
 
@@ -160,7 +164,8 @@
 .sc-glass-footer {
   border-top: 1px solid var(--footer-border);
   background:
-    linear-gradient(180deg, rgb(255 255 255 / 0.07), rgb(255 255 255 / 0.02)), var(--card);
+    linear-gradient(180deg, rgb(255 255 255 / 0.07), rgb(255 255 255 / 0.02)),
+    color-mix(in srgb, var(--card) calc(var(--beam-launcher-opacity) * 100%), transparent);
   -webkit-backdrop-filter: blur(48px) saturate(170%);
   backdrop-filter: blur(48px) saturate(170%);
 }
@@ -169,7 +174,7 @@
   border-top: none;
   background:
     linear-gradient(180deg, rgb(255 255 255 / 0.08), rgb(255 255 255 / 0.02)),
-    rgb(var(--sc-base-rgb) / 0.58);
+    rgb(var(--sc-base-rgb) / calc(0.58 * var(--beam-launcher-opacity)));
   -webkit-backdrop-filter: blur(104px) saturate(185%);
   backdrop-filter: blur(104px) saturate(185%);
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.18);
@@ -187,8 +192,36 @@
 /* Footer in solid theme - fully opaque */
 .sc-solid .sc-glass-footer {
   border-top: 1px solid var(--solid-border-subtle) !important;
-  background: var(--solid-bg-footer) !important;
+  background: color-mix(
+    in srgb,
+    var(--solid-bg-footer) calc(var(--beam-launcher-opacity) * 100%),
+    transparent
+  ) !important;
   box-shadow: none !important;
+}
+
+.glass-effect {
+  background: color-mix(
+    in srgb,
+    var(--card) calc(var(--beam-launcher-opacity) * 100%),
+    transparent
+  );
+}
+
+.beam-window-overlay {
+  background: color-mix(
+    in srgb,
+    var(--command-item-selected-bg) calc(var(--beam-launcher-opacity) * 100%),
+    transparent
+  );
+}
+
+.beam-takeover-shell {
+  background: color-mix(
+    in srgb,
+    var(--command-item-selected-bg) calc(var(--beam-launcher-opacity) * 100%),
+    transparent
+  );
 }
 
 /* Header in solid theme - fully opaque */

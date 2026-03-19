@@ -72,6 +72,7 @@
   --scrollbar-thumb: rgba(118, 130, 149, 0.26);
   --scrollbar-thumb-hover: rgba(118, 130, 149, 0.34);
   --sc-base-rgb: 16, 17, 19;
+  --beam-launcher-opacity: 0.96;
   --font-sans: "Manrope", "Ubuntu", "Noto Sans", "Segoe UI", sans-serif;
   --font-mono: "JetBrains Mono", "Fira Code", "Cascadia Mono", monospace;
 }
