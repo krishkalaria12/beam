@@ -21,8 +21,18 @@ export function GeneralTab({
   onMovePinned,
 }: GeneralTabProps) {
   return (
-    <div className="custom-scrollbar h-full min-h-0 overflow-y-auto overscroll-contain">
-      <div className="flex w-full min-w-0 flex-col gap-4 px-4 py-4">
+    <div className="settings-content h-full min-h-0 overflow-y-auto overscroll-contain">
+      <div className="settings-general-container flex w-full min-w-0 flex-col gap-5 px-5 py-5">
+        {/* Page Title */}
+        <div className="settings-general-hero mb-1">
+          <h2 className="text-launcher-3xl font-bold tracking-[-0.03em] text-foreground">
+            General
+          </h2>
+          <p className="mt-1 text-launcher-sm leading-relaxed text-muted-foreground">
+            Personalize Beam&apos;s look, feel, and behavior to match your workflow.
+          </p>
+        </div>
+
         <div style={SECTION_RENDER_STYLE}>
           <GeneralAppearanceSection />
         </div>
@@ -48,6 +58,9 @@ export function GeneralTab({
         <div style={SECTION_RENDER_STYLE}>
           <GeneralDesktopIntegrationSection />
         </div>
+
+        {/* Bottom spacer for scroll comfort */}
+        <div className="h-2" />
       </div>
     </div>
   );

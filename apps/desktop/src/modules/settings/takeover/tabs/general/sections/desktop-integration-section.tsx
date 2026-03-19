@@ -22,9 +22,9 @@ import {
   type DesktopIntegrationStatus,
 } from "@/modules/settings/api/desktop-integration";
 import { useMountEffect } from "@/hooks/use-mount-effect";
+import { SettingsSection, SettingsDivider } from "../components/settings-field";
 
 type ActionState = "idle" | "refreshing" | "installing" | "enabling" | "opening";
-type StatusTone = "supported" | "unsupported";
 
 interface CapabilityItem {
   label: string;
@@ -32,18 +32,16 @@ interface CapabilityItem {
 }
 
 function StatusPill({ supported }: { supported: boolean }) {
-  const tone: StatusTone = supported ? "supported" : "unsupported";
-
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-launcher-xs font-semibold tracking-[-0.01em]",
-        tone === "supported"
+        "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-launcher-2xs font-semibold tracking-[-0.01em]",
+        supported
           ? "border-[var(--launcher-card-selected-border)] bg-[var(--launcher-card-selected-bg)] text-foreground"
           : "border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] text-muted-foreground",
       )}
     >
-      {supported ? <CheckCircle2 className="size-3.5" /> : <XCircle className="size-3.5" />}
+      {supported ? <CheckCircle2 className="size-3" /> : <XCircle className="size-3" />}
       {supported ? "Supported" : "Unavailable"}
     </span>
   );
@@ -59,19 +57,16 @@ function SummaryCard({
   icon: ComponentType<{ className?: string }>;
 }) {
   return (
-    <div
-      className={cn(
-        "rounded-xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)]",
-        "px-4 py-4",
-      )}
-    >
+    <div className="rounded-xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-4 py-3.5">
       <div className="flex items-start gap-3">
-        <IconChip variant="cyan" size="md" className="rounded-xl">
-          <Icon className="size-4" />
+        <IconChip variant="cyan" size="sm" className="mt-0.5 rounded-lg">
+          <Icon className="size-3.5" />
         </IconChip>
         <div className="min-w-0">
-          <p className="text-launcher-xs uppercase tracking-[0.16em] text-muted-foreground">{label}</p>
-          <p className="mt-1 text-launcher-xl font-semibold tracking-[-0.02em] text-foreground">
+          <p className="text-launcher-2xs uppercase tracking-[0.14em] text-muted-foreground">
+            {label}
+          </p>
+          <p className="mt-0.5 text-launcher-md font-semibold tracking-[-0.02em] text-foreground">
             {value}
           </p>
         </div>
@@ -121,288 +116,246 @@ export function GeneralDesktopIntegrationSection() {
   const isBusy = actionState !== "idle";
 
   return (
-    <div className="rounded-2xl bg-[var(--launcher-card-hover-bg)] px-4 py-5 ring-1 ring-[var(--launcher-card-border)]">
-      <div className="space-y-4">
-        <div
-          className={cn(
-            "overflow-hidden rounded-2xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)]",
-          )}
-        >
-          <div className="border-b border-[var(--launcher-card-border)] bg-[var(--launcher-card-hover-bg)] px-4 py-4">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex min-w-0 items-start gap-3">
-                <IconChip variant="green" size="lg" className="rounded-2xl">
-                  <Monitor className="size-5" />
-                </IconChip>
-                <div className="min-w-0">
-                  <p className="text-launcher-xs uppercase tracking-[0.18em] text-muted-foreground">
-                    Linux Desktop Integration
-                  </p>
-                  <h3 className="mt-1 text-launcher-3xl font-semibold tracking-[-0.03em] text-foreground">
-                    Session-aware backends and capability reporting
-                  </h3>
-                  <p className="mt-1 max-w-[520px] text-launcher-sm leading-5 text-muted-foreground">
-                    Beam now detects the active Linux desktop backend instead of assuming Hyprland
-                    or Sway.
-                  </p>
-                </div>
-              </div>
-
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="shrink-0 rounded-xl"
-                disabled={isBusy}
-                onClick={() => void refresh("refreshing")}
-              >
-                {actionState === "refreshing" ? (
-                  <Loader2 className="mr-2 size-4 animate-spin" />
-                ) : (
-                  <RefreshCw className="mr-2 size-4" />
-                )}
-                Refresh
-              </Button>
-            </div>
-          </div>
-
-          <div className="grid gap-3 px-4 py-4 md:grid-cols-2">
-            <SummaryCard
-              label="Session Type"
-              value={status?.sessionType ?? "loading"}
-              icon={Monitor}
-            />
-            <SummaryCard
-              label="Desktop"
-              value={status ? `${status.desktopEnvironment} / ${status.compositor}` : "loading"}
-              icon={Wrench}
-            />
-            <SummaryCard
-              label="Window Backend"
-              value={status?.windowBackend ?? "loading"}
-              icon={CheckCircle2}
-            />
-            <SummaryCard
-              label="Clipboard Backend"
-              value={status?.clipboardBackend ?? "loading"}
-              icon={FolderOpen}
-            />
-            <SummaryCard
-              label="Selected Text"
-              value={status?.selectedTextBackend ?? "loading"}
-              icon={CheckCircle2}
-            />
-            <SummaryCard
-              label="Selected Files"
-              value={status?.selectedFilesBackend ?? "loading"}
-              icon={FolderOpen}
-            />
-            <SummaryCard
-              label="Wayland Helper"
-              value={
-                status
-                  ? status.waylandHelper.available
-                    ? (status.waylandHelper.backend ?? "available")
-                    : (status.waylandHelper.lastError ?? "unavailable")
-                  : "loading"
-              }
-              icon={Wrench}
-            />
-          </div>
+    <div className="space-y-4">
+      {/* ── Desktop Session Overview ── */}
+      <SettingsSection
+        title="Desktop Integration"
+        description="Session-aware backends and capability reporting for your Linux desktop."
+        icon={Monitor}
+        iconVariant="green"
+        headerAction={
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="gap-1.5 rounded-lg border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-2.5 text-launcher-2xs font-medium text-muted-foreground hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground"
+            disabled={isBusy}
+            onClick={() => void refresh("refreshing")}
+          >
+            {actionState === "refreshing" ? (
+              <Loader2 className="size-3 animate-spin" />
+            ) : (
+              <RefreshCw className="size-3" />
+            )}
+            Refresh
+          </Button>
+        }
+      >
+        {/* Summary grid */}
+        <div className="grid gap-2.5 p-5 md:grid-cols-2">
+          <SummaryCard
+            label="Session Type"
+            value={status?.sessionType ?? "loading"}
+            icon={Monitor}
+          />
+          <SummaryCard
+            label="Desktop"
+            value={status ? `${status.desktopEnvironment} / ${status.compositor}` : "loading"}
+            icon={Wrench}
+          />
+          <SummaryCard
+            label="Window Backend"
+            value={status?.windowBackend ?? "loading"}
+            icon={CheckCircle2}
+          />
+          <SummaryCard
+            label="Clipboard Backend"
+            value={status?.clipboardBackend ?? "loading"}
+            icon={FolderOpen}
+          />
+          <SummaryCard
+            label="Selected Text"
+            value={status?.selectedTextBackend ?? "loading"}
+            icon={CheckCircle2}
+          />
+          <SummaryCard
+            label="Selected Files"
+            value={status?.selectedFilesBackend ?? "loading"}
+            icon={FolderOpen}
+          />
+          <SummaryCard
+            label="Wayland Helper"
+            value={
+              status
+                ? status.waylandHelper.available
+                  ? (status.waylandHelper.backend ?? "available")
+                  : (status.waylandHelper.lastError ?? "unavailable")
+                : "loading"
+            }
+            icon={Wrench}
+          />
         </div>
 
         {errorMessage ? (
-          <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-launcher-sm text-red-200">
+          <div className="mx-5 mb-4 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-launcher-xs text-red-200">
             {errorMessage}
           </div>
         ) : null}
+      </SettingsSection>
 
-        <div className="rounded-2xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-4 py-4">
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <div>
-              <p className="text-launcher-md font-semibold tracking-[-0.02em] text-foreground">
-                Capability Matrix
-              </p>
-              <p className="text-launcher-sm text-muted-foreground">
-                These are the capabilities Beam can actually provide in the current Linux session.
-              </p>
+      {/* ── Capability Matrix ── */}
+      <SettingsSection
+        title="Capability Matrix"
+        description="What Beam can provide in the current Linux session."
+        icon={CheckCircle2}
+        iconVariant="cyan"
+      >
+        <div className="grid gap-2 p-5 md:grid-cols-2">
+          {capabilityItems.map((item) => (
+            <div
+              key={item.label}
+              className="flex items-center justify-between rounded-xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-3.5 py-2.5"
+            >
+              <span className="text-launcher-sm tracking-[-0.01em] text-foreground">
+                {item.label}
+              </span>
+              <StatusPill supported={item.supported} />
             </div>
-          </div>
+          ))}
+        </div>
+      </SettingsSection>
 
-          <div className="grid gap-2 md:grid-cols-2">
-            {capabilityItems.map((item) => (
+      {/* ── GNOME Shell Extension ── */}
+      {status?.desktopEnvironment === "gnome" ? (
+        <SettingsSection
+          title="GNOME Shell Extension"
+          description="Beam's Shell bridge enables window management and selection support on GNOME."
+          icon={Wrench}
+          iconVariant="primary"
+          headerAction={<StatusPill supported={Boolean(gnomeExtension?.dbusReachable)} />}
+        >
+          {/* Stats */}
+          <div className="grid gap-2 p-5 md:grid-cols-2">
+            {[
+              { label: "Installed", value: gnomeExtension?.installed ? "Yes" : "No" },
+              { label: "Enabled", value: gnomeExtension?.enabled ? "Yes" : "No" },
+              { label: "Version", value: gnomeExtension?.version ?? "Unknown" },
+              { label: "Update Required", value: gnomeExtension?.updateRequired ? "Yes" : "No" },
+            ].map((stat) => (
               <div
-                key={item.label}
-                className="flex items-center justify-between rounded-xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-hover-bg)] px-3 py-3"
+                key={stat.label}
+                className="rounded-xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-3.5 py-3"
               >
-                <span className="text-launcher-md tracking-[-0.01em] text-foreground">{item.label}</span>
-                <StatusPill supported={item.supported} />
+                <p className="text-launcher-2xs uppercase tracking-[0.14em] text-muted-foreground">
+                  {stat.label}
+                </p>
+                <p className="mt-0.5 text-launcher-lg font-medium text-foreground">{stat.value}</p>
               </div>
             ))}
           </div>
-        </div>
 
-        {status?.desktopEnvironment === "gnome" ? (
-          <div className="rounded-2xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-4 py-4">
-            <div className="flex items-start justify-between gap-4">
-              <div className="min-w-0">
-                <p className="text-launcher-md font-semibold tracking-[-0.02em] text-foreground">
-                  GNOME Shell Extension
-                </p>
-                <p className="mt-1 text-launcher-sm leading-5 text-muted-foreground">
-                  GNOME window management and selection support depend on Beam&apos;s Shell bridge.
-                </p>
-              </div>
-              <StatusPill supported={Boolean(gnomeExtension?.dbusReachable)} />
-            </div>
+          <SettingsDivider />
 
-            <div className="mt-4 grid gap-2 md:grid-cols-2">
-              <div className="rounded-xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-hover-bg)] px-3 py-3">
-                <p className="text-launcher-xs uppercase tracking-[0.16em] text-muted-foreground">
-                  Installed
-                </p>
-                <p className="mt-1 text-launcher-lg font-medium text-foreground">
-                  {gnomeExtension?.installed ? "Yes" : "No"}
-                </p>
-              </div>
-              <div className="rounded-xl border border-white/6 bg-black/10 px-3 py-3">
-                <p className="text-launcher-xs uppercase tracking-[0.16em] text-muted-foreground">
-                  Enabled
-                </p>
-                <p className="mt-1 text-launcher-lg font-medium text-foreground">
-                  {gnomeExtension?.enabled ? "Yes" : "No"}
-                </p>
-              </div>
-              <div className="rounded-xl border border-white/6 bg-black/10 px-3 py-3">
-                <p className="text-launcher-xs uppercase tracking-[0.16em] text-muted-foreground">
-                  Version
-                </p>
-                <p className="mt-1 text-launcher-lg font-medium text-foreground">
-                  {gnomeExtension?.version ?? "Unknown"}
-                </p>
-              </div>
-              <div className="rounded-xl border border-white/6 bg-black/10 px-3 py-3">
-                <p className="text-launcher-xs uppercase tracking-[0.16em] text-muted-foreground">
-                  Update Required
-                </p>
-                <p className="mt-1 text-launcher-lg font-medium text-foreground">
-                  {gnomeExtension?.updateRequired ? "Yes" : "No"}
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Button
-                type="button"
-                size="sm"
-                className="rounded-xl"
-                disabled={isBusy}
-                onClick={async () => {
-                  try {
-                    await installGnomeShellExtension();
-                    await refresh("installing");
-                  } catch (error) {
-                    setErrorMessage(
-                      error instanceof Error ? error.message : "Failed to install extension.",
-                    );
-                    setActionState("idle");
-                  }
-                }}
-              >
-                {actionState === "installing" ? (
-                  <Loader2 className="mr-2 size-4 animate-spin" />
-                ) : (
-                  <Wrench className="mr-2 size-4" />
-                )}
-                {gnomeExtension?.updateRequired ? "Update Extension" : "Install Extension"}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="rounded-xl"
-                disabled={isBusy}
-                onClick={async () => {
-                  try {
-                    setActionState("enabling");
-                    setErrorMessage("");
-                    await enableGnomeShellExtension();
-                    await refresh("enabling");
-                  } catch (error) {
-                    setErrorMessage(
-                      error instanceof Error ? error.message : "Failed to enable extension.",
-                    );
-                    setActionState("idle");
-                  }
-                }}
-              >
-                {actionState === "enabling" ? (
-                  <Loader2 className="mr-2 size-4 animate-spin" />
-                ) : (
-                  <CheckCircle2 className="mr-2 size-4" />
-                )}
-                Enable Extension
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="rounded-xl"
-                disabled={isBusy}
-                onClick={async () => {
-                  try {
-                    setActionState("opening");
-                    setErrorMessage("");
-                    await openGnomeShellExtensionDirectory();
-                    setActionState("idle");
-                  } catch (error) {
-                    setErrorMessage(
-                      error instanceof Error ? error.message : "Failed to open extension folder.",
-                    );
-                    setActionState("idle");
-                  }
-                }}
-              >
-                {actionState === "opening" ? (
-                  <Loader2 className="mr-2 size-4 animate-spin" />
-                ) : (
-                  <FolderOpen className="mr-2 size-4" />
-                )}
-                Open Folder
-              </Button>
-            </div>
-
-            {gnomeExtension?.path ? (
-              <p className="mt-3 break-all text-launcher-xs text-muted-foreground">
-                {gnomeExtension.path}
-              </p>
-            ) : null}
+          {/* Actions */}
+          <div className="flex flex-wrap gap-2 px-5 py-4">
+            <Button
+              type="button"
+              size="sm"
+              className="rounded-xl"
+              disabled={isBusy}
+              onClick={async () => {
+                try {
+                  await installGnomeShellExtension();
+                  await refresh("installing");
+                } catch (error) {
+                  setErrorMessage(
+                    error instanceof Error ? error.message : "Failed to install extension.",
+                  );
+                  setActionState("idle");
+                }
+              }}
+            >
+              {actionState === "installing" ? (
+                <Loader2 className="mr-2 size-3.5 animate-spin" />
+              ) : (
+                <Wrench className="mr-2 size-3.5" />
+              )}
+              {gnomeExtension?.updateRequired ? "Update Extension" : "Install Extension"}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="rounded-xl"
+              disabled={isBusy}
+              onClick={async () => {
+                try {
+                  setActionState("enabling");
+                  setErrorMessage("");
+                  await enableGnomeShellExtension();
+                  await refresh("enabling");
+                } catch (error) {
+                  setErrorMessage(
+                    error instanceof Error ? error.message : "Failed to enable extension.",
+                  );
+                  setActionState("idle");
+                }
+              }}
+            >
+              {actionState === "enabling" ? (
+                <Loader2 className="mr-2 size-3.5 animate-spin" />
+              ) : (
+                <CheckCircle2 className="mr-2 size-3.5" />
+              )}
+              Enable Extension
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="rounded-xl"
+              disabled={isBusy}
+              onClick={async () => {
+                try {
+                  setActionState("opening");
+                  setErrorMessage("");
+                  await openGnomeShellExtensionDirectory();
+                  setActionState("idle");
+                } catch (error) {
+                  setErrorMessage(
+                    error instanceof Error ? error.message : "Failed to open extension folder.",
+                  );
+                  setActionState("idle");
+                }
+              }}
+            >
+              {actionState === "opening" ? (
+                <Loader2 className="mr-2 size-3.5 animate-spin" />
+              ) : (
+                <FolderOpen className="mr-2 size-3.5" />
+              )}
+              Open Folder
+            </Button>
           </div>
-        ) : null}
 
-        <div className="rounded-[22px] border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)]/75 px-4 py-4">
-          <div className="flex items-start gap-3">
-            <IconChip variant="orange" size="md" className="rounded-xl">
-              <AlertTriangle className="size-4" />
-            </IconChip>
-            <div className="min-w-0">
-              <p className="text-launcher-md font-semibold tracking-[-0.02em] text-foreground">Notes</p>
-              <div className="mt-2 space-y-2">
-                {(status?.notes.length ? status.notes : ["No additional integration notes."]).map(
-                  (note) => (
-                    <div
-                      key={note}
-                      className="rounded-xl border border-white/6 bg-black/10 px-3 py-3 text-launcher-sm leading-5 text-muted-foreground"
-                    >
-                      {note}
-                    </div>
-                  ),
-                )}
+          {gnomeExtension?.path ? (
+            <p className="px-5 pb-4 break-all text-launcher-xs text-muted-foreground">
+              {gnomeExtension.path}
+            </p>
+          ) : null}
+        </SettingsSection>
+      ) : null}
+
+      {/* ── Notes ── */}
+      <SettingsSection
+        title="Notes"
+        description="Integration-specific warnings and information."
+        icon={AlertTriangle}
+        iconVariant="orange"
+      >
+        <div className="space-y-2 p-5">
+          {(status?.notes.length ? status.notes : ["No additional integration notes."]).map(
+            (note) => (
+              <div
+                key={note}
+                className="rounded-xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-4 py-3 text-launcher-sm leading-5 text-muted-foreground"
+              >
+                {note}
               </div>
-            </div>
-          </div>
+            ),
+          )}
         </div>
-      </div>
+      </SettingsSection>
     </div>
   );
 }

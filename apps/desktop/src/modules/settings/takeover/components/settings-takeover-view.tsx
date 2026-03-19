@@ -58,27 +58,33 @@ const AboutTab = lazy(() =>
 
 function SettingsTakeoverPlaceholder() {
   return (
-    <div className="flex h-full min-h-0 flex-1 flex-col gap-4 px-4 py-4">
-      <div className="rounded-2xl bg-[var(--launcher-card-hover-bg)] p-4 ring-1 ring-[var(--launcher-card-border)]">
-        <div className="grid grid-cols-3 gap-3">
-          <Skeleton className="h-[116px] rounded-xl bg-[var(--launcher-card-bg)]" />
-          <Skeleton className="h-[116px] rounded-xl bg-[var(--launcher-card-bg)]" />
-          <Skeleton className="h-[116px] rounded-xl bg-[var(--launcher-card-bg)]" />
+    <div className="settings-content flex h-full min-h-0 flex-1 flex-col gap-5 px-6 py-6">
+      <div className="mx-auto w-full max-w-[820px] space-y-5">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-32 rounded-xl bg-[var(--launcher-card-hover-bg)]" />
+          <Skeleton className="h-4 w-64 rounded-lg bg-[var(--launcher-card-hover-bg)]" />
         </div>
-      </div>
-      <div className="rounded-2xl bg-[var(--launcher-card-hover-bg)] p-4 ring-1 ring-[var(--launcher-card-border)]">
-        <div className="space-y-3">
-          <Skeleton className="h-10 rounded-xl bg-[var(--launcher-card-bg)]" />
-          <Skeleton className="h-10 rounded-xl bg-[var(--launcher-card-bg)]" />
-          <Skeleton className="h-10 rounded-xl bg-[var(--launcher-card-bg)]" />
+        <div className="rounded-2xl bg-[var(--launcher-card-hover-bg)] p-5 ring-1 ring-[var(--launcher-card-border)]">
+          <div className="grid grid-cols-3 gap-3">
+            <Skeleton className="h-[116px] rounded-xl bg-[var(--launcher-card-bg)]" />
+            <Skeleton className="h-[116px] rounded-xl bg-[var(--launcher-card-bg)]" />
+            <Skeleton className="h-[116px] rounded-xl bg-[var(--launcher-card-bg)]" />
+          </div>
         </div>
-      </div>
-      <div className="rounded-2xl bg-[var(--launcher-card-hover-bg)] p-4 ring-1 ring-[var(--launcher-card-border)]">
-        <div className="space-y-3">
-          <Skeleton className="h-12 rounded-xl bg-[var(--launcher-card-bg)]" />
-          <Skeleton className="h-12 rounded-xl bg-[var(--launcher-card-bg)]" />
-          <Skeleton className="h-12 rounded-xl bg-[var(--launcher-card-bg)]" />
-          <Skeleton className="h-12 rounded-xl bg-[var(--launcher-card-bg)]" />
+        <div className="rounded-2xl bg-[var(--launcher-card-hover-bg)] p-5 ring-1 ring-[var(--launcher-card-border)]">
+          <div className="space-y-3">
+            <Skeleton className="h-10 rounded-xl bg-[var(--launcher-card-bg)]" />
+            <Skeleton className="h-10 rounded-xl bg-[var(--launcher-card-bg)]" />
+            <Skeleton className="h-10 rounded-xl bg-[var(--launcher-card-bg)]" />
+          </div>
+        </div>
+        <div className="rounded-2xl bg-[var(--launcher-card-hover-bg)] p-5 ring-1 ring-[var(--launcher-card-border)]">
+          <div className="space-y-3">
+            <Skeleton className="h-12 rounded-xl bg-[var(--launcher-card-bg)]" />
+            <Skeleton className="h-12 rounded-xl bg-[var(--launcher-card-bg)]" />
+            <Skeleton className="h-12 rounded-xl bg-[var(--launcher-card-bg)]" />
+            <Skeleton className="h-12 rounded-xl bg-[var(--launcher-card-bg)]" />
+          </div>
         </div>
       </div>
     </div>
@@ -150,20 +156,23 @@ export function SettingsTakeoverView({
           phase === "closing" ? "opacity-0 scale-[0.988]" : "opacity-100",
         )}
       >
-        <div className="relative flex h-[84px] shrink-0 items-center justify-center border-b border-[var(--launcher-card-border)] bg-[var(--launcher-card-hover-bg)]/70 px-5">
+        {/* ── Settings navbar ── */}
+        <div className="settings-navbar relative flex h-[72px] shrink-0 items-center border-b border-[var(--launcher-card-border)] bg-[var(--launcher-card-hover-bg)]/50 px-5">
+          {/* Back button */}
           <Button
             type="button"
             variant="ghost"
             size="sm"
             onClick={handleBack}
             disabled={phase === "closing"}
-            className="absolute left-5 top-1/2 h-9 -translate-y-1/2 rounded-lg border border-[var(--launcher-card-border)] bg-[var(--launcher-card-hover-bg)] px-3 text-launcher-sm hover:bg-[var(--launcher-card-bg)]"
+            className="settings-back-btn absolute left-5 top-1/2 h-8 -translate-y-1/2 gap-1.5 rounded-xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-3 text-launcher-xs text-muted-foreground transition-all duration-200 hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground"
           >
-            <ChevronLeft className="size-4" />
-            Back
+            <ChevronLeft className="size-3.5" />
+            <span>Back</span>
           </Button>
 
-          <div className="flex items-center gap-2">
+          {/* Tab bar */}
+          <div className="settings-tab-bar mx-auto flex items-center gap-1 rounded-2xl bg-[var(--launcher-card-bg)]/60 p-1 ring-1 ring-[var(--launcher-card-border)]">
             {SETTINGS_TABS.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -175,21 +184,35 @@ export function SettingsTakeoverView({
                   disabled={phase === "closing"}
                   onClick={() => setActiveTab(tab.id)}
                   className={cn(
-                    "flex min-w-[108px] flex-col items-center gap-2 rounded-lg px-4 py-3 transition-colors",
+                    "settings-tab-item group relative flex items-center gap-2 rounded-xl px-4 py-2 transition-all duration-200",
                     isActive
-                      ? "bg-[var(--launcher-card-bg)] text-foreground ring-1 ring-[var(--launcher-card-border)]"
+                      ? "settings-tab-active bg-[var(--launcher-card-hover-bg)] text-foreground shadow-sm ring-1 ring-[var(--launcher-card-border)]"
                       : "text-muted-foreground hover:bg-[var(--launcher-card-bg)] hover:text-foreground",
                     phase === "closing" && "pointer-events-none opacity-70",
                   )}
                 >
-                  <Icon className="size-4.5" />
-                  <span className="font-mono text-launcher-sm tracking-[0.04em]">{tab.label}</span>
+                  <Icon className={cn(
+                    "size-4 transition-colors duration-200",
+                    isActive ? "text-foreground" : "text-muted-foreground group-hover:text-foreground",
+                  )} />
+                  <span className={cn(
+                    "text-launcher-xs font-medium tracking-[0.02em] transition-colors duration-200",
+                    isActive ? "text-foreground" : "text-muted-foreground group-hover:text-foreground",
+                  )}>
+                    {tab.label}
+                  </span>
+
+                  {/* Active indicator dot */}
+                  {isActive && (
+                    <span className="settings-tab-indicator absolute -bottom-[5px] left-1/2 h-[2px] w-5 -translate-x-1/2 rounded-full bg-[var(--ring)] opacity-80" />
+                  )}
                 </button>
               );
             })}
           </div>
         </div>
 
+        {/* ── Content area ── */}
         <div className="flex h-full min-h-0 flex-1 overflow-hidden">
           <Suspense fallback={<SettingsTakeoverPlaceholder />}>
             {activeTab === "general" ? (

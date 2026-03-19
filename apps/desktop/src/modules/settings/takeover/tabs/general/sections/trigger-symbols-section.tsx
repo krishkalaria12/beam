@@ -7,6 +7,7 @@ import {
   Plus,
   RotateCcw,
   Sparkles,
+  Target,
   Terminal,
   Trash2,
   Zap,
@@ -30,6 +31,12 @@ import type {
   TriggerSymbols,
 } from "@/modules/settings/api/trigger-symbols";
 import { useTriggerSymbols } from "@/modules/settings/hooks/use-trigger-symbols";
+import {
+  SettingsSection,
+  SettingsSubLabel,
+  SettingsHint,
+  SettingsDivider,
+} from "../components/settings-field";
 
 type TriggerSymbolRow = {
   key: TriggerSymbolTarget;
@@ -120,8 +127,8 @@ function CommandSelector({
       <DropdownMenuTrigger
         disabled={disabled}
         className={cn(
-          "flex h-11 flex-1 min-w-0 items-center justify-between gap-2 rounded-xl px-3.5",
-          "bg-[var(--launcher-card-hover-bg)] text-launcher-md font-medium tracking-[-0.01em]",
+          "flex h-10 flex-1 min-w-0 items-center justify-between gap-2 rounded-xl px-3.5",
+          "bg-[var(--launcher-card-bg)] text-launcher-sm font-medium tracking-[-0.01em]",
           "ring-1 ring-[var(--launcher-card-border)] transition-all",
           "hover:bg-[var(--launcher-chip-bg)]",
           disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer",
@@ -263,22 +270,28 @@ export function GeneralTriggerSymbolsSection() {
   };
 
   return (
-    <div className="settings-panel space-y-6 rounded-2xl bg-[var(--launcher-card-hover-bg)] px-4 py-5 ring-1 ring-[var(--launcher-card-border)]">
-      {/* Trigger Symbols Section */}
-      <section className="space-y-3">
-        <div className="flex items-center gap-3 px-1">
-          <span className="text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-            Trigger Symbols
-          </span>
-          <div className="h-px flex-1 bg-[var(--launcher-chip-bg)]" />
-        </div>
-
-        <p className="px-1 text-launcher-sm leading-relaxed text-muted-foreground">
-          Map launcher prefixes to command groups.
-        </p>
-
-        <div className="space-y-2.5">
-          {TRIGGER_SYMBOL_ROWS.map((row, index) => {
+    <div className="space-y-4">
+      {/* ── Built-in trigger symbols ── */}
+      <SettingsSection
+        title="Trigger Symbols"
+        description="Map single-character launcher prefixes to command groups."
+        icon={Target}
+        iconVariant="orange"
+        headerAction={
+          <Button
+            type="button"
+            onClick={handleReset}
+            variant="ghost"
+            size="sm"
+            className="gap-1.5 rounded-lg border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-2.5 text-launcher-2xs font-medium text-muted-foreground hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground"
+          >
+            <RotateCcw className="size-3" />
+            Reset
+          </Button>
+        }
+      >
+        <div className="divide-y divide-[var(--launcher-card-border)]/60">
+          {TRIGGER_SYMBOL_ROWS.map((row) => {
             const Icon = row.icon;
             const currentValue = draft[row.key];
             const originalValue = symbols[row.key];
@@ -287,93 +300,71 @@ export function GeneralTriggerSymbolsSection() {
             return (
               <div
                 key={row.key}
-                className={cn(
-                  "group rounded-xl bg-[var(--launcher-card-bg)] p-4",
-                  "transition-all duration-200",
-                  "hover:bg-[var(--launcher-card-hover-bg)]",
-                )}
-                style={{ animationDelay: `${index * 50}ms` }}
+                className="flex items-center gap-3.5 px-5 py-3.5 transition-colors duration-150 hover:bg-[var(--launcher-card-bg)]/30"
               >
-                <div className="flex items-center gap-3.5">
-                  {/* Icon */}
-                  <IconChip variant={row.iconVariant} size="lg" className="size-11 rounded-xl">
-                    <Icon className="size-5" />
-                  </IconChip>
+                <IconChip variant={row.iconVariant} size="md" className="rounded-xl">
+                  <Icon className="size-4" />
+                </IconChip>
 
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-launcher-lg font-medium tracking-[-0.02em] text-foreground">
-                      {row.title}
-                    </p>
-                    <p className="text-launcher-sm text-muted-foreground">{row.description}</p>
-                  </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-launcher-sm font-medium tracking-[-0.01em] text-foreground">
+                    {row.title}
+                  </p>
+                  <p className="text-launcher-xs text-muted-foreground">{row.description}</p>
+                </div>
 
-                  {/* Input and Save */}
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="text"
-                      value={currentValue}
-                      onChange={(event) => {
-                        handleDraftChange(row.key, event.target.value);
-                      }}
-                      maxLength={1}
-                      placeholder="#"
-                      className={cn(
-                        "size-11 rounded-lg border-[var(--launcher-card-border)] bg-[var(--launcher-card-hover-bg)] px-0 text-center text-launcher-2xl font-semibold text-foreground placeholder:text-muted-foreground",
-                        "focus-visible:border-[var(--ring)] focus-visible:ring-[var(--ring)]/40",
-                        "transition-all duration-150",
-                      )}
-                      aria-label={`${row.title} trigger symbol`}
-                    />
-                    <Button
-                      type="button"
-                      onClick={() => saveSymbol(row.key)}
-                      disabled={!hasChanges}
-                      size="sm"
-                      className={cn(
-                        "rounded-lg px-3.5 text-launcher-sm font-medium transition-all duration-150",
-                        hasChanges
-                          ? "bg-[var(--ring)]/20 text-[var(--ring)] hover:bg-[var(--ring)]/30"
-                          : "bg-[var(--launcher-card-bg)] text-muted-foreground cursor-not-allowed",
-                      )}
-                    >
-                      Save
-                    </Button>
-                  </div>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="text"
+                    value={currentValue}
+                    onChange={(event) => {
+                      handleDraftChange(row.key, event.target.value);
+                    }}
+                    maxLength={1}
+                    placeholder="#"
+                    className={cn(
+                      "size-10 rounded-lg border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-0 text-center text-launcher-xl font-semibold text-foreground placeholder:text-muted-foreground",
+                      "focus-visible:border-[var(--ring)] focus-visible:ring-[var(--ring)]/40",
+                      "transition-all duration-150",
+                    )}
+                    aria-label={`${row.title} trigger symbol`}
+                  />
+                  <Button
+                    type="button"
+                    onClick={() => saveSymbol(row.key)}
+                    disabled={!hasChanges}
+                    size="sm"
+                    className={cn(
+                      "rounded-lg px-3 text-launcher-xs font-medium transition-all duration-150",
+                      hasChanges
+                        ? "bg-[var(--ring)]/20 text-[var(--ring)] hover:bg-[var(--ring)]/30"
+                        : "bg-[var(--launcher-card-bg)] text-muted-foreground cursor-not-allowed opacity-50",
+                    )}
+                  >
+                    Save
+                  </Button>
                 </div>
               </div>
             );
           })}
         </div>
-      </section>
+      </SettingsSection>
 
-      {/* Custom Symbol Mappings */}
-      <section className="space-y-3">
-        <div className="flex items-center gap-3 px-1">
-          <span className="text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-            Custom Mappings
-          </span>
-          <div className="h-px flex-1 bg-[var(--launcher-chip-bg)]" />
-        </div>
-
-        <p className="px-1 text-launcher-sm leading-relaxed text-muted-foreground">
-          Choose any launcher item and map a symbol to it.
-        </p>
-
+      {/* ── Custom symbol mappings ── */}
+      <SettingsSection
+        title="Custom Mappings"
+        description="Map a prefix symbol to any launcher item."
+        icon={Hash}
+        iconVariant="green"
+      >
         {/* Existing bindings */}
-        <div className="space-y-2">
+        <div className="divide-y divide-[var(--launcher-card-border)]/60">
           {draft.customBindings.length === 0 ? (
-            <div
-              className={cn(
-                "flex flex-col items-center justify-center py-10",
-                "rounded-xl border border-dashed border-[var(--launcher-card-border)]",
-                "text-center",
-              )}
-            >
-              <div className="flex size-12 items-center justify-center rounded-xl bg-[var(--launcher-card-hover-bg)] mb-3">
-                <Plus className="size-5 text-muted-foreground" />
+            <div className="flex flex-col items-center justify-center py-10 text-center">
+              <div className="mb-3 flex size-11 items-center justify-center rounded-xl bg-[var(--launcher-card-bg)] ring-1 ring-[var(--launcher-card-border)]">
+                <Plus className="size-4.5 text-muted-foreground" />
               </div>
-              <p className="text-launcher-md text-muted-foreground">No custom mappings yet</p>
+              <p className="text-launcher-sm text-muted-foreground">No custom mappings yet</p>
               <p className="mt-0.5 text-launcher-xs text-muted-foreground">
                 Add one below to get started
               </p>
@@ -389,83 +380,67 @@ export function GeneralTriggerSymbolsSection() {
               return (
                 <div
                   key={`${binding.symbol}:${binding.commandId}:${index}`}
-                  className={cn(
-                    "group rounded-xl bg-[var(--launcher-card-bg)] p-4",
-                    "transition-all duration-200",
-                    "hover:bg-[var(--launcher-card-hover-bg)]",
-                  )}
-                  style={{ animationDelay: `${index * 30}ms` }}
+                  className="flex items-center gap-3 px-5 py-3.5 transition-colors duration-150 hover:bg-[var(--launcher-card-bg)]/30"
                 >
-                  <div className="flex items-center gap-3">
-                    {/* Order number */}
-                    <div className="flex size-7 items-center justify-center rounded-lg bg-[var(--launcher-card-hover-bg)] text-launcher-xs font-semibold tabular-nums text-muted-foreground">
-                      {index + 1}
-                    </div>
+                  <div className="flex size-7 items-center justify-center rounded-lg bg-[var(--launcher-card-bg)] text-launcher-xs font-semibold tabular-nums text-muted-foreground ring-1 ring-[var(--launcher-card-border)]">
+                    {index + 1}
+                  </div>
 
-                    {/* Symbol input */}
-                    <Input
-                      type="text"
-                      value={binding.symbol}
-                      onChange={(event) => {
-                        const value = toSingleCharacter(event.target.value);
-                        setDraftState((previous) => ({
-                          ...previous,
-                          value: {
-                            ...previous.value,
-                            customBindings: previous.value.customBindings.map((entry, entryIndex) =>
-                              entryIndex === index ? { ...entry, symbol: value } : entry,
-                            ),
-                          },
-                        }));
-                      }}
-                      maxLength={1}
-                      placeholder="#"
+                  <Input
+                    type="text"
+                    value={binding.symbol}
+                    onChange={(event) => {
+                      const value = toSingleCharacter(event.target.value);
+                      setDraftState((previous) => ({
+                        ...previous,
+                        value: {
+                          ...previous.value,
+                          customBindings: previous.value.customBindings.map((entry, entryIndex) =>
+                            entryIndex === index ? { ...entry, symbol: value } : entry,
+                          ),
+                        },
+                      }));
+                    }}
+                    maxLength={1}
+                    placeholder="#"
+                    className={cn(
+                      "size-10 shrink-0 rounded-lg border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-0 text-center text-launcher-xl font-semibold text-foreground placeholder:text-muted-foreground",
+                      "focus-visible:border-[var(--ring)] focus-visible:ring-[var(--ring)]/40",
+                      "transition-all duration-150",
+                    )}
+                    aria-label={`Custom symbol ${index + 1}`}
+                  />
+
+                  <CommandSelector
+                    value={binding.commandId}
+                    onChange={(value) => updateCustomBindingCommand(index, value)}
+                  />
+
+                  <div className="flex items-center gap-1.5">
+                    <Button
+                      type="button"
+                      onClick={() => saveExistingCustomBinding(index)}
+                      disabled={!hasChanges}
+                      size="sm"
                       className={cn(
-                        "size-11 shrink-0 rounded-lg border-[var(--launcher-card-border)] bg-[var(--launcher-card-hover-bg)] px-0 text-center text-launcher-2xl font-semibold text-foreground placeholder:text-muted-foreground",
-                        "focus-visible:border-[var(--ring)] focus-visible:ring-[var(--ring)]/40",
-                        "transition-all duration-150",
+                        "rounded-lg px-3 text-launcher-xs font-medium transition-all duration-150",
+                        hasChanges
+                          ? "bg-[var(--ring)]/20 text-[var(--ring)] hover:bg-[var(--ring)]/30"
+                          : "bg-[var(--launcher-card-bg)] text-muted-foreground cursor-not-allowed opacity-50",
                       )}
-                      aria-label={`Custom symbol ${index + 1}`}
-                    />
-
-                    {/* Command selector */}
-                    <CommandSelector
-                      value={binding.commandId}
-                      onChange={(value) => updateCustomBindingCommand(index, value)}
-                    />
-
-                    {/* Actions */}
-                    <div className="flex items-center gap-1.5">
-                      <Button
-                        type="button"
-                        onClick={() => saveExistingCustomBinding(index)}
-                        disabled={!hasChanges}
-                        size="sm"
-                        className={cn(
-                          "rounded-lg px-3.5 text-launcher-sm font-medium transition-all duration-150",
-                          hasChanges
-                            ? "bg-[var(--ring)]/20 text-[var(--ring)] hover:bg-[var(--ring)]/30"
-                            : "bg-[var(--launcher-card-bg)] text-muted-foreground cursor-not-allowed",
-                        )}
-                      >
-                        Save
-                      </Button>
-                      <Button
-                        type="button"
-                        size="icon-lg"
-                        variant="ghost"
-                        onClick={() => removeCustomBinding(index)}
-                        className={cn(
-                          "size-11 rounded-lg",
-                          "text-muted-foreground hover:text-destructive",
-                          "bg-[var(--launcher-card-bg)] hover:bg-destructive/10",
-                          "transition-all duration-150",
-                        )}
-                        aria-label="Remove custom mapping"
-                      >
-                        <Trash2 className="size-4" />
-                      </Button>
-                    </div>
+                    >
+                      Save
+                    </Button>
+                    <Button
+                      type="button"
+                      size="icon-lg"
+                      variant="ghost"
+                      onClick={() => removeCustomBinding(index)}
+                      className="size-10 rounded-lg bg-[var(--launcher-card-bg)] text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-150"
+                      aria-label="Remove custom mapping"
+                    >
+                      <Trash2 className="size-4" />
+                    </Button>
                   </div>
                 </div>
               );
@@ -473,12 +448,12 @@ export function GeneralTriggerSymbolsSection() {
           )}
         </div>
 
-        {/* Add new mapping */}
-        <div className="rounded-xl bg-[var(--launcher-card-bg)] ring-1 ring-[var(--launcher-card-border)] p-4">
-          <p className="mb-3 text-launcher-sm font-medium text-muted-foreground">Add new mapping</p>
+        <SettingsDivider />
 
+        {/* Add new mapping */}
+        <div className="px-5 py-4">
+          <p className="mb-3 text-launcher-xs font-medium text-muted-foreground">Add new mapping</p>
           <div className="flex items-center gap-3">
-            {/* Symbol input */}
             <Input
               type="text"
               value={newCustomSymbol}
@@ -488,14 +463,13 @@ export function GeneralTriggerSymbolsSection() {
               maxLength={1}
               placeholder="#"
               className={cn(
-                "size-11 shrink-0 rounded-lg border-[var(--launcher-card-border)] bg-[var(--launcher-card-hover-bg)] px-0 text-center text-launcher-2xl font-semibold text-foreground placeholder:text-muted-foreground",
+                "size-10 shrink-0 rounded-lg border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-0 text-center text-launcher-xl font-semibold text-foreground placeholder:text-muted-foreground",
                 "focus-visible:border-[var(--ring)] focus-visible:ring-[var(--ring)]/40",
                 "transition-all duration-150",
               )}
               aria-label="New custom symbol"
             />
 
-            {/* Command selector */}
             <CommandSelector
               value={newCustomCommandId}
               onChange={setNewCustomCommandId}
@@ -503,44 +477,24 @@ export function GeneralTriggerSymbolsSection() {
               placeholder="Choose item"
             />
 
-            {/* Add button */}
             <Button
               type="button"
               onClick={addCustomBinding}
               disabled={!HAS_COMMAND_OPTIONS || !newCustomSymbol}
               size="sm"
               className={cn(
-                "gap-1.5 rounded-lg px-4 text-launcher-sm font-medium transition-all duration-150",
+                "gap-1.5 rounded-lg px-3.5 text-launcher-xs font-medium transition-all duration-150",
                 HAS_COMMAND_OPTIONS && newCustomSymbol
                   ? "bg-[var(--ring)]/20 text-[var(--ring)] hover:bg-[var(--ring)]/30"
-                  : "bg-[var(--launcher-card-bg)] text-muted-foreground cursor-not-allowed",
+                  : "bg-[var(--launcher-card-bg)] text-muted-foreground cursor-not-allowed opacity-50",
               )}
             >
-              <Plus className="size-4" />
-              <span>Add</span>
+              <Plus className="size-3.5" />
+              Add
             </Button>
           </div>
         </div>
-      </section>
-
-      {/* Reset Button */}
-      <section className="pt-2">
-        <Button
-          type="button"
-          onClick={handleReset}
-          variant="outline"
-          size="sm"
-          className={cn(
-            "gap-2 rounded-lg border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-4 text-launcher-sm font-medium text-muted-foreground",
-            "hover:bg-[var(--launcher-chip-bg)]",
-            "transition-all duration-150",
-            "hover:text-foreground",
-          )}
-        >
-          <RotateCcw className="size-4" />
-          <span>Reset to Defaults</span>
-        </Button>
-      </section>
+      </SettingsSection>
     </div>
   );
 }

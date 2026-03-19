@@ -8,6 +8,7 @@ import {
   Palette,
   RefreshCw,
   Sparkles,
+  Type,
 } from "lucide-react";
 
 import { IconChip, SearchableDropdown, type SearchableDropdownSection } from "@/components/module";
@@ -35,6 +36,15 @@ import {
   MIN_LAUNCHER_OPACITY,
 } from "@/modules/settings/api/launcher-opacity";
 import { useUiStyle, type UiStylePreference } from "@/providers/ui-style-provider";
+import {
+  SettingsSection,
+  SettingsField,
+  SettingsDivider,
+  SettingsSubLabel,
+  SettingsHint,
+} from "../components/settings-field";
+
+/* ── Style presets ── */
 
 interface StyleOption {
   id: UiStylePreference;
@@ -54,10 +64,12 @@ const STYLE_OPTIONS: StyleOption[] = [
     id: "glassy",
     icon: Sparkles,
     title: "Glassy",
-    description: "Blur and transparency",
+    description: "Blur & transparency",
   },
   { id: "solid", icon: Layers, title: "Solid", description: "Opaque surfaces" },
 ];
+
+/* ── Component ── */
 
 export function GeneralAppearanceSection() {
   const { uiStyle, setUiStyle } = useUiStyle();
@@ -84,6 +96,7 @@ export function GeneralAppearanceSection() {
     setFontFamily,
     setFontSize,
   } = useLauncherFont();
+
   const fontSections: SearchableDropdownSection[] = [
     {
       title: "Built-ins",
@@ -111,209 +124,96 @@ export function GeneralAppearanceSection() {
         })),
     },
   ].filter((section) => section.items.length > 0);
+
   const selectedFontSizePreset = getLauncherFontSizePreset(fontSize);
 
   return (
-    <div className="settings-panel space-y-5 rounded-2xl bg-[var(--launcher-card-hover-bg)] px-4 py-5 ring-1 ring-[var(--launcher-card-border)]">
-      {/* Section header */}
-      <div className="flex items-center gap-3 px-1">
-        <span className="text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-          Theme
-        </span>
-        <div className="h-px flex-1 bg-[var(--launcher-chip-bg)]" />
-      </div>
+    <div className="space-y-4">
+      {/* ─── Visual Style ─── */}
+      <SettingsSection
+        title="Appearance"
+        description="Choose your visual style, colors, and how Beam blends with your desktop."
+        icon={Sparkles}
+        iconVariant="cyan"
+      >
+        {/* Style picker grid */}
+        <div className="p-5">
+          <div className="grid grid-cols-3 gap-2.5">
+            {STYLE_OPTIONS.map((option) => {
+              const isSelected = uiStyle === option.id;
+              const Icon = option.icon;
 
-      {/* Style Options */}
-      <div className="grid grid-cols-3 gap-2.5">
-        {STYLE_OPTIONS.map((option) => {
-          const isSelected = uiStyle === option.id;
-          const Icon = option.icon;
-
-          return (
-            <Button
-              key={option.id}
-              type="button"
-              variant="ghost"
-              data-selected={isSelected}
-              onClick={() => setUiStyle(option.id)}
-              className={cn(
-                "settings-style-card group relative h-auto min-h-[122px] w-full items-start justify-start",
-                "rounded-xl px-3 py-4 text-left",
-                "transition-all duration-200",
-                isSelected
-                  ? "bg-[var(--launcher-card-selected-bg)] ring-1 ring-[var(--launcher-card-selected-border)]"
-                  : "bg-[var(--launcher-card-bg)] ring-1 ring-[var(--launcher-card-border)] hover:bg-[var(--launcher-card-bg)]",
-              )}
-            >
-              {/* Icon */}
-              <IconChip
-                variant={
-                  option.id === "default" ? "neutral" : option.id === "glassy" ? "cyan" : "primary"
-                }
-                size="lg"
-                className={cn(
-                  "size-11 rounded-xl transition-all duration-200",
-                  !isSelected && "opacity-70",
-                )}
-              >
-                <Icon className="size-5 transition-colors" />
-              </IconChip>
-
-              {/* Text */}
-              <div className="min-w-0 text-left">
-                <p
+              return (
+                <Button
+                  key={option.id}
+                  type="button"
+                  variant="ghost"
+                  data-selected={isSelected}
+                  onClick={() => setUiStyle(option.id)}
                   className={cn(
-                    "truncate text-launcher-md font-semibold tracking-[-0.02em]",
-                    isSelected ? "text-secondary-foreground" : "text-foreground",
+                    "settings-style-card group relative h-auto min-h-[116px] w-full items-start justify-start",
+                    "rounded-xl px-3.5 py-4 text-left",
+                    "transition-all duration-200",
+                    isSelected
+                      ? "bg-[var(--launcher-card-selected-bg)] ring-1 ring-[var(--launcher-card-selected-border)]"
+                      : "bg-[var(--launcher-card-bg)] ring-1 ring-[var(--launcher-card-border)] hover:bg-[var(--launcher-card-bg)]",
                   )}
                 >
-                  {option.title}
-                </p>
-                <p
-                  className={cn(
-                    "mt-0.5 text-launcher-xs",
-                    isSelected ? "text-secondary-foreground/80" : "text-muted-foreground",
-                  )}
-                >
-                  {option.description}
-                </p>
-              </div>
+                  <IconChip
+                    variant={
+                      option.id === "default" ? "neutral" : option.id === "glassy" ? "cyan" : "primary"
+                    }
+                    size="lg"
+                    className={cn(
+                      "size-10 rounded-xl transition-all duration-200",
+                      !isSelected && "opacity-70",
+                    )}
+                  >
+                    <Icon className="size-4.5 transition-colors" />
+                  </IconChip>
 
-              {/* Check indicator */}
-              {isSelected && (
-                <div
-                  className="absolute top-2.5 right-2.5 size-5 rounded-full
-                  bg-[var(--ring)] flex items-center justify-center"
-                >
-                  <Check className="size-3 text-background" strokeWidth={3} />
-                </div>
-              )}
-            </Button>
-          );
-        })}
-      </div>
-
-      {/* Hint */}
-      <p className="px-1 text-launcher-sm leading-relaxed text-muted-foreground">
-        Choose how Beam appears. Glassy adds blur effects while solid uses opaque backgrounds.
-      </p>
-
-      <div className="grid gap-3 lg:grid-cols-[minmax(0,1.3fr)_minmax(220px,0.9fr)]">
-        <div className="rounded-2xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-4 py-4 lg:col-span-2">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-launcher-sm font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-                Typography
-              </p>
-              <p className="text-launcher-md mt-1 text-foreground">
-                Set the launcher font family and scale Beam&apos;s base text size.
-              </p>
-            </div>
-            <IconChip variant="neutral" size="md" className="rounded-xl">
-              <PaintBucket className="size-4" />
-            </IconChip>
-          </div>
-
-          <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1.2fr)_minmax(260px,0.8fr)]">
-            <div className="space-y-3 rounded-2xl border border-[var(--launcher-card-border)] bg-[var(--command-item-selected-bg)]/35 px-4 py-4">
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-launcher-sm font-mono uppercase tracking-[0.08em] text-muted-foreground">
-                  Font Family
-                </span>
-                <span className="text-launcher-xs rounded-full border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-2.5 py-1 text-muted-foreground">
-                  {selectedFamilyId === DEFAULT_LAUNCHER_FONT_FAMILY
-                    ? "Beam"
-                    : selectedFamilyId === SYSTEM_LAUNCHER_FONT_FAMILY
-                      ? "System"
-                      : "Custom"}
-                </span>
-              </div>
-
-              <SearchableDropdown
-                sections={fontSections}
-                value={selectedFamilyId}
-                disabled={fontLoading}
-                onValueChange={(value) => {
-                  void setFontFamily(value);
-                }}
-                placeholder="Choose a font"
-                searchPlaceholder="Search installed fonts..."
-                triggerClassName="h-11 rounded-xl border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-3 text-launcher-md text-foreground"
-                panelClassName="sc-actions-panel rounded-2xl border border-[var(--actions-panel-border)] bg-[var(--actions-panel-bg)] p-1 text-foreground shadow-2xl"
-              />
-
-              <p className="text-launcher-xs text-muted-foreground">
-                Beam Default keeps the current Manrope stack. System Default follows the OS UI font.
-              </p>
-            </div>
-
-            <div className="space-y-3 rounded-2xl border border-[var(--launcher-card-border)] bg-[var(--command-item-selected-bg)]/35 px-4 py-4">
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-launcher-sm font-mono uppercase tracking-[0.08em] text-muted-foreground">
-                  Font Size
-                </span>
-                <span className="text-launcher-sm rounded-full border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-2.5 py-1 font-mono text-foreground">
-                  {selectedFontSizePreset.label}
-                </span>
-              </div>
-
-              <div className="grid grid-cols-3 gap-2">
-                {LAUNCHER_FONT_SIZE_PRESETS.map((preset) => {
-                  const isSelected = preset.id === selectedFontSizePreset.id;
-
-                  return (
-                    <Button
-                      key={preset.id}
-                      type="button"
-                      variant="ghost"
-                      disabled={fontLoading}
-                      onClick={() => {
-                        void setFontSize(preset.size);
-                      }}
+                  <div className="min-w-0 text-left">
+                    <p
                       className={cn(
-                        "h-10 rounded-xl border px-3 text-launcher-sm font-medium transition-all duration-200",
-                        isSelected
-                          ? "border-[var(--launcher-card-selected-border)] bg-[var(--launcher-card-selected-bg)] text-foreground"
-                          : "border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] text-muted-foreground hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground",
+                        "truncate text-launcher-md font-semibold tracking-[-0.02em]",
+                        isSelected ? "text-secondary-foreground" : "text-foreground",
                       )}
                     >
-                      {preset.label}
-                    </Button>
-                  );
-                })}
-              </div>
+                      {option.title}
+                    </p>
+                    <p
+                      className={cn(
+                        "mt-0.5 text-launcher-xs",
+                        isSelected ? "text-secondary-foreground/80" : "text-muted-foreground",
+                      )}
+                    >
+                      {option.description}
+                    </p>
+                  </div>
 
-              <p className="text-launcher-xs text-muted-foreground">
-                Small uses a denser launcher, Default matches Beam&apos;s baseline, and Large
-                improves readability.
-              </p>
-            </div>
+                  {isSelected && (
+                    <div className="absolute top-2.5 right-2.5 flex size-5 items-center justify-center rounded-full bg-[var(--ring)]">
+                      <Check className="size-3 text-background" strokeWidth={3} />
+                    </div>
+                  )}
+                </Button>
+              );
+            })}
           </div>
-
-          {fontError ? <p className="text-launcher-xs mt-3 text-destructive">{fontError}</p> : null}
         </div>
 
-        <div className="rounded-2xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-4 py-4">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-launcher-sm font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-                Window Opacity
-              </p>
-              <p className="mt-1 text-launcher-md text-foreground">
-                Tune backdrop strength without softening text.
-              </p>
-            </div>
-            <IconChip variant="cyan" size="md" className="rounded-xl">
-              <Droplets className="size-4" />
-            </IconChip>
-          </div>
+        <SettingsDivider />
 
-          <div className="mt-4 rounded-2xl border border-[var(--launcher-card-border)] bg-[var(--command-item-selected-bg)]/35 px-4 py-4">
+        {/* Window Opacity */}
+        <SettingsField
+          label="Window Opacity"
+          description="Adjust backdrop transparency without affecting text clarity."
+          stacked
+        >
+          <div className="rounded-xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-4 py-3.5">
             <div className="flex items-center justify-between gap-3">
-              <span className="font-mono text-launcher-sm uppercase tracking-[0.08em] text-muted-foreground">
-                Surface Alpha
-              </span>
-              <span className="rounded-full border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-2.5 py-1 font-mono text-launcher-sm text-foreground">
+              <span className="text-launcher-xs text-muted-foreground">Surface Alpha</span>
+              <span className="rounded-full border border-[var(--launcher-card-border)] bg-[var(--launcher-card-hover-bg)] px-2.5 py-0.5 font-mono text-launcher-xs text-foreground">
                 {opacity.toFixed(2)}
               </span>
             </div>
@@ -329,207 +229,295 @@ export function GeneralAppearanceSection() {
                 const nextOpacity = Number(event.currentTarget.value);
                 void setOpacity(nextOpacity);
               }}
-              className="beam-opacity-slider mt-4 h-2 w-full cursor-pointer appearance-none rounded-full bg-transparent"
+              className="beam-opacity-slider mt-3 h-2 w-full cursor-pointer appearance-none rounded-full bg-transparent"
             />
-            <div className="mt-3 flex items-center justify-between text-launcher-xs text-muted-foreground">
+            <div className="mt-2 flex items-center justify-between text-launcher-2xs text-muted-foreground">
               <span>Invisible</span>
               <span>Opaque</span>
             </div>
           </div>
           {opacityError ? (
-            <p className="mt-3 text-launcher-xs text-destructive">{opacityError}</p>
+            <p className="text-launcher-xs text-destructive">{opacityError}</p>
           ) : null}
-        </div>
+        </SettingsField>
+      </SettingsSection>
 
-        <div className="rounded-2xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-4 py-4">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-launcher-sm font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-                System Icon Theme
-              </p>
-              <p className="mt-1 text-launcher-md text-foreground">
-                Controls native app and window icons. Beam icons stay unchanged.
-              </p>
-            </div>
-            <IconChip variant="primary" size="md" className="rounded-xl">
-              <Palette className="size-4" />
-            </IconChip>
-          </div>
-
-          <div className="mt-4 space-y-3">
-            <Select
-              value={selectedIconThemeId}
-              onValueChange={(value) => {
-                if (!value) {
-                  return;
-                }
-                void setIconTheme(value);
-              }}
-            >
-              <SelectTrigger className="h-11 w-full rounded-xl border-[var(--launcher-card-border)] bg-[var(--command-item-selected-bg)] px-3 text-launcher-md text-foreground">
-                <SelectValue placeholder="Choose icon theme" />
-              </SelectTrigger>
-              <SelectContent className="sc-actions-panel rounded-2xl border-[var(--actions-panel-border)] bg-[var(--actions-panel-bg)] p-1 text-foreground shadow-2xl">
-                <SelectItem
-                  value="auto"
-                  className="rounded-xl px-3 py-2.5 text-launcher-md text-foreground focus:bg-[var(--command-item-selected-bg)] focus:text-foreground"
-                >
-                  Auto
-                </SelectItem>
-                {iconThemes.map((theme) => (
-                  <SelectItem
-                    key={theme.id}
-                    value={theme.id}
-                    className="rounded-xl px-3 py-2.5 text-launcher-md text-foreground focus:bg-[var(--command-item-selected-bg)] focus:text-foreground"
-                  >
-                    <span className="flex min-w-0 items-center justify-between gap-3">
-                      <span className="truncate">{theme.name}</span>
-                      <span className="font-mono text-launcher-2xs uppercase tracking-[0.08em] text-muted-foreground">
-                        {theme.id}
-                      </span>
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <div className="flex items-center justify-between text-launcher-xs text-muted-foreground">
-              <span>
-                {iconThemesLoading ? "Scanning themes..." : `${iconThemes.length} themes found`}
-              </span>
-              <span>{selectedIconThemeId === "auto" ? "Following system" : "Manual override"}</span>
-            </div>
-          </div>
-          {iconThemeError ? (
-            <p className="mt-3 text-launcher-xs text-destructive">{iconThemeError}</p>
-          ) : null}
-        </div>
-      </div>
-
-      <div className="flex items-center gap-3 px-1 pt-2">
-        <span className="text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-          Custom Themes
-        </span>
-        <div className="h-px flex-1 bg-[var(--launcher-chip-bg)]" />
-        <Button
-          type="button"
-          onClick={() => {
-            void refresh();
-          }}
-          size="icon-xs"
-          variant="ghost"
-          className="size-6 rounded-md bg-[var(--launcher-card-bg)] text-muted-foreground ring-1 ring-[var(--launcher-card-border)] hover:bg-[var(--launcher-card-bg)] hover:text-foreground"
-          aria-label="Refresh theme list"
-          title="Refresh theme list"
+      {/* ─── Typography ─── */}
+      <SettingsSection
+        title="Typography"
+        description="Control the launcher font family and base text size."
+        icon={Type}
+        iconVariant="neutral"
+      >
+        <SettingsField
+          label="Font Family"
+          description="Beam Default keeps Manrope. System Default follows your OS font."
+          badge={
+            selectedFamilyId === DEFAULT_LAUNCHER_FONT_FAMILY
+              ? "Beam"
+              : selectedFamilyId === SYSTEM_LAUNCHER_FONT_FAMILY
+                ? "System"
+                : "Custom"
+          }
+          stacked
         >
-          <RefreshCw className="size-3.5" />
-        </Button>
-      </div>
+          <SearchableDropdown
+            sections={fontSections}
+            value={selectedFamilyId}
+            disabled={fontLoading}
+            onValueChange={(value) => {
+              void setFontFamily(value);
+            }}
+            placeholder="Choose a font"
+            searchPlaceholder="Search installed fonts..."
+            triggerClassName="h-10 rounded-xl border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-3 text-launcher-sm text-foreground"
+            panelClassName="sc-actions-panel rounded-2xl border border-[var(--actions-panel-border)] bg-[var(--actions-panel-bg)] p-1 text-foreground shadow-2xl"
+          />
+        </SettingsField>
 
-      {isLoading ? (
-        <div className="flex items-center gap-2 px-1 text-launcher-sm text-muted-foreground">
-          <Loader2 className="size-3.5 animate-spin" />
-          <span>Loading themes...</span>
-        </div>
-      ) : (
-        <div className="space-y-2.5">
+        <SettingsDivider />
+
+        <SettingsField
+          label="Font Size"
+          description="Small packs more content, Large improves readability."
+          badge={selectedFontSizePreset.label}
+          stacked
+        >
+          <div className="flex items-center gap-2">
+            {LAUNCHER_FONT_SIZE_PRESETS.map((preset) => {
+              const isSelected = preset.id === selectedFontSizePreset.id;
+
+              return (
+                <Button
+                  key={preset.id}
+                  type="button"
+                  variant="ghost"
+                  disabled={fontLoading}
+                  onClick={() => {
+                    void setFontSize(preset.size);
+                  }}
+                  className={cn(
+                    "h-9 flex-1 rounded-xl border px-3 text-launcher-sm font-medium transition-all duration-200",
+                    isSelected
+                      ? "border-[var(--launcher-card-selected-border)] bg-[var(--launcher-card-selected-bg)] text-foreground"
+                      : "border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] text-muted-foreground hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground",
+                  )}
+                >
+                  {preset.label}
+                </Button>
+              );
+            })}
+          </div>
+        </SettingsField>
+
+        {fontError ? (
+          <div className="px-5 pb-4">
+            <p className="text-launcher-xs text-destructive">{fontError}</p>
+          </div>
+        ) : null}
+      </SettingsSection>
+
+      {/* ─── Icon Theme ─── */}
+      <SettingsSection
+        title="System Icon Theme"
+        description="Choose the icon set used for native app and file type icons."
+        icon={Palette}
+        iconVariant="primary"
+      >
+        <SettingsField label="Theme" stacked>
+          <Select
+            value={selectedIconThemeId}
+            onValueChange={(value) => {
+              if (!value) return;
+              void setIconTheme(value);
+            }}
+          >
+            <SelectTrigger className="h-10 w-full rounded-xl border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-3 text-launcher-sm text-foreground">
+              <SelectValue placeholder="Choose icon theme" />
+            </SelectTrigger>
+            <SelectContent className="sc-actions-panel rounded-2xl border-[var(--actions-panel-border)] bg-[var(--actions-panel-bg)] p-1 text-foreground shadow-2xl">
+              <SelectItem
+                value="auto"
+                className="rounded-xl px-3 py-2.5 text-launcher-sm text-foreground focus:bg-[var(--command-item-selected-bg)] focus:text-foreground"
+              >
+                Auto
+              </SelectItem>
+              {iconThemes.map((theme) => (
+                <SelectItem
+                  key={theme.id}
+                  value={theme.id}
+                  className="rounded-xl px-3 py-2.5 text-launcher-sm text-foreground focus:bg-[var(--command-item-selected-bg)] focus:text-foreground"
+                >
+                  <span className="flex min-w-0 items-center justify-between gap-3">
+                    <span className="truncate">{theme.name}</span>
+                    <span className="font-mono text-launcher-2xs uppercase tracking-[0.08em] text-muted-foreground">
+                      {theme.id}
+                    </span>
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <div className="flex items-center justify-between text-launcher-2xs text-muted-foreground">
+            <span>
+              {iconThemesLoading ? "Scanning themes..." : `${iconThemes.length} themes found`}
+            </span>
+            <span>{selectedIconThemeId === "auto" ? "Following system" : "Manual override"}</span>
+          </div>
+        </SettingsField>
+
+        {iconThemeError ? (
+          <div className="px-5 pb-4">
+            <p className="text-launcher-xs text-destructive">{iconThemeError}</p>
+          </div>
+        ) : null}
+      </SettingsSection>
+
+      {/* ─── Custom Themes ─── */}
+      <SettingsSection
+        title="Custom Themes"
+        description="Load external theme CSS to fully customize Beam's appearance."
+        icon={PaintBucket}
+        iconVariant="orange"
+        headerAction={
           <Button
             type="button"
-            variant="ghost"
             onClick={() => {
-              void setTheme(null);
+              void refresh();
             }}
-            className={cn(
-              "h-auto w-full items-start justify-start rounded-xl px-3 py-3 text-left transition-all duration-200",
-              selectedThemeId === null
-                ? "bg-[var(--launcher-card-selected-bg)] ring-1 ring-[var(--launcher-card-selected-border)]"
-                : "bg-[var(--launcher-card-bg)] ring-1 ring-[var(--launcher-card-border)] hover:bg-[var(--launcher-card-bg)]",
-            )}
+            size="icon-xs"
+            variant="ghost"
+            className="size-7 rounded-lg bg-[var(--launcher-card-bg)] text-muted-foreground ring-1 ring-[var(--launcher-card-border)] hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground"
+            aria-label="Refresh theme list"
+            title="Refresh theme list"
           >
-            <p
-              className={cn(
-                "text-launcher-md font-semibold",
-                selectedThemeId ? "text-muted-foreground" : "text-secondary-foreground",
-              )}
-            >
-              Built-in only
-            </p>
-            <p
-              className={cn(
-                "mt-0.5 text-launcher-xs",
-                selectedThemeId ? "text-muted-foreground" : "text-secondary-foreground/80",
-              )}
-            >
-              Disable external theme CSS and use Beam defaults.
-            </p>
+            <RefreshCw className="size-3.5" />
           </Button>
-
-          {themes.map((theme) => {
-            const isSelected = selectedThemeId === theme.id;
-            return (
+        }
+      >
+        <div className="p-5">
+          {isLoading ? (
+            <div className="flex items-center gap-2 text-launcher-sm text-muted-foreground">
+              <Loader2 className="size-3.5 animate-spin" />
+              <span>Loading themes...</span>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {/* Built-in option */}
               <Button
-                key={theme.id}
                 type="button"
                 variant="ghost"
                 onClick={() => {
-                  void setTheme(theme.id);
+                  void setTheme(null);
                 }}
                 className={cn(
-                  "h-auto w-full items-start justify-start rounded-xl px-3 py-3 text-left transition-all duration-200",
-                  isSelected
+                  "h-auto w-full items-start justify-start rounded-xl px-4 py-3 text-left transition-all duration-200",
+                  selectedThemeId === null
                     ? "bg-[var(--launcher-card-selected-bg)] ring-1 ring-[var(--launcher-card-selected-border)]"
                     : "bg-[var(--launcher-card-bg)] ring-1 ring-[var(--launcher-card-border)] hover:bg-[var(--launcher-card-bg)]",
                 )}
               >
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex w-full items-center justify-between gap-3">
                   <div className="min-w-0">
                     <p
                       className={cn(
-                        "truncate text-launcher-md font-semibold",
-                        isSelected ? "text-secondary-foreground" : "text-foreground",
+                        "text-launcher-sm font-semibold",
+                        selectedThemeId ? "text-muted-foreground" : "text-secondary-foreground",
                       )}
                     >
-                      {theme.name}
+                      Built-in only
                     </p>
                     <p
                       className={cn(
-                        "mt-0.5 truncate text-launcher-xs",
-                        isSelected ? "text-secondary-foreground/80" : "text-muted-foreground",
+                        "mt-0.5 text-launcher-xs",
+                        selectedThemeId ? "text-muted-foreground" : "text-secondary-foreground/80",
                       )}
                     >
-                      id: {theme.id}
-                      {theme.version ? ` • v${theme.version}` : ""}
-                      {theme.author ? ` • ${theme.author}` : ""}
+                      Use Beam default styles without external CSS.
                     </p>
-                    {theme.description ? (
-                      <p
-                        className={cn(
-                          "mt-1.5 line-clamp-2 text-launcher-xs",
-                          isSelected ? "text-secondary-foreground/80" : "text-muted-foreground",
-                        )}
-                      >
-                        {theme.description}
-                      </p>
-                    ) : null}
                   </div>
-                  {isSelected ? (
-                    <span className="mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-[var(--ring)]/25 text-[var(--ring)]">
-                      <Check className="size-3.5" strokeWidth={3} />
+                  {selectedThemeId === null && (
+                    <span className="inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-[var(--ring)]">
+                      <Check className="size-3 text-background" strokeWidth={3} />
                     </span>
-                  ) : null}
+                  )}
                 </div>
               </Button>
-            );
-          })}
 
-          {themes.length === 0 ? (
-            <p className="px-1 text-launcher-sm text-muted-foreground">
-              No external themes found. Add a theme folder under Beam config themes directory.
-            </p>
-          ) : null}
+              {/* External themes */}
+              {themes.map((theme) => {
+                const isSelected = selectedThemeId === theme.id;
+                return (
+                  <Button
+                    key={theme.id}
+                    type="button"
+                    variant="ghost"
+                    onClick={() => {
+                      void setTheme(theme.id);
+                    }}
+                    className={cn(
+                      "h-auto w-full items-start justify-start rounded-xl px-4 py-3 text-left transition-all duration-200",
+                      isSelected
+                        ? "bg-[var(--launcher-card-selected-bg)] ring-1 ring-[var(--launcher-card-selected-border)]"
+                        : "bg-[var(--launcher-card-bg)] ring-1 ring-[var(--launcher-card-border)] hover:bg-[var(--launcher-card-bg)]",
+                    )}
+                  >
+                    <div className="flex w-full items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p
+                          className={cn(
+                            "truncate text-launcher-sm font-semibold",
+                            isSelected ? "text-secondary-foreground" : "text-foreground",
+                          )}
+                        >
+                          {theme.name}
+                        </p>
+                        <p
+                          className={cn(
+                            "mt-0.5 truncate text-launcher-xs",
+                            isSelected ? "text-secondary-foreground/80" : "text-muted-foreground",
+                          )}
+                        >
+                          id: {theme.id}
+                          {theme.version ? ` • v${theme.version}` : ""}
+                          {theme.author ? ` • ${theme.author}` : ""}
+                        </p>
+                        {theme.description ? (
+                          <p
+                            className={cn(
+                              "mt-1.5 line-clamp-2 text-launcher-xs",
+                              isSelected ? "text-secondary-foreground/80" : "text-muted-foreground",
+                            )}
+                          >
+                            {theme.description}
+                          </p>
+                        ) : null}
+                      </div>
+                      {isSelected && (
+                        <span className="mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-[var(--ring)]/25 text-[var(--ring)]">
+                          <Check className="size-3.5" strokeWidth={3} />
+                        </span>
+                      )}
+                    </div>
+                  </Button>
+                );
+              })}
+
+              {themes.length === 0 && (
+                <p className="py-3 text-center text-launcher-xs text-muted-foreground">
+                  No external themes found. Add a theme folder under Beam config themes directory.
+                </p>
+              )}
+            </div>
+          )}
         </div>
-      )}
 
-      {error ? <p className="px-1 text-launcher-sm text-destructive">{error}</p> : null}
+        {error ? (
+          <div className="px-5 pb-4">
+            <p className="text-launcher-xs text-destructive">{error}</p>
+          </div>
+        ) : null}
+      </SettingsSection>
     </div>
   );
 }

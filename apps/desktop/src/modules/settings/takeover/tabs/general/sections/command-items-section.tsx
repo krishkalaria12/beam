@@ -1,4 +1,4 @@
-import { Eye, EyeOff, Lock, Search } from "lucide-react";
+import { Eye, EyeOff, ListFilter, Lock, Search } from "lucide-react";
 import { useState } from "react";
 
 import { staticCommandRegistry } from "@/command-registry/registry";
@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { isNonHideableCommandId } from "@/modules/settings/api/command-items";
+import { SettingsSection, SettingsDivider, SettingsHint } from "../components/settings-field";
 
 import type {
   CommandItemsEntry,
@@ -108,18 +109,19 @@ export function GeneralCommandItemsSection({
   const hiddenCount = hiddenCommandIds.size;
 
   return (
-    <div className="settings-panel space-y-5 rounded-2xl bg-[var(--launcher-card-hover-bg)] px-4 py-5 ring-1 ring-[var(--launcher-card-border)]">
-      <div className="flex items-center gap-3 px-1">
-        <span className="text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-          Command Items
-        </span>
-        <div className="h-px flex-1 bg-[var(--launcher-chip-bg)]" />
-        <span className="text-launcher-xs tabular-nums text-muted-foreground">
+    <SettingsSection
+      title="Command Items"
+      description="Toggle which commands appear in launcher search results."
+      icon={ListFilter}
+      iconVariant="purple"
+      headerAction={
+        <span className="rounded-full border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-2.5 py-0.5 text-launcher-2xs font-medium tabular-nums text-muted-foreground">
           {hiddenCount} disabled
         </span>
-      </div>
-
-      <div className="space-y-2">
+      }
+    >
+      {/* Search + filter bar */}
+      <div className="space-y-2 px-5 pt-4 pb-2">
         <div className="rounded-xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-3">
           <Input
             value={query}
@@ -152,21 +154,22 @@ export function GeneralCommandItemsSection({
         </div>
       </div>
 
+      {/* Command list */}
       {filteredItems.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-14 text-center">
-          <IconChip variant="neutral" size="lg" className="mb-4 size-14 rounded-2xl">
-            <Search className="size-6" />
+          <IconChip variant="neutral" size="lg" className="mb-4 size-12 rounded-2xl">
+            <Search className="size-5" />
           </IconChip>
-          <p className="mb-1.5 text-launcher-lg font-medium text-muted-foreground">
-            No command items found
+          <p className="mb-1 text-launcher-sm font-medium text-muted-foreground">
+            No commands found
           </p>
-          <p className="max-w-[230px] text-launcher-sm leading-relaxed text-muted-foreground">
+          <p className="max-w-[230px] text-launcher-xs leading-relaxed text-muted-foreground">
             Try a different search query or filter.
           </p>
         </div>
       ) : (
-        <div className="space-y-1.5">
-          {filteredItems.map((item, index) => {
+        <div className="divide-y divide-[var(--launcher-card-border)]/60">
+          {filteredItems.map((item) => {
             const isHidden = hiddenCommandIds.has(item.id);
             const isLocked = isNonHideableCommandId(item.id);
             const isEnabled = !isHidden || isLocked;
@@ -174,13 +177,12 @@ export function GeneralCommandItemsSection({
             return (
               <div
                 key={item.id}
-                className="group flex items-center gap-3 rounded-xl bg-[var(--launcher-card-bg)] px-3 py-3 ring-1 ring-[var(--launcher-card-border)] transition-all duration-200 hover:bg-[var(--launcher-card-bg)]"
-                style={{ animationDelay: `${index * 14}ms` }}
+                className="group flex items-center gap-3 px-5 py-3 transition-colors duration-150 hover:bg-[var(--launcher-card-bg)]/30"
               >
-                <CommandIcon icon={item.icon} commandId={item.id} className="size-9 rounded-xl" />
+                <CommandIcon icon={item.icon} commandId={item.id} className="size-8 rounded-xl" />
 
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-launcher-md font-medium tracking-[-0.01em] text-foreground capitalize">
+                  <p className="truncate text-launcher-sm font-medium tracking-[-0.01em] text-foreground capitalize">
                     {item.title}
                   </p>
                   <p className="truncate text-launcher-xs text-muted-foreground">
@@ -188,7 +190,7 @@ export function GeneralCommandItemsSection({
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2 pl-2">
+                <div className="flex items-center gap-2.5 pl-2">
                   <span className="hidden text-launcher-2xs font-medium uppercase tracking-[0.06em] text-muted-foreground sm:block">
                     {isLocked ? "Required" : isEnabled ? "Enabled" : "Disabled"}
                   </span>
@@ -214,9 +216,9 @@ export function GeneralCommandItemsSection({
         </div>
       )}
 
-      <p className="px-1 text-launcher-sm leading-relaxed text-muted-foreground">
-        Disabled commands are removed from launcher results and blocked from command hotkeys.
-      </p>
-    </div>
+      <SettingsHint>
+        Disabled commands are removed from results and blocked from command hotkeys.
+      </SettingsHint>
+    </SettingsSection>
   );
 }
