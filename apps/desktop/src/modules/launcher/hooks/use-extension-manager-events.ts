@@ -41,7 +41,10 @@ export function useExtensionManagerEvents({
         if (openSettings) {
           useSettingsPageStore
             .getState()
-            .openExtensions(event.extensionName, event.type === "open-command-preferences" ? event.commandName : null);
+            .openExtensions(
+              event.extensionName,
+              event.type === "open-command-preferences" ? event.commandName : null,
+            );
           openSettings();
         } else {
           backToCommands();

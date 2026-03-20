@@ -380,6 +380,14 @@ export function FileList({
               )}
               onClick={() => onSelect(index)}
               onDoubleClick={() => onOpen(result.entry.path)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  onOpen(result.entry.path);
+                }
+              }}
+              role="button"
+              tabIndex={0}
             >
               {/* Selection indicator bar */}
               <div

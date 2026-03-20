@@ -121,8 +121,8 @@ export function NotesView({ onBack }: NotesViewProps) {
       return;
     }
 
-    try {
-      if (viewMode === "create") {
+    if (viewMode === "create") {
+      try {
         const created = await createNoteMutation.mutateAsync({
           title,
           content: draft.content,
@@ -132,10 +132,14 @@ export function NotesView({ onBack }: NotesViewProps) {
         setSearchValue("");
         setViewMode("view");
         toast.success("Note created.");
-        return;
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Failed to save note.");
       }
+      return;
+    }
 
-      if (viewMode === "edit" && resolvedSelectedNoteId) {
+    if (viewMode === "edit" && resolvedSelectedNoteId) {
+      try {
         const updated = await updateNoteMutation.mutateAsync({
           id: resolvedSelectedNoteId,
           title,
@@ -145,9 +149,9 @@ export function NotesView({ onBack }: NotesViewProps) {
         setSelectedNoteId(updated.id);
         setViewMode("view");
         toast.success("Note updated.");
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Failed to save note.");
       }
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to save note.");
     }
   }
 

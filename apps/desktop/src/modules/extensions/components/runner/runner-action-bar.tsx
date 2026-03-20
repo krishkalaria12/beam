@@ -1,5 +1,5 @@
 import { ChevronsUpDown } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffectEvent, useState } from "react";
 
 import { ActionListPanel, ModuleFooter } from "@/components/module";
 import { Button } from "@/components/ui/button";
@@ -28,8 +28,13 @@ export function RunnerActionBar({
   const primaryAction = actions[0];
   const moreActionsCount = Math.max(0, actions.length - (primaryAction ? 1 : 0));
   const resolvedActionsOpen = actions.length > 0 && actionsOpen;
-  const actionsLengthRef = useRef(actions.length);
-  actionsLengthRef.current = actions.length;
+  const handleToggleFromShortcut = useEffectEvent(() => {
+    if (actions.length === 0) {
+      return;
+    }
+
+    setActionsOpen((previous) => !previous);
+  });
 
   const parseShortcut = (shortcut?: string): string[] => {
     if (!shortcut) {
@@ -43,11 +48,7 @@ export function RunnerActionBar({
 
   useMountEffect(() => {
     return listenExtensionRunnerActionsToggle(() => {
-      if (actionsLengthRef.current === 0) {
-        return;
-      }
-
-      setActionsOpen((previous) => !previous);
+      handleToggleFromShortcut();
     });
   });
 
@@ -69,7 +70,9 @@ export function RunnerActionBar({
             }}
             className="ext-footer-actions-toggle h-7 rounded-md px-2 text-launcher-xs font-medium text-muted-foreground hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground"
           >
-            <span>{actions.length} action{actions.length === 1 ? "" : "s"}</span>
+            <span>
+              {actions.length} action{actions.length === 1 ? "" : "s"}
+            </span>
             <ChevronsUpDown className="size-3 text-muted-foreground/70" />
           </Button>
         ) : (

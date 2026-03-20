@@ -73,7 +73,9 @@ export function AiSetupView({
           <ChevronLeft className="size-4" />
         </Button>
         <div className="flex flex-col gap-0.5">
-          <h1 className="text-launcher-md font-semibold tracking-[-0.01em] text-foreground">AI Setup</h1>
+          <h1 className="text-launcher-md font-semibold tracking-[-0.01em] text-foreground">
+            AI Setup
+          </h1>
           <p className="text-launcher-xs tracking-[-0.01em] text-muted-foreground">
             Configure your AI provider
           </p>

@@ -1,5 +1,5 @@
 import { Trash2 } from "lucide-react";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffectEvent, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/module/kbd";
@@ -127,26 +127,44 @@ export default function HotkeyRecorder({
   autoRecord = false,
 }: HotkeyRecorderProps) {
   const [isRecording, setIsRecording] = useState(false);
-  const isRecordingRef = useRef(false);
-  const disabledRef = useRef(disabled);
-  const onChangeRef = useRef(onChange);
-  const previousAutoRecordRef = useRef(autoRecord);
-  const previousDisabledRef = useRef(disabled);
 
-  if (
-    autoRecord &&
-    !disabled &&
-    !isRecording &&
-    (!previousAutoRecordRef.current || previousDisabledRef.current)
-  ) {
+  if (autoRecord && !disabled && !isRecording) {
     setIsRecording(true);
   }
 
-  previousAutoRecordRef.current = autoRecord;
-  previousDisabledRef.current = disabled;
-  isRecordingRef.current = isRecording;
-  disabledRef.current = disabled;
-  onChangeRef.current = onChange;
+  const handleKeyDown = useEffectEvent((event: KeyboardEvent) => {
+    if (!isRecording || disabled) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (event.key === "Escape") {
+      setIsRecording(false);
+      return;
+    }
+
+    if (
+      (event.key === "Backspace" || event.key === "Delete") &&
+      !event.metaKey &&
+      !event.ctrlKey &&
+      !event.altKey &&
+      !event.shiftKey
+    ) {
+      onChange("");
+      setIsRecording(false);
+      return;
+    }
+
+    const hotkey = keyboardEventToHotkey(event);
+    if (!hotkey) {
+      return;
+    }
+
+    onChange(hotkey);
+    setIsRecording(false);
+  });
 
   const containerRef = useCallback(
     (node: HTMLDivElement | null) => {
@@ -158,43 +176,13 @@ export default function HotkeyRecorder({
   );
 
   useMountEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (!isRecordingRef.current || disabledRef.current) {
-        return;
-      }
-
-      event.preventDefault();
-      event.stopPropagation();
-
-      if (event.key === "Escape") {
-        setIsRecording(false);
-        return;
-      }
-
-      if (
-        (event.key === "Backspace" || event.key === "Delete") &&
-        !event.metaKey &&
-        !event.ctrlKey &&
-        !event.altKey &&
-        !event.shiftKey
-      ) {
-        onChangeRef.current("");
-        setIsRecording(false);
-        return;
-      }
-
-      const hotkey = keyboardEventToHotkey(event);
-      if (!hotkey) {
-        return;
-      }
-
-      onChangeRef.current(hotkey);
-      setIsRecording(false);
+    const onWindowKeyDown = (event: KeyboardEvent) => {
+      handleKeyDown(event);
     };
 
-    window.addEventListener("keydown", handleKeyDown, true);
+    window.addEventListener("keydown", onWindowKeyDown, true);
     return () => {
-      window.removeEventListener("keydown", handleKeyDown, true);
+      window.removeEventListener("keydown", onWindowKeyDown, true);
     };
   });
 
@@ -211,9 +199,20 @@ export default function HotkeyRecorder({
           }
           setIsRecording(true);
         }}
+        onKeyDown={(event) => {
+          if (disabled) {
+            return;
+          }
+
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            setIsRecording(true);
+          }
+        }}
         onBlur={() => {
           setIsRecording(false);
         }}
+        role="button"
         className={cn(
           "inline-flex min-h-10 min-w-36 items-center justify-center gap-1.5 rounded-xl px-4 py-2 text-launcher-sm font-medium transition-all duration-150 outline-none",
           disabled
@@ -229,8 +228,8 @@ export default function HotkeyRecorder({
           <span className="text-muted-foreground/80">Press keys...</span>
         ) : value ? (
           <span className="flex items-center gap-1.5">
-            {hotkeyParts.map((part, index) => (
-              <Kbd key={index} className="min-w-7 h-6 px-2 text-launcher-xs text-foreground">
+            {hotkeyParts.map((part) => (
+              <Kbd key={part} className="min-w-7 h-6 px-2 text-launcher-xs text-foreground">
                 {part}
               </Kbd>
             ))}

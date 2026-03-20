@@ -39,7 +39,10 @@ function parseStoreQuery(query: string): string | null {
   return searchTerm.length > 0 ? searchTerm : null;
 }
 
-function toReleaseChannelInput(channelName: string | undefined, channel: number): string | undefined {
+function toReleaseChannelInput(
+  channelName: string | undefined,
+  channel: number,
+): string | undefined {
   if (channelName && channelName.trim().length > 0) {
     return channelName.trim();
   }

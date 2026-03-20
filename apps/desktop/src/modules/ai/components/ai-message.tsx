@@ -10,7 +10,16 @@ import { code } from "@streamdown/code";
 import { math } from "@streamdown/math";
 import { mermaid } from "@streamdown/mermaid";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
-import { Children, createContext, isValidElement, memo, useCallback, useContext, useMemo, useState } from "react";
+import {
+  Children,
+  createContext,
+  isValidElement,
+  memo,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+} from "react";
 import { Streamdown } from "streamdown";
 
 export type MessageProps = HTMLAttributes<HTMLDivElement> & {
@@ -119,7 +128,7 @@ export const MessageBranch = ({
   children,
   ...props
 }: MessageBranchProps) => {
-  const [currentBranch, setCurrentBranch] = useState(defaultBranch);
+  const [currentBranch, setCurrentBranch] = useState(() => defaultBranch);
   const totalBranches = useMemo(() => {
     let branchCount = 0;
 
@@ -134,8 +143,7 @@ export const MessageBranch = ({
 
     return branchCount;
   }, [children]);
-  const resolvedCurrentBranch =
-    totalBranches > 0 ? Math.min(currentBranch, totalBranches - 1) : 0;
+  const resolvedCurrentBranch = totalBranches > 0 ? Math.min(currentBranch, totalBranches - 1) : 0;
 
   const handleBranchChange = useCallback(
     (newBranch: number) => {

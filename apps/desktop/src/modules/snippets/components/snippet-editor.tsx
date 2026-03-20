@@ -64,9 +64,9 @@ export function SnippetEditor({
       <div className="flex min-h-0 flex-1 gap-4 overflow-hidden p-4">
         {/* Left: Snippet Content Editor */}
         <div className="flex min-h-0 w-[47%] flex-col">
-          <label className="mb-2 text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+          <p className="mb-2 text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
             Snippet Content
-          </label>
+          </p>
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl bg-[var(--launcher-card-bg)] ring-1 ring-[var(--launcher-card-border)]">
             <Textarea
               value={draft.template}
@@ -109,9 +109,9 @@ export function SnippetEditor({
           <div className="grid gap-4">
             {/* Name */}
             <div>
-              <label className="mb-2 block text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+              <p className="mb-2 block text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
                 Name
-              </label>
+              </p>
               <Input
                 type="text"
                 value={draft.name}
@@ -132,9 +132,9 @@ export function SnippetEditor({
 
             {/* Keyword */}
             <div>
-              <label className="mb-2 block text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+              <p className="mb-2 block text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
                 Keyword
-              </label>
+              </p>
               <Input
                 type="text"
                 value={draft.trigger}
@@ -155,9 +155,9 @@ export function SnippetEditor({
 
             {/* Tags */}
             <div>
-              <label className="mb-2 block text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+              <p className="mb-2 block text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
                 Tags
-              </label>
+              </p>
               <SnippetTagInput
                 value={draft.tags}
                 suggestions={existingTags}
@@ -173,9 +173,9 @@ export function SnippetEditor({
             {/* Content Type & Placeholders */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="mb-2 block text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                <p className="mb-2 block text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
                   Content Type
-                </label>
+                </p>
                 <DropdownMenu>
                   <DropdownMenuTrigger className="flex h-10 w-full items-center justify-between gap-2 rounded-xl bg-[var(--launcher-card-hover-bg)] px-3 text-launcher-md font-medium text-muted-foreground ring-1 ring-[var(--launcher-card-border)] transition-all hover:bg-[var(--launcher-chip-bg)] hover:text-foreground">
                     <div className="flex items-center gap-2">

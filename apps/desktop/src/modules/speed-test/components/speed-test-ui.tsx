@@ -9,12 +9,45 @@ import {
   TriangleAlert,
   Wifi,
 } from "lucide-react";
-import { Area, AreaChart, ResponsiveContainer } from "recharts";
+import { lazy, Suspense } from "react";
 
 import { cn } from "@/lib/utils";
 import { ModuleFooter } from "@/components/module";
 import { Button } from "@/components/ui/button";
 import { formatMetricValue, type SpeedTestStatus } from "./speed-test-shared";
+
+interface ThroughputMiniChartProps {
+  data: ThroughputChartDatum[];
+  metric: SpeedMetric;
+  color: string;
+}
+
+const LazyThroughputMiniChart = lazy(async () => {
+  const module = await import("recharts");
+  const ThroughputMiniChart = ({ data, metric, color }: ThroughputMiniChartProps) => (
+    <module.ResponsiveContainer width="100%" height="100%">
+      <module.AreaChart data={data} margin={{ top: 2, right: 0, left: 0, bottom: 2 }}>
+        <defs>
+          <linearGradient id={`speedtest-${metric}-gradient`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor={color} stopOpacity={0.35} />
+            <stop offset="95%" stopColor={color} stopOpacity={0.02} />
+          </linearGradient>
+        </defs>
+        <module.Area
+          dataKey={metric}
+          type="monotone"
+          fill={`url(#speedtest-${metric}-gradient)`}
+          stroke={color}
+          strokeWidth={1.5}
+          dot={false}
+          isAnimationActive={false}
+        />
+      </module.AreaChart>
+    </module.ResponsiveContainer>
+  );
+
+  return { default: ThroughputMiniChart };
+});
 
 /* =============================================================================
    STATUS BADGE
@@ -204,38 +237,22 @@ export function SpeedCard({ metric, valueMbps, p90Value, data, isRunning, index 
       {/* Mini chart - takes remaining space */}
       <div className="mt-auto h-[60px] w-full">
         {data.length > 1 ? (
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={data} margin={{ top: 2, right: 0, left: 0, bottom: 2 }}>
-              <defs>
-                <linearGradient id={`speedtest-${metric}-gradient`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={color} stopOpacity={0.35} />
-                  <stop offset="95%" stopColor={color} stopOpacity={0.02} />
-                </linearGradient>
-              </defs>
-              <Area
-                dataKey={metric}
-                type="monotone"
-                fill={`url(#speedtest-${metric}-gradient)`}
-                stroke={color}
-                strokeWidth={1.5}
-                dot={false}
-                isAnimationActive={false}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
+          <Suspense fallback={<div className="h-full w-full" />}>
+            <LazyThroughputMiniChart data={data} metric={metric} color={color} />
+          </Suspense>
         ) : (
           <div className="flex h-full items-center justify-center">
             <div className="flex gap-0.5">
-              {[...Array(16)].map((_, i) => (
+              {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map((seed) => (
                 <div
-                  key={i}
+                  key={`sample:${seed}`}
                   className={cn(
                     "w-1 rounded-full transition-all",
                     isRunning ? "speedtest-sample-bar" : "bg-[var(--launcher-card-hover-bg)]",
                   )}
                   style={{
-                    height: `${12 + Math.random() * 32}px`,
-                    animationDelay: `${i * 60}ms`,
+                    height: `${12 + (((seed + 1) * 19) % 33)}px`,
+                    animationDelay: `${seed * 60}ms`,
                   }}
                 />
               ))}

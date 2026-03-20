@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useReducer } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { buildPreferenceValues } from "@/modules/extensions/components/extensions-view-model";
@@ -31,6 +31,70 @@ function areSelectionsEqual(
   return left.kind === "group" || right.kind === "group" || left.commandId === right.commandId;
 }
 
+interface ExtensionsTabState {
+  query: string;
+  expandedGroupIds: Set<string>;
+  selected: SelectedExtensionEntry | null;
+  isPreferenceSaving: boolean;
+  preferenceDraftState: {
+    key: string;
+    values: Record<string, unknown>;
+    validationError: string | null;
+    saveError: string | null;
+  };
+}
+
+type ExtensionsTabAction =
+  | { type: "set-query"; value: string }
+  | { type: "set-expanded-group-ids"; value: Set<string> }
+  | { type: "toggle-group"; value: string }
+  | { type: "set-selected"; value: SelectedExtensionEntry | null }
+  | { type: "set-preference-saving"; value: boolean }
+  | {
+      type: "set-preference-draft-state";
+      value: ExtensionsTabState["preferenceDraftState"];
+    };
+
+const INITIAL_EXTENSIONS_TAB_STATE: ExtensionsTabState = {
+  query: "",
+  expandedGroupIds: new Set(),
+  selected: null,
+  isPreferenceSaving: false,
+  preferenceDraftState: {
+    key: "",
+    values: {},
+    validationError: null,
+    saveError: null,
+  },
+};
+
+function extensionsTabReducer(
+  state: ExtensionsTabState,
+  action: ExtensionsTabAction,
+): ExtensionsTabState {
+  switch (action.type) {
+    case "set-query":
+      return { ...state, query: action.value };
+    case "set-expanded-group-ids":
+      return { ...state, expandedGroupIds: action.value };
+    case "toggle-group": {
+      const next = new Set(state.expandedGroupIds);
+      if (next.has(action.value)) {
+        next.delete(action.value);
+      } else {
+        next.add(action.value);
+      }
+      return { ...state, expandedGroupIds: next };
+    }
+    case "set-selected":
+      return { ...state, selected: action.value };
+    case "set-preference-saving":
+      return { ...state, isPreferenceSaving: action.value };
+    case "set-preference-draft-state":
+      return { ...state, preferenceDraftState: action.value };
+  }
+}
+
 export function ExtensionsTab({
   isActive,
   hiddenCommandIds,
@@ -40,21 +104,7 @@ export function ExtensionsTab({
 }: SettingsExtensionsTabProps) {
   const extensionTarget = useSettingsPageStore((state) => state.extensionTarget);
   const clearExtensionTarget = useSettingsPageStore((state) => state.clearExtensionTarget);
-  const [query, setQuery] = useState("");
-  const [expandedGroupIds, setExpandedGroupIds] = useState<Set<string>>(new Set());
-  const [selected, setSelected] = useState<SelectedExtensionEntry | null>(null);
-  const [isPreferenceSaving, setIsPreferenceSaving] = useState(false);
-  const [preferenceDraftState, setPreferenceDraftState] = useState<{
-    key: string;
-    values: Record<string, unknown>;
-    validationError: string | null;
-    saveError: string | null;
-  }>({
-    key: "",
-    values: {},
-    validationError: null,
-    saveError: null,
-  });
+  const [state, dispatch] = useReducer(extensionsTabReducer, INITIAL_EXTENSIONS_TAB_STATE);
 
   const pluginsQuery = useQuery<PluginInfo[]>({
     queryKey: ["settings-extension-plugins"],
@@ -66,38 +116,40 @@ export function ExtensionsTab({
 
   const groups = buildExtensionSettingsGroups(plugins);
 
-  const filteredGroups = filterExtensionSettingsGroups(groups, query);
+  const filteredGroups = filterExtensionSettingsGroups(groups, state.query);
   const defaultExpandedGroupIds = useMemo(
     () =>
       new Set(
-        (query.trim().length > 0 ? filteredGroups : groups).map((group) => group.id),
+        (state.query.trim().length > 0 ? filteredGroups : groups).map((group) => group.id),
       ),
-    [filteredGroups, groups, query],
+    [filteredGroups, groups, state.query],
   );
 
-  if (expandedGroupIds.size === 0 && defaultExpandedGroupIds.size > 0) {
-    setExpandedGroupIds(defaultExpandedGroupIds);
+  if (state.expandedGroupIds.size === 0 && defaultExpandedGroupIds.size > 0) {
+    dispatch({ type: "set-expanded-group-ids", value: defaultExpandedGroupIds });
   }
 
   const resolvedExpandedGroupIds =
-    query.trim().length > 0 ? defaultExpandedGroupIds : expandedGroupIds;
+    state.query.trim().length > 0 ? defaultExpandedGroupIds : state.expandedGroupIds;
 
   const desiredSelected = useMemo<SelectedExtensionEntry | null>(() => {
     if (filteredGroups.length === 0) {
       return null;
     }
 
+    const selectedEntry = state.selected;
+
     if (
-      selected &&
+      selectedEntry &&
       filteredGroups.some((group) => {
-        if (selected.kind === "group") {
-          return group.id === selected.groupId;
+        if (selectedEntry.kind === "group") {
+          return group.id === selectedEntry.groupId;
         }
 
-        return group.commands.some((command) => command.commandId === selected.commandId);
+        return group.commands.some((command) => command.commandId === selectedEntry.commandId);
       })
     ) {
-      return selected;
+      return selectedEntry;
     }
 
     const firstGroup = filteredGroups[0];
@@ -108,10 +160,10 @@ export function ExtensionsTab({
           commandId: firstGroup.commands[0].commandId,
         }
       : { kind: "group", groupId: firstGroup.id };
-  }, [filteredGroups, selected]);
+  }, [filteredGroups, state.selected]);
 
-  if (!areSelectionsEqual(selected, desiredSelected)) {
-    setSelected(desiredSelected);
+  if (!areSelectionsEqual(state.selected, desiredSelected)) {
+    dispatch({ type: "set-selected", value: desiredSelected });
   }
 
   if (isActive && extensionTarget && filteredGroups.length > 0) {
@@ -124,7 +176,10 @@ export function ExtensionsTab({
       }
 
       if (!resolvedExpandedGroupIds.has(group.id)) {
-        setExpandedGroupIds((previous) => new Set(previous).add(group.id));
+        dispatch({
+          type: "set-expanded-group-ids",
+          value: new Set(resolvedExpandedGroupIds).add(group.id),
+        });
       }
 
       const targetSelection =
@@ -144,21 +199,25 @@ export function ExtensionsTab({
             })()
           : null;
 
-      setSelected(targetSelection ?? { kind: "group", groupId: group.id });
+      dispatch({
+        type: "set-selected",
+        value: targetSelection ?? { kind: "group", groupId: group.id },
+      });
       clearExtensionTarget();
       break;
     }
   }
 
   let selectedGroup = null;
-  if (selected) {
-    selectedGroup = filteredGroups.find((group) => group.id === selected.groupId) ?? null;
+  const selectedEntry = state.selected;
+  if (selectedEntry) {
+    selectedGroup = filteredGroups.find((group) => group.id === selectedEntry.groupId) ?? null;
   }
 
   let selectedCommand = null;
-  if (selected && selected.kind === "command" && selectedGroup) {
+  if (selectedEntry && selectedEntry.kind === "command" && selectedGroup) {
     selectedCommand =
-      selectedGroup.commands.find((command) => command.commandId === selected.commandId) ?? null;
+      selectedGroup.commands.find((command) => command.commandId === selectedEntry.commandId) ?? null;
   }
 
   const selectedFields: ExtensionPreferenceField[] =
@@ -182,22 +241,22 @@ export function ExtensionsTab({
       ? `${selectedPluginName}:${selectedPreferencesQuery.dataUpdatedAt}`
       : "";
 
-  if (preferenceDraftState.key !== preferenceDraftKey) {
-    setPreferenceDraftState({
+  if (state.preferenceDraftState.key !== preferenceDraftKey) {
+    dispatch({ type: "set-preference-draft-state", value: {
       key: preferenceDraftKey,
       values: preferenceSeedValues,
       validationError: null,
       saveError: null,
-    });
+    }});
   }
 
   const isPreferenceLoading = selectedPreferencesQuery.isLoading;
   const preferenceError =
-    preferenceDraftState.saveError ??
+    state.preferenceDraftState.saveError ??
     (selectedPreferencesQuery.error instanceof Error
       ? selectedPreferencesQuery.error.message
       : null);
-  const validationError = preferenceDraftState.validationError;
+  const validationError = state.preferenceDraftState.validationError;
 
   const handleSavePreferences = async () => {
     if (!selectedPluginName || selectedFields.length === 0) {
@@ -205,32 +264,35 @@ export function ExtensionsTab({
     }
 
     const missingField = selectedFields.find((field) =>
-      isMissingRequiredField(field, preferenceDraftState.values[field.name]),
+      isMissingRequiredField(field, state.preferenceDraftState.values[field.name]),
     );
     if (missingField) {
-      setPreferenceDraftState((previous) => ({
-        ...previous,
+      dispatch({ type: "set-preference-draft-state", value: {
+        ...state.preferenceDraftState,
         validationError: `"${missingField.title}" is required.`,
-      }));
+      }});
       return;
     }
 
-    setPreferenceDraftState((previous) => ({
-      ...previous,
+    dispatch({ type: "set-preference-draft-state", value: {
+      ...state.preferenceDraftState,
       validationError: null,
       saveError: null,
-    }));
-    setIsPreferenceSaving(true);
+    }});
+    dispatch({ type: "set-preference-saving", value: true });
     try {
-      await extensionManagerService.setPreferences(selectedPluginName, preferenceDraftState.values);
+      await extensionManagerService.setPreferences(
+        selectedPluginName,
+        state.preferenceDraftState.values,
+      );
     } catch (error) {
-      setPreferenceDraftState((previous) => ({
-        ...previous,
+      dispatch({ type: "set-preference-draft-state", value: {
+        ...state.preferenceDraftState,
         saveError: error instanceof Error ? error.message : "Failed to save preferences.",
-      }));
-    } finally {
-      setIsPreferenceSaving(false);
+      }});
     }
+
+    dispatch({ type: "set-preference-saving", value: false });
   };
 
   return (
@@ -238,25 +300,15 @@ export function ExtensionsTab({
       <div className="grid h-full min-h-0 flex-1 grid-cols-[58%_42%] overflow-hidden bg-[var(--command-item-selected-bg)]/30">
         <ExtensionsListPane
           isLoading={isLoading}
-          query={query}
+          query={state.query}
           groups={filteredGroups}
           expandedGroupIds={resolvedExpandedGroupIds}
           hiddenCommandIds={hiddenCommandIds}
           aliasesById={aliasesById}
-          selected={selected}
-          onQueryChange={setQuery}
-          onToggleGroup={(groupId) => {
-            setExpandedGroupIds((previous) => {
-              const next = new Set(previous);
-              if (next.has(groupId)) {
-                next.delete(groupId);
-              } else {
-                next.add(groupId);
-              }
-              return next;
-            });
-          }}
-          onSelect={setSelected}
+          selected={state.selected}
+          onQueryChange={(value) => dispatch({ type: "set-query", value })}
+          onToggleGroup={(groupId) => dispatch({ type: "toggle-group", value: groupId })}
+          onSelect={(value) => dispatch({ type: "set-selected", value })}
           onSetHidden={onSetHidden}
           onSetAliases={onSetAliases}
         />
@@ -265,21 +317,21 @@ export function ExtensionsTab({
           selectedGroup={selectedGroup}
           selectedCommand={selectedCommand}
           selectedFields={selectedFields}
-          preferenceValues={preferenceDraftState.values}
+          preferenceValues={state.preferenceDraftState.values}
           isPreferenceLoading={isPreferenceLoading}
-          isPreferenceSaving={isPreferenceSaving}
+          isPreferenceSaving={state.isPreferenceSaving}
           preferenceError={preferenceError}
           validationError={validationError}
           onChangePreference={(key, value) => {
-            setPreferenceDraftState((previous) => ({
-              ...previous,
+            dispatch({ type: "set-preference-draft-state", value: {
+              ...state.preferenceDraftState,
               values: {
-                ...previous.values,
+                ...state.preferenceDraftState.values,
                 [key]: value,
               },
               validationError: null,
               saveError: null,
-            }));
+            }});
           }}
           onSavePreferences={handleSavePreferences}
         />

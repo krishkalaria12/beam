@@ -1,6 +1,5 @@
-import { useVirtualizer } from "@tanstack/react-virtual";
 import { FileText, ImageIcon, Link, Clipboard } from "lucide-react";
-import { useCallback, useMemo, useRef } from "react";
+import { useMemo } from "react";
 import { isToday, isYesterday, parseISO, format } from "date-fns";
 
 import { CommandLoadingState } from "@/components/command/command-loading-state";
@@ -44,6 +43,14 @@ function ClipboardListItem({ entry, isSelected, onSelect, itemRef }: ClipboardLi
     <div
       ref={itemRef}
       onClick={onSelect}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onSelect();
+        }
+      }}
+      role="button"
+      tabIndex={0}
       className={cn(
         "group relative flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 transition-colors",
         "[content-visibility:auto] [contain-intrinsic-size:56px]",
@@ -105,21 +112,8 @@ interface ClipboardListProps {
   isLoading: boolean;
 }
 
-type ClipboardVirtualRow =
-  | {
-      key: string;
-      kind: "header";
-      title: string;
-    }
-  | {
-      key: string;
-      kind: "item";
-      entry: ClipboardHistoryEntry;
-      originalIndex: number;
-    };
-
 export function ClipboardList({ entries, selectedIndex, onSelect, isLoading }: ClipboardListProps) {
-  const scrollRef = useRef<HTMLDivElement | null>(null);
+  "use no memo";
 
   const groupedEntries = useMemo(() => {
     const groups: Array<{
@@ -158,55 +152,9 @@ export function ClipboardList({ entries, selectedIndex, onSelect, isLoading }: C
     return groups;
   }, [entries]);
 
-  const virtualRows = useMemo<ClipboardVirtualRow[]>(() => {
-    const rows: ClipboardVirtualRow[] = [];
-
-    for (const group of groupedEntries) {
-      rows.push({
-        key: `header-${group.title}`,
-        kind: "header",
-        title: group.title,
-      });
-
-      for (const item of group.items) {
-        rows.push({
-          key: `item-${item.entry.copied_at}-${item.entry.content_type}-${item.entry.value.slice(0, 20)}`,
-          kind: "item",
-          entry: item.entry,
-          originalIndex: item.originalIndex,
-        });
-      }
-    }
-
-    return rows;
-  }, [groupedEntries]);
-
-  const rowVirtualizer = useVirtualizer({
-    count: virtualRows.length,
-    getScrollElement: () => scrollRef.current,
-    estimateSize: (index) => (virtualRows[index]?.kind === "header" ? 32 : 56),
-    overscan: 8,
-  });
-
-  const selectedVirtualIndex = useMemo(
-    () =>
-      virtualRows.findIndex((row) => row.kind === "item" && row.originalIndex === selectedIndex),
-    [selectedIndex, virtualRows],
-  );
-  const selectedItemRef = useCallback(
-    (node: HTMLDivElement | null) => {
-      if (!node || selectedVirtualIndex < 0 || isLoading || entries.length === 0) {
-        return;
-      }
-
-      node.scrollIntoView({ block: "nearest" });
-    },
-    [entries.length, isLoading, selectedVirtualIndex],
-  );
-
   return (
     <div className="clipboard-list-panel flex w-[42%] flex-col border-r border-[var(--launcher-card-border)]">
-      <div ref={scrollRef} className="custom-scrollbar flex-1 overflow-y-auto p-3">
+      <div className="custom-scrollbar flex-1 overflow-y-auto p-3">
         {isLoading ? (
           <div className="flex h-full items-center justify-center">
             <CommandLoadingState label="Loading history..." withSpinner />
@@ -224,44 +172,25 @@ export function ClipboardList({ entries, selectedIndex, onSelect, isLoading }: C
             </div>
           </div>
         ) : (
-          <div
-            className="relative w-full"
-            style={{
-              height: `${rowVirtualizer.getTotalSize()}px`,
-            }}
-          >
-            {rowVirtualizer.getVirtualItems().map((virtualItem) => {
-              const row = virtualRows[virtualItem.index];
-              if (!row) {
-                return null;
-              }
-
-              return (
-                <div
-                  key={row.key}
-                  className="absolute left-0 top-0 w-full"
-                  style={{
-                    transform: `translateY(${virtualItem.start}px)`,
-                  }}
-                >
-                  {row.kind === "header" ? (
-                    <div className="flex items-center gap-3 px-3 py-1">
-                      <h3 className="text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-                        {row.title}
-                      </h3>
-                      <div className="h-px flex-1 bg-[var(--launcher-card-hover-bg)]" />
-                    </div>
-                  ) : (
-                    <ClipboardListItem
-                      entry={row.entry}
-                      isSelected={row.originalIndex === selectedIndex}
-                      onSelect={() => onSelect(row.originalIndex)}
-                      itemRef={row.originalIndex === selectedIndex ? selectedItemRef : undefined}
-                    />
-                  )}
+          <div className="w-full">
+            {groupedEntries.map((group) => (
+              <div key={`group-${group.title}`}>
+                <div className="flex items-center gap-3 px-3 py-1">
+                  <h3 className="text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                    {group.title}
+                  </h3>
+                  <div className="h-px flex-1 bg-[var(--launcher-card-hover-bg)]" />
                 </div>
-              );
-            })}
+                {group.items.map((item) => (
+                  <ClipboardListItem
+                    key={`item-${item.entry.copied_at}-${item.entry.content_type}-${item.entry.value.slice(0, 20)}`}
+                    entry={item.entry}
+                    isSelected={item.originalIndex === selectedIndex}
+                    onSelect={() => onSelect(item.originalIndex)}
+                  />
+                ))}
+              </div>
+            ))}
           </div>
         )}
       </div>

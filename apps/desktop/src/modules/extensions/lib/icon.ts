@@ -171,14 +171,20 @@ export function resolveExtensionIconSources(
 
   const localPath = stripFileProtocol(normalized);
   const candidatePaths =
-    baseDirectory && !normalized.startsWith("/") && !normalized.startsWith("\\") && !isWindowsAbsolutePath(normalized) && !hasUriScheme(normalized)
+    baseDirectory &&
+    !normalized.startsWith("/") &&
+    !normalized.startsWith("\\") &&
+    !isWindowsAbsolutePath(normalized) &&
+    !hasUriScheme(normalized)
       ? buildRelativeIconCandidates(localPath, baseDirectory)
       : [localPath];
 
   try {
     const resolvedSources = Array.from(
       new Set(
-        candidatePaths.map((candidatePath) => convertFileSrc(stripFileProtocol(candidatePath), "asset")),
+        candidatePaths.map((candidatePath) =>
+          convertFileSrc(stripFileProtocol(candidatePath), "asset"),
+        ),
       ),
     );
     iconSourceCache.set(cacheKey, resolvedSources[0] ?? null);

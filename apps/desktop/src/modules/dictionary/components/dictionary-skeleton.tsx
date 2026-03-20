@@ -1,6 +1,9 @@
 import { ArrowLeft, Search } from "lucide-react";
 import { ModuleFooter } from "@/components/module";
 
+const MEANING_SKELETON_IDS = ["first", "second"] as const;
+const SENSE_SKELETON_IDS = ["top", "bottom"] as const;
+
 export function DictionarySkeleton() {
   return (
     <div className="dictionary-view-enter flex h-full w-full flex-col text-foreground">
@@ -31,8 +34,12 @@ export function DictionarySkeleton() {
         </div>
 
         {/* Meaning sections */}
-        {[1, 2].map((i) => (
-          <div key={i} className="space-y-4" style={{ animationDelay: `${i * 100}ms` }}>
+        {MEANING_SKELETON_IDS.map((meaningId, meaningIndex) => (
+          <div
+            key={meaningId}
+            className="space-y-4"
+            style={{ animationDelay: `${(meaningIndex + 1) * 100}ms` }}
+          >
             <div className="flex items-center gap-4">
               <div className="h-px flex-1 bg-[var(--launcher-card-hover-bg)]" />
               <div className="h-3 w-16 animate-pulse rounded bg-[var(--launcher-card-hover-bg)]" />
@@ -41,11 +48,11 @@ export function DictionarySkeleton() {
 
             {/* Senses skeletons */}
             <div className="grid gap-3">
-              {[1, 2].map((j) => (
+              {SENSE_SKELETON_IDS.map((senseId, senseIndex) => (
                 <div
-                  key={j}
+                  key={`${meaningId}:${senseId}`}
                   className="rounded-xl bg-[var(--launcher-card-hover-bg)] p-4"
-                  style={{ animationDelay: `${(i * 2 + j) * 50}ms` }}
+                  style={{ animationDelay: `${(meaningIndex * 2 + senseIndex + 1) * 50}ms` }}
                 >
                   <div className="flex items-start gap-3">
                     <div className="h-5 w-8 animate-pulse rounded bg-[var(--launcher-card-hover-bg)]" />

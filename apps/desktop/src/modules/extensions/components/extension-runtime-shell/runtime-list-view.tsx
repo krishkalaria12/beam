@@ -161,7 +161,11 @@ export function RuntimeListView({ state }: RuntimeListViewProps) {
                   onDoubleClick={() => state.runPrimarySelectionAction()}
                   showAccentBar
                   leftSlot={
-                    icon ? <RunnerIcon icon={icon} className="size-5" /> : <span className="size-5" />
+                    icon ? (
+                      <RunnerIcon icon={icon} className="size-5" />
+                    ) : (
+                      <span className="size-5" />
+                    )
                   }
                   rightSlot={
                     accessories.length > 0 ? (

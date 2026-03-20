@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useMemo, useState } from "react";
 
 import {
   LAUNCHER_THEME_CHANGE_EVENT,
@@ -209,16 +209,22 @@ export function UiStyleProvider({
     applyBaseColor(baseColor);
   }
 
-  const setUiStyle = (style: UiStylePreference) => {
-    localStorage.setItem(styleStorageKey, style);
-    setUiStyleState(style);
-  };
+  const setUiStyle = useCallback(
+    (style: UiStylePreference) => {
+      localStorage.setItem(styleStorageKey, style);
+      setUiStyleState(style);
+    },
+    [styleStorageKey],
+  );
 
-  const setBaseColor = (color: string) => {
-    const normalized = normalizeBaseColor(color);
-    localStorage.setItem(baseColorStorageKey, normalized);
-    setBaseColorState(normalized);
-  };
+  const setBaseColor = useCallback(
+    (color: string) => {
+      const normalized = normalizeBaseColor(color);
+      localStorage.setItem(baseColorStorageKey, normalized);
+      setBaseColorState(normalized);
+    },
+    [baseColorStorageKey],
+  );
 
   const value = useMemo(
     () => ({
@@ -227,7 +233,7 @@ export function UiStyleProvider({
       setUiStyle,
       setBaseColor,
     }),
-    [uiStyle, baseColor],
+    [uiStyle, baseColor, setUiStyle, setBaseColor],
   );
 
   return (

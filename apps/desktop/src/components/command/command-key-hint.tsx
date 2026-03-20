@@ -25,7 +25,7 @@ export function CommandKeyHint({
     <div className="flex items-center gap-1">
       {keyLabels.map((entry, index) => (
         <Kbd
-          key={`key:${index}`}
+          key={`key:${String(entry)}`}
           className={cn(
             "h-[22px] min-w-[22px] px-1.5 text-launcher-xs font-medium text-muted-foreground",
             keyClassName,
@@ -38,7 +38,9 @@ export function CommandKeyHint({
   );
 
   const labelNode = (
-    <span className={cn("text-launcher-xs font-normal text-muted-foreground", labelClassName)}>{label}</span>
+    <span className={cn("text-launcher-xs font-normal text-muted-foreground", labelClassName)}>
+      {label}
+    </span>
   );
 
   return (

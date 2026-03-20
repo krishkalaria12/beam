@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { RefreshCcw } from "lucide-react";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useReducer } from "react";
 import { toast } from "sonner";
 
 import { GenericListView, SearchBar } from "@/components/module";
@@ -44,10 +44,7 @@ type SelectedExtensionsRow =
   | { kind: "store"; id: string }
   | null;
 
-function areSelectedRowsEqual(
-  left: SelectedExtensionsRow,
-  right: SelectedExtensionsRow,
-): boolean {
+function areSelectedRowsEqual(left: SelectedExtensionsRow, right: SelectedExtensionsRow): boolean {
   return left?.kind === right?.kind && left?.id === right?.id;
 }
 
@@ -98,26 +95,74 @@ function SummaryMetric({ label, value }: { label: string; value: string }) {
   );
 }
 
-export function ExtensionsView({ onBack }: ExtensionsViewProps) {
-  const queryClient = useQueryClient();
-  const extensionsUi = useExtensionsUiStore();
-  const [selectedRow, setSelectedRow] = useState<SelectedExtensionsRow>(null);
-  const [pendingInstallSlug, setPendingInstallSlug] = useState<string | null>(null);
-  const [pendingUninstallSlug, setPendingUninstallSlug] = useState<string | null>(null);
-  const [actionError, setActionError] = useState<string | null>(null);
-  const [optimisticInstalledSlugs, setOptimisticInstalledSlugs] = useState<string[]>([]);
-  const [isPreferenceSaving, setIsPreferenceSaving] = useState(false);
-  const [preferenceDraftState, setPreferenceDraftState] = useState<{
+interface ExtensionsViewState {
+  selectedRow: SelectedExtensionsRow;
+  pendingInstallSlug: string | null;
+  pendingUninstallSlug: string | null;
+  actionError: string | null;
+  optimisticInstalledSlugs: string[];
+  isPreferenceSaving: boolean;
+  preferenceDraftState: {
     key: string;
     values: Record<string, unknown>;
     validationError: string | null;
     saveError: string | null;
-  }>({
+  };
+}
+
+type ExtensionsViewAction =
+  | { type: "set-selected-row"; value: SelectedExtensionsRow }
+  | { type: "set-pending-install-slug"; value: string | null }
+  | { type: "set-pending-uninstall-slug"; value: string | null }
+  | { type: "set-action-error"; value: string | null }
+  | { type: "set-optimistic-installed-slugs"; value: string[] }
+  | { type: "set-preference-saving"; value: boolean }
+  | {
+      type: "set-preference-draft-state";
+      value: ExtensionsViewState["preferenceDraftState"];
+    };
+
+const INITIAL_EXTENSIONS_VIEW_STATE: ExtensionsViewState = {
+  selectedRow: null,
+  pendingInstallSlug: null,
+  pendingUninstallSlug: null,
+  actionError: null,
+  optimisticInstalledSlugs: [],
+  isPreferenceSaving: false,
+  preferenceDraftState: {
     key: "",
     values: {},
     validationError: null,
     saveError: null,
-  });
+  },
+};
+
+function extensionsViewReducer(
+  state: ExtensionsViewState,
+  action: ExtensionsViewAction,
+): ExtensionsViewState {
+  switch (action.type) {
+    case "set-selected-row":
+      return { ...state, selectedRow: action.value };
+    case "set-pending-install-slug":
+      return { ...state, pendingInstallSlug: action.value };
+    case "set-pending-uninstall-slug":
+      return { ...state, pendingUninstallSlug: action.value };
+    case "set-action-error":
+      return { ...state, actionError: action.value };
+    case "set-optimistic-installed-slugs":
+      return { ...state, optimisticInstalledSlugs: action.value };
+    case "set-preference-saving":
+      return { ...state, isPreferenceSaving: action.value };
+    case "set-preference-draft-state":
+      return { ...state, preferenceDraftState: action.value };
+  }
+}
+
+export function ExtensionsView({ onBack }: ExtensionsViewProps) {
+  const queryClient = useQueryClient();
+  const extensionsUi = useExtensionsUiStore();
+  const [state, dispatch] = useReducer(extensionsViewReducer, INITIAL_EXTENSIONS_VIEW_STATE);
 
   const normalizedSearch = extensionsUi.search.trim();
   const debouncedNormalizedSearch = extensionsUi.debouncedSearch.trim();
@@ -150,8 +195,8 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
   );
 
   const displayedInstalledExtensions = useMemo(
-    () => mergeInstalledWithOptimisticSlugs(installedExtensions, optimisticInstalledSlugs),
-    [installedExtensions, optimisticInstalledSlugs],
+    () => mergeInstalledWithOptimisticSlugs(installedExtensions, state.optimisticInstalledSlugs),
+    [installedExtensions, state.optimisticInstalledSlugs],
   );
 
   const filteredInstalledExtensions = useMemo(
@@ -169,18 +214,22 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
 
   const selectedInstalled = useMemo(
     () =>
-      selectedRow?.kind === "installed"
-        ? (filteredInstalledExtensions.find((entry) => entry.id === selectedRow.id) ?? null)
+      state.selectedRow?.kind === "installed"
+        ? (filteredInstalledExtensions.find((entry) => entry.id === state.selectedRow?.id) ?? null)
         : null,
-    [filteredInstalledExtensions, selectedRow],
+    [filteredInstalledExtensions, state.selectedRow],
   );
 
   const selectedStore = useMemo(
-    () =>
-      selectedRow?.kind === "store"
-        ? ((storeSearchQuery.data ?? []).find((entry) => entry.id === selectedRow.id) ?? null)
-        : null,
-    [selectedRow, storeSearchQuery.data],
+    () => {
+      const selectedStoreRow = state.selectedRow;
+      if (!selectedStoreRow || selectedStoreRow.kind !== "store") {
+        return null;
+      }
+
+      return (storeSearchQuery.data ?? []).find((entry) => entry.id === selectedStoreRow.id) ?? null;
+    },
+    [state.selectedRow, storeSearchQuery.data],
   );
 
   const selectedStorePackageQuery = useStoreExtensionPackageQuery(selectedStore?.id ?? null);
@@ -211,26 +260,28 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
   const installedUpdateKeys = useMemo(
     () =>
       new Set(
-        (storeUpdatesQuery.data ?? []).map((entry) => extensionKey(entry.author.handle, entry.slug)),
+        (storeUpdatesQuery.data ?? []).map((entry) =>
+          extensionKey(entry.author.handle, entry.slug),
+        ),
       ),
     [storeUpdatesQuery.data],
   );
 
   const desiredSelectedRow = useMemo<SelectedExtensionsRow>(() => {
-    const selectedKind = selectedRow?.kind ?? null;
-    const selectedId = selectedRow?.id ?? null;
+    const selectedKind = state.selectedRow?.kind ?? null;
+    const selectedId = state.selectedRow?.id ?? null;
 
     if (selectedKind === "installed" && selectedId) {
       const exists = filteredInstalledExtensions.some((entry) => entry.id === selectedId);
       if (exists) {
-        return selectedRow;
+          return state.selectedRow;
       }
     }
 
     if (selectedKind === "store" && selectedId) {
       const exists = (storeSearchQuery.data ?? []).some((entry) => entry.id === selectedId);
       if (exists) {
-        return selectedRow;
+          return state.selectedRow;
       }
     }
 
@@ -241,21 +292,16 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
 
     const firstStore = (storeSearchQuery.data ?? [])[0];
     return firstStore ? { kind: "store", id: firstStore.id } : null;
-  }, [filteredInstalledExtensions, selectedRow, storeSearchQuery.data]);
+  }, [filteredInstalledExtensions, state.selectedRow, storeSearchQuery.data]);
 
-  if (!areSelectedRowsEqual(selectedRow, desiredSelectedRow)) {
-    setSelectedRow((current) =>
-      areSelectedRowsEqual(current, desiredSelectedRow) ? current : desiredSelectedRow,
-    );
+  if (!areSelectedRowsEqual(state.selectedRow, desiredSelectedRow)) {
+    dispatch({ type: "set-selected-row", value: desiredSelectedRow });
   }
 
   const seededPreferenceValues = useMemo(
     () =>
       selectedInstalledPluginName.length > 0 && selectedInstalledPreferences.length > 0
-        ? buildPreferenceValues(
-            selectedInstalledPreferences,
-            installedPreferencesQuery.data ?? {},
-          )
+        ? buildPreferenceValues(selectedInstalledPreferences, installedPreferencesQuery.data ?? {})
         : {},
     [installedPreferencesQuery.data, selectedInstalledPluginName, selectedInstalledPreferences],
   );
@@ -271,43 +317,49 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
     ],
   );
 
-  if (preferenceDraftState.key !== preferenceDraftKey) {
-    setPreferenceDraftState({
+  if (state.preferenceDraftState.key !== preferenceDraftKey) {
+    dispatch({ type: "set-preference-draft-state", value: {
       key: preferenceDraftKey,
       values: seededPreferenceValues,
       validationError: null,
       saveError: null,
-    });
+    }});
   }
 
   const resolvedOptimisticInstalledSlugs = useMemo(() => {
-    if (optimisticInstalledSlugs.length === 0) {
-      return optimisticInstalledSlugs;
+    if (state.optimisticInstalledSlugs.length === 0) {
+      return state.optimisticInstalledSlugs;
     }
 
     const installedSlugSet = new Set(installedExtensions.map((entry) => entry.slug.toLowerCase()));
-    return optimisticInstalledSlugs.filter((entry) => !installedSlugSet.has(entry.toLowerCase()));
-  }, [installedExtensions, optimisticInstalledSlugs]);
+    return state.optimisticInstalledSlugs.filter((entry) => !installedSlugSet.has(entry.toLowerCase()));
+  }, [installedExtensions, state.optimisticInstalledSlugs]);
 
   if (
-    resolvedOptimisticInstalledSlugs.length !== optimisticInstalledSlugs.length ||
-    resolvedOptimisticInstalledSlugs.some((entry, index) => entry !== optimisticInstalledSlugs[index])
+    resolvedOptimisticInstalledSlugs.length !== state.optimisticInstalledSlugs.length ||
+    resolvedOptimisticInstalledSlugs.some(
+      (entry, index) => entry !== state.optimisticInstalledSlugs[index],
+    )
   ) {
-    setOptimisticInstalledSlugs(resolvedOptimisticInstalledSlugs);
+    dispatch({ type: "set-optimistic-installed-slugs", value: resolvedOptimisticInstalledSlugs });
   }
 
   const handleRefreshInstalled = useCallback(async () => {
     invalidateDiscoveredExtensionsCache();
-    await queryClient.invalidateQueries({ queryKey: EXTENSIONS_QUERY_KEY_INSTALLED });
-    await queryClient.invalidateQueries({ queryKey: EXTENSIONS_QUERY_KEY_STORE_UPDATES });
-    await queryClient.refetchQueries({
-      queryKey: EXTENSIONS_QUERY_KEY_INSTALLED,
-      type: "active",
-    });
-    await queryClient.refetchQueries({
-      queryKey: EXTENSIONS_QUERY_KEY_STORE_UPDATES,
-      type: "active",
-    });
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: EXTENSIONS_QUERY_KEY_INSTALLED }),
+      queryClient.invalidateQueries({ queryKey: EXTENSIONS_QUERY_KEY_STORE_UPDATES }),
+    ]);
+    await Promise.all([
+      queryClient.refetchQueries({
+        queryKey: EXTENSIONS_QUERY_KEY_INSTALLED,
+        type: "active",
+      }),
+      queryClient.refetchQueries({
+        queryKey: EXTENSIONS_QUERY_KEY_STORE_UPDATES,
+        type: "active",
+      }),
+    ]);
   }, [queryClient]);
 
   const handleInstall = useCallback(
@@ -318,8 +370,8 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
       releaseVersion?: string;
       channel?: string;
     }) => {
-      setActionError(null);
-      setPendingInstallSlug(input.slug);
+      dispatch({ type: "set-action-error", value: null });
+      dispatch({ type: "set-pending-install-slug", value: input.slug });
 
       try {
         const result = await installExtensionMutation.mutateAsync({
@@ -351,24 +403,29 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
           });
         }
 
-        setOptimisticInstalledSlugs((current) => {
-          const normalizedSlug = input.slug.trim();
-          if (!normalizedSlug) {
-            return current;
-          }
-          const alreadyExists = current.some(
+        const normalizedSlug = input.slug.trim();
+        if (normalizedSlug) {
+          const alreadyExists = state.optimisticInstalledSlugs.some(
             (entry) => entry.toLowerCase() === normalizedSlug.toLowerCase(),
           );
-          return alreadyExists ? current : [...current, normalizedSlug];
-        });
+          if (!alreadyExists) {
+            dispatch({
+              type: "set-optimistic-installed-slugs",
+              value: [...state.optimisticInstalledSlugs, normalizedSlug],
+            });
+          }
+        }
         await handleRefreshInstalled();
       } catch (error) {
-        setActionError(error instanceof Error ? error.message : "Failed to install extension.");
-      } finally {
-        setPendingInstallSlug(null);
+        dispatch({
+          type: "set-action-error",
+          value: error instanceof Error ? error.message : "Failed to install extension.",
+        });
       }
+
+      dispatch({ type: "set-pending-install-slug", value: null });
     },
-    [handleRefreshInstalled, installExtensionMutation],
+    [handleRefreshInstalled, installExtensionMutation, state.optimisticInstalledSlugs],
   );
 
   const handleUninstall = useCallback(
@@ -378,21 +435,27 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
         return;
       }
 
-      setActionError(null);
-      setPendingUninstallSlug(entry.slug);
+      dispatch({ type: "set-action-error", value: null });
+      dispatch({ type: "set-pending-uninstall-slug", value: entry.slug });
       try {
         await uninstallExtensionMutation.mutateAsync(entry.slug);
-        setOptimisticInstalledSlugs((current) =>
-          current.filter((slug) => slug.toLowerCase() !== entry.slug.toLowerCase()),
-        );
+        dispatch({
+          type: "set-optimistic-installed-slugs",
+          value: state.optimisticInstalledSlugs.filter(
+            (slug) => slug.toLowerCase() !== entry.slug.toLowerCase(),
+          ),
+        });
         await handleRefreshInstalled();
       } catch (error) {
-        setActionError(error instanceof Error ? error.message : "Failed to uninstall extension.");
-      } finally {
-        setPendingUninstallSlug(null);
+        dispatch({
+          type: "set-action-error",
+          value: error instanceof Error ? error.message : "Failed to uninstall extension.",
+        });
       }
+
+      dispatch({ type: "set-pending-uninstall-slug", value: null });
     },
-    [handleRefreshInstalled, uninstallExtensionMutation],
+    [handleRefreshInstalled, state.optimisticInstalledSlugs, uninstallExtensionMutation],
   );
 
   const handleSearchChange = (nextValue: string) => {
@@ -416,42 +479,41 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
     }
 
     const missingRequiredField = selectedInstalled.preferences.find((field) =>
-      isMissingRequiredField(field, preferenceDraftState.values[field.name]),
+      isMissingRequiredField(field, state.preferenceDraftState.values[field.name]),
     );
     if (missingRequiredField) {
-      setPreferenceDraftState((previous) => ({
-        ...previous,
+      dispatch({ type: "set-preference-draft-state", value: {
+        ...state.preferenceDraftState,
         validationError: `"${missingRequiredField.title}" is required.`,
-      }));
+      }});
       return;
     }
 
-    setPreferenceDraftState((previous) => ({
-      ...previous,
+    dispatch({ type: "set-preference-draft-state", value: {
+      ...state.preferenceDraftState,
       validationError: null,
       saveError: null,
-    }));
-    setIsPreferenceSaving(true);
+    }});
+    dispatch({ type: "set-preference-saving", value: true });
     try {
       await extensionManagerService.setPreferences(
         selectedInstalled.pluginName,
-        preferenceDraftState.values,
+        state.preferenceDraftState.values,
       );
       queryClient.setQueryData(
         ["extension-preferences", selectedInstalled.pluginName],
-        preferenceDraftState.values,
+        state.preferenceDraftState.values,
       );
       toast.success(`Saved setup for ${selectedInstalled.title}.`);
       await handleRefreshInstalled();
     } catch (error) {
-      setPreferenceDraftState((previous) => ({
-        ...previous,
-        saveError:
-          error instanceof Error ? error.message : "Failed to save extension preferences.",
-      }));
-    } finally {
-      setIsPreferenceSaving(false);
+      dispatch({ type: "set-preference-draft-state", value: {
+        ...state.preferenceDraftState,
+        saveError: error instanceof Error ? error.message : "Failed to save extension preferences.",
+      }});
     }
+
+    dispatch({ type: "set-preference-saving", value: false });
   };
 
   useLauncherPanelBackHandler("extensions", onBack);
@@ -522,14 +584,14 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
             installedErrorMessage={
               installedQuery.isError ? "Failed to load installed extensions." : null
             }
-            selectedInstalledId={selectedRow?.kind === "installed" ? selectedRow.id : null}
-            installedUpdateKeys={installedUpdateKeys}
-            onSelectInstalled={(id) => setSelectedRow({ kind: "installed", id })}
+             selectedInstalledId={state.selectedRow?.kind === "installed" ? state.selectedRow.id : null}
+             installedUpdateKeys={installedUpdateKeys}
+             onSelectInstalled={(id) => dispatch({ type: "set-selected-row", value: { kind: "installed", id } })}
             search={normalizedSearch}
             minimumSearchLength={EXTENSIONS_STORE_SEARCH_MIN_LENGTH}
             storeResults={storeSearchQuery.data ?? []}
-            selectedStoreId={selectedRow?.kind === "store" ? selectedRow.id : null}
-            onSelectStore={(id) => setSelectedRow({ kind: "store", id })}
+             selectedStoreId={state.selectedRow?.kind === "store" ? state.selectedRow.id : null}
+             onSelectStore={(id) => dispatch({ type: "set-selected-row", value: { kind: "store", id } })}
             isStoreLoading={Boolean(storeSearchQuery.isLoading)}
             isStoreError={Boolean(storeSearchQuery.isError)}
             storeErrorMessage={
@@ -548,34 +610,34 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
             selectedInstalledUpdate={selectedInstalledUpdate}
             selectedStoreDetail={selectedStoreDetail ?? null}
             selectedStoreInstalled={Boolean(selectedStoreInstalled)}
-            pendingInstallSlug={pendingInstallSlug}
-            pendingUninstallSlug={pendingUninstallSlug}
-            onInstall={handleInstall}
-            onUninstall={handleUninstall}
+             pendingInstallSlug={state.pendingInstallSlug}
+             pendingUninstallSlug={state.pendingUninstallSlug}
+             onInstall={handleInstall}
+             onUninstall={handleUninstall}
             isPreferenceLoading={
               selectedInstalledPluginName.length > 0 &&
               selectedInstalledPreferences.length > 0 &&
               installedPreferencesQuery.isLoading
             }
-            isPreferenceSaving={isPreferenceSaving}
-            preferenceValues={preferenceDraftState.values}
-            preferenceError={
-              preferenceDraftState.saveError ??
-              (installedPreferencesQuery.error instanceof Error
+             isPreferenceSaving={state.isPreferenceSaving}
+             preferenceValues={state.preferenceDraftState.values}
+             preferenceError={
+               state.preferenceDraftState.saveError ??
+               (installedPreferencesQuery.error instanceof Error
                 ? installedPreferencesQuery.error.message
                 : installedPreferencesQuery.isError
                   ? "Failed to load extension preferences."
                   : null)
             }
-            validationError={preferenceDraftState.validationError}
-            onChangePreference={(key, value) => {
-              setPreferenceDraftState((previous) => ({
-                ...previous,
-                validationError: null,
-                saveError: null,
-                values: { ...previous.values, [key]: value },
-              }));
-            }}
+             validationError={state.preferenceDraftState.validationError}
+             onChangePreference={(key, value) => {
+               dispatch({ type: "set-preference-draft-state", value: {
+                 ...state.preferenceDraftState,
+                 validationError: null,
+                 saveError: null,
+                 values: { ...state.preferenceDraftState.values, [key]: value },
+               }});
+             }}
             onSavePreferences={handleSavePreferences}
             storeDetailIsLoading={
               Boolean(selectedStorePackageQuery.isLoading) && selectedStorePackageQuery.data == null
@@ -591,9 +653,9 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
         }
       />
 
-      {actionError ? (
+      {state.actionError ? (
         <div className="border-t border-[var(--ui-divider)] px-4 py-2 text-launcher-sm text-[var(--icon-red-fg)]">
-          {actionError}
+          {state.actionError}
         </div>
       ) : null}
     </div>

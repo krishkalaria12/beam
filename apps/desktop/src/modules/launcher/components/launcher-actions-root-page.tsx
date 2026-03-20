@@ -41,7 +41,9 @@ export function LauncherActionsRootPage({
             >
               <div className="mr-2 text-muted-foreground/80 [&_svg]:size-4">{item.icon}</div>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-launcher-md font-medium text-foreground">{item.label}</p>
+                <p className="truncate text-launcher-md font-medium text-foreground">
+                  {item.label}
+                </p>
                 {item.description ? (
                   <p className="truncate text-launcher-xs text-muted-foreground/70">
                     {item.description}

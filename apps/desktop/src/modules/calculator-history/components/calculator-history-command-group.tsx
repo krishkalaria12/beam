@@ -101,7 +101,7 @@ export default function CalculatorHistoryCommandGroup({
 
           return (
             <CalculatorHistoryItem
-              key={`${index}-${entry.timestamp}`}
+              key={`${entry.timestamp}:${entry.result}`}
               entry={entry}
               index={index}
               isCopied={isCopied}

@@ -1,5 +1,10 @@
 import { cn } from "@/lib/utils";
 
+function widthFromIndex(index: number, base: number, spread: number) {
+  const seeded = ((index + 1) * 37) % 100;
+  return `${base + (seeded / 100) * spread}%`;
+}
+
 interface CommandSkeletonProps {
   /** Number of skeleton rows */
   rows?: number;
@@ -61,12 +66,12 @@ export function CommandSkeletonRow({
       <div className="flex-1 space-y-2">
         <div
           className={cn("h-4 rounded", shimmerClass)}
-          style={{ width: `${55 + Math.random() * 35}%` }}
+          style={{ width: widthFromIndex(0, 55, 35) }}
         />
         {showSubtitle && (
           <div
             className={cn("h-3 rounded", shimmerClass)}
-            style={{ width: `${35 + Math.random() * 25}%` }}
+            style={{ width: widthFromIndex(1, 35, 25) }}
           />
         )}
       </div>
@@ -129,7 +134,7 @@ export function CommandSkeletonText({
           key={i}
           className={cn("h-3 rounded", shimmerClass)}
           style={{
-            width: i === lines - 1 ? `${40 + Math.random() * 30}%` : `${80 + Math.random() * 20}%`,
+            width: i === lines - 1 ? widthFromIndex(i, 40, 30) : widthFromIndex(i, 80, 20),
             animationDelay: `${i * 75}ms`,
           }}
         />

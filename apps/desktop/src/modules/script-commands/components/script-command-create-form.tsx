@@ -146,8 +146,7 @@ export function ScriptCommandCreateForm({
       <div className="scripts-content-enter custom-scrollbar min-h-0 flex-1 overflow-y-auto p-4">
         <form
           id="script-command-create-form"
-          onSubmit={(event) => {
-            event.preventDefault();
+          action={() => {
             void form.handleSubmit();
           }}
           onKeyDownCapture={handleSubmitShortcut}
@@ -191,9 +190,8 @@ export function ScriptCommandCreateForm({
 
           {/* File name section */}
           <section className="rounded-xl bg-[var(--launcher-card-hover-bg)] p-4 ring-1 ring-[var(--launcher-card-border)]">
-            <form.Field
-              name="fileName"
-              children={(field) => (
+            <form.Field name="fileName">
+              {(field) => (
                 <div className="space-y-2">
                   <Label
                     htmlFor="script-file-name"
@@ -213,7 +211,6 @@ export function ScriptCommandCreateForm({
                       "h-10 w-full rounded-xl bg-[var(--launcher-card-hover-bg)] px-4 font-mono text-launcher-md text-foreground placeholder:text-muted-foreground ring-1 ring-[var(--launcher-card-border)] transition-all duration-200 focus:outline-none focus:ring-[var(--ring)]",
                       field.state.meta.errors.length > 0 && "ring-[var(--icon-red-bg)]",
                     )}
-                    autoFocus
                   />
                   {field.state.meta.errors.length > 0 ? (
                     <p className="text-launcher-xs text-[var(--icon-red-fg)]">
@@ -226,14 +223,13 @@ export function ScriptCommandCreateForm({
                   )}
                 </div>
               )}
-            />
+            </form.Field>
           </section>
 
           {/* Script content section */}
           <section className="rounded-xl bg-[var(--launcher-card-hover-bg)] p-4 ring-1 ring-[var(--launcher-card-border)]">
-            <form.Field
-              name="content"
-              children={(field) => (
+            <form.Field name="content">
+              {(field) => (
                 <div className="space-y-2">
                   <Label
                     htmlFor="script-content"
@@ -265,14 +261,13 @@ export function ScriptCommandCreateForm({
                   )}
                 </div>
               )}
-            />
+            </form.Field>
           </section>
 
           {/* Options grid */}
           <section className="grid gap-3 sm:grid-cols-2">
-            <form.Field
-              name="makeExecutable"
-              children={(field) => (
+            <form.Field name="makeExecutable">
+              {(field) => (
                 <div className="rounded-xl bg-[var(--launcher-card-hover-bg)] p-4 ring-1 ring-[var(--launcher-card-border)]">
                   <div className="flex items-center gap-3">
                     <Checkbox
@@ -294,11 +289,10 @@ export function ScriptCommandCreateForm({
                   </p>
                 </div>
               )}
-            />
+            </form.Field>
 
-            <form.Field
-              name="overwrite"
-              children={(field) => (
+            <form.Field name="overwrite">
+              {(field) => (
                 <div className="rounded-xl bg-[var(--launcher-card-hover-bg)] p-4 ring-1 ring-[var(--launcher-card-border)]">
                   <div className="flex items-center gap-3">
                     <Checkbox
@@ -320,7 +314,7 @@ export function ScriptCommandCreateForm({
                   </p>
                 </div>
               )}
-            />
+            </form.Field>
           </section>
 
           {/* Error message */}

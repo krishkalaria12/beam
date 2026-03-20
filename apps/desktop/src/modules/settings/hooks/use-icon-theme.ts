@@ -27,8 +27,7 @@ export function useIconTheme() {
   const themes = themesQuery.data ?? [];
   const rawSelectedThemeId = selectedThemeQuery.data ?? "auto";
   const selectedThemeId =
-    rawSelectedThemeId === "auto" ||
-    themes.some((theme) => theme.id === rawSelectedThemeId)
+    rawSelectedThemeId === "auto" || themes.some((theme) => theme.id === rawSelectedThemeId)
       ? rawSelectedThemeId
       : "auto";
 

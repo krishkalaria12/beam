@@ -40,7 +40,9 @@ export function LauncherActionsHotkeyPage({
             </div>
           ) : feedback?.tone === "success" ? (
             <div className="flex flex-col items-center gap-2">
-              <span className="text-launcher-sm font-medium text-[var(--icon-green-fg)]">Hotkey Saved</span>
+              <span className="text-launcher-sm font-medium text-[var(--icon-green-fg)]">
+                Hotkey Saved
+              </span>
               <HotkeyRecorder
                 value={hotkeyValue}
                 onChange={onHotkeyChange}

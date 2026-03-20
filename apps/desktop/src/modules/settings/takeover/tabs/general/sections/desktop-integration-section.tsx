@@ -88,9 +88,9 @@ export function GeneralDesktopIntegrationSection() {
       setStatus(nextStatus);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Failed to load desktop status.");
-    } finally {
-      setActionState("idle");
     }
+
+    setActionState("idle");
   }
 
   useMountEffect(() => {

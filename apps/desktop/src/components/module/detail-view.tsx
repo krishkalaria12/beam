@@ -7,6 +7,8 @@ import { MarkdownView } from "./markdown-view";
 import { MetadataBar, type MetadataBarItem } from "./metadata-bar";
 import { SplitView } from "./split-view";
 
+const EMPTY_METADATA: MetadataBarItem[] = [];
+
 interface DetailViewProps {
   markdown?: string;
   metadata?: MetadataBarItem[];
@@ -24,7 +26,7 @@ interface DetailViewProps {
 
 export function DetailView({
   markdown,
-  metadata = [],
+  metadata = EMPTY_METADATA,
   emptyTitle = "No detail available",
   emptyDescription,
   className,
@@ -42,7 +44,10 @@ export function DetailView({
 
   if (!hasMarkdown && !hasMetadata) {
     return (
-      <div className={cn("module-detail-view min-h-0 flex-1 overflow-hidden", className)} style={style}>
+      <div
+        className={cn("module-detail-view min-h-0 flex-1 overflow-hidden", className)}
+        style={style}
+      >
         {emptyState ?? <EmptyView title={emptyTitle} description={emptyDescription} />}
       </div>
     );
@@ -101,10 +106,10 @@ export function DetailView({
 
   return (
     <div
-        className={cn(
-          "module-detail-metadata",
-          "custom-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain",
-          className,
+      className={cn(
+        "module-detail-metadata",
+        "custom-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain",
+        className,
         metadataClassName,
       )}
       style={{ ...style, ...metadataStyle }}

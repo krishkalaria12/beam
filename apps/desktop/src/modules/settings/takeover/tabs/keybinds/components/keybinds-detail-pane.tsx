@@ -2,10 +2,7 @@ import { Keyboard, Loader2 } from "lucide-react";
 
 import { CommandIcon } from "@/components/icons/command-icon";
 import { DetailPanel, EmptyView } from "@/components/module";
-import type {
-  CompositorBindings,
-  HotkeyCapabilities,
-} from "@/modules/settings/api/hotkeys";
+import type { CompositorBindings, HotkeyCapabilities } from "@/modules/settings/api/hotkeys";
 import HotkeyRecorder from "@/modules/settings/takeover/components/hotkey-recorder";
 
 import type { KeybindRow } from "../types";
@@ -44,7 +41,9 @@ export function KeybindsDetailPane({
               className="size-11 rounded-xl"
             />
             <div className="min-w-0">
-              <div className="truncate font-mono text-launcher-3xl text-foreground">{selectedRow.title}</div>
+              <div className="truncate font-mono text-launcher-3xl text-foreground">
+                {selectedRow.title}
+              </div>
               <div className="mt-1 text-launcher-sm text-muted-foreground">
                 {selectedRow.kind === "global" ? "Launcher shortcut" : selectedRow.id}
               </div>
@@ -55,7 +54,9 @@ export function KeybindsDetailPane({
             <div className="font-mono text-launcher-xs uppercase tracking-[0.14em] text-muted-foreground">
               Description
             </div>
-            <p className="text-launcher-md leading-6 text-foreground/90">{selectedRow.description}</p>
+            <p className="text-launcher-md leading-6 text-foreground/90">
+              {selectedRow.description}
+            </p>
           </div>
 
           <div className="space-y-2">

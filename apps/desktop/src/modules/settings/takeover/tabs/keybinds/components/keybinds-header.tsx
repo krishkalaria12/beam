@@ -39,7 +39,11 @@ export function KeybindsHeader({
           onClick={onRefresh}
           className="h-8 rounded-lg border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-3 text-launcher-xs"
         >
-          {isLoading ? <Loader2 className="size-3.5 animate-spin" /> : <RefreshCw className="size-3.5" />}
+          {isLoading ? (
+            <Loader2 className="size-3.5 animate-spin" />
+          ) : (
+            <RefreshCw className="size-3.5" />
+          )}
           Refresh
         </Button>
       </div>

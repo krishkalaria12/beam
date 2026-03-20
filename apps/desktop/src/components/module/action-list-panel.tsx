@@ -1,5 +1,13 @@
 import { ArrowRight, Search } from "lucide-react";
-import { type CSSProperties, type KeyboardEvent, useCallback, useMemo, useRef, useState } from "react";
+import {
+  type CSSProperties,
+  type KeyboardEvent,
+  useCallback,
+  useEffectEvent,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import { cn } from "@/lib/utils";
 import { useMountEffect } from "@/hooks/use-mount-effect";
@@ -54,8 +62,6 @@ export function ActionListPanel({
   const [query, setQuery] = useState("");
   const [highlightedIndex, setHighlightedIndex] = useState(0);
   const resolvedOpen = open ?? uncontrolledOpen;
-  const resolvedOpenRef = useRef(resolvedOpen);
-  resolvedOpenRef.current = resolvedOpen;
 
   const setPanelOpen = (nextOpen: boolean) => {
     if (open === undefined) {
@@ -109,23 +115,30 @@ export function ActionListPanel({
     setHighlightedIndex(0);
   }
 
-  const inputMountRef = useCallback((node: HTMLInputElement | null) => {
-    inputRef.current = node;
-    if (resolvedOpen && node) {
-      window.setTimeout(() => node.focus(), 0);
+  const inputMountRef = useCallback(
+    (node: HTMLInputElement | null) => {
+      inputRef.current = node;
+      if (resolvedOpen && node) {
+        window.setTimeout(() => node.focus(), 0);
+      }
+    },
+    [resolvedOpen],
+  );
+
+  const handleOutsidePointerDown = useEffectEvent((event: MouseEvent) => {
+    if (!resolvedOpen) {
+      return;
     }
-  }, [resolvedOpen]);
+
+    if (rootRef.current?.contains(event.target as Node)) {
+      return;
+    }
+    closePanel();
+  });
 
   useMountEffect(() => {
     const onPointerDown = (event: MouseEvent) => {
-      if (!resolvedOpenRef.current) {
-        return;
-      }
-
-      if (rootRef.current?.contains(event.target as Node)) {
-        return;
-      }
-      closePanel();
+      handleOutsidePointerDown(event);
     };
 
     document.addEventListener("mousedown", onPointerDown);

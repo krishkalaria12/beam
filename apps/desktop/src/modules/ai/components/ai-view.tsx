@@ -27,6 +27,90 @@ interface AiViewProps {
   onBack: () => void;
 }
 
+function AiMainView({
+  activeConversationId,
+  conversationItems,
+  isLoadingConversationList,
+  isLoadingHistory,
+  isStreaming,
+  isSidebarOpen,
+  activeAssistantMessageId,
+  messages,
+  selectedProvider,
+  selectedModel,
+  providerDefinition,
+  isClearingChat,
+  supportsFiles,
+  onToggleSidebar,
+  onStartNewChat,
+  onSelectConversation,
+  onOpenSettings,
+  onProviderChange,
+  onModelChange,
+  onClearChat,
+  onSubmit,
+}: {
+  activeConversationId: string;
+  conversationItems: ReturnType<typeof useAiChatStore.getState>["conversations"];
+  isLoadingConversationList: boolean;
+  isLoadingHistory: boolean;
+  isStreaming: boolean;
+  isSidebarOpen: boolean;
+  activeAssistantMessageId: string | null;
+  messages: ReturnType<typeof useAiChatStore.getState>["messages"];
+  selectedProvider: ReturnType<typeof useAiChatStore.getState>["selectedProvider"];
+  selectedModel: ReturnType<typeof useAiChatStore.getState>["selectedModel"];
+  providerDefinition: ReturnType<typeof getProviderDefinition>;
+  isClearingChat: boolean;
+  supportsFiles: boolean;
+  onToggleSidebar: () => void;
+  onStartNewChat: () => void;
+  onSelectConversation: (conversationId: string) => void;
+  onOpenSettings: () => void;
+  onProviderChange: (providerId: ReturnType<typeof useAiChatStore.getState>["selectedProvider"]) => void;
+  onModelChange: (modelId: string) => void;
+  onClearChat: () => void;
+  onSubmit: (messageText: string, files?: AttachedFile[]) => void;
+}) {
+  return (
+    <div className="ai-view-enter flex h-full w-full overflow-hidden text-foreground">
+      <AiChatSidebar
+        activeConversationId={activeConversationId}
+        conversations={conversationItems}
+        isLoadingConversationList={isLoadingConversationList}
+        isStreaming={isStreaming}
+        isOpen={isSidebarOpen}
+        onToggle={onToggleSidebar}
+        onStartNewChat={onStartNewChat}
+        onSelectConversation={onSelectConversation}
+        onOpenSettings={onOpenSettings}
+      />
+
+      <main className="flex min-w-0 flex-1 flex-col">
+        <AiChatToolbar
+          selectedProvider={selectedProvider}
+          selectedModel={selectedModel}
+          providerDefinition={providerDefinition}
+          isClearingChat={isClearingChat}
+          isStreaming={isStreaming}
+          onProviderChange={onProviderChange}
+          onModelChange={onModelChange}
+          onClearChat={onClearChat}
+        />
+
+        <AiMessageList
+          messages={messages}
+          isLoadingHistory={isLoadingHistory}
+          isStreaming={isStreaming}
+          activeAssistantMessageId={activeAssistantMessageId}
+        />
+
+        <ChatInput onSubmit={onSubmit} isLoading={isStreaming} supportsFiles={supportsFiles} />
+      </main>
+    </div>
+  );
+}
+
 export function AiView({ onBack }: AiViewProps) {
   const [showSetup, setShowSetup] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -84,7 +168,8 @@ export function AiView({ onBack }: AiViewProps) {
         id: activeConversationId,
         title: conversationTitleFromMessages(messages),
         lastMessagePreview: conversationPreviewFromMessages(messages),
-        updatedAt: messages[messages.length - 1]?.createdAt.getTime() ?? Date.now(),
+        updatedAt:
+          messages[messages.length - 1]?.createdAt.getTime() ?? messages[0]?.createdAt.getTime() ?? 0,
         messageCount: messages.length,
       },
       ...conversations,
@@ -129,14 +214,15 @@ export function AiView({ onBack }: AiViewProps) {
       setApiKeyInput("");
       const isSet = await refreshApiKeyStatus(false);
       if (!isSet) {
-        throw new Error(`Saved ${providerDefinition.label} API key could not be verified.`);
+        toast.error(`Saved ${providerDefinition.label} API key could not be verified.`);
+        return;
       }
       toast.success(`Saved ${providerDefinition.label} API key.`);
     } catch (error) {
       toast.error(toErrorMessage(error, "Failed to save API key."));
-    } finally {
-      setIsSavingApiKey(false);
     }
+
+    setIsSavingApiKey(false);
   }, [
     apiKeyInput,
     providerDefinition.label,
@@ -155,9 +241,9 @@ export function AiView({ onBack }: AiViewProps) {
       toast.success(`Cleared ${providerDefinition.label} API key.`);
     } catch (error) {
       toast.error(toErrorMessage(error, "Failed to clear API key."));
-    } finally {
-      setIsSavingApiKey(false);
     }
+
+    setIsSavingApiKey(false);
   }, [
     providerDefinition.label,
     refreshApiKeyStatus,
@@ -175,9 +261,9 @@ export function AiView({ onBack }: AiViewProps) {
       toast.success("Cleared chat history.");
     } catch (error) {
       toast.error(toErrorMessage(error, "Failed to clear AI chat history."));
-    } finally {
-      setIsClearingChat(false);
     }
+
+    setIsClearingChat(false);
   }, [activeConversationId, refreshConversations, setIsClearingChat, setMessages]);
 
   const handleSubmit = useCallback(
@@ -214,6 +300,8 @@ export function AiView({ onBack }: AiViewProps) {
       const userMessageId = createId();
       const assistantMessageId = createId();
       const requestId = createId();
+      const conversationId = activeConversationId || AI_DEFAULT_CONVERSATION_ID;
+      const attachments = toAskAttachments(files);
 
       updateMessages((previous) => [
         ...previous,
@@ -239,10 +327,10 @@ export function AiView({ onBack }: AiViewProps) {
           requestId,
           prompt,
           options: {
-            conversationId: activeConversationId || AI_DEFAULT_CONVERSATION_ID,
+            conversationId,
             provider: selectedProvider,
             model: selectedModel,
-            attachments: toAskAttachments(files),
+            attachments,
           },
         });
       } catch (error) {
@@ -296,45 +384,32 @@ export function AiView({ onBack }: AiViewProps) {
   }
 
   return (
-    <div className="ai-view-enter flex h-full w-full overflow-hidden text-foreground">
-      {/* Sidebar */}
-      <AiChatSidebar
-        activeConversationId={activeConversationId}
-        conversations={conversationItems}
-        isLoadingConversationList={isLoadingConversationList}
-        isStreaming={isStreaming}
-        isOpen={isSidebarOpen}
-        onToggle={() => setIsSidebarOpen((prev) => !prev)}
-        onStartNewChat={handleStartNewChat}
-        onSelectConversation={handleSelectConversation}
-        onOpenSettings={() => setShowSetup(true)}
-      />
-
-      {/* Main content */}
-      <main className="flex flex-1 flex-col min-w-0">
-        {/* Toolbar */}
-        <AiChatToolbar
-          selectedProvider={selectedProvider}
-          selectedModel={selectedModel}
-          providerDefinition={providerDefinition}
-          isClearingChat={isClearingChat}
-          isStreaming={isStreaming}
-          onProviderChange={handleProviderChange}
-          onModelChange={setSelectedModel}
-          onClearChat={handleClearChat}
-        />
-
-        {/* Messages */}
-        <AiMessageList
-          messages={messages}
-          isLoadingHistory={isLoadingHistory}
-          isStreaming={isStreaming}
-          activeAssistantMessageId={activeRequest?.assistantMessageId ?? null}
-        />
-
-        {/* Input */}
-        <ChatInput onSubmit={handleSubmit} isLoading={isStreaming} supportsFiles={supportsFiles} />
-      </main>
-    </div>
+    <AiMainView
+      activeConversationId={activeConversationId}
+      conversationItems={conversationItems}
+      isLoadingConversationList={isLoadingConversationList}
+      isLoadingHistory={isLoadingHistory}
+      isStreaming={isStreaming}
+      isSidebarOpen={isSidebarOpen}
+      activeAssistantMessageId={activeRequest?.assistantMessageId ?? null}
+      messages={messages}
+      selectedProvider={selectedProvider}
+      selectedModel={selectedModel}
+      providerDefinition={providerDefinition}
+      isClearingChat={isClearingChat}
+      supportsFiles={supportsFiles}
+      onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
+      onStartNewChat={handleStartNewChat}
+      onSelectConversation={handleSelectConversation}
+      onOpenSettings={() => setShowSetup(true)}
+      onProviderChange={handleProviderChange}
+      onModelChange={setSelectedModel}
+      onClearChat={() => {
+        void handleClearChat();
+      }}
+      onSubmit={(messageText, files) => {
+        void handleSubmit(messageText, files);
+      }}
+    />
   );
 }

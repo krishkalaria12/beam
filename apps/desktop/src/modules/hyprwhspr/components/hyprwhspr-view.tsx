@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffectEvent, useMemo, useRef, useState } from "react";
 
 import {
   executeHyprWhsprRecord,
@@ -39,6 +39,15 @@ function resolveStatusLabel(state: ReturnType<typeof parseHyprWhsprRecordState>)
   return "unknown";
 }
 
+function formatRecordActionOutput(action: HyprWhsprRecordAction, output: string) {
+  const normalizedOutput = output.trim();
+  if (normalizedOutput.length > 0) {
+    return normalizedOutput;
+  }
+
+  return `[${action}] command completed (no output)`;
+}
+
 export function HyprWhsprView({ onBack }: HyprWhsprViewProps) {
   const queryClient = useQueryClient();
   const [runningAction, setRunningAction] = useState<HyprWhsprRecordAction | null>(null);
@@ -75,28 +84,26 @@ export function HyprWhsprView({ onBack }: HyprWhsprViewProps) {
 
       try {
         const output = await executeHyprWhsprRecord(action, { hideLauncher: false });
-        const normalizedOutput = output.trim();
-        setLastActionOutput(
-          normalizedOutput.length > 0
-            ? normalizedOutput
-            : `[${action}] command completed (no output)`,
-        );
+        setLastActionOutput(formatRecordActionOutput(action, output));
         await queryClient.invalidateQueries({ queryKey: RECORD_STATUS_QUERY_KEY });
       } catch (error) {
         setErrorMessage(error instanceof Error ? error.message : "HyprWhspr command failed.");
-      } finally {
-        setRunningAction(null);
       }
+
+      setRunningAction(null);
     },
     [queryClient],
   );
 
-  const onBackRef = useRef(onBack);
-  const refreshRecordStatusRef = useRef(refreshRecordStatus);
-  const runRecordActionRef = useRef(runRecordAction);
-  onBackRef.current = onBack;
-  refreshRecordStatusRef.current = refreshRecordStatus;
-  runRecordActionRef.current = runRecordAction;
+  const handleEscape = useEffectEvent(() => {
+    void onBack();
+  });
+  const handleRefreshShortcut = useEffectEvent(() => {
+    void refreshRecordStatus();
+  });
+  const handleRecordShortcut = useEffectEvent((action: HyprWhsprRecordAction) => {
+    void runRecordAction(action);
+  });
 
   useMountEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -106,7 +113,7 @@ export function HyprWhsprView({ onBack }: HyprWhsprViewProps) {
 
       if (event.key.toLowerCase() === "escape") {
         event.preventDefault();
-        void onBackRef.current();
+        handleEscape();
         return;
       }
 
@@ -116,19 +123,19 @@ export function HyprWhsprView({ onBack }: HyprWhsprViewProps) {
           return;
         }
         spaceHeldRef.current = true;
-        void runRecordActionRef.current("start");
+        handleRecordShortcut("start");
         return;
       }
 
       if (event.key.toLowerCase() === "enter") {
         event.preventDefault();
-        void runRecordActionRef.current("toggle");
+        handleRecordShortcut("toggle");
         return;
       }
 
       if (event.key.toLowerCase() === "r") {
         event.preventDefault();
-        void refreshRecordStatusRef.current();
+        handleRefreshShortcut();
       }
     };
 
@@ -143,7 +150,7 @@ export function HyprWhsprView({ onBack }: HyprWhsprViewProps) {
 
       event.preventDefault();
       spaceHeldRef.current = false;
-      void runRecordActionRef.current("stop");
+      handleRecordShortcut("stop");
     };
 
     window.addEventListener("keydown", handleKeyDown);

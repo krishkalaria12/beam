@@ -33,7 +33,9 @@ export function ListAccessory({
       style={{ ...(accentColor ? { color: accentColor } : undefined), ...style }}
       title={tooltip}
     >
-      {icon ? <span className="module-list-accessory-icon shrink-0 [&_svg]:size-3.5">{icon}</span> : null}
+      {icon ? (
+        <span className="module-list-accessory-icon shrink-0 [&_svg]:size-3.5">{icon}</span>
+      ) : null}
       <span className="module-list-accessory-text">{text}</span>
     </span>
   );

@@ -1,5 +1,5 @@
 import { AppWindow, ChevronLeft, RefreshCcw, Search } from "lucide-react";
-import { useCallback, useDeferredValue, useMemo, useRef, useState } from "react";
+import { useCallback, useDeferredValue, useEffectEvent, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { ModuleFooter } from "@/components/module";
@@ -42,9 +42,6 @@ export function WindowSwitcherView({ onBack }: WindowSwitcherViewProps) {
   }, [normalizedQuery, windowsQuery.data]);
 
   const [selectedWindowId, setSelectedWindowId] = useState<string | null>(null);
-  const filteredWindowsRef = useRef(filteredWindows);
-  const selectedWindowIdRef = useRef<string | null>(selectedWindowId);
-  const busyRef = useRef(false);
 
   const resolvedSelectedWindowId = filteredWindows.some((entry) => entry.id === selectedWindowId)
     ? selectedWindowId
@@ -55,9 +52,6 @@ export function WindowSwitcherView({ onBack }: WindowSwitcherViewProps) {
   }
 
   const busy = focusMutation.isPending || closeMutation.isPending;
-  filteredWindowsRef.current = filteredWindows;
-  selectedWindowIdRef.current = resolvedSelectedWindowId;
-  busyRef.current = busy;
 
   const handleFocusWindow = useCallback(
     async (windowId: string) => {
@@ -85,77 +79,67 @@ export function WindowSwitcherView({ onBack }: WindowSwitcherViewProps) {
     [closeMutation],
   );
 
-  const handleKeyboardFocus = useCallback(() => {
-    if (!selectedWindowId || busy) {
+  const handleWindowKeyDown = useEffectEvent((event: KeyboardEvent) => {
+    if (event.defaultPrevented) {
       return;
     }
 
-    void handleFocusWindow(selectedWindowId);
-  }, [busy, handleFocusWindow, selectedWindowId]);
+    if (!filteredWindows.length) {
+      return;
+    }
 
-  const handleKeyboardFocusRef = useRef(handleKeyboardFocus);
-  const handleCloseWindowRef = useRef(handleCloseWindow);
-  handleKeyboardFocusRef.current = handleKeyboardFocus;
-  handleCloseWindowRef.current = handleCloseWindow;
+    const target = event.target;
+    const isEditableTarget =
+      target instanceof HTMLElement &&
+      (target.tagName.toLowerCase() === "textarea" || target.isContentEditable);
+    if (isEditableTarget) {
+      return;
+    }
+
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      const currentIndex = filteredWindows.findIndex(
+        (entry) => entry.id === resolvedSelectedWindowId,
+      );
+      const hasSelection = currentIndex >= 0;
+      const fallbackIndex = 0;
+      const nextIndex =
+        event.key === "ArrowDown"
+          ? hasSelection
+            ? Math.min(filteredWindows.length - 1, currentIndex + 1)
+            : fallbackIndex
+          : hasSelection
+            ? Math.max(0, currentIndex - 1)
+            : fallbackIndex;
+      const next = filteredWindows[nextIndex];
+      if (next) {
+        setSelectedWindowId(next.id);
+      }
+    }
+
+    if (event.key === "Enter" && !event.shiftKey) {
+      const isInput = target instanceof HTMLInputElement;
+      if (isInput && target.value.length > 0 && resolvedSelectedWindowId && !busy) {
+        event.preventDefault();
+        void handleFocusWindow(resolvedSelectedWindowId);
+        return;
+      }
+
+      if (!isInput && resolvedSelectedWindowId && !busy) {
+        event.preventDefault();
+        void handleFocusWindow(resolvedSelectedWindowId);
+      }
+    }
+
+    if (event.key === "Enter" && event.shiftKey && resolvedSelectedWindowId && !busy) {
+      event.preventDefault();
+      void handleCloseWindow(resolvedSelectedWindowId);
+    }
+  });
 
   useMountEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.defaultPrevented) {
-        return;
-      }
-
-      const currentFilteredWindows = filteredWindowsRef.current;
-      if (!currentFilteredWindows.length) {
-        return;
-      }
-
-      const target = event.target;
-      const isEditableTarget =
-        target instanceof HTMLElement &&
-        (target.tagName.toLowerCase() === "textarea" || target.isContentEditable);
-      if (isEditableTarget) {
-        return;
-      }
-
-      if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-        event.preventDefault();
-        const currentIndex = currentFilteredWindows.findIndex(
-          (entry) => entry.id === selectedWindowIdRef.current,
-        );
-        const hasSelection = currentIndex >= 0;
-        const fallbackIndex = 0;
-        const nextIndex =
-          event.key === "ArrowDown"
-            ? hasSelection
-              ? Math.min(currentFilteredWindows.length - 1, currentIndex + 1)
-              : fallbackIndex
-            : hasSelection
-              ? Math.max(0, currentIndex - 1)
-              : fallbackIndex;
-        const next = currentFilteredWindows[nextIndex];
-        if (next) {
-          setSelectedWindowId(next.id);
-        }
-      }
-
-      if (event.key === "Enter" && !event.shiftKey) {
-        const isInput = target instanceof HTMLInputElement;
-        if (isInput && target.value.length > 0 && selectedWindowIdRef.current) {
-          event.preventDefault();
-          handleKeyboardFocusRef.current();
-          return;
-        }
-
-        if (!isInput && selectedWindowIdRef.current) {
-          event.preventDefault();
-          handleKeyboardFocusRef.current();
-        }
-      }
-
-      if (event.key === "Enter" && event.shiftKey && selectedWindowIdRef.current && !busyRef.current) {
-        event.preventDefault();
-        void handleCloseWindowRef.current(selectedWindowIdRef.current);
-      }
+      handleWindowKeyDown(event);
     };
 
     window.addEventListener("keydown", onKeyDown);
@@ -225,7 +209,6 @@ export function WindowSwitcherView({ onBack }: WindowSwitcherViewProps) {
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search open windows..."
             className="h-10 w-full rounded-xl bg-[var(--launcher-card-hover-bg)] pl-10 pr-4 text-launcher-md tracking-[-0.01em] text-foreground ring-1 ring-[var(--launcher-card-border)] transition-all placeholder:text-muted-foreground focus:outline-none focus:ring-[var(--ring)]"
-            autoFocus
           />
         </div>
 

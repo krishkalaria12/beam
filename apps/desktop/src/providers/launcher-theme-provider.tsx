@@ -74,21 +74,17 @@ export function LauncherThemeProvider({ children }: LauncherThemeProviderProps) 
     let mounted = true;
 
     const syncTheme = async () => {
-      try {
-        const selectedThemeId = await getSelectedLauncherThemeId();
-        const css = selectedThemeId ? await getLauncherThemeCss(selectedThemeId) : "";
-        if (!mounted) {
-          return;
-        }
-        applyUserThemeClass(selectedThemeId);
-        applyUserThemeCss(css);
-      } catch {
-        if (!mounted) {
-          return;
-        }
-        applyUserThemeClass(null);
-        applyUserThemeCss(null);
+      const selectedThemeId = await getSelectedLauncherThemeId().catch(() => null);
+      const css = selectedThemeId
+        ? await getLauncherThemeCss(selectedThemeId).catch(() => null)
+        : "";
+
+      if (!mounted) {
+        return;
       }
+
+      applyUserThemeClass(selectedThemeId);
+      applyUserThemeCss(css);
     };
 
     void syncTheme();

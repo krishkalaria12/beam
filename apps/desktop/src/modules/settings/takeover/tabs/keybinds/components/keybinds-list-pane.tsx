@@ -83,7 +83,9 @@ export function KeybindsListPane({
                     className="size-8 rounded-lg"
                   />
                   <div className="min-w-0">
-                    <div className="truncate font-mono text-launcher-md text-foreground">{row.title}</div>
+                    <div className="truncate font-mono text-launcher-md text-foreground">
+                      {row.title}
+                    </div>
                     <div className="truncate text-launcher-xs text-muted-foreground">
                       {row.kind === "global" ? "Global" : row.id}
                     </div>

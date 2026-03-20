@@ -69,6 +69,106 @@ const STYLE_OPTIONS: StyleOption[] = [
   { id: "solid", icon: Layers, title: "Solid", description: "Opaque surfaces" },
 ];
 
+function AppearanceStyleSection({
+  uiStyle,
+  setUiStyle,
+  opacity,
+  opacityLoading,
+  opacityError,
+  setOpacity,
+}: {
+  uiStyle: UiStylePreference;
+  setUiStyle: (value: UiStylePreference) => void;
+  opacity: number;
+  opacityLoading: boolean;
+  opacityError: string | null;
+  setOpacity: (value: number) => Promise<void>;
+}) {
+  return (
+    <SettingsSection
+      title="Appearance"
+      description="Choose your visual style, colors, and how Beam blends with your desktop."
+      icon={Sparkles}
+      iconVariant="cyan"
+    >
+      <div className="p-5">
+        <div className="grid grid-cols-3 gap-2.5">
+          {STYLE_OPTIONS.map((option) => {
+            const isSelected = uiStyle === option.id;
+            const Icon = option.icon;
+
+            return (
+              <Button
+                key={option.id}
+                type="button"
+                variant="ghost"
+                data-selected={isSelected}
+                onClick={() => setUiStyle(option.id)}
+                className={cn(
+                  "settings-style-card group relative h-auto min-h-[116px] w-full items-start justify-start rounded-xl px-3.5 py-4 text-left transition-all duration-200",
+                  isSelected
+                    ? "bg-[var(--launcher-card-selected-bg)] ring-1 ring-[var(--launcher-card-selected-border)]"
+                    : "bg-[var(--launcher-card-bg)] ring-1 ring-[var(--launcher-card-border)] hover:bg-[var(--launcher-card-bg)]",
+                )}
+              >
+                <IconChip
+                  variant={option.id === "default" ? "neutral" : option.id === "glassy" ? "cyan" : "primary"}
+                  size="lg"
+                  className={cn("size-10 rounded-xl transition-all duration-200", !isSelected && "opacity-70")}
+                >
+                  <Icon className="size-4.5 transition-colors" />
+                </IconChip>
+                <div className="min-w-0 text-left">
+                  <p className={cn("truncate text-launcher-md font-semibold tracking-[-0.02em]", isSelected ? "text-secondary-foreground" : "text-foreground")}>{option.title}</p>
+                  <p className={cn("mt-0.5 text-launcher-xs", isSelected ? "text-secondary-foreground/80" : "text-muted-foreground")}>{option.description}</p>
+                </div>
+                {isSelected ? (
+                  <div className="absolute right-2.5 top-2.5 flex size-5 items-center justify-center rounded-full bg-[var(--ring)]">
+                    <Check className="size-3 text-background" strokeWidth={3} />
+                  </div>
+                ) : null}
+              </Button>
+            );
+          })}
+        </div>
+      </div>
+
+      <SettingsDivider />
+
+      <SettingsField
+        label="Window Opacity"
+        description="Adjust backdrop transparency without affecting text clarity."
+        stacked
+      >
+        <div className="rounded-xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-4 py-3.5">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-launcher-xs text-muted-foreground">Surface Alpha</span>
+            <span className="rounded-full border border-[var(--launcher-card-border)] bg-[var(--launcher-card-hover-bg)] px-2.5 py-0.5 font-mono text-launcher-xs text-foreground">{opacity.toFixed(2)}</span>
+          </div>
+          <input
+            type="range"
+            min={MIN_LAUNCHER_OPACITY}
+            max={MAX_LAUNCHER_OPACITY}
+            step={0.01}
+            value={opacity}
+            disabled={opacityLoading}
+            aria-label="Launcher opacity"
+            onChange={(event) => {
+              void setOpacity(Number(event.currentTarget.value));
+            }}
+            className="beam-opacity-slider mt-3 h-2 w-full cursor-pointer appearance-none rounded-full bg-transparent"
+          />
+          <div className="mt-2 flex items-center justify-between text-launcher-2xs text-muted-foreground">
+            <span>Invisible</span>
+            <span>Opaque</span>
+          </div>
+        </div>
+        {opacityError ? <p className="text-launcher-xs text-destructive">{opacityError}</p> : null}
+      </SettingsField>
+    </SettingsSection>
+  );
+}
+
 /* ── Component ── */
 
 export function GeneralAppearanceSection() {
@@ -161,7 +261,11 @@ export function GeneralAppearanceSection() {
                 >
                   <IconChip
                     variant={
-                      option.id === "default" ? "neutral" : option.id === "glassy" ? "cyan" : "primary"
+                      option.id === "default"
+                        ? "neutral"
+                        : option.id === "glassy"
+                          ? "cyan"
+                          : "primary"
                     }
                     size="lg"
                     className={cn(

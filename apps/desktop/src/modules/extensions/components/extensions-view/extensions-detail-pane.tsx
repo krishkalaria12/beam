@@ -1,6 +1,12 @@
 import { Download, Loader2, RefreshCcw, Trash2 } from "lucide-react";
 
-import { DetailPanel, EmptyView, MarkdownView, MetadataBar, type MetadataBarItem } from "@/components/module";
+import {
+  DetailPanel,
+  EmptyView,
+  MarkdownView,
+  MetadataBar,
+  type MetadataBarItem,
+} from "@/components/module";
 import { Button } from "@/components/ui/button";
 import { ExtensionIcon } from "@/modules/extensions/components/extension-icon";
 import { PreferenceEditor } from "@/modules/extensions/components/extensions-view/preference-editor";
@@ -85,11 +91,22 @@ interface ExtensionsDetailPaneProps {
   storeDetailError: string | null;
 }
 
-export function ExtensionsDetailPane({
+function EmptyExtensionsDetailPane() {
+  return (
+    <DetailPanel className="h-full">
+      <DetailPanel.Content className="flex items-center justify-center">
+        <EmptyView
+          title="Select an extension"
+          description="Installed commands and store packages open here."
+        />
+      </DetailPanel.Content>
+    </DetailPanel>
+  );
+}
+
+function InstalledExtensionDetailPane({
   selectedInstalled,
   selectedInstalledUpdate,
-  selectedStoreDetail,
-  selectedStoreInstalled,
   pendingInstallSlug,
   pendingUninstallSlug,
   onInstall,
@@ -101,144 +118,163 @@ export function ExtensionsDetailPane({
   validationError,
   onChangePreference,
   onSavePreferences,
-  storeDetailIsLoading,
-  storeDetailError,
-}: ExtensionsDetailPaneProps) {
-  const installedVersionLabel = formatInstalledVersion(selectedInstalled?.version);
-
-  if (!selectedInstalled && !selectedStoreDetail) {
-    return (
-      <DetailPanel className="h-full">
-        <DetailPanel.Content className="flex items-center justify-center">
-          <EmptyView
-            title="Select an extension"
-            description="Installed commands and store packages open here."
-          />
-        </DetailPanel.Content>
-      </DetailPanel>
-    );
+}: Pick<
+  ExtensionsDetailPaneProps,
+  | "selectedInstalled"
+  | "selectedInstalledUpdate"
+  | "pendingInstallSlug"
+  | "pendingUninstallSlug"
+  | "onInstall"
+  | "onUninstall"
+  | "isPreferenceLoading"
+  | "isPreferenceSaving"
+  | "preferenceValues"
+  | "preferenceError"
+  | "validationError"
+  | "onChangePreference"
+  | "onSavePreferences"
+>) {
+  if (!selectedInstalled) {
+    return null;
   }
 
-  if (selectedInstalled) {
-    return (
-      <DetailPanel className="h-full bg-transparent">
-        <DetailPanel.Content className="space-y-4">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex items-start gap-3">
-              <ExtensionIcon
-                iconReference={selectedInstalled.icon}
-                title={selectedInstalled.title}
-                className="size-12 rounded-xl"
-              />
-              <div>
-                <h2 className="text-launcher-3xl font-semibold text-foreground">{selectedInstalled.title}</h2>
-                <p className="text-launcher-sm text-muted-foreground">
-                  {selectedInstalled.owner}/{selectedInstalled.slug}
-                  {installedVersionLabel ? ` · ${installedVersionLabel}` : ""}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              {selectedInstalledUpdate ? (
-                <Button
-                  size="sm"
-                  onClick={() =>
-                    void onInstall({
-                      packageId: selectedInstalledUpdate.id,
-                      slug: selectedInstalled.slug,
-                      title: selectedInstalled.title,
-                      releaseVersion: selectedInstalledUpdate.latestVersion,
-                      channel: selectedInstalledUpdate.latestRelease.channelName || undefined,
-                    })
-                  }
-                  disabled={pendingInstallSlug === selectedInstalled.slug}
-                >
-                  {pendingInstallSlug === selectedInstalled.slug ? (
-                    <Loader2 className="size-3.5 animate-spin" />
-                  ) : (
-                    <RefreshCcw className="size-3.5" />
-                  )}
-                  Update
-                </Button>
-              ) : null}
-              <Button
-                size="sm"
-                variant="outline"
-                className="text-[var(--icon-red-fg)]"
-                onClick={() => void onUninstall(selectedInstalled)}
-                disabled={pendingUninstallSlug === selectedInstalled.slug}
-              >
-                {pendingUninstallSlug === selectedInstalled.slug ? (
-                  <Loader2 className="size-3.5 animate-spin" />
-                ) : (
-                  <Trash2 className="size-3.5" />
-                )}
-                Uninstall
-              </Button>
+  const installedVersionLabel = formatInstalledVersion(selectedInstalled.version);
+
+  return (
+    <DetailPanel className="h-full bg-transparent">
+      <DetailPanel.Content className="space-y-4">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <ExtensionIcon
+              iconReference={selectedInstalled.icon}
+              title={selectedInstalled.title}
+              className="size-12 rounded-xl"
+            />
+            <div>
+              <h2 className="text-launcher-3xl font-semibold text-foreground">
+                {selectedInstalled.title}
+              </h2>
+              <p className="text-launcher-sm text-muted-foreground">
+                {selectedInstalled.owner}/{selectedInstalled.slug}
+                {installedVersionLabel ? ` · ${installedVersionLabel}` : ""}
+              </p>
             </div>
           </div>
+          <div className="flex items-center gap-2">
+            {selectedInstalledUpdate ? (
+              <Button
+                size="sm"
+                onClick={() =>
+                  void onInstall({
+                    packageId: selectedInstalledUpdate.id,
+                    slug: selectedInstalled.slug,
+                    title: selectedInstalled.title,
+                    releaseVersion: selectedInstalledUpdate.latestVersion,
+                    channel: selectedInstalledUpdate.latestRelease.channelName || undefined,
+                  })
+                }
+                disabled={pendingInstallSlug === selectedInstalled.slug}
+              >
+                {pendingInstallSlug === selectedInstalled.slug ? (
+                  <Loader2 className="size-3.5 animate-spin" />
+                ) : (
+                  <RefreshCcw className="size-3.5" />
+                )}
+                Update
+              </Button>
+            ) : null}
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-[var(--icon-red-fg)]"
+              onClick={() => void onUninstall(selectedInstalled)}
+              disabled={pendingUninstallSlug === selectedInstalled.slug}
+            >
+              {pendingUninstallSlug === selectedInstalled.slug ? (
+                <Loader2 className="size-3.5 animate-spin" />
+              ) : (
+                <Trash2 className="size-3.5" />
+              )}
+              Uninstall
+            </Button>
+          </div>
+        </div>
 
-          {selectedInstalled.description ? (
-            <p className="max-w-2xl text-launcher-md leading-6 text-foreground/90">
-              {selectedInstalled.description}
+        {selectedInstalled.description ? (
+          <p className="max-w-2xl text-launcher-md leading-6 text-foreground/90">
+            {selectedInstalled.description}
+          </p>
+        ) : null}
+
+        {selectedInstalledUpdate ? (
+          <section className="rounded-xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] p-4">
+            <div className="flex items-center gap-2 text-launcher-md font-medium text-foreground">
+              <RefreshCcw className="size-4" />
+              Update available
+            </div>
+            <p className="mt-1 text-launcher-sm text-muted-foreground">
+              {installedVersionLabel ? `Installed ${installedVersionLabel}` : "Installed build"}
+              {selectedInstalledUpdate.id.startsWith("raycast:")
+                ? " · latest Raycast Store build"
+                : ` · latest v${selectedInstalledUpdate.latestVersion}`}
             </p>
-          ) : null}
-
-          {selectedInstalledUpdate ? (
-            <section className="rounded-xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] p-4">
-              <div className="flex items-center gap-2 text-launcher-md font-medium text-foreground">
-                <RefreshCcw className="size-4" />
-                Update available
-              </div>
-              <p className="mt-1 text-launcher-sm text-muted-foreground">
-                {installedVersionLabel
-                  ? `Installed ${installedVersionLabel}`
-                  : "Installed build"}
-                {selectedInstalledUpdate.id.startsWith("raycast:")
-                  ? " · latest Raycast Store build"
-                  : ` · latest v${selectedInstalledUpdate.latestVersion}`}
-              </p>
-            </section>
-          ) : null}
-
-          <section className="rounded-lg border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)]">
-            <MetadataBar
-              items={compactMetadataRows([
-                { label: "Commands", value: String(selectedInstalled.commandCount) },
-                {
-                  label: "Version",
-                  value:
-                    installedVersionLabel?.replace(/^v/, "") ??
-                    (isSyntheticRaycastVersion(selectedInstalled.version)
-                      ? "Raycast Store build"
-                      : "Unknown"),
-                },
-                {
-                  label: "Preferences",
-                  value:
-                    selectedInstalled.preferences.length > 0
-                      ? `${selectedInstalled.preferences.length} fields`
-                      : "None",
-                },
-              ])}
-            />
           </section>
+        ) : null}
 
-          <PreferenceEditor
-            fields={selectedInstalled.preferences}
-            values={preferenceValues}
-            isLoading={isPreferenceLoading}
-            isSaving={isPreferenceSaving}
-            error={preferenceError}
-            validationError={validationError}
-            onChange={onChangePreference}
-            onSave={onSavePreferences}
+        <section className="rounded-lg border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)]">
+          <MetadataBar
+            items={compactMetadataRows([
+              { label: "Commands", value: String(selectedInstalled.commandCount) },
+              {
+                label: "Version",
+                value:
+                  installedVersionLabel?.replace(/^v/, "") ??
+                  (isSyntheticRaycastVersion(selectedInstalled.version)
+                    ? "Raycast Store build"
+                    : "Unknown"),
+              },
+              {
+                label: "Preferences",
+                value:
+                  selectedInstalled.preferences.length > 0
+                    ? `${selectedInstalled.preferences.length} fields`
+                    : "None",
+              },
+            ])}
           />
-        </DetailPanel.Content>
-      </DetailPanel>
-    );
-  }
+        </section>
 
+        <PreferenceEditor
+          fields={selectedInstalled.preferences}
+          values={preferenceValues}
+          isLoading={isPreferenceLoading}
+          isSaving={isPreferenceSaving}
+          error={preferenceError}
+          validationError={validationError}
+          onChange={onChangePreference}
+          onSave={onSavePreferences}
+        />
+      </DetailPanel.Content>
+    </DetailPanel>
+  );
+}
+
+function StoreExtensionDetailPane({
+  selectedStoreDetail,
+  selectedStoreInstalled,
+  pendingInstallSlug,
+  onInstall,
+  storeDetailIsLoading,
+  storeDetailError,
+}: Pick<
+  ExtensionsDetailPaneProps,
+  | "selectedStoreDetail"
+  | "selectedStoreInstalled"
+  | "pendingInstallSlug"
+  | "onInstall"
+  | "storeDetailIsLoading"
+  | "storeDetailError"
+>) {
   if (!selectedStoreDetail) {
     return null;
   }
@@ -259,8 +295,12 @@ export function ExtensionsDetailPane({
               className="size-12 rounded-xl"
             />
             <div>
-              <h2 className="text-launcher-3xl font-semibold text-foreground">{selectedStoreDetail.title}</h2>
-              <p className="text-launcher-sm text-muted-foreground">{formatStoreHeaderMeta(selectedStoreDetail)}</p>
+              <h2 className="text-launcher-3xl font-semibold text-foreground">
+                {selectedStoreDetail.title}
+              </h2>
+              <p className="text-launcher-sm text-muted-foreground">
+                {formatStoreHeaderMeta(selectedStoreDetail)}
+              </p>
             </div>
           </div>
           <Button
@@ -317,12 +357,10 @@ export function ExtensionsDetailPane({
               {
                 label: "Desktop Environments",
                 value:
-                  selectedStoreDetail.compatibility.desktopEnvironments.join(", ") || "Unspecified",
+                  selectedStoreDetail.compatibility.desktopEnvironments.join(", ") ||
+                  "Unspecified",
               },
-              {
-                label: "Commands",
-                value: String(selectedStoreDetail.manifest?.commands.length ?? 0),
-              },
+              { label: "Commands", value: String(selectedStoreDetail.manifest?.commands.length ?? 0) },
               {
                 label: "Channel",
                 value: formatReleaseChannelLabel(
@@ -330,10 +368,7 @@ export function ExtensionsDetailPane({
                   selectedStoreDetail.latestRelease.channel,
                 ),
               },
-              {
-                label: "Releases",
-                value: String(selectedStoreDetail.releases.length),
-              },
+              { label: "Releases", value: String(selectedStoreDetail.releases.length) },
             ])}
           />
         </section>
@@ -353,8 +388,7 @@ export function ExtensionsDetailPane({
               </div>
             ) : null}
             <div className="text-launcher-xs text-muted-foreground">
-              v{selectedStoreDetail.latestRelease.version} ·{" "}
-              {formatReleaseChannelLabel(
+              v{selectedStoreDetail.latestRelease.version} · {formatReleaseChannelLabel(
                 selectedStoreDetail.latestRelease.channelName,
                 selectedStoreDetail.latestRelease.channel,
               )}
@@ -382,5 +416,60 @@ export function ExtensionsDetailPane({
         ) : null}
       </DetailPanel.Content>
     </DetailPanel>
+  );
+}
+
+export function ExtensionsDetailPane({
+  selectedInstalled,
+  selectedInstalledUpdate,
+  selectedStoreDetail,
+  selectedStoreInstalled,
+  pendingInstallSlug,
+  pendingUninstallSlug,
+  onInstall,
+  onUninstall,
+  isPreferenceLoading,
+  isPreferenceSaving,
+  preferenceValues,
+  preferenceError,
+  validationError,
+  onChangePreference,
+  onSavePreferences,
+  storeDetailIsLoading,
+  storeDetailError,
+}: ExtensionsDetailPaneProps) {
+  if (!selectedInstalled && !selectedStoreDetail) {
+    return <EmptyExtensionsDetailPane />;
+  }
+
+  if (selectedInstalled) {
+    return (
+      <InstalledExtensionDetailPane
+        selectedInstalled={selectedInstalled}
+        selectedInstalledUpdate={selectedInstalledUpdate}
+        pendingInstallSlug={pendingInstallSlug}
+        pendingUninstallSlug={pendingUninstallSlug}
+        onInstall={onInstall}
+        onUninstall={onUninstall}
+        isPreferenceLoading={isPreferenceLoading}
+        isPreferenceSaving={isPreferenceSaving}
+        preferenceValues={preferenceValues}
+        preferenceError={preferenceError}
+        validationError={validationError}
+        onChangePreference={onChangePreference}
+        onSavePreferences={onSavePreferences}
+      />
+    );
+  }
+
+  return (
+    <StoreExtensionDetailPane
+      selectedStoreDetail={selectedStoreDetail}
+      selectedStoreInstalled={selectedStoreInstalled}
+      pendingInstallSlug={pendingInstallSlug}
+      onInstall={onInstall}
+      storeDetailIsLoading={storeDetailIsLoading}
+      storeDetailError={storeDetailError}
+    />
   );
 }

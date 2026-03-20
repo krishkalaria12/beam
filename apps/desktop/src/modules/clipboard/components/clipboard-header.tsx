@@ -70,7 +70,6 @@ export function ClipboardHeader({
           onKeyDown={onKeyDown}
           className="h-10 w-full rounded-xl bg-[var(--launcher-card-hover-bg)] pl-10 pr-4 text-launcher-lg font-medium tracking-[-0.01em] text-foreground outline-none ring-1 ring-[var(--launcher-card-border)] transition-all placeholder:text-muted-foreground focus:bg-[var(--launcher-card-hover-bg)] focus:ring-[var(--launcher-card-border)]"
           placeholder="Search clipboard history..."
-          autoFocus
         />
       </div>
 

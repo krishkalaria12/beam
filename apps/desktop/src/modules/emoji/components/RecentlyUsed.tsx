@@ -23,7 +23,7 @@ export function RecentlyUsed({ emojis, onEmojiClick }: RecentlyUsedProps) {
       <div className="grid w-full grid-cols-8 gap-2.5">
         {emojis.slice(0, 16).map((emoji, idx) => (
           <EmojiCard
-            key={`recent-${emoji.hexcode}-${idx}`}
+            key={`recent-${emoji.hexcode}`}
             emoji={emoji}
             onClick={onEmojiClick}
             isRecent

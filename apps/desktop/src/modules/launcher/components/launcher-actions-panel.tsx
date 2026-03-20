@@ -76,10 +76,15 @@ function createEmptySelectionByPage(): Record<ActionPageId, string> {
   };
 }
 
-export function LauncherActionsPanel({
-  open,
-  ...props
-}: LauncherActionsPanelProps) {
+function getAliasSaveSuccessMessage(normalizedAlias: string) {
+  if (normalizedAlias) {
+    return "Alias saved.";
+  }
+
+  return "Alias removed.";
+}
+
+export function LauncherActionsPanel({ open, ...props }: LauncherActionsPanelProps) {
   if (!open) {
     return null;
   }
@@ -99,7 +104,9 @@ function LauncherActionsPanelContent({
   const panelRef = React.useRef<HTMLDivElement | null>(null);
   const inputRef = React.useRef<HTMLInputElement | null>(null);
   const aliasInputRef = React.useRef<HTMLInputElement | null>(null);
-  const onOpenChangeRef = React.useRef(onOpenChange);
+  const handleClosePanel = React.useEffectEvent(() => {
+    onOpenChange(false);
+  });
   const inputId = React.useId();
   const aliasInputId = React.useId();
 
@@ -161,7 +168,6 @@ function LauncherActionsPanelContent({
       : currentPageId === "alias"
         ? (targetCommandTitle ?? "Create quick trigger phrases.")
         : undefined;
-  onOpenChangeRef.current = onOpenChange;
 
   function goBack() {
     setPageStack((previous) => {
@@ -267,15 +273,18 @@ function LauncherActionsPanelContent({
       if (!updateResult.success) {
         if (updateResult.error === "duplicate") {
           const conflictId = updateResult.conflictCommandId;
+          let duplicateMessage = "Shortcut is already in use.";
+          if (conflictId) {
+            duplicateMessage = `"${normalizedHotkey}" is already used by ${formatCommandName(
+              conflictId,
+              targetCommandTitle,
+              targetCommandId,
+            )}.`;
+          }
+
           setHotkeyFeedback({
             tone: "error",
-            text: conflictId
-              ? `"${normalizedHotkey}" is already used by ${formatCommandName(
-                  conflictId,
-                  targetCommandTitle,
-                  targetCommandId,
-                )}.`
-              : "Shortcut is already in use.",
+            text: duplicateMessage,
           });
           return;
         }
@@ -306,9 +315,9 @@ function LauncherActionsPanelContent({
         tone: "error",
         text: "Could not save this shortcut.",
       });
-    } finally {
-      setSavingPage((previous) => (previous === "hotkey" ? null : previous));
     }
+
+    setSavingPage((previous) => (previous === "hotkey" ? null : previous));
   }
 
   async function saveAlias() {
@@ -336,10 +345,11 @@ function LauncherActionsPanelContent({
       return;
     }
 
+    const normalizedAlias = aliasValue.trim();
+    const nextAliases = normalizedAlias ? [normalizedAlias] : [];
+
     setSavingPage("alias");
     try {
-      const normalizedAlias = aliasValue.trim();
-      const nextAliases = normalizedAlias ? [normalizedAlias] : [];
       const currentPreferences = readCommandPreferences();
       const nextPreferences = setCommandAliases(currentPreferences, targetCommandId, nextAliases);
       writeCommandPreferences(nextPreferences);
@@ -347,16 +357,16 @@ function LauncherActionsPanelContent({
 
       setAliasFeedback({
         tone: "success",
-        text: normalizedAlias ? "Alias saved." : "Alias removed.",
+        text: getAliasSaveSuccessMessage(normalizedAlias),
       });
     } catch {
       setAliasFeedback({
         tone: "error",
         text: "Could not save this alias.",
       });
-    } finally {
-      setSavingPage((previous) => (previous === "alias" ? null : previous));
     }
+
+    setSavingPage((previous) => (previous === "alias" ? null : previous));
   }
 
   useMountEffect(() => {
@@ -411,7 +421,7 @@ function LauncherActionsPanelContent({
         return;
       }
 
-      onOpenChangeRef.current(false);
+      handleClosePanel();
     };
 
     window.addEventListener("pointerdown", handlePointerDown);
@@ -518,7 +528,9 @@ function LauncherActionsPanelContent({
                 </Button>
               ) : null}
               <div className="min-w-0">
-                <p className="truncate text-launcher-md font-medium text-foreground">{panelTitle}</p>
+                <p className="truncate text-launcher-md font-medium text-foreground">
+                  {panelTitle}
+                </p>
                 {panelSubtitle ? (
                   <p className="truncate text-launcher-xs text-muted-foreground">{panelSubtitle}</p>
                 ) : null}

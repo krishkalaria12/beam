@@ -63,7 +63,7 @@ export function ExtensionsDetailPane({
             </div>
           </div>
 
-          {(selectedCommand?.description || selectedGroup.description) ? (
+          {selectedCommand?.description || selectedGroup.description ? (
             <div className="space-y-2">
               <div className="font-mono text-launcher-xs uppercase tracking-[0.14em] text-muted-foreground">
                 Description
@@ -79,13 +79,14 @@ export function ExtensionsDetailPane({
               {[
                 {
                   label: "Type",
-                  value: selectedGroup.sourceKind === "beam"
-                    ? selectedCommand
-                      ? "Built-in Command"
-                      : "Built-in Group"
-                    : selectedCommand
-                      ? "Command"
-                      : "Extension",
+                  value:
+                    selectedGroup.sourceKind === "beam"
+                      ? selectedCommand
+                        ? "Built-in Command"
+                        : "Built-in Group"
+                      : selectedCommand
+                        ? "Command"
+                        : "Extension",
                 },
                 {
                   label: "Version",

@@ -16,8 +16,8 @@ interface FileSearchViewProps {
 }
 
 export function FileSearchView({ initialQuery, onBack }: FileSearchViewProps) {
-  const [query, setQuery] = useState(initialQuery);
-  const [debouncedQuery, setDebouncedQuery] = useState(initialQuery);
+  const [query, setQuery] = useState(() => initialQuery);
+  const [debouncedQuery, setDebouncedQuery] = useState(() => initialQuery);
   const [selectionState, setSelectionState] = useState({ key: "", index: 0 });
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -56,33 +56,30 @@ export function FileSearchView({ initialQuery, onBack }: FileSearchViewProps) {
   }, []);
 
   // Centralized keyboard handler
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      switch (e.key) {
-        case "ArrowDown":
-          e.preventDefault();
-          e.stopPropagation();
-          setSelectedIndex((prev) => Math.min(prev + 1, results.length - 1));
-          break;
-        case "ArrowUp":
-          e.preventDefault();
-          e.stopPropagation();
-          setSelectedIndex((prev) => Math.max(prev - 1, 0));
-          break;
-        case "Enter":
-          e.preventDefault();
-          if (selectedFile) {
-            openFile(selectedFile.path);
-          }
-          break;
-        case "Escape":
-          e.preventDefault();
-          onBack();
-          break;
-      }
-    },
-    [results.length, selectedFile, openFile, onBack],
-  );
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        e.stopPropagation();
+        setSelectedIndex((prev) => Math.min(prev + 1, results.length - 1));
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        e.stopPropagation();
+        setSelectedIndex((prev) => Math.max(prev - 1, 0));
+        break;
+      case "Enter":
+        e.preventDefault();
+        if (selectedFile) {
+          openFile(selectedFile.path);
+        }
+        break;
+      case "Escape":
+        e.preventDefault();
+        onBack();
+        break;
+    }
+  };
 
   const handleChange = (value: string) => {
     setQuery(value);
@@ -95,6 +92,8 @@ export function FileSearchView({ initialQuery, onBack }: FileSearchViewProps) {
       className="glass-effect flex h-full w-full flex-col text-foreground"
       onKeyDown={handleKeyDown}
       tabIndex={-1}
+      role="region"
+      aria-label="File search"
     >
       {/* Header - Refined minimal design */}
       <header className="file-search-header flex items-center gap-4 px-4 h-14 border-b border-[var(--ui-divider)] flex-shrink-0">
@@ -126,7 +125,6 @@ export function FileSearchView({ initialQuery, onBack }: FileSearchViewProps) {
               outline-none
               placeholder:text-muted-foreground/40 placeholder:font-normal"
             placeholder="Search files by name..."
-            autoFocus
           />
         </div>
 

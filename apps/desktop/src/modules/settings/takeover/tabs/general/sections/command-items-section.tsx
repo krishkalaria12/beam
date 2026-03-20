@@ -11,10 +11,7 @@ import { cn } from "@/lib/utils";
 import { isNonHideableCommandId } from "@/modules/settings/api/command-items";
 import { SettingsSection, SettingsDivider, SettingsHint } from "../components/settings-field";
 
-import type {
-  CommandItemsEntry,
-  CommandItemsFilter,
-} from "../types";
+import type { CommandItemsEntry, CommandItemsFilter } from "../types";
 
 const FILTER_LABELS: Record<CommandItemsFilter, string> = {
   all: "All",

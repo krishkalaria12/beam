@@ -1,4 +1,4 @@
-import { useRef, useState, type ReactNode } from "react";
+import { useEffectEvent, useState, type ReactNode } from "react";
 
 import { CommandFooterBar, type FooterAction } from "@/components/command/command-footer-bar";
 import { useMountEffect } from "@/hooks/use-mount-effect";
@@ -12,8 +12,9 @@ interface LauncherFooterProps {
 
 export function LauncherFooter({ leftSlot, primaryAction }: LauncherFooterProps) {
   const [actionsOpen, setActionsOpen] = useState(false);
-  const setActionsOpenRef = useRef(setActionsOpen);
-  setActionsOpenRef.current = setActionsOpen;
+  const toggleActions = useEffectEvent(() => {
+    setActionsOpen((previous) => !previous);
+  });
 
   useMountEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -23,7 +24,7 @@ export function LauncherFooter({ leftSlot, primaryAction }: LauncherFooterProps)
 
       event.preventDefault();
       event.stopPropagation();
-      setActionsOpenRef.current((previous) => !previous);
+      toggleActions();
     };
 
     window.addEventListener("keydown", handleKeyDown, true);

@@ -165,6 +165,204 @@ export interface CommandPaletteProps {
   className?: string;
 }
 
+interface CommandPaletteHeaderProps {
+  mergedClassNames: CommandPaletteClassNames;
+  pageStack: string[];
+  breadcrumbText: string;
+  currentPage: CommandPalettePage;
+  currentQuery: string;
+  searchInputId: string;
+  searchPlaceholder: string;
+  onGoBack: () => void;
+  onInputChange: (value: string) => void;
+}
+
+function CommandPaletteHeader({
+  mergedClassNames,
+  pageStack,
+  breadcrumbText,
+  currentPage,
+  currentQuery,
+  searchInputId,
+  searchPlaceholder,
+  onGoBack,
+  onInputChange,
+}: CommandPaletteHeaderProps) {
+  return (
+    <div data-slot="command-palette-header" className={mergedClassNames.header}>
+      <div className="flex items-start gap-2">
+        {pageStack.length > 1 ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            onClick={onGoBack}
+            className={mergedClassNames.backButton}
+          >
+            <ChevronLeft className="size-4" />
+            <span className="sr-only">Back</span>
+          </Button>
+        ) : null}
+
+        <div className={mergedClassNames.titleBlock}>
+          <p data-slot="command-palette-breadcrumbs" className={mergedClassNames.breadcrumbs}>
+            {breadcrumbText}
+          </p>
+          <h2 data-slot="command-palette-title" className={mergedClassNames.title}>
+            {currentPage.title}
+          </h2>
+          {currentPage.subtitle ? (
+            <p data-slot="command-palette-subtitle" className={mergedClassNames.subtitle}>
+              {currentPage.subtitle}
+            </p>
+          ) : null}
+        </div>
+      </div>
+
+      <div data-slot="command-palette-search-row" className={mergedClassNames.searchRow}>
+        <Label htmlFor={searchInputId} className={mergedClassNames.searchLabel}>
+          Search commands
+        </Label>
+        <Search className={mergedClassNames.searchIcon} />
+        <Input
+          id={searchInputId}
+          type="text"
+          data-slot="command-palette-search-input"
+          value={currentQuery}
+          onChange={(event) => onInputChange(event.target.value)}
+          placeholder={currentPage.searchPlaceholder ?? searchPlaceholder}
+          className={mergedClassNames.searchInput}
+        />
+      </div>
+    </div>
+  );
+}
+
+interface CommandPaletteSectionsProps {
+  mergedClassNames: CommandPaletteClassNames;
+  currentPage: CommandPalettePage;
+  filteredSections: CommandPaletteSection[];
+  pendingItemId: string | null;
+  onItemSelect: (item: CommandPaletteItem) => void;
+}
+
+function CommandPaletteSections({
+  mergedClassNames,
+  currentPage,
+  filteredSections,
+  pendingItemId,
+  onItemSelect,
+}: CommandPaletteSectionsProps) {
+  return (
+    <CommandList data-slot="command-palette-list" className={mergedClassNames.list}>
+      <CommandEmpty data-slot="command-palette-empty" className={mergedClassNames.empty}>
+        <p className="text-launcher-sm font-medium text-muted-foreground">
+          {currentPage.emptyState?.title ?? "No matches found"}
+        </p>
+        <p className="mt-1 text-launcher-xs text-muted-foreground/70">
+          {currentPage.emptyState?.description ?? "Try a different search term."}
+        </p>
+      </CommandEmpty>
+
+      {filteredSections.map((section) => (
+        <CommandGroup
+          key={section.id}
+          data-slot="command-palette-group"
+          heading={section.heading}
+          className={mergedClassNames.group}
+          forceMount={section.forceMount}
+        >
+          {section.items.map((item) => {
+            const isPending = pendingItemId === item.id;
+            const isDisabled = item.disabled || (pendingItemId !== null && !isPending);
+            return (
+              <CommandItem
+                key={item.id}
+                value={item.value ?? getDefaultItemValue(item)}
+                keywords={item.keywords}
+                disabled={isDisabled}
+                onSelect={() => {
+                  void onItemSelect(item);
+                }}
+                data-slot="command-palette-item"
+                className={cn(mergedClassNames.item, item.className)}
+              >
+                {item.icon ? (
+                  <div
+                    data-slot="command-palette-item-icon"
+                    className={mergedClassNames.itemIcon}
+                  >
+                    {item.icon}
+                  </div>
+                ) : null}
+
+                <div data-slot="command-palette-item-body" className={mergedClassNames.itemBody}>
+                  <p data-slot="command-palette-item-title" className={mergedClassNames.itemTitle}>
+                    {item.label}
+                  </p>
+                  {item.description ? (
+                    <p
+                      data-slot="command-palette-item-description"
+                      className={mergedClassNames.itemDescription}
+                    >
+                      {item.description}
+                    </p>
+                  ) : null}
+                </div>
+
+                <div data-slot="command-palette-item-end" className={mergedClassNames.itemEnd}>
+                  {item.badge}
+                  {item.shortcut ? (
+                    <CommandShortcut
+                      data-slot="command-palette-item-shortcut"
+                      className={mergedClassNames.itemShortcut}
+                    >
+                      {item.shortcut}
+                    </CommandShortcut>
+                  ) : null}
+                  {isPending ? (
+                    <Loader2 className="size-3.5 animate-spin text-muted-foreground/70" />
+                  ) : item.nextPageId ? (
+                    <ChevronRight
+                      data-slot="command-palette-item-chevron"
+                      className={mergedClassNames.itemChevron}
+                    />
+                  ) : null}
+                </div>
+              </CommandItem>
+            );
+          })}
+        </CommandGroup>
+      ))}
+    </CommandList>
+  );
+}
+
+function CommandPaletteFooter({
+  mergedClassNames,
+  showFooterHints,
+  pageStack,
+}: {
+  mergedClassNames: CommandPaletteClassNames;
+  showFooterHints: boolean;
+  pageStack: string[];
+}) {
+  if (!showFooterHints) {
+    return null;
+  }
+
+  return (
+    <div data-slot="command-palette-footer" className={mergedClassNames.footer}>
+      <span className={mergedClassNames.footerHint}>Enter to run</span>
+      {pageStack.length > 1 ? (
+        <span className={mergedClassNames.footerHint}>Backspace or Esc to go back</span>
+      ) : (
+        <span className={mergedClassNames.footerHint}>Esc to close</span>
+      )}
+    </div>
+  );
+}
+
 function isTextInputTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) {
     return false;
@@ -351,11 +549,11 @@ export function CommandPalette({
       };
 
       setStoredPendingItemId(item.id);
-      try {
-        await item.onSelect?.(selectionContext);
-      } finally {
+      await Promise.resolve(item.onSelect?.(selectionContext)).catch((error: unknown) => {
         setStoredPendingItemId(null);
-      }
+        throw error;
+      });
+      setStoredPendingItemId(null);
 
       if (item.nextPageId) {
         navigate(item.nextPageId);
@@ -423,153 +621,31 @@ export function CommandPalette({
         onKeyDown={handleCommandKeyDown}
         className={cn(mergedClassNames.surface, className)}
       >
-        <div data-slot="command-palette-header" className={mergedClassNames.header}>
-          <div className="flex items-start gap-2">
-            {pageStack.length > 1 ? (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-sm"
-                onClick={goBack}
-                className={mergedClassNames.backButton}
-              >
-                <ChevronLeft className="size-4" />
-                <span className="sr-only">Back</span>
-              </Button>
-            ) : null}
+        <CommandPaletteHeader
+          mergedClassNames={mergedClassNames}
+          pageStack={pageStack}
+          breadcrumbText={breadcrumbText}
+          currentPage={currentPage}
+          currentQuery={currentQuery}
+          searchInputId={searchInputId}
+          searchPlaceholder={searchPlaceholder}
+          onGoBack={goBack}
+          onInputChange={handleInputChange}
+        />
 
-            <div className={mergedClassNames.titleBlock}>
-              <p data-slot="command-palette-breadcrumbs" className={mergedClassNames.breadcrumbs}>
-                {breadcrumbText}
-              </p>
-              <h2 data-slot="command-palette-title" className={mergedClassNames.title}>
-                {currentPage.title}
-              </h2>
-              {currentPage.subtitle ? (
-                <p data-slot="command-palette-subtitle" className={mergedClassNames.subtitle}>
-                  {currentPage.subtitle}
-                </p>
-              ) : null}
-            </div>
-          </div>
+        <CommandPaletteSections
+          mergedClassNames={mergedClassNames}
+          currentPage={currentPage}
+          filteredSections={filteredSections}
+          pendingItemId={pendingItemId}
+          onItemSelect={handleItemSelect}
+        />
 
-          <div data-slot="command-palette-search-row" className={mergedClassNames.searchRow}>
-            <Label htmlFor={searchInputId} className={mergedClassNames.searchLabel}>
-              Search commands
-            </Label>
-            <Search className={mergedClassNames.searchIcon} />
-            <Input
-              id={searchInputId}
-              type="text"
-              data-slot="command-palette-search-input"
-              value={currentQuery}
-              onChange={(event) => {
-                handleInputChange(event.target.value);
-              }}
-              placeholder={currentPage.searchPlaceholder ?? searchPlaceholder}
-              className={mergedClassNames.searchInput}
-            />
-          </div>
-        </div>
-
-        <CommandList data-slot="command-palette-list" className={mergedClassNames.list}>
-          <CommandEmpty data-slot="command-palette-empty" className={mergedClassNames.empty}>
-            <p className="text-launcher-sm font-medium text-muted-foreground">
-              {currentPage.emptyState?.title ?? "No matches found"}
-            </p>
-            <p className="mt-1 text-launcher-xs text-muted-foreground/70">
-              {currentPage.emptyState?.description ?? "Try a different search term."}
-            </p>
-          </CommandEmpty>
-
-          {filteredSections.map((section) => (
-            <CommandGroup
-              key={section.id}
-              data-slot="command-palette-group"
-              heading={section.heading}
-              className={mergedClassNames.group}
-              forceMount={section.forceMount}
-            >
-              {section.items.map((item) => {
-                const isPending = pendingItemId === item.id;
-                const isDisabled = item.disabled || (pendingItemId !== null && !isPending);
-                return (
-                  <CommandItem
-                    key={item.id}
-                    value={item.value ?? getDefaultItemValue(item)}
-                    keywords={item.keywords}
-                    disabled={isDisabled}
-                    onSelect={() => {
-                      void handleItemSelect(item);
-                    }}
-                    data-slot="command-palette-item"
-                    className={cn(mergedClassNames.item, item.className)}
-                  >
-                    {item.icon ? (
-                      <div
-                        data-slot="command-palette-item-icon"
-                        className={mergedClassNames.itemIcon}
-                      >
-                        {item.icon}
-                      </div>
-                    ) : null}
-
-                    <div
-                      data-slot="command-palette-item-body"
-                      className={mergedClassNames.itemBody}
-                    >
-                      <p
-                        data-slot="command-palette-item-title"
-                        className={mergedClassNames.itemTitle}
-                      >
-                        {item.label}
-                      </p>
-                      {item.description ? (
-                        <p
-                          data-slot="command-palette-item-description"
-                          className={mergedClassNames.itemDescription}
-                        >
-                          {item.description}
-                        </p>
-                      ) : null}
-                    </div>
-
-                    <div data-slot="command-palette-item-end" className={mergedClassNames.itemEnd}>
-                      {item.badge}
-                      {item.shortcut ? (
-                        <CommandShortcut
-                          data-slot="command-palette-item-shortcut"
-                          className={mergedClassNames.itemShortcut}
-                        >
-                          {item.shortcut}
-                        </CommandShortcut>
-                      ) : null}
-                      {isPending ? (
-                        <Loader2 className="size-3.5 animate-spin text-muted-foreground/70" />
-                      ) : item.nextPageId ? (
-                        <ChevronRight
-                          data-slot="command-palette-item-chevron"
-                          className={mergedClassNames.itemChevron}
-                        />
-                      ) : null}
-                    </div>
-                  </CommandItem>
-                );
-              })}
-            </CommandGroup>
-          ))}
-        </CommandList>
-
-        {showFooterHints ? (
-          <div data-slot="command-palette-footer" className={mergedClassNames.footer}>
-            <span className={mergedClassNames.footerHint}>Enter to run</span>
-            {pageStack.length > 1 ? (
-              <span className={mergedClassNames.footerHint}>Backspace or Esc to go back</span>
-            ) : (
-              <span className={mergedClassNames.footerHint}>Esc to close</span>
-            )}
-          </div>
-        ) : null}
+        <CommandPaletteFooter
+          mergedClassNames={mergedClassNames}
+          showFooterHints={showFooterHints}
+          pageStack={pageStack}
+        />
       </Command>
     </CommandDialog>
   );

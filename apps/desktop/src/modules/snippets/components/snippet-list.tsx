@@ -24,6 +24,8 @@ interface SnippetListProps {
   onSelectedTagChange: (nextTag: string) => void;
 }
 
+const SKELETON_DELAYS_MS = [0, 50, 100, 150] as const;
+
 export function SnippetList({
   snippets,
   selectedSnippetId,
@@ -106,11 +108,11 @@ export function SnippetList({
         {/* Loading State */}
         {isLoading && (
           <div className="space-y-1.5 px-1">
-            {[...Array(4)].map((_, i) => (
+            {SKELETON_DELAYS_MS.map((delayMs) => (
               <div
-                key={i}
+                key={`skeleton:${delayMs}`}
                 className="h-14 animate-pulse rounded-xl bg-[var(--launcher-card-hover-bg)]"
-                style={{ animationDelay: `${i * 50}ms` }}
+                style={{ animationDelay: `${delayMs}ms` }}
               />
             ))}
           </div>
@@ -188,7 +190,9 @@ export function SnippetList({
                   >
                     {snippet.name}
                   </p>
-                  <p className="truncate text-launcher-xs text-muted-foreground">{snippet.trigger}</p>
+                  <p className="truncate text-launcher-xs text-muted-foreground">
+                    {snippet.trigger}
+                  </p>
                 </div>
 
                 {/* Tags indicator */}

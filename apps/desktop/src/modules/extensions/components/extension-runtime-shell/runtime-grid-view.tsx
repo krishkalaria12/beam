@@ -108,161 +108,165 @@ export function RuntimeGridView({ state }: RuntimeGridViewProps) {
       }}
       footer={<RuntimeActionFooter state={state} actions={selectedActions(state)} />}
     >
-        {sections.length === 0 ? (
-          <EmptyView
-            title={emptyViewNode ? asString(emptyViewNode.props.title).trim() || "No results" : "No results"}
-            description={
-              emptyViewNode
-                ? asString(emptyViewNode.props.description).trim() || undefined
-                : "This extension did not return any grid items."
-            }
-            icon={
-              emptyViewNode?.props.icon ? (
-                <RunnerIcon
-                  icon={emptyViewNode.props.icon}
-                  className={getEmptyViewIconClassName(emptyViewNode.props.icon)}
-                />
-              ) : undefined
-            }
-            className={cn("ext-empty-view", readClassName(emptyViewNode?.props.className))}
-            style={readStyle(emptyViewNode?.props.style)}
-            contentClassName={cn(
-              isAnimatedEmptyViewIcon(emptyViewNode?.props.icon) ? "max-w-md" : undefined,
-              readClassName(emptyViewNode?.props.contentClassName),
-            )}
-            contentStyle={readStyle(emptyViewNode?.props.contentStyle)}
-            titleClassName={cn(
-              isAnimatedEmptyViewIcon(emptyViewNode?.props.icon) ? "text-launcher-lg" : undefined,
-              readClassName(emptyViewNode?.props.titleClassName),
-            )}
-            descriptionClassName={readClassName(emptyViewNode?.props.descriptionClassName)}
-          />
-        ) : (
-          <div className="ext-grid-sections space-y-4">
-            {sections.map((section) => (
-              <div key={section.key} className="ext-grid-section space-y-2">
-                {section.title ? (
-                  <SectionHeader title={section.title} className="ext-section-header px-0" />
-                ) : null}
-                <div
-                  className="ext-grid-matrix grid gap-2"
-                  style={{ gridTemplateColumns: `repeat(${section.columns}, minmax(0, 1fr))` }}
-                >
-                  {section.entries.map(({ entry, index }) => {
-                    const node = state.uiTree.get(entry.nodeId);
-                    if (!node) {
-                      return null;
-                    }
+      {sections.length === 0 ? (
+        <EmptyView
+          title={
+            emptyViewNode
+              ? asString(emptyViewNode.props.title).trim() || "No results"
+              : "No results"
+          }
+          description={
+            emptyViewNode
+              ? asString(emptyViewNode.props.description).trim() || undefined
+              : "This extension did not return any grid items."
+          }
+          icon={
+            emptyViewNode?.props.icon ? (
+              <RunnerIcon
+                icon={emptyViewNode.props.icon}
+                className={getEmptyViewIconClassName(emptyViewNode.props.icon)}
+              />
+            ) : undefined
+          }
+          className={cn("ext-empty-view", readClassName(emptyViewNode?.props.className))}
+          style={readStyle(emptyViewNode?.props.style)}
+          contentClassName={cn(
+            isAnimatedEmptyViewIcon(emptyViewNode?.props.icon) ? "max-w-md" : undefined,
+            readClassName(emptyViewNode?.props.contentClassName),
+          )}
+          contentStyle={readStyle(emptyViewNode?.props.contentStyle)}
+          titleClassName={cn(
+            isAnimatedEmptyViewIcon(emptyViewNode?.props.icon) ? "text-launcher-lg" : undefined,
+            readClassName(emptyViewNode?.props.titleClassName),
+          )}
+          descriptionClassName={readClassName(emptyViewNode?.props.descriptionClassName)}
+        />
+      ) : (
+        <div className="ext-grid-sections space-y-4">
+          {sections.map((section) => (
+            <div key={section.key} className="ext-grid-section space-y-2">
+              {section.title ? (
+                <SectionHeader title={section.title} className="ext-section-header px-0" />
+              ) : null}
+              <div
+                className="ext-grid-matrix grid gap-2"
+                style={{ gridTemplateColumns: `repeat(${section.columns}, minmax(0, 1fr))` }}
+              >
+                {section.entries.map(({ entry, index }) => {
+                  const node = state.uiTree.get(entry.nodeId);
+                  if (!node) {
+                    return null;
+                  }
 
-                    const selected = index === state.selectedIndex;
-                    const contentValue = resolveContentValue(node.props.content);
-                    const colorContent = resolveColorContent(contentValue);
-                    const accessory =
-                      node.props.accessory && typeof node.props.accessory === "object"
-                        ? (node.props.accessory as Record<string, unknown>)
-                        : null;
-                    const itemClassName = readClassName(node.props.className);
-                    const itemStyle = readStyle(node.props.style);
-                    const titleClassName = readClassName(node.props.titleClassName);
-                    const subtitleClassName = readClassName(node.props.subtitleClassName);
-                    const aspectRatio =
-                      entry.gridAspectRatio ?? (asString(node.props.aspectRatio).trim() || "1");
-                    const fit = entry.gridFit ?? (asString(node.props.fit).trim() || "fill");
-                    const insetClass = toInsetClass(entry.gridInset ?? node.props.inset);
+                  const selected = index === state.selectedIndex;
+                  const contentValue = resolveContentValue(node.props.content);
+                  const colorContent = resolveColorContent(contentValue);
+                  const accessory =
+                    node.props.accessory && typeof node.props.accessory === "object"
+                      ? (node.props.accessory as Record<string, unknown>)
+                      : null;
+                  const itemClassName = readClassName(node.props.className);
+                  const itemStyle = readStyle(node.props.style);
+                  const titleClassName = readClassName(node.props.titleClassName);
+                  const subtitleClassName = readClassName(node.props.subtitleClassName);
+                  const aspectRatio =
+                    entry.gridAspectRatio ?? (asString(node.props.aspectRatio).trim() || "1");
+                  const fit = entry.gridFit ?? (asString(node.props.fit).trim() || "fill");
+                  const insetClass = toInsetClass(entry.gridInset ?? node.props.inset);
 
-                    return (
-                      <button
-                        key={`grid:${entry.nodeId}`}
-                        type="button"
-                        data-selected={selected}
-                        onMouseEnter={() => state.setSelectedIndex(index)}
-                        onClick={() => state.setSelectedIndex(index)}
-                        onDoubleClick={() => state.runPrimarySelectionAction()}
+                  return (
+                    <button
+                      key={`grid:${entry.nodeId}`}
+                      type="button"
+                      data-selected={selected}
+                      onMouseEnter={() => state.setSelectedIndex(index)}
+                      onClick={() => state.setSelectedIndex(index)}
+                      onDoubleClick={() => state.runPrimarySelectionAction()}
+                      className={cn(
+                        "ext-grid-item",
+                        "flex h-auto flex-col gap-2 rounded-xl border p-2 text-left transition-colors",
+                        selected
+                          ? "border-[var(--launcher-card-selected-border)] bg-[var(--launcher-card-selected-bg)]"
+                          : "border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] hover:bg-[var(--launcher-card-hover-bg)]",
+                        itemClassName,
+                      )}
+                      style={itemStyle}
+                    >
+                      <div
                         className={cn(
-                          "ext-grid-item",
-                          "flex h-auto flex-col gap-2 rounded-xl border p-2 text-left transition-colors",
-                          selected
-                            ? "border-[var(--launcher-card-selected-border)] bg-[var(--launcher-card-selected-bg)]"
-                            : "border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] hover:bg-[var(--launcher-card-hover-bg)]",
-                          itemClassName,
+                          "w-full overflow-hidden rounded-lg border border-[var(--launcher-card-border)] bg-[var(--launcher-chip-bg)]",
+                          insetClass,
                         )}
-                        style={itemStyle}
+                        style={{ aspectRatio }}
                       >
+                        {colorContent ? (
+                          <div
+                            className="h-full w-full rounded-md"
+                            style={{ backgroundColor: colorContent }}
+                          />
+                        ) : (
+                          <RunnerIcon
+                            icon={contentValue}
+                            className={cn(
+                              "h-full w-full",
+                              fit === "contain" ? "object-contain" : "object-cover",
+                            )}
+                          />
+                        )}
+                      </div>
+                      <div className="min-w-0">
                         <div
                           className={cn(
-                            "w-full overflow-hidden rounded-lg border border-[var(--launcher-card-border)] bg-[var(--launcher-chip-bg)]",
-                            insetClass,
+                            "ext-grid-item-title truncate text-launcher-md font-medium text-foreground",
+                            titleClassName,
                           )}
-                          style={{ aspectRatio }}
                         >
-                          {colorContent ? (
-                            <div
-                              className="h-full w-full rounded-md"
-                              style={{ backgroundColor: colorContent }}
-                            />
-                          ) : (
-                            <RunnerIcon
-                              icon={contentValue}
-                              className={cn(
-                                "h-full w-full",
-                                fit === "contain" ? "object-contain" : "object-cover",
-                              )}
-                            />
-                          )}
+                          {entry.title}
                         </div>
-                        <div className="min-w-0">
+                        {entry.subtitle ? (
                           <div
                             className={cn(
-                              "ext-grid-item-title truncate text-launcher-md font-medium text-foreground",
-                              titleClassName,
+                              "ext-grid-item-subtitle truncate text-launcher-xs text-muted-foreground",
+                              subtitleClassName,
                             )}
                           >
-                            {entry.title}
+                            {entry.subtitle}
                           </div>
-                          {entry.subtitle ? (
-                            <div
-                              className={cn(
-                                "ext-grid-item-subtitle truncate text-launcher-xs text-muted-foreground",
-                                subtitleClassName,
-                              )}
-                            >
-                              {entry.subtitle}
-                            </div>
-                          ) : null}
-                        </div>
-                        {accessory ? (
-                          <ListAccessoryRow
-                            items={[
-                              {
-                                key: `${entry.nodeId}:accessory`,
-                                text: asString(accessory.text).trim(),
-                                icon: accessory.icon ? (
-                                  <RunnerIcon icon={accessory.icon} className="size-3.5" />
-                                ) : undefined,
-                              },
-                            ]}
-                            className="ext-grid-accessories"
-                          />
                         ) : null}
-                      </button>
-                    );
-                  })}
-                </div>
+                      </div>
+                      {accessory ? (
+                        <ListAccessoryRow
+                          items={[
+                            {
+                              key: `${entry.nodeId}:accessory`,
+                              text: asString(accessory.text).trim(),
+                              icon: accessory.icon ? (
+                                <RunnerIcon icon={accessory.icon} className="size-3.5" />
+                              ) : undefined,
+                            },
+                          ]}
+                          className="ext-grid-accessories"
+                        />
+                      ) : null}
+                    </button>
+                  );
+                })}
               </div>
-            ))}
+            </div>
+          ))}
 
-            {showPlaceholders ? (
-              <div className="ext-grid-placeholders grid grid-cols-3 gap-2">
-                {Array.from({ length: pageSize }).map((_, index) => (
-                  <div
-                    key={`placeholder:${index}`}
-                    className="ext-grid-placeholder aspect-square rounded-lg border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)]/70"
-                  />
-                ))}
-              </div>
-            ) : null}
-          </div>
-        )}
+          {showPlaceholders ? (
+            <div className="ext-grid-placeholders grid grid-cols-3 gap-2">
+              {Array.from({ length: pageSize }).map((_, index) => (
+                <div
+                  key={`placeholder:${index}`}
+                  className="ext-grid-placeholder aspect-square rounded-lg border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)]/70"
+                />
+              ))}
+            </div>
+          ) : null}
+        </div>
+      )}
     </GenericGridView>
   );
 }

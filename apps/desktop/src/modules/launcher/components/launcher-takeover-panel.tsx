@@ -11,7 +11,7 @@ import {
   Search,
   X,
 } from "lucide-react";
-import { lazy, Suspense, useRef, useState, type ReactNode } from "react";
+import { lazy, Suspense, useEffectEvent, useRef, useState, type ReactNode } from "react";
 
 import { COMMAND_PANELS, TAKEOVER_COMMAND_PANELS } from "@/command-registry/panels";
 import {
@@ -185,20 +185,17 @@ function LauncherTakeoverPanelContent({
   onMovePinned,
   backToCommands,
 }: LauncherTakeoverPanelProps) {
+  "use no memo";
+
   const takeoverPanelIsOpen = isTakeoverPanel(activePanel);
   const [actionsOpen, setActionsOpen] = useState(false);
   const actionsPreviousFocusRef = useRef<HTMLElement | null>(null);
-  const actionsOpenRef = useRef(actionsOpen);
-  const shouldUseSharedActionsRef = useRef(false);
-  const handleActionsOpenChangeRef = useRef<(nextOpen: boolean) => void>(() => {});
   const shouldUseSharedActions =
     takeoverPanelIsOpen &&
     activePanel !== COMMAND_PANELS.DMENU &&
     activePanel !== COMMAND_PANELS.SETTINGS;
   const panelRegistration = getPanelCommandRegistration(activePanel, quicklinksView);
   const primaryActionLabel = getPanelPrimaryActionLabel(activePanel);
-  actionsOpenRef.current = actionsOpen;
-  shouldUseSharedActionsRef.current = shouldUseSharedActions;
 
   function handleActionsOpenChange(nextOpen: boolean) {
     if (nextOpen) {
@@ -218,26 +215,67 @@ function LauncherTakeoverPanelContent({
     });
   }
 
-  handleActionsOpenChangeRef.current = handleActionsOpenChange;
+  const handleActionsHotkey = useEffectEvent(() => {
+    if (!shouldUseSharedActions) {
+      return;
+    }
+
+    handleActionsOpenChange(!actionsOpen);
+  });
+
+  const dispatchShortcut = useEffectEvent(
+    (options: {
+      key: string;
+      code?: string;
+      metaKey?: boolean;
+      ctrlKey?: boolean;
+      altKey?: boolean;
+      shiftKey?: boolean;
+    }) => {
+      const previousFocusElement = actionsPreviousFocusRef.current;
+      if (previousFocusElement && previousFocusElement.isConnected) {
+        previousFocusElement.focus({ preventScroll: true });
+        dispatchKeyboardShortcutToTarget(previousFocusElement, options);
+        return;
+      }
+
+      const activeElement =
+        document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      dispatchKeyboardShortcutToTarget(activeElement, options);
+    },
+  );
+
+  const handlePrimaryActionSelect = useEffectEvent(() => {
+    if (activePanel === COMMAND_PANELS.TRANSLATION) {
+      dispatchShortcut({ key: "Enter", code: "Enter", ctrlKey: true });
+      return;
+    }
+
+    const previousFocusElement = actionsPreviousFocusRef.current;
+    if (previousFocusElement && previousFocusElement.isConnected) {
+      previousFocusElement.focus({ preventScroll: true });
+      dispatchEnterToTarget(previousFocusElement);
+      return;
+    }
+
+    const activeElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    dispatchEnterToTarget(activeElement);
+  });
 
   useMountEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (!shouldUseSharedActionsRef.current || !isLauncherActionsHotkey(event)) {
+      if (!isLauncherActionsHotkey(event)) {
         return;
       }
 
       event.preventDefault();
       event.stopPropagation();
-      handleActionsOpenChangeRef.current(!actionsOpenRef.current);
+      handleActionsHotkey();
     };
 
     window.addEventListener("keydown", onKeyDown, true);
     const unsubscribeToggle = listenLauncherActionsToggle(() => {
-      if (!shouldUseSharedActionsRef.current) {
-        return;
-      }
-
-      handleActionsOpenChangeRef.current(!actionsOpenRef.current);
+      handleActionsHotkey();
     });
 
     return () => {
@@ -245,26 +283,6 @@ function LauncherTakeoverPanelContent({
       unsubscribeToggle();
     };
   });
-
-  function dispatchShortcut(options: {
-    key: string;
-    code?: string;
-    metaKey?: boolean;
-    ctrlKey?: boolean;
-    altKey?: boolean;
-    shiftKey?: boolean;
-  }) {
-    const previousFocusElement = actionsPreviousFocusRef.current;
-    if (previousFocusElement && previousFocusElement.isConnected) {
-      previousFocusElement.focus({ preventScroll: true });
-      dispatchKeyboardShortcutToTarget(previousFocusElement, options);
-      return;
-    }
-
-    const activeElement =
-      document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    dispatchKeyboardShortcutToTarget(activeElement, options);
-  }
 
   const panelSpecificRootItems: LauncherActionItem[] = [];
   if (activePanel === COMMAND_PANELS.TRANSLATION) {
@@ -379,22 +397,7 @@ function LauncherTakeoverPanelContent({
           icon: <CornerDownLeft className="size-4" />,
           shortcut: getPrimaryShortcutLabel(activePanel),
           keywords: ["primary", "default", "action", "enter", activePanel],
-          onSelect: () => {
-            if (activePanel === COMMAND_PANELS.TRANSLATION) {
-              dispatchShortcut({ key: "Enter", code: "Enter", ctrlKey: true });
-            } else {
-              const previousFocusElement = actionsPreviousFocusRef.current;
-              if (previousFocusElement && previousFocusElement.isConnected) {
-                previousFocusElement.focus({ preventScroll: true });
-                dispatchEnterToTarget(previousFocusElement);
-                return;
-              }
-
-              const activeElement =
-                document.activeElement instanceof HTMLElement ? document.activeElement : null;
-              dispatchEnterToTarget(activeElement);
-            }
-          },
+          onSelect: handlePrimaryActionSelect,
         },
         ...panelSpecificRootItems,
         {

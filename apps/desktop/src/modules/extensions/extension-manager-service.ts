@@ -4,9 +4,7 @@ import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { open as shellOpen } from "@tauri-apps/plugin-shell";
 import { parseRaycastDeepLink } from "@/modules/extensions/extension-manager/deep-link";
 import { emitClipboardHistoryUpdated } from "@/modules/clipboard/lib/updates";
-import {
-  type ExtensionMode,
-} from "@/modules/extensions/extension-manager/discovery";
+import { type ExtensionMode } from "@/modules/extensions/extension-manager/discovery";
 import { findExtensionCommandByName } from "@/modules/extensions/extension-catalog";
 import {
   buildBrowserExtensionStatusManagerRequest,
@@ -282,7 +280,10 @@ class ExtensionManagerService {
       const commandMode: ExtensionMode =
         command.mode === "menu-bar" ? "menu-bar" : command.mode === "no-view" ? "no-view" : "view";
 
-      if (commandMode === "menu-bar" || (commandMode === "no-view" && typeof command.interval === "string")) {
+      if (
+        commandMode === "menu-bar" ||
+        (commandMode === "no-view" && typeof command.interval === "string")
+      ) {
         await persistentExtensionRunnerManager.runPlugin(
           {
             title: command.title,

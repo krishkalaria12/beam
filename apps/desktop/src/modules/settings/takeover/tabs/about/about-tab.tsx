@@ -47,7 +47,8 @@ export function AboutTab() {
             {productName}
           </div>
           <div className="text-launcher-lg text-foreground/90">
-            Beam’s launcher settings, command registry controls, and extension runtime configuration.
+            Beam’s launcher settings, command registry controls, and extension runtime
+            configuration.
           </div>
           <div className="font-mono text-launcher-sm uppercase tracking-[0.14em] text-muted-foreground">
             Version {version}

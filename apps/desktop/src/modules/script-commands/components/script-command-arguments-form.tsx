@@ -146,8 +146,7 @@ export function ScriptCommandArgumentsForm({
           {/* Arguments form */}
           <form
             id="script-command-arguments-form"
-            onSubmit={(event) => {
-              event.preventDefault();
+            action={() => {
               void form.handleSubmit();
             }}
             onKeyDownCapture={handleSubmitShortcut}
@@ -157,10 +156,8 @@ export function ScriptCommandArgumentsForm({
               const label = resolveArgumentLabel(argument);
 
               return (
-                <form.Field
-                  key={`${script.id}:${argument.name}`}
-                  name={argument.name}
-                  children={(fieldApi) => (
+                <form.Field key={`${script.id}:${argument.name}`} name={argument.name}>
+                  {(fieldApi) => (
                     <div
                       className="scripts-arg-field rounded-xl bg-[var(--launcher-card-hover-bg)] p-4 ring-1 ring-[var(--launcher-card-border)]"
                       style={{ animationDelay: `${index * 50}ms` }}
@@ -192,12 +189,12 @@ export function ScriptCommandArgumentsForm({
                               <SelectValue placeholder={argument.placeholder || "Select value"} />
                             </SelectTrigger>
                             <SelectContent className="rounded-xl border-[var(--launcher-card-border)] bg-[var(--popover)]">
-                              {argument.data.map((entry, idx) => {
+                              {argument.data.map((entry) => {
                                 const value = entry.value ?? entry.title ?? "";
                                 const title = entry.title ?? entry.value ?? value;
                                 return (
                                   <SelectItem
-                                    key={`${argument.name}:${idx}:${value}`}
+                                    key={`${argument.name}:${value || title}`}
                                     value={value}
                                     className="text-launcher-sm text-muted-foreground focus:bg-[var(--launcher-card-hover-bg)] focus:text-foreground"
                                   >
@@ -220,13 +217,12 @@ export function ScriptCommandArgumentsForm({
                             onKeyDownCapture={stopFieldKeyPropagation}
                             placeholder={argument.placeholder || argument.name}
                             className="h-10 w-full rounded-xl bg-[var(--launcher-card-hover-bg)] px-4 font-mono text-launcher-md text-foreground placeholder:text-muted-foreground ring-1 ring-[var(--launcher-card-border)] transition-all duration-200 focus:outline-none focus:ring-[var(--ring)]"
-                            autoFocus={argument.index === 1}
                           />
                         )}
                       </div>
                     </div>
                   )}
-                />
+                </form.Field>
               );
             })}
 

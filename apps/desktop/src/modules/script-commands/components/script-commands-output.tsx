@@ -80,7 +80,9 @@ export function ScriptCommandsOutput({
                 Exit {executionResult.exitCode}
               </span>
             )}
-            <span className="text-launcher-sm text-muted-foreground">{executionResult.message}</span>
+            <span className="text-launcher-sm text-muted-foreground">
+              {executionResult.message}
+            </span>
           </div>
 
           {/* Stdout section */}
@@ -112,7 +114,9 @@ export function ScriptCommandsOutput({
       ) : (
         <div className="mt-4 flex h-32 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-[var(--launcher-card-border)] bg-[var(--launcher-card-hover-bg)]">
           <Terminal className="size-5 text-muted-foreground" />
-          <span className="text-launcher-sm text-muted-foreground">Run the script to see output</span>
+          <span className="text-launcher-sm text-muted-foreground">
+            Run the script to see output
+          </span>
         </div>
       )}
     </div>

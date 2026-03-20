@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useReducer } from "react";
 
 import {
   getHotkeyCapabilities,
@@ -33,15 +33,63 @@ async function loadHotkeySnapshot(): Promise<HotkeySnapshot> {
   };
 }
 
+interface KeybindsTabState {
+  settings: HotkeySettings | null;
+  capabilities: HotkeyCapabilities | null;
+  bindings: CompositorBindings | null;
+  isLoading: boolean;
+  query: string;
+  selectedId: string;
+  savingId: string | null;
+  status: KeybindStatus;
+}
+
+type KeybindsTabAction =
+  | { type: "set-snapshot"; value: HotkeySnapshot }
+  | { type: "set-loading"; value: boolean }
+  | { type: "set-query"; value: string }
+  | { type: "set-selected-id"; value: string }
+  | { type: "set-saving-id"; value: string | null }
+  | { type: "set-status"; value: KeybindStatus }
+  | { type: "set-settings"; value: HotkeySettings | null };
+
+const INITIAL_KEYBINDS_TAB_STATE: KeybindsTabState = {
+  settings: null,
+  capabilities: null,
+  bindings: null,
+  isLoading: true,
+  query: "",
+  selectedId: "__global__",
+  savingId: null,
+  status: { tone: "idle", text: "" },
+};
+
+function keybindsTabReducer(state: KeybindsTabState, action: KeybindsTabAction): KeybindsTabState {
+  switch (action.type) {
+    case "set-snapshot":
+      return {
+        ...state,
+        settings: action.value.settings,
+        capabilities: action.value.capabilities,
+        bindings: action.value.bindings,
+      };
+    case "set-loading":
+      return { ...state, isLoading: action.value };
+    case "set-query":
+      return { ...state, query: action.value };
+    case "set-selected-id":
+      return { ...state, selectedId: action.value };
+    case "set-saving-id":
+      return { ...state, savingId: action.value };
+    case "set-status":
+      return { ...state, status: action.value };
+    case "set-settings":
+      return { ...state, settings: action.value };
+  }
+}
+
 export function KeybindsTab({ isActive }: KeybindsTabProps) {
-  const [settings, setSettings] = useState<HotkeySettings | null>(null);
-  const [capabilities, setCapabilities] = useState<HotkeyCapabilities | null>(null);
-  const [bindings, setBindings] = useState<CompositorBindings | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [query, setQuery] = useState("");
-  const [selectedId, setSelectedId] = useState<string>("__global__");
-  const [savingId, setSavingId] = useState<string | null>(null);
-  const [status, setStatus] = useState<KeybindStatus>({ tone: "idle", text: "" });
+  const [state, dispatch] = useReducer(keybindsTabReducer, INITIAL_KEYBINDS_TAB_STATE);
 
   useMountEffect(() => {
     if (!isActive) {
@@ -51,31 +99,26 @@ export function KeybindsTab({ isActive }: KeybindsTabProps) {
     let cancelled = false;
 
     const refresh = async () => {
-      setIsLoading(true);
+      dispatch({ type: "set-loading", value: true });
 
-      try {
-        const snapshot = await loadHotkeySnapshot();
-        if (cancelled) {
-          return;
-        }
-
-        setSettings(snapshot.settings);
-        setCapabilities(snapshot.capabilities);
-        setBindings(snapshot.bindings);
-      } catch {
-        if (cancelled) {
-          return;
-        }
-
-        setStatus({
-          tone: "error",
-          text: "Failed to load hotkey settings.",
-        });
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
+      const snapshot = await loadHotkeySnapshot().catch(() => null);
+      if (cancelled) {
+        return;
       }
+
+      if (snapshot) {
+        dispatch({ type: "set-snapshot", value: snapshot });
+      } else {
+        dispatch({
+          type: "set-status",
+          value: {
+            tone: "error",
+            text: "Failed to load hotkey settings.",
+          },
+        });
+      }
+
+      dispatch({ type: "set-loading", value: false });
     };
 
     void refresh();
@@ -85,35 +128,36 @@ export function KeybindsTab({ isActive }: KeybindsTabProps) {
     };
   });
 
-  const rows = buildKeybindRows(settings);
-  const filteredRows = filterKeybindRows(rows, query);
-  const resolvedSelectedId = filteredRows.some((row) => row.id === selectedId)
-    ? selectedId
+  const rows = buildKeybindRows(state.settings);
+  const filteredRows = filterKeybindRows(rows, state.query);
+  const resolvedSelectedId = filteredRows.some((row) => row.id === state.selectedId)
+    ? state.selectedId
     : (filteredRows[0]?.id ?? "");
 
-  if (selectedId !== resolvedSelectedId) {
-    setSelectedId(resolvedSelectedId);
+  if (state.selectedId !== resolvedSelectedId) {
+    dispatch({ type: "set-selected-id", value: resolvedSelectedId });
   }
 
   const selectedRow = filteredRows.find((row) => row.id === resolvedSelectedId) ?? null;
 
   async function refreshKeybinds() {
-    setIsLoading(true);
-    setStatus({ tone: "idle", text: "" });
+    dispatch({ type: "set-loading", value: true });
+    dispatch({ type: "set-status", value: { tone: "idle", text: "" } });
 
-    try {
-      const snapshot = await loadHotkeySnapshot();
-      setSettings(snapshot.settings);
-      setCapabilities(snapshot.capabilities);
-      setBindings(snapshot.bindings);
-    } catch {
-      setStatus({
+    const snapshot = await loadHotkeySnapshot().catch(() => null);
+    if (snapshot) {
+      dispatch({ type: "set-snapshot", value: snapshot });
+    } else {
+      dispatch({
+        type: "set-status",
+        value: {
         tone: "error",
         text: "Failed to load hotkey settings.",
+        },
       });
-    } finally {
-      setIsLoading(false);
     }
+
+    dispatch({ type: "set-loading", value: false });
   }
 
   async function handleRecord(nextShortcut: string) {
@@ -121,53 +165,70 @@ export function KeybindsTab({ isActive }: KeybindsTabProps) {
       return;
     }
 
-    setSavingId(selectedRow.id);
-    setStatus({ tone: "idle", text: "" });
+    dispatch({ type: "set-saving-id", value: selectedRow.id });
+    dispatch({ type: "set-status", value: { tone: "idle", text: "" } });
 
-    try {
+    const didSucceed = await (async () => {
       if (selectedRow.kind === "global") {
         const normalized = nextShortcut.trim();
         if (!normalized) {
-          setStatus({
+          dispatch({
+            type: "set-status",
+            value: {
             tone: "error",
             text: "Global launcher hotkey cannot be empty.",
+            },
           });
-          return;
+          return true;
         }
 
         const result = await updateGlobalHotkey(normalized);
         if (!result.success) {
-          setStatus({
+          dispatch({
+            type: "set-status",
+            value: {
             tone: "error",
             text: "Failed to update the launcher shortcut.",
+            },
           });
-          return;
+          return true;
         }
 
-        setSettings((previous) =>
-          previous
-            ? { ...previous, globalShortcut: normalized }
-            : { globalShortcut: normalized, commandHotkeys: {} },
-        );
-        setStatus({
+        dispatch({
+          type: "set-settings",
+          value:
+            state.settings
+              ? { ...state.settings, globalShortcut: normalized }
+              : { globalShortcut: normalized, commandHotkeys: {} },
+        });
+        dispatch({
+          type: "set-status",
+          value: {
           tone: "success",
           text: "Launcher shortcut updated.",
+          },
         });
-        return;
+        return true;
       }
 
       const normalized = nextShortcut.trim();
       if (!normalized) {
         const result = await removeCommandHotkey(selectedRow.id);
         if (!result.success) {
-          setStatus({
+          dispatch({
+            type: "set-status",
+            value: {
             tone: "error",
             text: "Failed to remove the command shortcut.",
+            },
           });
-          return;
+          return true;
         }
 
-        setSettings((previous) => {
+        dispatch({
+          type: "set-settings",
+          value: (() => {
+            const previous = state.settings;
           if (!previous) {
             return previous;
           }
@@ -178,48 +239,71 @@ export function KeybindsTab({ isActive }: KeybindsTabProps) {
             ...previous,
             commandHotkeys,
           };
+          })(),
         });
-        setStatus({
+        dispatch({
+          type: "set-status",
+          value: {
           tone: "success",
           text: "Command shortcut removed.",
+          },
         });
-        return;
+        return true;
       }
 
       const result = await updateCommandHotkey(selectedRow.id, normalized);
       if (!result.success) {
-        setStatus({
+        dispatch({
+          type: "set-status",
+          value: {
           tone: "error",
           text:
             result.error === "duplicate"
               ? `Shortcut already used by ${result.conflictCommandId ?? "another command"}.`
               : "Failed to update the command shortcut.",
+          },
         });
-        return;
+        return true;
       }
 
-      setSettings((previous) => ({
-        globalShortcut: previous?.globalShortcut ?? "SUPER+Space",
-        commandHotkeys: {
-          ...previous?.commandHotkeys,
+      dispatch({
+        type: "set-settings",
+        value: {
+          globalShortcut: state.settings?.globalShortcut ?? "SUPER+Space",
+          commandHotkeys: {
+            ...state.settings?.commandHotkeys,
           [selectedRow.id]: normalized,
         },
-      }));
-      setStatus({
+        },
+      });
+      dispatch({
+        type: "set-status",
+        value: {
         tone: "success",
         text: "Command shortcut updated.",
+        },
       });
-    } finally {
-      setSavingId(null);
+      return true;
+    })().catch(() => {
+      dispatch({
+        type: "set-status",
+        value: { tone: "error", text: "Failed to update hotkey settings." },
+      });
+      return false;
+    });
+
+    dispatch({ type: "set-saving-id", value: null });
+    if (!didSucceed) {
+      return;
     }
   }
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
       <KeybindsHeader
-        capabilities={capabilities}
-        isLoading={isLoading}
-        status={status}
+        capabilities={state.capabilities}
+        isLoading={state.isLoading}
+        status={state.status}
         onRefresh={() => {
           void refreshKeybinds();
         }}
@@ -227,18 +311,18 @@ export function KeybindsTab({ isActive }: KeybindsTabProps) {
 
       <div className="grid h-full min-h-0 flex-1 grid-cols-[58%_42%] overflow-hidden bg-[var(--command-item-selected-bg)]/30">
         <KeybindsListPane
-          query={query}
+          query={state.query}
           rows={filteredRows}
-          selectedId={selectedId}
-          onQueryChange={setQuery}
-          onSelect={setSelectedId}
+          selectedId={state.selectedId}
+          onQueryChange={(value) => dispatch({ type: "set-query", value })}
+          onSelect={(value) => dispatch({ type: "set-selected-id", value })}
         />
 
         <KeybindsDetailPane
           selectedRow={selectedRow}
-          savingId={savingId}
-          bindings={bindings}
-          capabilities={capabilities}
+          savingId={state.savingId}
+          bindings={state.bindings}
+          capabilities={state.capabilities}
           onRecord={(nextShortcut) => {
             void handleRecord(nextShortcut);
           }}

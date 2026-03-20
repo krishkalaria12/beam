@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { createElement } from "react";
 import { ImageIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 
@@ -101,10 +102,7 @@ function isEmojiOrSymbol(value: string): boolean {
   return /^[^\w\s]{1,4}$/u.test(value);
 }
 
-function resolveDirectImageSources(
-  rawValue: string,
-  extensionDirectory?: string | null,
-): string[] {
+function resolveDirectImageSources(rawValue: string, extensionDirectory?: string | null): string[] {
   const value = rawValue.trim();
   if (!value) {
     return [];
@@ -163,16 +161,10 @@ interface UnifiedIconProps {
   extensionDirectory?: string | null;
 }
 
-export function UnifiedIcon({
-  icon,
-  className,
-  fallback,
-  extensionDirectory,
-}: UnifiedIconProps) {
+export function UnifiedIcon({ icon, className, fallback, extensionDirectory }: UnifiedIconProps) {
   const imageValue = useMemo(() => resolveImageValue(icon), [icon]);
   const iconSources = useMemo(
-    () =>
-      imageValue ? resolveDirectImageSources(imageValue.value, extensionDirectory) : [],
+    () => (imageValue ? resolveDirectImageSources(imageValue.value, extensionDirectory) : []),
     [extensionDirectory, imageValue],
   );
   const iconSourcesKey = iconSources.join("\n");
@@ -195,12 +187,7 @@ interface UnifiedIconInnerProps {
   iconSources: string[];
 }
 
-function UnifiedIconInner({
-  className,
-  fallback,
-  imageValue,
-  iconSources,
-}: UnifiedIconInnerProps) {
+function UnifiedIconInner({ className, fallback, imageValue, iconSources }: UnifiedIconInnerProps) {
   const [failedImage, setFailedImage] = useState(false);
   const [sourceIndex, setSourceIndex] = useState(0);
   const iconSource = iconSources[sourceIndex] ?? null;
@@ -256,13 +243,14 @@ function UnifiedIconInner({
   }
 
   if (lucideIcon) {
-    const Lucide = lucideIcon;
-    return <Lucide className={cn("size-4", className)} />;
+    return createElement(lucideIcon, { className: cn("size-4", className) });
   }
 
   if (phosphorIcon) {
-    const Icon = phosphorIcon.icon;
-    return <Icon className={cn("size-4", className)} weight={phosphorIcon.weight} />;
+    return createElement(phosphorIcon.icon, {
+      className: cn("size-4", className),
+      weight: phosphorIcon.weight,
+    });
   }
 
   if (tokenCandidate && isEmojiOrSymbol(tokenCandidate)) {

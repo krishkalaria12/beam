@@ -18,7 +18,9 @@ export function CalculatorHistoryError({
 
         {/* Text */}
         <div className="min-w-0 flex-1">
-          <p className="text-launcher-md font-medium text-[var(--icon-red-fg)] truncate">{message}</p>
+          <p className="text-launcher-md font-medium text-[var(--icon-red-fg)] truncate">
+            {message}
+          </p>
           <p className="text-launcher-xs text-muted-foreground">Please try again later</p>
         </div>
       </div>

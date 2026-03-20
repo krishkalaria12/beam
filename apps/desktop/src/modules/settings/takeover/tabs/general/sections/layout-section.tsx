@@ -94,9 +94,9 @@ export function GeneralLayoutSection() {
 
                 {/* Visual preview bars */}
                 <div className={cn("mt-3 space-y-1.5", option.id === "compressed" && "space-y-1")}>
-                  {option.preview.map((_, i) => (
+                  {option.preview.map((width, i) => (
                     <div
-                      key={i}
+                      key={`${option.id}:${width}`}
                       className={cn(
                         "rounded-full",
                         isSelected ? "bg-secondary-foreground/30" : "bg-[var(--launcher-chip-bg)]",
@@ -117,9 +117,7 @@ export function GeneralLayoutSection() {
           );
         })}
       </div>
-      <SettingsHint>
-        Expanded for readability, Compressed to see more items at once.
-      </SettingsHint>
+      <SettingsHint>Expanded for readability, Compressed to see more items at once.</SettingsHint>
     </SettingsSection>
   );
 }

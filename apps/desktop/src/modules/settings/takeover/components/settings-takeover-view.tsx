@@ -1,6 +1,5 @@
 import { Blocks, ChevronLeft, Info, Keyboard, Settings } from "lucide-react";
-import { lazy, Suspense, type ComponentType } from "react";
-import { useRef, useState } from "react";
+import { lazy, Suspense, useEffectEvent, useState, type ComponentType } from "react";
 
 import { Button } from "@/components/ui/button";
 import { useMountEffect } from "@/hooks/use-mount-effect";
@@ -106,15 +105,13 @@ export function SettingsTakeoverView({
   const activeTab = useSettingsPageStore((state) => state.activeTab);
   const extensionTarget = useSettingsPageStore((state) => state.extensionTarget);
   const setActiveTab = useSettingsPageStore((state) => state.setActiveTab);
-  const initializedRef = useRef(false);
   const [phase, setPhase] = useState<"ready" | "closing">("ready");
 
-  if (!initializedRef.current) {
-    initializedRef.current = true;
+  useMountEffect(() => {
     if (!extensionTarget) {
       setActiveTab("general");
     }
-  }
+  });
 
   function handleBack() {
     if (phase === "closing") {
@@ -127,8 +124,9 @@ export function SettingsTakeoverView({
     }, 110);
   }
 
-  const handleBackRef = useRef(handleBack);
-  handleBackRef.current = handleBack;
+  const handleBackHotkey = useEffectEvent(() => {
+    handleBack();
+  });
 
   useMountEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -138,7 +136,7 @@ export function SettingsTakeoverView({
 
       event.preventDefault();
       event.stopPropagation();
-      handleBackRef.current();
+      handleBackHotkey();
     };
 
     window.addEventListener("keydown", onKeyDown, true);
@@ -191,14 +189,22 @@ export function SettingsTakeoverView({
                     phase === "closing" && "pointer-events-none opacity-70",
                   )}
                 >
-                  <Icon className={cn(
-                    "size-4 transition-colors duration-200",
-                    isActive ? "text-foreground" : "text-muted-foreground group-hover:text-foreground",
-                  )} />
-                  <span className={cn(
-                    "text-launcher-xs font-medium tracking-[0.02em] transition-colors duration-200",
-                    isActive ? "text-foreground" : "text-muted-foreground group-hover:text-foreground",
-                  )}>
+                  <Icon
+                    className={cn(
+                      "size-4 transition-colors duration-200",
+                      isActive
+                        ? "text-foreground"
+                        : "text-muted-foreground group-hover:text-foreground",
+                    )}
+                  />
+                  <span
+                    className={cn(
+                      "text-launcher-xs font-medium tracking-[0.02em] transition-colors duration-200",
+                      isActive
+                        ? "text-foreground"
+                        : "text-muted-foreground group-hover:text-foreground",
+                    )}
+                  >
                     {tab.label}
                   </span>
 

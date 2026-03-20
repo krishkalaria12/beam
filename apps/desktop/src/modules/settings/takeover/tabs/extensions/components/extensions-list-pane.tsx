@@ -6,10 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 
-import type {
-  ExtensionGroupEntry,
-  SelectedExtensionEntry,
-} from "../types";
+import type { ExtensionGroupEntry, SelectedExtensionEntry } from "../types";
 import { ExtensionsEntryIcon } from "./extensions-entry-icon";
 
 interface ExtensionsListPaneProps {
@@ -126,7 +123,9 @@ export function ExtensionsListPane({
                         <div className="truncate font-mono text-launcher-md text-foreground">
                           {group.title}
                         </div>
-                        <div className="truncate text-launcher-xs text-muted-foreground">{group.owner}</div>
+                        <div className="truncate text-launcher-xs text-muted-foreground">
+                          {group.owner}
+                        </div>
                       </div>
                     </button>
                   </div>

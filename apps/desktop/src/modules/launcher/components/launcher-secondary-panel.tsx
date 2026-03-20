@@ -1,5 +1,5 @@
 import { ArrowLeft, AtSign, CornerDownLeft, Keyboard } from "lucide-react";
-import { lazy, Suspense, useRef, useState, type ReactNode } from "react";
+import { lazy, Suspense, useEffectEvent, useRef, useState, type ReactNode } from "react";
 
 import { CommandLoadingState } from "@/components/command/command-loading-state";
 import {
@@ -75,13 +75,8 @@ function LauncherSecondaryPanelContent({
   const secondaryPanelIsOpen = isSecondaryPanel(activePanel);
   const [actionsOpen, setActionsOpen] = useState(false);
   const actionsPreviousFocusRef = useRef<HTMLElement | null>(null);
-  const actionsOpenRef = useRef(actionsOpen);
-  const secondaryPanelIsOpenRef = useRef(secondaryPanelIsOpen);
-  const handleActionsOpenChangeRef = useRef<(nextOpen: boolean) => void>(() => {});
   const panelRegistration = getPanelCommandRegistration(activePanel);
   const primaryActionLabel = getPanelPrimaryActionLabel(activePanel);
-  actionsOpenRef.current = actionsOpen;
-  secondaryPanelIsOpenRef.current = secondaryPanelIsOpen;
 
   function handleActionsOpenChange(nextOpen: boolean) {
     if (nextOpen) {
@@ -101,26 +96,28 @@ function LauncherSecondaryPanelContent({
     });
   }
 
-  handleActionsOpenChangeRef.current = handleActionsOpenChange;
+  const handleActionsHotkey = useEffectEvent(() => {
+    if (!secondaryPanelIsOpen) {
+      return;
+    }
+
+    handleActionsOpenChange(!actionsOpen);
+  });
 
   useMountEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (!secondaryPanelIsOpenRef.current || !isLauncherActionsHotkey(event)) {
+      if (!isLauncherActionsHotkey(event)) {
         return;
       }
 
       event.preventDefault();
       event.stopPropagation();
-      handleActionsOpenChangeRef.current(!actionsOpenRef.current);
+      handleActionsHotkey();
     };
 
     window.addEventListener("keydown", onKeyDown, true);
     const unsubscribeToggle = listenLauncherActionsToggle(() => {
-      if (!secondaryPanelIsOpenRef.current) {
-        return;
-      }
-
-      handleActionsOpenChangeRef.current(!actionsOpenRef.current);
+      handleActionsHotkey();
     });
 
     return () => {

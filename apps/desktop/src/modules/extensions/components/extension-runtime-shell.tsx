@@ -28,7 +28,9 @@ export function ExtensionRuntimeShell({ state, onOpenExtensions }: ExtensionRunt
       : "Search…";
   const searchBarClassName = readClassName(rootNode?.props.searchBarClassName);
   const searchBarStyle = readStyle(rootNode?.props.searchBarStyle);
-  const searchInputContainerClassName = readClassName(rootNode?.props.searchInputContainerClassName);
+  const searchInputContainerClassName = readClassName(
+    rootNode?.props.searchInputContainerClassName,
+  );
   const searchInputClassName = readClassName(rootNode?.props.searchInputClassName);
   const titleClassName = readClassName(rootNode?.props.searchTitleClassName);
   const subtitleClassName = readClassName(rootNode?.props.searchSubtitleClassName);
@@ -58,6 +60,8 @@ export function ExtensionRuntimeShell({ state, onOpenExtensions }: ExtensionRunt
       className="extension-runtime-shell ext-shell flex h-full w-full flex-col overflow-hidden bg-[var(--solid-bg)] text-foreground"
       onKeyDownCapture={state.handleRootKeyDownCapture}
       onKeyDown={state.handleRootKeyDown}
+      role="application"
+      tabIndex={-1}
     >
       <SearchBar
         onBack={state.handleBack}
@@ -69,11 +73,15 @@ export function ExtensionRuntimeShell({ state, onOpenExtensions }: ExtensionRunt
         onChange={showSearchInput ? state.handleSearchInputChange : undefined}
         onKeyDown={showSearchInput ? state.handleSearchInputKeyDown : undefined}
         placeholder={searchPlaceholder}
-        inputContainerClassName={["ext-search-input-container", searchInputContainerClassName].filter(Boolean).join(" ")}
+        inputContainerClassName={["ext-search-input-container", searchInputContainerClassName]
+          .filter(Boolean)
+          .join(" ")}
         inputClassName={["ext-search-input", searchInputClassName].filter(Boolean).join(" ")}
         titleClassName={["ext-search-title", titleClassName].filter(Boolean).join(" ")}
         subtitleClassName={["ext-search-subtitle", subtitleClassName].filter(Boolean).join(" ")}
-        rightSlotClassName={["ext-search-accessories", rightSlotClassName].filter(Boolean).join(" ")}
+        rightSlotClassName={["ext-search-accessories", rightSlotClassName]
+          .filter(Boolean)
+          .join(" ")}
         title={state.runningSession?.title || "Extension"}
         subtitle={
           state.runningSession?.subtitle || state.runningSession?.pluginPath || "Beam extension"

@@ -3,10 +3,7 @@ import { invoke, isTauri } from "@tauri-apps/api/core";
 export const DEFAULT_LAUNCHER_OPACITY = 0.96;
 export const MIN_LAUNCHER_OPACITY = 0;
 export const MAX_LAUNCHER_OPACITY = 1;
-export const LAUNCHER_OPACITY_QUERY_KEY = [
-  "settings",
-  "launcher-opacity",
-] as const;
+export const LAUNCHER_OPACITY_QUERY_KEY = ["settings", "launcher-opacity"] as const;
 const LAUNCHER_OPACITY_STORAGE_KEY = "beam-launcher-opacity";
 
 function normalizeLauncherOpacity(value: unknown): number {
@@ -21,10 +18,7 @@ function normalizeLauncherOpacity(value: unknown): number {
     return DEFAULT_LAUNCHER_OPACITY;
   }
 
-  return Math.min(
-    MAX_LAUNCHER_OPACITY,
-    Math.max(MIN_LAUNCHER_OPACITY, Number(numeric.toFixed(2))),
-  );
+  return Math.min(MAX_LAUNCHER_OPACITY, Math.max(MIN_LAUNCHER_OPACITY, Number(numeric.toFixed(2))));
 }
 
 export function applyLauncherOpacity(opacity: number): void {
@@ -40,9 +34,7 @@ export function applyLauncherOpacity(opacity: number): void {
 
 export async function getLauncherOpacity(): Promise<number> {
   if (!isTauri()) {
-    return normalizeLauncherOpacity(
-      localStorage.getItem(LAUNCHER_OPACITY_STORAGE_KEY),
-    );
+    return normalizeLauncherOpacity(localStorage.getItem(LAUNCHER_OPACITY_STORAGE_KEY));
   }
 
   const result = await invoke<unknown>("get_launcher_opacity");

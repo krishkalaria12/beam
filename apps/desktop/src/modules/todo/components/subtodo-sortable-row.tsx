@@ -96,7 +96,6 @@ export function SubTodoSortableRow({
       <div className="min-w-0 flex-1">
         {isEditing ? (
           <Input
-            autoFocus
             value={editingTitle}
             disabled={isBusy}
             onChange={(event) => onEditingTitleChange(event.target.value)}

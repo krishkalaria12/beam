@@ -24,7 +24,10 @@ export function FormView({
   maxWidthStyle,
 }: FormViewProps) {
   return (
-    <div className={cn("module-form-view min-h-0 flex flex-1 flex-col overflow-hidden", className)} style={style}>
+    <div
+      className={cn("module-form-view min-h-0 flex flex-1 flex-col overflow-hidden", className)}
+      style={style}
+    >
       <div
         className={cn(
           "module-form-view-content",
@@ -34,7 +37,10 @@ export function FormView({
         style={contentStyle}
       >
         <div
-          className={cn("module-form-view-width mx-auto w-full max-w-2xl space-y-4", maxWidthClassName)}
+          className={cn(
+            "module-form-view-width mx-auto w-full max-w-2xl space-y-4",
+            maxWidthClassName,
+          )}
           style={maxWidthStyle}
         >
           {children}

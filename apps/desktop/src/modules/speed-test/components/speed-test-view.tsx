@@ -2,11 +2,12 @@ import { Clock, Signal, Zap } from "lucide-react";
 import {
   type Dispatch,
   type KeyboardEvent,
+  type Reducer,
   type SetStateAction,
   useCallback,
   useMemo,
+  useReducer,
   useRef,
-  useState,
 } from "react";
 
 import { useMountEffect } from "@/hooks/use-mount-effect";
@@ -33,55 +34,179 @@ interface SpeedTestViewProps {
   autoStart?: boolean;
 }
 
+interface SpeedTestViewState {
+  metrics: typeof EMPTY_METRICS;
+  hasStarted: boolean;
+  isRunning: boolean;
+  isFinished: boolean;
+  isPreparing: boolean;
+  isPaused: boolean;
+  errorMessage: string | null;
+  downloadHistory: ThroughputHistoryPoint[];
+  uploadHistory: ThroughputHistoryPoint[];
+}
+
+type SpeedTestViewAction =
+  | { type: "set-run-state"; value: Partial<SpeedTestViewState> }
+  | { type: "set-preparing"; value: boolean }
+  | { type: "set-error"; value: string | null }
+  | { type: "start-fresh-run" }
+  | { type: "append-download-history"; value: number | null }
+  | { type: "append-upload-history"; value: number | null };
+
+const INITIAL_SPEED_TEST_VIEW_STATE: SpeedTestViewState = {
+  metrics: EMPTY_METRICS,
+  hasStarted: false,
+  isRunning: false,
+  isFinished: false,
+  isPreparing: false,
+  isPaused: false,
+  errorMessage: null,
+  downloadHistory: [],
+  uploadHistory: [],
+};
+
+function appendHistoryPoints(
+  history: ThroughputHistoryPoint[],
+  valueMbps: number | null,
+): ThroughputHistoryPoint[] {
+  if (valueMbps === null) {
+    return history;
+  }
+
+  const last = history[history.length - 1];
+  if (last && Math.abs(last.valueMbps - valueMbps) < 0.01) {
+    return history;
+  }
+
+  const nextPoint: ThroughputHistoryPoint = {
+    sample: (last?.sample ?? 0) + 1,
+    valueMbps,
+  };
+
+  return [...history, nextPoint].slice(-MAX_THROUGHPUT_HISTORY_POINTS);
+}
+
+const speedTestViewReducer: Reducer<SpeedTestViewState, SpeedTestViewAction> = (state, action) => {
+  switch (action.type) {
+    case "set-run-state":
+      return { ...state, ...action.value };
+    case "set-preparing":
+      return { ...state, isPreparing: action.value };
+    case "set-error":
+      return { ...state, errorMessage: action.value };
+    case "start-fresh-run":
+      return {
+        ...state,
+        errorMessage: null,
+        hasStarted: true,
+        isFinished: false,
+        isPaused: false,
+        downloadHistory: [],
+        uploadHistory: [],
+      };
+    case "append-download-history":
+      return {
+        ...state,
+        downloadHistory: appendHistoryPoints(state.downloadHistory, action.value),
+      };
+    case "append-upload-history":
+      return {
+        ...state,
+        uploadHistory: appendHistoryPoints(state.uploadHistory, action.value),
+      };
+  }
+};
+
+function SpeedTestCharts({
+  latestDownload,
+  latestUpload,
+  p90Download,
+  p90Upload,
+  downloadChartData,
+  uploadChartData,
+  isRunning,
+}: {
+  latestDownload: number | null;
+  latestUpload: number | null;
+  p90Download: number | null;
+  p90Upload: number | null;
+  downloadChartData: Array<{ sample: number; download: number }>;
+  uploadChartData: Array<{ sample: number; upload: number }>;
+  isRunning: boolean;
+}) {
+  return (
+    <section className="speedtest-section grid flex-1 grid-cols-2 gap-4" style={{ animationDelay: "0ms" }}>
+      <SpeedCard
+        metric="download"
+        valueMbps={latestDownload}
+        p90Value={p90Download}
+        data={downloadChartData}
+        isRunning={isRunning}
+        index={0}
+      />
+      <SpeedCard
+        metric="upload"
+        valueMbps={latestUpload}
+        p90Value={p90Upload}
+        data={uploadChartData}
+        isRunning={isRunning}
+        index={1}
+      />
+    </section>
+  );
+}
+
+function SpeedTestMetrics({ metrics }: { metrics: SpeedTestViewState["metrics"] }) {
+  return (
+    <section className="speedtest-section grid grid-cols-3 gap-4" style={{ animationDelay: "60ms" }}>
+      <MetricCard
+        icon={<Clock className="size-4 text-[var(--icon-orange-fg)]" />}
+        gradient="bg-[var(--launcher-card-bg)]"
+        ringColor="ring-[var(--icon-orange-bg)]"
+        label="Latency"
+        unit="ms"
+        value={metrics.unloadedLatencyMs}
+        index={0}
+      />
+      <MetricCard
+        icon={<Zap className="size-4 text-[var(--icon-green-fg)]" />}
+        gradient="bg-[var(--launcher-card-bg)]"
+        ringColor="ring-[var(--icon-green-bg)]"
+        label="Jitter"
+        unit="ms"
+        value={metrics.unloadedJitterMs}
+        index={1}
+      />
+      <MetricCard
+        icon={<Signal className="size-4 text-[var(--icon-red-fg)]" />}
+        gradient="bg-[var(--launcher-card-bg)]"
+        ringColor="ring-[var(--icon-red-bg)]"
+        label="Packet Loss"
+        unit="%"
+        value={metrics.packetLoss}
+        index={2}
+      />
+    </section>
+  );
+}
+
 export function SpeedTestView({ onBack, autoStart = true }: SpeedTestViewProps) {
   const speedTestRef = useRef<SpeedTestInstance | null>(null);
   const mountedRef = useRef(true);
   const containerRef = useRef<HTMLDivElement>(null);
   const hasAutoStartedRef = useRef(false);
-
-  const [metrics, setMetrics] = useState(EMPTY_METRICS);
-  const [hasStarted, setHasStarted] = useState(false);
-  const [isRunning, setIsRunning] = useState(false);
-  const [isFinished, setIsFinished] = useState(false);
-  const [isPreparing, setIsPreparing] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [downloadHistory, setDownloadHistory] = useState<ThroughputHistoryPoint[]>([]);
-  const [uploadHistory, setUploadHistory] = useState<ThroughputHistoryPoint[]>([]);
+  const [state, dispatch] = useReducer(speedTestViewReducer, INITIAL_SPEED_TEST_VIEW_STATE);
 
   const status = useMemo(
     () =>
       resolveStatus({
-        hasStarted,
-        isRunning,
-        isFinished,
-        errorMessage,
+        hasStarted: state.hasStarted,
+        isRunning: state.isRunning,
+        isFinished: state.isFinished,
+        errorMessage: state.errorMessage,
       }),
-    [errorMessage, hasStarted, isFinished, isRunning],
-  );
-
-  const appendHistory = useCallback(
-    (setter: Dispatch<SetStateAction<ThroughputHistoryPoint[]>>, valueMbps: number | null) => {
-      if (valueMbps === null) {
-        return;
-      }
-
-      setter((previous) => {
-        const last = previous[previous.length - 1];
-        if (last && Math.abs(last.valueMbps - valueMbps) < 0.01) {
-          return previous;
-        }
-
-        const nextPoint: ThroughputHistoryPoint = {
-          sample: (last?.sample ?? 0) + 1,
-          valueMbps,
-        };
-
-        const next = [...previous, nextPoint];
-        return next.slice(-MAX_THROUGHPUT_HISTORY_POINTS);
-      });
-    },
-    [],
+    [state.errorMessage, state.hasStarted, state.isFinished, state.isRunning],
   );
 
   const syncFromSpeedTest = useCallback(() => {
@@ -97,21 +222,25 @@ export function SpeedTestView({ onBack, autoStart = true }: SpeedTestViewProps) 
     const summary = instance.results.getSummary();
     const nextMetrics = toMetrics(summary);
 
-    setMetrics(nextMetrics);
-    setIsRunning(instance.isRunning);
-    setIsFinished(instance.isFinished);
-    setIsPaused(!instance.isRunning && !instance.isFinished && hasStarted);
-
-    appendHistory(setDownloadHistory, nextMetrics.downloadMbps);
-    appendHistory(setUploadHistory, nextMetrics.uploadMbps);
-  }, [appendHistory, hasStarted]);
+    dispatch({
+      type: "set-run-state",
+      value: {
+        metrics: nextMetrics,
+        isRunning: instance.isRunning,
+        isFinished: instance.isFinished,
+        isPaused: !instance.isRunning && !instance.isFinished && state.hasStarted,
+      },
+    });
+    dispatch({ type: "append-download-history", value: nextMetrics.downloadMbps });
+    dispatch({ type: "append-upload-history", value: nextMetrics.uploadMbps });
+  }, [state.hasStarted]);
 
   const setupSpeedTest = useCallback(async () => {
     if (speedTestRef.current) {
       return speedTestRef.current;
     }
 
-    setIsPreparing(true);
+    dispatch({ type: "set-preparing", value: true });
 
     try {
       const speedTest = await createSpeedTestInstance({ autoStart: false });
@@ -137,7 +266,7 @@ export function SpeedTestView({ onBack, autoStart = true }: SpeedTestViewProps) 
         if (!mountedRef.current) {
           return;
         }
-        setErrorMessage(normalizeSpeedTestError(error || "Speed test failed."));
+        dispatch({ type: "set-error", value: normalizeSpeedTestError(error || "Speed test failed.") });
         syncFromSpeedTest();
       };
 
@@ -147,15 +276,15 @@ export function SpeedTestView({ onBack, autoStart = true }: SpeedTestViewProps) 
       return speedTest;
     } catch (error) {
       if (mountedRef.current) {
-        setErrorMessage(
+        dispatch({ type: "set-error", value:
           error instanceof Error ? error.message : "Could not initialize speed test engine.",
-        );
+        });
       }
       return null;
-    } finally {
-      if (mountedRef.current) {
-        setIsPreparing(false);
-      }
+    }
+
+    if (mountedRef.current) {
+      dispatch({ type: "set-preparing", value: false });
     }
   }, [syncFromSpeedTest]);
 
@@ -186,12 +315,7 @@ export function SpeedTestView({ onBack, autoStart = true }: SpeedTestViewProps) 
   });
 
   const startFreshRun = useCallback(() => {
-    setErrorMessage(null);
-    setHasStarted(true);
-    setIsFinished(false);
-    setIsPaused(false);
-    setDownloadHistory([]);
-    setUploadHistory([]);
+    dispatch({ type: "start-fresh-run" });
   }, []);
 
   useMountEffect(() => {
@@ -215,7 +339,10 @@ export function SpeedTestView({ onBack, autoStart = true }: SpeedTestViewProps) 
         if (!mountedRef.current) {
           return;
         }
-        setErrorMessage(error instanceof Error ? error.message : "Could not start speed test.");
+        dispatch({
+          type: "set-error",
+          value: error instanceof Error ? error.message : "Could not start speed test.",
+        });
       }
     })();
   });
@@ -232,7 +359,10 @@ export function SpeedTestView({ onBack, autoStart = true }: SpeedTestViewProps) 
       await Promise.resolve(speedTest.play());
       syncFromSpeedTest();
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Could not start speed test.");
+      dispatch({
+        type: "set-error",
+        value: error instanceof Error ? error.message : "Could not start speed test.",
+      });
     }
   }, [setupSpeedTest, startFreshRun, syncFromSpeedTest]);
 
@@ -248,7 +378,10 @@ export function SpeedTestView({ onBack, autoStart = true }: SpeedTestViewProps) 
       await Promise.resolve(speedTest.restart());
       syncFromSpeedTest();
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Could not restart speed test.");
+      dispatch({
+        type: "set-error",
+        value: error instanceof Error ? error.message : "Could not restart speed test.",
+      });
     }
   }, [setupSpeedTest, startFreshRun, syncFromSpeedTest]);
 
@@ -258,19 +391,22 @@ export function SpeedTestView({ onBack, autoStart = true }: SpeedTestViewProps) 
       return;
     }
 
-    setErrorMessage(null);
+    dispatch({ type: "set-error", value: null });
 
     try {
       if (speedTest.isRunning) {
         await Promise.resolve(speedTest.pause());
-        setIsPaused(true);
+        dispatch({ type: "set-run-state", value: { isPaused: true } });
       } else {
         await Promise.resolve(speedTest.play());
-        setIsPaused(false);
+        dispatch({ type: "set-run-state", value: { isPaused: false } });
       }
       syncFromSpeedTest();
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Could not update test state.");
+      dispatch({
+        type: "set-error",
+        value: error instanceof Error ? error.message : "Could not update test state.",
+      });
     }
   }, [syncFromSpeedTest]);
 
@@ -283,7 +419,7 @@ export function SpeedTestView({ onBack, autoStart = true }: SpeedTestViewProps) 
 
     if (event.key === "Enter") {
       event.preventDefault();
-      if (hasStarted) {
+      if (state.hasStarted) {
         void handleRestart();
       } else {
         void handleStart();
@@ -291,7 +427,7 @@ export function SpeedTestView({ onBack, autoStart = true }: SpeedTestViewProps) 
     }
 
     // Space to pause/resume
-    if (event.key === " " && hasStarted && !isFinished) {
+    if (event.key === " " && state.hasStarted && !state.isFinished) {
       event.preventDefault();
       void handlePauseResume();
     }
@@ -299,25 +435,26 @@ export function SpeedTestView({ onBack, autoStart = true }: SpeedTestViewProps) 
 
   const downloadChartData = useMemo(
     () =>
-      downloadHistory.map((point) => ({
+      state.downloadHistory.map((point) => ({
         sample: point.sample,
         download: point.valueMbps,
       })),
-    [downloadHistory],
+    [state.downloadHistory],
   );
 
   const uploadChartData = useMemo(
     () =>
-      uploadHistory.map((point) => ({
+      state.uploadHistory.map((point) => ({
         sample: point.sample,
         upload: point.valueMbps,
       })),
-    [uploadHistory],
+    [state.uploadHistory],
   );
 
   const latestDownload =
-    downloadHistory[downloadHistory.length - 1]?.valueMbps ?? metrics.downloadMbps;
-  const latestUpload = uploadHistory[uploadHistory.length - 1]?.valueMbps ?? metrics.uploadMbps;
+    state.downloadHistory[state.downloadHistory.length - 1]?.valueMbps ?? state.metrics.downloadMbps;
+  const latestUpload =
+    state.uploadHistory[state.uploadHistory.length - 1]?.valueMbps ?? state.metrics.uploadMbps;
 
   const p90Download = useMemo(
     () =>
@@ -342,84 +479,39 @@ export function SpeedTestView({ onBack, autoStart = true }: SpeedTestViewProps) 
       className="speedtest-view flex h-full w-full flex-col outline-none"
       onKeyDown={handleContainerKeyDown}
       tabIndex={-1}
+      role="region"
+      aria-label="Speed test"
     >
-      <SpeedTestHeader status={status} isPreparing={isPreparing} onBack={onBack} />
+      <SpeedTestHeader status={status} isPreparing={state.isPreparing} onBack={onBack} />
 
       <div className="speedtest-content flex flex-1 flex-col min-h-0 overflow-y-auto overflow-x-hidden p-4 scrollbar-hidden-until-hover">
-        {/* Error Banner */}
-        {errorMessage && (
+        {state.errorMessage && (
           <div className="mb-4">
-            <ErrorBanner message={errorMessage} />
+            <ErrorBanner message={state.errorMessage} />
           </div>
         )}
 
-        {/* Main grid layout - fills available space */}
         <div className="flex flex-1 flex-col gap-4">
-          {/* Speed Cards Row - Download & Upload (taller cards) */}
-          <section
-            className="speedtest-section grid flex-1 gap-4 grid-cols-2"
-            style={{ animationDelay: "0ms" }}
-          >
-            <SpeedCard
-              metric="download"
-              valueMbps={latestDownload}
-              p90Value={p90Download}
-              data={downloadChartData}
-              isRunning={isRunning}
-              index={0}
-            />
-            <SpeedCard
-              metric="upload"
-              valueMbps={latestUpload}
-              p90Value={p90Upload}
-              data={uploadChartData}
-              isRunning={isRunning}
-              index={1}
-            />
-          </section>
+          <SpeedTestCharts
+            latestDownload={latestDownload}
+            latestUpload={latestUpload}
+            p90Download={p90Download}
+            p90Upload={p90Upload}
+            downloadChartData={downloadChartData}
+            uploadChartData={uploadChartData}
+            isRunning={state.isRunning}
+          />
 
-          {/* Metrics Row - Latency, Jitter, Packet Loss */}
-          <section
-            className="speedtest-section grid gap-4 grid-cols-3"
-            style={{ animationDelay: "60ms" }}
-          >
-            <MetricCard
-              icon={<Clock className="size-4 text-[var(--icon-orange-fg)]" />}
-              gradient="bg-[var(--launcher-card-bg)]"
-              ringColor="ring-[var(--icon-orange-bg)]"
-              label="Latency"
-              unit="ms"
-              value={metrics.unloadedLatencyMs}
-              index={0}
-            />
-            <MetricCard
-              icon={<Zap className="size-4 text-[var(--icon-green-fg)]" />}
-              gradient="bg-[var(--launcher-card-bg)]"
-              ringColor="ring-[var(--icon-green-bg)]"
-              label="Jitter"
-              unit="ms"
-              value={metrics.unloadedJitterMs}
-              index={1}
-            />
-            <MetricCard
-              icon={<Signal className="size-4 text-[var(--icon-red-fg)]" />}
-              gradient="bg-[var(--launcher-card-bg)]"
-              ringColor="ring-[var(--icon-red-bg)]"
-              label="Packet Loss"
-              unit="%"
-              value={metrics.packetLoss}
-              index={2}
-            />
-          </section>
+          <SpeedTestMetrics metrics={state.metrics} />
         </div>
       </div>
 
       <SpeedTestFooter
-        isRunning={isRunning}
-        isPaused={isPaused}
-        isFinished={isFinished}
-        isPreparing={isPreparing}
-        hasStarted={hasStarted}
+        isRunning={state.isRunning}
+        isPaused={state.isPaused}
+        isFinished={state.isFinished}
+        isPreparing={state.isPreparing}
+        hasStarted={state.hasStarted}
         onPauseResume={() => void handlePauseResume()}
         onRestart={() => void handleRestart()}
       />

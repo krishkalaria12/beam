@@ -163,6 +163,249 @@ function CommandSelector({
   );
 }
 
+function BuiltInTriggerSymbolsSection({
+  draft,
+  symbols,
+  onReset,
+  onDraftChange,
+  onSaveSymbol,
+}: {
+  draft: TriggerSymbols;
+  symbols: TriggerSymbols;
+  onReset: () => void;
+  onDraftChange: (target: TriggerSymbolTarget, value: string) => void;
+  onSaveSymbol: (target: TriggerSymbolTarget) => void;
+}) {
+  return (
+    <SettingsSection
+      title="Trigger Symbols"
+      description="Map single-character launcher prefixes to command groups."
+      icon={Target}
+      iconVariant="orange"
+      headerAction={
+        <Button
+          type="button"
+          onClick={onReset}
+          variant="ghost"
+          size="sm"
+          className="gap-1.5 rounded-lg border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-2.5 text-launcher-2xs font-medium text-muted-foreground hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground"
+        >
+          <RotateCcw className="size-3" />
+          Reset
+        </Button>
+      }
+    >
+      <div className="divide-y divide-[var(--launcher-card-border)]/60">
+        {TRIGGER_SYMBOL_ROWS.map((row) => {
+          const Icon = row.icon;
+          const currentValue = draft[row.key];
+          const originalValue = symbols[row.key];
+          const hasChanges = currentValue !== originalValue;
+
+          return (
+            <div
+              key={row.key}
+              className="flex items-center gap-3.5 px-5 py-3.5 transition-colors duration-150 hover:bg-[var(--launcher-card-bg)]/30"
+            >
+              <IconChip variant={row.iconVariant} size="md" className="rounded-xl">
+                <Icon className="size-4" />
+              </IconChip>
+
+              <div className="min-w-0 flex-1">
+                <p className="text-launcher-sm font-medium tracking-[-0.01em] text-foreground">{row.title}</p>
+                <p className="text-launcher-xs text-muted-foreground">{row.description}</p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Input
+                  type="text"
+                  value={currentValue}
+                  onChange={(event) => onDraftChange(row.key, event.target.value)}
+                  maxLength={1}
+                  placeholder="#"
+                  className={cn(
+                    "size-10 rounded-lg border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-0 text-center text-launcher-xl font-semibold text-foreground placeholder:text-muted-foreground",
+                    "focus-visible:border-[var(--ring)] focus-visible:ring-[var(--ring)]/40",
+                    "transition-all duration-150",
+                  )}
+                  aria-label={`${row.title} trigger symbol`}
+                />
+                <Button
+                  type="button"
+                  onClick={() => onSaveSymbol(row.key)}
+                  disabled={!hasChanges}
+                  size="sm"
+                  className={cn(
+                    "rounded-lg px-3 text-launcher-xs font-medium transition-all duration-150",
+                    hasChanges
+                      ? "bg-[var(--ring)]/20 text-[var(--ring)] hover:bg-[var(--ring)]/30"
+                      : "bg-[var(--launcher-card-bg)] text-muted-foreground cursor-not-allowed opacity-50",
+                  )}
+                >
+                  Save
+                </Button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </SettingsSection>
+  );
+}
+
+function CustomTriggerMappingsSection({
+  draft,
+  symbols,
+  newCustomSymbol,
+  newCustomCommandId,
+  onNewCustomSymbolChange,
+  onNewCustomCommandIdChange,
+  onUpdateBindingSymbol,
+  onUpdateBindingCommand,
+  onSaveExistingBinding,
+  onRemoveBinding,
+  onAddBinding,
+}: {
+  draft: TriggerSymbols;
+  symbols: TriggerSymbols;
+  newCustomSymbol: string;
+  newCustomCommandId: string;
+  onNewCustomSymbolChange: (value: string) => void;
+  onNewCustomCommandIdChange: (value: string) => void;
+  onUpdateBindingSymbol: (index: number, value: string) => void;
+  onUpdateBindingCommand: (index: number, value: string) => void;
+  onSaveExistingBinding: (index: number) => void;
+  onRemoveBinding: (index: number) => void;
+  onAddBinding: () => void;
+}) {
+  return (
+    <SettingsSection
+      title="Custom Mappings"
+      description="Map a prefix symbol to any launcher item."
+      icon={Hash}
+      iconVariant="green"
+    >
+      <div className="divide-y divide-[var(--launcher-card-border)]/60">
+        {draft.customBindings.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-10 text-center">
+            <div className="mb-3 flex size-11 items-center justify-center rounded-xl bg-[var(--launcher-card-bg)] ring-1 ring-[var(--launcher-card-border)]">
+              <Plus className="size-4.5 text-muted-foreground" />
+            </div>
+            <p className="text-launcher-sm text-muted-foreground">No custom mappings yet</p>
+            <p className="mt-0.5 text-launcher-xs text-muted-foreground">Add one below to get started</p>
+          </div>
+        ) : (
+          draft.customBindings.map((binding, index) => {
+            const originalBinding = symbols.customBindings[index];
+            const hasChanges =
+              !originalBinding ||
+              binding.symbol !== originalBinding.symbol ||
+              binding.commandId !== originalBinding.commandId;
+
+            return (
+              <div
+                key={`${binding.symbol}:${binding.commandId}`}
+                className="flex items-center gap-3 px-5 py-3.5 transition-colors duration-150 hover:bg-[var(--launcher-card-bg)]/30"
+              >
+                <div className="flex size-7 items-center justify-center rounded-lg bg-[var(--launcher-card-bg)] text-launcher-xs font-semibold tabular-nums text-muted-foreground ring-1 ring-[var(--launcher-card-border)]">
+                  {index + 1}
+                </div>
+
+                <Input
+                  type="text"
+                  value={binding.symbol}
+                  onChange={(event) => onUpdateBindingSymbol(index, event.target.value)}
+                  maxLength={1}
+                  placeholder="#"
+                  className={cn(
+                    "size-10 shrink-0 rounded-lg border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-0 text-center text-launcher-xl font-semibold text-foreground placeholder:text-muted-foreground",
+                    "focus-visible:border-[var(--ring)] focus-visible:ring-[var(--ring)]/40",
+                    "transition-all duration-150",
+                  )}
+                  aria-label={`Custom symbol ${index + 1}`}
+                />
+
+                <CommandSelector value={binding.commandId} onChange={(value) => onUpdateBindingCommand(index, value)} />
+
+                <div className="flex items-center gap-1.5">
+                  <Button
+                    type="button"
+                    onClick={() => onSaveExistingBinding(index)}
+                    disabled={!hasChanges}
+                    size="sm"
+                    className={cn(
+                      "rounded-lg px-3 text-launcher-xs font-medium transition-all duration-150",
+                      hasChanges
+                        ? "bg-[var(--ring)]/20 text-[var(--ring)] hover:bg-[var(--ring)]/30"
+                        : "bg-[var(--launcher-card-bg)] text-muted-foreground cursor-not-allowed opacity-50",
+                    )}
+                  >
+                    Save
+                  </Button>
+                  <Button
+                    type="button"
+                    size="icon-lg"
+                    variant="ghost"
+                    onClick={() => onRemoveBinding(index)}
+                    className="size-10 rounded-lg bg-[var(--launcher-card-bg)] text-muted-foreground transition-all duration-150 hover:bg-destructive/10 hover:text-destructive"
+                    aria-label="Remove custom mapping"
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      <SettingsDivider />
+
+      <div className="px-5 py-4">
+        <p className="mb-3 text-launcher-xs font-medium text-muted-foreground">Add new mapping</p>
+        <div className="flex items-center gap-3">
+          <Input
+            type="text"
+            value={newCustomSymbol}
+            onChange={(event) => onNewCustomSymbolChange(event.target.value)}
+            maxLength={1}
+            placeholder="#"
+            className={cn(
+              "size-10 shrink-0 rounded-lg border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-0 text-center text-launcher-xl font-semibold text-foreground placeholder:text-muted-foreground",
+              "focus-visible:border-[var(--ring)] focus-visible:ring-[var(--ring)]/40",
+              "transition-all duration-150",
+            )}
+            aria-label="New custom symbol"
+          />
+
+          <CommandSelector
+            value={newCustomCommandId}
+            onChange={onNewCustomCommandIdChange}
+            disabled={!HAS_COMMAND_OPTIONS}
+            placeholder="Choose item"
+          />
+
+          <Button
+            type="button"
+            onClick={onAddBinding}
+            disabled={!HAS_COMMAND_OPTIONS || !newCustomSymbol}
+            size="sm"
+            className={cn(
+              "gap-1.5 rounded-lg px-3.5 text-launcher-xs font-medium transition-all duration-150",
+              HAS_COMMAND_OPTIONS && newCustomSymbol
+                ? "bg-[var(--ring)]/20 text-[var(--ring)] hover:bg-[var(--ring)]/30"
+                : "bg-[var(--launcher-card-bg)] text-muted-foreground cursor-not-allowed opacity-50",
+            )}
+          >
+            <Plus className="size-3.5" />
+            Add
+          </Button>
+        </div>
+      </div>
+    </SettingsSection>
+  );
+}
+
 export function GeneralTriggerSymbolsSection() {
   const { symbols, updateSymbol, updateCustomBindings, resetSymbols } = useTriggerSymbols();
   const [draftState, setDraftState] = useState<{ key: string; value: TriggerSymbols }>(() => ({
@@ -271,230 +514,38 @@ export function GeneralTriggerSymbolsSection() {
 
   return (
     <div className="space-y-4">
-      {/* ── Built-in trigger symbols ── */}
-      <SettingsSection
-        title="Trigger Symbols"
-        description="Map single-character launcher prefixes to command groups."
-        icon={Target}
-        iconVariant="orange"
-        headerAction={
-          <Button
-            type="button"
-            onClick={handleReset}
-            variant="ghost"
-            size="sm"
-            className="gap-1.5 rounded-lg border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-2.5 text-launcher-2xs font-medium text-muted-foreground hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground"
-          >
-            <RotateCcw className="size-3" />
-            Reset
-          </Button>
-        }
-      >
-        <div className="divide-y divide-[var(--launcher-card-border)]/60">
-          {TRIGGER_SYMBOL_ROWS.map((row) => {
-            const Icon = row.icon;
-            const currentValue = draft[row.key];
-            const originalValue = symbols[row.key];
-            const hasChanges = currentValue !== originalValue;
+      <BuiltInTriggerSymbolsSection
+        draft={draft}
+        symbols={symbols}
+        onReset={handleReset}
+        onDraftChange={handleDraftChange}
+        onSaveSymbol={saveSymbol}
+      />
 
-            return (
-              <div
-                key={row.key}
-                className="flex items-center gap-3.5 px-5 py-3.5 transition-colors duration-150 hover:bg-[var(--launcher-card-bg)]/30"
-              >
-                <IconChip variant={row.iconVariant} size="md" className="rounded-xl">
-                  <Icon className="size-4" />
-                </IconChip>
-
-                <div className="min-w-0 flex-1">
-                  <p className="text-launcher-sm font-medium tracking-[-0.01em] text-foreground">
-                    {row.title}
-                  </p>
-                  <p className="text-launcher-xs text-muted-foreground">{row.description}</p>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="text"
-                    value={currentValue}
-                    onChange={(event) => {
-                      handleDraftChange(row.key, event.target.value);
-                    }}
-                    maxLength={1}
-                    placeholder="#"
-                    className={cn(
-                      "size-10 rounded-lg border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-0 text-center text-launcher-xl font-semibold text-foreground placeholder:text-muted-foreground",
-                      "focus-visible:border-[var(--ring)] focus-visible:ring-[var(--ring)]/40",
-                      "transition-all duration-150",
-                    )}
-                    aria-label={`${row.title} trigger symbol`}
-                  />
-                  <Button
-                    type="button"
-                    onClick={() => saveSymbol(row.key)}
-                    disabled={!hasChanges}
-                    size="sm"
-                    className={cn(
-                      "rounded-lg px-3 text-launcher-xs font-medium transition-all duration-150",
-                      hasChanges
-                        ? "bg-[var(--ring)]/20 text-[var(--ring)] hover:bg-[var(--ring)]/30"
-                        : "bg-[var(--launcher-card-bg)] text-muted-foreground cursor-not-allowed opacity-50",
-                    )}
-                  >
-                    Save
-                  </Button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </SettingsSection>
-
-      {/* ── Custom symbol mappings ── */}
-      <SettingsSection
-        title="Custom Mappings"
-        description="Map a prefix symbol to any launcher item."
-        icon={Hash}
-        iconVariant="green"
-      >
-        {/* Existing bindings */}
-        <div className="divide-y divide-[var(--launcher-card-border)]/60">
-          {draft.customBindings.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-10 text-center">
-              <div className="mb-3 flex size-11 items-center justify-center rounded-xl bg-[var(--launcher-card-bg)] ring-1 ring-[var(--launcher-card-border)]">
-                <Plus className="size-4.5 text-muted-foreground" />
-              </div>
-              <p className="text-launcher-sm text-muted-foreground">No custom mappings yet</p>
-              <p className="mt-0.5 text-launcher-xs text-muted-foreground">
-                Add one below to get started
-              </p>
-            </div>
-          ) : (
-            draft.customBindings.map((binding, index) => {
-              const originalBinding = symbols.customBindings[index];
-              const hasChanges =
-                !originalBinding ||
-                binding.symbol !== originalBinding.symbol ||
-                binding.commandId !== originalBinding.commandId;
-
-              return (
-                <div
-                  key={`${binding.symbol}:${binding.commandId}:${index}`}
-                  className="flex items-center gap-3 px-5 py-3.5 transition-colors duration-150 hover:bg-[var(--launcher-card-bg)]/30"
-                >
-                  <div className="flex size-7 items-center justify-center rounded-lg bg-[var(--launcher-card-bg)] text-launcher-xs font-semibold tabular-nums text-muted-foreground ring-1 ring-[var(--launcher-card-border)]">
-                    {index + 1}
-                  </div>
-
-                  <Input
-                    type="text"
-                    value={binding.symbol}
-                    onChange={(event) => {
-                      const value = toSingleCharacter(event.target.value);
-                      setDraftState((previous) => ({
-                        ...previous,
-                        value: {
-                          ...previous.value,
-                          customBindings: previous.value.customBindings.map((entry, entryIndex) =>
-                            entryIndex === index ? { ...entry, symbol: value } : entry,
-                          ),
-                        },
-                      }));
-                    }}
-                    maxLength={1}
-                    placeholder="#"
-                    className={cn(
-                      "size-10 shrink-0 rounded-lg border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-0 text-center text-launcher-xl font-semibold text-foreground placeholder:text-muted-foreground",
-                      "focus-visible:border-[var(--ring)] focus-visible:ring-[var(--ring)]/40",
-                      "transition-all duration-150",
-                    )}
-                    aria-label={`Custom symbol ${index + 1}`}
-                  />
-
-                  <CommandSelector
-                    value={binding.commandId}
-                    onChange={(value) => updateCustomBindingCommand(index, value)}
-                  />
-
-                  <div className="flex items-center gap-1.5">
-                    <Button
-                      type="button"
-                      onClick={() => saveExistingCustomBinding(index)}
-                      disabled={!hasChanges}
-                      size="sm"
-                      className={cn(
-                        "rounded-lg px-3 text-launcher-xs font-medium transition-all duration-150",
-                        hasChanges
-                          ? "bg-[var(--ring)]/20 text-[var(--ring)] hover:bg-[var(--ring)]/30"
-                          : "bg-[var(--launcher-card-bg)] text-muted-foreground cursor-not-allowed opacity-50",
-                      )}
-                    >
-                      Save
-                    </Button>
-                    <Button
-                      type="button"
-                      size="icon-lg"
-                      variant="ghost"
-                      onClick={() => removeCustomBinding(index)}
-                      className="size-10 rounded-lg bg-[var(--launcher-card-bg)] text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-150"
-                      aria-label="Remove custom mapping"
-                    >
-                      <Trash2 className="size-4" />
-                    </Button>
-                  </div>
-                </div>
-              );
-            })
-          )}
-        </div>
-
-        <SettingsDivider />
-
-        {/* Add new mapping */}
-        <div className="px-5 py-4">
-          <p className="mb-3 text-launcher-xs font-medium text-muted-foreground">Add new mapping</p>
-          <div className="flex items-center gap-3">
-            <Input
-              type="text"
-              value={newCustomSymbol}
-              onChange={(event) => {
-                setNewCustomSymbol(toSingleCharacter(event.target.value));
-              }}
-              maxLength={1}
-              placeholder="#"
-              className={cn(
-                "size-10 shrink-0 rounded-lg border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-0 text-center text-launcher-xl font-semibold text-foreground placeholder:text-muted-foreground",
-                "focus-visible:border-[var(--ring)] focus-visible:ring-[var(--ring)]/40",
-                "transition-all duration-150",
-              )}
-              aria-label="New custom symbol"
-            />
-
-            <CommandSelector
-              value={newCustomCommandId}
-              onChange={setNewCustomCommandId}
-              disabled={!HAS_COMMAND_OPTIONS}
-              placeholder="Choose item"
-            />
-
-            <Button
-              type="button"
-              onClick={addCustomBinding}
-              disabled={!HAS_COMMAND_OPTIONS || !newCustomSymbol}
-              size="sm"
-              className={cn(
-                "gap-1.5 rounded-lg px-3.5 text-launcher-xs font-medium transition-all duration-150",
-                HAS_COMMAND_OPTIONS && newCustomSymbol
-                  ? "bg-[var(--ring)]/20 text-[var(--ring)] hover:bg-[var(--ring)]/30"
-                  : "bg-[var(--launcher-card-bg)] text-muted-foreground cursor-not-allowed opacity-50",
-              )}
-            >
-              <Plus className="size-3.5" />
-              Add
-            </Button>
-          </div>
-        </div>
-      </SettingsSection>
+      <CustomTriggerMappingsSection
+        draft={draft}
+        symbols={symbols}
+        newCustomSymbol={newCustomSymbol}
+        newCustomCommandId={newCustomCommandId}
+        onNewCustomSymbolChange={(value) => setNewCustomSymbol(toSingleCharacter(value))}
+        onNewCustomCommandIdChange={setNewCustomCommandId}
+        onUpdateBindingSymbol={(index, value) => {
+          const nextValue = toSingleCharacter(value);
+          setDraftState((previous) => ({
+            ...previous,
+            value: {
+              ...previous.value,
+              customBindings: previous.value.customBindings.map((entry, entryIndex) =>
+                entryIndex === index ? { ...entry, symbol: nextValue } : entry,
+              ),
+            },
+          }));
+        }}
+        onUpdateBindingCommand={updateCustomBindingCommand}
+        onSaveExistingBinding={saveExistingCustomBinding}
+        onRemoveBinding={removeCustomBinding}
+        onAddBinding={addCustomBinding}
+      />
     </div>
   );
 }

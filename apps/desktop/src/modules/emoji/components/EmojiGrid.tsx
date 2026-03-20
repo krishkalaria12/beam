@@ -64,7 +64,7 @@ export function EmojiGrid({
           <div className="grid w-full grid-cols-8 gap-2.5">
             {groupEmojis.map((emoji, idx) => (
               <EmojiCard
-                key={`${emoji.hexcode}-${idx}`}
+                key={emoji.hexcode}
                 emoji={emoji}
                 onClick={onEmojiClick}
                 style={{ animationDelay: `${Math.min(idx, 16) * 8}ms` }}

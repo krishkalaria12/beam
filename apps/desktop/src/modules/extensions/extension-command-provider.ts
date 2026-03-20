@@ -1,7 +1,5 @@
 import type { CommandProvider } from "@/command-registry/types";
-import {
-  EXTENSIONS_PROVIDER_SCOPE,
-} from "@/modules/extensions/constants";
+import { EXTENSIONS_PROVIDER_SCOPE } from "@/modules/extensions/constants";
 import {
   invalidateExtensionCatalog,
   searchExtensionCatalog,

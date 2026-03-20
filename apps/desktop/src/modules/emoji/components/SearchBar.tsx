@@ -59,7 +59,6 @@ export function SearchBar({
       </Button>
 
       <SearchInput
-        autoFocus
         value={searchValue}
         onChange={onSearchChange}
         placeholder="Search emojis..."

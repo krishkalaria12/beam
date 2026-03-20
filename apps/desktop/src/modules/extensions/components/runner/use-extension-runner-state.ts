@@ -198,11 +198,13 @@ export function useExtensionRunnerState({
   const rootNode = rootNodeId ? uiTree.get(rootNodeId) : undefined;
   const rootType = rootNode?.type ?? "";
   const isSearchableRoot = rootType === "List" || rootType === "Grid";
-  const controlledSearchText = isSearchableRoot && rootNode ? asString(rootNode.props.searchText) : "";
+  const controlledSearchText =
+    isSearchableRoot && rootNode ? asString(rootNode.props.searchText) : "";
   const isControlledSearch =
     isSearchableRoot && rootNode ? asBoolean(rootNode.props.onSearchTextChange) : false;
   const searchStateKey = `${rootNode?.id ?? 0}:${rootType}`;
-  const localSearchText = searchState.key === searchStateKey ? searchState.value : controlledSearchText;
+  const localSearchText =
+    searchState.key === searchStateKey ? searchState.value : controlledSearchText;
   const pendingSearchText =
     pendingControlledSearchTextRef.current?.key === searchStateKey
       ? pendingControlledSearchTextRef.current.value
@@ -214,12 +216,11 @@ export function useExtensionRunnerState({
     pendingSearchText !== null &&
     localSearchText === pendingSearchText &&
     controlledSearchText !== pendingSearchText;
-  const searchText =
-    !isSearchableRoot
-      ? ""
-      : isControlledSearch && !shouldUsePendingSearchText
-        ? controlledSearchText
-        : localSearchText;
+  const searchText = !isSearchableRoot
+    ? ""
+    : isControlledSearch && !shouldUsePendingSearchText
+      ? controlledSearchText
+      : localSearchText;
 
   const listModel = useMemo(
     () => (rootNode?.type === "List" ? collectListEntries(uiTree, rootNode) : null),
@@ -866,7 +867,13 @@ export function useExtensionRunnerState({
     (event: KeyboardEvent<HTMLInputElement>) => {
       const availableActions = selectedEntryActions.length > 0 ? selectedEntryActions : rootActions;
 
-      if (event.key === "Escape" && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) {
+      if (
+        event.key === "Escape" &&
+        !event.ctrlKey &&
+        !event.metaKey &&
+        !event.shiftKey &&
+        !event.altKey
+      ) {
         event.preventDefault();
         event.stopPropagation();
         if (searchText.trim().length > 0) {
@@ -935,16 +942,19 @@ export function useExtensionRunnerState({
     ],
   );
 
-  const registerFieldRef = useCallback((nodeId: number, element: HTMLElement | null) => {
-    if (!element) {
-      fieldRefs.current.delete(nodeId);
-      return;
-    }
-    fieldRefs.current.set(nodeId, element);
-    if (focusElementId === nodeId) {
-      element.focus();
-    }
-  }, [focusElementId]);
+  const registerFieldRef = useCallback(
+    (nodeId: number, element: HTMLElement | null) => {
+      if (!element) {
+        fieldRefs.current.delete(nodeId);
+        return;
+      }
+      fieldRefs.current.set(nodeId, element);
+      if (focusElementId === nodeId) {
+        element.focus();
+      }
+    },
+    [focusElementId],
+  );
 
   const dispatchNodeEvent = useCallback(
     (nodeId: number, handlerName: string, args: unknown[] = []) => {

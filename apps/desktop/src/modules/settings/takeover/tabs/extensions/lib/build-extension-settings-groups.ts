@@ -3,11 +3,7 @@ import type { CommandDescriptor } from "@/command-registry/types";
 import { toExtensionCommandDescriptorForPlugin } from "@/modules/extensions/extension-catalog";
 import { getPluginAuthorPrefix } from "@/modules/extensions/extension-catalog";
 import { resolveExtensionIconReference } from "@/modules/extensions/lib/icon";
-import type {
-  ExtensionPreferenceField,
-  PluginInfo,
-  Preference,
-} from "@/modules/extensions/types";
+import type { ExtensionPreferenceField, PluginInfo, Preference } from "@/modules/extensions/types";
 
 import type { ExtensionGroupEntry } from "../types";
 
@@ -221,13 +217,25 @@ export function filterExtensionSettingsGroups(groups: ExtensionGroupEntry[], que
   }
 
   return groups.flatMap((group) => {
-    const groupMatches = [group.title, group.pluginName, group.description, group.owner, ...group.keywords]
+    const groupMatches = [
+      group.title,
+      group.pluginName,
+      group.description,
+      group.owner,
+      ...group.keywords,
+    ]
       .join(" ")
       .toLowerCase()
       .includes(normalizedQuery);
 
     const matchingCommands = group.commands.filter((command) =>
-      [command.title, command.commandName, command.description, command.subtitle, ...command.keywords]
+      [
+        command.title,
+        command.commandName,
+        command.description,
+        command.subtitle,
+        ...command.keywords,
+      ]
         .join(" ")
         .toLowerCase()
         .includes(normalizedQuery),

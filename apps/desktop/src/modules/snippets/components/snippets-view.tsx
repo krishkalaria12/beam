@@ -1,5 +1,5 @@
 import { ArrowLeft, CircleDot, FilePlus2, Loader2, NotebookTabs } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffectEvent, useReducer } from "react";
 import { toast } from "sonner";
 
 import { ModuleFooter } from "@/components/module";
@@ -53,6 +53,39 @@ function createEmptyDraft(): SnippetEditorDraft {
 }
 
 type SnippetsMode = "view" | "create" | "edit";
+
+interface SnippetsViewState {
+  viewMode: SnippetsMode;
+  searchValue: string;
+  selectedTag: string;
+  selectedSnippetId: string | null;
+  draft: SnippetEditorDraft;
+}
+
+type SnippetsViewAction =
+  | { type: "set-view-mode"; value: SnippetsMode }
+  | { type: "set-search-value"; value: string }
+  | { type: "set-selected-tag"; value: string }
+  | { type: "set-selected-snippet-id"; value: string | null }
+  | { type: "set-draft"; value: SnippetEditorDraft };
+
+function snippetsViewReducer(
+  state: SnippetsViewState,
+  action: SnippetsViewAction,
+): SnippetsViewState {
+  switch (action.type) {
+    case "set-view-mode":
+      return { ...state, viewMode: action.value };
+    case "set-search-value":
+      return { ...state, searchValue: action.value };
+    case "set-selected-tag":
+      return { ...state, selectedTag: action.value };
+    case "set-selected-snippet-id":
+      return { ...state, selectedSnippetId: action.value };
+    case "set-draft":
+      return { ...state, draft: action.value };
+  }
+}
 
 function normalizeText(value: string): string {
   return value.trim();
@@ -110,6 +143,115 @@ function filterSnippets(snippets: Snippet[], searchValue: string, selectedTag: s
   });
 }
 
+function SnippetsHeader({
+  snippets,
+  isFetching,
+  viewMode,
+  onBack,
+}: {
+  snippets: Snippet[];
+  isFetching: boolean;
+  viewMode: SnippetsMode;
+  onBack: () => void;
+}) {
+  return (
+    <header className="snippets-header-enter flex h-14 shrink-0 items-center gap-3 border-b border-[var(--launcher-card-border)] px-4">
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon-sm"
+        onClick={onBack}
+        className="flex size-9 items-center justify-center rounded-lg bg-[var(--launcher-card-bg)] text-muted-foreground transition-all duration-200 hover:bg-[var(--launcher-chip-bg)] hover:text-muted-foreground"
+        aria-label="Back"
+      >
+        <ArrowLeft className="size-4" />
+      </Button>
+
+      <div className="flex flex-1 items-center gap-3">
+        <div className="size-8 rounded-xl bg-[var(--launcher-card-bg)] p-1.5">
+          <NotebookTabs className="size-full text-[var(--icon-orange-fg)]" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <h1 className="text-launcher-lg font-semibold tracking-[-0.02em] text-foreground">Snippets</h1>
+          <p className="text-launcher-sm tracking-[-0.01em] text-muted-foreground">
+            Create, preview, and paste text snippets
+          </p>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2">
+        {viewMode === "view" && isFetching ? <Loader2 className="size-3.5 animate-spin text-muted-foreground" /> : null}
+        <span className="rounded-full bg-[var(--launcher-chip-bg)] px-2.5 py-1 text-launcher-xs font-medium text-muted-foreground">
+          {snippets.length} {snippets.length === 1 ? "snippet" : "snippets"}
+        </span>
+      </div>
+    </header>
+  );
+}
+
+function SnippetsFooter({
+  filteredSnippets,
+  selectedSnippet,
+  pasteSnippetMutation,
+  openCreateView,
+  onPaste,
+}: {
+  filteredSnippets: Snippet[];
+  selectedSnippet: Snippet | null;
+  pasteSnippetMutation: { isPending: boolean };
+  openCreateView: () => void;
+  onPaste: () => void;
+}) {
+  return (
+    <ModuleFooter
+      className="snippets-footer-enter border-[var(--footer-border)]"
+      leftSlot={
+        <>
+          <CircleDot className="size-3.5" />
+          <span>{filteredSnippets.length} visible</span>
+        </>
+      }
+      shortcuts={[
+        { keys: ["Ctrl+N"], label: "New" },
+        { keys: ["Ctrl+E"], label: "Edit" },
+      ]}
+      actions={
+        <>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={openCreateView}
+            className={cn(
+              "inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-launcher-sm font-medium transition-all duration-200",
+              "bg-[var(--ring)]/20 text-[var(--ring)] hover:bg-[var(--ring)]/30",
+            )}
+          >
+            <FilePlus2 className="size-3.5" />
+            New
+          </Button>
+
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={onPaste}
+            disabled={!selectedSnippet || pasteSnippetMutation.isPending}
+            className={cn(
+              "inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--launcher-card-border)] px-3 text-launcher-sm font-medium transition-all duration-200",
+              "bg-[var(--launcher-card-bg)] text-muted-foreground hover:bg-[var(--launcher-chip-bg)] hover:text-muted-foreground",
+              "disabled:opacity-40 disabled:pointer-events-none",
+            )}
+          >
+            <NotebookTabs className="size-3.5" />
+            Paste
+          </Button>
+        </>
+      }
+    />
+  );
+}
+
 export function SnippetsView({ onBack }: SnippetsViewProps) {
   const snippetsQuery = useSnippetsQuery();
   const createSnippetMutation = useCreateSnippetMutation();
@@ -118,59 +260,62 @@ export function SnippetsView({ onBack }: SnippetsViewProps) {
   const setSnippetEnabledMutation = useSetSnippetEnabledMutation();
   const pasteSnippetMutation = usePasteSnippetMutation();
 
-  const [viewMode, setViewMode] = useState<SnippetsMode>("view");
-  const [searchValue, setSearchValue] = useState("");
-  const [selectedTag, setSelectedTag] = useState("all");
-  const [selectedSnippetId, setSelectedSnippetId] = useState<string | null>(null);
-  const [draft, setDraft] = useState<SnippetEditorDraft>(createEmptyDraft);
-  const viewModeRef = useRef<SnippetsMode>(viewMode);
-  const selectedSnippetRef = useRef<Snippet | null>(null);
+  const [state, dispatch] = useReducer(snippetsViewReducer, {
+    viewMode: "view",
+    searchValue: "",
+    selectedTag: "all",
+    selectedSnippetId: null,
+    draft: createEmptyDraft(),
+  });
 
   const snippets = snippetsQuery.data ?? [];
   const availableTags = collectAvailableTags(snippets);
-  const filteredSnippets = filterSnippets(snippets, searchValue, selectedTag);
-  const resolvedSelectedSnippetId = filteredSnippets.some((snippet) => snippet.id === selectedSnippetId)
-    ? selectedSnippetId
+  const filteredSnippets = filterSnippets(snippets, state.searchValue, state.selectedTag);
+  const resolvedSelectedSnippetId = filteredSnippets.some(
+    (snippet) => snippet.id === state.selectedSnippetId,
+  )
+    ? state.selectedSnippetId
     : (filteredSnippets[0]?.id ?? null);
   const selectedSnippet =
     filteredSnippets.find((snippet) => snippet.id === resolvedSelectedSnippetId) ?? null;
 
-  if (selectedSnippetId !== resolvedSelectedSnippetId) {
-    setSelectedSnippetId(resolvedSelectedSnippetId);
+  if (state.selectedSnippetId !== resolvedSelectedSnippetId) {
+    dispatch({ type: "set-selected-snippet-id", value: resolvedSelectedSnippetId });
   }
 
-  viewModeRef.current = viewMode;
-  selectedSnippetRef.current = selectedSnippet;
+  const handleWindowKeyDown = useEffectEvent((event: KeyboardEvent) => {
+    if (state.viewMode !== "view") {
+      return;
+    }
+
+    const isMeta = event.metaKey || event.ctrlKey;
+    const key = event.key.toLowerCase();
+
+    const target = event.target;
+    if (target instanceof HTMLElement) {
+      const tag = target.tagName.toLowerCase();
+      if (tag === "input" || tag === "textarea" || target.isContentEditable) {
+        return;
+      }
+    }
+
+    if (isMeta && key === "n") {
+      event.preventDefault();
+      dispatch({ type: "set-draft", value: createEmptyDraft() });
+      dispatch({ type: "set-view-mode", value: "create" });
+      return;
+    }
+
+    if (isMeta && key === "e" && selectedSnippet) {
+      event.preventDefault();
+      dispatch({ type: "set-draft", value: buildDraftFromSnippet(selectedSnippet) });
+      dispatch({ type: "set-view-mode", value: "edit" });
+    }
+  });
 
   useMountEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (viewModeRef.current !== "view") {
-        return;
-      }
-
-      const isMeta = event.metaKey || event.ctrlKey;
-      const key = event.key.toLowerCase();
-
-      const target = event.target;
-      if (target instanceof HTMLElement) {
-        const tag = target.tagName.toLowerCase();
-        if (tag === "input" || tag === "textarea" || target.isContentEditable) {
-          return;
-        }
-      }
-
-      if (isMeta && key === "n") {
-        event.preventDefault();
-        setDraft(createEmptyDraft());
-        setViewMode("create");
-        return;
-      }
-
-      if (isMeta && key === "e" && selectedSnippetRef.current) {
-        event.preventDefault();
-        setDraft(buildDraftFromSnippet(selectedSnippetRef.current));
-        setViewMode("edit");
-      }
+      handleWindowKeyDown(event);
     };
 
     window.addEventListener("keydown", handleKeyDown);
@@ -180,8 +325,8 @@ export function SnippetsView({ onBack }: SnippetsViewProps) {
   });
 
   useLauncherPanelBackHandler("snippets", () => {
-    if (viewMode === "create" || viewMode === "edit") {
-      setViewMode("view");
+    if (state.viewMode === "create" || state.viewMode === "edit") {
+      dispatch({ type: "set-view-mode", value: "view" });
       return true;
     }
 
@@ -190,57 +335,61 @@ export function SnippetsView({ onBack }: SnippetsViewProps) {
   });
 
   async function handleSaveSnippet() {
-    const name = normalizeText(draft.name);
-    const trigger = normalizeText(draft.trigger);
-    const template = normalizeText(draft.template);
+    const name = normalizeText(state.draft.name);
+    const trigger = normalizeText(state.draft.trigger);
+    const template = normalizeText(state.draft.template);
 
     if (!name || !trigger || !template) {
       toast.error("Name, keyword, and snippet content are required.");
       return;
     }
 
-    const normalizedTags = draft.tags.map((tag) => tag.trim()).filter(Boolean);
+    const normalizedTags = state.draft.tags.map((tag) => tag.trim()).filter(Boolean);
 
-    try {
-      if (viewMode === "create") {
+    if (state.viewMode === "create") {
+      try {
         const created = await createSnippetMutation.mutateAsync({
           name,
           trigger,
           template,
           tags: normalizedTags,
-          contentType: draft.contentType,
-          enabled: draft.enabled,
-          caseSensitive: draft.caseSensitive,
-          wordBoundary: draft.wordBoundary,
-          instantExpand: draft.instantExpand,
+          contentType: state.draft.contentType,
+          enabled: state.draft.enabled,
+          caseSensitive: state.draft.caseSensitive,
+          wordBoundary: state.draft.wordBoundary,
+          instantExpand: state.draft.instantExpand,
         });
 
-        setSelectedSnippetId(created.id);
-        setViewMode("view");
+        dispatch({ type: "set-selected-snippet-id", value: created.id });
+        dispatch({ type: "set-view-mode", value: "view" });
         toast.success("Snippet created.");
-        return;
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Failed to save snippet.");
       }
+      return;
+    }
 
-      if (viewMode === "edit" && resolvedSelectedSnippetId) {
+    if (state.viewMode === "edit" && resolvedSelectedSnippetId) {
+      try {
         const updated = await updateSnippetMutation.mutateAsync({
           id: resolvedSelectedSnippetId,
           name,
           trigger,
           template,
           tags: normalizedTags,
-          contentType: draft.contentType,
-          enabled: draft.enabled,
-          caseSensitive: draft.caseSensitive,
-          wordBoundary: draft.wordBoundary,
-          instantExpand: draft.instantExpand,
+          contentType: state.draft.contentType,
+          enabled: state.draft.enabled,
+          caseSensitive: state.draft.caseSensitive,
+          wordBoundary: state.draft.wordBoundary,
+          instantExpand: state.draft.instantExpand,
         });
 
-        setSelectedSnippetId(updated.id);
-        setViewMode("view");
+        dispatch({ type: "set-selected-snippet-id", value: updated.id });
+        dispatch({ type: "set-view-mode", value: "view" });
         toast.success("Snippet updated.");
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Failed to save snippet.");
       }
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to save snippet.");
     }
   }
 
@@ -252,8 +401,8 @@ export function SnippetsView({ onBack }: SnippetsViewProps) {
     try {
       await deleteSnippetMutation.mutateAsync(resolvedSelectedSnippetId);
       toast.success("Snippet deleted.");
-      setSelectedSnippetId(null);
-      setViewMode("view");
+      dispatch({ type: "set-selected-snippet-id", value: null });
+      dispatch({ type: "set-view-mode", value: "view" });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to delete snippet.");
     }
@@ -264,12 +413,14 @@ export function SnippetsView({ onBack }: SnippetsViewProps) {
       return;
     }
 
+    const successMessage = selectedSnippet.enabled ? "Snippet disabled." : "Snippet enabled.";
+
     try {
       await setSnippetEnabledMutation.mutateAsync({
         id: selectedSnippet.id,
         enabled: !selectedSnippet.enabled,
       });
-      toast.success(selectedSnippet.enabled ? "Snippet disabled." : "Snippet enabled.");
+      toast.success(successMessage);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to update snippet status.");
     }
@@ -289,8 +440,8 @@ export function SnippetsView({ onBack }: SnippetsViewProps) {
   }
 
   function openCreateView() {
-    setDraft(createEmptyDraft());
-    setViewMode("create");
+    dispatch({ type: "set-draft", value: createEmptyDraft() });
+    dispatch({ type: "set-view-mode", value: "create" });
   }
 
   function openEditView() {
@@ -298,8 +449,8 @@ export function SnippetsView({ onBack }: SnippetsViewProps) {
       return;
     }
 
-    setDraft(buildDraftFromSnippet(selectedSnippet));
-    setViewMode("edit");
+    dispatch({ type: "set-draft", value: buildDraftFromSnippet(selectedSnippet) });
+    dispatch({ type: "set-view-mode", value: "edit" });
   }
 
   const isBusy =
@@ -309,58 +460,28 @@ export function SnippetsView({ onBack }: SnippetsViewProps) {
 
   return (
     <div className="snippets-view-enter relative flex h-full w-full flex-col overflow-hidden text-foreground">
-      {/* Header */}
-      <header className="snippets-header-enter flex h-14 shrink-0 items-center gap-3 border-b border-[var(--launcher-card-border)] px-4">
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-sm"
-          onClick={() => {
-            if (viewMode === "create" || viewMode === "edit") {
-              setViewMode("view");
-              return;
-            }
-            onBack();
-          }}
-          className="flex size-9 items-center justify-center rounded-lg bg-[var(--launcher-card-bg)] text-muted-foreground transition-all duration-200 hover:bg-[var(--launcher-chip-bg)] hover:text-muted-foreground"
-          aria-label="Back"
-        >
-          <ArrowLeft className="size-4" />
-        </Button>
+      <SnippetsHeader
+        snippets={snippets}
+        isFetching={snippetsQuery.isFetching}
+        viewMode={state.viewMode}
+        onBack={() => {
+          if (state.viewMode === "create" || state.viewMode === "edit") {
+            dispatch({ type: "set-view-mode", value: "view" });
+            return;
+          }
+          onBack();
+        }}
+      />
 
-        <div className="flex flex-1 items-center gap-3">
-          <div className="size-8 rounded-xl bg-[var(--launcher-card-bg)] p-1.5">
-            <NotebookTabs className="size-full text-[var(--icon-orange-fg)]" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <h1 className="text-launcher-lg font-semibold tracking-[-0.02em] text-foreground">
-              Snippets
-            </h1>
-            <p className="text-launcher-sm tracking-[-0.01em] text-muted-foreground">
-              Create, preview, and paste text snippets
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {snippetsQuery.isFetching && (
-            <Loader2 className="size-3.5 animate-spin text-muted-foreground" />
-          )}
-          <span className="rounded-full bg-[var(--launcher-chip-bg)] px-2.5 py-1 text-launcher-xs font-medium text-muted-foreground">
-            {snippets.length} {snippets.length === 1 ? "snippet" : "snippets"}
-          </span>
-        </div>
-      </header>
-
-      {viewMode === "create" || viewMode === "edit" ? (
+      {state.viewMode === "create" || state.viewMode === "edit" ? (
         <SnippetEditor
-          mode={viewMode}
-          draft={draft}
+          mode={state.viewMode}
+          draft={state.draft}
           existingTags={availableTags}
           isSubmitting={isBusy}
-          onDraftChange={setDraft}
+          onDraftChange={(value) => dispatch({ type: "set-draft", value })}
           onCancel={() => {
-            setViewMode("view");
+            dispatch({ type: "set-view-mode", value: "view" });
           }}
           onSubmit={() => {
             void handleSaveSnippet();
@@ -372,12 +493,12 @@ export function SnippetsView({ onBack }: SnippetsViewProps) {
             snippets={filteredSnippets}
             selectedSnippetId={resolvedSelectedSnippetId}
             isLoading={snippetsQuery.isLoading}
-            searchValue={searchValue}
-            selectedTag={selectedTag}
+            searchValue={state.searchValue}
+            selectedTag={state.selectedTag}
             tags={availableTags}
-            onSearchValueChange={setSearchValue}
-            onSelectSnippet={setSelectedSnippetId}
-            onSelectedTagChange={setSelectedTag}
+            onSearchValueChange={(value) => dispatch({ type: "set-search-value", value })}
+            onSelectSnippet={(value) => dispatch({ type: "set-selected-snippet-id", value })}
+            onSelectedTagChange={(value) => dispatch({ type: "set-selected-tag", value })}
           />
           <SnippetPreview
             snippet={selectedSnippet}
@@ -398,54 +519,15 @@ export function SnippetsView({ onBack }: SnippetsViewProps) {
         </div>
       )}
 
-      {viewMode === "view" && (
-        <ModuleFooter
-          className="snippets-footer-enter border-[var(--footer-border)]"
-          leftSlot={
-            <>
-              <CircleDot className="size-3.5" />
-              <span>{filteredSnippets.length} visible</span>
-            </>
-          }
-          shortcuts={[
-            { keys: ["Ctrl+N"], label: "New" },
-            { keys: ["Ctrl+E"], label: "Edit" },
-          ]}
-          actions={
-            <>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={openCreateView}
-                className={cn(
-                  "inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-launcher-sm font-medium transition-all duration-200",
-                  "bg-[var(--ring)]/20 text-[var(--ring)] hover:bg-[var(--ring)]/30",
-                )}
-              >
-                <FilePlus2 className="size-3.5" />
-                New
-              </Button>
-
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  void handlePasteSnippet();
-                }}
-                disabled={!selectedSnippet || pasteSnippetMutation.isPending}
-                className={cn(
-                  "inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--launcher-card-border)] px-3 text-launcher-sm font-medium transition-all duration-200",
-                  "bg-[var(--launcher-card-bg)] text-muted-foreground hover:bg-[var(--launcher-chip-bg)] hover:text-muted-foreground",
-                  "disabled:opacity-40 disabled:pointer-events-none",
-                )}
-              >
-                <NotebookTabs className="size-3.5" />
-                Paste
-              </Button>
-            </>
-          }
+      {state.viewMode === "view" && (
+        <SnippetsFooter
+          filteredSnippets={filteredSnippets}
+          selectedSnippet={selectedSnippet}
+          pasteSnippetMutation={pasteSnippetMutation}
+          openCreateView={openCreateView}
+          onPaste={() => {
+            void handlePasteSnippet();
+          }}
         />
       )}
     </div>

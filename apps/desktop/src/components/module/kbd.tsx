@@ -31,7 +31,9 @@ interface KbdShortcutProps {
 
 export function KbdShortcut({ keys, label, className }: KbdShortcutProps) {
   return (
-    <span className={cn("flex items-center gap-1 text-launcher-xs text-muted-foreground", className)}>
+    <span
+      className={cn("flex items-center gap-1 text-launcher-xs text-muted-foreground", className)}
+    >
       {keys.map((key) => (
         <Kbd key={key}>{key}</Kbd>
       ))}

@@ -85,22 +85,11 @@ if (!reactCompiler.rolldown?.filter) {
 
 reactCompiler.rolldown.filter.id = {
   include: ["src/**"],
-  exclude: [
-    "**/*.d.ts",
-    "src/assets/**",
-    "src/routeTree.gen.ts",
-    "src/styles/**",
-    "src/types/**",
-  ],
+  exclude: ["**/*.d.ts", "src/assets/**", "src/routeTree.gen.ts", "src/styles/**", "src/types/**"],
 };
 
 export default defineConfig({
-  plugins: [
-    tailwindcss(),
-    tanstackRouter({}),
-    react(),
-    babel({ presets: [reactCompiler] }),
-  ],
+  plugins: [tailwindcss(), tanstackRouter({}), react(), babel({ presets: [reactCompiler] })],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

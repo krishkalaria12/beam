@@ -35,7 +35,11 @@ export function SplitView({
 
   return (
     <div
-      className={cn("module-split-view min-h-0 flex-1 overflow-hidden", showDetail ? "grid" : "block", className)}
+      className={cn(
+        "module-split-view min-h-0 flex-1 overflow-hidden",
+        showDetail ? "grid" : "block",
+        className,
+      )}
       style={
         showDetail
           ? {
@@ -47,7 +51,10 @@ export function SplitView({
           : style
       }
     >
-      <div className={cn("module-split-view-primary min-h-0 h-full overflow-hidden", primaryClassName)} style={primaryStyle}>
+      <div
+        className={cn("module-split-view-primary min-h-0 h-full overflow-hidden", primaryClassName)}
+        style={primaryStyle}
+      >
         {primary}
       </div>
       {showDetail ? (

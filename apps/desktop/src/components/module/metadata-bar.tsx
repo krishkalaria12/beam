@@ -32,7 +32,7 @@ type MetadataTagsItem = {
   tags: Array<{
     text: ReactNode;
     icon?: ReactNode;
-      color?: string;
+    color?: string;
   }>;
   className?: string;
   style?: CSSProperties;
@@ -59,6 +59,29 @@ interface MetadataBarProps {
   rowClassName?: string;
 }
 
+function getMetadataItemSignature(item: MetadataBarItem): string {
+  if (item.type === "separator") {
+    return "separator";
+  }
+
+  if (item.type === "tags") {
+    return `tags:${item.label}:${item.tags.length}`;
+  }
+
+  return `${item.type ?? "label"}:${item.label}`;
+}
+
+function buildMetadataKeys(items: MetadataBarItem[]): string[] {
+  const seenCounts = new Map<string, number>();
+
+  return items.map((item) => {
+    const signature = getMetadataItemSignature(item);
+    const nextCount = (seenCounts.get(signature) ?? 0) + 1;
+    seenCounts.set(signature, nextCount);
+    return `${signature}:${nextCount}`;
+  });
+}
+
 export function MetadataBar({
   items,
   className,
@@ -67,30 +90,62 @@ export function MetadataBar({
   contentStyle,
   rowClassName,
 }: MetadataBarProps) {
+  const itemKeys = buildMetadataKeys(items);
+
   return (
-    <div className={cn("module-metadata-bar custom-scrollbar min-h-0 overflow-y-auto overscroll-contain", className)} style={style}>
-      <div className={cn("module-metadata-content space-y-2 p-4", contentClassName)} style={contentStyle}>
+    <div
+      className={cn(
+        "module-metadata-bar custom-scrollbar min-h-0 overflow-y-auto overscroll-contain",
+        className,
+      )}
+      style={style}
+    >
+      <div
+        className={cn("module-metadata-content space-y-2 p-4", contentClassName)}
+        style={contentStyle}
+      >
         {items.map((item, index) => {
+          const itemKey = itemKeys[index];
+
           if (item.type === "separator") {
             return (
-              <div key={`separator:${index}`} className="module-metadata-separator my-1 h-px w-full bg-[var(--ui-divider)]" />
+              <div
+                key={itemKey}
+                className="module-metadata-separator my-1 h-px w-full bg-[var(--ui-divider)]"
+              />
             );
           }
+
+          const rowKeyBase = `${item.type}:${item.label}`;
 
           if (item.type === "tags") {
             return (
               <div
-                key={`tags:${item.label}:${index}`}
-                className={cn("metadata-row module-metadata-row flex items-start justify-between gap-4", rowClassName, item.className)}
+                key={itemKey}
+                className={cn(
+                  "metadata-row module-metadata-row flex items-start justify-between gap-4",
+                  rowClassName,
+                  item.className,
+                )}
                 style={item.style}
               >
-                <span className={cn("module-metadata-label text-launcher-sm text-muted-foreground", item.labelClassName)}>
+                <span
+                  className={cn(
+                    "module-metadata-label text-launcher-sm text-muted-foreground",
+                    item.labelClassName,
+                  )}
+                >
                   {item.label}
                 </span>
-                <div className={cn("module-metadata-tags flex max-w-[68%] flex-wrap justify-end gap-1.5", item.tagsClassName)}>
-                  {item.tags.map((tag, tagIndex) => (
+                <div
+                  className={cn(
+                    "module-metadata-tags flex max-w-[68%] flex-wrap justify-end gap-1.5",
+                    item.tagsClassName,
+                  )}
+                >
+                  {item.tags.map((tag) => (
                     <span
-                      key={`tag:${index}:${tagIndex}`}
+                      key={`tag:${tag.text}:${tag.color ?? "default"}`}
                       className="module-metadata-tag inline-flex items-center gap-1 rounded-md border border-[var(--launcher-chip-border)] bg-[var(--launcher-chip-bg)] px-2 py-0.5 text-launcher-xs text-muted-foreground"
                       style={tag.color ? { color: tag.color } : undefined}
                     >
@@ -135,11 +190,20 @@ export function MetadataBar({
 
           return (
             <div
-              key={`${item.type ?? "label"}:${item.label}:${index}`}
-              className={cn("metadata-row module-metadata-row flex items-start justify-between gap-4", rowClassName, item.className)}
+              key={itemKey}
+              className={cn(
+                "metadata-row module-metadata-row flex items-start justify-between gap-4",
+                rowClassName,
+                item.className,
+              )}
               style={item.style}
             >
-              <span className={cn("module-metadata-label text-launcher-sm text-muted-foreground", item.labelClassName)}>
+              <span
+                className={cn(
+                  "module-metadata-label text-launcher-sm text-muted-foreground",
+                  item.labelClassName,
+                )}
+              >
                 {item.label}
               </span>
               {value}

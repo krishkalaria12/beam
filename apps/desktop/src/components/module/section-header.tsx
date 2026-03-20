@@ -11,7 +11,10 @@ interface SectionHeaderProps {
 
 export function SectionHeader({ title, className, style, titleClassName }: SectionHeaderProps) {
   return (
-    <div className={cn("module-section-header flex h-7 items-center px-2", className)} style={style}>
+    <div
+      className={cn("module-section-header flex h-7 items-center px-2", className)}
+      style={style}
+    >
       <div
         className={cn(
           "module-section-header-title text-launcher-xs font-medium text-muted-foreground",

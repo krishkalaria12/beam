@@ -53,7 +53,10 @@ export function filterKeybindRows(rows: KeybindRow[], query: string): KeybindRow
   }
 
   return rows.filter((row) =>
-    [row.title, row.description, row.id, ...row.keywords].join(" ").toLowerCase().includes(normalizedQuery),
+    [row.title, row.description, row.id, ...row.keywords]
+      .join(" ")
+      .toLowerCase()
+      .includes(normalizedQuery),
   );
 }
 

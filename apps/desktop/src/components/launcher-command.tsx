@@ -396,27 +396,34 @@ export default function LauncherCommand() {
   const calculatorPreviewKey = calculatorPreview
     ? `${calculatorPreview.query}\u0000${calculatorPreview.result}\u0000${calculatorSessionId}`
     : "";
-
-  if (calculatorPreviewKey && calculatorSaveKeyRef.current !== calculatorPreviewKey) {
-    calculatorSaveKeyRef.current = calculatorPreviewKey;
-    if (calculatorSaveTimerRef.current !== null) {
-      window.clearTimeout(calculatorSaveTimerRef.current);
+  const syncCalculatorAutoSave = useEffectEvent(() => {
+    if (calculatorPreviewKey && calculatorSaveKeyRef.current !== calculatorPreviewKey) {
+      calculatorSaveKeyRef.current = calculatorPreviewKey;
+      if (calculatorSaveTimerRef.current !== null) {
+        window.clearTimeout(calculatorSaveTimerRef.current);
+      }
+      calculatorSaveTimerRef.current = window.setTimeout(() => {
+        calculatorSaveTimerRef.current = null;
+        if (!calculatorPreview) {
+          return;
+        }
+        void saveCalculatorHistory(
+          calculatorPreview.query,
+          calculatorPreview.result,
+          calculatorSessionId,
+        ).then(() => {
+          queryClient.invalidateQueries({ queryKey: ["calculator", "history"] });
+        });
+      }, CALCULATOR_AUTO_SAVE_DEBOUNCE_MS);
+      return;
     }
-    calculatorSaveTimerRef.current = window.setTimeout(() => {
+
+    if (!calculatorPreviewKey && calculatorSaveTimerRef.current !== null) {
+      window.clearTimeout(calculatorSaveTimerRef.current);
       calculatorSaveTimerRef.current = null;
-      void saveCalculatorHistory(
-        calculatorPreview!.query,
-        calculatorPreview!.result,
-        calculatorSessionId,
-      ).then(() => {
-        queryClient.invalidateQueries({ queryKey: ["calculator", "history"] });
-      });
-    }, CALCULATOR_AUTO_SAVE_DEBOUNCE_MS);
-  } else if (!calculatorPreviewKey && calculatorSaveTimerRef.current !== null) {
-    window.clearTimeout(calculatorSaveTimerRef.current);
-    calculatorSaveTimerRef.current = null;
-    calculatorSaveKeyRef.current = "";
-  }
+      calculatorSaveKeyRef.current = "";
+    }
+  });
 
   const customActionHandler = useMemo(
     () =>
@@ -696,33 +703,32 @@ export default function LauncherCommand() {
     }
   };
 
-  const activePanelRef = useRef(activePanel);
-  const backToCommandsRef = useRef(backToCommands);
-  activePanelRef.current = activePanel;
-  backToCommandsRef.current = backToCommands;
+  const handleWindowBackHotkey = useEffectEvent((event: KeyboardEvent) => {
+    if (activePanel === "commands") {
+      return;
+    }
+
+    if (event.defaultPrevented || !isLauncherBackHotkey(event)) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    const handledByPanel = runLauncherPanelBackHandler(activePanel);
+    if (!handledByPanel) {
+      backToCommands();
+    }
+  });
 
   useMountEffect(() => {
-    const handleWindowBackHotkey = (event: KeyboardEvent) => {
-      if (activePanelRef.current === "commands") {
-        return;
-      }
-
-      if (event.defaultPrevented || !isLauncherBackHotkey(event)) {
-        return;
-      }
-
-      event.preventDefault();
-      event.stopPropagation();
-
-      const handledByPanel = runLauncherPanelBackHandler(activePanelRef.current);
-      if (!handledByPanel) {
-        backToCommandsRef.current();
-      }
+    const onWindowBackHotkey = (event: KeyboardEvent) => {
+      handleWindowBackHotkey(event);
     };
 
-    window.addEventListener("keydown", handleWindowBackHotkey);
+    window.addEventListener("keydown", onWindowBackHotkey);
     return () => {
-      window.removeEventListener("keydown", handleWindowBackHotkey);
+      window.removeEventListener("keydown", onWindowBackHotkey);
     };
   });
 
@@ -748,6 +754,17 @@ export default function LauncherCommand() {
   );
 
   useLauncherWindowSizeSync(activePanel === "commands", shouldCollapseToInputOnly);
+
+  useMountEffect(() => {
+    syncCalculatorAutoSave();
+    const intervalId = window.setInterval(() => {
+      syncCalculatorAutoSave();
+    }, 120);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  });
 
   useMountEffect(() => {
     return () => {
@@ -786,8 +803,12 @@ export default function LauncherCommand() {
   });
   const focusInputFrameRef = useRef<number | null>(null);
   const focusInputKeyRef = useRef("");
-  const focusInputKey = `${activePanel}:${isInputHidden}`;
-  if (focusInputKeyRef.current !== focusInputKey) {
+  const syncFocusedInput = useEffectEvent(() => {
+    const focusInputKey = `${activePanel}:${isInputHidden}`;
+    if (focusInputKeyRef.current === focusInputKey) {
+      return;
+    }
+
     focusInputKeyRef.current = focusInputKey;
     if (focusInputFrameRef.current !== null) {
       window.cancelAnimationFrame(focusInputFrameRef.current);
@@ -798,7 +819,18 @@ export default function LauncherCommand() {
         focusLauncherInputElement();
       });
     }
-  }
+  });
+
+  useMountEffect(() => {
+    syncFocusedInput();
+    const intervalId = window.setInterval(() => {
+      syncFocusedInput();
+    }, 120);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  });
 
   useMountEffect(() => {
     return () => {

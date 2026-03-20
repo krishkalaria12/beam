@@ -22,7 +22,13 @@ export function GenericGridView({
   onScroll,
 }: GenericGridViewProps) {
   return (
-    <div className={cn("module-generic-grid-view min-h-0 flex flex-1 flex-col overflow-hidden", className)} style={style}>
+    <div
+      className={cn(
+        "module-generic-grid-view min-h-0 flex flex-1 flex-col overflow-hidden",
+        className,
+      )}
+      style={style}
+    >
       <div
         className={cn(
           "module-generic-grid-content",

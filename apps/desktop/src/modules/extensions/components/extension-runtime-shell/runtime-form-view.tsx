@@ -57,7 +57,9 @@ function renderFormField(state: UseExtensionRunnerStateResult, field: RunnerForm
       <ModuleFormField
         key={field.nodeId}
         label={
-          <Label className="ext-form-label text-launcher-sm font-medium text-muted-foreground">{field.title}</Label>
+          <Label className="ext-form-label text-launcher-sm font-medium text-muted-foreground">
+            {field.title}
+          </Label>
         }
         description={field.info}
         error={field.error}
@@ -90,7 +92,9 @@ function renderFormField(state: UseExtensionRunnerStateResult, field: RunnerForm
       <ModuleFormField
         key={field.nodeId}
         label={
-          <Label className="ext-form-label text-launcher-sm font-medium text-muted-foreground">{field.title}</Label>
+          <Label className="ext-form-label text-launcher-sm font-medium text-muted-foreground">
+            {field.title}
+          </Label>
         }
         description={field.info}
         error={field.error}
@@ -121,7 +125,9 @@ function renderFormField(state: UseExtensionRunnerStateResult, field: RunnerForm
       <ModuleFormField
         key={field.nodeId}
         label={
-          <Label className="ext-form-label text-launcher-sm font-medium text-muted-foreground">{field.title}</Label>
+          <Label className="ext-form-label text-launcher-sm font-medium text-muted-foreground">
+            {field.title}
+          </Label>
         }
         description={field.info}
         error={field.error}
@@ -156,7 +162,11 @@ function renderFormField(state: UseExtensionRunnerStateResult, field: RunnerForm
   return (
     <ModuleFormField
       key={field.nodeId}
-      label={<Label className="ext-form-label text-launcher-sm font-medium text-muted-foreground">{field.title}</Label>}
+      label={
+        <Label className="ext-form-label text-launcher-sm font-medium text-muted-foreground">
+          {field.title}
+        </Label>
+      }
       description={field.info}
       error={field.error}
       className="ext-form-field"

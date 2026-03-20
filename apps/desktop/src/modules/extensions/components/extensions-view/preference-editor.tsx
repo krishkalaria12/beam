@@ -52,7 +52,9 @@ export function PreferenceEditor({
       return (
         <FormField
           key={field.name}
-          label={<Label className="text-launcher-sm font-medium text-muted-foreground">{label}</Label>}
+          label={
+            <Label className="text-launcher-sm font-medium text-muted-foreground">{label}</Label>
+          }
           description={field.description}
         >
           <SearchableDropdown
@@ -96,7 +98,9 @@ export function PreferenceEditor({
       return (
         <FormField
           key={field.name}
-          label={<Label className="text-launcher-sm font-medium text-muted-foreground">{label}</Label>}
+          label={
+            <Label className="text-launcher-sm font-medium text-muted-foreground">{label}</Label>
+          }
           description={field.description}
         >
           <Textarea
@@ -113,7 +117,9 @@ export function PreferenceEditor({
     return (
       <FormField
         key={field.name}
-        label={<Label className="text-launcher-sm font-medium text-muted-foreground">{label}</Label>}
+        label={
+          <Label className="text-launcher-sm font-medium text-muted-foreground">{label}</Label>
+        }
         description={field.description}
       >
         <Input

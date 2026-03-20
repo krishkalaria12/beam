@@ -12,9 +12,7 @@ interface LauncherOpacityProviderProps {
   children: React.ReactNode;
 }
 
-export function LauncherOpacityProvider({
-  children,
-}: LauncherOpacityProviderProps) {
+export function LauncherOpacityProvider({ children }: LauncherOpacityProviderProps) {
   const queryClient = useQueryClient();
 
   useMountEffect(() => {
@@ -32,10 +30,7 @@ export function LauncherOpacityProvider({
         if (!mounted) {
           return;
         }
-        queryClient.setQueryData(
-          LAUNCHER_OPACITY_QUERY_KEY,
-          DEFAULT_LAUNCHER_OPACITY,
-        );
+        queryClient.setQueryData(LAUNCHER_OPACITY_QUERY_KEY, DEFAULT_LAUNCHER_OPACITY);
         applyLauncherOpacity(DEFAULT_LAUNCHER_OPACITY);
       }
     };

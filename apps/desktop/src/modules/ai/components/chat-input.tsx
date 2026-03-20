@@ -24,8 +24,8 @@ function FieldInfo({ field }: { field: AnyFieldApi }) {
     <>
       {field.state.meta.isTouched && field.state.meta.errors.length > 0 ? (
         <div className="px-4 text-launcher-xs tracking-[-0.01em] text-[var(--icon-red-fg)]">
-          {field.state.meta.errors.map((error, i) => (
-            <p key={i}>{error}</p>
+          {field.state.meta.errors.map((error) => (
+            <p key={String(error)}>{error}</p>
           ))}
         </div>
       ) : null}
@@ -105,9 +105,7 @@ export function ChatInput({ onSubmit, isLoading, supportsFiles = true }: ChatInp
   return (
     <div className="ai-input-enter shrink-0 border-t border-[var(--launcher-card-border)] px-3 py-4">
       <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
+        action={() => {
           form.handleSubmit();
         }}
         className=""

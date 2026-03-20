@@ -63,6 +63,14 @@ export function TodoSortableRow({
         animationDelay: `${index * 30}ms`,
       }}
       onClick={() => onSelect(todo.id)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onSelect(todo.id);
+        }
+      }}
+      role="button"
+      tabIndex={0}
       className={cn(
         "todo-row-enter group relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-200 cursor-pointer",
         isSelected
@@ -116,10 +124,9 @@ export function TodoSortableRow({
       </Button>
 
       {/* Content */}
-      <div className="min-w-0 flex-1" onClick={(event) => event.stopPropagation()}>
+      <div className="min-w-0 flex-1">
         {isEditing ? (
           <Input
-            autoFocus
             value={editingTitle}
             disabled={isBusy}
             onChange={(event) => onEditingTitleChange(event.target.value)}

@@ -32,9 +32,7 @@ function normalizeIconThemes(value: unknown): IconThemeSummary[] {
       const record = entry as Record<string, unknown>;
       const id = normalizeIconThemeId(record.id);
       const name =
-        typeof record.name === "string" && record.name.trim().length > 0
-          ? record.name.trim()
-          : id;
+        typeof record.name === "string" && record.name.trim().length > 0 ? record.name.trim() : id;
 
       if (id === "auto") {
         return null;

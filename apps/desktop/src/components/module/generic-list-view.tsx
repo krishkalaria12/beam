@@ -38,7 +38,13 @@ export function GenericListView({
   templateColumns,
 }: GenericListViewProps) {
   return (
-    <div className={cn("module-generic-list-view min-h-0 flex flex-1 flex-col overflow-hidden", className)} style={style}>
+    <div
+      className={cn(
+        "module-generic-list-view min-h-0 flex flex-1 flex-col overflow-hidden",
+        className,
+      )}
+      style={style}
+    >
       <SplitView
         detailVisible={detailVisible}
         detail={detail}

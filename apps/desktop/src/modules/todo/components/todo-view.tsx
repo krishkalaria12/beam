@@ -6,7 +6,7 @@ import {
   type DragEndEvent,
 } from "@dnd-kit/core";
 import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
-import { useState } from "react";
+import { useReducer } from "react";
 import { ArrowLeft, CheckCircle2, ListTodo, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -41,18 +41,72 @@ interface TodoViewProps {
   onBack: () => void;
 }
 
+interface TodoViewState {
+  newTodoTitle: string;
+  newSubTodoTitle: string;
+  selectedTodoId: string | null;
+  todoOrder: string[];
+  subTodoOrder: string[];
+  editingTodoId: string | null;
+  editingTodoTitle: string;
+  editingSubTodoId: string | null;
+  editingSubTodoTitle: string;
+}
+
+type TodoViewAction =
+  | { type: "set-new-todo-title"; value: string }
+  | { type: "set-new-subtodo-title"; value: string }
+  | { type: "set-selected-todo-id"; value: string | null }
+  | { type: "set-todo-order"; value: string[] }
+  | { type: "set-subtodo-order"; value: string[] }
+  | { type: "start-todo-edit"; id: string; title: string }
+  | { type: "cancel-todo-edit" }
+  | { type: "set-editing-todo-title"; value: string }
+  | { type: "start-subtodo-edit"; id: string; title: string }
+  | { type: "cancel-subtodo-edit" }
+  | { type: "set-editing-subtodo-title"; value: string };
+
+const INITIAL_TODO_VIEW_STATE: TodoViewState = {
+  newTodoTitle: "",
+  newSubTodoTitle: "",
+  selectedTodoId: null,
+  todoOrder: [],
+  subTodoOrder: [],
+  editingTodoId: null,
+  editingTodoTitle: "",
+  editingSubTodoId: null,
+  editingSubTodoTitle: "",
+};
+
+function todoViewReducer(state: TodoViewState, action: TodoViewAction): TodoViewState {
+  switch (action.type) {
+    case "set-new-todo-title":
+      return { ...state, newTodoTitle: action.value };
+    case "set-new-subtodo-title":
+      return { ...state, newSubTodoTitle: action.value };
+    case "set-selected-todo-id":
+      return { ...state, selectedTodoId: action.value };
+    case "set-todo-order":
+      return { ...state, todoOrder: action.value };
+    case "set-subtodo-order":
+      return { ...state, subTodoOrder: action.value };
+    case "start-todo-edit":
+      return { ...state, editingTodoId: action.id, editingTodoTitle: action.title };
+    case "cancel-todo-edit":
+      return { ...state, editingTodoId: null, editingTodoTitle: "" };
+    case "set-editing-todo-title":
+      return { ...state, editingTodoTitle: action.value };
+    case "start-subtodo-edit":
+      return { ...state, editingSubTodoId: action.id, editingSubTodoTitle: action.title };
+    case "cancel-subtodo-edit":
+      return { ...state, editingSubTodoId: null, editingSubTodoTitle: "" };
+    case "set-editing-subtodo-title":
+      return { ...state, editingSubTodoTitle: action.value };
+  }
+}
+
 export function TodoView({ onBack }: TodoViewProps) {
-  const [newTodoTitle, setNewTodoTitle] = useState("");
-  const [newSubTodoTitle, setNewSubTodoTitle] = useState("");
-  const [selectedTodoId, setSelectedTodoId] = useState<string | null>(null);
-
-  const [todoOrder, setTodoOrder] = useState<string[]>([]);
-  const [subTodoOrder, setSubTodoOrder] = useState<string[]>([]);
-
-  const [editingTodoId, setEditingTodoId] = useState<string | null>(null);
-  const [editingTodoTitle, setEditingTodoTitle] = useState("");
-  const [editingSubTodoId, setEditingSubTodoId] = useState<string | null>(null);
-  const [editingSubTodoTitle, setEditingSubTodoTitle] = useState("");
+  const [state, dispatch] = useReducer(todoViewReducer, INITIAL_TODO_VIEW_STATE);
 
   const { data: todos = [], isLoading, isFetching } = useTodos();
   const createTodoMutation = useCreateTodoMutation();
@@ -87,31 +141,38 @@ export function TodoView({ onBack }: TodoViewProps) {
 
   useLauncherPanelBackHandler("todo", onBack);
 
-  const resolvedSelectedTodoId = todos.some((todo) => todo.id === selectedTodoId)
-    ? selectedTodoId
+  const resolvedSelectedTodoId = todos.some((todo) => todo.id === state.selectedTodoId)
+    ? state.selectedTodoId
     : (todos[0]?.id ?? null);
   const desiredTodoOrder = todos.map((todo) => todo.id);
 
-  if (selectedTodoId !== resolvedSelectedTodoId) {
-    setSelectedTodoId(resolvedSelectedTodoId);
+  if (state.selectedTodoId !== resolvedSelectedTodoId) {
+    dispatch({ type: "set-selected-todo-id", value: resolvedSelectedTodoId });
   }
 
-  if (!hasSameOrder(todoOrder, desiredTodoOrder)) {
-    setTodoOrder(desiredTodoOrder);
+  if (!hasSameOrder(state.todoOrder, desiredTodoOrder)) {
+    dispatch({ type: "set-todo-order", value: desiredTodoOrder });
   }
 
-  const orderedTodos = orderTodos(todos, hasSameOrder(todoOrder, desiredTodoOrder) ? todoOrder : desiredTodoOrder);
+  const orderedTodos = orderTodos(
+    todos,
+    hasSameOrder(state.todoOrder, desiredTodoOrder) ? state.todoOrder : desiredTodoOrder,
+  );
   const selectedTodo = orderedTodos.find((todo) => todo.id === resolvedSelectedTodoId) ?? null;
-  const desiredSubTodoOrder = selectedTodo ? selectedTodo.sub_todos.map((subTodo) => subTodo.id) : [];
+  const desiredSubTodoOrder = selectedTodo
+    ? selectedTodo.sub_todos.map((subTodo) => subTodo.id)
+    : [];
 
-  if (!hasSameOrder(subTodoOrder, desiredSubTodoOrder)) {
-    setSubTodoOrder(desiredSubTodoOrder);
+  if (!hasSameOrder(state.subTodoOrder, desiredSubTodoOrder)) {
+    dispatch({ type: "set-subtodo-order", value: desiredSubTodoOrder });
   }
 
   const orderedSubTodos = selectedTodo
     ? orderSubTodos(
         selectedTodo.sub_todos,
-        hasSameOrder(subTodoOrder, desiredSubTodoOrder) ? subTodoOrder : desiredSubTodoOrder,
+        hasSameOrder(state.subTodoOrder, desiredSubTodoOrder)
+          ? state.subTodoOrder
+          : desiredSubTodoOrder,
       )
     : [];
 
@@ -121,7 +182,7 @@ export function TodoView({ onBack }: TodoViewProps) {
   );
 
   async function handleCreateTodo() {
-    const title = normalizeTitle(newTodoTitle);
+    const title = normalizeTitle(state.newTodoTitle);
     if (!title) {
       return;
     }
@@ -131,8 +192,8 @@ export function TodoView({ onBack }: TodoViewProps) {
         title,
         orderIndex: orderedTodos.length,
       });
-      setNewTodoTitle("");
-      setSelectedTodoId(created.id);
+      dispatch({ type: "set-new-todo-title", value: "" });
+      dispatch({ type: "set-selected-todo-id", value: created.id });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to create todo.");
     }
@@ -153,11 +214,10 @@ export function TodoView({ onBack }: TodoViewProps) {
     try {
       await deleteTodoMutation.mutateAsync(todoId);
       if (resolvedSelectedTodoId === todoId) {
-        setSelectedTodoId(null);
+        dispatch({ type: "set-selected-todo-id", value: null });
       }
-      if (editingTodoId === todoId) {
-        setEditingTodoId(null);
-        setEditingTodoTitle("");
+      if (state.editingTodoId === todoId) {
+        dispatch({ type: "cancel-todo-edit" });
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to delete todo.");
@@ -169,7 +229,7 @@ export function TodoView({ onBack }: TodoViewProps) {
       return;
     }
 
-    const title = normalizeTitle(newSubTodoTitle);
+    const title = normalizeTitle(state.newSubTodoTitle);
     if (!title) {
       return;
     }
@@ -180,7 +240,7 @@ export function TodoView({ onBack }: TodoViewProps) {
         title,
         orderIndex: orderedSubTodos.length,
       });
-      setNewSubTodoTitle("");
+      dispatch({ type: "set-new-subtodo-title", value: "" });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to create sub todo.");
     }
@@ -200,9 +260,8 @@ export function TodoView({ onBack }: TodoViewProps) {
   async function handleDeleteSubTodo(subTodoId: string) {
     try {
       await deleteSubTodoMutation.mutateAsync(subTodoId);
-      if (editingSubTodoId === subTodoId) {
-        setEditingSubTodoId(null);
-        setEditingSubTodoTitle("");
+      if (state.editingSubTodoId === subTodoId) {
+        dispatch({ type: "cancel-subtodo-edit" });
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to delete sub todo.");
@@ -253,27 +312,25 @@ export function TodoView({ onBack }: TodoViewProps) {
   }
 
   function handleStartTodoEdit(todo: TodoWithSubTodos) {
-    setEditingTodoId(todo.id);
-    setEditingTodoTitle(todo.title);
+    dispatch({ type: "start-todo-edit", id: todo.id, title: todo.title });
   }
 
   function handleCancelTodoEdit() {
-    setEditingTodoId(null);
-    setEditingTodoTitle("");
+    dispatch({ type: "cancel-todo-edit" });
   }
 
   async function handleSubmitTodoEdit() {
-    if (!editingTodoId) {
+    if (!state.editingTodoId) {
       return;
     }
 
-    const nextTitle = normalizeTitle(editingTodoTitle);
+    const nextTitle = normalizeTitle(state.editingTodoTitle);
     if (!nextTitle) {
       toast.error("Todo title is required.");
       return;
     }
 
-    const currentTodo = orderedTodos.find((todo) => todo.id === editingTodoId);
+    const currentTodo = orderedTodos.find((todo) => todo.id === state.editingTodoId);
     if (!currentTodo) {
       handleCancelTodoEdit();
       return;
@@ -285,8 +342,8 @@ export function TodoView({ onBack }: TodoViewProps) {
     }
 
     try {
-      await updateTodoMutation.mutateAsync({
-        id: editingTodoId,
+        await updateTodoMutation.mutateAsync({
+        id: state.editingTodoId,
         title: nextTitle,
       });
       handleCancelTodoEdit();
@@ -296,27 +353,25 @@ export function TodoView({ onBack }: TodoViewProps) {
   }
 
   function handleStartSubTodoEdit(subTodo: SubTodo) {
-    setEditingSubTodoId(subTodo.id);
-    setEditingSubTodoTitle(subTodo.title);
+    dispatch({ type: "start-subtodo-edit", id: subTodo.id, title: subTodo.title });
   }
 
   function handleCancelSubTodoEdit() {
-    setEditingSubTodoId(null);
-    setEditingSubTodoTitle("");
+    dispatch({ type: "cancel-subtodo-edit" });
   }
 
   async function handleSubmitSubTodoEdit() {
-    if (!editingSubTodoId) {
+    if (!state.editingSubTodoId) {
       return;
     }
 
-    const nextTitle = normalizeTitle(editingSubTodoTitle);
+    const nextTitle = normalizeTitle(state.editingSubTodoTitle);
     if (!nextTitle) {
       toast.error("Subtask title is required.");
       return;
     }
 
-    const currentSubTodo = orderedSubTodos.find((subTodo) => subTodo.id === editingSubTodoId);
+    const currentSubTodo = orderedSubTodos.find((subTodo) => subTodo.id === state.editingSubTodoId);
     if (!currentSubTodo) {
       handleCancelSubTodoEdit();
       return;
@@ -328,8 +383,8 @@ export function TodoView({ onBack }: TodoViewProps) {
     }
 
     try {
-      await updateSubTodoMutation.mutateAsync({
-        id: editingSubTodoId,
+        await updateSubTodoMutation.mutateAsync({
+        id: state.editingSubTodoId,
         title: nextTitle,
       });
       handleCancelSubTodoEdit();
@@ -351,15 +406,15 @@ export function TodoView({ onBack }: TodoViewProps) {
       return;
     }
 
-    const oldIndex = todoOrder.indexOf(activeId);
-    const newIndex = todoOrder.indexOf(overId);
+    const oldIndex = state.todoOrder.indexOf(activeId);
+    const newIndex = state.todoOrder.indexOf(overId);
 
     if (oldIndex < 0 || newIndex < 0) {
       return;
     }
 
-    const nextOrder = arrayMove(todoOrder, oldIndex, newIndex);
-    setTodoOrder(nextOrder);
+    const nextOrder = arrayMove(state.todoOrder, oldIndex, newIndex);
+    dispatch({ type: "set-todo-order", value: nextOrder });
 
     const updates = buildTodoReorderUpdates(orderedTodos, nextOrder);
     if (updates.length === 0) {
@@ -369,7 +424,7 @@ export function TodoView({ onBack }: TodoViewProps) {
     try {
       await reorderTodosMutation.mutateAsync(updates);
     } catch (error) {
-      setTodoOrder(orderedTodos.map((todo) => todo.id));
+      dispatch({ type: "set-todo-order", value: orderedTodos.map((todo) => todo.id) });
       toast.error(error instanceof Error ? error.message : "Failed to reorder todos.");
     }
   }
@@ -387,15 +442,15 @@ export function TodoView({ onBack }: TodoViewProps) {
       return;
     }
 
-    const oldIndex = subTodoOrder.indexOf(activeId);
-    const newIndex = subTodoOrder.indexOf(overId);
+    const oldIndex = state.subTodoOrder.indexOf(activeId);
+    const newIndex = state.subTodoOrder.indexOf(overId);
 
     if (oldIndex < 0 || newIndex < 0) {
       return;
     }
 
-    const nextOrder = arrayMove(subTodoOrder, oldIndex, newIndex);
-    setSubTodoOrder(nextOrder);
+    const nextOrder = arrayMove(state.subTodoOrder, oldIndex, newIndex);
+    dispatch({ type: "set-subtodo-order", value: nextOrder });
 
     const updates = buildSubTodoReorderUpdates(orderedSubTodos, nextOrder);
     if (updates.length === 0) {
@@ -405,7 +460,7 @@ export function TodoView({ onBack }: TodoViewProps) {
     try {
       await reorderSubTodosMutation.mutateAsync(updates);
     } catch (error) {
-      setSubTodoOrder(orderedSubTodos.map((subTodo) => subTodo.id));
+      dispatch({ type: "set-subtodo-order", value: orderedSubTodos.map((subTodo) => subTodo.id) });
       toast.error(error instanceof Error ? error.message : "Failed to reorder subtasks.");
     }
   }
@@ -437,7 +492,9 @@ export function TodoView({ onBack }: TodoViewProps) {
 
         {/* Title block */}
         <div className="flex-1 min-w-0">
-          <h1 className="text-launcher-lg font-semibold tracking-[-0.01em] text-foreground">Todos</h1>
+          <h1 className="text-launcher-lg font-semibold tracking-[-0.01em] text-foreground">
+            Todos
+          </h1>
           <p className="text-launcher-xs text-muted-foreground">
             {completedTodoCount}/{orderedTodos.length} completed
           </p>
@@ -462,19 +519,19 @@ export function TodoView({ onBack }: TodoViewProps) {
           isBusy={isBusy}
           sensors={sensors}
           todos={orderedTodos}
-          todoOrder={todoOrder}
-          selectedTodoId={selectedTodoId}
-          newTodoTitle={newTodoTitle}
-          editingTodoId={editingTodoId}
-          editingTodoTitle={editingTodoTitle}
-          onNewTodoTitleChange={setNewTodoTitle}
+          todoOrder={state.todoOrder}
+          selectedTodoId={state.selectedTodoId}
+          newTodoTitle={state.newTodoTitle}
+          editingTodoId={state.editingTodoId}
+          editingTodoTitle={state.editingTodoTitle}
+          onNewTodoTitleChange={(value) => dispatch({ type: "set-new-todo-title", value })}
           onCreateTodo={handleCreateTodo}
           onTodoDragEnd={handleTodoDragEnd}
-          onSelectTodo={setSelectedTodoId}
+          onSelectTodo={(value) => dispatch({ type: "set-selected-todo-id", value })}
           onToggleTodo={handleToggleTodo}
           onDeleteTodo={handleDeleteTodo}
           onStartTodoEdit={handleStartTodoEdit}
-          onTodoEditingTitleChange={setEditingTodoTitle}
+          onTodoEditingTitleChange={(value) => dispatch({ type: "set-editing-todo-title", value })}
           onSubmitTodoEdit={handleSubmitTodoEdit}
           onCancelTodoEdit={handleCancelTodoEdit}
         />
@@ -484,11 +541,11 @@ export function TodoView({ onBack }: TodoViewProps) {
           sensors={sensors}
           selectedTodo={selectedTodo}
           orderedSubTodos={orderedSubTodos}
-          subTodoOrder={subTodoOrder}
-          newSubTodoTitle={newSubTodoTitle}
-          editingSubTodoId={editingSubTodoId}
-          editingSubTodoTitle={editingSubTodoTitle}
-          onNewSubTodoTitleChange={setNewSubTodoTitle}
+          subTodoOrder={state.subTodoOrder}
+          newSubTodoTitle={state.newSubTodoTitle}
+          editingSubTodoId={state.editingSubTodoId}
+          editingSubTodoTitle={state.editingSubTodoTitle}
+          onNewSubTodoTitleChange={(value) => dispatch({ type: "set-new-subtodo-title", value })}
           onCreateSubTodo={handleCreateSubTodo}
           onSubTodoDragEnd={handleSubTodoDragEnd}
           onToggleTodo={handleToggleTodo}
@@ -499,7 +556,9 @@ export function TodoView({ onBack }: TodoViewProps) {
           onToggleSubTodo={handleToggleSubTodo}
           onDeleteSubTodo={handleDeleteSubTodo}
           onStartSubTodoEdit={handleStartSubTodoEdit}
-          onSubTodoEditingTitleChange={setEditingSubTodoTitle}
+          onSubTodoEditingTitleChange={(value) =>
+            dispatch({ type: "set-editing-subtodo-title", value })
+          }
           onSubmitSubTodoEdit={handleSubmitSubTodoEdit}
           onCancelSubTodoEdit={handleCancelSubTodoEdit}
         />

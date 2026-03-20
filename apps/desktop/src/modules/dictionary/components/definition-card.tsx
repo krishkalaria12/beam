@@ -28,6 +28,14 @@ export function SenseCard({
       ref={containerRef}
       data-selected={isSelected}
       onClick={onSelect}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onSelect();
+        }
+      }}
+      role="button"
+      tabIndex={0}
       className={cn(
         "dictionary-sense-card group relative cursor-pointer rounded-xl p-4 transition-all duration-200",
         isSelected
@@ -71,8 +79,11 @@ export function SenseCard({
           {/* Examples */}
           {sense.examples && sense.examples.length > 0 && (
             <div className="space-y-1.5 border-l-2 border-[var(--launcher-card-border)] pl-3">
-              {sense.examples.map((example, idx) => (
-                <p key={idx} className="text-launcher-sm italic text-muted-foreground leading-snug">
+              {sense.examples.map((example) => (
+                <p
+                  key={example}
+                  className="text-launcher-sm italic text-muted-foreground leading-snug"
+                >
                   "{example}"
                 </p>
               ))}
@@ -88,12 +99,12 @@ export function SenseCard({
                     Synonyms
                   </span>
                   <div className="flex flex-wrap gap-1.5">
-                    {sense.synonyms.map((synonym, idx) => (
+                    {sense.synonyms.map((synonym) => (
                       <Button
                         type="button"
                         variant="ghost"
                         size="xs"
-                        key={idx}
+                        key={synonym}
                         onClick={(event) => {
                           event.stopPropagation();
                           onSynonymClick(synonym);
@@ -117,12 +128,12 @@ export function SenseCard({
                     Antonyms
                   </span>
                   <div className="flex flex-wrap gap-1.5">
-                    {sense.antonyms.map((antonym, idx) => (
+                    {sense.antonyms.map((antonym) => (
                       <Button
                         type="button"
                         variant="ghost"
                         size="xs"
-                        key={idx}
+                        key={antonym}
                         onClick={(event) => {
                           event.stopPropagation();
                           onSynonymClick(antonym);

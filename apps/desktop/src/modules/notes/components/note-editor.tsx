@@ -28,10 +28,14 @@ export function NoteEditor({
     <section className="note-editor-enter relative flex min-h-0 flex-1 flex-col overflow-hidden">
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden p-4">
         <div>
-          <label className="mb-2 block text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+          <label
+            htmlFor="note-editor-title"
+            className="mb-2 block text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground"
+          >
             Title
           </label>
           <Input
+            id="note-editor-title"
             type="text"
             value={draft.title}
             onChange={(event) => {
@@ -50,11 +54,15 @@ export function NoteEditor({
         </div>
 
         <div className="min-h-0 flex-1">
-          <label className="mb-2 block text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+          <label
+            htmlFor="note-editor-content"
+            className="mb-2 block text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground"
+          >
             Content
           </label>
           <div className="flex h-full min-h-0 flex-col rounded-xl bg-[var(--launcher-card-bg)] ring-1 ring-[var(--launcher-card-border)]">
             <Textarea
+              id="note-editor-content"
               value={draft.content}
               onChange={(event) => {
                 onDraftChange({

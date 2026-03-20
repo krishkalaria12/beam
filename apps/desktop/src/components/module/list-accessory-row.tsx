@@ -25,7 +25,10 @@ export function ListAccessoryRow({ items, className, style }: ListAccessoryRowPr
   }
 
   return (
-    <div className={cn("module-list-accessory-row flex items-center gap-2", className)} style={style}>
+    <div
+      className={cn("module-list-accessory-row flex items-center gap-2", className)}
+      style={style}
+    >
       {items.map((item) => (
         <ListAccessory
           key={item.key}

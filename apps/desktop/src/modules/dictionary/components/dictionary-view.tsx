@@ -1,5 +1,5 @@
 import { AlertCircle, ArrowLeft, BookOpen, Check, Copy, Loader2, Search } from "lucide-react";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { type RefObject, useCallback, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { IconChip, ModuleFooter, SearchInput } from "@/components/module";
 import { useDictionary } from "../hooks/use-dictionary";
@@ -13,9 +13,177 @@ interface DictionaryViewProps {
   onBack: () => void;
 }
 
+function DictionaryEmptyState({
+  error,
+  isLoading,
+  query,
+  inputRef,
+  onClear,
+}: {
+  error: Error | null;
+  isLoading: boolean;
+  query: string;
+  inputRef: RefObject<HTMLInputElement | null>;
+  onClear: () => void;
+}) {
+  return (
+    <div className="flex h-full w-full flex-col items-center justify-center p-12 text-center">
+      <IconChip variant="primary" size="lg" className="mb-5 size-16 rounded-2xl p-4">
+        <BookOpen className="size-full" />
+      </IconChip>
+
+      {error ? (
+        <>
+          <div className="mb-3 flex items-center gap-2 text-destructive">
+            <AlertCircle className="size-5" />
+            <h3 className="text-launcher-lg font-semibold">Error loading definition</h3>
+          </div>
+          <p className="max-w-xs text-launcher-sm text-muted-foreground">{error.message}</p>
+        </>
+      ) : isLoading ? (
+        <>
+          <h3 className="mb-2 text-launcher-lg font-semibold text-foreground">Searching...</h3>
+          <p className="text-launcher-sm text-muted-foreground">
+            Finding the perfect definition for you.
+          </p>
+        </>
+      ) : (
+        <>
+          <h3 className="mb-2 text-launcher-lg font-semibold text-foreground">
+            {query.trim() ? "Word not found" : "Dictionary"}
+          </h3>
+          <p className="max-w-xs text-launcher-sm text-muted-foreground">
+            {query.trim()
+              ? `We couldn't find "${query.trim()}" in our database.`
+              : "Type a word above to explore its meanings, synonyms, and more."}
+          </p>
+          {query.trim() ? (
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              className="mt-4 text-launcher-sm font-medium text-[var(--ring)] hover:text-[var(--ring)]"
+              onClick={() => {
+                onClear();
+                inputRef.current?.focus();
+              }}
+            >
+              Clear search
+            </Button>
+          ) : null}
+        </>
+      )}
+    </div>
+  );
+}
+
+function DictionaryResults({
+  data,
+  totalSenses,
+  copied,
+  selectedSenseIndex,
+  setSelectedSenseRef,
+  setSelectedSenseIndex,
+  onCopyWord,
+  onSynonymClick,
+}: {
+  data: NonNullable<ReturnType<typeof useDictionary>["data"]>;
+  totalSenses: number;
+  copied: boolean;
+  selectedSenseIndex: number;
+  setSelectedSenseRef: (node: HTMLDivElement | null) => void;
+  setSelectedSenseIndex: (value: number) => void;
+  onCopyWord: () => void;
+  onSynonymClick: (synonym: string) => void;
+}) {
+  return (
+    <div className="w-full space-y-6 p-5">
+      <div className="flex items-end justify-between pb-3">
+        <div className="space-y-1">
+          <div className="flex items-center gap-3">
+            <h2 className="text-[length:calc(var(--beam-font-size-base)*2.1538)] font-bold tracking-[-0.02em] capitalize text-foreground">
+              {data.word}
+            </h2>
+            <span className="rounded-full bg-[var(--ring)]/15 px-2.5 py-0.5 text-launcher-2xs font-semibold uppercase tracking-[0.06em] text-[var(--ring)]">
+              Word
+            </span>
+          </div>
+          <p className="text-launcher-sm text-muted-foreground">
+            {data.entries.length} meaning{data.entries.length !== 1 ? "s" : ""} • {totalSenses} sense
+            {totalSenses !== 1 ? "s" : ""}
+          </p>
+        </div>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={onCopyWord}
+          className={cn(
+            "h-8 gap-2 rounded-lg px-3 text-launcher-sm font-medium",
+            copied
+              ? "bg-[var(--icon-green-bg)] text-[var(--icon-green-fg)] border-transparent"
+              : "border-[var(--launcher-card-border)] bg-[var(--launcher-card-hover-bg)] text-muted-foreground hover:text-foreground hover:bg-[var(--launcher-card-hover-bg)]",
+          )}
+        >
+          {copied ? (
+            <>
+              <Check className="size-3.5" />
+              Copied
+            </>
+          ) : (
+            <>
+              <Copy className="size-3.5" />
+              Copy word
+            </>
+          )}
+        </Button>
+      </div>
+
+      <div className="space-y-8">
+        {data.entries.map((entry, entryIdx) => (
+          <div key={entryIdx} className="space-y-4">
+            <div className="flex items-center gap-4">
+              <div className="h-px flex-1 bg-[var(--ui-divider)]" />
+              <span className="text-launcher-xs font-semibold uppercase tracking-[0.08em] text-[var(--ring)]">
+                {entry.part_of_speech}
+              </span>
+              <div className="h-px flex-1 bg-[var(--ui-divider)]" />
+            </div>
+
+            <div className="grid gap-3">
+              {entry.senses.map((sense, senseIdx) => {
+                let globalIdx = 0;
+                for (let i = 0; i < entryIdx; i++) {
+                  globalIdx += data.entries[i].senses.length;
+                }
+                globalIdx += senseIdx;
+
+                return (
+                  <SenseCard
+                    key={senseIdx}
+                    sense={sense}
+                    senseNumber={senseIdx + 1}
+                    entryNumber={entryIdx + 1}
+                    isSelected={globalIdx === selectedSenseIndex}
+                    containerRef={globalIdx === selectedSenseIndex ? setSelectedSenseRef : undefined}
+                    onSelect={() => setSelectedSenseIndex(globalIdx)}
+                    onSynonymClick={onSynonymClick}
+                  />
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="h-4" />
+    </div>
+  );
+}
+
 export function DictionaryView({ initialQuery, onBack }: DictionaryViewProps) {
-  const [query, setQuery] = useState(initialQuery);
-  const [debouncedQuery, setDebouncedQuery] = useState(initialQuery);
+  const [query, setQuery] = useState(() => initialQuery);
+  const [debouncedQuery, setDebouncedQuery] = useState(() => initialQuery);
   const [senseSelectionState, setSenseSelectionState] = useState({ wordKey: "", index: 0 });
   const [copied, setCopied] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -167,145 +335,27 @@ export function DictionaryView({ initialQuery, onBack }: DictionaryViewProps) {
         className="dictionary-content-enter list-area custom-scrollbar flex min-h-0 flex-1 overflow-y-auto"
       >
         {!data ? (
-          <div className="flex h-full w-full flex-col items-center justify-center p-12 text-center">
-            <IconChip variant="primary" size="lg" className="mb-5 size-16 rounded-2xl p-4">
-              <BookOpen className="size-full" />
-            </IconChip>
-
-            {error ? (
-              <>
-                <div className="mb-3 flex items-center gap-2 text-destructive">
-                  <AlertCircle className="size-5" />
-                  <h3 className="text-launcher-lg font-semibold">Error loading definition</h3>
-                </div>
-                <p className="max-w-xs text-launcher-sm text-muted-foreground">{error.message}</p>
-              </>
-            ) : isLoading ? (
-              <>
-                <h3 className="mb-2 text-launcher-lg font-semibold text-foreground">Searching...</h3>
-                <p className="text-launcher-sm text-muted-foreground">
-                  Finding the perfect definition for you.
-                </p>
-              </>
-            ) : (
-              <>
-                <h3 className="mb-2 text-launcher-lg font-semibold text-foreground">
-                  {query.trim() ? "Word not found" : "Dictionary"}
-                </h3>
-                <p className="max-w-xs text-launcher-sm text-muted-foreground">
-                  {query.trim()
-                    ? `We couldn't find "${query.trim()}" in our database.`
-                    : "Type a word above to explore its meanings, synonyms, and more."}
-                </p>
-                {query.trim() && (
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="ghost"
-                    className="mt-4 text-launcher-sm font-medium text-[var(--ring)] hover:text-[var(--ring)]"
-                    onClick={() => {
-                      setQuery("");
-                      setDebouncedQuery("");
-                      inputRef.current?.focus();
-                    }}
-                  >
-                    Clear search
-                  </Button>
-                )}
-              </>
-            )}
-          </div>
+          <DictionaryEmptyState
+            error={error ?? null}
+            isLoading={isLoading}
+            query={query}
+            inputRef={inputRef}
+            onClear={() => {
+              setQuery("");
+              setDebouncedQuery("");
+            }}
+          />
         ) : (
-          <div className="w-full space-y-6 p-5">
-            {/* Word Header */}
-            <div className="flex items-end justify-between pb-3">
-              <div className="space-y-1">
-                <div className="flex items-center gap-3">
-                  <h2 className="text-[length:calc(var(--beam-font-size-base)*2.1538)] font-bold tracking-[-0.02em] capitalize text-foreground">
-                    {data.word}
-                  </h2>
-                  <span className="rounded-full bg-[var(--ring)]/15 px-2.5 py-0.5 text-launcher-2xs font-semibold uppercase tracking-[0.06em] text-[var(--ring)]">
-                    Word
-                  </span>
-                </div>
-                <p className="text-launcher-sm text-muted-foreground">
-                  {data.entries.length} meaning{data.entries.length !== 1 ? "s" : ""} •{" "}
-                  {totalSenses} sense
-                  {totalSenses !== 1 ? "s" : ""}
-                </p>
-              </div>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={handleCopyWord}
-                className={cn(
-                  "h-8 gap-2 rounded-lg px-3 text-launcher-sm font-medium",
-                  copied
-                    ? "bg-[var(--icon-green-bg)] text-[var(--icon-green-fg)] border-transparent"
-                    : "border-[var(--launcher-card-border)] bg-[var(--launcher-card-hover-bg)] text-muted-foreground hover:text-foreground hover:bg-[var(--launcher-card-hover-bg)]",
-                )}
-              >
-                {copied ? (
-                  <>
-                    <Check className="size-3.5" />
-                    Copied
-                  </>
-                ) : (
-                  <>
-                    <Copy className="size-3.5" />
-                    Copy word
-                  </>
-                )}
-              </Button>
-            </div>
-
-            {/* Entries with Senses */}
-            <div className="space-y-8">
-              {data.entries.map((entry, entryIdx) => (
-                <div key={entryIdx} className="space-y-4">
-                  {/* Part of Speech Header */}
-                  <div className="flex items-center gap-4">
-                    <div className="h-px flex-1 bg-[var(--ui-divider)]" />
-                    <span className="text-launcher-xs font-semibold uppercase tracking-[0.08em] text-[var(--ring)]">
-                      {entry.part_of_speech}
-                    </span>
-                    <div className="h-px flex-1 bg-[var(--ui-divider)]" />
-                  </div>
-
-                  {/* Senses */}
-                  <div className="grid gap-3">
-                    {entry.senses.map((sense, senseIdx) => {
-                      // Calculate global sense index
-                      let globalIdx = 0;
-                      for (let i = 0; i < entryIdx; i++) {
-                        globalIdx += data.entries[i].senses.length;
-                      }
-                      globalIdx += senseIdx;
-
-                      return (
-                        <SenseCard
-                          key={senseIdx}
-                          sense={sense}
-                          senseNumber={senseIdx + 1}
-                          entryNumber={entryIdx + 1}
-                          isSelected={globalIdx === selectedSenseIndex}
-                          containerRef={
-                            globalIdx === selectedSenseIndex ? setSelectedSenseRef : undefined
-                          }
-                          onSelect={() => setSelectedSenseIndex(globalIdx)}
-                          onSynonymClick={handleSynonymClick}
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Bottom spacer */}
-            <div className="h-4" />
-          </div>
+          <DictionaryResults
+            data={data}
+            totalSenses={totalSenses}
+            copied={copied}
+            selectedSenseIndex={selectedSenseIndex}
+            setSelectedSenseRef={setSelectedSenseRef}
+            setSelectedSenseIndex={setSelectedSenseIndex}
+            onCopyWord={handleCopyWord}
+            onSynonymClick={handleSynonymClick}
+          />
         )}
       </div>
 

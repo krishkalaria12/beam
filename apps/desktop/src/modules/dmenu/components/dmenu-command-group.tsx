@@ -49,10 +49,7 @@ export default function DmenuCommandGroup() {
     () => dmenuSession?.rows.map((row) => row.id) ?? [],
     [dmenuSession?.rows],
   );
-  const nextSessionRowsStateKey = useMemo(
-    () => `${dmenuSession?.requestId ?? ""}\u0000${initialRankedRowIds.join("\u0001")}`,
-    [dmenuSession?.requestId, initialRankedRowIds],
-  );
+  const nextSessionRowsStateKey = `${dmenuSession?.requestId ?? ""}\u0000${initialRankedRowIds.join("\u0001")}`;
 
   if (sessionRowsStateKey !== nextSessionRowsStateKey) {
     setSessionRowsStateKey(nextSessionRowsStateKey);
@@ -79,29 +76,30 @@ export default function DmenuCommandGroup() {
           }
         }
 
-        return (
-          dmenuSession
-            ? (pickDefaultRowId(dmenuSession.rows, resolvedRankedRowIds, dmenuSession.selectText) ??
+        return dmenuSession
+          ? (pickDefaultRowId(dmenuSession.rows, resolvedRankedRowIds, dmenuSession.selectText) ??
               null)
-            : null
-        );
+          : null;
       });
     });
   }
 
-  const inputMountRef = useCallback((node: HTMLInputElement | null) => {
-    inputRef.current = node;
-    if (!node || !dmenuSession) {
-      return;
-    }
-
-    window.requestAnimationFrame(() => {
-      if (node.isConnected) {
-        node.focus({ preventScroll: true });
-        node.select();
+  const inputMountRef = useCallback(
+    (node: HTMLInputElement | null) => {
+      inputRef.current = node;
+      if (!node || !dmenuSession) {
+        return;
       }
-    });
-  }, [dmenuSession]);
+
+      window.requestAnimationFrame(() => {
+        if (node.isConnected) {
+          node.focus({ preventScroll: true });
+          node.select();
+        }
+      });
+    },
+    [dmenuSession],
+  );
 
   const completeSession = async (payload: DmenuResolvePayload) => {
     await completeCliDmenuRequest(payload);

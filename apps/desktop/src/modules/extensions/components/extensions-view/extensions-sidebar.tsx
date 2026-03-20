@@ -2,10 +2,7 @@ import { Loader2 } from "lucide-react";
 
 import { EmptyView, ListItem, SectionHeader } from "@/components/module";
 import { ExtensionIcon } from "@/modules/extensions/components/extension-icon";
-import type {
-  ExtensionStoreListing,
-  InstalledExtensionSummary,
-} from "@/modules/extensions/types";
+import type { ExtensionStoreListing, InstalledExtensionSummary } from "@/modules/extensions/types";
 
 function isSyntheticRaycastVersion(version: string | null | undefined): boolean {
   return typeof version === "string" && /^0\.0\.\d{9,}$/.test(version.trim());
@@ -173,7 +170,9 @@ export function ExtensionsSidebar({
                 onSelect={() => onSelectStore(entry.id)}
                 leftSlot={
                   <ExtensionIcon
-                    iconReference={entry.icons.light || entry.icons.dark || entry.author.avatar || null}
+                    iconReference={
+                      entry.icons.light || entry.icons.dark || entry.author.avatar || null
+                    }
                     title={entry.title}
                     className="size-9 rounded-lg"
                   />

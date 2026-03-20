@@ -4,10 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { createDefaultCommandProviders } from "@/command-registry/default-providers";
 import { hasStrongRegistryMatch, isFallbackMode } from "@/command-registry/fallback-commands";
 import { createCommandProviderOrchestrator } from "@/command-registry/providers";
-import {
-  rankCommands,
-  type CommandRankingSignals,
-} from "@/command-registry/ranker";
+import { rankCommands, type CommandRankingSignals } from "@/command-registry/ranker";
 import { staticCommandRegistry } from "@/command-registry/registry";
 import { resolveStaticCommandCandidates } from "@/command-registry/static-candidates";
 import { logProviderResolution } from "@/command-registry/telemetry";
@@ -57,7 +54,14 @@ export function useRankedRegistryCommands({
   );
 
   const dynamicResolutionQuery = useQuery<CommandProviderResolution>({
-    queryKey: ["ranked-registry", commandContext, [...hiddenCommandIds], rankingSignals, fallbackEnabled, fallbackCommandIds],
+    queryKey: [
+      "ranked-registry",
+      commandContext,
+      [...hiddenCommandIds],
+      rankingSignals,
+      fallbackEnabled,
+      fallbackCommandIds,
+    ],
     queryFn: async () => {
       const result = await providerOrchestrator.resolve(commandContext);
       logProviderResolution(result, {

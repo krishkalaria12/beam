@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useReducer, useRef } from "react";
 
 import debounce from "@/lib/debounce";
 import { copyToClipboard } from "../api/copy-to-clipboard";
@@ -18,26 +18,73 @@ interface ClipboardViewProps {
   onToggleActions: () => void;
 }
 
+interface ClipboardViewState {
+  query: string;
+  debouncedQuery: string;
+  typeFilter: ClipboardTypeFilter;
+  selectionState: { key: string; index: number };
+  copiedEntryIndex: number | null;
+  copyError: string | null;
+}
+
+type ClipboardViewAction =
+  | { type: "set-query"; value: string }
+  | { type: "set-debounced-query"; value: string }
+  | { type: "set-type-filter"; value: ClipboardTypeFilter }
+  | { type: "set-selection"; value: { key: string; index: number } }
+  | { type: "set-copied-state"; copiedEntryIndex: number | null; copyError: string | null };
+
+const INITIAL_CLIPBOARD_VIEW_STATE: ClipboardViewState = {
+  query: "",
+  debouncedQuery: "",
+  typeFilter: "all",
+  selectionState: { key: "", index: 0 },
+  copiedEntryIndex: null,
+  copyError: null,
+};
+
+function clipboardViewReducer(
+  state: ClipboardViewState,
+  action: ClipboardViewAction,
+): ClipboardViewState {
+  switch (action.type) {
+    case "set-query":
+      return { ...state, query: action.value };
+    case "set-debounced-query":
+      return { ...state, debouncedQuery: action.value };
+    case "set-type-filter":
+      return { ...state, typeFilter: action.value };
+    case "set-selection":
+      return { ...state, selectionState: action.value };
+    case "set-copied-state":
+      return {
+        ...state,
+        copiedEntryIndex: action.copiedEntryIndex,
+        copyError: action.copyError,
+      };
+  }
+}
+
 export function ClipboardView({ onBack, onToggleActions }: ClipboardViewProps) {
-  const [query, setQuery] = useState("");
-  const [debouncedQuery, setDebouncedQuery] = useState("");
-  const [typeFilter, setTypeFilter] = useState<ClipboardTypeFilter>("all");
-  const [selectionState, setSelectionState] = useState({ key: "", index: 0 });
-  const [copiedEntryIndex, setCopiedEntryIndex] = useState<number | null>(null);
-  const [copyError, setCopyError] = useState<string | null>(null);
+  const [state, dispatch] = useReducer(clipboardViewReducer, INITIAL_CLIPBOARD_VIEW_STATE);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const { data: history = [], isLoading } = useClipboardHistory(true);
 
   const updateDebouncedQuery = useMemo(
-    () => debounce((value: string) => setDebouncedQuery(value), 150),
+    () =>
+      debounce((value: string) => {
+        dispatch({ type: "set-debounced-query", value });
+      }, 150),
     [],
   );
 
   const filteredHistory = useMemo(() => {
-    const lowerQuery = debouncedQuery.toLowerCase();
+    const lowerQuery = state.debouncedQuery.toLowerCase();
     const filteredByType =
-      typeFilter === "all" ? history : history.filter((entry) => entry.content_type === typeFilter);
+      state.typeFilter === "all"
+        ? history
+        : history.filter((entry) => entry.content_type === state.typeFilter);
 
     if (!lowerQuery) {
       return filteredByType;
@@ -54,22 +101,29 @@ export function ClipboardView({ onBack, onToggleActions }: ClipboardViewProps) {
           : entry.value.toLowerCase();
       return searchableValue.includes(lowerQuery);
     });
-  }, [history, debouncedQuery, typeFilter]);
+  }, [history, state.debouncedQuery, state.typeFilter]);
 
-  const selectionKey = `${query}\u0000${typeFilter}\u0000${filteredHistory.length}`;
-  if (selectionState.key !== selectionKey) {
-    setSelectionState({ key: selectionKey, index: 0 });
+  const selectionKey = `${state.query}\u0000${state.typeFilter}\u0000${filteredHistory.length}`;
+  if (state.selectionState.key !== selectionKey) {
+    dispatch({ type: "set-selection", value: { key: selectionKey, index: 0 } });
   }
 
-  const selectedIndex = Math.min(selectionState.index, Math.max(filteredHistory.length - 1, 0));
+  const selectedIndex = Math.min(
+    state.selectionState.index,
+    Math.max(filteredHistory.length - 1, 0),
+  );
   const setSelectedIndex = (value: number | ((previous: number) => number)) => {
-    setSelectionState((previous) => ({
-      key: selectionKey,
-      index:
-        typeof value === "function"
-          ? value(previous.key === selectionKey ? previous.index : 0)
-          : value,
-    }));
+    const previous = state.selectionState;
+    dispatch({
+      type: "set-selection",
+      value: {
+        key: selectionKey,
+        index:
+          typeof value === "function"
+            ? value(previous.key === selectionKey ? previous.index : 0)
+            : value,
+      },
+    });
   };
 
   const selectedEntry = filteredHistory[selectedIndex] || null;
@@ -84,23 +138,24 @@ export function ClipboardView({ onBack, onToggleActions }: ClipboardViewProps) {
     try {
       const isImage = entry.content_type === ClipboardContentType.Image;
       await copyToClipboard(entry.value, isImage);
-      setCopiedEntryIndex(index);
-      setCopyError(null);
+      dispatch({ type: "set-copied-state", copiedEntryIndex: index, copyError: null });
     } catch (error) {
       console.error("Failed to copy:", error);
-      setCopiedEntryIndex(null);
-      setCopyError("Could not copy entry");
-    } finally {
-      if (copyFeedbackTimerRef.current !== null) {
-        window.clearTimeout(copyFeedbackTimerRef.current);
-      }
-
-      copyFeedbackTimerRef.current = window.setTimeout(() => {
-        copyFeedbackTimerRef.current = null;
-        setCopiedEntryIndex(null);
-        setCopyError(null);
-      }, 1400);
+      dispatch({
+        type: "set-copied-state",
+        copiedEntryIndex: null,
+        copyError: "Could not copy entry",
+      });
     }
+
+    if (copyFeedbackTimerRef.current !== null) {
+      window.clearTimeout(copyFeedbackTimerRef.current);
+    }
+
+    copyFeedbackTimerRef.current = window.setTimeout(() => {
+      copyFeedbackTimerRef.current = null;
+      dispatch({ type: "set-copied-state", copiedEntryIndex: null, copyError: null });
+    }, 1400);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -124,8 +179,8 @@ export function ClipboardView({ onBack, onToggleActions }: ClipboardViewProps) {
     } else if (e.key === "Escape") {
       e.preventDefault();
       e.stopPropagation();
-      if (query) {
-        setQuery("");
+      if (state.query) {
+        dispatch({ type: "set-query", value: "" });
         updateDebouncedQuery("");
       } else {
         onBack();
@@ -134,7 +189,7 @@ export function ClipboardView({ onBack, onToggleActions }: ClipboardViewProps) {
   };
 
   const handleChange = (value: string) => {
-    setQuery(value);
+    dispatch({ type: "set-query", value });
     updateDebouncedQuery(value);
   };
 
@@ -152,16 +207,19 @@ export function ClipboardView({ onBack, onToggleActions }: ClipboardViewProps) {
         inputRef.current?.focus();
       }}
       onKeyDown={handleKeyDown}
+      role="region"
+      aria-label="Clipboard history"
+      tabIndex={-1}
     >
-      <ClipboardHeader
-        query={query}
-        onQueryChange={handleChange}
-        onKeyDown={handleKeyDown}
-        onBack={onBack}
-        typeFilter={typeFilter}
-        onTypeFilterChange={setTypeFilter}
-        inputRef={focusInputRef}
-      />
+        <ClipboardHeader
+          query={state.query}
+          onQueryChange={handleChange}
+          onKeyDown={handleKeyDown}
+          onBack={onBack}
+          typeFilter={state.typeFilter}
+          onTypeFilterChange={(value) => dispatch({ type: "set-type-filter", value })}
+          inputRef={focusInputRef}
+        />
 
       <div className="flex min-h-0 flex-1 overflow-hidden">
         <ClipboardList
@@ -172,8 +230,8 @@ export function ClipboardView({ onBack, onToggleActions }: ClipboardViewProps) {
         />
         <ClipboardDetails
           entry={selectedEntry}
-          isCopied={copiedEntryIndex === selectedIndex && !copyError}
-          copyError={copyError}
+          isCopied={state.copiedEntryIndex === selectedIndex && !state.copyError}
+          copyError={state.copyError}
           isLoading={isInitialLoading}
           onCopy={() => {
             if (selectedEntry) {
@@ -184,9 +242,9 @@ export function ClipboardView({ onBack, onToggleActions }: ClipboardViewProps) {
       </div>
 
       <ClipboardFooter
-        copiedEntryIndex={copiedEntryIndex}
+        copiedEntryIndex={state.copiedEntryIndex}
         selectedIndex={selectedIndex}
-        copyError={copyError}
+        copyError={state.copyError}
         canCopy={Boolean(selectedEntry)}
         onBack={onBack}
         onCopySelected={() => {

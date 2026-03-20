@@ -66,6 +66,83 @@ function getFirstErrorMessage(errors: readonly unknown[]): string | null {
   return String(firstError);
 }
 
+function QuicklinkIconPreview({
+  isFetchingIcon,
+  previewIcon,
+  isFileTarget,
+}: {
+  isFetchingIcon: boolean;
+  previewIcon: string;
+  isFileTarget: boolean;
+}) {
+  if (!isFetchingIcon && !previewIcon) {
+    return null;
+  }
+
+  return (
+    <div className="flex justify-center">
+      <div className="quicklinks-icon-preview relative flex size-20 items-center justify-center rounded-2xl bg-[var(--launcher-card-bg)] ring-1 ring-[var(--launcher-card-selected-border)]">
+        {isFetchingIcon ? (
+          <Loader2 className="size-7 animate-spin text-muted-foreground" />
+        ) : (
+          <QuicklinkIcon
+            icon={previewIcon}
+            isFileTarget={isFileTarget}
+            className="size-12 rounded-xl object-contain"
+            fallbackClassName="size-12 rounded-xl bg-[var(--launcher-card-hover-bg)]"
+          />
+        )}
+        <div className="absolute -bottom-2 rounded-full bg-[var(--popover)] px-2 py-0.5 text-launcher-2xs font-medium text-muted-foreground ring-1 ring-[var(--launcher-card-selected-border)]">
+          {isFetchingIcon ? "Fetching..." : isFileTarget ? "File" : "Auto"}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function QuicklinkFormFooter({
+  isEditMode,
+  isSubmitting,
+  onBack,
+  onSubmit,
+}: {
+  isEditMode: boolean;
+  isSubmitting: boolean;
+  onBack: () => void;
+  onSubmit: () => void;
+}) {
+  return (
+    <ModuleFooter
+      className="quicklinks-footer h-14 px-5"
+      leftSlot={
+        <>
+          <Zap className="size-3.5" />
+          <span className="font-medium tracking-[-0.01em]">
+            {isEditMode ? "Edit Quicklink" : "New Quicklink"}
+          </span>
+        </>
+      }
+      actions={
+        <>
+          <Button type="button" variant="ghost" size="sm" onClick={onBack}>
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            onClick={onSubmit}
+            disabled={isSubmitting}
+            className="bg-[var(--ring)]/20 text-[var(--ring)] hover:bg-[var(--ring)]/30"
+          >
+            {isSubmitting ? <Loader2 className="size-3.5 animate-spin" /> : null}
+            {isEditMode ? "Update" : "Create"}
+          </Button>
+        </>
+      }
+    />
+  );
+}
+
 export function QuicklinksView({ view, setView, onBack }: QuicklinksViewProps) {
   const [editingQuicklink, setEditingQuicklink] = useState<Quicklink | null>(null);
   const [returnToManage, setReturnToManage] = useState(false);
@@ -129,7 +206,9 @@ function QuicklinkCreateForm({
   const updateMutation = useUpdateQuicklink();
   const getFaviconMutation = useGetFavicon();
   const [fetchedIcon, setFetchedIcon] = useState(initialData?.icon ?? "");
-  const [isFileTarget, setIsFileTarget] = useState(isFileQuicklinkTarget(initialData?.url ?? ""));
+  const [isFileTarget, setIsFileTarget] = useState(() =>
+    isFileQuicklinkTarget(initialData?.url ?? ""),
+  );
   const [isFetchingIcon, setIsFetchingIcon] = useState(false);
   const fetchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mutationError = isEditMode ? updateMutation.error : createMutation.error;
@@ -204,9 +283,9 @@ function QuicklinkCreateForm({
           }
         } catch {
           // ignore
-        } finally {
-          setIsFetchingIcon(false);
         }
+
+        setIsFetchingIcon(false);
       }
     }, 1000);
   };
@@ -254,35 +333,19 @@ function QuicklinkCreateForm({
       <div className="quicklinks-content custom-scrollbar flex-1 overflow-y-auto px-5 py-6">
         <form
           id="quicklink-form"
-          onSubmit={(event) => {
-            event.preventDefault();
+          action={() => {
             form.handleSubmit();
           }}
           className="mx-auto max-w-lg space-y-6"
         >
-          {(isFetchingIcon || previewIcon) && (
-            <div className="flex justify-center">
-              <div className="quicklinks-icon-preview relative flex size-20 items-center justify-center rounded-2xl bg-[var(--launcher-card-bg)] ring-1 ring-[var(--launcher-card-selected-border)]">
-                {isFetchingIcon ? (
-                  <Loader2 className="size-7 animate-spin text-muted-foreground" />
-                ) : (
-                  <QuicklinkIcon
-                    icon={previewIcon}
-                    isFileTarget={isFileTarget}
-                    className="size-12 rounded-xl object-contain"
-                    fallbackClassName="size-12 rounded-xl bg-[var(--launcher-card-hover-bg)]"
-                  />
-                )}
-                <div className="absolute -bottom-2 rounded-full bg-[var(--popover)] px-2 py-0.5 text-launcher-2xs font-medium text-muted-foreground ring-1 ring-[var(--launcher-card-selected-border)]">
-                  {isFetchingIcon ? "Fetching..." : isFileTarget ? "File" : "Auto"}
-                </div>
-              </div>
-            </div>
-          )}
+          <QuicklinkIconPreview
+            isFetchingIcon={isFetchingIcon}
+            previewIcon={previewIcon}
+            isFileTarget={isFileTarget}
+          />
 
-          <form.Field
-            name="name"
-            children={(field) => {
+          <form.Field name="name">
+            {(field) => {
               const error = getFirstErrorMessage(field.state.meta.errors);
 
               return (
@@ -308,11 +371,10 @@ function QuicklinkCreateForm({
                 </div>
               );
             }}
-          />
+          </form.Field>
 
-          <form.Field
-            name="keyword"
-            children={(field) => {
+          <form.Field name="keyword">
+            {(field) => {
               const error = getFirstErrorMessage(field.state.meta.errors);
 
               return (
@@ -343,11 +405,10 @@ function QuicklinkCreateForm({
                 </div>
               );
             }}
-          />
+          </form.Field>
 
-          <form.Field
-            name="url"
-            children={(field) => {
+          <form.Field name="url">
+            {(field) => {
               const error = getFirstErrorMessage(field.state.meta.errors);
 
               return (
@@ -408,7 +469,7 @@ function QuicklinkCreateForm({
                 </div>
               );
             }}
-          />
+          </form.Field>
 
           {mutationError && (
             <div className="rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-launcher-sm font-medium text-destructive">
@@ -418,33 +479,11 @@ function QuicklinkCreateForm({
         </form>
       </div>
 
-      <ModuleFooter
-        className="quicklinks-footer h-14 px-5"
-        leftSlot={
-          <>
-            <Zap className="size-3.5" />
-            <span className="font-medium tracking-[-0.01em]">
-              {isEditMode ? "Edit Quicklink" : "New Quicklink"}
-            </span>
-          </>
-        }
-        actions={
-          <>
-            <Button type="button" variant="ghost" size="sm" onClick={onBack}>
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              onClick={() => form.handleSubmit()}
-              disabled={isSubmitting}
-              className="bg-[var(--ring)]/20 text-[var(--ring)] hover:bg-[var(--ring)]/30"
-            >
-              {isSubmitting && <Loader2 className="size-3.5 animate-spin" />}
-              {isEditMode ? "Update" : "Create"}
-            </Button>
-          </>
-        }
+      <QuicklinkFormFooter
+        isEditMode={isEditMode}
+        isSubmitting={isSubmitting}
+        onBack={onBack}
+        onSubmit={() => form.handleSubmit()}
       />
     </div>
   );
@@ -467,9 +506,9 @@ function QuicklinksManageView({ onBack, onCreate, onEdit }: QuicklinksManageView
       await deleteMutation.mutateAsync(keyword);
     } catch {
       // Error is handled by the mutation
-    } finally {
-      setDeletingKeyword(null);
     }
+
+    setDeletingKeyword(null);
   };
 
   return (
@@ -516,7 +555,9 @@ function QuicklinksManageView({ onBack, onCreate, onEdit }: QuicklinksManageView
               <Link2 className="size-7" />
             </IconChip>
             <div className="text-center">
-              <p className="text-launcher-md font-medium text-muted-foreground">No quicklinks yet</p>
+              <p className="text-launcher-md font-medium text-muted-foreground">
+                No quicklinks yet
+              </p>
               <p className="mt-1 text-launcher-xs text-muted-foreground">
                 Add your first shortcut to get started
               </p>
@@ -557,7 +598,9 @@ function QuicklinksManageView({ onBack, onCreate, onEdit }: QuicklinksManageView
                   <p className="truncate text-launcher-md font-medium tracking-[-0.01em] text-foreground">
                     {quicklink.name}
                   </p>
-                  <p className="text-launcher-xs font-mono text-[var(--ring)]">!{quicklink.keyword}</p>
+                  <p className="text-launcher-xs font-mono text-[var(--ring)]">
+                    !{quicklink.keyword}
+                  </p>
                 </div>
 
                 <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">

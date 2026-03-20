@@ -424,7 +424,6 @@
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--ring) 8%, transparent);
 }
 
-
 /* Field row subtle hover */
 .settings-field {
   transition: background-color 150ms ease;

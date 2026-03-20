@@ -46,7 +46,9 @@ export function collectFormFields(
           node.type === "Form.Dropdown" ? "Form.Dropdown.Item" : "Form.TagPicker.Item";
         const sectionType =
           node.type === "Form.Dropdown" ? "Form.Dropdown.Section" : "Form.TagPicker.Section";
-        const collectOptions = (candidateId: number): Array<{
+        const collectOptions = (
+          candidateId: number,
+        ): Array<{
           value: string;
           title: string;
           icon?: unknown;

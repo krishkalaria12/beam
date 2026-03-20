@@ -145,11 +145,7 @@ export const useLauncherUiStore = create<LauncherUiState>((set) => ({
       activePanel: panel,
       commandSearch: clearCommandSearch ? "" : state.commandSearch,
       commandSearchSessionSeed: clearCommandSearch
-        ? nextCommandSearchSessionSeed(
-            state.commandSearch,
-            "",
-            state.commandSearchSessionSeed,
-          )
+        ? nextCommandSearchSessionSeed(state.commandSearch, "", state.commandSearchSessionSeed)
         : state.commandSearchSessionSeed,
     })),
   openFileSearch: (query) =>

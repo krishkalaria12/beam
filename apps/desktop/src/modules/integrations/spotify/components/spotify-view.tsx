@@ -76,7 +76,7 @@ export function SpotifyView({ initialQuery, onBack }: SpotifyViewProps) {
 }
 
 function SpotifyViewContent({ initialQuery, onBack }: SpotifyViewProps) {
-  const [searchInput, setSearchInput] = useState(initialQuery);
+  const [searchInput, setSearchInput] = useState(() => initialQuery);
   const [selectedDeviceId, setSelectedDeviceId] = useState<string>("");
   const [localError, setLocalError] = useState<string | null>(null);
 
@@ -447,7 +447,9 @@ function SpotifyViewContent({ initialQuery, onBack }: SpotifyViewProps) {
                   {nowPlaying?.name ||
                     (isConnected ? "Nothing playing" : "Connect Spotify to view playback")}
                 </p>
-                <p className="truncate text-launcher-sm text-muted-foreground">{nowPlayingArtists}</p>
+                <p className="truncate text-launcher-sm text-muted-foreground">
+                  {nowPlayingArtists}
+                </p>
                 <p className="mt-1 text-launcher-xs text-muted-foreground">
                   {nowPlaying ? formatDuration(nowPlaying.duration_ms) : "--:--"}
                 </p>
