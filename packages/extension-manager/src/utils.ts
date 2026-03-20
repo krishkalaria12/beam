@@ -1,4 +1,4 @@
-import React from "react";
+import React from "./shared-react";
 import type { ComponentType, ParentInstance } from "./types";
 import { root, instances } from "./state";
 import type { RuntimeCommand } from "@beam/extension-protocol";

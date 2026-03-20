@@ -2,6 +2,7 @@ import { type CSSProperties, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 import { SearchableDropdown } from "@/components/module";
+import { Button } from "@/components/ui/button";
 import {
   getDropdownItems,
   getDropdownSections,
@@ -19,6 +20,35 @@ export function RuntimeDropdownAccessory({ nodeId, state }: RuntimeDropdownAcces
   const node = state.uiTree.get(nodeId);
   if (!node) {
     return null;
+  }
+
+  if (node.type === "Form.LinkAccessory") {
+    const text = asString(node.props.text).trim() || "Open";
+    const target = asString(node.props.target).trim();
+    if (!target) {
+      return null;
+    }
+
+    return (
+      <Button
+        type="button"
+        variant="outline"
+        className={cn(
+          "ext-form-link-accessory h-8 rounded-lg border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-3 text-launcher-xs",
+          asString(node.props.className).trim() || undefined,
+        )}
+        style={
+          node.props.style && typeof node.props.style === "object" && !Array.isArray(node.props.style)
+            ? (node.props.style as CSSProperties)
+            : undefined
+        }
+        onClick={() => {
+          window.open(target, "_blank", "noopener,noreferrer");
+        }}
+      >
+        {text}
+      </Button>
+    );
   }
 
   const isDropdownType =

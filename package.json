@@ -30,6 +30,7 @@
     "extension-manager:check": "bun run --cwd packages/extension-manager check-types",
     "create:extension": "bun run --cwd packages/beam-api build && node packages/beam-api/bin/run.js create",
     "publish:beam-api": "bun infra/scripts/publish-beam-api.ts",
+    "publish:beam-utils": "bun infra/scripts/publish-beam-utils.ts",
     "store:publish": "bun infra/scripts/publish-store-package.ts",
     "store:publish:all": "bun infra/scripts/publish-store-package.ts --all",
     "store:validate": "bun infra/scripts/validate-store-package.ts --all"

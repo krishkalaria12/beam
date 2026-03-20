@@ -1,5 +1,5 @@
-import React, { type ElementType } from "react";
-import { jsx } from "react/jsx-runtime";
+import type { ElementType } from "react";
+import React, { jsx } from "../shared-react";
 
 export const createLocalStorage = () => {
   const storage = new Map<string, string>();

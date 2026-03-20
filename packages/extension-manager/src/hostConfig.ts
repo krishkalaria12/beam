@@ -19,7 +19,7 @@ import { writeLog } from "./io";
 import { writeRuntimeOutput } from "./protocol/runtime-output";
 import { writeRuntimeRenderBatchMessage } from "./protocol/runtime-render";
 import { serializeProps, optimizeCommitBuffer } from "./utils";
-import React from "react";
+import React from "./shared-react";
 
 const handleAccessory = (parent: ParentInstance, child: AnyInstance) => {
   const isFlareParent = (value: ParentInstance): value is FlareInstance => "type" in value;

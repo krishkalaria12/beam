@@ -1,4 +1,4 @@
-import React from "react";
+import React from "../shared-react";
 import { currentRootElement, navigationStack } from "../state";
 import { updateContainer } from "../reconciler";
 

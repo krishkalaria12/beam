@@ -17,6 +17,7 @@ const FormTagPickerSection = createWrapperComponent("Form.TagPicker.Section");
 const FormFilePicker = createWrapperComponent("Form.FilePicker");
 
 const FormLinkAccessory = createWrapperComponent("Form.LinkAccessory");
+const FormSeparator = createWrapperComponent("Form.Separator");
 
 Object.assign(FormDropdown, {
   Item: FormDropdownItem,
@@ -41,6 +42,7 @@ Object.assign(Form, {
   FilePicker: FormFilePicker,
   Description: FormDescription,
   LinkAccessory: FormLinkAccessory,
+  Separator: FormSeparator,
 });
 
 export { Form };

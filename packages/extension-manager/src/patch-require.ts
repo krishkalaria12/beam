@@ -1,8 +1,7 @@
 import Module from "module";
-import React from "react";
-import * as ReactJsxRuntime from "react/jsx-runtime";
+import React, { ReactJsxRuntime } from "./shared-react";
 import { getBeamApi } from "./api";
-import { loadRaycastUtils } from "./loaders/load-raycast-utils";
+import { loadBeamUtils } from "./loaders/load-beam-utils";
 import { createCompatElement, createCompatElementDev } from "./runtime/jsx-runtime";
 
 const injectJsxGlobals = () => {
@@ -46,8 +45,8 @@ export const patchRequire = (pluginPath: string) => {
       return getBeamApi();
     }
 
-    if (moduleName.startsWith("@raycast/utils")) {
-      return loadRaycastUtils(pluginPath);
+    if (moduleName.startsWith("@beam-launcher/utils") || moduleName.startsWith("@raycast/utils")) {
+      return loadBeamUtils(pluginPath);
     }
 
     return pluginRequire(moduleName);

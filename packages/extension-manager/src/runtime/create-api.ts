@@ -1,4 +1,4 @@
-import React from "react";
+import React from "../shared-react";
 
 type LocalStorageApi = {
   allItems: () => Promise<Record<string, unknown>>;

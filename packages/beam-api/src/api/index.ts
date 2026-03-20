@@ -806,6 +806,7 @@ const ActionSubmitForm = createRuntimeBackedComponent("Action.SubmitForm");
 const MenuBarExtraItem = createRuntimeBackedComponent("MenuBarExtra.Item");
 const MenuBarExtraSection = createRuntimeBackedComponent("MenuBarExtra.Section");
 const MenuBarExtraSubmenu = createRuntimeBackedComponent("MenuBarExtra.Submenu");
+const MenuBarExtraSeparator = createRuntimeBackedComponent("MenuBarExtra.Separator");
 
 Object.assign(Action, {
   Open: ActionOpen,
@@ -935,6 +936,7 @@ Object.assign(MenuBarExtra, {
   Item: MenuBarExtraItem,
   Section: MenuBarExtraSection,
   Submenu: MenuBarExtraSubmenu,
+  Separator: MenuBarExtraSeparator,
   isSupported: true,
   open: async () => {
     const runtimeOpen = pathGet(tryGetBeamApi(), "MenuBarExtra.open");

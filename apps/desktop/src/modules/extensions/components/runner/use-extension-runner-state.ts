@@ -51,6 +51,13 @@ export interface UseExtensionRunnerStateResult {
   selectedEntryActions: FlattenedAction[];
   rootActions: FlattenedAction[];
   activeToast: ExtensionToast | undefined;
+  selectionSync: {
+    key: string;
+    selectedNodeId?: number;
+    rootNodeId?: number;
+    selectedItemId: string | null;
+    shouldDispatchSelectionChange: boolean;
+  };
   handleBack: () => void;
   handleRootKeyDownCapture: (event: KeyboardEvent<HTMLDivElement>) => void;
   handleRootKeyDown: (event: KeyboardEvent<HTMLDivElement>) => void;
@@ -168,7 +175,6 @@ export function useExtensionRunnerState({
   const rootNodeId = useExtensionRuntimeStore((state) => state.rootNodeId);
   const toasts = useExtensionRuntimeStore((state) => state.toasts);
   const runningSession = useExtensionRuntimeStore((state) => state.runningSession);
-  const setSelectedNodeId = useExtensionRuntimeStore((state) => state.setSelectedNodeId);
 
   const [searchState, setSearchState] = useState<{ key: string; value: string }>({
     key: "",
@@ -187,7 +193,7 @@ export function useExtensionRunnerState({
   });
   const [focusElementId, setFocusElementId] = useState<number | null>(null);
   const fieldRefs = useRef<Map<number, HTMLElement>>(new Map());
-  const pendingControlledSearchTextRef = useRef<string | null>(null);
+  const pendingControlledSearchTextRef = useRef<{ key: string; value: string } | null>(null);
 
   const rootNode = rootNodeId ? uiTree.get(rootNodeId) : undefined;
   const rootType = rootNode?.type ?? "";
@@ -196,27 +202,24 @@ export function useExtensionRunnerState({
   const isControlledSearch =
     isSearchableRoot && rootNode ? asBoolean(rootNode.props.onSearchTextChange) : false;
   const searchStateKey = `${rootNode?.id ?? 0}:${rootType}`;
-
-  if (!isSearchableRoot) {
+  const localSearchText = searchState.key === searchStateKey ? searchState.value : controlledSearchText;
+  const pendingSearchText =
+    pendingControlledSearchTextRef.current?.key === searchStateKey
+      ? pendingControlledSearchTextRef.current.value
+      : null;
+  if (pendingSearchText !== null && controlledSearchText === pendingSearchText) {
     pendingControlledSearchTextRef.current = null;
-    if (searchState.key !== searchStateKey || searchState.value.length > 0) {
-      setSearchState({ key: searchStateKey, value: "" });
-    }
-  } else if (searchState.key !== searchStateKey) {
-    setSearchState({ key: searchStateKey, value: controlledSearchText });
-  } else if (isControlledSearch) {
-    const pendingSearchText = pendingControlledSearchTextRef.current;
-    if (pendingSearchText !== null && controlledSearchText === pendingSearchText) {
-      pendingControlledSearchTextRef.current = null;
-    } else if (
-      !(pendingSearchText !== null && searchState.value === pendingSearchText) &&
-      controlledSearchText !== searchState.value
-    ) {
-      setSearchState({ key: searchStateKey, value: controlledSearchText });
-    }
   }
-
-  const searchText = searchState.value;
+  const shouldUsePendingSearchText =
+    pendingSearchText !== null &&
+    localSearchText === pendingSearchText &&
+    controlledSearchText !== pendingSearchText;
+  const searchText =
+    !isSearchableRoot
+      ? ""
+      : isControlledSearch && !shouldUsePendingSearchText
+        ? controlledSearchText
+        : localSearchText;
 
   const listModel = useMemo(
     () => (rootNode?.type === "List" ? collectListEntries(uiTree, rootNode) : null),
@@ -268,34 +271,23 @@ export function useExtensionRunnerState({
         : "",
     [formFields, rootNode?.id, rootNode?.type],
   );
+  const formEdits = formState.key === formStateKey ? formState.values : {};
+  const formValues = useMemo(() => {
+    if (rootNode?.type !== "Form") {
+      return {};
+    }
 
-  if (formState.key !== formStateKey) {
-    setFormState({ key: formStateKey, values: seededFormValues });
-  } else if (rootNode?.type === "Form") {
-    let changed = false;
-    const next = { ...formState.values };
-
+    const next = { ...seededFormValues };
     for (const field of formFields) {
+      if (field.key in formEdits) {
+        next[field.key] = formEdits[field.key];
+      }
       if (field.controlledValue !== undefined) {
-        if (next[field.key] !== field.controlledValue) {
-          next[field.key] = field.controlledValue;
-          changed = true;
-        }
-        continue;
-      }
-
-      if (!(field.key in next)) {
-        next[field.key] = field.defaultValue;
-        changed = true;
+        next[field.key] = field.controlledValue;
       }
     }
-
-    if (changed) {
-      setFormState({ key: formStateKey, values: next });
-    }
-  }
-
-  const formValues = formState.values;
+    return next;
+  }, [formEdits, formFields, rootNode?.type, seededFormValues]);
 
   const currentEntries = useMemo(() => {
     if (rootType === "List") {
@@ -341,21 +333,12 @@ export function useExtensionRunnerState({
     return currentEntries.findIndex((entry) => entry.itemId === selectedItemId);
   }, [currentEntries, rootNode, rootType]);
   const selectionStateKey = `${rootNode?.id ?? 0}:${currentEntries.length}`;
-
-  if (selectionState.key !== selectionStateKey) {
-    setSelectionState({
-      key: selectionStateKey,
-      index: controlledSelectedIndex >= 0 ? controlledSelectedIndex : 0,
-    });
-  } else if (controlledSelectedIndex >= 0 && selectionState.index !== controlledSelectedIndex) {
-    setSelectionState((previous) =>
-      previous.key === selectionStateKey
-        ? { key: selectionStateKey, index: controlledSelectedIndex }
-        : previous,
-    );
-  }
-
-  const selectedIndex = Math.min(selectionState.index, Math.max(0, currentEntries.length - 1));
+  const uncontrolledSelectedIndex =
+    selectionState.key === selectionStateKey ? selectionState.index : 0;
+  const selectedIndex = Math.min(
+    controlledSelectedIndex >= 0 ? controlledSelectedIndex : uncontrolledSelectedIndex,
+    Math.max(0, currentEntries.length - 1),
+  );
   const setSelectedIndex = useCallback(
     (value: number | ((previous: number) => number)) => {
       setSelectionState((previous) => ({
@@ -387,35 +370,27 @@ export function useExtensionRunnerState({
       ),
     [toasts],
   );
-  const selectionSyncKey = `${rootNode?.id ?? 0}:${selectedEntry?.nodeId ?? ""}:${selectedEntry?.itemId ?? ""}`;
-  const selectionSyncRef = useRef("");
-  if (selectionSyncRef.current !== selectionSyncKey) {
-    selectionSyncRef.current = selectionSyncKey;
-    if (!selectedEntry) {
-      setSelectedNodeId(undefined);
-      if (
-        (rootNode?.type === "List" || rootNode?.type === "Grid") &&
-        asBoolean(rootNode.props.onSelectionChange)
-      ) {
-        extensionManagerService.dispatchEvent(rootNode.id, "onSelectionChange", [null]);
-      }
-    } else {
-      setSelectedNodeId(selectedEntry.nodeId);
-      if (
-        (rootNode?.type === "List" || rootNode?.type === "Grid") &&
-        asBoolean(rootNode.props.onSelectionChange)
-      ) {
-        extensionManagerService.dispatchEvent(rootNode.id, "onSelectionChange", [
-          selectedEntry.itemId,
-        ]);
-      }
-    }
-  }
+  const selectionSync = useMemo(
+    () => ({
+      key: `${rootNode?.id ?? 0}:${selectedEntry?.nodeId ?? ""}:${selectedEntry?.itemId ?? ""}:${rootType === "List" || rootType === "Grid" ? Number(asBoolean(rootNode?.props.onSelectionChange)) : 0}`,
+      selectedNodeId: selectedEntry?.nodeId,
+      rootNodeId:
+        rootNode && (rootType === "List" || rootType === "Grid") ? rootNode.id : undefined,
+      selectedItemId: selectedEntry?.itemId ?? null,
+      shouldDispatchSelectionChange:
+        !!rootNode &&
+        (rootType === "List" || rootType === "Grid") &&
+        asBoolean(rootNode.props.onSelectionChange),
+    }),
+    [rootNode, rootType, selectedEntry?.itemId, selectedEntry?.nodeId],
+  );
 
   const formFieldByNodeIdRef = useRef(formFieldByNodeId);
+  const formStateKeyRef = useRef(formStateKey);
   const rootNodeRef = useRef(rootNode);
   const searchStateKeyRef = useRef(searchStateKey);
   formFieldByNodeIdRef.current = formFieldByNodeId;
+  formStateKeyRef.current = formStateKey;
   rootNodeRef.current = rootNode;
   searchStateKeyRef.current = searchStateKey;
 
@@ -431,9 +406,9 @@ export function useExtensionRunnerState({
           return;
         }
         setFormState((previous) => ({
-          ...previous,
+          key: formStateKeyRef.current,
           values: {
-            ...previous.values,
+            ...(previous.key === formStateKeyRef.current ? previous.values : {}),
             [field.key]: field.defaultValue,
           },
         }));
@@ -588,22 +563,28 @@ export function useExtensionRunnerState({
         rootNode &&
         asBoolean(rootNode.props.onSearchTextChange)
       ) {
-        pendingControlledSearchTextRef.current = value;
+        pendingControlledSearchTextRef.current = { key: searchStateKey, value };
         extensionManagerService.dispatchEvent(rootNode.id, "onSearchTextChange", [value]);
       }
     },
     [rootNode, rootType, searchStateKey],
   );
 
-  const handleSetFormValue = useCallback((field: FormField, value: FormValue) => {
-    setFormState((previous) => ({
-      ...previous,
-      values: { ...previous.values, [field.key]: value },
-    }));
-    if (field.hasOnChange) {
-      extensionManagerService.dispatchEvent(field.nodeId, "onChange", [value]);
-    }
-  }, []);
+  const handleSetFormValue = useCallback(
+    (field: FormField, value: FormValue) => {
+      setFormState((previous) => ({
+        key: formStateKey,
+        values: {
+          ...(previous.key === formStateKey ? previous.values : {}),
+          [field.key]: value,
+        },
+      }));
+      if (field.hasOnChange) {
+        extensionManagerService.dispatchEvent(field.nodeId, "onChange", [value]);
+      }
+    },
+    [formStateKey],
+  );
 
   const handleBlurFormField = useCallback(
     (field: FormField) => {
@@ -989,6 +970,7 @@ export function useExtensionRunnerState({
     selectedEntryActions,
     rootActions,
     activeToast,
+    selectionSync,
     handleBack,
     handleRootKeyDownCapture,
     handleRootKeyDown,

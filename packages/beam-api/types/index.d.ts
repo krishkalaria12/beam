@@ -62,11 +62,13 @@ export declare const Color: {
   readonly SecondaryText: "raycast-secondary-text";
 };
 
+export type Color = (typeof Color)[keyof typeof Color];
+export type ImageSource = string | DynamicColor;
 export type ImageLike =
-  | string
+  | ImageSource
   | {
-      source: string;
-      fallback?: string;
+      source: ImageSource;
+      fallback?: ImageSource;
       mask?: "circle" | "roundedRectangle";
       tintColor?: ColorLike;
     };
@@ -77,6 +79,13 @@ export declare const Image: {
     readonly RoundedRectangle: "roundedRectangle";
   };
 };
+
+export declare namespace Image {
+  type Mask = (typeof Image.Mask)[keyof typeof Image.Mask];
+  type Asset = string;
+  type Fallback = ImageSource;
+  type ImageLike = import("./index").ImageLike;
+}
 
 export declare enum LaunchType {
   UserInitiated = "userInitiated",
@@ -97,6 +106,39 @@ export declare const Toast: {
   };
 };
 
+export declare namespace Toast {
+  type Style = (typeof Toast.Style)[keyof typeof Toast.Style];
+
+  type Shortcut = {
+    modifiers: KeyModifier[];
+    key: KeyEquivalent;
+  };
+
+  interface Instance {
+    style: Style;
+    title: string;
+    message?: string;
+    primaryAction?: ActionOptions;
+    secondaryAction?: ActionOptions;
+    show(): Promise<void>;
+    hide(): Promise<void>;
+  }
+
+  interface ActionOptions {
+    title: string;
+    onAction?: (toast: Instance) => void | Promise<void>;
+    shortcut?: Shortcut;
+  }
+
+  interface Options {
+    style?: Style;
+    title: string;
+    message?: string;
+    primaryAction?: ActionOptions;
+    secondaryAction?: ActionOptions;
+  }
+}
+
 export declare const Alert: {
   readonly ActionStyle: {
     readonly Default: "default";
@@ -105,7 +147,27 @@ export declare const Alert: {
   };
 };
 
-export type Environment = Record<string, unknown>;
+export type Environment = {
+  raycastVersion: string;
+  ownerOrAuthorName: string;
+  extensionName: string;
+  commandName: string;
+  commandMode: "no-view" | "view" | "menu-bar";
+  assetsPath: string;
+  supportPath: string;
+  isDevelopment: boolean;
+  appearance: "light" | "dark";
+  theme: "light" | "dark";
+  textSize: "medium" | "large";
+  launchType: LaunchType;
+  canAccess(api: unknown): boolean;
+  launchContext?: LaunchContext;
+  beamVersion: {
+    tag: string;
+    commit: string;
+  };
+  isRaycast: boolean;
+};
 export type LaunchProps<TArguments extends Arguments = Arguments> = {
   arguments?: TArguments;
   launchContext?: LaunchContext;
@@ -125,7 +187,21 @@ export declare const Icon: Record<string, string>;
 
 export declare const environment: Environment;
 export declare const preferences: Record<string, unknown>;
-export declare const Cache: Record<string, unknown>;
+export interface CacheOptions {
+  capacity?: number;
+  namespace?: string;
+  directory?: string;
+}
+export declare class Cache {
+  constructor(options?: CacheOptions);
+  readonly isEmpty: boolean;
+  get(key: string): string | undefined;
+  has(key: string): boolean;
+  set(key: string, data: string): void;
+  remove(key: string): boolean;
+  clear(options?: { notifySubscribers?: boolean }): void;
+  subscribe(subscriber: (key: string | undefined, data: string | undefined) => void): () => void;
+}
 export declare const Clipboard: {
   copy(content: unknown, options?: unknown): Promise<void>;
   paste(content: unknown): Promise<void>;
@@ -140,20 +216,166 @@ export declare const LocalStorage: {
   clear(): Promise<void>;
   allItems(): Promise<Record<string, unknown>>;
 };
-export declare const OAuth: Record<string, unknown>;
-export declare const AI: {
-  name: "AI";
-  ask(prompt: string, options?: Record<string, unknown>): Promise<string>;
-};
+export declare namespace OAuth {
+  enum RedirectMethod {
+    Web = "web",
+    App = "app",
+    AppURI = "app-uri",
+  }
+
+  interface PKCEClientOptions {
+    redirectMethod: RedirectMethod;
+    providerName: string;
+    providerIcon?: ImageLike;
+    description?: string;
+    providerId?: string;
+  }
+
+  interface AuthorizationRequestOptions {
+    endpoint: string;
+    clientId: string;
+    scope: string;
+    extraParameters?: { [key: string]: string };
+  }
+
+  interface AuthorizationRequest {
+    url: string;
+    codeVerifier: string;
+    codeChallenge: string;
+    redirectURI: string;
+    state: string;
+    toURL(): string;
+  }
+
+  interface AuthorizationOptions {
+    url: string;
+  }
+
+  interface AuthorizationResponse {
+    authorizationCode: string;
+  }
+
+  interface TokenResponse {
+    access_token: string;
+    refresh_token?: string;
+    expires_in?: number;
+    scope?: string | string[];
+    id_token?: string;
+  }
+
+  interface TokenSetOptions {
+    accessToken: string;
+    refreshToken?: string;
+    expiresIn?: number;
+    scope?: string;
+    idToken?: string;
+  }
+
+  interface TokenSet {
+    accessToken: string;
+    refreshToken?: string;
+    expiresIn?: number;
+    scope?: string;
+    idToken?: string;
+    updatedAt: Date;
+    isExpired(): boolean;
+  }
+
+  class PKCEClient {
+    providerName: string;
+    providerIcon?: ImageLike;
+    description?: string;
+    providerId?: string;
+    constructor(options: PKCEClientOptions);
+    authorizationRequest(options: AuthorizationRequestOptions): Promise<AuthorizationRequest>;
+    authorize(authRequest: AuthorizationRequest | AuthorizationOptions): Promise<AuthorizationResponse>;
+    getTokens(): Promise<TokenSet | undefined>;
+    setTokens(tokens: TokenSetOptions | TokenResponse): Promise<void>;
+    removeTokens(): Promise<void>;
+  }
+}
+
+export declare namespace AI {
+  type Creativity = "none" | "low" | "medium" | "high" | "maximum" | number;
+
+  enum Model {
+    "OpenAI_GPT4.1" = "OpenAI_GPT4.1",
+    "OpenAI_GPT4.1-mini" = "OpenAI_GPT4.1-mini",
+    "OpenAI_GPT4.1-nano" = "OpenAI_GPT4.1-nano",
+    OpenAI_GPT4 = "OpenAI_GPT4",
+    "OpenAI_GPT4-turbo" = "OpenAI_GPT4-turbo",
+    OpenAI_GPT4o = "OpenAI_GPT4o",
+    "OpenAI_GPT4o-mini" = "OpenAI_GPT4o-mini",
+    OpenAI_o3 = "OpenAI_o3",
+    "OpenAI_o4-mini" = "OpenAI_o4-mini",
+    OpenAI_o1 = "OpenAI_o1",
+    "OpenAI_o3-mini" = "OpenAI_o3-mini",
+    Anthropic_Claude_Haiku = "Anthropic_Claude_Haiku",
+    Anthropic_Claude_Sonnet = "Anthropic_Claude_Sonnet",
+    "Anthropic_Claude_Sonnet_3.7" = "Anthropic_Claude_Sonnet_3.7",
+    Anthropic_Claude_Opus = "Anthropic_Claude_Opus",
+    Anthropic_Claude_4_Sonnet = "Anthropic_Claude_4_Sonnet",
+    Anthropic_Claude_4_Opus = "Anthropic_Claude_4_Opus",
+    Perplexity_Sonar = "Perplexity_Sonar",
+    Perplexity_Sonar_Pro = "Perplexity_Sonar_Pro",
+    Perplexity_Sonar_Reasoning = "Perplexity_Sonar_Reasoning",
+    Perplexity_Sonar_Reasoning_Pro = "Perplexity_Sonar_Reasoning_Pro",
+    Llama4_Scout = "Llama4_Scout",
+    "Llama3.3_70B" = "Llama3.3_70B",
+    "Llama3.1_8B" = "Llama3.1_8B",
+    "Llama3.1_405B" = "Llama3.1_405B",
+    Mistral_Nemo = "Mistral_Nemo",
+    Mistral_Large = "Mistral_Large",
+    Mistral_Medium = "Mistral_Medium",
+    Mistral_Small = "Mistral_Small",
+    Mistral_Codestral = "Mistral_Codestral",
+    "DeepSeek_R1_Distill_Llama_3.3_70B" = "DeepSeek_R1_Distill_Llama_3.3_70B",
+    DeepSeek_R1 = "DeepSeek_R1",
+    DeepSeek_V3 = "DeepSeek_V3",
+    "Google_Gemini_2.5_Pro" = "Google_Gemini_2.5_Pro",
+    "Google_Gemini_2.5_Flash" = "Google_Gemini_2.5_Flash",
+    "Google_Gemini_2.0_Flash" = "Google_Gemini_2.0_Flash",
+    xAI_Grok_3 = "xAI_Grok_3",
+    xAI_Grok_3_Mini = "xAI_Grok_3_Mini",
+    xAI_Grok_2 = "xAI_Grok_2",
+  }
+
+  interface AskOptions {
+    creativity?: Creativity;
+    model?: string;
+    provider?: "openrouter" | "openai" | "anthropic" | "gemini";
+    modelMappings?: Record<string, string>;
+    signal?: AbortSignal;
+  }
+
+  interface AskResult extends Promise<string> {
+    on(event: "data", listener: (chunk: string) => void): this;
+    on(event: "end", listener: (fullText: string) => void): this;
+    on(event: "error", listener: (error: Error) => void): this;
+    off(event: "data", listener: (chunk: string) => void): this;
+    off(event: "end", listener: (fullText: string) => void): this;
+    off(event: "error", listener: (error: Error) => void): this;
+  }
+
+  const name: "AI";
+  function ask(prompt: string, options?: AskOptions): AskResult;
+  const Creativity: {
+    none: "none";
+    low: "low";
+    medium: "medium";
+    high: "high";
+    maximum: "maximum";
+  };
+}
 export declare const BrowserExtension: Record<string, unknown>;
 
 export declare function randomId(): string;
 export declare function getPreferenceValues<T = Record<string, any>>(): T;
 export declare function showToast(
-  optionsOrStyle: Record<string, unknown> | string,
+  optionsOrStyle: Toast.Options | Toast.Style,
   title?: string,
   message?: string,
-): Promise<any>;
+): Promise<Toast.Instance>;
 export declare function showHUD(
   title: string,
   options?: { clearRootSearch?: boolean; popToRootType?: PopToRootType },
@@ -217,6 +439,8 @@ type FormItemProps<T extends FormValue> = {
   value?: T;
   defaultValue?: T;
   onChange?: (newValue: T) => void;
+  onBlur?: (event: { target: { value: T } }) => void;
+  ref?: React.Ref<Form.ItemReference>;
 };
 
 type MetadataLabelText = string | { color?: ColorLike; value: string };
@@ -380,6 +604,7 @@ export declare namespace Form {
     focus(): void;
     reset(): void;
   };
+  type ItemProps<T extends FormValue = FormValue> = FormItemProps<T>;
 
   namespace TextField {
     type Props = FormItemProps<string>;
@@ -509,6 +734,7 @@ export declare namespace List {
       title?: string;
       description?: string;
       icon?: ImageLike;
+      actions?: React.ReactNode;
     };
   }
 
@@ -715,6 +941,7 @@ export interface MenuBarExtraComponent extends React.FC<Record<string, unknown>>
   Item: React.FC<Record<string, unknown>>;
   Section: React.FC<Record<string, unknown>>;
   Submenu: React.FC<Record<string, unknown>>;
+  Separator: React.FC<Record<string, never>>;
   isSupported: boolean;
   open: () => Promise<void>;
 }

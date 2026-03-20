@@ -1,4 +1,4 @@
-import React from "react";
+import React from "../shared-react";
 import { updateContainer } from "../reconciler";
 import { type CommandLoadOptions, loadCommandModule } from "./load-command-module";
 

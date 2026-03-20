@@ -117,7 +117,13 @@ export default class Develop extends Command {
         return esbuild.build({
           bundle: true,
           entryPoints: [source],
-          external: ["react", "@beam-launcher/api", "@raycast/api", "@raycast/utils"],
+          external: [
+            "react",
+            "@beam-launcher/api",
+            "@beam-launcher/utils",
+            "@raycast/api",
+            "@raycast/utils",
+          ],
           format: "cjs",
           outdir: outDir,
           platform: "node",

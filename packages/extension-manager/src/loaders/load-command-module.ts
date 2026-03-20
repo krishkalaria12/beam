@@ -1,5 +1,4 @@
-import React from "react";
-import * as ReactJsxRuntime from "react/jsx-runtime";
+import React, { ReactJsxRuntime } from "../shared-react";
 import { inspect } from "util";
 import { environment } from "../api/environment";
 import { loadBeamGlobals } from "../globals";

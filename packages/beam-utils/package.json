@@ -1,0 +1,61 @@
+{
+  "name": "@beam-launcher/utils",
+  "version": "0.1.0",
+  "description": "Utilities for building Beam extensions",
+  "type": "module",
+  "keywords": [
+    "beam",
+    "extensions",
+    "raycast",
+    "utils"
+  ],
+  "license": "MIT",
+  "author": "",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/krishkalaria12/beam.git"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsdown --config-loader unrun --config tsdown.config.ts",
+    "check": "bunx tsc --noEmit",
+    "check-types": "bunx tsc --noEmit",
+    "pack": "bun run build && npm pack --dry-run"
+  },
+  "dependencies": {
+    "dequal": "^2.0.3"
+  },
+  "devDependencies": {
+    "@beam-launcher/api": "workspace:*",
+    "@beam/config": "workspace:*",
+    "@types/node": "^24.0.0",
+    "@types/react": "19.2.7",
+    "react": "19.2.3",
+    "tsdown": "^0.21.3",
+    "typescript": "^5.9.3"
+  },
+  "peerDependencies": {
+    "@beam-launcher/api": "^1.0.0",
+    "react": "^19.0.0"
+  }
+}

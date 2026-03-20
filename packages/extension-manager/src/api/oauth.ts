@@ -199,7 +199,7 @@ export class PKCEClient {
         redirectURI = `beam://oauth?package_name=${encodeURIComponent(packageName)}`;
         break;
       case RedirectMethod.AppURI:
-        redirectURI = `raycast://oauth?package_name=${encodeURIComponent(packageName)}`;
+        redirectURI = `beam://oauth?package_name=${encodeURIComponent(packageName)}`;
         break;
     }
 

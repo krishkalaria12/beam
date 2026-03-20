@@ -1,24 +1,23 @@
 import Module from "module";
 import * as DequalLite from "dequal/lite";
-import React from "react";
-import * as ReactJsxRuntime from "react/jsx-runtime";
+import React, { ReactJsxRuntime } from "../shared-react";
 import { getBeamApi } from "../api";
 import { createCompatElement, createCompatElementDev } from "../runtime/jsx-runtime";
-import { RAYCAST_UTILS_MAIN } from "../vendor/raycast-utils-main";
+import { BEAM_UTILS_MAIN } from "../vendor/beam-utils-main";
 
-type RaycastUtilsModule = Record<string, unknown>;
+type BeamUtilsModule = Record<string, unknown>;
 
-let cachedRaycastUtils: RaycastUtilsModule | null = null;
+let cachedBeamUtils: BeamUtilsModule | null = null;
 
-export function loadRaycastUtils(pluginPath: string): RaycastUtilsModule {
-  if (cachedRaycastUtils) {
-    return cachedRaycastUtils;
+export function loadBeamUtils(pluginPath: string): BeamUtilsModule {
+  if (cachedBeamUtils) {
+    return cachedBeamUtils;
   }
 
   const pluginRequire = Module.createRequire(pluginPath);
-  const module = { exports: {} as RaycastUtilsModule };
+  const module = { exports: {} as BeamUtilsModule };
 
-  const scriptFunction = new Function("require", "module", "exports", RAYCAST_UTILS_MAIN);
+  const scriptFunction = new Function("require", "module", "exports", BEAM_UTILS_MAIN);
   scriptFunction(
     (moduleName: string): unknown => {
       if (moduleName === "react") {
@@ -42,7 +41,7 @@ export function loadRaycastUtils(pluginPath: string): RaycastUtilsModule {
         };
       }
 
-      if (moduleName === "@raycast/api") {
+      if (moduleName === "@beam-launcher/api") {
         return getBeamApi();
       }
 
@@ -56,6 +55,6 @@ export function loadRaycastUtils(pluginPath: string): RaycastUtilsModule {
     module.exports,
   );
 
-  cachedRaycastUtils = module.exports;
-  return cachedRaycastUtils;
+  cachedBeamUtils = module.exports;
+  return cachedBeamUtils;
 }

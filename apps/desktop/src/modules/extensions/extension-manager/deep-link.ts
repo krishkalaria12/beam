@@ -103,21 +103,23 @@ export function parseRaycastDeepLink(url: string): ParsedRaycastDeepLinkResult {
   }
 
   const isRaycastScheme = urlObj.protocol === "raycast:";
+  const isBeamScheme = urlObj.protocol === "beam:";
   const isRaycastDomain =
     (urlObj.protocol === "https:" || urlObj.protocol === "http:") &&
     urlObj.hostname === "raycast.com";
 
-  if (!isRaycastScheme && !isRaycastDomain) {
+  if (!isRaycastScheme && !isBeamScheme && !isRaycastDomain) {
     return { handled: false };
   }
 
-  const routeHost = isRaycastScheme ? urlObj.host : urlObj.pathname.split("/").filter(Boolean)[0];
+  const routeHost =
+    isRaycastScheme || isBeamScheme ? urlObj.host : urlObj.pathname.split("/").filter(Boolean)[0];
   if (routeHost !== "extensions") {
     return { handled: false };
   }
 
   const pathParts = (
-    isRaycastScheme
+    isRaycastScheme || isBeamScheme
       ? urlObj.pathname.split("/")
       : urlObj.pathname.replace(/^\/extensions/, "").split("/")
   )

@@ -8,7 +8,8 @@
   "main": "index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsdown --config-loader unrun --config tsdown.config.ts && pkg dist/index.js --targets node22-linux-x64 --output app --public --sea && bun run rename",
+    "sync:beam-utils-vendor": "node scripts/sync-beam-utils-vendor.mjs",
+    "build": "bun run --cwd ../beam-utils build && bun run sync:beam-utils-vendor && tsdown --config-loader unrun --config tsdown.config.ts && pkg dist/index.js --targets node22-linux-x64 --output app --public --sea && bun run rename",
     "rename": "mkdir -p ../../apps/desktop/src-tauri/binaries && mv \"app$([[ \"$OSTYPE\" =~ msys|win32 ]] && echo .exe)\" \"../../apps/desktop/src-tauri/binaries/app-$(rustc -vV | awk '/host:/ {print $2}')$([[ \"$OSTYPE\" =~ msys|win32 ]] && echo .exe)\"",
     "check": "tsc --noEmit",
     "check-types": "tsc --noEmit"

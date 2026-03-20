@@ -285,6 +285,18 @@ export function RuntimeFormView({ state }: RuntimeFormViewProps) {
           );
         }
 
+        if (child.type === "Form.Separator") {
+          return (
+            <div
+              key={child.id}
+              className={cn("ext-form-separator-wrapper", readClassName(child.props.className))}
+              style={readStyle(child.props.style)}
+            >
+              <ModuleFormField.Separator />
+            </div>
+          );
+        }
+
         const field = state.formFieldByNodeId.get(child.id);
         return field ? renderFormField(state, field) : null;
       })}
