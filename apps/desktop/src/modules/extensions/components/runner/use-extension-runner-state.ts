@@ -12,16 +12,21 @@ import {
   useExtensionRuntimeStore,
 } from "@/modules/extensions/runtime/store";
 import { requestExtensionRunnerActionsToggle } from "@/modules/extensions/components/runner/runner-actions-toggle";
+import {
+  getPrimaryExtensionAction,
+  getTopLevelExtensionShortcutActions,
+} from "@/modules/extensions/components/runner/types";
 import type {
-  FlattenedAction,
+  ExtensionAction,
+  ExtensionActionPanelPage,
   FormField,
   FormValue,
-  KeyboardShortcutDefinition,
   ListEntry,
 } from "@/modules/extensions/components/runner/types";
 import { asBoolean, asString } from "@/modules/extensions/components/runner/utils";
 import { filterEntriesByQuery } from "@/modules/extensions/components/runner/search";
 import { collectActions } from "@/modules/extensions/components/runner/nodes/actions/action-model";
+import { keyMatchesShortcut } from "@/modules/extensions/components/runner/shortcut-utils";
 import { collectFormFields } from "@/modules/extensions/components/runner/nodes/form/form-model";
 import { collectGridEntries } from "@/modules/extensions/components/runner/nodes/grid/grid-model";
 import {
@@ -48,8 +53,8 @@ export interface UseExtensionRunnerStateResult {
   selectedIndex: number;
   currentEntries: ListEntry[];
   selectedEntry: ListEntry | undefined;
-  selectedEntryActions: FlattenedAction[];
-  rootActions: FlattenedAction[];
+  selectedEntryActions: ExtensionActionPanelPage;
+  rootActions: ExtensionActionPanelPage;
   activeToast: ExtensionToast | undefined;
   selectionSync: {
     key: string;
@@ -68,7 +73,7 @@ export interface UseExtensionRunnerStateResult {
   handleToastAction: (toastId: number, actionType: "primary" | "secondary") => void;
   handleToastHide: (toastId: number) => void;
   runPrimarySelectionAction: () => void;
-  executeAction: (action: FlattenedAction) => Promise<void>;
+  executeAction: (action: ExtensionAction) => Promise<void>;
   setSelectedIndex: (index: number | ((previous: number) => number)) => void;
   registerFieldRef: (nodeId: number, element: HTMLElement | null) => void;
   dispatchNodeEvent: (nodeId: number, handlerName: string, args?: unknown[]) => void;
@@ -92,33 +97,6 @@ function isEditableTarget(target: EventTarget | null): target is HTMLElement {
 
 function isExtensionSearchInputTarget(target: EventTarget | null): target is HTMLElement {
   return target instanceof HTMLElement && target.dataset.moduleSearchInput === "true";
-}
-
-function isMacPlatform(): boolean {
-  if (typeof navigator === "undefined") {
-    return false;
-  }
-  return /mac/i.test(navigator.platform);
-}
-
-function keyMatchesShortcut(event: KeyboardEvent, shortcut: KeyboardShortcutDefinition): boolean {
-  if (event.key.toLowerCase() !== shortcut.key.toLowerCase()) {
-    return false;
-  }
-
-  const required = new Set(shortcut.modifiers);
-  const isMac = isMacPlatform();
-  const expectMeta = isMac ? required.has("cmd") : false;
-  const expectCtrl = isMac ? required.has("ctrl") : required.has("cmd") || required.has("ctrl");
-  const expectAlt = required.has("opt");
-  const expectShift = required.has("shift");
-
-  return (
-    event.metaKey === expectMeta &&
-    event.ctrlKey === expectCtrl &&
-    event.altKey === expectAlt &&
-    event.shiftKey === expectShift
-  );
 }
 
 function readApplicationTarget(value: unknown): string | undefined {
@@ -439,7 +417,7 @@ export function useExtensionRunnerState({
   }, [onBack]);
 
   const executeAction = useCallback(
-    async (action: FlattenedAction) => {
+    async (action: ExtensionAction) => {
       if (action.type === "Action.OpenInBrowser") {
         const target = asString(action.props.url, asString(action.props.target));
         if (target) {
@@ -540,7 +518,8 @@ export function useExtensionRunnerState({
   );
 
   const runPrimarySelectionAction = useCallback(() => {
-    const primaryAction = selectedEntryActions[0] ?? rootActions[0];
+    const primaryAction =
+      getPrimaryExtensionAction(selectedEntryActions) ?? getPrimaryExtensionAction(rootActions);
     if (primaryAction) {
       void executeAction(primaryAction);
       return;
@@ -634,7 +613,10 @@ export function useExtensionRunnerState({
         return;
       }
 
-      const availableActions = selectedEntryActions.length > 0 ? selectedEntryActions : rootActions;
+      const availableActions =
+        selectedEntryActions.sections.length > 0
+          ? getTopLevelExtensionShortcutActions(selectedEntryActions)
+          : getTopLevelExtensionShortcutActions(rootActions);
 
       if (availableActions.length > 0 && isLauncherActionsHotkey(event)) {
         event.preventDefault();
@@ -865,7 +847,10 @@ export function useExtensionRunnerState({
 
   const handleSearchInputKeyDown = useCallback(
     (event: KeyboardEvent<HTMLInputElement>) => {
-      const availableActions = selectedEntryActions.length > 0 ? selectedEntryActions : rootActions;
+      const availableActions =
+        selectedEntryActions.sections.length > 0
+          ? getTopLevelExtensionShortcutActions(selectedEntryActions)
+          : getTopLevelExtensionShortcutActions(rootActions);
 
       if (
         event.key === "Escape" &&

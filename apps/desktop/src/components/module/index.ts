@@ -18,7 +18,11 @@ export { ListAccessory } from "./list-accessory";
 export { ListAccessoryRow } from "./list-accessory-row";
 export type { ListAccessoryItem } from "./list-accessory-row";
 export { ActionListPanel } from "./action-list-panel";
-export type { ActionListPanelItem } from "./action-list-panel";
+export type {
+  ActionListPanelItem,
+  ActionListPanelPage,
+  ActionListPanelSection,
+} from "./action-list-panel";
 
 export { ModuleHeader } from "./module-header";
 export { SectionHeader } from "./section-header";

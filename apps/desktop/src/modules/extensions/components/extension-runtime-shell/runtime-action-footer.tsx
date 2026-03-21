@@ -1,10 +1,10 @@
 import { RunnerActionBar } from "@/modules/extensions/components/runner/runner-action-bar";
-import type { FlattenedAction } from "@/modules/extensions/components/runner/types";
+import type { ExtensionActionPanelPage } from "@/modules/extensions/components/runner/types";
 import type { UseExtensionRunnerStateResult } from "@/modules/extensions/components/runner/use-extension-runner-state";
 
 interface RuntimeActionFooterProps {
   state: UseExtensionRunnerStateResult;
-  actions: FlattenedAction[];
+  actions: ExtensionActionPanelPage;
 }
 
 export function RuntimeActionFooter({ state, actions }: RuntimeActionFooterProps) {
@@ -16,6 +16,11 @@ export function RuntimeActionFooter({ state, actions }: RuntimeActionFooterProps
       onToastHide={state.handleToastHide}
       onExecuteAction={(action) => {
         void state.executeAction(action);
+      }}
+      onOpenSubmenu={(submenu) => {
+        if (submenu.hasOnOpen) {
+          state.dispatchNodeEvent(submenu.nodeId, "onOpen");
+        }
       }}
     />
   );

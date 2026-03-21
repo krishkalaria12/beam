@@ -3,7 +3,7 @@ import { formatDistanceToNowStrict } from "date-fns";
 
 import { normalizeIconToken } from "@/components/icons/icon-registry";
 import type { MetadataBarItem } from "@/components/module";
-import type { FlattenedAction } from "@/modules/extensions/components/runner/types";
+import type { ExtensionActionPanelPage } from "@/modules/extensions/components/runner/types";
 import type { UseExtensionRunnerStateResult } from "@/modules/extensions/components/runner/use-extension-runner-state";
 import { asString } from "@/modules/extensions/components/runner/utils";
 
@@ -237,8 +237,10 @@ export function resolveContentValue(content: unknown): unknown {
   return content;
 }
 
-export function selectedActions(state: UseExtensionRunnerStateResult): FlattenedAction[] {
-  return state.selectedEntryActions.length > 0 ? state.selectedEntryActions : state.rootActions;
+export function selectedActions(state: UseExtensionRunnerStateResult): ExtensionActionPanelPage {
+  return state.selectedEntryActions.sections.length > 0
+    ? state.selectedEntryActions
+    : state.rootActions;
 }
 
 export function readClassName(value: unknown): string | undefined {
