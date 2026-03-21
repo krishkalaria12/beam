@@ -25,7 +25,6 @@ async function applyWindowSize(compact: boolean, compactHeight?: number) {
   await window.setMinSize(size);
   await window.setMaxSize(size);
   await window.setSize(size);
-  await window.center();
 }
 
 export async function setLauncherCompactMode(

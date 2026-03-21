@@ -32,7 +32,6 @@ async function resizeLauncherWindow(width: number, height: number): Promise<void
     await currentWindow.setMinSize(size);
     await currentWindow.setMaxSize(size);
     await currentWindow.setSize(size);
-    await currentWindow.center();
   } catch (error) {
     console.error("Failed to sync launcher window geometry:", error);
   }

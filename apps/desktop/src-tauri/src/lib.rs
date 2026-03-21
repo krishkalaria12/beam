@@ -84,6 +84,7 @@ fn emit_deep_link(app: &tauri::AppHandle, deep_link: String) {
     if let Some(main_window) = app.get_webview_window("main") {
         let _ = main_window.emit("deep-link", deep_link);
         let _ = main_window.unminimize();
+        let _ = main_window.center();
         let _ = main_window.show();
         let _ = main_window.set_focus();
     }
@@ -175,11 +176,6 @@ pub fn run(startup_args: Vec<String>) {
 
     builder
         .setup(move |app| {
-            #[cfg(desktop)]
-            {
-                handle_activation_args(&app.handle(), &startup_args, true);
-            }
-
             if cfg!(debug_assertions) {
                 app.handle().plugin(
                     tauri_plugin_log::Builder::default()
@@ -208,6 +204,11 @@ pub fn run(startup_args: Vec<String>) {
                 Err(error) => {
                     log::warn!("failed to load ui layout mode: {error}");
                 }
+            }
+
+            #[cfg(desktop)]
+            {
+                handle_activation_args(&app.handle(), &startup_args, true);
             }
 
             // Initialize File Search Backend via State

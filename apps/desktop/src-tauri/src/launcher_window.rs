@@ -42,10 +42,7 @@ pub fn set_launcher_compact_mode(
     };
 
     apply_fixed_size(&window, LAUNCHER_WIDTH, target_height)?;
-
-    if window.is_visible().unwrap_or(false) {
-        let _ = window.center();
-    }
+    let _ = window.center();
 
     Ok(())
 }
@@ -69,10 +66,7 @@ pub fn set_launcher_window_size(app: AppHandle, width: f64, height: f64) -> Resu
     };
 
     apply_fixed_size(&window, normalized_width, normalized_height)?;
-
-    if window.is_visible().unwrap_or(false) {
-        let _ = window.center();
-    }
+    let _ = window.center();
 
     Ok(())
 }
