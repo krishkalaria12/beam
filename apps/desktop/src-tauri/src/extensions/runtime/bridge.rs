@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::fs;
 use std::io::{BufRead, BufReader, BufWriter, Read, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Child, ChildStderr, ChildStdin, ChildStdout, Command, Stdio};
@@ -58,17 +57,25 @@ fn write_json_line(stdin: &Arc<Mutex<BufWriter<ChildStdin>>>, value: &Value) -> 
     writer.flush().map_err(|error| error.to_string())
 }
 
-fn resolve_extension_manager_launcher(app: &AppHandle) -> Result<PathBuf, String> {
+fn resolve_extension_manager_entry(app: &AppHandle) -> Result<PathBuf, String> {
     let mut candidate_dirs = Vec::new();
 
     if let Ok(resource_dir) = app.path().resource_dir() {
         candidate_dirs.push(resource_dir.join("binaries"));
+        candidate_dirs.push(resource_dir.join("dist"));
         candidate_dirs.push(resource_dir);
     }
 
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+
     candidate_dirs.push(manifest_dir.join("binaries"));
     if let Some(repo_root) = find_repo_root(&manifest_dir) {
+        candidate_dirs.push(
+            repo_root
+                .join("packages")
+                .join("extension-manager")
+                .join("dist"),
+        );
         candidate_dirs.push(
             repo_root
                 .join("apps")
@@ -79,38 +86,23 @@ fn resolve_extension_manager_launcher(app: &AppHandle) -> Result<PathBuf, String
     }
 
     for directory in candidate_dirs {
-        if let Some(path) = find_extension_manager_launcher_in_dir(&directory) {
+        if let Some(path) = find_extension_manager_entry_in_dir(&directory) {
             return Ok(path);
         }
     }
 
-    Err("failed to locate the extension runtime launcher".to_string())
+    Err("failed to locate extension-manager.js for the extension runtime".to_string())
 }
 
-fn resolve_extension_manager_dev_entry() -> Option<PathBuf> {
-    let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    let repo_root = find_repo_root(&manifest_dir)?;
-    let entry = repo_root
-        .join("packages")
-        .join("extension-manager")
-        .join("dist")
-        .join("index.js");
-    if entry.is_file() {
-        Some(entry)
-    } else {
-        None
+fn find_extension_manager_entry_in_dir(directory: &Path) -> Option<PathBuf> {
+    let copied_entry = directory.join("extension-manager.js");
+    if copied_entry.is_file() {
+        return Some(copied_entry);
     }
-}
 
-fn find_extension_manager_launcher_in_dir(directory: &Path) -> Option<PathBuf> {
-    let entries = fs::read_dir(directory).ok()?;
-
-    for entry in entries.flatten() {
-        let path = entry.path();
-        let name = path.file_name()?.to_string_lossy();
-        if path.is_file() && (name == "app" || name.starts_with("app-")) {
-            return Some(path);
-        }
+    let dist_entry = directory.join("index.js");
+    if dist_entry.is_file() {
+        return Some(dist_entry);
     }
 
     None
@@ -134,23 +126,14 @@ fn build_extension_manager_args(app: &AppHandle) -> Result<Vec<String>, String> 
 
 fn resolve_extension_runtime_launcher(app: &AppHandle) -> Result<ExtensionRuntimeLauncher, String> {
     let args = build_extension_manager_args(app)?;
-
-    if cfg!(debug_assertions) {
-        if let Some(entry) = resolve_extension_manager_dev_entry() {
-            let mut node_args = Vec::with_capacity(args.len() + 1);
-            node_args.push(entry.display().to_string());
-            node_args.extend(args);
-
-            return Ok(ExtensionRuntimeLauncher {
-                program: PathBuf::from("node"),
-                args: node_args,
-            });
-        }
-    }
+    let entry = resolve_extension_manager_entry(app)?;
+    let mut node_args = Vec::with_capacity(args.len() + 1);
+    node_args.push(entry.display().to_string());
+    node_args.extend(args);
 
     Ok(ExtensionRuntimeLauncher {
-        program: resolve_extension_manager_launcher(app)?,
-        args,
+        program: PathBuf::from("node"),
+        args: node_args,
     })
 }
 

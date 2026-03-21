@@ -7,7 +7,7 @@ export default defineConfig({
   outDir: "dist",
   format: "cjs",
   platform: "node",
-  target: "node22",
+  target: "node20",
   clean: true,
   minify: "dce-only",
   deps: {

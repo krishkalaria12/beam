@@ -9,8 +9,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "sync:beam-utils-vendor": "node scripts/sync-beam-utils-vendor.mjs",
-    "build": "bun run --cwd ../beam-utils build && bun run sync:beam-utils-vendor && tsdown --config-loader unrun --config tsdown.config.ts && pkg dist/index.js --targets node22-linux-x64 --output app --public --sea && bun run rename",
-    "rename": "mkdir -p ../../apps/desktop/src-tauri/binaries && mv \"app$([[ \"$OSTYPE\" =~ msys|win32 ]] && echo .exe)\" \"../../apps/desktop/src-tauri/binaries/app-$(rustc -vV | awk '/host:/ {print $2}')$([[ \"$OSTYPE\" =~ msys|win32 ]] && echo .exe)\"",
+    "build": "bun run --cwd ../beam-utils build && bun run sync:beam-utils-vendor && tsdown --config-loader unrun --config tsdown.config.ts && bun run sync:desktop-runtime",
+    "sync:desktop-runtime": "mkdir -p ../../apps/desktop/src-tauri/binaries && cp dist/index.js ../../apps/desktop/src-tauri/binaries/extension-manager.js",
     "check": "tsc --noEmit",
     "check-types": "tsc --noEmit"
   },
@@ -30,7 +30,6 @@
     "@types/pako": "^2.0.3",
     "@types/react": "19.2.7",
     "@types/react-reconciler": "^0.32.0",
-    "@yao-pkg/pkg": "^6.5.1",
     "tsdown": "^0.21.3",
     "typescript": "^5.8.3"
   }
