@@ -1,9 +1,7 @@
-import { invoke, isTauri } from "@tauri-apps/api/core";
+import { invoke } from "@tauri-apps/api/core";
 
 export const ICON_THEME_QUERY_KEY = ["settings", "icon-theme"] as const;
 export const ICON_THEMES_QUERY_KEY = ["settings", "icon-themes"] as const;
-const ICON_THEME_STORAGE_KEY = "beam-icon-theme";
-
 export interface IconThemeSummary {
   id: string;
   name: string;
@@ -45,30 +43,17 @@ function normalizeIconThemes(value: unknown): IconThemeSummary[] {
 }
 
 export async function listIconThemes(): Promise<IconThemeSummary[]> {
-  if (!isTauri()) {
-    return [];
-  }
-
   const result = await invoke<unknown>("list_icon_themes");
   return normalizeIconThemes(result);
 }
 
 export async function getIconTheme(): Promise<string> {
-  if (!isTauri()) {
-    return normalizeIconThemeId(localStorage.getItem(ICON_THEME_STORAGE_KEY));
-  }
-
   const result = await invoke<unknown>("get_icon_theme");
   return normalizeIconThemeId(result);
 }
 
 export async function setIconTheme(themeId: string): Promise<string> {
   const normalized = normalizeIconThemeId(themeId);
-
-  if (!isTauri()) {
-    localStorage.setItem(ICON_THEME_STORAGE_KEY, normalized);
-    return normalized;
-  }
 
   const result = await invoke<unknown>("set_icon_theme", {
     themeId: normalized,

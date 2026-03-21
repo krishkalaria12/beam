@@ -7,6 +7,7 @@ use std::path::{Path, PathBuf};
 
 use fontdb::Database;
 use serde::{Deserialize, Serialize};
+use serde_json::{Map, Value};
 use tauri::{AppHandle, Emitter};
 use tauri_plugin_store::StoreExt;
 
@@ -20,6 +21,14 @@ const DEFAULT_FONT_FAMILY_ID: &str = "default";
 const SYSTEM_FONT_FAMILY_ID: &str = "system";
 const MIN_LAUNCHER_FONT_SIZE: f64 = 10.0;
 const MAX_LAUNCHER_FONT_SIZE: f64 = 18.0;
+#[derive(Debug, Clone, Copy, Default, Deserialize, Serialize, Eq, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub enum UiStylePreference {
+    Default,
+    #[default]
+    Glassy,
+    Solid,
+}
 
 #[derive(Debug, Clone, Copy, Default, Deserialize, Serialize, Eq, PartialEq)]
 #[serde(rename_all = "snake_case")]
@@ -43,6 +52,33 @@ pub struct FontFamilySummary {
     pub name: String,
 }
 
+#[derive(Debug, Clone, Deserialize, Serialize, Eq, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct CustomTriggerBinding {
+    pub symbol: String,
+    pub command_id: String,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, Eq, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct TriggerSymbols {
+    pub quicklink: String,
+    pub system: String,
+    pub script: String,
+    pub shell: String,
+    pub custom_bindings: Vec<CustomTriggerBinding>,
+}
+
+fn default_trigger_symbols() -> TriggerSymbols {
+    TriggerSymbols {
+        quicklink: "!".to_string(),
+        system: "$".to_string(),
+        script: ">".to_string(),
+        shell: "~".to_string(),
+        custom_bindings: Vec::new(),
+    }
+}
+
 fn open_store(app: &AppHandle) -> Result<std::sync::Arc<tauri_plugin_store::Store<tauri::Wry>>> {
     app.store(APP_CONFIG.store_file_name)
         .map_err(|err| SettingsError::StoreOpen(err.to_string()))
@@ -61,6 +97,220 @@ fn normalize_icon_theme_id(value: &str) -> Option<String> {
     }
 
     Some(normalized.to_string())
+}
+
+fn normalize_ui_style(value: &str) -> Option<UiStylePreference> {
+    match value.trim().to_ascii_lowercase().as_str() {
+        "default" => Some(UiStylePreference::Default),
+        "glassy" => Some(UiStylePreference::Glassy),
+        "solid" => Some(UiStylePreference::Solid),
+        _ => None,
+    }
+}
+
+fn serialize_ui_style(style: UiStylePreference) -> &'static str {
+    match style {
+        UiStylePreference::Default => "default",
+        UiStylePreference::Glassy => "glassy",
+        UiStylePreference::Solid => "solid",
+    }
+}
+
+fn parse_ui_style(value: Option<Value>) -> UiStylePreference {
+    value
+        .and_then(|stored| stored.as_str().and_then(normalize_ui_style))
+        .unwrap_or_default()
+}
+
+fn normalize_base_color(value: &str) -> Option<String> {
+    let normalized = value.trim();
+    let hex = normalized.strip_prefix('#')?;
+
+    if hex.len() == 3 && hex.chars().all(|ch| ch.is_ascii_hexdigit()) {
+        let mut expanded = String::with_capacity(7);
+        expanded.push('#');
+        for ch in hex.chars() {
+            expanded.push(ch.to_ascii_lowercase());
+            expanded.push(ch.to_ascii_lowercase());
+        }
+        return Some(expanded);
+    }
+
+    if hex.len() == 6 && hex.chars().all(|ch| ch.is_ascii_hexdigit()) {
+        return Some(format!("#{}", hex.to_ascii_lowercase()));
+    }
+
+    None
+}
+
+fn parse_base_color(value: Option<Value>) -> String {
+    value
+        .and_then(|stored| stored.as_str().and_then(normalize_base_color))
+        .unwrap_or_else(|| SETTINGS_CONFIG.default_base_color.to_string())
+}
+
+fn is_valid_trigger_symbol(value: &str) -> bool {
+    value.chars().count() == 1 && !value.chars().any(char::is_whitespace)
+}
+
+fn normalize_trigger_symbol(value: &str) -> Option<String> {
+    let normalized = value.trim();
+    if is_valid_trigger_symbol(normalized) {
+        Some(normalized.to_string())
+    } else {
+        None
+    }
+}
+
+fn normalize_command_id(value: &str) -> Option<String> {
+    let normalized = value.trim();
+    if normalized.is_empty() {
+        None
+    } else {
+        Some(normalized.to_string())
+    }
+}
+
+fn normalize_custom_trigger_bindings(value: &Value) -> Vec<CustomTriggerBinding> {
+    let Value::Array(items) = value else {
+        return Vec::new();
+    };
+
+    let mut seen_symbols = HashSet::new();
+    let mut bindings = Vec::new();
+
+    for item in items {
+        let Value::Object(record) = item else {
+            continue;
+        };
+
+        let Some(symbol) = record
+            .get("symbol")
+            .and_then(Value::as_str)
+            .and_then(normalize_trigger_symbol)
+        else {
+            continue;
+        };
+        let Some(command_id) = record
+            .get("commandId")
+            .or_else(|| record.get("command_id"))
+            .and_then(Value::as_str)
+            .and_then(normalize_command_id)
+        else {
+            continue;
+        };
+
+        if seen_symbols.insert(symbol.clone()) {
+            bindings.push(CustomTriggerBinding { symbol, command_id });
+        }
+    }
+
+    bindings
+}
+
+fn has_unique_trigger_symbols(symbols: &TriggerSymbols) -> bool {
+    let mut used = HashSet::new();
+    for symbol in [
+        symbols.quicklink.as_str(),
+        symbols.system.as_str(),
+        symbols.script.as_str(),
+        symbols.shell.as_str(),
+    ] {
+        if !used.insert(symbol.to_string()) {
+            return false;
+        }
+    }
+
+    for binding in &symbols.custom_bindings {
+        if !used.insert(binding.symbol.clone()) {
+            return false;
+        }
+    }
+
+    true
+}
+
+fn trigger_symbols_from_map(record: &Map<String, Value>) -> Option<TriggerSymbols> {
+    let defaults = default_trigger_symbols();
+    let quicklink = record
+        .get("quicklink")
+        .and_then(Value::as_str)
+        .and_then(normalize_trigger_symbol)
+        .unwrap_or_else(|| defaults.quicklink.clone());
+    let system = record
+        .get("system")
+        .and_then(Value::as_str)
+        .and_then(normalize_trigger_symbol)
+        .unwrap_or_else(|| defaults.system.clone());
+    let script = record
+        .get("script")
+        .and_then(Value::as_str)
+        .and_then(normalize_trigger_symbol)
+        .unwrap_or_else(|| defaults.script.clone());
+    let shell = record
+        .get("shell")
+        .and_then(Value::as_str)
+        .and_then(normalize_trigger_symbol)
+        .unwrap_or_else(|| defaults.shell.clone());
+    let custom_bindings = record
+        .get("customBindings")
+        .or_else(|| record.get("custom_bindings"))
+        .map(normalize_custom_trigger_bindings)
+        .unwrap_or_default();
+
+    let normalized = TriggerSymbols {
+        quicklink,
+        system,
+        script,
+        shell,
+        custom_bindings,
+    };
+
+    if has_unique_trigger_symbols(&normalized) {
+        Some(normalized)
+    } else {
+        None
+    }
+}
+
+fn parse_trigger_symbols(value: Option<Value>) -> TriggerSymbols {
+    value
+        .and_then(|stored| match stored {
+            Value::Object(record) => trigger_symbols_from_map(&record),
+            _ => None,
+        })
+        .unwrap_or_else(default_trigger_symbols)
+}
+
+fn validate_trigger_symbols(symbols: TriggerSymbols) -> Option<TriggerSymbols> {
+    let quicklink = normalize_trigger_symbol(&symbols.quicklink)?;
+    let system = normalize_trigger_symbol(&symbols.system)?;
+    let script = normalize_trigger_symbol(&symbols.script)?;
+    let shell = normalize_trigger_symbol(&symbols.shell)?;
+
+    let mut seen_symbols = HashSet::new();
+    let mut custom_bindings = Vec::new();
+    for binding in symbols.custom_bindings {
+        let symbol = normalize_trigger_symbol(&binding.symbol)?;
+        let command_id = normalize_command_id(&binding.command_id)?;
+        if seen_symbols.insert(symbol.clone()) {
+            custom_bindings.push(CustomTriggerBinding { symbol, command_id });
+        }
+    }
+
+    let normalized = TriggerSymbols {
+        quicklink,
+        system,
+        script,
+        shell,
+        custom_bindings,
+    };
+
+    if has_unique_trigger_symbols(&normalized) {
+        Some(normalized)
+    } else {
+        None
+    }
 }
 
 fn normalize_launcher_font_family_id(value: &str) -> Option<String> {
@@ -312,6 +562,35 @@ pub fn set_ui_layout_mode(app: AppHandle, mode: UiLayoutMode) -> Result<()> {
 }
 
 #[tauri::command]
+pub fn get_ui_style(app: AppHandle) -> Result<UiStylePreference> {
+    let store = open_store(&app)?;
+    Ok(parse_ui_style(store.get(SETTINGS_CONFIG.ui_style_key)))
+}
+
+#[tauri::command]
+pub fn set_ui_style(app: AppHandle, style: UiStylePreference) -> Result<UiStylePreference> {
+    let store = open_store(&app)?;
+    store.set(SETTINGS_CONFIG.ui_style_key, serialize_ui_style(style));
+    save_store(&store)?;
+    Ok(style)
+}
+
+#[tauri::command]
+pub fn get_base_color(app: AppHandle) -> Result<String> {
+    let store = open_store(&app)?;
+    Ok(parse_base_color(store.get(SETTINGS_CONFIG.base_color_key)))
+}
+
+#[tauri::command]
+pub fn set_base_color(app: AppHandle, color: String) -> Result<String> {
+    let normalized = normalize_base_color(&color).ok_or(SettingsError::InvalidBaseColor)?;
+    let store = open_store(&app)?;
+    store.set(SETTINGS_CONFIG.base_color_key, normalized.clone());
+    save_store(&store)?;
+    Ok(normalized)
+}
+
+#[tauri::command]
 pub fn get_launcher_opacity(app: AppHandle) -> Result<f64> {
     let store = open_store(&app)?;
     Ok(parse_launcher_opacity(
@@ -372,6 +651,27 @@ pub fn set_launcher_font_size(app: AppHandle, size: f64) -> Result<f64> {
         normalize_launcher_font_size(Some(size)).ok_or(SettingsError::InvalidLauncherFontSize)?;
     let store = open_store(&app)?;
     store.set(SETTINGS_CONFIG.launcher_font_size_key, normalized);
+    save_store(&store)?;
+    Ok(normalized)
+}
+
+#[tauri::command]
+pub fn get_trigger_symbols(app: AppHandle) -> Result<TriggerSymbols> {
+    let store = open_store(&app)?;
+    Ok(parse_trigger_symbols(
+        store.get(SETTINGS_CONFIG.trigger_symbols_key),
+    ))
+}
+
+#[tauri::command]
+pub fn set_trigger_symbols(app: AppHandle, symbols: TriggerSymbols) -> Result<TriggerSymbols> {
+    let normalized =
+        validate_trigger_symbols(symbols).ok_or(SettingsError::InvalidTriggerSymbols)?;
+    let store = open_store(&app)?;
+    store.set(
+        SETTINGS_CONFIG.trigger_symbols_key,
+        serde_json::json!(normalized),
+    );
     save_store(&store)?;
     Ok(normalized)
 }

@@ -432,10 +432,10 @@ export function GeneralTriggerSymbolsSection() {
     }));
   };
 
-  const saveSymbol = (target: TriggerSymbolTarget) => {
+  const saveSymbol = async (target: TriggerSymbolTarget) => {
     const symbol = toSingleCharacter(draft[target]);
     try {
-      updateSymbol(target, symbol);
+      await updateSymbol(target, symbol);
       toast.success("Trigger symbol updated.");
     } catch (error) {
       const message =
@@ -446,14 +446,14 @@ export function GeneralTriggerSymbolsSection() {
     }
   };
 
-  const handleReset = () => {
-    resetSymbols();
+  const handleReset = async () => {
+    await resetSymbols();
     toast.success("Trigger symbols reset to defaults.");
   };
 
-  const saveCustomBindings = (nextBindings: CustomTriggerBinding[]) => {
+  const saveCustomBindings = async (nextBindings: CustomTriggerBinding[]) => {
     try {
-      updateCustomBindings(nextBindings);
+      await updateCustomBindings(nextBindings);
       toast.success("Custom symbol mapping updated.");
     } catch (error) {
       const message =
@@ -464,7 +464,7 @@ export function GeneralTriggerSymbolsSection() {
     }
   };
 
-  const saveExistingCustomBinding = (index: number) => {
+  const saveExistingCustomBinding = async (index: number) => {
     if (!draft.customBindings[index]) {
       return;
     }
@@ -474,15 +474,15 @@ export function GeneralTriggerSymbolsSection() {
       commandId: entry.commandId.trim(),
     }));
 
-    saveCustomBindings(nextBindings);
+    await saveCustomBindings(nextBindings);
   };
 
-  const removeCustomBinding = (index: number) => {
+  const removeCustomBinding = async (index: number) => {
     const nextBindings = draft.customBindings.filter((_, entryIndex) => entryIndex !== index);
-    saveCustomBindings(nextBindings);
+    await saveCustomBindings(nextBindings);
   };
 
-  const addCustomBinding = () => {
+  const addCustomBinding = async () => {
     if (!HAS_COMMAND_OPTIONS) {
       toast.error("No command items available to map.");
       return;
@@ -496,7 +496,7 @@ export function GeneralTriggerSymbolsSection() {
     }
 
     const nextBindings = [...draft.customBindings, { symbol, commandId }];
-    saveCustomBindings(nextBindings);
+    await saveCustomBindings(nextBindings);
     setNewCustomSymbol("");
   };
 
@@ -517,9 +517,13 @@ export function GeneralTriggerSymbolsSection() {
       <BuiltInTriggerSymbolsSection
         draft={draft}
         symbols={symbols}
-        onReset={handleReset}
+        onReset={() => {
+          void handleReset();
+        }}
         onDraftChange={handleDraftChange}
-        onSaveSymbol={saveSymbol}
+        onSaveSymbol={(target) => {
+          void saveSymbol(target);
+        }}
       />
 
       <CustomTriggerMappingsSection
@@ -542,9 +546,15 @@ export function GeneralTriggerSymbolsSection() {
           }));
         }}
         onUpdateBindingCommand={updateCustomBindingCommand}
-        onSaveExistingBinding={saveExistingCustomBinding}
-        onRemoveBinding={removeCustomBinding}
-        onAddBinding={addCustomBinding}
+        onSaveExistingBinding={(index) => {
+          void saveExistingCustomBinding(index);
+        }}
+        onRemoveBinding={(index) => {
+          void removeCustomBinding(index);
+        }}
+        onAddBinding={() => {
+          void addCustomBinding();
+        }}
       />
     </div>
   );

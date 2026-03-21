@@ -1,4 +1,4 @@
-import { invoke, isTauri } from "@tauri-apps/api/core";
+import { invoke } from "@tauri-apps/api/core";
 
 export interface FontFamilySummary {
   id: string;
@@ -27,8 +27,6 @@ export const LAUNCHER_FONT_SIZE_PRESETS: LauncherFontSizePreset[] = [
   { id: "large", label: "Large", size: LARGE_LAUNCHER_FONT_SIZE },
 ];
 
-const LAUNCHER_FONT_FAMILY_STORAGE_KEY = "beam-launcher-font-family";
-const LAUNCHER_FONT_SIZE_STORAGE_KEY = "beam-launcher-font-size";
 const BEAM_DEFAULT_FONT_STACK = '"Manrope", "Ubuntu", "Noto Sans", "Segoe UI", sans-serif';
 const SYSTEM_FONT_STACK = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
 
@@ -125,30 +123,17 @@ export function applyLauncherFontSize(size: number): void {
 }
 
 export async function listFontFamilies(): Promise<FontFamilySummary[]> {
-  if (!isTauri()) {
-    return [];
-  }
-
   const result = await invoke<unknown>("list_font_families");
   return normalizeFontFamilies(result);
 }
 
 export async function getLauncherFontFamily(): Promise<string> {
-  if (!isTauri()) {
-    return normalizeFontFamilyId(localStorage.getItem(LAUNCHER_FONT_FAMILY_STORAGE_KEY));
-  }
-
   const result = await invoke<unknown>("get_launcher_font_family");
   return normalizeFontFamilyId(result);
 }
 
 export async function setLauncherFontFamily(familyId: string): Promise<string> {
   const normalized = normalizeFontFamilyId(familyId);
-
-  if (!isTauri()) {
-    localStorage.setItem(LAUNCHER_FONT_FAMILY_STORAGE_KEY, normalized);
-    return normalized;
-  }
 
   const result = await invoke<unknown>("set_launcher_font_family", {
     family: normalized,
@@ -157,21 +142,12 @@ export async function setLauncherFontFamily(familyId: string): Promise<string> {
 }
 
 export async function getLauncherFontSize(): Promise<number> {
-  if (!isTauri()) {
-    return normalizeFontSize(localStorage.getItem(LAUNCHER_FONT_SIZE_STORAGE_KEY));
-  }
-
   const result = await invoke<unknown>("get_launcher_font_size");
   return normalizeFontSize(result);
 }
 
 export async function setLauncherFontSize(size: number): Promise<number> {
   const normalized = normalizeFontSize(size);
-
-  if (!isTauri()) {
-    localStorage.setItem(LAUNCHER_FONT_SIZE_STORAGE_KEY, String(normalized));
-    return normalized;
-  }
 
   const result = await invoke<unknown>("set_launcher_font_size", {
     size: normalized,

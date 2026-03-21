@@ -1,75 +1,44 @@
-import { createContext, useCallback, useContext, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
 
 import {
   LAUNCHER_THEME_CHANGE_EVENT,
   getSelectedLauncherThemeId,
 } from "@/modules/settings/api/launcher-theme";
+import {
+  DEFAULT_BASE_COLOR as DEFAULT_BASE_COLOR_HEX,
+  normalizeBaseColor,
+  normalizeUiStyle,
+  setBaseColorPreference,
+  setUiStylePreference,
+  type UiStylePreference,
+} from "@/modules/settings/api/ui-style";
 import { useMountEffect } from "@/hooks/use-mount-effect";
-
-export type UiStylePreference = "default" | "glassy" | "solid";
 
 type UiStyleProviderState = {
   uiStyle: UiStylePreference;
   baseColor: string;
-  setUiStyle: (style: UiStylePreference) => void;
-  setBaseColor: (color: string) => void;
+  setUiStyle: (style: UiStylePreference) => Promise<void>;
+  setBaseColor: (color: string) => Promise<void>;
 };
 
 type UiStyleProviderProps = {
   children: React.ReactNode;
   defaultUiStyle?: UiStylePreference;
   defaultBaseColor?: string;
-  styleStorageKey?: string;
-  baseColorStorageKey?: string;
 };
 
-const DEFAULT_BASE_COLOR_RGB: [number, number, number] = [16, 17, 19];
-
-function rgbTupleToHex([r, g, b]: readonly [number, number, number]): string {
-  const toHex = (value: number) => value.toString(16).padStart(2, "0");
-  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
-}
-
-const DEFAULT_BASE_COLOR = rgbTupleToHex(DEFAULT_BASE_COLOR_RGB);
-const DEFAULT_STYLE_STORAGE_KEY = "beam-ui-style";
-const DEFAULT_BASE_COLOR_STORAGE_KEY = "beam-ui-base-color";
 const STYLE_CLASS_PREFIX = "theme-style-";
 const USER_THEME_CLASS_PREFIX = "theme-user-";
 const CUSTOM_THEME_ACTIVE_CLASS = "theme-custom-active";
 
 const initialState: UiStyleProviderState = {
   uiStyle: "glassy",
-  baseColor: DEFAULT_BASE_COLOR,
-  setUiStyle: () => null,
-  setBaseColor: () => null,
+  baseColor: DEFAULT_BASE_COLOR_HEX,
+  setUiStyle: async () => {},
+  setBaseColor: async () => {},
 };
 
 const UiStyleProviderContext = createContext<UiStyleProviderState>(initialState);
-
-function normalizeUiStyle(value: string | null | undefined): UiStylePreference {
-  const normalized = String(value || "")
-    .trim()
-    .toLowerCase();
-  if (normalized === "glassy") return "glassy";
-  if (normalized === "solid") return "solid";
-  return "default";
-}
-
-function normalizeBaseColor(value: string | null | undefined): string {
-  const raw = String(value || "").trim();
-  if (/^#[0-9a-fA-F]{6}$/.test(raw)) {
-    return raw.toLowerCase();
-  }
-  if (/^#[0-9a-fA-F]{3}$/.test(raw)) {
-    const expanded = raw
-      .slice(1)
-      .split("")
-      .map((ch) => `${ch}${ch}`)
-      .join("");
-    return `#${expanded}`.toLowerCase();
-  }
-  return DEFAULT_BASE_COLOR;
-}
 
 function hexToRgb(hexColor: string): [number, number, number] {
   const value = parseInt(hexColor.slice(1), 16);
@@ -154,17 +123,16 @@ function applyBaseColor(baseColor: string): void {
 export function UiStyleProvider({
   children,
   defaultUiStyle = "glassy",
-  defaultBaseColor = DEFAULT_BASE_COLOR,
-  styleStorageKey = DEFAULT_STYLE_STORAGE_KEY,
-  baseColorStorageKey = DEFAULT_BASE_COLOR_STORAGE_KEY,
+  defaultBaseColor = DEFAULT_BASE_COLOR_HEX,
 }: UiStyleProviderProps) {
-  const [uiStyle, setUiStyleState] = useState<UiStylePreference>(() =>
-    normalizeUiStyle(localStorage.getItem(styleStorageKey) || defaultUiStyle),
-  );
-  const [baseColor, setBaseColorState] = useState<string>(() =>
-    normalizeBaseColor(localStorage.getItem(baseColorStorageKey) || defaultBaseColor),
-  );
+  const [uiStyle, setUiStyleState] = useState<UiStylePreference>(() => normalizeUiStyle(defaultUiStyle));
+  const [baseColor, setBaseColorState] = useState<string>(() => normalizeBaseColor(defaultBaseColor));
   const [customThemeActive, setCustomThemeActive] = useState<boolean>(false);
+  const uiStyleRef = useRef(uiStyle);
+  const baseColorRef = useRef(baseColor);
+
+  uiStyleRef.current = uiStyle;
+  baseColorRef.current = baseColor;
 
   useMountEffect(() => {
     let mounted = true;
@@ -175,7 +143,14 @@ export function UiStyleProvider({
         if (!mounted) {
           return;
         }
-        setCustomThemeActive(Boolean(selectedThemeId));
+        const active = Boolean(selectedThemeId);
+        setCustomThemeActive(active);
+        applyUiStyle(uiStyleRef.current, active);
+        if (active) {
+          document.documentElement.style.removeProperty("--sc-base-rgb");
+        } else {
+          applyBaseColor(baseColorRef.current);
+        }
       } catch {
         if (!mounted) {
           return;
@@ -186,7 +161,14 @@ export function UiStyleProvider({
           USER_THEME_CLASS_PREFIX,
         );
         const bodyHasThemeClass = hasClassByPrefix(document.body, USER_THEME_CLASS_PREFIX);
-        setCustomThemeActive(rootHasThemeClass || bodyHasThemeClass);
+        const active = rootHasThemeClass || bodyHasThemeClass;
+        setCustomThemeActive(active);
+        applyUiStyle(uiStyleRef.current, active);
+        if (active) {
+          document.documentElement.style.removeProperty("--sc-base-rgb");
+        } else {
+          applyBaseColor(baseColorRef.current);
+        }
       }
     };
 
@@ -210,20 +192,25 @@ export function UiStyleProvider({
   }
 
   const setUiStyle = useCallback(
-    (style: UiStylePreference) => {
-      localStorage.setItem(styleStorageKey, style);
-      setUiStyleState(style);
+    async (style: UiStylePreference) => {
+      const saved = await setUiStylePreference(style);
+      setUiStyleState(saved);
+      applyUiStyle(saved, customThemeActive);
+      return;
     },
-    [styleStorageKey],
+    [customThemeActive],
   );
 
   const setBaseColor = useCallback(
-    (color: string) => {
-      const normalized = normalizeBaseColor(color);
-      localStorage.setItem(baseColorStorageKey, normalized);
-      setBaseColorState(normalized);
+    async (color: string) => {
+      const saved = await setBaseColorPreference(color);
+      setBaseColorState(saved);
+      if (!customThemeActive) {
+        applyBaseColor(saved);
+      }
+      return;
     },
-    [baseColorStorageKey],
+    [customThemeActive],
   );
 
   const value = useMemo(

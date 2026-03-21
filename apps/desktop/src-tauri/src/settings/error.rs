@@ -22,6 +22,15 @@ pub enum SettingsError {
 
     #[error("invalid launcher font size")]
     InvalidLauncherFontSize,
+
+    #[error("invalid ui style")]
+    InvalidUiStyle,
+
+    #[error("invalid base color")]
+    InvalidBaseColor,
+
+    #[error("invalid trigger symbols")]
+    InvalidTriggerSymbols,
 }
 
 impl Serialize for SettingsError {

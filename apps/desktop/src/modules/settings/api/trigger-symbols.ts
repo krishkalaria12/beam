@@ -1,3 +1,5 @@
+import { invoke } from "@tauri-apps/api/core";
+
 export type TriggerSymbolTarget = "quicklink" | "system" | "script" | "shell";
 
 export interface CustomTriggerBinding {
@@ -13,7 +15,6 @@ export interface TriggerSymbols {
   customBindings: CustomTriggerBinding[];
 }
 
-export const TRIGGER_SYMBOLS_STORAGE_KEY = "beam-trigger-symbols";
 export const TRIGGER_SYMBOLS_CHANGE_EVENT = "beam-trigger-symbols-change";
 
 export const DEFAULT_TRIGGER_SYMBOLS: TriggerSymbols = Object.freeze({
@@ -24,8 +25,10 @@ export const DEFAULT_TRIGGER_SYMBOLS: TriggerSymbols = Object.freeze({
   customBindings: [],
 });
 
-let cachedRawValue: string | null = null;
-let cachedSymbols: TriggerSymbols = DEFAULT_TRIGGER_SYMBOLS;
+let cachedSymbols: TriggerSymbols = {
+  ...DEFAULT_TRIGGER_SYMBOLS,
+  customBindings: [],
+};
 
 function isValidSymbol(input: string): boolean {
   return input.length === 1 && !/\s/.test(input);
@@ -124,55 +127,7 @@ function normalizeSymbols(input: unknown): TriggerSymbols {
   return next;
 }
 
-function readSymbolsFromStorage(): TriggerSymbols {
-  if (typeof window === "undefined") {
-    return { ...DEFAULT_TRIGGER_SYMBOLS, customBindings: [] };
-  }
-
-  const raw = window.localStorage.getItem(TRIGGER_SYMBOLS_STORAGE_KEY);
-  if (raw === cachedRawValue) {
-    return cachedSymbols;
-  }
-
-  cachedRawValue = raw;
-
-  if (!raw) {
-    cachedSymbols = { ...DEFAULT_TRIGGER_SYMBOLS, customBindings: [] };
-    return cachedSymbols;
-  }
-
-  try {
-    const parsed = JSON.parse(raw) as unknown;
-    cachedSymbols = normalizeSymbols(parsed);
-  } catch {
-    cachedSymbols = { ...DEFAULT_TRIGGER_SYMBOLS, customBindings: [] };
-  }
-
-  return cachedSymbols;
-}
-
-function persistSymbols(symbols: TriggerSymbols): void {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  const normalizedSymbols: TriggerSymbols = {
-    ...symbols,
-    customBindings: symbols.customBindings.map((binding) => ({
-      symbol: binding.symbol,
-      commandId: binding.commandId,
-    })),
-  };
-
-  const raw = JSON.stringify(normalizedSymbols);
-  window.localStorage.setItem(TRIGGER_SYMBOLS_STORAGE_KEY, raw);
-  cachedRawValue = raw;
-  cachedSymbols = normalizedSymbols;
-  window.dispatchEvent(new Event(TRIGGER_SYMBOLS_CHANGE_EVENT));
-}
-
-export function getTriggerSymbols(): TriggerSymbols {
-  const symbols = readSymbolsFromStorage();
+function cloneSymbols(symbols: TriggerSymbols): TriggerSymbols {
   return {
     ...symbols,
     customBindings: symbols.customBindings.map((binding) => ({
@@ -182,7 +137,32 @@ export function getTriggerSymbols(): TriggerSymbols {
   };
 }
 
-export function setTriggerSymbol(target: TriggerSymbolTarget, symbol: string): void {
+function updateCachedSymbols(symbols: TriggerSymbols, dispatchChange = true): TriggerSymbols {
+  cachedSymbols = cloneSymbols(symbols);
+  if (dispatchChange) {
+    window.dispatchEvent(new Event(TRIGGER_SYMBOLS_CHANGE_EVENT));
+  }
+  return cloneSymbols(cachedSymbols);
+}
+
+async function writeTriggerSymbolsToBackend(symbols: TriggerSymbols): Promise<TriggerSymbols> {
+  const result = await invoke<unknown>("set_trigger_symbols", { symbols });
+  return normalizeSymbols(result);
+}
+
+export async function initializeTriggerSymbols(): Promise<TriggerSymbols> {
+  const result = await invoke<unknown>("get_trigger_symbols");
+  return updateCachedSymbols(normalizeSymbols(result), false);
+}
+
+export function getTriggerSymbols(): TriggerSymbols {
+  return cloneSymbols(cachedSymbols);
+}
+
+export async function setTriggerSymbol(
+  target: TriggerSymbolTarget,
+  symbol: string,
+): Promise<TriggerSymbols> {
   const normalizedSymbol = sanitizeSymbol(symbol, "");
   if (!isValidSymbol(normalizedSymbol)) {
     throw new Error("Symbol must be exactly one non-space character.");
@@ -197,10 +177,13 @@ export function setTriggerSymbol(target: TriggerSymbolTarget, symbol: string): v
     throw new Error("This symbol is already used by another trigger.");
   }
 
-  persistSymbols(next);
+  const saved = await writeTriggerSymbolsToBackend(next);
+  return updateCachedSymbols(saved);
 }
 
-export function setCustomTriggerBindings(bindings: CustomTriggerBinding[]): void {
+export async function setCustomTriggerBindings(
+  bindings: CustomTriggerBinding[],
+): Promise<TriggerSymbols> {
   const normalizedBindings = normalizeCustomBindings(bindings);
   const current = getTriggerSymbols();
   const next: TriggerSymbols = {
@@ -212,9 +195,14 @@ export function setCustomTriggerBindings(bindings: CustomTriggerBinding[]): void
     throw new Error("Each trigger symbol must be unique.");
   }
 
-  persistSymbols(next);
+  const saved = await writeTriggerSymbolsToBackend(next);
+  return updateCachedSymbols(saved);
 }
 
-export function resetTriggerSymbols(): void {
-  persistSymbols({ ...DEFAULT_TRIGGER_SYMBOLS, customBindings: [] });
+export async function resetTriggerSymbols(): Promise<TriggerSymbols> {
+  const saved = await writeTriggerSymbolsToBackend({
+    ...DEFAULT_TRIGGER_SYMBOLS,
+    customBindings: [],
+  });
+  return updateCachedSymbols(saved);
 }

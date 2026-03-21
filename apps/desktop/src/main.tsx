@@ -7,6 +7,8 @@ import "streamdown/styles.css";
 import { CommandLoadingState } from "./components/command/command-loading-state";
 import { Toaster } from "./components/ui/sonner";
 import { TooltipProvider } from "./components/ui/tooltip";
+import { initializeTriggerSymbols } from "./modules/settings/api/trigger-symbols";
+import { loadInitialUiStyleSettings } from "./modules/settings/api/ui-style";
 import { LauncherFontProvider } from "./providers/launcher-font-provider";
 import { LauncherThemeProvider } from "./providers/launcher-theme-provider";
 import { LauncherOpacityProvider } from "./providers/launcher-opacity-provider";
@@ -34,12 +36,24 @@ if (!rootElement) {
   throw new Error("Root element not found");
 }
 
-if (!rootElement.innerHTML) {
-  const root = ReactDOM.createRoot(rootElement);
+const appRootElement = rootElement;
+
+async function bootstrapAndRender() {
+  const uiStyleSettings = await loadInitialUiStyleSettings();
+  await initializeTriggerSymbols();
+
+  if (appRootElement.innerHTML) {
+    return;
+  }
+
+  const root = ReactDOM.createRoot(appRootElement);
   root.render(
     <QueryProvider>
       <ThemeProvider>
-        <UiStyleProvider>
+        <UiStyleProvider
+          defaultUiStyle={uiStyleSettings.uiStyle}
+          defaultBaseColor={uiStyleSettings.baseColor}
+        >
           <LauncherThemeProvider>
             <LauncherFontProvider>
               <LauncherOpacityProvider>
@@ -55,3 +69,5 @@ if (!rootElement.innerHTML) {
     </QueryProvider>,
   );
 }
+
+void bootstrapAndRender();

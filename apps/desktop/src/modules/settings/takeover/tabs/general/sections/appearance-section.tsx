@@ -35,7 +35,8 @@ import {
   MAX_LAUNCHER_OPACITY,
   MIN_LAUNCHER_OPACITY,
 } from "@/modules/settings/api/launcher-opacity";
-import { useUiStyle, type UiStylePreference } from "@/providers/ui-style-provider";
+import type { UiStylePreference } from "@/modules/settings/api/ui-style";
+import { useUiStyle } from "@/providers/ui-style-provider";
 import {
   SettingsSection,
   SettingsField,
@@ -103,7 +104,9 @@ function AppearanceStyleSection({
                 type="button"
                 variant="ghost"
                 data-selected={isSelected}
-                onClick={() => setUiStyle(option.id)}
+                onClick={() => {
+                  void setUiStyle(option.id);
+                }}
                 className={cn(
                   "settings-style-card group relative h-auto min-h-[116px] w-full items-start justify-start rounded-xl px-3.5 py-4 text-left transition-all duration-200",
                   isSelected
@@ -249,7 +252,9 @@ export function GeneralAppearanceSection() {
                   type="button"
                   variant="ghost"
                   data-selected={isSelected}
-                  onClick={() => setUiStyle(option.id)}
+                  onClick={() => {
+                    void setUiStyle(option.id);
+                  }}
                   className={cn(
                     "settings-style-card group relative h-auto min-h-[116px] w-full items-start justify-start",
                     "rounded-xl px-3.5 py-4 text-left",

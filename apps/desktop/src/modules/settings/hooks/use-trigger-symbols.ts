@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import {
+  initializeTriggerSymbols,
   getTriggerSymbols,
   resetTriggerSymbols,
   setCustomTriggerBindings,
@@ -20,28 +21,31 @@ export function useTriggerSymbols() {
       setSymbols(getTriggerSymbols());
     };
 
-    window.addEventListener("storage", syncFromStorage);
+    void initializeTriggerSymbols().then(setSymbols);
+
     window.addEventListener(TRIGGER_SYMBOLS_CHANGE_EVENT, syncFromStorage);
 
     return () => {
-      window.removeEventListener("storage", syncFromStorage);
       window.removeEventListener(TRIGGER_SYMBOLS_CHANGE_EVENT, syncFromStorage);
     };
   });
 
-  const updateSymbol = (target: TriggerSymbolTarget, symbol: string) => {
-    setTriggerSymbol(target, symbol);
-    setSymbols(getTriggerSymbols());
+  const updateSymbol = async (target: TriggerSymbolTarget, symbol: string) => {
+    const nextSymbols = await setTriggerSymbol(target, symbol);
+    setSymbols(nextSymbols);
+    return nextSymbols;
   };
 
-  const resetSymbols = () => {
-    resetTriggerSymbols();
-    setSymbols(getTriggerSymbols());
+  const resetSymbols = async () => {
+    const nextSymbols = await resetTriggerSymbols();
+    setSymbols(nextSymbols);
+    return nextSymbols;
   };
 
-  const updateCustomBindings = (bindings: CustomTriggerBinding[]) => {
-    setCustomTriggerBindings(bindings);
-    setSymbols(getTriggerSymbols());
+  const updateCustomBindings = async (bindings: CustomTriggerBinding[]) => {
+    const nextSymbols = await setCustomTriggerBindings(bindings);
+    setSymbols(nextSymbols);
+    return nextSymbols;
   };
 
   return {
