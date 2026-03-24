@@ -21,7 +21,7 @@ export function GeneralTab({
   onMovePinned,
 }: GeneralTabProps) {
   return (
-    <div className="settings-content h-full min-h-0 overflow-y-auto overscroll-contain">
+    <div className="settings-content flex h-full min-h-0 w-full flex-1 overflow-y-auto overscroll-contain">
       <div className="settings-general-container flex w-full min-w-0 flex-col gap-5 px-5 py-5">
         {/* Page Title */}
         <div className="settings-general-hero mb-1">
