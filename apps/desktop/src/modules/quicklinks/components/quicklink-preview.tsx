@@ -1,12 +1,16 @@
 import { CommandGroup, CommandItem, CommandShortcut } from "@/components/ui/command";
 import { Link2 } from "lucide-react";
 import type { Quicklink } from "@/modules/quicklinks/types";
-import { findQuicklinkByKeyword, isFileQuicklinkTarget } from "@/modules/quicklinks/api/quicklinks";
+import {
+  findQuicklinkByKeywordOrAlias,
+  isFileQuicklinkTarget,
+} from "@/modules/quicklinks/api/quicklinks";
 import { QuicklinkIcon } from "@/modules/quicklinks/components/quicklink-icon";
 import { getTriggerSymbol, QUICKLINK_TRIGGER_MODE } from "@/command-registry/trigger-registry";
 
 interface QuicklinkPreviewProps {
   quicklinks: Quicklink[];
+  aliasesById: Record<string, string[]>;
   keyword: string;
   query: string;
   onExecute: (keyword: string, query: string) => void;
@@ -15,12 +19,13 @@ interface QuicklinkPreviewProps {
 
 export function QuicklinkPreview({
   quicklinks,
+  aliasesById,
   keyword,
   query,
   onExecute,
   onFill,
 }: QuicklinkPreviewProps) {
-  const quicklink = findQuicklinkByKeyword(quicklinks, keyword);
+  const quicklink = findQuicklinkByKeywordOrAlias(quicklinks, keyword, aliasesById);
   const quicklinkSymbol = getTriggerSymbol(QUICKLINK_TRIGGER_MODE) ?? "!";
 
   if (!keyword) {

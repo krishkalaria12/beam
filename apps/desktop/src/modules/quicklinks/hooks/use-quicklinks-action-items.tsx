@@ -2,6 +2,10 @@ import { CopyPlus, Pencil, Play, Trash2 } from "lucide-react";
 import { useMemo } from "react";
 import { create } from "zustand";
 
+import { toQuicklinkExecuteCommandId } from "@/command-registry/default-providers";
+import { useManagedItemActionItems } from "@/modules/launcher/managed-item-actions";
+import type { LauncherManagedItem } from "@/modules/launcher/managed-items";
+import { useManagedItemPreferencesStore } from "@/modules/launcher/managed-items";
 import { executeQuicklink } from "@/modules/quicklinks/api/quicklinks";
 import type { Quicklink } from "@/modules/quicklinks/types";
 import type { LauncherActionItem } from "@/modules/launcher/types";
@@ -43,18 +47,18 @@ export function clearQuicklinksActionsState() {
 export function buildDuplicateKeyword(keyword: string, quicklinks: Quicklink[]) {
   const normalized = keyword.trim().toLowerCase();
   const existing = new Set(quicklinks.map((entry) => entry.keyword.trim().toLowerCase()));
-  if (!existing.has(`${normalized}-copy`)) {
-    return `${keyword}-copy`;
+  if (!existing.has(`${normalized}_copy`)) {
+    return `${keyword}_copy`;
   }
 
   for (let index = 2; index < 100; index += 1) {
-    const candidate = `${keyword}-copy-${index}`;
+    const candidate = `${keyword}_copy_${index}`;
     if (!existing.has(candidate.toLowerCase())) {
       return candidate;
     }
   }
 
-  return `${keyword}-${Date.now()}`;
+  return `${keyword}_${Date.now()}`;
 }
 
 export function buildDuplicateName(name: string, quicklinks: Quicklink[]) {
@@ -73,8 +77,38 @@ export function buildDuplicateName(name: string, quicklinks: Quicklink[]) {
   return `${name} ${Date.now()}`;
 }
 
+export function toManagedQuicklinkItem(
+  quicklink: Quicklink,
+  quicklinks: readonly Quicklink[] = [],
+): LauncherManagedItem {
+  return {
+    kind: "quicklink",
+    id: quicklink.keyword,
+    title: quicklink.name,
+    subtitle: quicklink.url,
+    keywords: [quicklink.keyword, quicklink.url],
+    reservedAliases: quicklinks
+      .map((entry) => entry.keyword)
+      .filter((keyword) => keyword.trim().toLowerCase() !== quicklink.keyword.trim().toLowerCase()),
+    commandTarget: {
+      commandId: toQuicklinkExecuteCommandId(quicklink.keyword),
+      title: quicklink.name,
+    },
+    copyIdLabel: "Copy Quicklink ID",
+    copyIdValue: quicklink.keyword,
+    supportsFavorite: true,
+    supportsAlias: true,
+    supportsResetRanking: true,
+  };
+}
+
 export function useQuicklinksActionItems(): LauncherActionItem[] {
   const state = useQuicklinksActionsStore();
+  const recordUsage = useManagedItemPreferencesStore((store) => store.recordUsage);
+  const managedItem = state.selectedQuicklink
+    ? toManagedQuicklinkItem(state.selectedQuicklink, state.quicklinks)
+    : null;
+  const managedActionItems = useManagedItemActionItems(managedItem);
 
   return useMemo(() => {
     const quicklink = state.selectedQuicklink;
@@ -90,6 +124,7 @@ export function useQuicklinksActionItems(): LauncherActionItem[] {
         disabled: !hasSelection,
         onSelect: () => {
           if (!quicklink) return;
+          recordUsage(toManagedQuicklinkItem(quicklink));
           void executeQuicklink(quicklink.keyword, "");
         },
       },
@@ -126,6 +161,7 @@ export function useQuicklinksActionItems(): LauncherActionItem[] {
           void state.onDelete?.(quicklink.keyword);
         },
       },
+      ...managedActionItems,
     ];
-  }, [state]);
+  }, [managedActionItems, recordUsage, state]);
 }

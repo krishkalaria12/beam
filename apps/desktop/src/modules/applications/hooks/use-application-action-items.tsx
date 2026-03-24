@@ -1,14 +1,20 @@
 import { open as shellOpen } from "@tauri-apps/plugin-shell";
-import { Copy, ExternalLink, FolderOpen, SquareTerminal } from "lucide-react";
+import { ExternalLink, FolderOpen, SquareTerminal } from "lucide-react";
 import { useMemo } from "react";
 import { create } from "zustand";
 
+import {
+  buildApplicationTitle,
+  toApplicationCommandId,
+} from "@/command-registry/default-providers";
 import type { Application } from "@/modules/applications/api/search-applications";
+import { useManagedItemActionItems } from "@/modules/launcher/managed-item-actions";
+import type { LauncherManagedItem } from "@/modules/launcher/managed-items";
 import type { LauncherActionItem } from "@/modules/launcher/types";
 
 interface ApplicationActionsState {
   selectedApplication: Application | null;
-  onOpen?: (execPath: string) => void;
+  onOpen?: (application: Application) => void;
 }
 
 const initialState: ApplicationActionsState = {
@@ -42,8 +48,33 @@ async function copyText(value: string) {
   await navigator.clipboard.writeText(value);
 }
 
+export function toManagedApplicationItem(application: Application): LauncherManagedItem {
+  const commandTitle = buildApplicationTitle(application.name, application.exec_path);
+
+  return {
+    kind: "application",
+    id: application.app_id || application.exec_path,
+    title: commandTitle,
+    subtitle: application.description,
+    keywords: [application.app_id, application.exec_path, application.description].filter(Boolean),
+    commandTarget: {
+      commandId: toApplicationCommandId(commandTitle, application.exec_path),
+      title: commandTitle,
+    },
+    copyIdLabel: "Copy App ID",
+    copyIdValue: application.app_id || undefined,
+    supportsFavorite: true,
+    supportsAlias: true,
+    supportsResetRanking: true,
+  };
+}
+
 export function useApplicationActionItems(): LauncherActionItem[] {
   const state = useApplicationActionsStore();
+  const managedItem = state.selectedApplication
+    ? toManagedApplicationItem(state.selectedApplication)
+    : null;
+  const managedActionItems = useManagedItemActionItems(managedItem);
 
   return useMemo(() => {
     const application = state.selectedApplication;
@@ -60,7 +91,7 @@ export function useApplicationActionItems(): LauncherActionItem[] {
         icon: <ExternalLink className="size-4" />,
         shortcut: "↩",
         onSelect: () => {
-          state.onOpen?.(application.exec_path);
+          state.onOpen?.(application);
         },
       },
       {
@@ -75,17 +106,6 @@ export function useApplicationActionItems(): LauncherActionItem[] {
         },
       },
       {
-        id: "application-copy-id",
-        label: "Copy App ID",
-        description: application.app_id || "Application id unavailable",
-        icon: <Copy className="size-4" />,
-        disabled: !application.app_id,
-        onSelect: () => {
-          if (!application.app_id) return;
-          void copyText(application.app_id);
-        },
-      },
-      {
         id: "application-copy-command",
         label: "Copy Launch Command",
         description: application.exec_path || "Application command unavailable",
@@ -96,6 +116,7 @@ export function useApplicationActionItems(): LauncherActionItem[] {
           void copyText(application.exec_path);
         },
       },
+      ...managedActionItems,
     ];
-  }, [state]);
+  }, [managedActionItems, state]);
 }

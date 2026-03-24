@@ -3,6 +3,8 @@ import { Copy, ExternalLink, FileCode2, FolderOpen, Type } from "lucide-react";
 import { useMemo } from "react";
 import { create } from "zustand";
 
+import { useManagedItemActionItems } from "@/modules/launcher/managed-item-actions";
+import type { LauncherManagedItem } from "@/modules/launcher/managed-items";
 import type { FileEntry } from "@/modules/file-search/types";
 import type { LauncherActionItem } from "@/modules/launcher/types";
 
@@ -54,8 +56,22 @@ async function copyText(value: string) {
   await navigator.clipboard.writeText(value);
 }
 
+export function toManagedFileItem(file: FileEntry): LauncherManagedItem {
+  return {
+    kind: "file",
+    id: file.path,
+    title: file.name,
+    subtitle: file.path,
+    keywords: [file.path, getFileTypeLabel(file)],
+    supportsFavorite: true,
+    supportsResetRanking: true,
+  };
+}
+
 export function useFileSearchActionItems(): LauncherActionItem[] {
   const state = useFileSearchActionsStore();
+  const managedItem = state.selectedFile ? toManagedFileItem(state.selectedFile) : null;
+  const managedActionItems = useManagedItemActionItems(managedItem);
 
   return useMemo(() => {
     const file = state.selectedFile;
@@ -117,6 +133,7 @@ export function useFileSearchActionItems(): LauncherActionItem[] {
           void copyText(getFileTypeLabel(file));
         },
       },
+      ...managedActionItems,
     ];
-  }, [state]);
+  }, [managedActionItems, state]);
 }

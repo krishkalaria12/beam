@@ -1,4 +1,4 @@
-import { ArrowLeft, AtSign, CornerDownLeft, Keyboard } from "lucide-react";
+import { ArrowLeft, CornerDownLeft } from "lucide-react";
 import { lazy, Suspense, useEffectEvent, useRef, useState, type ReactNode } from "react";
 
 import { CommandLoadingState } from "@/components/command/command-loading-state";
@@ -167,22 +167,6 @@ function LauncherSecondaryPanelContent({
           keywords: ["back", "close", "exit", activePanel],
           onSelect: onBack,
         },
-        {
-          id: `${activePanel}-set-hotkey`,
-          label: "Set Hotkey...",
-          icon: <Keyboard className="size-4" />,
-          keywords: ["shortcut", "keys", "binding", activePanel],
-          nextPageId: "hotkey",
-          closeOnSelect: false,
-        },
-        {
-          id: `${activePanel}-set-alias`,
-          label: "Set Alias...",
-          icon: <AtSign className="size-4" />,
-          keywords: ["alias", "keyword", "trigger", activePanel],
-          nextPageId: "alias",
-          closeOnSelect: false,
-        },
       ]
     : [];
 
@@ -210,8 +194,15 @@ function LauncherSecondaryPanelContent({
         rootTitle={`${panelRegistration?.title ?? "Module"} Actions...`}
         rootSearchPlaceholder="Search for actions..."
         rootItems={sharedRootItems}
-        targetCommandId={panelRegistration?.id}
-        targetCommandTitle={panelRegistration?.title}
+        defaultTarget={
+          panelRegistration
+            ? {
+                kind: "command",
+                commandId: panelRegistration.id,
+                title: panelRegistration.title,
+              }
+            : null
+        }
         containerClassName="right-4"
       />
     </div>

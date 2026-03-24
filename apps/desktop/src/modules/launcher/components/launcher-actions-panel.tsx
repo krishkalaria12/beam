@@ -21,18 +21,24 @@ import { useMountEffect } from "@/hooks/use-mount-effect";
 import { LauncherActionsAliasPage } from "./launcher-actions-alias-page";
 import { LauncherActionsHotkeyPage } from "./launcher-actions-hotkey-page";
 import {
-  buildAliasAvailability,
-  buildHotkeyAvailability,
   filterActionItems,
   findAliasConflictCommandId,
   findHotkeyConflictCommandId,
   formatCommandName,
 } from "@/modules/launcher/helper";
 import { LauncherActionsRootPage } from "./launcher-actions-root-page";
+import {
+  findManagedItemAliasConflictId,
+  getManagedItemAliases,
+  getManagedItemPreferenceId,
+  isManagedItemAliasReserved,
+  useManagedItemPreferencesStore,
+} from "@/modules/launcher/managed-items";
 import type {
   ActionPageId,
   LauncherActionItem,
   LauncherActionsPanelProps,
+  LauncherActionTarget,
   SaveFeedback,
 } from "@/modules/launcher/types";
 
@@ -84,12 +90,149 @@ function getAliasSaveSuccessMessage(normalizedAlias: string) {
   return "Alias removed.";
 }
 
+function getActionTargetKey(target: LauncherActionTarget | null | undefined): string {
+  if (!target) {
+    return "";
+  }
+
+  if (target.kind === "command") {
+    return `command:${target.commandId}`;
+  }
+
+  return getManagedItemPreferenceId(target.item);
+}
+
+function getActionTargetTitle(target: LauncherActionTarget | null | undefined): string | undefined {
+  if (!target) {
+    return undefined;
+  }
+
+  if (target.kind === "command") {
+    return target.title ?? formatCommandName(target.commandId);
+  }
+
+  return target.item.title;
+}
+
+function buildHotkeyAvailability(options: {
+  target: LauncherActionTarget | null;
+  hotkeyValue: string;
+  hotkeyConflictCommandId: string | null;
+}): SaveFeedback {
+  const { target, hotkeyValue, hotkeyConflictCommandId } = options;
+  if (!target || target.kind !== "command") {
+    return {
+      tone: "error",
+      text: "No command context. Open this from a command panel action.",
+    };
+  }
+
+  if (!hotkeyValue.trim()) {
+    return {
+      tone: "neutral",
+      text: "Empty value removes the current shortcut.",
+    };
+  }
+
+  if (hotkeyConflictCommandId) {
+    return {
+      tone: "error",
+      text: `"${hotkeyValue}" is already used by ${formatCommandName(
+        hotkeyConflictCommandId,
+        target.title,
+        target.commandId,
+      )}.`,
+    };
+  }
+
+  return {
+    tone: "success",
+    text: `"${hotkeyValue}" is available.`,
+  };
+}
+
+function buildAliasAvailability(options: {
+  target: LauncherActionTarget | null;
+  aliasValue: string;
+  commandAliasesById: Record<string, string[]>;
+  managedAliasesById: Record<string, string[]>;
+}): SaveFeedback {
+  const { target, aliasValue, commandAliasesById, managedAliasesById } = options;
+  if (!target) {
+    return {
+      tone: "error",
+      text: "No item context. Open this from an item action.",
+    };
+  }
+
+  if (!aliasValue.trim()) {
+    return {
+      tone: "neutral",
+      text: "Empty value removes the current alias.",
+    };
+  }
+
+  if (target.kind === "command") {
+    const aliasConflictCommandId = findAliasConflictCommandId(
+      commandAliasesById,
+      target.commandId,
+      aliasValue,
+    );
+    if (aliasConflictCommandId) {
+      return {
+        tone: "error",
+        text: `"${aliasValue.trim()}" is already used by ${formatCommandName(
+          aliasConflictCommandId,
+          target.title,
+          target.commandId,
+        )}.`,
+      };
+    }
+  }
+
+  if (target.kind === "managed-item") {
+    if (isManagedItemAliasReserved(target.item, aliasValue)) {
+      return {
+        tone: "error",
+        text: `"${aliasValue.trim()}" is reserved by another item.`,
+      };
+    }
+
+    const aliasConflictManagedItemId = findManagedItemAliasConflictId(
+      managedAliasesById,
+      target.item,
+      aliasValue,
+    );
+    if (aliasConflictManagedItemId) {
+      return {
+        tone: "error",
+        text: `"${aliasValue.trim()}" is already used by another item.`,
+      };
+    }
+  }
+
+  return {
+    tone: "success",
+    text: `"${aliasValue.trim()}" is available.`,
+  };
+}
+
+interface PageStackEntry {
+  id: ActionPageId;
+  target: LauncherActionTarget | null;
+}
+
 export function LauncherActionsPanel({ open, ...props }: LauncherActionsPanelProps) {
   if (!open) {
     return null;
   }
 
-  return <LauncherActionsPanelContent key={props.targetCommandId ?? "__all__"} {...props} />;
+  return (
+    <LauncherActionsPanelContent
+      key={getActionTargetKey(props.defaultTarget) || "__all__"}
+      {...props}
+    />
+  );
 }
 
 function LauncherActionsPanelContent({
@@ -100,8 +243,7 @@ function LauncherActionsPanelContent({
   rootSearchPlaceholder,
   rootItems,
   defaultRootItemsMode = "replace",
-  targetCommandId,
-  targetCommandTitle,
+  defaultTarget,
 }: Omit<LauncherActionsPanelProps, "open">) {
   const panelRef = React.useRef<HTMLDivElement | null>(null);
   const inputRef = React.useRef<HTMLInputElement | null>(null);
@@ -111,13 +253,19 @@ function LauncherActionsPanelContent({
   });
   const inputId = React.useId();
   const aliasInputId = React.useId();
+  const managedAliasesById = useManagedItemPreferencesStore((state) => state.aliasesById);
+  const setManagedAliases = useManagedItemPreferencesStore((state) => state.setAliases);
 
-  const [pageStack, setPageStack] = React.useState<ActionPageId[]>(["root"]);
+  const [pageStack, setPageStack] = React.useState<PageStackEntry[]>([
+    { id: "root", target: defaultTarget ?? null },
+  ]);
   const [rootQuery, setRootQuery] = React.useState("");
-  const [hotkeyValue, setHotkeyValue] = React.useState("");
-  const [aliasValue, setAliasValue] = React.useState("");
+  const [hotkeyDraftsByTarget, setHotkeyDraftsByTarget] = React.useState<Record<string, string>>(
+    {},
+  );
+  const [aliasDraftsByTarget, setAliasDraftsByTarget] = React.useState<Record<string, string>>({});
   const [hotkeyMap, setHotkeyMap] = React.useState<Record<string, string>>({});
-  const [aliasesById, setAliasesById] = React.useState<Record<string, string[]>>({});
+  const [commandAliasesById, setCommandAliasesById] = React.useState<Record<string, string[]>>({});
   const [savingPage, setSavingPage] = React.useState<"hotkey" | "alias" | null>(null);
   const [hotkeyFeedback, setHotkeyFeedback] = React.useState<SaveFeedback | null>(null);
   const [aliasFeedback, setAliasFeedback] = React.useState<SaveFeedback | null>(null);
@@ -125,7 +273,31 @@ function LauncherActionsPanelContent({
     createEmptySelectionByPage,
   );
 
-  const currentPageId = pageStack[pageStack.length - 1] ?? "root";
+  const currentPage = pageStack[pageStack.length - 1] ?? {
+    id: "root" as ActionPageId,
+    target: defaultTarget ?? null,
+  };
+  const currentPageId = currentPage.id;
+  const currentTarget = currentPage.target;
+  const currentTargetKey = getActionTargetKey(currentTarget);
+  const currentCommandTarget = currentTarget?.kind === "command" ? currentTarget : null;
+  const currentCommandId = currentCommandTarget?.commandId;
+  const currentManagedTarget = currentTarget?.kind === "managed-item" ? currentTarget.item : null;
+  const currentManagedAliases = currentManagedTarget
+    ? getManagedItemAliases(managedAliasesById, currentManagedTarget)
+    : [];
+  const savedAliasValue = currentManagedTarget
+    ? (currentManagedAliases[0] ?? "")
+    : currentCommandId
+      ? (commandAliasesById[currentCommandId]?.[0] ?? "")
+      : "";
+  const savedHotkeyValue = currentCommandId ? (hotkeyMap[currentCommandId] ?? "") : "";
+  const aliasValue = currentTargetKey
+    ? (aliasDraftsByTarget[currentTargetKey] ?? savedAliasValue)
+    : savedAliasValue;
+  const hotkeyValue = currentTargetKey
+    ? (hotkeyDraftsByTarget[currentTargetKey] ?? savedHotkeyValue)
+    : savedHotkeyValue;
   const defaultRootItems = buildDefaultRootItems();
   const resolvedRootItems =
     rootItems == null
@@ -134,26 +306,19 @@ function LauncherActionsPanelContent({
         ? [...rootItems, ...defaultRootItems]
         : rootItems;
   const filteredRootItems = filterActionItems(resolvedRootItems, rootQuery);
-
-  const hotkeyConflictCommandId = targetCommandId
-    ? findHotkeyConflictCommandId(hotkeyMap, targetCommandId, hotkeyValue)
+  const hotkeyConflictCommandId = currentCommandId
+    ? findHotkeyConflictCommandId(hotkeyMap, currentCommandId, hotkeyValue)
     : null;
-  const aliasConflictCommandId = targetCommandId
-    ? findAliasConflictCommandId(aliasesById, targetCommandId, aliasValue)
-    : null;
-
   const hotkeyAvailability = buildHotkeyAvailability({
-    targetCommandId,
-    targetCommandTitle,
+    target: currentTarget,
     hotkeyValue,
     hotkeyConflictCommandId,
   });
-
   const aliasAvailability = buildAliasAvailability({
-    targetCommandId,
-    targetCommandTitle,
+    target: currentTarget,
     aliasValue,
-    aliasConflictCommandId,
+    commandAliasesById,
+    managedAliasesById,
   });
   const preferredRootItemId = selectedItemByPage.root;
   const hasPreferredRootItem = filteredRootItems.some(
@@ -172,9 +337,9 @@ function LauncherActionsPanelContent({
 
   const panelSubtitle =
     currentPageId === "hotkey"
-      ? (targetCommandTitle ?? "Assign quick keyboard shortcuts.")
+      ? (getActionTargetTitle(currentTarget) ?? "Assign quick keyboard shortcuts.")
       : currentPageId === "alias"
-        ? (targetCommandTitle ?? "Create quick trigger phrases.")
+        ? (getActionTargetTitle(currentTarget) ?? "Create quick trigger phrases.")
         : undefined;
 
   function goBack() {
@@ -186,8 +351,16 @@ function LauncherActionsPanelContent({
     });
   }
 
-  function openNextPage(nextPageId: ActionPageId) {
-    setPageStack((previous) => [...previous, nextPageId]);
+  function openNextPage(nextPageId: ActionPageId, nextTarget: LauncherActionTarget | null) {
+    if (nextPageId === "hotkey") {
+      setHotkeyFeedback(null);
+    }
+
+    if (nextPageId === "alias") {
+      setAliasFeedback(null);
+    }
+
+    setPageStack((previous) => [...previous, { id: nextPageId, target: nextTarget }]);
   }
 
   const rootInputMountRef = React.useCallback(
@@ -227,7 +400,7 @@ function LauncherActionsPanelContent({
       return;
     }
 
-    if (!targetCommandId) {
+    if (!currentCommandId) {
       setHotkeyFeedback({
         tone: "error",
         text: "No command selected for hotkey registration.",
@@ -240,8 +413,8 @@ function LauncherActionsPanelContent({
         tone: "error",
         text: `"${hotkeyValue}" is already used by ${formatCommandName(
           hotkeyConflictCommandId,
-          targetCommandTitle,
-          targetCommandId,
+          currentCommandTarget?.title,
+          currentCommandId,
         )}.`,
       });
       return;
@@ -252,7 +425,7 @@ function LauncherActionsPanelContent({
 
     try {
       if (!normalizedHotkey) {
-        const removeResult = await removeCommandHotkey(targetCommandId);
+        const removeResult = await removeCommandHotkey(currentCommandId);
         if (!removeResult.success) {
           setHotkeyFeedback({
             tone: "error",
@@ -263,12 +436,16 @@ function LauncherActionsPanelContent({
 
         setHotkeyMap((previous) => {
           const next = { ...previous };
-          delete next[targetCommandId];
+          delete next[currentCommandId];
           return next;
         });
+        setHotkeyDraftsByTarget((previous) => ({
+          ...previous,
+          [currentTargetKey]: "",
+        }));
 
         const currentPreferences = readCommandPreferences();
-        writeCommandPreferences(setCommandHotkey(currentPreferences, targetCommandId, undefined));
+        writeCommandPreferences(setCommandHotkey(currentPreferences, currentCommandId, undefined));
 
         setHotkeyFeedback({
           tone: "success",
@@ -277,7 +454,7 @@ function LauncherActionsPanelContent({
         return;
       }
 
-      const updateResult = await updateCommandHotkey(targetCommandId, normalizedHotkey);
+      const updateResult = await updateCommandHotkey(currentCommandId, normalizedHotkey);
       if (!updateResult.success) {
         if (updateResult.error === "duplicate") {
           const conflictId = updateResult.conflictCommandId;
@@ -285,8 +462,8 @@ function LauncherActionsPanelContent({
           if (conflictId) {
             duplicateMessage = `"${normalizedHotkey}" is already used by ${formatCommandName(
               conflictId,
-              targetCommandTitle,
-              targetCommandId,
+              currentCommandTarget?.title,
+              currentCommandId,
             )}.`;
           }
 
@@ -306,12 +483,16 @@ function LauncherActionsPanelContent({
 
       setHotkeyMap((previous) => ({
         ...previous,
-        [targetCommandId]: normalizedHotkey,
+        [currentCommandId]: normalizedHotkey,
+      }));
+      setHotkeyDraftsByTarget((previous) => ({
+        ...previous,
+        [currentTargetKey]: normalizedHotkey,
       }));
 
       const currentPreferences = readCommandPreferences();
       writeCommandPreferences(
-        setCommandHotkey(currentPreferences, targetCommandId, normalizedHotkey),
+        setCommandHotkey(currentPreferences, currentCommandId, normalizedHotkey),
       );
 
       setHotkeyFeedback({
@@ -323,9 +504,9 @@ function LauncherActionsPanelContent({
         tone: "error",
         text: "Could not save this shortcut.",
       });
+    } finally {
+      setSavingPage((previous) => (previous === "hotkey" ? null : previous));
     }
-
-    setSavingPage((previous) => (previous === "hotkey" ? null : previous));
   }
 
   async function saveAlias() {
@@ -333,24 +514,54 @@ function LauncherActionsPanelContent({
       return;
     }
 
-    if (!targetCommandId) {
+    if (!currentTarget) {
       setAliasFeedback({
         tone: "error",
-        text: "No command selected for alias registration.",
+        text: "No item selected for alias registration.",
       });
       return;
     }
 
-    if (aliasConflictCommandId) {
-      setAliasFeedback({
-        tone: "error",
-        text: `"${aliasValue.trim()}" is already used by ${formatCommandName(
-          aliasConflictCommandId,
-          targetCommandTitle,
-          targetCommandId,
-        )}.`,
-      });
-      return;
+    if (currentTarget.kind === "command") {
+      const aliasConflictCommandId = findAliasConflictCommandId(
+        commandAliasesById,
+        currentTarget.commandId,
+        aliasValue,
+      );
+      if (aliasConflictCommandId) {
+        setAliasFeedback({
+          tone: "error",
+          text: `"${aliasValue.trim()}" is already used by ${formatCommandName(
+            aliasConflictCommandId,
+            currentTarget.title,
+            currentTarget.commandId,
+          )}.`,
+        });
+        return;
+      }
+    }
+
+    if (currentTarget.kind === "managed-item") {
+      if (isManagedItemAliasReserved(currentTarget.item, aliasValue)) {
+        setAliasFeedback({
+          tone: "error",
+          text: `"${aliasValue.trim()}" is reserved by another item.`,
+        });
+        return;
+      }
+
+      const aliasConflictManagedItemId = findManagedItemAliasConflictId(
+        managedAliasesById,
+        currentTarget.item,
+        aliasValue,
+      );
+      if (aliasConflictManagedItemId) {
+        setAliasFeedback({
+          tone: "error",
+          text: `"${aliasValue.trim()}" is already used by another item.`,
+        });
+        return;
+      }
     }
 
     const normalizedAlias = aliasValue.trim();
@@ -358,10 +569,23 @@ function LauncherActionsPanelContent({
 
     setSavingPage("alias");
     try {
-      const currentPreferences = readCommandPreferences();
-      const nextPreferences = setCommandAliases(currentPreferences, targetCommandId, nextAliases);
-      writeCommandPreferences(nextPreferences);
-      setAliasesById(nextPreferences.aliasesById);
+      if (currentTarget.kind === "command") {
+        const currentPreferences = readCommandPreferences();
+        const nextPreferences = setCommandAliases(
+          currentPreferences,
+          currentTarget.commandId,
+          nextAliases,
+        );
+        writeCommandPreferences(nextPreferences);
+        setCommandAliasesById(nextPreferences.aliasesById);
+      } else {
+        setManagedAliases(currentTarget.item, nextAliases);
+      }
+
+      setAliasDraftsByTarget((previous) => ({
+        ...previous,
+        [currentTargetKey]: normalizedAlias,
+      }));
 
       setAliasFeedback({
         tone: "success",
@@ -379,10 +603,7 @@ function LauncherActionsPanelContent({
 
   useMountEffect(() => {
     const commandPreferences = readCommandPreferences();
-    setAliasesById(commandPreferences.aliasesById);
-    setAliasValue(
-      targetCommandId ? (commandPreferences.aliasesById[targetCommandId]?.[0] ?? "") : "",
-    );
+    setCommandAliasesById(commandPreferences.aliasesById);
     setAliasFeedback(null);
     setHotkeyFeedback(null);
 
@@ -394,7 +615,6 @@ function LauncherActionsPanelContent({
         }
 
         setHotkeyMap(settings.commandHotkeys);
-        setHotkeyValue(targetCommandId ? (settings.commandHotkeys[targetCommandId] ?? "") : "");
       })
       .catch(() => {
         if (isCancelled) {
@@ -402,7 +622,6 @@ function LauncherActionsPanelContent({
         }
 
         setHotkeyMap({});
-        setHotkeyValue("");
         setHotkeyFeedback({
           tone: "error",
           text: "Unable to load existing shortcuts.",
@@ -566,7 +785,7 @@ function LauncherActionsPanelContent({
                         root: item.id,
                       },
                 );
-                openNextPage(item.nextPageId);
+                openNextPage(item.nextPageId, item.nextPageTarget ?? currentTarget);
                 return;
               }
 
@@ -582,13 +801,16 @@ function LauncherActionsPanelContent({
             saving={savingPage === "hotkey"}
             canSave={
               savingPage !== "hotkey" &&
-              Boolean(targetCommandId) &&
+              Boolean(currentCommandId) &&
               (hotkeyFeedback ?? hotkeyAvailability).tone !== "error"
             }
             feedback={hotkeyFeedback}
             availability={hotkeyAvailability}
             onHotkeyChange={(value) => {
-              setHotkeyValue(value);
+              setHotkeyDraftsByTarget((previous) => ({
+                ...previous,
+                [currentTargetKey]: value,
+              }));
               setHotkeyFeedback(null);
             }}
             onSave={() => {
@@ -604,13 +826,16 @@ function LauncherActionsPanelContent({
             saving={savingPage === "alias"}
             canSave={
               savingPage !== "alias" &&
-              Boolean(targetCommandId) &&
+              Boolean(currentCommandId || currentManagedTarget) &&
               (aliasFeedback ?? aliasAvailability).tone !== "error"
             }
             feedback={aliasFeedback}
             availability={aliasAvailability}
             onAliasChange={(value) => {
-              setAliasValue(value);
+              setAliasDraftsByTarget((previous) => ({
+                ...previous,
+                [currentTargetKey]: value,
+              }));
               setAliasFeedback(null);
             }}
             onSave={() => {

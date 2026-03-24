@@ -30,7 +30,7 @@ export function invalidateScriptCommandsProviderCache() {
   inflightScriptsPromise = null;
 }
 
-function createScriptRunCommandId(scriptId: string): string {
+export function createScriptRunCommandId(scriptId: string): string {
   const normalized = scriptId
     .trim()
     .toLowerCase()

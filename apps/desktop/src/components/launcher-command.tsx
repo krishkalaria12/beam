@@ -49,8 +49,9 @@ import {
 } from "@/modules/extensions/extension-catalog";
 import { extensionManagerService } from "@/modules/extensions/extension-manager-service";
 import { useExtensionRuntimeStore } from "@/modules/extensions/runtime/store";
-import { findQuicklinkByKeyword } from "@/modules/quicklinks/api/quicklinks";
+import { findQuicklinkByKeywordOrAlias } from "@/modules/quicklinks/api/quicklinks";
 import { useQuicklinks } from "@/modules/quicklinks/hooks/use-quicklinks";
+import { useManagedItemPreferencesStore } from "@/modules/launcher/managed-items";
 import { HOTKEY_BACKEND_STATUS_EVENT, HOTKEY_COMMAND_EVENT } from "@/modules/settings/api/hotkeys";
 import { useTriggerSymbols } from "@/modules/settings/hooks/use-trigger-symbols";
 import { useUiLayout } from "@/modules/settings/hooks/use-ui-layout";
@@ -171,6 +172,7 @@ export default function LauncherCommand() {
   }, [openPanel]);
 
   const { data: quicklinks = [] } = useQuicklinks();
+  const quicklinkAliasesById = useManagedItemPreferencesStore((state) => state.aliasesById);
   const { isCompressed } = useUiLayout();
   const { symbols: triggerSymbols } = useTriggerSymbols();
   const runShellCommandMutation = useRunShellCommandMutation();
@@ -311,7 +313,7 @@ export default function LauncherCommand() {
   const quicklinkQuery = commandContext.query;
   const shellCommand = commandContext.query.trim();
   const matchedQuicklink = quicklinkKeyword
-    ? findQuicklinkByKeyword(quicklinks, quicklinkKeyword)
+    ? findQuicklinkByKeywordOrAlias(quicklinks, quicklinkKeyword, quicklinkAliasesById)
     : undefined;
 
   const { rankedRegistryCommands, fallbackRegistryCommands } = useRankedRegistryCommands({
@@ -558,7 +560,7 @@ export default function LauncherCommand() {
 
   const handleQuicklinkExecute = useCallback(
     async (keyword: string = quicklinkKeyword, query: string = quicklinkQuery) => {
-      const quicklink = findQuicklinkByKeyword(quicklinks, keyword);
+      const quicklink = findQuicklinkByKeywordOrAlias(quicklinks, keyword, quicklinkAliasesById);
       if (!quicklink) {
         return;
       }
@@ -574,7 +576,13 @@ export default function LauncherCommand() {
         fallbackCommand,
       );
     },
-    [handleRegistryCommandSelect, quicklinkKeyword, quicklinkQuery, quicklinks],
+    [
+      handleRegistryCommandSelect,
+      quicklinkAliasesById,
+      quicklinkKeyword,
+      quicklinkQuery,
+      quicklinks,
+    ],
   );
 
   const handleHotkeyCommand = useEffectEvent((event: { payload?: HotkeyCommandEventPayload }) => {
@@ -951,6 +959,7 @@ export default function LauncherCommand() {
               <LauncherCommandModeContent
                 isQuicklinkTrigger={isQuicklinkTrigger}
                 quicklinks={quicklinks}
+                quicklinkAliasesById={quicklinkAliasesById}
                 quicklinkKeyword={quicklinkKeyword}
                 quicklinkQuery={quicklinkQuery}
                 rankedRegistryCommands={rankedRegistryCommands}

@@ -8,6 +8,10 @@ import { toast } from "sonner";
 import { saveCalculatorHistory } from "@/modules/calculator-history/api/save-calculator-history";
 import { installExtension } from "@/modules/extensions/api/install-extension";
 import { invalidateDiscoveredExtensionsCache } from "@/modules/extensions/extension-command-provider";
+import {
+  getManagedItemPreferenceId,
+  useManagedItemPreferencesStore,
+} from "@/modules/launcher/managed-items";
 import { executeQuicklink } from "@/modules/quicklinks/api/quicklinks";
 import { runScriptCommand } from "@/modules/script-commands/api/run-script-command";
 import { SCRIPT_COMMANDS_RUN_EXTENSION_COMMAND_ID } from "@/modules/script-commands/constants";
@@ -103,6 +107,11 @@ export function createCustomActionHandler(
 
       try {
         await executeQuicklink(quicklinkKeywordFromPayload, executionQuery);
+        useManagedItemPreferencesStore
+          .getState()
+          .recordUsage(
+            getManagedItemPreferenceId({ kind: "quicklink", id: quicklinkKeywordFromPayload }),
+          );
         input.setCommandSearch("");
         return { ok: true, payload: { keyword: quicklinkKeywordFromPayload } };
       } catch (error) {
@@ -169,6 +178,9 @@ export function createCustomActionHandler(
           };
         }
 
+        useManagedItemPreferencesStore
+          .getState()
+          .recordUsage(getManagedItemPreferenceId({ kind: "script", id: scriptCommandId }));
         toast.success(result.message || "Script finished.");
 
         return {

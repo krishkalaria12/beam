@@ -5,6 +5,8 @@ import { create } from "zustand";
 import type { EmojiData } from "@/modules/emoji/types";
 import { CATEGORY_LABELS } from "@/modules/emoji/types";
 import { useSetPinnedEmoji, usePinnedEmojis } from "@/modules/emoji/hooks/use-pinned-emojis";
+import { useManagedItemActionItems } from "@/modules/launcher/managed-item-actions";
+import type { LauncherManagedItem } from "@/modules/launcher/managed-items";
 import type { LauncherActionItem } from "@/modules/launcher/types";
 import { invoke } from "@tauri-apps/api/core";
 
@@ -45,10 +47,27 @@ async function pasteEmoji(value: string) {
   });
 }
 
+export function toManagedEmojiItem(emoji: EmojiData): LauncherManagedItem {
+  return {
+    kind: "emoji",
+    id: emoji.hexcode,
+    title: `${emoji.emoji} ${emoji.label}`,
+    subtitle: CATEGORY_LABELS[emoji.group],
+    keywords: [emoji.label, ...emoji.tags],
+    copyIdLabel: "Copy Emoji ID",
+    copyIdValue: emoji.hexcode,
+    supportsFavorite: true,
+    supportsAlias: true,
+    supportsResetRanking: true,
+  };
+}
+
 export function useEmojiActionItems(): LauncherActionItem[] {
   const { data: pinnedHexcodes = [] } = usePinnedEmojis();
   const setPinnedMutation = useSetPinnedEmoji();
   const state = useEmojiActionsStore();
+  const managedItem = state.selectedEmoji ? toManagedEmojiItem(state.selectedEmoji) : null;
+  const managedActionItems = useManagedItemActionItems(managedItem);
 
   return useMemo(() => {
     const emoji = state.selectedEmoji;
@@ -119,6 +138,7 @@ export function useEmojiActionItems(): LauncherActionItem[] {
           });
         },
       },
+      ...managedActionItems,
     ];
-  }, [pinnedHexcodes, setPinnedMutation, state]);
+  }, [managedActionItems, pinnedHexcodes, setPinnedMutation, state]);
 }

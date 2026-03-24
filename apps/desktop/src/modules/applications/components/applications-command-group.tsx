@@ -1,34 +1,55 @@
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { AlertTriangle, Search } from "lucide-react";
 import { useCommandState } from "cmdk";
 
 import { CommandGroup, CommandItem } from "@/components/ui/command";
 import { useMountEffect } from "@/hooks/use-mount-effect";
 import {
+  useManagedItemPreferencesStore,
+  useManagedItemRankedList,
+} from "@/modules/launcher/managed-items";
+import {
   clearApplicationActionsState,
   syncApplicationActionsState,
+  toManagedApplicationItem,
 } from "@/modules/applications/hooks/use-application-action-items";
 
 import { useApplicationSearch } from "../hooks/use-application-search";
 import { useOpenApplication } from "../hooks/use-open-application";
 import ApplicationCommandItem from "./application-command-item";
+import type { Application } from "../api/search-applications";
 
 export default function ApplicationsCommandGroup() {
   const searchInput = useCommandState((state) => state.search);
   const query = searchInput.trim();
+  const recordUsage = useManagedItemPreferencesStore((state) => state.recordUsage);
 
   const { data, isLoading, isError } = useApplicationSearch(query);
   const { launchApplication, launchingExecPath, launchError } = useOpenApplication();
-  const applications = data ?? [];
+  const applications = useManagedItemRankedList({
+    items: data ?? [],
+    query,
+    getManagedItem: toManagedApplicationItem,
+    getSearchableText: (application) =>
+      `${application.description} ${application.app_id} ${application.exec_path}`,
+  });
+
+  const handleOpen = useCallback(
+    (application: Application) => {
+      recordUsage(toManagedApplicationItem(application));
+      launchApplication(application.exec_path);
+    },
+    [launchApplication, recordUsage],
+  );
 
   useMountEffect(() => clearApplicationActionsState);
 
   useEffect(() => {
     syncApplicationActionsState({
-      selectedApplication: applications[0] ?? null,
-      onOpen: launchApplication,
+      selectedApplication: query ? (applications[0] ?? null) : null,
+      onOpen: handleOpen,
     });
-  }, [applications, launchApplication]);
+  }, [applications, handleOpen, query]);
 
   if (!query) {
     return null;
@@ -64,7 +85,7 @@ export default function ApplicationsCommandGroup() {
             launchErrorMessage={
               launchError?.execPath === application.exec_path ? launchError.message : null
             }
-            onOpen={launchApplication}
+            onOpen={handleOpen}
           />
         ))}
     </CommandGroup>

@@ -1,5 +1,4 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { onClipboardUpdate, startListening } from "tauri-plugin-clipboard-api";
 
 import { useMountEffect } from "@/hooks/use-mount-effect";
 import { getClipboardHistory } from "../api/get-clipboard-history";
@@ -11,34 +10,14 @@ export function useClipboardHistory(enabled: boolean) {
   useMountEffect(() => {
     if (!enabled) return;
 
-    let unlistenClipboard: (() => void) | undefined;
-    let stopListening: (() => Promise<void>) | undefined;
     const invalidateHistory = () => {
       queryClient.invalidateQueries({ queryKey: ["clipboard", "history"] });
     };
 
-    const setupListener = async () => {
-      try {
-        stopListening = await startListening();
-        unlistenClipboard = await onClipboardUpdate(invalidateHistory);
-      } catch (error) {
-        console.error("Failed to setup clipboard listener:", error);
-      }
-    };
-
-    setupListener();
     window.addEventListener(CLIPBOARD_HISTORY_UPDATED_EVENT, invalidateHistory);
 
     return () => {
       window.removeEventListener(CLIPBOARD_HISTORY_UPDATED_EVENT, invalidateHistory);
-
-      if (unlistenClipboard) {
-        unlistenClipboard();
-      }
-
-      if (stopListening) {
-        void stopListening();
-      }
     };
   });
 
@@ -51,6 +30,8 @@ export function useClipboardHistory(enabled: boolean) {
     refetchOnMount: true,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
+    refetchInterval: (query) => (enabled && query.state.status !== "error" ? 2_000 : false),
+    refetchIntervalInBackground: false,
     retry: (failureCount, error) => {
       if (error instanceof Error && error.message.includes("invalid clipboard history response")) {
         return false;

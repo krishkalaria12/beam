@@ -3,6 +3,9 @@ import { Copy, FolderOpen, Play, SquarePen } from "lucide-react";
 import { useMemo } from "react";
 import { create } from "zustand";
 
+import { createScriptRunCommandId } from "@/modules/script-commands/script-commands-provider";
+import { useManagedItemActionItems } from "@/modules/launcher/managed-item-actions";
+import type { LauncherManagedItem } from "@/modules/launcher/managed-items";
 import type { LauncherActionItem } from "@/modules/launcher/types";
 import type { ScriptCommandSummary } from "@/modules/script-commands/types";
 
@@ -42,8 +45,31 @@ async function copyText(value: string) {
   await navigator.clipboard.writeText(value);
 }
 
+export function toManagedScriptCommandItem(script: ScriptCommandSummary): LauncherManagedItem {
+  return {
+    kind: "script",
+    id: script.id,
+    title: script.title,
+    subtitle: script.subtitle,
+    keywords: [script.scriptName, script.scriptPath, script.subtitle].filter(Boolean),
+    commandTarget: {
+      commandId: createScriptRunCommandId(script.id),
+      title: script.title,
+    },
+    copyIdLabel: "Copy Script ID",
+    copyIdValue: script.id,
+    supportsFavorite: true,
+    supportsAlias: true,
+    supportsResetRanking: true,
+  };
+}
+
 export function useScriptCommandActionItems(): LauncherActionItem[] {
   const state = useScriptCommandActionsStore();
+  const managedItem = state.selectedScript
+    ? toManagedScriptCommandItem(state.selectedScript)
+    : null;
+  const managedActionItems = useManagedItemActionItems(managedItem);
 
   return useMemo(() => {
     const script = state.selectedScript;
@@ -94,6 +120,7 @@ export function useScriptCommandActionItems(): LauncherActionItem[] {
           void copyText(script.scriptPath);
         },
       },
+      ...managedActionItems,
     ];
-  }, [state]);
+  }, [managedActionItems, state]);
 }

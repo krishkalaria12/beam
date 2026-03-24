@@ -8,6 +8,7 @@ import type { Quicklink } from "@/modules/quicklinks/types";
 interface LauncherCommandModeContentProps {
   isQuicklinkTrigger: boolean;
   quicklinks: Quicklink[];
+  quicklinkAliasesById: Record<string, string[]>;
   quicklinkKeyword: string;
   quicklinkQuery: string;
   rankedRegistryCommands: readonly RankedCommand[];
@@ -24,6 +25,7 @@ interface LauncherCommandModeContentProps {
 export function LauncherCommandModeContent({
   isQuicklinkTrigger,
   quicklinks,
+  quicklinkAliasesById,
   quicklinkKeyword,
   quicklinkQuery,
   rankedRegistryCommands,
@@ -41,6 +43,7 @@ export function LauncherCommandModeContent({
       {isQuicklinkTrigger ? (
         <QuicklinkPreview
           quicklinks={quicklinks}
+          aliasesById={quicklinkAliasesById}
           keyword={quicklinkKeyword}
           query={quicklinkQuery}
           onExecute={onQuicklinkExecute}

@@ -1,4 +1,5 @@
 import { invoke, isTauri } from "@tauri-apps/api/core";
+import { getManagedItemAliases } from "@/modules/launcher/managed-items";
 import type { Quicklink, QuicklinkFormData } from "../types";
 
 export function isWebQuicklinkTarget(value: string): boolean {
@@ -64,6 +65,27 @@ export function findQuicklinkByKeyword(
   keyword: string,
 ): Quicklink | undefined {
   return quicklinks.find((ql) => ql.keyword.toLowerCase() === keyword.toLowerCase());
+}
+
+export function findQuicklinkByKeywordOrAlias(
+  quicklinks: Quicklink[],
+  keyword: string,
+  aliasesById: Record<string, string[]>,
+): Quicklink | undefined {
+  const normalizedKeyword = keyword.trim().toLowerCase();
+  if (!normalizedKeyword) {
+    return undefined;
+  }
+
+  return quicklinks.find((quicklink) => {
+    if (quicklink.keyword.toLowerCase() === normalizedKeyword) {
+      return true;
+    }
+
+    return getManagedItemAliases(aliasesById, { kind: "quicklink", id: quicklink.keyword }).some(
+      (alias) => alias.trim().toLowerCase() === normalizedKeyword,
+    );
+  });
 }
 
 export async function executeQuicklink(keyword: string, query: string): Promise<void> {

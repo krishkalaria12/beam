@@ -2,8 +2,13 @@ import { useCallback, useEffect, useMemo, useReducer, useRef } from "react";
 
 import debounce from "@/lib/debounce";
 import {
+  useManagedItemPreferencesStore,
+  useManagedItemRankedGroups,
+} from "@/modules/launcher/managed-items";
+import {
   clearClipboardActionsState,
   syncClipboardActionsState,
+  toManagedClipboardItem,
 } from "@/modules/clipboard/hooks/use-clipboard-action-items";
 import { copyToClipboard } from "../api/copy-to-clipboard";
 import { buildClipboardPinnedEntryId } from "../api/history-actions";
@@ -29,8 +34,8 @@ interface ClipboardViewState {
   query: string;
   debouncedQuery: string;
   typeFilter: ClipboardTypeFilter;
-  selectionState: { key: string; index: number };
-  copiedEntryIndex: number | null;
+  selectionState: { key: string; entryId: string };
+  copiedEntryId: string | null;
   copyError: string | null;
 }
 
@@ -38,15 +43,15 @@ type ClipboardViewAction =
   | { type: "set-query"; value: string }
   | { type: "set-debounced-query"; value: string }
   | { type: "set-type-filter"; value: ClipboardTypeFilter }
-  | { type: "set-selection"; value: { key: string; index: number } }
-  | { type: "set-copied-state"; copiedEntryIndex: number | null; copyError: string | null };
+  | { type: "set-selection"; value: { key: string; entryId: string } }
+  | { type: "set-copied-state"; copiedEntryId: string | null; copyError: string | null };
 
 const INITIAL_CLIPBOARD_VIEW_STATE: ClipboardViewState = {
   query: "",
   debouncedQuery: "",
   typeFilter: "all",
-  selectionState: { key: "", index: 0 },
-  copiedEntryIndex: null,
+  selectionState: { key: "", entryId: "" },
+  copiedEntryId: null,
   copyError: null,
 };
 
@@ -66,7 +71,7 @@ function clipboardViewReducer(
     case "set-copied-state":
       return {
         ...state,
-        copiedEntryIndex: action.copiedEntryIndex,
+        copiedEntryId: action.copiedEntryId,
         copyError: action.copyError,
       };
   }
@@ -78,6 +83,7 @@ export function ClipboardView({ onBack, onToggleActions }: ClipboardViewProps) {
 
   const { data: history = [], isLoading } = useClipboardHistory(true);
   const { data: pinnedEntryIds = [] } = usePinnedClipboardHistory();
+  const recordUsage = useManagedItemPreferencesStore((managedState) => managedState.recordUsage);
   const pinnedEntryIdSet = useMemo(() => new Set(pinnedEntryIds), [pinnedEntryIds]);
 
   useMountEffect(() => clearClipboardActionsState);
@@ -90,58 +96,66 @@ export function ClipboardView({ onBack, onToggleActions }: ClipboardViewProps) {
     [],
   );
 
-  const filteredHistory = useMemo(() => {
-    const lowerQuery = state.debouncedQuery.toLowerCase();
-    const filteredByType =
+  const filteredByType = useMemo(
+    () =>
       state.typeFilter === "all"
         ? history
-        : history.filter((entry) => entry.content_type === state.typeFilter);
+        : history.filter((entry) => entry.content_type === state.typeFilter),
+    [history, state.typeFilter],
+  );
+  const pinnedEntries = useMemo(
+    () =>
+      filteredByType.filter((entry) =>
+        pinnedEntryIdSet.has(
+          buildClipboardPinnedEntryId({ copiedAt: entry.copied_at, value: entry.value }),
+        ),
+      ),
+    [filteredByType, pinnedEntryIdSet],
+  );
+  const unpinnedEntries = useMemo(
+    () =>
+      filteredByType.filter(
+        (entry) =>
+          !pinnedEntryIdSet.has(
+            buildClipboardPinnedEntryId({ copiedAt: entry.copied_at, value: entry.value }),
+          ),
+      ),
+    [filteredByType, pinnedEntryIdSet],
+  );
+  const filteredHistory = useManagedItemRankedGroups({
+    groups: [pinnedEntries, unpinnedEntries],
+    query: state.debouncedQuery,
+    getManagedItem: toManagedClipboardItem,
+    getSearchableText: (entry) =>
+      entry.content_type === ClipboardContentType.Image
+        ? "image screenshot clipboard"
+        : entry.value.slice(0, 4096),
+    compareFallback: (left, right) => right.copied_at.localeCompare(left.copied_at),
+  });
+  const getEntryId = useCallback(
+    (entry: ClipboardHistoryEntry) =>
+      buildClipboardPinnedEntryId({ copiedAt: entry.copied_at, value: entry.value }),
+    [],
+  );
 
-    const queryFiltered = filteredByType.filter((entry) => {
-      if (!lowerQuery) {
-        return true;
-      }
-
-      if (entry.content_type === ClipboardContentType.Image) {
-        return "image screenshot clipboard".includes(lowerQuery);
-      }
-
-      const searchableValue =
-        entry.value.length > 4096
-          ? entry.value.slice(0, 4096).toLowerCase()
-          : entry.value.toLowerCase();
-      return searchableValue.includes(lowerQuery);
-    });
-
-    return queryFiltered.toSorted((left, right) => {
-      const leftPinned = pinnedEntryIdSet.has(
-        buildClipboardPinnedEntryId({ copiedAt: left.copied_at, value: left.value }),
-      );
-      const rightPinned = pinnedEntryIdSet.has(
-        buildClipboardPinnedEntryId({ copiedAt: right.copied_at, value: right.value }),
-      );
-      if (leftPinned !== rightPinned) {
-        return leftPinned ? -1 : 1;
-      }
-
-      return right.copied_at.localeCompare(left.copied_at);
-    });
-  }, [history, pinnedEntryIdSet, state.debouncedQuery, state.typeFilter]);
-
-  const selectionKey = `${state.query}\u0000${state.typeFilter}\u0000${filteredHistory.length}`;
-  const effectiveSelectedIndex =
-    state.selectionState.key === selectionKey ? state.selectionState.index : 0;
-  const selectedIndex = Math.min(effectiveSelectedIndex, Math.max(filteredHistory.length - 1, 0));
+  const selectionKey = `${state.debouncedQuery}\u0000${state.typeFilter}\u0000${filteredHistory.length}`;
+  const selectedIndex =
+    state.selectionState.key === selectionKey
+      ? Math.max(
+          0,
+          filteredHistory.findIndex((entry) => getEntryId(entry) === state.selectionState.entryId),
+        )
+      : 0;
   const setSelectedIndex = (value: number | ((previous: number) => number)) => {
-    const previous = state.selectionState;
+    const nextIndex = typeof value === "function" ? value(selectedIndex) : value;
+    const boundedIndex = Math.max(0, Math.min(nextIndex, Math.max(filteredHistory.length - 1, 0)));
+    const nextEntry = filteredHistory[boundedIndex] ?? null;
+
     dispatch({
       type: "set-selection",
       value: {
         key: selectionKey,
-        index:
-          typeof value === "function"
-            ? value(previous.key === selectionKey ? previous.index : 0)
-            : value,
+        entryId: nextEntry ? getEntryId(nextEntry) : "",
       },
     });
   };
@@ -154,33 +168,44 @@ export function ClipboardView({ onBack, onToggleActions }: ClipboardViewProps) {
     node?.focus();
   }, []);
 
-  const handleCopy = useCallback(async (entry: ClipboardHistoryEntry, index: number) => {
-    try {
-      const isImage = entry.content_type === ClipboardContentType.Image;
-      await copyToClipboard(entry.value, isImage);
-      dispatch({ type: "set-copied-state", copiedEntryIndex: index, copyError: null });
-    } catch (error) {
-      console.error("Failed to copy:", error);
-      dispatch({
-        type: "set-copied-state",
-        copiedEntryIndex: null,
-        copyError: "Could not copy entry",
-      });
-    }
+  const handleCopy = useCallback(
+    async (entry: ClipboardHistoryEntry) => {
+      try {
+        const isImage = entry.content_type === ClipboardContentType.Image;
+        await copyToClipboard(entry.value, isImage);
+        recordUsage(toManagedClipboardItem(entry));
+        dispatch({
+          type: "set-selection",
+          value: {
+            key: selectionKey,
+            entryId: getEntryId(entry),
+          },
+        });
+        dispatch({ type: "set-copied-state", copiedEntryId: getEntryId(entry), copyError: null });
+      } catch (error) {
+        console.error("Failed to copy:", error);
+        dispatch({
+          type: "set-copied-state",
+          copiedEntryId: null,
+          copyError: "Could not copy entry",
+        });
+      }
 
-    if (copyFeedbackTimerRef.current !== null) {
-      window.clearTimeout(copyFeedbackTimerRef.current);
-    }
+      if (copyFeedbackTimerRef.current !== null) {
+        window.clearTimeout(copyFeedbackTimerRef.current);
+      }
 
-    copyFeedbackTimerRef.current = window.setTimeout(() => {
-      copyFeedbackTimerRef.current = null;
-      dispatch({ type: "set-copied-state", copiedEntryIndex: null, copyError: null });
-    }, 1400);
-  }, []);
+      copyFeedbackTimerRef.current = window.setTimeout(() => {
+        copyFeedbackTimerRef.current = null;
+        dispatch({ type: "set-copied-state", copiedEntryId: null, copyError: null });
+      }, 1400);
+    },
+    [getEntryId, recordUsage, selectionKey],
+  );
 
   const handleCopySelected = useCallback(() => {
     if (selectedEntry) {
-      return handleCopy(selectedEntry, selectedIndex);
+      return handleCopy(selectedEntry);
     }
   }, [handleCopy, selectedEntry, selectedIndex]);
 
@@ -208,7 +233,7 @@ export function ClipboardView({ onBack, onToggleActions }: ClipboardViewProps) {
       e.preventDefault();
       e.stopPropagation();
       if (selectedEntry) {
-        void handleCopy(selectedEntry, selectedIndex);
+        void handleCopy(selectedEntry);
       }
     } else if (e.key === "Escape") {
       e.preventDefault();
@@ -264,26 +289,32 @@ export function ClipboardView({ onBack, onToggleActions }: ClipboardViewProps) {
         />
         <ClipboardDetails
           entry={selectedEntry}
-          isCopied={state.copiedEntryIndex === selectedIndex && !state.copyError}
+          isCopied={
+            selectedEntry
+              ? state.copiedEntryId === getEntryId(selectedEntry) && !state.copyError
+              : false
+          }
           copyError={state.copyError}
           isLoading={isInitialLoading}
           onCopy={() => {
             if (selectedEntry) {
-              void handleCopy(selectedEntry, selectedIndex);
+              void handleCopy(selectedEntry);
             }
           }}
         />
       </div>
 
       <ClipboardFooter
-        copiedEntryIndex={state.copiedEntryIndex}
+        copiedEntryIndex={
+          selectedEntry && state.copiedEntryId === getEntryId(selectedEntry) ? selectedIndex : null
+        }
         selectedIndex={selectedIndex}
         copyError={state.copyError}
         canCopy={Boolean(selectedEntry)}
         onBack={onBack}
         onCopySelected={() => {
           if (selectedEntry) {
-            void handleCopy(selectedEntry, selectedIndex);
+            void handleCopy(selectedEntry);
           }
         }}
         onToggleActions={() => {

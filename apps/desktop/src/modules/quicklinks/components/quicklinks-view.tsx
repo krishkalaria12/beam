@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { useManagedItemRankedList } from "@/modules/launcher/managed-items";
 import { useLauncherPanelBackHandler } from "@/modules/launcher/lib/back-navigation";
 import {
   useCreateQuicklink,
@@ -35,6 +36,7 @@ import {
   buildDuplicateName,
   clearQuicklinksActionsState,
   syncQuicklinksActionsState,
+  toManagedQuicklinkItem,
 } from "@/modules/quicklinks/hooks/use-quicklinks-action-items";
 
 const quicklinkSchema = z.object({
@@ -208,8 +210,9 @@ function QuicklinkCreateForm({
   editKeyword,
 }: QuicklinkCreateFormProps) {
   const isEditMode = Boolean(editKeyword);
-  const createMutation = useCreateQuicklink();
-  const updateMutation = useUpdateQuicklink();
+  const { data: quicklinks, isLoading: isLoadingQuicklinks } = useQuicklinks();
+  const createMutation = useCreateQuicklink(quicklinks ?? null);
+  const updateMutation = useUpdateQuicklink(quicklinks ?? null);
   const getFaviconMutation = useGetFavicon();
   const [fetchedIcon, setFetchedIcon] = useState(initialData?.icon ?? "");
   const [isFileTarget, setIsFileTarget] = useState(() =>
@@ -218,7 +221,8 @@ function QuicklinkCreateForm({
   const [isFetchingIcon, setIsFetchingIcon] = useState(false);
   const fetchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mutationError = isEditMode ? updateMutation.error : createMutation.error;
-  const isSubmitting = isEditMode ? updateMutation.isPending : createMutation.isPending;
+  const isSubmitting =
+    isLoadingQuicklinks || (isEditMode ? updateMutation.isPending : createMutation.isPending);
   const previewIcon = fetchedIcon;
 
   const form = useForm({
@@ -503,7 +507,7 @@ type QuicklinksManageViewProps = {
 
 function QuicklinksManageView({ onBack, onCreate, onEdit }: QuicklinksManageViewProps) {
   const { data: quicklinks, isLoading, error } = useQuicklinks();
-  const createMutation = useCreateQuicklink();
+  const createMutation = useCreateQuicklink(quicklinks ?? null);
   const deleteMutation = useDeleteQuicklink();
   const [deletingKeyword, setDeletingKeyword] = useState<string | null>(null);
   const [selectedKeyword, setSelectedKeyword] = useState<string | null>(null);
@@ -524,9 +528,21 @@ function QuicklinksManageView({ onBack, onCreate, onEdit }: QuicklinksManageView
     [deleteMutation],
   );
 
+  const rankedQuicklinks = useManagedItemRankedList({
+    items: quicklinks ?? [],
+    query: "",
+    getManagedItem: toManagedQuicklinkItem,
+    getSearchableText: (quicklink) => `${quicklink.keyword} ${quicklink.url}`,
+  });
+  const resolvedSelectedKeyword = rankedQuicklinks.some(
+    (quicklink) => quicklink.keyword === selectedKeyword,
+  )
+    ? selectedKeyword
+    : (rankedQuicklinks[0]?.keyword ?? null);
+
   const selectedQuicklink =
-    quicklinks?.find((quicklink) => quicklink.keyword === selectedKeyword) ??
-    quicklinks?.[0] ??
+    rankedQuicklinks.find((quicklink) => quicklink.keyword === resolvedSelectedKeyword) ??
+    rankedQuicklinks[0] ??
     null;
 
   const handleDuplicate = useCallback(
@@ -544,12 +560,12 @@ function QuicklinksManageView({ onBack, onCreate, onEdit }: QuicklinksManageView
   useEffect(() => {
     syncQuicklinksActionsState({
       selectedQuicklink,
-      quicklinks: quicklinks ?? [],
+      quicklinks: rankedQuicklinks,
       onEdit,
       onDelete: handleDelete,
       onDuplicate: handleDuplicate,
     });
-  }, [handleDelete, handleDuplicate, onEdit, quicklinks, selectedQuicklink]);
+  }, [handleDelete, handleDuplicate, onEdit, rankedQuicklinks, selectedQuicklink]);
 
   return (
     <div className="quicklinks-view flex h-full flex-col">
@@ -589,7 +605,7 @@ function QuicklinksManageView({ onBack, onCreate, onEdit }: QuicklinksManageView
           </div>
         )}
 
-        {!isLoading && !error && quicklinks?.length === 0 && (
+        {!isLoading && !error && rankedQuicklinks.length === 0 && (
           <div className="flex h-full flex-col items-center justify-center gap-4 py-16">
             <IconChip variant="orange" size="lg" className="size-16 rounded-2xl">
               <Link2 className="size-7" />
@@ -615,18 +631,30 @@ function QuicklinksManageView({ onBack, onCreate, onEdit }: QuicklinksManageView
           </div>
         )}
 
-        {quicklinks && quicklinks.length > 0 && (
+        {rankedQuicklinks.length > 0 && (
           <div className="space-y-2">
-            {quicklinks.map((quicklink, index) => (
+            {rankedQuicklinks.map((quicklink, index) => (
               <div
                 key={quicklink.keyword}
                 className="quicklinks-item group relative flex items-center gap-3.5 rounded-xl bg-[var(--launcher-card-bg)] p-3.5 transition-all duration-200 hover:bg-[var(--launcher-card-hover-bg)]"
                 style={{ animationDelay: `${index * 30}ms` }}
+                onClick={() => {
+                  setSelectedKeyword(quicklink.keyword);
+                }}
                 onMouseEnter={() => {
                   setSelectedKeyword(quicklink.keyword);
                 }}
+                onFocus={() => {
+                  setSelectedKeyword(quicklink.keyword);
+                }}
+                tabIndex={0}
               >
-                <div className="absolute left-0 top-1/2 h-6 w-[3px] -translate-y-1/2 scale-y-50 rounded-full bg-[var(--ring)] opacity-0 transition-all duration-200 group-hover:scale-y-100 group-hover:opacity-60" />
+                <div
+                  className={cn(
+                    "absolute left-0 top-1/2 h-6 w-[3px] -translate-y-1/2 scale-y-50 rounded-full bg-[var(--ring)] opacity-0 transition-all duration-200 group-hover:scale-y-100 group-hover:opacity-60",
+                    resolvedSelectedKeyword === quicklink.keyword && "scale-y-100 opacity-60",
+                  )}
+                />
 
                 <IconChip variant="orange" size="lg" className="size-11 rounded-xl">
                   <QuicklinkIcon

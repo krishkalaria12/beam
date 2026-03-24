@@ -69,7 +69,6 @@ export function LauncherFooter({
             open={actionsOpen}
             onOpenChange={setActionsOpen}
             rootItems={applicationActionItems}
-            defaultRootItemsMode="append"
           />
         ) : undefined
       }

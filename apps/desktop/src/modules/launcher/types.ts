@@ -1,5 +1,18 @@
 import type React from "react";
 
+import type { LauncherManagedItem } from "@/modules/launcher/managed-items";
+
+export type LauncherActionTarget =
+  | {
+      kind: "command";
+      commandId: string;
+      title?: string;
+    }
+  | {
+      kind: "managed-item";
+      item: LauncherManagedItem;
+    };
+
 export interface LauncherActionItem {
   id: string;
   label: string;
@@ -9,6 +22,7 @@ export interface LauncherActionItem {
   shortcut?: React.ReactNode;
   disabled?: boolean;
   nextPageId?: "hotkey" | "alias";
+  nextPageTarget?: LauncherActionTarget;
   closeOnSelect?: boolean;
   onSelect?: () => void;
 }
@@ -22,8 +36,7 @@ export interface LauncherActionsPanelProps {
   rootSearchPlaceholder?: string;
   rootItems?: LauncherActionItem[];
   defaultRootItemsMode?: "replace" | "append";
-  targetCommandId?: string;
-  targetCommandTitle?: string;
+  defaultTarget?: LauncherActionTarget | null;
 }
 
 export type ActionPageId = "root" | "hotkey" | "alias";

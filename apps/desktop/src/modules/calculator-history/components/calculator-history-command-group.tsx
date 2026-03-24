@@ -14,9 +14,14 @@ import { HISTORY_COPY_FEEDBACK_MS } from "../constants";
 import {
   clearCalculatorHistoryActionsState,
   syncCalculatorHistoryActionsState,
+  toManagedCalculatorHistoryItem,
 } from "@/modules/calculator-history/hooks/use-calculator-history-action-items";
 import { usePinnedCalculatorHistory } from "@/modules/calculator-history/hooks/use-pinned-calculator-history";
 import { useMountEffect } from "@/hooks/use-mount-effect";
+import {
+  useManagedItemPreferencesStore,
+  useManagedItemRankedGroups,
+} from "@/modules/launcher/managed-items";
 
 import { CalculatorHistoryEmpty } from "./calculator-history-empty";
 import { CalculatorHistoryError } from "./calculator-history-error";
@@ -42,17 +47,41 @@ export default function CalculatorHistoryCommandGroup({
   onOpen,
 }: CalculatorHistoryCommandGroupProps) {
   const searchInput = useCommandState((state) => state.search);
+  const selectedCommandValue = useCommandState((state) => state.value);
   const query = normalizeCommandQuery(searchInput);
 
   const { data, isLoading, isError } = useCalculatorHistory(isOpen);
   const { data: pinnedTimestamps = [] } = usePinnedCalculatorHistory();
+  const recordUsage = useManagedItemPreferencesStore((state) => state.recordUsage);
   const history = data ?? [];
-  const [copiedEntryIndex, setCopiedEntryIndex] = useState<number | null>(null);
+  const [copiedEntryTimestamp, setCopiedEntryTimestamp] = useState<number | null>(null);
   const [copyError, setCopyError] = useState<string | null>(null);
   const copiedResetTimerRef = useRef<number | null>(null);
   const pinnedTimestampSet = useMemo(() => new Set(pinnedTimestamps), [pinnedTimestamps]);
 
   useMountEffect(() => clearCalculatorHistoryActionsState);
+
+  const pinnedHistory = history.filter((entry) => pinnedTimestampSet.has(entry.timestamp));
+  const unpinnedHistory = history.filter((entry) => !pinnedTimestampSet.has(entry.timestamp));
+  const filteredHistory = useManagedItemRankedGroups({
+    groups: [pinnedHistory, unpinnedHistory],
+    query,
+    getManagedItem: toManagedCalculatorHistoryItem,
+    getSearchableText: (entry) => `${entry.query} ${entry.result}`,
+    compareFallback: (left, right) => right.timestamp - left.timestamp,
+  });
+
+  const selectedEntry =
+    filteredHistory.find(
+      (entry) => `calculator-history-${entry.timestamp}` === selectedCommandValue,
+    ) ??
+    filteredHistory[0] ??
+    null;
+  useEffect(() => {
+    syncCalculatorHistoryActionsState({
+      selectedEntry: isOpen ? selectedEntry : null,
+    });
+  }, [isOpen, selectedEntry]);
 
   if (!isOpen) {
     const shouldShowOpenHistory = matchesCommandKeywords(query, CALCULATOR_HISTORY_KEYWORDS);
@@ -72,32 +101,6 @@ export default function CalculatorHistoryCommandGroup({
       </CommandGroup>
     );
   }
-
-  const filteredHistory = history
-    .filter((entry) => {
-      if (!query) {
-        return true;
-      }
-      return (
-        entry.query.toLowerCase().includes(query) || entry.result.toLowerCase().includes(query)
-      );
-    })
-    .toSorted((left, right) => {
-      const leftPinned = pinnedTimestampSet.has(left.timestamp);
-      const rightPinned = pinnedTimestampSet.has(right.timestamp);
-      if (leftPinned !== rightPinned) {
-        return leftPinned ? -1 : 1;
-      }
-
-      return right.timestamp - left.timestamp;
-    });
-
-  const selectedEntry = filteredHistory[0] ?? null;
-  useEffect(() => {
-    syncCalculatorHistoryActionsState({
-      selectedEntry,
-    });
-  }, [selectedEntry]);
 
   return (
     <CommandGroup>
@@ -126,7 +129,7 @@ export default function CalculatorHistoryCommandGroup({
       {!isLoading &&
         !isError &&
         filteredHistory.map((entry, index) => {
-          const isCopied = copiedEntryIndex === index;
+          const isCopied = copiedEntryTimestamp === entry.timestamp;
 
           return (
             <CalculatorHistoryItem
@@ -142,14 +145,15 @@ export default function CalculatorHistoryCommandGroup({
               onSelect={() => {
                 copyCalculatorEntry(entry.result)
                   .then(() => {
-                    setCopiedEntryIndex(index);
+                    recordUsage(toManagedCalculatorHistoryItem(entry));
+                    setCopiedEntryTimestamp(entry.timestamp);
                     setCopyError(null);
                     if (copiedResetTimerRef.current !== null) {
                       window.clearTimeout(copiedResetTimerRef.current);
                     }
                     copiedResetTimerRef.current = window.setTimeout(() => {
                       copiedResetTimerRef.current = null;
-                      setCopiedEntryIndex(null);
+                      setCopiedEntryTimestamp(null);
                     }, HISTORY_COPY_FEEDBACK_MS);
                   })
                   .catch(() => {

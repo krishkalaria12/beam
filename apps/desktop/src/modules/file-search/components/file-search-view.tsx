@@ -7,8 +7,13 @@ import { DetailPanel, SearchInput } from "@/components/module";
 import { Button } from "@/components/ui/button";
 import { useMountEffect } from "@/hooks/use-mount-effect";
 import {
+  getManagedItemPreferenceId,
+  useManagedItemPreferencesStore,
+} from "@/modules/launcher/managed-items";
+import {
   clearFileSearchActionsState,
   syncFileSearchActionsState,
+  toManagedFileItem,
 } from "@/modules/file-search/hooks/use-file-search-action-items";
 import { useFileSearch } from "../hooks/use-file-search";
 import { useOpenFile } from "../hooks/use-open-file";
@@ -23,9 +28,12 @@ interface FileSearchViewProps {
 export function FileSearchView({ initialQuery, onBack }: FileSearchViewProps) {
   const [query, setQuery] = useState(() => initialQuery);
   const [debouncedQuery, setDebouncedQuery] = useState(() => initialQuery);
-  const [selectionState, setSelectionState] = useState({ key: "", index: 0 });
+  const [selectionState, setSelectionState] = useState({ key: "", path: "" });
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const favoriteIds = useManagedItemPreferencesStore((state) => state.favoriteIds);
+  const usageById = useManagedItemPreferencesStore((state) => state.usageById);
+  const recordUsage = useManagedItemPreferencesStore((state) => state.recordUsage);
 
   const { data, isLoading } = useFileSearch(debouncedQuery);
   const { mutate: openFile } = useOpenFile();
@@ -37,28 +45,74 @@ export function FileSearchView({ initialQuery, onBack }: FileSearchViewProps) {
     [],
   );
 
-  const results = data?.results || [];
-  const selectionKey = `${query}\u0000${results.length}`;
-  const effectiveSelectedIndex = selectionState.key === selectionKey ? selectionState.index : 0;
-  const selectedIndex = Math.min(effectiveSelectedIndex, Math.max(results.length - 1, 0));
+  const results = useMemo(() => {
+    const baseResults = data?.results ?? [];
+
+    return [...baseResults].sort((left, right) => {
+      const leftItem = toManagedFileItem(left.entry);
+      const rightItem = toManagedFileItem(right.entry);
+      const leftId = getManagedItemPreferenceId(leftItem);
+      const rightId = getManagedItemPreferenceId(rightItem);
+
+      if (left.score !== right.score) {
+        return right.score - left.score;
+      }
+
+      const leftFavorite = favoriteIds.includes(leftId);
+      const rightFavorite = favoriteIds.includes(rightId);
+      if (leftFavorite !== rightFavorite) {
+        return leftFavorite ? -1 : 1;
+      }
+
+      const leftUsage = usageById[leftId]?.count ?? 0;
+      const rightUsage = usageById[rightId]?.count ?? 0;
+      if (leftUsage !== rightUsage) {
+        return rightUsage - leftUsage;
+      }
+
+      return left.entry.path.localeCompare(right.entry.path);
+    });
+  }, [data?.results, favoriteIds, usageById]);
+  const selectionKey = `${debouncedQuery}\u0000${results.length}`;
+  const selectedIndex =
+    selectionState.key === selectionKey
+      ? Math.max(
+          0,
+          results.findIndex((result) => result.entry.path === selectionState.path),
+        )
+      : 0;
   const setSelectedIndex = useCallback(
     (value: number | ((previous: number) => number)) => {
-      setSelectionState((previous) => ({
-        key: selectionKey,
-        index:
+      setSelectionState((previous) => {
+        const nextIndex =
           typeof value === "function"
-            ? value(previous.key === selectionKey ? previous.index : 0)
-            : value,
-      }));
+            ? value(
+                previous.key === selectionKey
+                  ? Math.max(
+                      0,
+                      results.findIndex((result) => result.entry.path === previous.path),
+                    )
+                  : 0,
+              )
+            : value;
+        const boundedIndex = Math.max(0, Math.min(nextIndex, Math.max(results.length - 1, 0)));
+        const nextResult = results[boundedIndex]?.entry ?? null;
+
+        return {
+          key: selectionKey,
+          path: nextResult?.path ?? "",
+        };
+      });
     },
-    [selectionKey],
+    [results, selectionKey],
   );
   const selectedFile = results[selectedIndex]?.entry || null;
   const handleOpenSelected = useCallback(() => {
     if (selectedFile) {
+      recordUsage(toManagedFileItem(selectedFile));
       openFile(selectedFile.path);
     }
-  }, [openFile, selectedFile]);
+  }, [openFile, recordUsage, selectedFile]);
 
   useEffect(() => {
     syncFileSearchActionsState({
@@ -87,6 +141,7 @@ export function FileSearchView({ initialQuery, onBack }: FileSearchViewProps) {
       case "Enter":
         e.preventDefault();
         if (selectedFile) {
+          recordUsage(toManagedFileItem(selectedFile));
           openFile(selectedFile.path);
         }
         break;
@@ -166,7 +221,13 @@ export function FileSearchView({ initialQuery, onBack }: FileSearchViewProps) {
             onSelect={setSelectedIndex}
             isLoading={isLoading}
             query={query}
-            onOpen={(path) => openFile(path)}
+            onOpen={(path) => {
+              const entry = results.find((result) => result.entry.path === path)?.entry;
+              if (entry) {
+                recordUsage(toManagedFileItem(entry));
+              }
+              openFile(path);
+            }}
           />
         </div>
 
@@ -191,7 +252,14 @@ export function FileSearchView({ initialQuery, onBack }: FileSearchViewProps) {
         primaryAction={{
           label: "Open",
           shortcut: ["↵"],
-          onClick: () => selectedFile && openFile(selectedFile.path),
+          onClick: () => {
+            if (!selectedFile) {
+              return;
+            }
+
+            recordUsage(toManagedFileItem(selectedFile));
+            openFile(selectedFile.path);
+          },
           disabled: !selectedFile,
         }}
         secondaryActions={[

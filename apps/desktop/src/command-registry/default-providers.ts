@@ -33,7 +33,7 @@ function hashText(input: string): string {
   return (hash >>> 0).toString(16).padStart(8, "0");
 }
 
-function toApplicationCommandId(name: string, execPath: string): string {
+export function toApplicationCommandId(name: string, execPath: string): string {
   const nameSegment = normalizeIdSegment(name) || "app";
   return `applications.open.${nameSegment}::${hashText(execPath)}`;
 }
@@ -89,7 +89,7 @@ export function createQuicklinkExecuteCommandDescriptor(input: {
   };
 }
 
-function buildApplicationTitle(name: string, execPath: string): string {
+export function buildApplicationTitle(name: string, execPath: string): string {
   const normalizedName = name.trim();
   if (normalizedName.length > 0) {
     return normalizedName;

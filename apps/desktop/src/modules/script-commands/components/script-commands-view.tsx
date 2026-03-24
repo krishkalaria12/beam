@@ -5,6 +5,10 @@ import { toast } from "sonner";
 import { ModuleFooter } from "@/components/module";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  useManagedItemPreferencesStore,
+  useManagedItemRankedList,
+} from "@/modules/launcher/managed-items";
 import { useLauncherPanelBackHandler } from "@/modules/launcher/lib/back-navigation";
 import { openScriptCommandsDirectory } from "@/modules/script-commands/api/open-script-commands-directory";
 import { ScriptCommandArgumentsForm } from "@/modules/script-commands/components/script-command-arguments-form";
@@ -17,6 +21,7 @@ import { useScriptCommandsQuery } from "@/modules/script-commands/hooks/use-scri
 import {
   clearScriptCommandActionsState,
   syncScriptCommandActionsState,
+  toManagedScriptCommandItem,
 } from "@/modules/script-commands/hooks/use-script-command-action-items";
 import { useMountEffect } from "@/hooks/use-mount-effect";
 import type {
@@ -236,6 +241,7 @@ export function ScriptCommandsView({ onBack }: ScriptCommandsViewProps) {
   const scriptsQuery = useScriptCommandsQuery();
   const runMutation = useRunScriptCommandMutation();
   const createMutation = useCreateScriptCommandMutation();
+  const recordUsage = useManagedItemPreferencesStore((state) => state.recordUsage);
 
   const [state, dispatch] = useReducer(
     scriptCommandsViewReducer,
@@ -247,18 +253,12 @@ export function ScriptCommandsView({ onBack }: ScriptCommandsViewProps) {
 
   useMountEffect(() => clearScriptCommandActionsState);
 
-  const filteredScripts = useMemo(
-    () =>
-      scripts.filter((script) => {
-        if (!normalizedSearch) {
-          return true;
-        }
-
-        const haystack = `${script.title} ${script.scriptName} ${script.subtitle}`.toLowerCase();
-        return haystack.includes(normalizedSearch);
-      }),
-    [normalizedSearch, scripts],
-  );
+  const filteredScripts = useManagedItemRankedList({
+    items: scripts,
+    query: normalizedSearch,
+    getManagedItem: toManagedScriptCommandItem,
+    getSearchableText: (script) => `${script.scriptName} ${script.scriptPath} ${script.subtitle}`,
+  });
 
   const resolvedSelectedScriptId = filteredScripts.some(
     (script) => script.id === state.selectedScriptId,
@@ -279,16 +279,8 @@ export function ScriptCommandsView({ onBack }: ScriptCommandsViewProps) {
   const resolvedViewMode =
     state.viewMode === "arguments" && !argumentScript ? "manage" : state.viewMode;
 
-  if (state.viewMode !== resolvedViewMode) {
-    dispatch({ type: "set-view-mode", value: resolvedViewMode });
-  }
-
   const handleWindowKeyDown = useEffectEvent((event: KeyboardEvent) => {
     if (resolvedViewMode !== "manage") {
-      return;
-    }
-
-    if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== "n") {
       return;
     }
 
@@ -296,8 +288,28 @@ export function ScriptCommandsView({ onBack }: ScriptCommandsViewProps) {
     if (target instanceof HTMLElement) {
       const tag = target.tagName.toLowerCase();
       if (tag === "input" || tag === "textarea" || target.isContentEditable) {
-        return;
+        if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== "n") {
+          return;
+        }
       }
+    }
+
+    if (
+      event.key === "Enter" &&
+      !event.metaKey &&
+      !event.ctrlKey &&
+      !event.altKey &&
+      !event.shiftKey &&
+      !runMutation.isPending &&
+      selectedScript
+    ) {
+      event.preventDefault();
+      void handleRunSelected();
+      return;
+    }
+
+    if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== "n") {
+      return;
     }
 
     event.preventDefault();
@@ -323,6 +335,10 @@ export function ScriptCommandsView({ onBack }: ScriptCommandsViewProps) {
 
         dispatch({ type: "set-execution-result", value: result });
         if (result.exitCode === 0) {
+          const executedScript = scripts.find((entry) => entry.id === scriptId);
+          if (executedScript) {
+            recordUsage(toManagedScriptCommandItem(executedScript));
+          }
           toast.success(successMessage);
         } else {
           toast.error(failureMessage);
@@ -335,7 +351,7 @@ export function ScriptCommandsView({ onBack }: ScriptCommandsViewProps) {
         return false;
       }
     },
-    [runMutation],
+    [recordUsage, runMutation, scripts],
   );
 
   const openRunFlow = useCallback(
@@ -372,10 +388,10 @@ export function ScriptCommandsView({ onBack }: ScriptCommandsViewProps) {
 
   useEffect(() => {
     syncScriptCommandActionsState({
-      selectedScript,
-      onRunSelected: handleRunSelected,
+      selectedScript: resolvedViewMode === "manage" ? selectedScript : null,
+      onRunSelected: resolvedViewMode === "manage" ? handleRunSelected : undefined,
     });
-  }, [handleRunSelected, selectedScript]);
+  }, [handleRunSelected, resolvedViewMode, selectedScript]);
 
   const handleRunWithArguments = useCallback(
     async (argumentValues: Record<string, string>) => {
@@ -494,7 +510,7 @@ export function ScriptCommandsView({ onBack }: ScriptCommandsViewProps) {
         <div className="w-[42%] border-r border-[var(--launcher-card-border)]">
           <ScriptCommandsList
             scripts={filteredScripts}
-            selectedScriptId={state.selectedScriptId}
+            selectedScriptId={resolvedSelectedScriptId}
             isLoading={scriptsQuery.isLoading}
             onSelect={(value) => dispatch({ type: "set-selected-script-id", value })}
             onRun={(scriptId) => void handleRunById(scriptId)}

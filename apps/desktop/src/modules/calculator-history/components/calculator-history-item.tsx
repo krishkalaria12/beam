@@ -20,7 +20,7 @@ export function CalculatorHistoryItem({
 }: CalculatorHistoryItemProps) {
   return (
     <CommandItem
-      value={`calculator-history-${index}`}
+      value={`calculator-history-${entry.timestamp}`}
       className="calc-history-item group relative rounded-xl p-0 overflow-hidden data-[selected=true]:bg-[var(--launcher-card-hover-bg)]"
       onSelect={onSelect}
       onPointerEnter={onActivate}

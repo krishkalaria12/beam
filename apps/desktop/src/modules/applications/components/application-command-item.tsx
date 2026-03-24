@@ -8,7 +8,7 @@ type ApplicationCommandItemProps = {
   application: Application;
   isLaunching: boolean;
   launchErrorMessage: string | null;
-  onOpen: (execPath: string) => void;
+  onOpen: (application: Application) => void;
 };
 
 export default function ApplicationCommandItem({
@@ -38,7 +38,7 @@ export default function ApplicationCommandItem({
           return;
         }
 
-        onOpen(execPath);
+        onOpen(application);
       }}
       onPointerEnter={activate}
       onFocus={activate}

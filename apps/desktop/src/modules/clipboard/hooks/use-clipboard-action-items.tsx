@@ -14,6 +14,8 @@ import {
   usePinnedClipboardHistory,
   useSetPinnedClipboardHistoryEntry,
 } from "@/modules/clipboard/hooks/use-pinned-clipboard-history";
+import { useManagedItemActionItems } from "@/modules/launcher/managed-item-actions";
+import type { LauncherManagedItem } from "@/modules/launcher/managed-items";
 import type { LauncherActionItem } from "@/modules/launcher/types";
 
 export interface ClipboardActionsState {
@@ -46,6 +48,52 @@ export function clearClipboardActionsState() {
   useClipboardActionsStore.setState(initialState);
 }
 
+function getClipboardEntryTitle(entry: ClipboardHistoryEntry): string {
+  if (entry.content_type === "image") {
+    return "Image clipboard item";
+  }
+
+  const trimmed = entry.value.trim();
+  if (trimmed.length === 0) {
+    return "Empty clipboard item";
+  }
+
+  const firstLine = trimmed.split(/\r?\n/, 1)[0] ?? trimmed;
+  return firstLine.length > 72 ? `${firstLine.slice(0, 72).trimEnd()}...` : firstLine;
+}
+
+function hashClipboardValue(value: string): string {
+  let hash = 2166136261;
+
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+
+  return (hash >>> 0).toString(16);
+}
+
+function buildManagedClipboardEntryId(entry: ClipboardHistoryEntry): string {
+  return `${entry.copied_at.trim()}::${hashClipboardValue(entry.value)}`;
+}
+
+export function toManagedClipboardItem(entry: ClipboardHistoryEntry): LauncherManagedItem {
+  const entryId = buildManagedClipboardEntryId(entry);
+
+  return {
+    kind: "clipboard",
+    id: entryId,
+    title: getClipboardEntryTitle(entry),
+    subtitle: entry.content_type,
+    keywords: [entry.content_type],
+    copyIdLabel: "Copy Entry ID",
+    copyIdValue: entryId,
+    supportsFavorite: true,
+    supportsAlias: true,
+    supportsResetRanking: true,
+  };
+}
+
 export function useClipboardActionItems(): LauncherActionItem[] {
   const queryClient = useQueryClient();
   const { data: pinnedEntryIds = [] } = usePinnedClipboardHistory();
@@ -67,6 +115,8 @@ export function useClipboardActionItems(): LauncherActionItem[] {
       await queryClient.invalidateQueries({ queryKey: ["clipboard", "pinned-entries"] });
     },
   });
+  const managedItem = state.selectedEntry ? toManagedClipboardItem(state.selectedEntry) : null;
+  const managedActionItems = useManagedItemActionItems(managedItem);
 
   return useMemo(() => {
     const entry = state.selectedEntry;
@@ -148,6 +198,7 @@ export function useClipboardActionItems(): LauncherActionItem[] {
           void setPinnedMutation.mutateAsync({ entry, pinned: !isPinned });
         },
       },
+      ...managedActionItems,
     ];
-  }, [clearMutation, deleteMutation, pinnedEntryIds, setPinnedMutation, state]);
+  }, [clearMutation, deleteMutation, managedActionItems, pinnedEntryIds, setPinnedMutation, state]);
 }

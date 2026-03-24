@@ -13,6 +13,9 @@ import {
   usePinnedCalculatorHistory,
   useSetPinnedCalculatorHistoryEntry,
 } from "@/modules/calculator-history/hooks/use-pinned-calculator-history";
+import { useManagedItemActionItems } from "@/modules/launcher/managed-item-actions";
+import type { LauncherManagedItem } from "@/modules/launcher/managed-items";
+import { useManagedItemPreferencesStore } from "@/modules/launcher/managed-items";
 import type { LauncherActionItem } from "@/modules/launcher/types";
 
 interface CalculatorHistoryActionsState {
@@ -42,10 +45,26 @@ async function writeText(value: string) {
   await navigator.clipboard.writeText(value);
 }
 
+export function toManagedCalculatorHistoryItem(entry: CalculatorHistoryEntry): LauncherManagedItem {
+  return {
+    kind: "calculator-history",
+    id: String(entry.timestamp),
+    title: `${entry.query} = ${entry.result}`,
+    subtitle: new Date(entry.timestamp).toLocaleString(),
+    keywords: [entry.query, entry.result],
+    copyIdLabel: "Copy Entry ID",
+    copyIdValue: String(entry.timestamp),
+    supportsFavorite: true,
+    supportsAlias: true,
+    supportsResetRanking: true,
+  };
+}
+
 export function useCalculatorHistoryActionItems(): LauncherActionItem[] {
   const queryClient = useQueryClient();
   const { data: pinnedTimestamps = [] } = usePinnedCalculatorHistory();
   const setPinnedMutation = useSetPinnedCalculatorHistoryEntry();
+  const recordUsage = useManagedItemPreferencesStore((state) => state.recordUsage);
   const state = useCalculatorHistoryActionsStore();
   const deleteMutation = useMutation({
     mutationFn: deleteCalculatorHistoryEntry,
@@ -61,6 +80,10 @@ export function useCalculatorHistoryActionItems(): LauncherActionItem[] {
       await queryClient.invalidateQueries({ queryKey: pinnedCalculatorHistoryQueryKey });
     },
   });
+  const managedItem = state.selectedEntry
+    ? toManagedCalculatorHistoryItem(state.selectedEntry)
+    : null;
+  const managedActionItems = useManagedItemActionItems(managedItem);
 
   return useMemo(() => {
     const entry = state.selectedEntry;
@@ -77,6 +100,7 @@ export function useCalculatorHistoryActionItems(): LauncherActionItem[] {
         disabled: !hasSelection,
         onSelect: () => {
           if (!entry) return;
+          recordUsage(toManagedCalculatorHistoryItem(entry));
           void writeText(entry.result);
         },
       },
@@ -88,6 +112,7 @@ export function useCalculatorHistoryActionItems(): LauncherActionItem[] {
         disabled: !hasSelection,
         onSelect: () => {
           if (!entry) return;
+          recordUsage(toManagedCalculatorHistoryItem(entry));
           void writeText(entry.query);
         },
       },
@@ -99,6 +124,7 @@ export function useCalculatorHistoryActionItems(): LauncherActionItem[] {
         disabled: !hasSelection,
         onSelect: () => {
           if (!entry) return;
+          recordUsage(toManagedCalculatorHistoryItem(entry));
           void writeText(`${entry.query} = ${entry.result}`);
         },
       },
@@ -138,6 +164,15 @@ export function useCalculatorHistoryActionItems(): LauncherActionItem[] {
           void setPinnedMutation.mutateAsync({ entry, pinned: !isPinned });
         },
       },
+      ...managedActionItems,
     ];
-  }, [clearMutation, deleteMutation, pinnedTimestamps, setPinnedMutation, state]);
+  }, [
+    clearMutation,
+    deleteMutation,
+    managedActionItems,
+    pinnedTimestamps,
+    recordUsage,
+    setPinnedMutation,
+    state,
+  ]);
 }

@@ -1,9 +1,7 @@
 import {
   ArrowLeft,
-  AtSign,
   CornerDownLeft,
   FilePlus2,
-  Keyboard,
   List,
   Pencil,
   Plus,
@@ -433,22 +431,6 @@ function LauncherTakeoverPanelContent({
           keywords: ["back", "close", "exit", activePanel],
           onSelect: backToCommands,
         },
-        {
-          id: `${activePanel}-set-hotkey`,
-          label: "Set Hotkey...",
-          icon: <Keyboard className="size-4" />,
-          keywords: ["shortcut", "keys", "binding", activePanel],
-          nextPageId: "hotkey",
-          closeOnSelect: false,
-        },
-        {
-          id: `${activePanel}-set-alias`,
-          label: "Set Alias...",
-          icon: <AtSign className="size-4" />,
-          keywords: ["alias", "keyword", "trigger", activePanel],
-          nextPageId: "alias",
-          closeOnSelect: false,
-        },
       ]
     : [];
 
@@ -578,8 +560,15 @@ function LauncherTakeoverPanelContent({
           rootTitle={`${panelRegistration?.title ?? "Module"} Actions...`}
           rootSearchPlaceholder="Search for actions..."
           rootItems={sharedRootItems}
-          targetCommandId={panelRegistration?.id}
-          targetCommandTitle={panelRegistration?.title}
+          defaultTarget={
+            panelRegistration
+              ? {
+                  kind: "command",
+                  commandId: panelRegistration.id,
+                  title: panelRegistration.title,
+                }
+              : null
+          }
           containerClassName="right-4"
         />
       ) : null}
