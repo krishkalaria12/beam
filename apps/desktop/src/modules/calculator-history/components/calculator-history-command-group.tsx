@@ -1,5 +1,5 @@
 import { useCommandState } from "cmdk";
-import { useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
 
 import { OpenModuleCommandRow } from "@/components/command/open-module-command-row";
@@ -11,6 +11,12 @@ import {
 } from "@/modules/launcher/lib/command-query";
 import { useCalculatorHistory } from "../hooks/use-calculator-history";
 import { HISTORY_COPY_FEEDBACK_MS } from "../constants";
+import {
+  clearCalculatorHistoryActionsState,
+  syncCalculatorHistoryActionsState,
+} from "@/modules/calculator-history/hooks/use-calculator-history-action-items";
+import { usePinnedCalculatorHistory } from "@/modules/calculator-history/hooks/use-pinned-calculator-history";
+import { useMountEffect } from "@/hooks/use-mount-effect";
 
 import { CalculatorHistoryEmpty } from "./calculator-history-empty";
 import { CalculatorHistoryError } from "./calculator-history-error";
@@ -39,10 +45,14 @@ export default function CalculatorHistoryCommandGroup({
   const query = normalizeCommandQuery(searchInput);
 
   const { data, isLoading, isError } = useCalculatorHistory(isOpen);
+  const { data: pinnedTimestamps = [] } = usePinnedCalculatorHistory();
   const history = data ?? [];
   const [copiedEntryIndex, setCopiedEntryIndex] = useState<number | null>(null);
   const [copyError, setCopyError] = useState<string | null>(null);
   const copiedResetTimerRef = useRef<number | null>(null);
+  const pinnedTimestampSet = useMemo(() => new Set(pinnedTimestamps), [pinnedTimestamps]);
+
+  useMountEffect(() => clearCalculatorHistoryActionsState);
 
   if (!isOpen) {
     const shouldShowOpenHistory = matchesCommandKeywords(query, CALCULATOR_HISTORY_KEYWORDS);
@@ -63,12 +73,31 @@ export default function CalculatorHistoryCommandGroup({
     );
   }
 
-  const filteredHistory = history.filter((entry) => {
-    if (!query) {
-      return true;
-    }
-    return entry.query.toLowerCase().includes(query) || entry.result.toLowerCase().includes(query);
-  });
+  const filteredHistory = history
+    .filter((entry) => {
+      if (!query) {
+        return true;
+      }
+      return (
+        entry.query.toLowerCase().includes(query) || entry.result.toLowerCase().includes(query)
+      );
+    })
+    .toSorted((left, right) => {
+      const leftPinned = pinnedTimestampSet.has(left.timestamp);
+      const rightPinned = pinnedTimestampSet.has(right.timestamp);
+      if (leftPinned !== rightPinned) {
+        return leftPinned ? -1 : 1;
+      }
+
+      return right.timestamp - left.timestamp;
+    });
+
+  const selectedEntry = filteredHistory[0] ?? null;
+  useEffect(() => {
+    syncCalculatorHistoryActionsState({
+      selectedEntry,
+    });
+  }, [selectedEntry]);
 
   return (
     <CommandGroup>
@@ -105,6 +134,11 @@ export default function CalculatorHistoryCommandGroup({
               entry={entry}
               index={index}
               isCopied={isCopied}
+              onActivate={() => {
+                syncCalculatorHistoryActionsState({
+                  selectedEntry: entry,
+                });
+              }}
               onSelect={() => {
                 copyCalculatorEntry(entry.result)
                   .then(() => {

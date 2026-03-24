@@ -95,9 +95,11 @@ export function LauncherActionsPanel({ open, ...props }: LauncherActionsPanelPro
 function LauncherActionsPanelContent({
   onOpenChange,
   containerClassName,
+  anchorMode = "self",
   rootTitle,
   rootSearchPlaceholder,
   rootItems,
+  defaultRootItemsMode = "replace",
   targetCommandId,
   targetCommandTitle,
 }: Omit<LauncherActionsPanelProps, "open">) {
@@ -124,7 +126,13 @@ function LauncherActionsPanelContent({
   );
 
   const currentPageId = pageStack[pageStack.length - 1] ?? "root";
-  const resolvedRootItems = rootItems ?? buildDefaultRootItems();
+  const defaultRootItems = buildDefaultRootItems();
+  const resolvedRootItems =
+    rootItems == null
+      ? defaultRootItems
+      : defaultRootItemsMode === "append"
+        ? [...rootItems, ...defaultRootItems]
+        : rootItems;
   const filteredRootItems = filterActionItems(resolvedRootItems, rootQuery);
 
   const hotkeyConflictCommandId = targetCommandId
@@ -436,8 +444,9 @@ function LauncherActionsPanelContent({
       data-slot="launcher-actions-panel"
       className={cn(
         "sc-actions-panel",
-        "absolute bottom-[calc(100%+10px)] right-3 z-[60]",
-        "w-[335px] overflow-hidden rounded-2xl",
+        "absolute right-3 z-[60]",
+        anchorMode === "self" ? "bottom-full" : "bottom-[42px]",
+        "flex flex-col w-[360px] max-h-[min(380px,calc(100vh-88px))] overflow-hidden rounded-2xl",
         containerClassName,
       )}
     >
@@ -458,7 +467,7 @@ function LauncherActionsPanelContent({
                 },
           );
         }}
-        className="h-full bg-transparent"
+        className="flex flex-1 min-h-0 flex-col bg-transparent"
         onKeyDown={(event) => {
           if (event.defaultPrevented) {
             return;

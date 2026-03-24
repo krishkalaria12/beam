@@ -13,12 +13,16 @@ type IdleWindow = Window & {
 };
 
 const launchPanelPreloaders = [
+  () => import("@/modules/ai/components/ai-command-group"),
   () => import("@/modules/calculator-history/components/calculator-history-command-group"),
   () => import("@/modules/clipboard/components/clipboard-command-group"),
   () => import("@/modules/notes/components/notes-command-group"),
   () => import("@/modules/quicklinks/components/quicklinks-command-group"),
   () => import("@/modules/settings/takeover/components/settings-takeover-view"),
+  () => import("@/modules/settings/takeover/tabs/about/about-tab"),
+  () => import("@/modules/settings/takeover/tabs/extensions/extensions-tab"),
   () => import("@/modules/settings/takeover/tabs/general/general-tab"),
+  () => import("@/modules/settings/takeover/tabs/keybinds/keybinds-tab"),
 ];
 
 function preloadLauncherPanels() {

@@ -7,6 +7,7 @@ pub mod clipboard;
 pub mod config;
 pub mod custom_config;
 pub mod dictionary;
+pub mod emoji;
 pub mod error;
 pub mod extensions;
 pub mod file_search;
@@ -84,8 +85,8 @@ fn emit_deep_link(app: &tauri::AppHandle, deep_link: String) {
     if let Some(main_window) = app.get_webview_window("main") {
         let _ = main_window.emit("deep-link", deep_link);
         let _ = main_window.unminimize();
-        let _ = main_window.center();
         let _ = main_window.show();
+        let _ = main_window.center();
         let _ = main_window.set_focus();
     }
 }

@@ -1,10 +1,15 @@
 import { Search, ArrowLeft, FolderSearch } from "lucide-react";
-import { useState, useRef, useMemo, useCallback } from "react";
+import { useState, useRef, useMemo, useCallback, useEffect } from "react";
 import debounce from "@/lib/debounce";
 
 import { CommandFooterBar } from "@/components/command/command-footer-bar";
 import { DetailPanel, SearchInput } from "@/components/module";
 import { Button } from "@/components/ui/button";
+import { useMountEffect } from "@/hooks/use-mount-effect";
+import {
+  clearFileSearchActionsState,
+  syncFileSearchActionsState,
+} from "@/modules/file-search/hooks/use-file-search-action-items";
 import { useFileSearch } from "../hooks/use-file-search";
 import { useOpenFile } from "../hooks/use-open-file";
 import { FileList } from "./file-list";
@@ -25,6 +30,8 @@ export function FileSearchView({ initialQuery, onBack }: FileSearchViewProps) {
   const { data, isLoading } = useFileSearch(debouncedQuery);
   const { mutate: openFile } = useOpenFile();
 
+  useMountEffect(() => clearFileSearchActionsState);
+
   const updateDebouncedQuery = useMemo(
     () => debounce((value: string) => setDebouncedQuery(value), 150),
     [],
@@ -32,11 +39,8 @@ export function FileSearchView({ initialQuery, onBack }: FileSearchViewProps) {
 
   const results = data?.results || [];
   const selectionKey = `${query}\u0000${results.length}`;
-  if (selectionState.key !== selectionKey) {
-    setSelectionState({ key: selectionKey, index: 0 });
-  }
-
-  const selectedIndex = Math.min(selectionState.index, Math.max(results.length - 1, 0));
+  const effectiveSelectedIndex = selectionState.key === selectionKey ? selectionState.index : 0;
+  const selectedIndex = Math.min(effectiveSelectedIndex, Math.max(results.length - 1, 0));
   const setSelectedIndex = useCallback(
     (value: number | ((previous: number) => number)) => {
       setSelectionState((previous) => ({
@@ -50,6 +54,18 @@ export function FileSearchView({ initialQuery, onBack }: FileSearchViewProps) {
     [selectionKey],
   );
   const selectedFile = results[selectedIndex]?.entry || null;
+  const handleOpenSelected = useCallback(() => {
+    if (selectedFile) {
+      openFile(selectedFile.path);
+    }
+  }, [openFile, selectedFile]);
+
+  useEffect(() => {
+    syncFileSearchActionsState({
+      selectedFile,
+      onOpenSelected: handleOpenSelected,
+    });
+  }, [handleOpenSelected, selectedFile]);
   const focusInputRef = useCallback((node: HTMLInputElement | null) => {
     inputRef.current = node;
     node?.focus();

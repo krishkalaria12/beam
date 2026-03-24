@@ -17,9 +17,11 @@ export interface LauncherActionsPanelProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   containerClassName?: string;
+  anchorMode?: "self" | "panel-footer";
   rootTitle?: string;
   rootSearchPlaceholder?: string;
   rootItems?: LauncherActionItem[];
+  defaultRootItemsMode?: "replace" | "append";
   targetCommandId?: string;
   targetCommandTitle?: string;
 }

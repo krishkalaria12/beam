@@ -1,5 +1,5 @@
 import { Loader2 } from "lucide-react";
-import type { ReactNode } from "react";
+import type { FocusEventHandler, PointerEventHandler, ReactNode } from "react";
 
 import { BaseCommandRow } from "@/components/command/base-command-row";
 
@@ -16,6 +16,8 @@ interface AsyncCommandRowProps {
   titleClassName?: string;
   subtitleClassName?: string;
   endSlot?: ReactNode;
+  onPointerEnter?: PointerEventHandler<HTMLDivElement>;
+  onFocus?: FocusEventHandler<HTMLDivElement>;
 }
 
 export function AsyncCommandRow({
@@ -31,6 +33,8 @@ export function AsyncCommandRow({
   titleClassName,
   subtitleClassName,
   endSlot,
+  onPointerEnter,
+  onFocus,
 }: AsyncCommandRowProps) {
   return (
     <BaseCommandRow
@@ -48,6 +52,8 @@ export function AsyncCommandRow({
       subtitle={subtitle}
       disabled={disabled || isBusy}
       onSelect={onSelect}
+      onPointerEnter={onPointerEnter}
+      onFocus={onFocus}
       endSlot={endSlot}
       shortcut={!endSlot ? (isBusy ? busyShortcut : idleShortcut) : undefined}
       titleClassName={titleClassName ?? "truncate text-foreground capitalize"}

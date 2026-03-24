@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useCommandState } from "cmdk";
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { OpenModuleCommandRow } from "@/components/command/open-module-command-row";
 import { CommandIcon } from "@/components/icons/command-icon";
@@ -16,6 +16,12 @@ import { CATEGORY_ORDER } from "../types";
 
 // Import hooks
 import { useFilteredEmojis, useRecentEmojis, copyEmojiToClipboard } from "../hooks/useEmoji";
+import {
+  clearEmojiActionsState,
+  syncEmojiActionsState,
+} from "@/modules/emoji/hooks/use-emoji-action-items";
+import { usePinnedEmojis } from "@/modules/emoji/hooks/use-pinned-emojis";
+import { useMountEffect } from "@/hooks/use-mount-effect";
 
 // Import components
 import { EmojiPicker } from "./EmojiPicker";
@@ -92,6 +98,7 @@ export default function EmojiCommandGroup({ isOpen, onOpen, onBack }: EmojiComma
   const [searchValue, setSearchValue] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [copyError, setCopyError] = useState<string | null>(null);
+  const [selectedEmoji, setSelectedEmoji] = useState<EmojiData | null>(null);
   const copyErrorTimerRef = useRef<number | null>(null);
   const { data: emojis = [], isLoading } = useQuery({
     queryKey: ["emoji-data"],
@@ -102,7 +109,14 @@ export default function EmojiCommandGroup({ isOpen, onOpen, onBack }: EmojiComma
   });
 
   const { recentEmojis, saveEmoji } = useRecentEmojis(isOpen);
+  const { data: pinnedHexcodes = [] } = usePinnedEmojis();
+  const pinnedHexcodeSet = useMemo(
+    () => new Set(pinnedHexcodes.map((hexcode) => hexcode.toUpperCase())),
+    [pinnedHexcodes],
+  );
   const filteredEmojis = useFilteredEmojis(emojis, searchValue, selectedCategory);
+
+  useMountEffect(() => clearEmojiActionsState);
 
   // Get recent emoji objects
   const recentEmojiObjects = useMemo(() => {
@@ -110,25 +124,83 @@ export default function EmojiCommandGroup({ isOpen, onOpen, onBack }: EmojiComma
       .map((emoji) => emojis.find((e) => e.emoji === emoji))
       .filter((e): e is EmojiData => e !== undefined);
   }, [recentEmojis, emojis]);
-  const handleEmojiClick = async (emojiData: EmojiData) => {
-    try {
-      await copyEmojiToClipboard(emojiData.emoji);
-      saveEmoji(emojiData.emoji);
-      if (copyErrorTimerRef.current !== null) {
-        window.clearTimeout(copyErrorTimerRef.current);
-      }
-      setCopyError(null);
-    } catch {
-      setCopyError("Could not copy emoji");
-      if (copyErrorTimerRef.current !== null) {
-        window.clearTimeout(copyErrorTimerRef.current);
-      }
-      copyErrorTimerRef.current = window.setTimeout(() => {
-        copyErrorTimerRef.current = null;
-        setCopyError(null);
-      }, 1500);
+  const pinnedEmojiObjects = useMemo(
+    () => emojis.filter((emoji) => pinnedHexcodeSet.has(emoji.hexcode.toUpperCase())).slice(0, 16),
+    [emojis, pinnedHexcodeSet],
+  );
+  const orderedGridEmojis = useMemo(() => {
+    if (searchValue) {
+      return filteredEmojis.toSorted((left, right) => {
+        const leftPinned = pinnedHexcodeSet.has(left.hexcode.toUpperCase());
+        const rightPinned = pinnedHexcodeSet.has(right.hexcode.toUpperCase());
+        if (leftPinned !== rightPinned) {
+          return leftPinned ? -1 : 1;
+        }
+
+        return left.order - right.order;
+      });
     }
-  };
+
+    return filteredEmojis.filter((emoji) => !pinnedHexcodeSet.has(emoji.hexcode.toUpperCase()));
+  }, [filteredEmojis, pinnedHexcodeSet, searchValue]);
+
+  const visibleSelectedEmoji = searchValue
+    ? orderedGridEmojis.some((emoji) => emoji.hexcode === selectedEmoji?.hexcode)
+      ? selectedEmoji
+      : null
+    : selectedEmoji &&
+        (orderedGridEmojis.some((emoji) => emoji.hexcode === selectedEmoji.hexcode) ||
+          pinnedEmojiObjects.some((emoji) => emoji.hexcode === selectedEmoji.hexcode) ||
+          recentEmojiObjects.some((emoji) => emoji.hexcode === selectedEmoji.hexcode))
+      ? selectedEmoji
+      : null;
+
+  const resolvedSelectedEmoji = searchValue
+    ? (visibleSelectedEmoji ?? orderedGridEmojis[0] ?? null)
+    : (visibleSelectedEmoji ??
+      pinnedEmojiObjects[0] ??
+      recentEmojiObjects[0] ??
+      orderedGridEmojis[0] ??
+      null);
+
+  const handleEmojiClick = useCallback(
+    async (emojiData: EmojiData) => {
+      try {
+        setSelectedEmoji(emojiData);
+        await copyEmojiToClipboard(emojiData.emoji);
+        saveEmoji(emojiData.emoji);
+        if (copyErrorTimerRef.current !== null) {
+          window.clearTimeout(copyErrorTimerRef.current);
+        }
+        setCopyError(null);
+      } catch {
+        setCopyError("Could not copy emoji");
+        if (copyErrorTimerRef.current !== null) {
+          window.clearTimeout(copyErrorTimerRef.current);
+        }
+        copyErrorTimerRef.current = window.setTimeout(() => {
+          copyErrorTimerRef.current = null;
+          setCopyError(null);
+        }, 1500);
+      }
+    },
+    [saveEmoji],
+  );
+
+  const handleCopySelected = useCallback(() => {
+    if (!resolvedSelectedEmoji) {
+      return;
+    }
+
+    return handleEmojiClick(resolvedSelectedEmoji);
+  }, [handleEmojiClick, resolvedSelectedEmoji]);
+
+  useEffect(() => {
+    syncEmojiActionsState({
+      selectedEmoji: resolvedSelectedEmoji,
+      onCopySelected: handleCopySelected,
+    });
+  }, [handleCopySelected, resolvedSelectedEmoji]);
 
   if (!isOpen) {
     const shouldShowOpenEmoji = matchesCommandKeywords(query, EMOJI_KEYWORDS);
@@ -156,13 +228,15 @@ export default function EmojiCommandGroup({ isOpen, onOpen, onBack }: EmojiComma
 
   return (
     <EmojiPicker
-      emojis={filteredEmojis}
+      emojis={orderedGridEmojis}
+      pinnedEmojis={searchValue ? [] : pinnedEmojiObjects}
       recentEmojis={recentEmojiObjects}
       searchValue={searchValue}
       onSearchChange={setSearchValue}
       selectedCategory={selectedCategory}
       onCategoryChange={setSelectedCategory}
       onEmojiClick={handleEmojiClick}
+      onEmojiHover={setSelectedEmoji}
       onBack={onBack}
       showError={!!copyError}
     />

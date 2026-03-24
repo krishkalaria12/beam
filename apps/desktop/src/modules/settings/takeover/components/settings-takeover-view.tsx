@@ -105,12 +105,17 @@ export function SettingsTakeoverView({
   const activeTab = useSettingsPageStore((state) => state.activeTab);
   const extensionTarget = useSettingsPageStore((state) => state.extensionTarget);
   const setActiveTab = useSettingsPageStore((state) => state.setActiveTab);
-  const [phase, setPhase] = useState<"ready" | "closing">("ready");
+  const [phase, setPhase] = useState<"entering" | "ready" | "closing">("entering");
 
   useMountEffect(() => {
     if (!extensionTarget) {
       setActiveTab("general");
     }
+    // Transition from entering → ready after the enter animation completes
+    const raf = window.requestAnimationFrame(() => {
+      setPhase("ready");
+    });
+    return () => window.cancelAnimationFrame(raf);
   });
 
   function handleBack() {
@@ -119,9 +124,10 @@ export function SettingsTakeoverView({
     }
 
     setPhase("closing");
+    // Wait for exit animation to finish before calling onBack
     window.setTimeout(() => {
       onBack();
-    }, 110);
+    }, 180);
   }
 
   const handleBackHotkey = useEffectEvent(() => {
@@ -146,12 +152,11 @@ export function SettingsTakeoverView({
   });
 
   return (
-    <LauncherTakeoverSurface className="h-full w-full backdrop-blur-sm">
+    <LauncherTakeoverSurface className="h-full w-full backdrop-blur-sm" exiting={phase === "closing"}>
       <div
         className={cn(
           "beam-takeover-shell flex h-full w-full flex-col overflow-hidden border border-[var(--launcher-card-border)]",
-          "transition-[opacity,transform] duration-140 ease-out",
-          phase === "closing" ? "opacity-0 scale-[0.988]" : "opacity-100",
+          phase === "closing" ? "takeover-shell-exit" : "takeover-shell-enter",
         )}
       >
         {/* ── Settings navbar ── */}

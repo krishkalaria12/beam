@@ -6,6 +6,7 @@ import { EmojiCard } from "./EmojiCard";
 interface EmojiGridProps {
   emojis: EmojiData[];
   onEmojiClick: (emoji: EmojiData) => void;
+  onEmojiHover?: (emoji: EmojiData) => void;
   emptyMessage?: string;
 }
 
@@ -17,6 +18,7 @@ interface GroupedEmojis {
 export function EmojiGrid({
   emojis,
   onEmojiClick,
+  onEmojiHover,
   emptyMessage = "No emojis found",
 }: EmojiGridProps) {
   const groupedEmojis = useMemo(() => {
@@ -67,6 +69,7 @@ export function EmojiGrid({
                 key={emoji.hexcode}
                 emoji={emoji}
                 onClick={onEmojiClick}
+                onHover={onEmojiHover}
                 style={{ animationDelay: `${Math.min(idx, 16) * 8}ms` }}
               />
             ))}

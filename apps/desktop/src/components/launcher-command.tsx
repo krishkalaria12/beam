@@ -943,7 +943,7 @@ export default function LauncherCommand() {
               "list-area flex-1 transition-all duration-300",
               "custom-scrollbar px-1.5",
               isCommandListExpandedPanel
-                ? "min-h-0 flex flex-col h-full"
+                ? "min-h-0 flex flex-col h-full [&_[cmdk-list-sizer]]:h-full [&_[cmdk-list-sizer]]:min-h-0 [&_[cmdk-list-sizer]]:flex-1 [&_[cmdk-list-sizer]]:flex [&_[cmdk-list-sizer]]:flex-col"
                 : "max-h-none overflow-y-auto",
             )}
           >
@@ -997,6 +997,7 @@ export default function LauncherCommand() {
           <LauncherFooter
             leftSlot={isShellTrigger ? <span>Beam Shell</span> : undefined}
             primaryAction={footerPrimaryAction}
+            actionsEnabled={activePanel === "commands"}
           />
         )}
       </Command>

@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export function EmojiPickerLoading() {
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden">
       {/* Header skeleton */}
       <div className="flex h-14 items-center gap-3 border-b border-[var(--launcher-card-border)] px-4">
         <Skeleton className="size-9 rounded-lg bg-[var(--launcher-card-hover-bg)]" />
@@ -11,7 +11,7 @@ export function EmojiPickerLoading() {
       </div>
 
       {/* Content area */}
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="min-h-0 flex-1 overflow-y-auto p-4">
         <div className="space-y-6">
           {/* Recent section skeleton */}
           <div>

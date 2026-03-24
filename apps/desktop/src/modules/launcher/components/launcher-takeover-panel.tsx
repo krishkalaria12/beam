@@ -22,10 +22,14 @@ import type { CommandPanel } from "@/command-registry/types";
 import { CommandLoadingState } from "@/components/command/command-loading-state";
 import { useMountEffect } from "@/hooks/use-mount-effect";
 import { isLauncherActionsHotkey, listenLauncherActionsToggle } from "@/lib/launcher-actions";
+import { useClipboardActionItems } from "@/modules/clipboard/hooks/use-clipboard-action-items";
+import { useFileSearchActionItems } from "@/modules/file-search/hooks/use-file-search-action-items";
 import type { LauncherActionItem } from "@/modules/launcher/components/launcher-actions-panel";
 import { LauncherActionsPanel } from "@/modules/launcher/components/launcher-actions-panel";
 import { LauncherTakeoverSurface } from "@/modules/launcher/components/launcher-takeover-surface";
 import { dispatchKeyboardShortcutToTarget, dispatchEnterToTarget } from "@/modules/launcher/helper";
+import { useQuicklinksActionItems } from "@/modules/quicklinks/hooks/use-quicklinks-action-items";
+import { useScriptCommandActionItems } from "@/modules/script-commands/hooks/use-script-command-action-items";
 
 import type { QuicklinksView } from "@/store/use-launcher-ui-store";
 
@@ -196,6 +200,10 @@ function LauncherTakeoverPanelContent({
     activePanel !== COMMAND_PANELS.SETTINGS;
   const panelRegistration = getPanelCommandRegistration(activePanel, quicklinksView);
   const primaryActionLabel = getPanelPrimaryActionLabel(activePanel);
+  const clipboardActionItems = useClipboardActionItems();
+  const fileSearchActionItems = useFileSearchActionItems();
+  const quicklinksActionItems = useQuicklinksActionItems();
+  const scriptCommandActionItems = useScriptCommandActionItems();
 
   function handleActionsOpenChange(nextOpen: boolean) {
     if (nextOpen) {
@@ -258,7 +266,8 @@ function LauncherTakeoverPanelContent({
       return;
     }
 
-    const activeElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const activeElement =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
     dispatchEnterToTarget(activeElement);
   });
 
@@ -387,6 +396,22 @@ function LauncherTakeoverPanelContent({
         },
       },
     );
+  }
+
+  if (activePanel === COMMAND_PANELS.CLIPBOARD) {
+    panelSpecificRootItems.unshift(...clipboardActionItems);
+  }
+
+  if (activePanel === COMMAND_PANELS.FILE_SEARCH) {
+    panelSpecificRootItems.unshift(...fileSearchActionItems);
+  }
+
+  if (activePanel === COMMAND_PANELS.QUICKLINKS && quicklinksView === "manage") {
+    panelSpecificRootItems.push(...quicklinksActionItems);
+  }
+
+  if (activePanel === COMMAND_PANELS.SCRIPT_COMMANDS) {
+    panelSpecificRootItems.unshift(...scriptCommandActionItems);
   }
 
   const sharedRootItems: LauncherActionItem[] = shouldUseSharedActions
@@ -542,17 +567,20 @@ function LauncherTakeoverPanelContent({
   }
   return (
     <div className="relative h-full w-full">
-      <Suspense fallback={<TakeoverPanelFallback />}>{content}</Suspense>
+      <Suspense fallback={<TakeoverPanelFallback />}>
+        <div className="h-full min-h-0">{content}</div>
+      </Suspense>
       {shouldUseSharedActions ? (
         <LauncherActionsPanel
           open={actionsOpen}
           onOpenChange={handleActionsOpenChange}
+          anchorMode="panel-footer"
           rootTitle={`${panelRegistration?.title ?? "Module"} Actions...`}
           rootSearchPlaceholder="Search for actions..."
           rootItems={sharedRootItems}
           targetCommandId={panelRegistration?.id}
           targetCommandTitle={panelRegistration?.title}
-          containerClassName="bottom-14 right-4"
+          containerClassName="right-4"
         />
       ) : null}
     </div>

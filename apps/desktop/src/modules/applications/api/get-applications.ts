@@ -2,6 +2,10 @@ import { invoke } from "@tauri-apps/api/core";
 import { z } from "zod";
 
 const applicationSchema = z.object({
+  app_id: z
+    .string()
+    .default("")
+    .transform((appId) => appId.trim()),
   name: z
     .string()
     .default("")
@@ -18,6 +22,10 @@ const applicationSchema = z.object({
     .string()
     .default("")
     .transform((icon) => icon.trim()),
+  desktop_file_path: z
+    .string()
+    .default("")
+    .transform((desktopFilePath) => desktopFilePath.trim()),
 });
 
 const applicationsSchema = z.array(applicationSchema);

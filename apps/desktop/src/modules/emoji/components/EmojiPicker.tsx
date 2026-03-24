@@ -8,31 +8,35 @@ import { SearchBar } from "./SearchBar";
 
 interface EmojiPickerProps {
   emojis: EmojiData[];
+  pinnedEmojis: EmojiData[];
   recentEmojis: EmojiData[];
   searchValue: string;
   onSearchChange: (value: string) => void;
   selectedCategory: string;
   onCategoryChange: (value: string) => void;
   onEmojiClick: (emoji: EmojiData) => void;
+  onEmojiHover?: (emoji: EmojiData) => void;
   onBack: () => void;
   showError?: boolean;
 }
 
 export function EmojiPicker({
   emojis,
+  pinnedEmojis,
   recentEmojis,
   searchValue,
   onSearchChange,
   selectedCategory,
   onCategoryChange,
   onEmojiClick,
+  onEmojiHover,
   onBack,
   showError,
 }: EmojiPickerProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   return (
-    <div className="emoji-picker-enter flex h-full flex-col text-foreground">
+    <div className="emoji-picker-enter flex h-full min-h-0 flex-col overflow-hidden text-foreground">
       <SearchBar
         searchValue={searchValue}
         onSearchChange={onSearchChange}
@@ -46,16 +50,30 @@ export function EmojiPicker({
         ref={scrollContainerRef}
         className="emoji-content-enter flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-5 py-4 scroll-smooth scrollbar-hidden-until-hover"
       >
-        <div className="space-y-6 pb-6">
+        <div className="space-y-6 pb-4">
+          {!searchValue && pinnedEmojis.length > 0 ? (
+            <RecentlyUsed
+              emojis={pinnedEmojis}
+              onEmojiClick={onEmojiClick}
+              onEmojiHover={onEmojiHover}
+              title="Pinned"
+            />
+          ) : null}
           {/* Only show recent emojis when not searching */}
-          {!searchValue && <RecentlyUsed emojis={recentEmojis} onEmojiClick={onEmojiClick} />}
+          {!searchValue && (
+            <RecentlyUsed
+              emojis={recentEmojis}
+              onEmojiClick={onEmojiClick}
+              onEmojiHover={onEmojiHover}
+            />
+          )}
 
-          <EmojiGrid emojis={emojis} onEmojiClick={onEmojiClick} />
+          <EmojiGrid emojis={emojis} onEmojiClick={onEmojiClick} onEmojiHover={onEmojiHover} />
         </div>
       </div>
 
       <ModuleFooter
-        className="emoji-footer-enter h-11 px-5"
+        className="emoji-footer-enter z-10 h-11 border-t border-[var(--ui-divider)] bg-[var(--launcher-bg)]/96 px-5 backdrop-blur"
         leftSlot={
           <>
             <IconChip variant="neutral" size="xs">

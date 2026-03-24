@@ -1,8 +1,14 @@
-import { useCallback, useMemo, useReducer, useRef } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef } from "react";
 
 import debounce from "@/lib/debounce";
+import {
+  clearClipboardActionsState,
+  syncClipboardActionsState,
+} from "@/modules/clipboard/hooks/use-clipboard-action-items";
 import { copyToClipboard } from "../api/copy-to-clipboard";
+import { buildClipboardPinnedEntryId } from "../api/history-actions";
 import { useClipboardHistory } from "../hooks/use-clipboard-history";
+import { usePinnedClipboardHistory } from "../hooks/use-pinned-clipboard-history";
 import {
   ClipboardContentType,
   type ClipboardHistoryEntry,
@@ -12,6 +18,7 @@ import { ClipboardFooter } from "./clipboard-footer";
 import { ClipboardHeader } from "./clipboard-header";
 import { ClipboardDetails } from "./clipboard-details";
 import { ClipboardList } from "./clipboard-list";
+import { useMountEffect } from "@/hooks/use-mount-effect";
 
 interface ClipboardViewProps {
   onBack: () => void;
@@ -70,6 +77,10 @@ export function ClipboardView({ onBack, onToggleActions }: ClipboardViewProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const { data: history = [], isLoading } = useClipboardHistory(true);
+  const { data: pinnedEntryIds = [] } = usePinnedClipboardHistory();
+  const pinnedEntryIdSet = useMemo(() => new Set(pinnedEntryIds), [pinnedEntryIds]);
+
+  useMountEffect(() => clearClipboardActionsState);
 
   const updateDebouncedQuery = useMemo(
     () =>
@@ -86,11 +97,11 @@ export function ClipboardView({ onBack, onToggleActions }: ClipboardViewProps) {
         ? history
         : history.filter((entry) => entry.content_type === state.typeFilter);
 
-    if (!lowerQuery) {
-      return filteredByType;
-    }
+    const queryFiltered = filteredByType.filter((entry) => {
+      if (!lowerQuery) {
+        return true;
+      }
 
-    return filteredByType.filter((entry) => {
       if (entry.content_type === ClipboardContentType.Image) {
         return "image screenshot clipboard".includes(lowerQuery);
       }
@@ -101,17 +112,26 @@ export function ClipboardView({ onBack, onToggleActions }: ClipboardViewProps) {
           : entry.value.toLowerCase();
       return searchableValue.includes(lowerQuery);
     });
-  }, [history, state.debouncedQuery, state.typeFilter]);
+
+    return queryFiltered.toSorted((left, right) => {
+      const leftPinned = pinnedEntryIdSet.has(
+        buildClipboardPinnedEntryId({ copiedAt: left.copied_at, value: left.value }),
+      );
+      const rightPinned = pinnedEntryIdSet.has(
+        buildClipboardPinnedEntryId({ copiedAt: right.copied_at, value: right.value }),
+      );
+      if (leftPinned !== rightPinned) {
+        return leftPinned ? -1 : 1;
+      }
+
+      return right.copied_at.localeCompare(left.copied_at);
+    });
+  }, [history, pinnedEntryIdSet, state.debouncedQuery, state.typeFilter]);
 
   const selectionKey = `${state.query}\u0000${state.typeFilter}\u0000${filteredHistory.length}`;
-  if (state.selectionState.key !== selectionKey) {
-    dispatch({ type: "set-selection", value: { key: selectionKey, index: 0 } });
-  }
-
-  const selectedIndex = Math.min(
-    state.selectionState.index,
-    Math.max(filteredHistory.length - 1, 0),
-  );
+  const effectiveSelectedIndex =
+    state.selectionState.key === selectionKey ? state.selectionState.index : 0;
+  const selectedIndex = Math.min(effectiveSelectedIndex, Math.max(filteredHistory.length - 1, 0));
   const setSelectedIndex = (value: number | ((previous: number) => number)) => {
     const previous = state.selectionState;
     dispatch({
@@ -134,7 +154,7 @@ export function ClipboardView({ onBack, onToggleActions }: ClipboardViewProps) {
     node?.focus();
   }, []);
 
-  const handleCopy = async (entry: ClipboardHistoryEntry, index: number) => {
+  const handleCopy = useCallback(async (entry: ClipboardHistoryEntry, index: number) => {
     try {
       const isImage = entry.content_type === ClipboardContentType.Image;
       await copyToClipboard(entry.value, isImage);
@@ -156,7 +176,21 @@ export function ClipboardView({ onBack, onToggleActions }: ClipboardViewProps) {
       copyFeedbackTimerRef.current = null;
       dispatch({ type: "set-copied-state", copiedEntryIndex: null, copyError: null });
     }, 1400);
-  };
+  }, []);
+
+  const handleCopySelected = useCallback(() => {
+    if (selectedEntry) {
+      return handleCopy(selectedEntry, selectedIndex);
+    }
+  }, [handleCopy, selectedEntry, selectedIndex]);
+
+  useEffect(() => {
+    syncClipboardActionsState({
+      selectedEntry,
+      selectedIndex,
+      onCopy: handleCopySelected,
+    });
+  }, [handleCopySelected, selectedEntry, selectedIndex]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "ArrowDown") {
@@ -211,15 +245,15 @@ export function ClipboardView({ onBack, onToggleActions }: ClipboardViewProps) {
       aria-label="Clipboard history"
       tabIndex={-1}
     >
-        <ClipboardHeader
-          query={state.query}
-          onQueryChange={handleChange}
-          onKeyDown={handleKeyDown}
-          onBack={onBack}
-          typeFilter={state.typeFilter}
-          onTypeFilterChange={(value) => dispatch({ type: "set-type-filter", value })}
-          inputRef={focusInputRef}
-        />
+      <ClipboardHeader
+        query={state.query}
+        onQueryChange={handleChange}
+        onKeyDown={handleKeyDown}
+        onBack={onBack}
+        typeFilter={state.typeFilter}
+        onTypeFilterChange={(value) => dispatch({ type: "set-type-filter", value })}
+        inputRef={focusInputRef}
+      />
 
       <div className="flex min-h-0 flex-1 overflow-hidden">
         <ClipboardList

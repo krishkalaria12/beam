@@ -122,8 +122,8 @@ pub fn toggle_launcher(app: &AppHandle) {
     }
 
     let _ = main_window.unminimize();
-    let _ = main_window.center();
     let _ = main_window.show();
+    let _ = main_window.center();
     let _ = main_window.set_focus();
 }
 
@@ -345,8 +345,8 @@ fn show_launcher_window(app: &AppHandle) {
     };
 
     let _ = main_window.unminimize();
-    let _ = main_window.center();
     let _ = main_window.show();
+    let _ = main_window.center();
     let _ = main_window.set_focus();
 }
 

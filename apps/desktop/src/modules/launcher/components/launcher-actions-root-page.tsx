@@ -27,7 +27,7 @@ export function LauncherActionsRootPage({
 }: LauncherActionsRootPageProps) {
   return (
     <>
-      <CommandList className="max-h-[210px] overflow-y-auto px-2 py-2">
+      <CommandList className="min-h-0 flex-1 overflow-y-auto custom-scrollbar px-2 py-2">
         <CommandGroup>
           {items.map((item) => (
             <CommandItem

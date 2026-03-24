@@ -35,35 +35,37 @@ export function LauncherActionsAliasPage({
 }: LauncherActionsAliasPageProps) {
   return (
     <>
-      <div className="flex max-h-[210px] min-h-[210px] flex-col justify-center gap-3 px-4 py-4">
-        <div className="space-y-1">
-          <Label htmlFor={aliasInputId} className="text-launcher-xs text-muted-foreground/80">
-            Alias
-          </Label>
-          <Input
-            ref={aliasInputRef}
-            id={aliasInputId}
-            value={aliasValue}
-            onChange={(event) => {
-              onAliasChange(event.target.value);
-            }}
-            placeholder="Type alias..."
-            minimal
-            aria-invalid={(feedback ?? availability).tone === "error"}
-            className="h-8 text-launcher-sm"
-          />
-        </div>
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
+        <div className="flex min-h-full flex-col justify-center gap-3">
+          <div className="space-y-1">
+            <Label htmlFor={aliasInputId} className="text-launcher-xs text-muted-foreground/80">
+              Alias
+            </Label>
+            <Input
+              ref={aliasInputRef}
+              id={aliasInputId}
+              value={aliasValue}
+              onChange={(event) => {
+                onAliasChange(event.target.value);
+              }}
+              placeholder="Type alias..."
+              minimal
+              aria-invalid={(feedback ?? availability).tone === "error"}
+              className="h-8 text-launcher-sm"
+            />
+          </div>
 
-        <p
-          className={cn(
-            "text-launcher-xs",
-            (feedback ?? availability).tone === "error" && "text-[var(--icon-red-fg)]",
-            (feedback ?? availability).tone === "success" && "text-[var(--icon-green-fg)]",
-            (feedback ?? availability).tone === "neutral" && "text-muted-foreground/75",
-          )}
-        >
-          {(feedback ?? availability).text}
-        </p>
+          <p
+            className={cn(
+              "text-launcher-xs",
+              (feedback ?? availability).tone === "error" && "text-[var(--icon-red-fg)]",
+              (feedback ?? availability).tone === "success" && "text-[var(--icon-green-fg)]",
+              (feedback ?? availability).tone === "neutral" && "text-muted-foreground/75",
+            )}
+          >
+            {(feedback ?? availability).text}
+          </p>
+        </div>
       </div>
 
       <div className="flex items-center justify-end gap-2 border-t border-[var(--ui-divider)] px-3 py-2.5">

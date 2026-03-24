@@ -116,10 +116,17 @@ pub fn collect_applications(selected_icon_theme: Option<String>) -> Result<Vec<A
             }
 
             applications.push(AppEntry {
+                app_id: path
+                    .file_stem()
+                    .and_then(|stem| stem.to_str())
+                    .unwrap_or_default()
+                    .trim()
+                    .to_string(),
                 name,
                 description: get_application_description(&entry),
                 exec_path: clean_exec_path(application_entry.exec.as_deref()),
                 icon,
+                desktop_file_path: path.to_string_lossy().to_string(),
             });
         }
     }

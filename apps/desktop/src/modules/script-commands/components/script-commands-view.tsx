@@ -1,5 +1,5 @@
 import { ChevronLeft, FolderOpen, Play, Plus, Search, Terminal } from "lucide-react";
-import { useCallback, useEffectEvent, useMemo, useReducer } from "react";
+import { useCallback, useEffect, useEffectEvent, useMemo, useReducer } from "react";
 import { toast } from "sonner";
 
 import { ModuleFooter } from "@/components/module";
@@ -14,6 +14,10 @@ import { ScriptCommandsOutput } from "@/modules/script-commands/components/scrip
 import { useCreateScriptCommandMutation } from "@/modules/script-commands/hooks/use-create-script-command-mutation";
 import { useRunScriptCommandMutation } from "@/modules/script-commands/hooks/use-run-script-command-mutation";
 import { useScriptCommandsQuery } from "@/modules/script-commands/hooks/use-script-commands-query";
+import {
+  clearScriptCommandActionsState,
+  syncScriptCommandActionsState,
+} from "@/modules/script-commands/hooks/use-script-command-action-items";
 import { useMountEffect } from "@/hooks/use-mount-effect";
 import type {
   CreateScriptCommandRequest,
@@ -97,7 +101,13 @@ function getScriptExecutionFailureMessage(message: string | null | undefined) {
   return message || "Script failed.";
 }
 
-function ScriptCommandsHeader({ onBack, scripts }: { onBack: () => void; scripts: ScriptCommandSummary[] }) {
+function ScriptCommandsHeader({
+  onBack,
+  scripts,
+}: {
+  onBack: () => void;
+  scripts: ScriptCommandSummary[];
+}) {
   return (
     <header className="scripts-header-enter flex h-14 shrink-0 items-center gap-3 border-b border-[var(--launcher-card-border)] px-4">
       <Button
@@ -116,8 +126,12 @@ function ScriptCommandsHeader({ onBack, scripts }: { onBack: () => void; scripts
       </div>
 
       <div className="min-w-0 flex-1">
-        <h1 className="text-launcher-lg font-semibold tracking-[-0.02em] text-foreground">Script Commands</h1>
-        <p className="text-launcher-sm tracking-[-0.01em] text-muted-foreground">Run local scripts from Beam</p>
+        <h1 className="text-launcher-lg font-semibold tracking-[-0.02em] text-foreground">
+          Script Commands
+        </h1>
+        <p className="text-launcher-sm tracking-[-0.01em] text-muted-foreground">
+          Run local scripts from Beam
+        </p>
       </div>
 
       <div className="flex items-center gap-1.5 rounded-full bg-[var(--launcher-card-hover-bg)] px-2.5 py-1 text-launcher-xs font-medium text-muted-foreground">
@@ -231,6 +245,8 @@ export function ScriptCommandsView({ onBack }: ScriptCommandsViewProps) {
   const scripts = scriptsQuery.data ?? [];
   const normalizedSearch = state.search.trim().toLowerCase();
 
+  useMountEffect(() => clearScriptCommandActionsState);
+
   const filteredScripts = useMemo(
     () =>
       scripts.filter((script) => {
@@ -249,10 +265,6 @@ export function ScriptCommandsView({ onBack }: ScriptCommandsViewProps) {
   )
     ? state.selectedScriptId
     : (filteredScripts[0]?.id ?? null);
-
-  if (state.selectedScriptId !== resolvedSelectedScriptId) {
-    dispatch({ type: "set-selected-script-id", value: resolvedSelectedScriptId });
-  }
 
   const selectedScript = useMemo(
     () => filteredScripts.find((script) => script.id === resolvedSelectedScriptId) ?? null,
@@ -289,10 +301,10 @@ export function ScriptCommandsView({ onBack }: ScriptCommandsViewProps) {
     }
 
     event.preventDefault();
-      dispatch({ type: "set-run-error", value: null });
-      dispatch({ type: "set-selected-script-id", value: null });
-      dispatch({ type: "set-argument-script-id", value: null });
-      dispatch({ type: "set-view-mode", value: "create" });
+    dispatch({ type: "set-run-error", value: null });
+    dispatch({ type: "set-selected-script-id", value: null });
+    dispatch({ type: "set-argument-script-id", value: null });
+    dispatch({ type: "set-view-mode", value: "create" });
   });
 
   const executeScriptById = useCallback(
@@ -357,6 +369,13 @@ export function ScriptCommandsView({ onBack }: ScriptCommandsViewProps) {
     }
     openRunFlow(selectedScript);
   }, [openRunFlow, selectedScript]);
+
+  useEffect(() => {
+    syncScriptCommandActionsState({
+      selectedScript,
+      onRunSelected: handleRunSelected,
+    });
+  }, [handleRunSelected, selectedScript]);
 
   const handleRunWithArguments = useCallback(
     async (argumentValues: Record<string, string>) => {
@@ -474,7 +493,7 @@ export function ScriptCommandsView({ onBack }: ScriptCommandsViewProps) {
         {/* Scripts list */}
         <div className="w-[42%] border-r border-[var(--launcher-card-border)]">
           <ScriptCommandsList
-             scripts={filteredScripts}
+            scripts={filteredScripts}
             selectedScriptId={state.selectedScriptId}
             isLoading={scriptsQuery.isLoading}
             onSelect={(value) => dispatch({ type: "set-selected-script-id", value })}

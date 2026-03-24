@@ -6,7 +6,10 @@ pub mod types;
 use tauri::{command, AppHandle};
 
 use self::error::{CalculatorError, Result};
-use self::history::{get_history, save_to_history, CalculatorHistoryEntry};
+use self::history::{
+    clear_history, delete_history_entry, get_history, get_pinned_timestamps, save_to_history,
+    set_history_entry_pinned, CalculatorHistoryEntry,
+};
 use self::types::{CalculationOutput, CalculatorCommandResponse, CalculatorStatus};
 use smart_calculator::{calculate, parser::detect_intent, types::Intent};
 
@@ -107,4 +110,28 @@ pub fn save_calculator_history(
     session_id: String,
 ) -> Result<()> {
     save_to_history(&app, query, result, session_id)
+}
+
+#[command]
+pub fn delete_calculator_history_entry(app: AppHandle, timestamp: i64) -> Result<()> {
+    delete_history_entry(&app, timestamp)
+}
+
+#[command]
+pub fn clear_calculator_history(app: AppHandle) -> Result<()> {
+    clear_history(&app)
+}
+
+#[command]
+pub fn get_pinned_calculator_history_timestamps(app: AppHandle) -> Result<Vec<i64>> {
+    get_pinned_timestamps(&app)
+}
+
+#[command]
+pub fn set_calculator_history_entry_pinned(
+    app: AppHandle,
+    timestamp: i64,
+    pinned: bool,
+) -> Result<Vec<i64>> {
+    set_history_entry_pinned(&app, timestamp, pinned)
 }

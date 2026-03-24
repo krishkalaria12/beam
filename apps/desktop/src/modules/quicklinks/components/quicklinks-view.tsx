@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "@tanstack/react-form";
 import { File, Folder, FolderOpen, Link2, Loader2, Pencil, Plus, Trash2, Zap } from "lucide-react";
 import { z } from "zod";
@@ -30,6 +30,12 @@ import {
 import type { Quicklink } from "../types";
 import { QuicklinkIcon } from "./quicklink-icon";
 import { useMountEffect } from "@/hooks/use-mount-effect";
+import {
+  buildDuplicateKeyword,
+  buildDuplicateName,
+  clearQuicklinksActionsState,
+  syncQuicklinksActionsState,
+} from "@/modules/quicklinks/hooks/use-quicklinks-action-items";
 
 const quicklinkSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -497,19 +503,53 @@ type QuicklinksManageViewProps = {
 
 function QuicklinksManageView({ onBack, onCreate, onEdit }: QuicklinksManageViewProps) {
   const { data: quicklinks, isLoading, error } = useQuicklinks();
+  const createMutation = useCreateQuicklink();
   const deleteMutation = useDeleteQuicklink();
   const [deletingKeyword, setDeletingKeyword] = useState<string | null>(null);
+  const [selectedKeyword, setSelectedKeyword] = useState<string | null>(null);
 
-  const handleDelete = async (keyword: string) => {
-    setDeletingKeyword(keyword);
-    try {
-      await deleteMutation.mutateAsync(keyword);
-    } catch {
-      // Error is handled by the mutation
-    }
+  useMountEffect(() => clearQuicklinksActionsState);
 
-    setDeletingKeyword(null);
-  };
+  const handleDelete = useCallback(
+    async (keyword: string) => {
+      setDeletingKeyword(keyword);
+      try {
+        await deleteMutation.mutateAsync(keyword);
+      } catch {
+        // Error is handled by the mutation
+      }
+
+      setDeletingKeyword(null);
+    },
+    [deleteMutation],
+  );
+
+  const selectedQuicklink =
+    quicklinks?.find((quicklink) => quicklink.keyword === selectedKeyword) ??
+    quicklinks?.[0] ??
+    null;
+
+  const handleDuplicate = useCallback(
+    async (quicklink: Quicklink, allQuicklinks: Quicklink[]) => {
+      await createMutation.mutateAsync({
+        name: buildDuplicateName(quicklink.name, allQuicklinks),
+        keyword: buildDuplicateKeyword(quicklink.keyword, allQuicklinks),
+        url: quicklink.url,
+        icon: quicklink.icon,
+      });
+    },
+    [createMutation],
+  );
+
+  useEffect(() => {
+    syncQuicklinksActionsState({
+      selectedQuicklink,
+      quicklinks: quicklinks ?? [],
+      onEdit,
+      onDelete: handleDelete,
+      onDuplicate: handleDuplicate,
+    });
+  }, [handleDelete, handleDuplicate, onEdit, quicklinks, selectedQuicklink]);
 
   return (
     <div className="quicklinks-view flex h-full flex-col">
@@ -582,6 +622,9 @@ function QuicklinksManageView({ onBack, onCreate, onEdit }: QuicklinksManageView
                 key={quicklink.keyword}
                 className="quicklinks-item group relative flex items-center gap-3.5 rounded-xl bg-[var(--launcher-card-bg)] p-3.5 transition-all duration-200 hover:bg-[var(--launcher-card-hover-bg)]"
                 style={{ animationDelay: `${index * 30}ms` }}
+                onMouseEnter={() => {
+                  setSelectedKeyword(quicklink.keyword);
+                }}
               >
                 <div className="absolute left-0 top-1/2 h-6 w-[3px] -translate-y-1/2 scale-y-50 rounded-full bg-[var(--ring)] opacity-0 transition-all duration-200 group-hover:scale-y-100 group-hover:opacity-60" />
 

@@ -289,6 +289,13 @@
   border-color: transparent;
 }
 
+/* Inside the actions panel, rely on cmdk's data-selected for highlighting
+   and suppress the CSS :hover background to avoid dual-highlight conflict */
+.sc-actions-panel .command-item:hover:not([data-selected="true"]) {
+  background: transparent;
+  border-color: transparent;
+}
+
 .command-item[data-disabled="true"] {
   opacity: 0.55;
 }

@@ -4,9 +4,16 @@ import { EmojiCard } from "./EmojiCard";
 interface RecentlyUsedProps {
   emojis: EmojiData[];
   onEmojiClick: (emoji: EmojiData) => void;
+  onEmojiHover?: (emoji: EmojiData) => void;
+  title?: string;
 }
 
-export function RecentlyUsed({ emojis, onEmojiClick }: RecentlyUsedProps) {
+export function RecentlyUsed({
+  emojis,
+  onEmojiClick,
+  onEmojiHover,
+  title = "Recent",
+}: RecentlyUsedProps) {
   if (emojis.length === 0) return null;
 
   return (
@@ -14,7 +21,7 @@ export function RecentlyUsed({ emojis, onEmojiClick }: RecentlyUsedProps) {
       {/* Section header - minimal */}
       <div className="mb-3 flex items-center gap-2">
         <span className="text-launcher-xs font-medium uppercase tracking-[0.06em] text-muted-foreground">
-          Recent
+          {title}
         </span>
         <div className="h-px flex-1 bg-[var(--ui-divider)]" />
       </div>
@@ -26,6 +33,7 @@ export function RecentlyUsed({ emojis, onEmojiClick }: RecentlyUsedProps) {
             key={`recent-${emoji.hexcode}`}
             emoji={emoji}
             onClick={onEmojiClick}
+            onHover={onEmojiHover}
             isRecent
             style={{ animationDelay: `${idx * 12}ms` }}
           />

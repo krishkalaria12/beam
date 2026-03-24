@@ -1,32 +1,24 @@
-import { useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 
-import { useMountEffect } from "@/hooks/use-mount-effect";
 import { cn } from "@/lib/utils";
 
 interface LauncherTakeoverSurfaceProps {
   children: ReactNode;
   className?: string;
+  /** When true, plays the exit animation (top-up fade-out). */
+  exiting?: boolean;
 }
 
-export function LauncherTakeoverSurface({ children, className }: LauncherTakeoverSurfaceProps) {
-  const [isInteractive, setIsInteractive] = useState(false);
-
-  useMountEffect(() => {
-    const timerId = window.setTimeout(() => {
-      setIsInteractive(true);
-    }, 160);
-
-    return () => {
-      window.clearTimeout(timerId);
-    };
-  });
-
+export function LauncherTakeoverSurface({
+  children,
+  className,
+  exiting,
+}: LauncherTakeoverSurfaceProps) {
   return (
     <div
       className={cn(
         "beam-window-overlay absolute inset-0 z-50",
-        "animate-in fade-in zoom-in-[0.985] duration-200",
-        isInteractive ? "pointer-events-auto" : "pointer-events-none",
+        exiting ? "takeover-exit" : "takeover-enter",
         className,
       )}
     >

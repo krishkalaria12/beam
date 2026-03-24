@@ -31,53 +31,55 @@ export function LauncherActionsHotkeyPage({
 }: LauncherActionsHotkeyPageProps) {
   return (
     <>
-      <div className="flex max-h-[210px] min-h-[210px] flex-col items-center justify-center gap-4 px-4 py-6">
-        <div className="flex flex-col items-center gap-3">
-          {saving ? (
-            <div className="flex min-h-10 items-center gap-2">
-              <Loader2 className="size-4 animate-spin text-muted-foreground" />
-              <span className="text-launcher-sm text-muted-foreground">Saving...</span>
-            </div>
-          ) : feedback?.tone === "success" ? (
-            <div className="flex flex-col items-center gap-2">
-              <span className="text-launcher-sm font-medium text-[var(--icon-green-fg)]">
-                Hotkey Saved
-              </span>
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-6">
+        <div className="flex min-h-full flex-col items-center justify-center gap-4">
+          <div className="flex flex-col items-center gap-3">
+            {saving ? (
+              <div className="flex min-h-10 items-center gap-2">
+                <Loader2 className="size-4 animate-spin text-muted-foreground" />
+                <span className="text-launcher-sm text-muted-foreground">Saving...</span>
+              </div>
+            ) : feedback?.tone === "success" ? (
+              <div className="flex flex-col items-center gap-2">
+                <span className="text-launcher-sm font-medium text-[var(--icon-green-fg)]">
+                  Hotkey Saved
+                </span>
+                <HotkeyRecorder
+                  value={hotkeyValue}
+                  onChange={onHotkeyChange}
+                  autoRecord={false}
+                  disabled={false}
+                />
+              </div>
+            ) : (
               <HotkeyRecorder
                 value={hotkeyValue}
                 onChange={onHotkeyChange}
-                autoRecord={false}
+                autoRecord
                 disabled={false}
               />
-            </div>
-          ) : (
-            <HotkeyRecorder
-              value={hotkeyValue}
-              onChange={onHotkeyChange}
-              autoRecord
-              disabled={false}
-            />
-          )}
-        </div>
-
-        {feedback?.tone !== "success" ? (
-          <p
-            className={cn(
-              "text-center text-launcher-xs",
-              availability.tone === "error" && "text-[var(--icon-red-fg)]",
-              availability.tone === "success" && "text-[var(--icon-green-fg)]",
-              availability.tone === "neutral" && "text-muted-foreground/65",
             )}
-          >
-            {availability.text}
-          </p>
-        ) : null}
+          </div>
 
-        {!hotkeyValue.trim() && !feedback ? (
-          <p className="text-launcher-2xs tracking-wide text-muted-foreground/50">
-            Example: {HOTKEY_EXAMPLE}
-          </p>
-        ) : null}
+          {feedback?.tone !== "success" ? (
+            <p
+              className={cn(
+                "text-center text-launcher-xs",
+                availability.tone === "error" && "text-[var(--icon-red-fg)]",
+                availability.tone === "success" && "text-[var(--icon-green-fg)]",
+                availability.tone === "neutral" && "text-muted-foreground/65",
+              )}
+            >
+              {availability.text}
+            </p>
+          ) : null}
+
+          {!hotkeyValue.trim() && !feedback ? (
+            <p className="text-launcher-2xs tracking-wide text-muted-foreground/50">
+              Example: {HOTKEY_EXAMPLE}
+            </p>
+          ) : null}
+        </div>
       </div>
 
       <div className="sc-actions-panel-footer flex items-center justify-between gap-2 border-t border-[var(--ui-divider)] px-3 py-2.5">

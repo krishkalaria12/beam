@@ -11,7 +11,10 @@ use tauri::{command, AppHandle, State};
 #[cfg(not(target_os = "linux"))]
 use self::convert_image::get_image_as_base64;
 use self::error::Result;
-use self::history::{get_history, get_history_values, save_to_history, ClipboardHistoryEntry};
+use self::history::{
+    clear_history, get_history, get_history_values, get_pinned_entry_ids, remove_history_entry,
+    save_to_history, set_entry_pinned, ClipboardHistoryEntry,
+};
 use self::search::search_history;
 
 use crate::clipboard::config::CONFIG as CLIPBOARD_CONFIG;
@@ -73,6 +76,35 @@ pub fn search_clipboard_history(
     query: String,
 ) -> Result<Vec<ClipboardHistoryEntry>> {
     search_history(&app, &query)
+}
+
+#[command]
+pub fn delete_clipboard_history_entry(
+    app: AppHandle,
+    copied_at: String,
+    value: String,
+) -> Result<()> {
+    remove_history_entry(&app, copied_at, value)
+}
+
+#[command]
+pub fn clear_clipboard_history(app: AppHandle) -> Result<()> {
+    clear_history(&app)
+}
+
+#[command]
+pub fn get_pinned_clipboard_entry_ids(app: AppHandle) -> Result<Vec<String>> {
+    get_pinned_entry_ids(&app)
+}
+
+#[command]
+pub fn set_clipboard_entry_pinned(
+    app: AppHandle,
+    copied_at: String,
+    value: String,
+    pinned: bool,
+) -> Result<Vec<String>> {
+    set_entry_pinned(&app, copied_at, value, pinned)
 }
 
 #[command]

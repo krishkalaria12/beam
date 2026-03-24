@@ -12,6 +12,8 @@ import { useMountEffect } from "@/hooks/use-mount-effect";
 import type { LauncherActionItem } from "@/modules/launcher/components/launcher-actions-panel";
 import { LauncherActionsPanel } from "@/modules/launcher/components/launcher-actions-panel";
 import { dispatchEnterToTarget } from "@/modules/launcher/helper";
+import { useCalculatorHistoryActionItems } from "@/modules/calculator-history/hooks/use-calculator-history-action-items";
+import { useEmojiActionItems } from "@/modules/emoji/hooks/use-emoji-action-items";
 
 const CalculatorHistoryCommandGroup = lazy(
   () => import("@/modules/calculator-history/components/calculator-history-command-group"),
@@ -77,6 +79,8 @@ function LauncherSecondaryPanelContent({
   const actionsPreviousFocusRef = useRef<HTMLElement | null>(null);
   const panelRegistration = getPanelCommandRegistration(activePanel);
   const primaryActionLabel = getPanelPrimaryActionLabel(activePanel);
+  const calculatorHistoryActionItems = useCalculatorHistoryActionItems();
+  const emojiActionItems = useEmojiActionItems();
 
   function handleActionsOpenChange(nextOpen: boolean) {
     if (nextOpen) {
@@ -126,7 +130,12 @@ function LauncherSecondaryPanelContent({
     };
   });
 
-  const panelSpecificRootItems: LauncherActionItem[] = [];
+  const panelSpecificRootItems: LauncherActionItem[] =
+    activePanel === "calculator-history"
+      ? calculatorHistoryActionItems
+      : activePanel === "emoji"
+        ? emojiActionItems
+        : [];
 
   const sharedRootItems: LauncherActionItem[] = secondaryPanelIsOpen
     ? [
@@ -192,17 +201,18 @@ function LauncherSecondaryPanelContent({
   return (
     <div className="relative h-full w-full">
       <Suspense fallback={<SecondaryPanelFallback />}>
-        <div className="animate-in fade-in zoom-in-[0.985] duration-200">{content}</div>
+        <div className="takeover-enter h-full min-h-0">{content}</div>
       </Suspense>
       <LauncherActionsPanel
         open={actionsOpen}
         onOpenChange={handleActionsOpenChange}
+        anchorMode="panel-footer"
         rootTitle={`${panelRegistration?.title ?? "Module"} Actions...`}
         rootSearchPlaceholder="Search for actions..."
         rootItems={sharedRootItems}
         targetCommandId={panelRegistration?.id}
         targetCommandTitle={panelRegistration?.title}
-        containerClassName="bottom-14 right-4"
+        containerClassName="right-4"
       />
     </div>
   );

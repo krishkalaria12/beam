@@ -1,7 +1,13 @@
+import { useEffect } from "react";
 import { AlertTriangle, Search } from "lucide-react";
 import { useCommandState } from "cmdk";
 
 import { CommandGroup, CommandItem } from "@/components/ui/command";
+import { useMountEffect } from "@/hooks/use-mount-effect";
+import {
+  clearApplicationActionsState,
+  syncApplicationActionsState,
+} from "@/modules/applications/hooks/use-application-action-items";
 
 import { useApplicationSearch } from "../hooks/use-application-search";
 import { useOpenApplication } from "../hooks/use-open-application";
@@ -14,6 +20,15 @@ export default function ApplicationsCommandGroup() {
   const { data, isLoading, isError } = useApplicationSearch(query);
   const { launchApplication, launchingExecPath, launchError } = useOpenApplication();
   const applications = data ?? [];
+
+  useMountEffect(() => clearApplicationActionsState);
+
+  useEffect(() => {
+    syncApplicationActionsState({
+      selectedApplication: applications[0] ?? null,
+      onOpen: launchApplication,
+    });
+  }, [applications, launchApplication]);
 
   if (!query) {
     return null;

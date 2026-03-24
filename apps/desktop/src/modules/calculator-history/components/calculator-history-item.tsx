@@ -8,6 +8,7 @@ type CalculatorHistoryItemProps = {
   index: number;
   isCopied: boolean;
   onSelect: () => void;
+  onActivate: () => void;
 };
 
 export function CalculatorHistoryItem({
@@ -15,12 +16,15 @@ export function CalculatorHistoryItem({
   index,
   isCopied,
   onSelect,
+  onActivate,
 }: CalculatorHistoryItemProps) {
   return (
     <CommandItem
       value={`calculator-history-${index}`}
       className="calc-history-item group relative rounded-xl p-0 overflow-hidden data-[selected=true]:bg-[var(--launcher-card-hover-bg)]"
       onSelect={onSelect}
+      onPointerEnter={onActivate}
+      onFocus={onActivate}
       style={{ animationDelay: `${index * 30}ms` }}
     >
       {/* Left accent bar */}

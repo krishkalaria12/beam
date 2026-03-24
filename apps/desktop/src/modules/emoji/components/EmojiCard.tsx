@@ -6,6 +6,7 @@ import type { CSSProperties } from "react";
 interface EmojiCardProps {
   emoji: EmojiData;
   onClick: (emoji: EmojiData) => void;
+  onHover?: (emoji: EmojiData) => void;
   className?: string;
   style?: CSSProperties;
   isSelected?: boolean;
@@ -15,6 +16,7 @@ interface EmojiCardProps {
 export function EmojiCard({
   emoji,
   onClick,
+  onHover,
   className,
   style,
   isSelected,
@@ -26,6 +28,8 @@ export function EmojiCard({
       variant="ghost"
       size="icon"
       onClick={() => onClick(emoji)}
+      onPointerEnter={() => onHover?.(emoji)}
+      onFocus={() => onHover?.(emoji)}
       style={style}
       className={cn(
         "emoji-card group relative flex items-center justify-center transition-all duration-150",
