@@ -1,17 +1,19 @@
 use serde::{Deserialize, Serialize};
-use serde_json::from_value;
+use sqlx::{FromRow, SqlitePool};
 use std::sync::atomic::{AtomicU16, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 use tauri::AppHandle;
-use tauri_plugin_store::StoreExt;
+use tokio::sync::Mutex;
 
+use super::db::get_calculator_pool;
 use super::error::{CalculatorError, Result};
 
 use crate::calculator::config::CONFIG as CALCULATOR_CONFIG;
 
 static NEXT_HISTORY_DISCRIMINATOR: AtomicU16 = AtomicU16::new(0);
+static CALCULATOR_HISTORY_WRITE_LOCK: Mutex<()> = Mutex::const_new(());
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, FromRow, PartialEq)]
 pub struct CalculatorHistoryEntry {
     pub query: String,
     pub result: String,
@@ -19,102 +21,87 @@ pub struct CalculatorHistoryEntry {
     pub session_id: Option<String>,
 }
 
-pub fn get_history(app: &AppHandle) -> Result<Vec<CalculatorHistoryEntry>> {
-    let store = app
-        .store(CALCULATOR_CONFIG.store_file_name)
-        .map_err(|e| CalculatorError::StoreOpeningError(e.to_string()))?;
-
-    let json_value = store.get(CALCULATOR_CONFIG.history_key);
-
-    if let Some(value) = json_value {
-        let entries = from_value::<Vec<CalculatorHistoryEntry>>(value)
-            .map_err(|e| CalculatorError::SerializationError(e.to_string()))?;
-        Ok(entries)
-    } else {
-        Ok(Vec::new())
-    }
+#[derive(Debug, Clone, FromRow)]
+struct CalculatorHistorySnapshot {
+    timestamp: i64,
+    session_id: Option<String>,
+    pinned: bool,
 }
 
-pub fn save_to_history(
+pub async fn get_history(app: &AppHandle) -> Result<Vec<CalculatorHistoryEntry>> {
+    let pool = get_calculator_pool(app).await?;
+
+    sqlx::query_as::<_, CalculatorHistoryEntry>(
+        "SELECT query, result, timestamp, session_id FROM calculator_history ORDER BY timestamp DESC",
+    )
+    .fetch_all(pool.as_ref())
+    .await
+    .map_err(database_error)
+}
+
+pub async fn save_to_history(
     app: &AppHandle,
     query: String,
     result: String,
     session_id: String,
 ) -> Result<()> {
-    let mut history = get_history(app)?;
-    let mut pinned_timestamps = get_pinned_timestamps(app)?;
+    let _guard = CALCULATOR_HISTORY_WRITE_LOCK.lock().await;
+    let pool = get_calculator_pool(app).await?;
+    let mut tx = pool.begin().await.map_err(database_error)?;
 
-    let new_entry = CalculatorHistoryEntry {
-        query,
-        result,
-        timestamp: now_timestamp_millis(),
-        session_id: Some(session_id.clone()),
+    let timestamp = now_timestamp_millis();
+    let pinned = has_pinned_duplicate(&mut tx, &query, &result).await?;
+    let newest_entry = load_newest_history_snapshot(&mut tx).await?;
+
+    let persisted_timestamp = if newest_entry
+        .as_ref()
+        .and_then(|entry| entry.session_id.as_ref())
+        .is_some_and(|existing_session_id| existing_session_id == &session_id)
+    {
+        let existing = newest_entry.expect("newest entry checked above");
+        sqlx::query(
+            "UPDATE calculator_history SET query = ?, result = ?, session_id = ?, timestamp = ?, pinned = ? WHERE timestamp = ?",
+        )
+        .bind(&query)
+        .bind(&result)
+        .bind(&session_id)
+        .bind(timestamp)
+        .bind(existing.pinned || pinned)
+        .bind(existing.timestamp)
+        .execute(&mut *tx)
+        .await
+        .map_err(database_error)?;
+
+        timestamp
+    } else {
+        sqlx::query(
+            "INSERT INTO calculator_history (timestamp, query, result, session_id, pinned) VALUES (?, ?, ?, ?, ?)",
+        )
+        .bind(timestamp)
+        .bind(&query)
+        .bind(&result)
+        .bind(&session_id)
+        .bind(pinned)
+        .execute(&mut *tx)
+        .await
+        .map_err(database_error)?;
+
+        timestamp
     };
 
-    let current_query = new_entry.query.clone();
-    let current_result = new_entry.result.clone();
-    let should_keep_pinned = history.iter().any(|entry| {
-        entry.query == current_query
-            && entry.result == current_result
-            && pinned_timestamps
-                .iter()
-                .any(|timestamp| *timestamp == entry.timestamp)
-    });
+    sqlx::query("DELETE FROM calculator_history WHERE query = ? AND result = ? AND timestamp <> ?")
+        .bind(&query)
+        .bind(&result)
+        .bind(persisted_timestamp)
+        .execute(&mut *tx)
+        .await
+        .map_err(database_error)?;
 
-    let mut updated = false;
+    trim_history(&mut tx).await?;
 
-    // Check if the latest entry belongs to the same session
-    if let Some(first) = history.first_mut() {
-        if let Some(first_session_id) = &first.session_id {
-            if first_session_id == &session_id {
-                *first = new_entry.clone();
-                updated = true;
-            }
-        }
-    }
+    tx.commit().await.map_err(database_error)?;
 
-    if !updated {
-        history.insert(0, new_entry);
-    }
-
-    // Remove duplicates (same query and result) if any exist further down the list
-
-    // Keep the first occurrence (which is our new/updated entry) and remove subsequent duplicates
-    let mut seen = false;
-    history.retain(|entry| {
-        if entry.query == current_query && entry.result == current_result {
-            if !seen {
-                seen = true;
-                true
-            } else {
-                false
-            }
-        } else {
-            true
-        }
-    });
-
-    history.truncate(CALCULATOR_CONFIG.max_history_entries);
-
-    if should_keep_pinned {
-        if let Some(entry) = history
-            .iter()
-            .find(|entry| entry.query == current_query && entry.result == current_result)
-        {
-            pinned_timestamps.push(entry.timestamp);
-        }
-    }
-
-    let active_timestamps = history
-        .iter()
-        .map(|entry| entry.timestamp)
-        .collect::<Vec<_>>();
-    pinned_timestamps.retain(|timestamp| active_timestamps.contains(timestamp));
-    pinned_timestamps.sort_unstable();
-    pinned_timestamps.dedup();
-
-    persist_history(app, &history)?;
-    save_pinned_timestamps(app, &pinned_timestamps)
+    Ok(())
 }
 
 fn now_timestamp_millis() -> i64 {
@@ -124,89 +111,109 @@ fn now_timestamp_millis() -> i64 {
         .unwrap_or_default();
     let discriminator =
         i64::from(NEXT_HISTORY_DISCRIMINATOR.fetch_add(1, Ordering::Relaxed) % 1000);
+
     base_millis
         .saturating_mul(1000)
         .saturating_add(discriminator)
 }
 
-pub fn delete_history_entry(app: &AppHandle, timestamp: i64) -> Result<()> {
-    let mut history = get_history(app)?;
-    history.retain(|entry| entry.timestamp != timestamp);
-    persist_history(app, &history)?;
+pub async fn delete_history_entry(app: &AppHandle, timestamp: i64) -> Result<()> {
+    let _guard = CALCULATOR_HISTORY_WRITE_LOCK.lock().await;
+    let pool = get_calculator_pool(app).await?;
 
-    let mut pinned_timestamps = get_pinned_timestamps(app)?;
-    pinned_timestamps.retain(|entry_timestamp| *entry_timestamp != timestamp);
-    save_pinned_timestamps(app, &pinned_timestamps)
-}
-
-pub fn clear_history(app: &AppHandle) -> Result<()> {
-    persist_history(app, &[])?;
-    save_pinned_timestamps(app, &[])
-}
-
-pub fn get_pinned_timestamps(app: &AppHandle) -> Result<Vec<i64>> {
-    let store = app
-        .store(CALCULATOR_CONFIG.store_file_name)
-        .map_err(|e| CalculatorError::StoreOpeningError(e.to_string()))?;
-
-    let Some(value) = store.get(CALCULATOR_CONFIG.pinned_timestamps_key) else {
-        return Ok(Vec::new());
-    };
-
-    let mut timestamps = from_value::<Vec<i64>>(value)
-        .map_err(|e| CalculatorError::SerializationError(e.to_string()))?;
-    timestamps.sort_unstable();
-    timestamps.dedup();
-    Ok(timestamps)
-}
-
-pub fn set_history_entry_pinned(app: &AppHandle, timestamp: i64, pinned: bool) -> Result<Vec<i64>> {
-    let mut timestamps = get_pinned_timestamps(app)?;
-    if pinned {
-        if !timestamps
-            .iter()
-            .any(|entry_timestamp| *entry_timestamp == timestamp)
-        {
-            timestamps.push(timestamp);
-        }
-    } else {
-        timestamps.retain(|entry_timestamp| *entry_timestamp != timestamp);
-    }
-
-    timestamps.sort_unstable();
-    timestamps.dedup();
-    save_pinned_timestamps(app, &timestamps)?;
-    Ok(timestamps)
-}
-
-fn persist_history(app: &AppHandle, history: &[CalculatorHistoryEntry]) -> Result<()> {
-    let store = app
-        .store(CALCULATOR_CONFIG.store_file_name)
-        .map_err(|e| CalculatorError::StoreOpeningError(e.to_string()))?;
-
-    let json_value = serde_json::to_value(history)
-        .map_err(|e| CalculatorError::SerializationError(e.to_string()))?;
-
-    store.set(CALCULATOR_CONFIG.history_key, json_value);
-    store
-        .save()
-        .map_err(|e| CalculatorError::StoreSaveError(e.to_string()))?;
+    sqlx::query("DELETE FROM calculator_history WHERE timestamp = ?")
+        .bind(timestamp)
+        .execute(pool.as_ref())
+        .await
+        .map_err(database_error)?;
 
     Ok(())
 }
 
-fn save_pinned_timestamps(app: &AppHandle, timestamps: &[i64]) -> Result<()> {
-    let store = app
-        .store(CALCULATOR_CONFIG.store_file_name)
-        .map_err(|e| CalculatorError::StoreOpeningError(e.to_string()))?;
+pub async fn clear_history(app: &AppHandle) -> Result<()> {
+    let _guard = CALCULATOR_HISTORY_WRITE_LOCK.lock().await;
+    let pool = get_calculator_pool(app).await?;
 
-    let json_value = serde_json::to_value(timestamps)
-        .map_err(|e| CalculatorError::SerializationError(e.to_string()))?;
-
-    store.set(CALCULATOR_CONFIG.pinned_timestamps_key, json_value);
-    store
-        .save()
-        .map_err(|e| CalculatorError::StoreSaveError(e.to_string()))?;
+    sqlx::query("DELETE FROM calculator_history")
+        .execute(pool.as_ref())
+        .await
+        .map_err(database_error)?;
 
     Ok(())
+}
+
+pub async fn get_pinned_timestamps(app: &AppHandle) -> Result<Vec<i64>> {
+    let pool = get_calculator_pool(app).await?;
+    get_pinned_timestamps_from_pool(pool.as_ref()).await
+}
+
+async fn get_pinned_timestamps_from_pool(pool: &SqlitePool) -> Result<Vec<i64>> {
+    sqlx::query_as::<_, (i64,)>(
+        "SELECT timestamp FROM calculator_history WHERE pinned = 1 ORDER BY timestamp ASC",
+    )
+    .fetch_all(pool)
+    .await
+    .map_err(database_error)
+    .map(|rows| rows.into_iter().map(|(timestamp,)| timestamp).collect())
+}
+
+pub async fn set_history_entry_pinned(
+    app: &AppHandle,
+    timestamp: i64,
+    pinned: bool,
+) -> Result<Vec<i64>> {
+    let _guard = CALCULATOR_HISTORY_WRITE_LOCK.lock().await;
+    let pool = get_calculator_pool(app).await?;
+
+    sqlx::query("UPDATE calculator_history SET pinned = ? WHERE timestamp = ?")
+        .bind(pinned)
+        .bind(timestamp)
+        .execute(pool.as_ref())
+        .await
+        .map_err(database_error)?;
+
+    get_pinned_timestamps_from_pool(pool.as_ref()).await
+}
+
+async fn has_pinned_duplicate(
+    tx: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
+    query: &str,
+    result: &str,
+) -> Result<bool> {
+    sqlx::query_as::<_, (bool,)>(
+        "SELECT EXISTS(SELECT 1 FROM calculator_history WHERE query = ? AND result = ? AND pinned = 1)",
+    )
+    .bind(query)
+    .bind(result)
+    .fetch_one(&mut **tx)
+    .await
+    .map(|(exists,)| exists)
+    .map_err(database_error)
+}
+
+async fn load_newest_history_snapshot(
+    tx: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
+) -> Result<Option<CalculatorHistorySnapshot>> {
+    sqlx::query_as::<_, CalculatorHistorySnapshot>(
+        "SELECT timestamp, session_id, pinned FROM calculator_history ORDER BY timestamp DESC LIMIT 1",
+    )
+    .fetch_optional(&mut **tx)
+    .await
+    .map_err(database_error)
+}
+
+async fn trim_history(tx: &mut sqlx::Transaction<'_, sqlx::Sqlite>) -> Result<()> {
+    sqlx::query(
+        "DELETE FROM calculator_history WHERE timestamp NOT IN (SELECT timestamp FROM calculator_history ORDER BY timestamp DESC LIMIT ?)",
+    )
+    .bind(CALCULATOR_CONFIG.max_history_entries as i64)
+    .execute(&mut **tx)
+    .await
+    .map_err(database_error)?;
+
+    Ok(())
+}
+
+fn database_error(error: sqlx::Error) -> CalculatorError {
+    CalculatorError::Database(error.to_string())
 }

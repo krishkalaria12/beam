@@ -25,6 +25,7 @@ use crate::state::AppState;
 
 pub(crate) mod config;
 pub mod convert_image;
+pub mod db;
 pub mod error;
 pub mod history;
 pub mod password;
@@ -61,50 +62,50 @@ pub struct SelectedFinderItem {
 }
 
 #[command]
-pub fn get_clipboard_history(app: AppHandle) -> Result<Vec<String>> {
-    get_history_values(&app)
+pub async fn get_clipboard_history(app: AppHandle) -> Result<Vec<String>> {
+    get_history_values(&app).await
 }
 
 #[command]
-pub fn get_clipboard_history_entries(app: AppHandle) -> Result<Vec<ClipboardHistoryEntry>> {
-    get_history(&app)
+pub async fn get_clipboard_history_entries(app: AppHandle) -> Result<Vec<ClipboardHistoryEntry>> {
+    get_history(&app).await
 }
 
 #[command]
-pub fn search_clipboard_history(
+pub async fn search_clipboard_history(
     app: AppHandle,
     query: String,
 ) -> Result<Vec<ClipboardHistoryEntry>> {
-    search_history(&app, &query)
+    search_history(&app, &query).await
 }
 
 #[command]
-pub fn delete_clipboard_history_entry(
+pub async fn delete_clipboard_history_entry(
     app: AppHandle,
     copied_at: String,
     value: String,
 ) -> Result<()> {
-    remove_history_entry(&app, copied_at, value)
+    remove_history_entry(&app, copied_at, value).await
 }
 
 #[command]
-pub fn clear_clipboard_history(app: AppHandle) -> Result<()> {
-    clear_history(&app)
+pub async fn clear_clipboard_history(app: AppHandle) -> Result<()> {
+    clear_history(&app).await
 }
 
 #[command]
-pub fn get_pinned_clipboard_entry_ids(app: AppHandle) -> Result<Vec<String>> {
-    get_pinned_entry_ids(&app)
+pub async fn get_pinned_clipboard_entry_ids(app: AppHandle) -> Result<Vec<String>> {
+    get_pinned_entry_ids(&app).await
 }
 
 #[command]
-pub fn set_clipboard_entry_pinned(
+pub async fn set_clipboard_entry_pinned(
     app: AppHandle,
     copied_at: String,
     value: String,
     pinned: bool,
 ) -> Result<Vec<String>> {
-    set_entry_pinned(&app, copied_at, value, pinned)
+    set_entry_pinned(&app, copied_at, value, pinned).await
 }
 
 #[command]
@@ -334,7 +335,7 @@ fn run_clipboard_listener(app: AppHandle) {
 
         if let Some(next_value) = next_value {
             if next_value != last_value {
-                match save_to_history(&app, next_value.clone()) {
+                match tauri::async_runtime::block_on(save_to_history(&app, next_value.clone())) {
                     Ok(()) => last_value = next_value,
                     Err(err) => eprintln!("beam: failed to store clipboard entry: {err}"),
                 }

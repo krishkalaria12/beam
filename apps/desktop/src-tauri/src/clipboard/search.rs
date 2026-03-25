@@ -10,13 +10,13 @@ use crate::clipboard::config::CONFIG as CLIPBOARD_CONFIG;
 
 const MATCH_CONFIG: Config = Config::DEFAULT;
 
-pub fn search_history(app: &AppHandle, query: &str) -> Result<Vec<ClipboardHistoryEntry>> {
+pub async fn search_history(app: &AppHandle, query: &str) -> Result<Vec<ClipboardHistoryEntry>> {
     let normalized_query = query.trim();
     if normalized_query.is_empty() {
         return Ok(Vec::new());
     }
 
-    let history = get_history(app)?;
+    let history = get_history(app).await?;
     Ok(fuzzy_match_history_entries(
         history,
         normalized_query,

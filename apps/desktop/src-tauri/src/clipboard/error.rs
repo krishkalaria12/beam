@@ -5,6 +5,21 @@ pub type Result<T> = std::result::Result<T, ClipboardError>;
 
 #[derive(Debug, Clone, Error)]
 pub enum ClipboardError {
+    #[error("clipboard app local data directory unavailable")]
+    AppDataDirUnavailable,
+
+    #[error("failed to create clipboard data directory: {0}")]
+    CreateDirectory(String),
+
+    #[error("failed to connect clipboard database: {0}")]
+    DatabaseConnection(String),
+
+    #[error("failed to initialize clipboard schema: {0}")]
+    SchemaInitialization(String),
+
+    #[error("clipboard database error: {0}")]
+    Database(String),
+
     #[error("{0}")]
     NewEntryKeyringError(String),
 
@@ -13,18 +28,6 @@ pub enum ClipboardError {
 
     #[error("{0}")]
     SettingPasswordKeyring(String),
-
-    #[error("{0}")]
-    StoreOpeningError(String),
-
-    #[error("{0}")]
-    SerializationError(String),
-
-    #[error("{0}")]
-    StoreSaveError(String),
-
-    #[error("{0}")]
-    ClipboardEntry(String),
 
     #[error("{0}")]
     EncryptionCipherInitError(String),

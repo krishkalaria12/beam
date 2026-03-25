@@ -1,7 +1,6 @@
 pub(crate) const CONFIG: ClipboardConfig = ClipboardConfig {
-    history_key: "clipboard_history",
-    pinned_entries_key: "clipboard_pinned_entries",
-    store_file_name: "clipboard_history.json",
+    directory: "clipboard",
+    database_file_name: "clipboard.sqlite3",
     poll_interval_ms: 350,
     max_history_entries: 100,
     max_entry_bytes: 1_000_000,
@@ -16,9 +15,8 @@ pub(crate) const CONFIG: ClipboardConfig = ClipboardConfig {
 };
 
 pub(crate) struct ClipboardConfig {
-    pub history_key: &'static str,
-    pub pinned_entries_key: &'static str,
-    pub store_file_name: &'static str,
+    pub directory: &'static str,
+    pub database_file_name: &'static str,
     pub poll_interval_ms: u64,
     pub max_history_entries: usize,
     pub max_entry_bytes: usize,

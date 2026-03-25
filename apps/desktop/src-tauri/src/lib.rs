@@ -191,6 +191,8 @@ pub fn run(startup_args: Vec<String>) {
                 )?;
             }
 
+            calculator::db::init(&app.handle());
+            clipboard::db::init(&app.handle());
             clipboard::start_clipboard_listener(app.handle().clone());
 
             match settings::get_ui_layout_mode(app.handle().clone()) {

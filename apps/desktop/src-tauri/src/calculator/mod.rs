@@ -1,4 +1,5 @@
 pub(crate) mod config;
+pub mod db;
 pub mod error;
 pub mod history;
 pub mod types;
@@ -98,40 +99,40 @@ pub async fn calculate_expression(query: String) -> Result<CalculatorCommandResp
 }
 
 #[command]
-pub fn get_calculator_history(app: AppHandle) -> Result<Vec<CalculatorHistoryEntry>> {
-    get_history(&app)
+pub async fn get_calculator_history(app: AppHandle) -> Result<Vec<CalculatorHistoryEntry>> {
+    get_history(&app).await
 }
 
 #[command]
-pub fn save_calculator_history(
+pub async fn save_calculator_history(
     app: AppHandle,
     query: String,
     result: String,
     session_id: String,
 ) -> Result<()> {
-    save_to_history(&app, query, result, session_id)
+    save_to_history(&app, query, result, session_id).await
 }
 
 #[command]
-pub fn delete_calculator_history_entry(app: AppHandle, timestamp: i64) -> Result<()> {
-    delete_history_entry(&app, timestamp)
+pub async fn delete_calculator_history_entry(app: AppHandle, timestamp: i64) -> Result<()> {
+    delete_history_entry(&app, timestamp).await
 }
 
 #[command]
-pub fn clear_calculator_history(app: AppHandle) -> Result<()> {
-    clear_history(&app)
+pub async fn clear_calculator_history(app: AppHandle) -> Result<()> {
+    clear_history(&app).await
 }
 
 #[command]
-pub fn get_pinned_calculator_history_timestamps(app: AppHandle) -> Result<Vec<i64>> {
-    get_pinned_timestamps(&app)
+pub async fn get_pinned_calculator_history_timestamps(app: AppHandle) -> Result<Vec<i64>> {
+    get_pinned_timestamps(&app).await
 }
 
 #[command]
-pub fn set_calculator_history_entry_pinned(
+pub async fn set_calculator_history_entry_pinned(
     app: AppHandle,
     timestamp: i64,
     pinned: bool,
 ) -> Result<Vec<i64>> {
-    set_history_entry_pinned(&app, timestamp, pinned)
+    set_history_entry_pinned(&app, timestamp, pinned).await
 }

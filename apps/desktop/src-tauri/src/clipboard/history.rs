@@ -1,15 +1,18 @@
 use chrono::{SecondsFormat, Utc};
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use sqlx::{FromRow, SqlitePool};
 use std::collections::HashSet;
-use tauri::{AppHandle, Wry};
-use tauri_plugin_store::{Store, StoreExt};
+use tauri::AppHandle;
+use tokio::sync::Mutex;
 use url::Url;
 
+use super::db::get_clipboard_pool;
 use super::error::{ClipboardError, Result};
 use super::password::{decrypt_value, encrypt_value};
 
 use crate::clipboard::config::CONFIG as CLIPBOARD_CONFIG;
+
+static CLIPBOARD_HISTORY_WRITE_LOCK: Mutex<()> = Mutex::const_new(());
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, Default)]
 #[serde(rename_all = "snake_case")]
@@ -29,185 +32,169 @@ pub struct ClipboardHistoryEntry {
     pub word_count: usize,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, FromRow)]
 struct StoredClipboardHistoryEntry {
-    value: String,
-    #[serde(default)]
-    copied_at: Option<String>,
+    copied_at: String,
+    encrypted_value: String,
+    pinned: bool,
 }
 
-pub fn get_history(app: &AppHandle) -> Result<Vec<ClipboardHistoryEntry>> {
-    let store = app
-        .store(&CLIPBOARD_CONFIG.store_file_name)
-        .map_err(|e| ClipboardError::StoreOpeningError(e.to_string()))?;
-
-    get_decrypted_history(&store)
+#[derive(Debug, Clone)]
+struct VisibleClipboardHistoryEntry {
+    entry: ClipboardHistoryEntry,
+    pinned: bool,
 }
 
-pub fn get_history_values(app: &AppHandle) -> Result<Vec<String>> {
-    let history = get_history(app)?;
+pub async fn get_history(app: &AppHandle) -> Result<Vec<ClipboardHistoryEntry>> {
+    let pool = get_clipboard_pool(app).await?;
+    let (history, _) = load_visible_history(pool.as_ref()).await?;
+
+    Ok(history.into_iter().map(|record| record.entry).collect())
+}
+
+pub async fn get_history_values(app: &AppHandle) -> Result<Vec<String>> {
+    let history = get_history(app).await?;
     Ok(history.into_iter().map(|entry| entry.value).collect())
 }
 
-pub fn save_to_history(app: &AppHandle, copy_value: String) -> Result<()> {
-    let store = app
-        .store(&CLIPBOARD_CONFIG.store_file_name)
-        .map_err(|e| ClipboardError::StoreOpeningError(e.to_string()))?;
-
-    let mut pinned_entry_ids = read_pinned_entry_ids(&store)?;
-    let should_keep_pinned = pinned_entry_ids
-        .iter()
-        .any(|entry_id| pinned_entry_matches_value(entry_id, &copy_value));
-
-    let (mut history, mut undecryptable_history) =
-        get_decrypted_history_with_undecryptable(&store)?;
-    history.retain(|entry| entry.value != copy_value);
-    history.insert(0, build_entry(copy_value));
-    dedupe_keep_order(&mut history);
-    history.truncate(CLIPBOARD_CONFIG.max_history_entries);
-
-    let encrypted_history = encrypt_history_entries(&history)?;
-    let remaining_slots = CLIPBOARD_CONFIG
-        .max_history_entries
-        .saturating_sub(encrypted_history.len());
-    undecryptable_history.truncate(remaining_slots);
-
-    let mut serialized_history =
-        Vec::with_capacity(encrypted_history.len() + undecryptable_history.len());
-    for entry in encrypted_history {
-        let json_entry = serde_json::to_value(entry)
-            .map_err(|e| ClipboardError::SerializationError(e.to_string()))?;
-        serialized_history.push(json_entry);
+pub async fn save_to_history(app: &AppHandle, copy_value: String) -> Result<()> {
+    if copy_value.trim().is_empty() {
+        return Ok(());
     }
 
-    for entry in undecryptable_history {
-        serialized_history.push(stored_history_entry_to_value(entry));
-    }
+    let _guard = CLIPBOARD_HISTORY_WRITE_LOCK.lock().await;
+    let pool = get_clipboard_pool(app).await?;
+    let mut tx = pool.begin().await.map_err(database_error)?;
+    let stored_history = load_stored_history_with_executor(&mut *tx).await?;
+    let (duplicate_copied_ats, pinned) = find_duplicate_rows(&stored_history, &copy_value);
 
-    let app_json = Value::Array(serialized_history);
+    delete_rows_by_copied_at(&mut tx, &duplicate_copied_ats).await?;
 
-    store.set(CLIPBOARD_CONFIG.history_key, app_json);
-    store
-        .save()
-        .map_err(|e| ClipboardError::StoreSaveError(e.to_string()))?;
+    sqlx::query(
+        "INSERT INTO clipboard_history (copied_at, encrypted_value, pinned) VALUES (?, ?, ?)",
+    )
+    .bind(now_rfc3339())
+    .bind(encrypt_value(&copy_value)?)
+    .bind(pinned)
+    .execute(&mut *tx)
+    .await
+    .map_err(database_error)?;
 
-    pinned_entry_ids.retain(|entry_id| {
-        history
-            .iter()
-            .any(|entry| pinned_entry_matches_id(entry_id, &entry.copied_at, &entry.value))
-    });
-
-    if should_keep_pinned {
-        if let Some(entry) = history.first() {
-            pinned_entry_ids.push(build_pinned_entry_id(&entry.copied_at, &entry.value));
-        }
-    }
-
-    dedupe_keep_order_strings(&mut pinned_entry_ids);
-    save_pinned_entry_ids(&store, &pinned_entry_ids)?;
+    trim_history(&mut tx).await?;
+    tx.commit().await.map_err(database_error)?;
 
     Ok(())
 }
 
-pub fn remove_history_entry(app: &AppHandle, copied_at: String, value: String) -> Result<()> {
-    let store = app
-        .store(&CLIPBOARD_CONFIG.store_file_name)
-        .map_err(|e| ClipboardError::StoreOpeningError(e.to_string()))?;
-
-    let (history, undecryptable_history) = get_decrypted_history_with_undecryptable(&store)?;
-    let filtered_history = history
-        .into_iter()
-        .filter(|entry| !(entry.copied_at == copied_at && entry.value == value))
-        .collect::<Vec<_>>();
-
-    persist_history_entries(&store, &filtered_history, undecryptable_history)?;
-
-    let pinned_entry_id = build_pinned_entry_id(&copied_at, &value);
-    let mut pinned_entry_ids = read_pinned_entry_ids(&store)?;
-    pinned_entry_ids.retain(|entry_id| entry_id != &pinned_entry_id);
-    save_pinned_entry_ids(&store, &pinned_entry_ids)
-}
-
-pub fn clear_history(app: &AppHandle) -> Result<()> {
-    let store = app
-        .store(&CLIPBOARD_CONFIG.store_file_name)
-        .map_err(|e| ClipboardError::StoreOpeningError(e.to_string()))?;
-
-    persist_history_entries(&store, &[], Vec::new())?;
-    save_pinned_entry_ids(&store, &[])
-}
-
-pub fn get_pinned_entry_ids(app: &AppHandle) -> Result<Vec<String>> {
-    let store = app
-        .store(&CLIPBOARD_CONFIG.store_file_name)
-        .map_err(|e| ClipboardError::StoreOpeningError(e.to_string()))?;
-
-    read_pinned_entry_ids(&store)
-}
-
-pub fn set_entry_pinned(
+pub async fn remove_history_entry(
     app: &AppHandle,
     copied_at: String,
-    value: String,
+    _value: String,
+) -> Result<()> {
+    let _guard = CLIPBOARD_HISTORY_WRITE_LOCK.lock().await;
+    let pool = get_clipboard_pool(app).await?;
+
+    sqlx::query("DELETE FROM clipboard_history WHERE copied_at = ?")
+        .bind(copied_at)
+        .execute(pool.as_ref())
+        .await
+        .map_err(database_error)?;
+
+    Ok(())
+}
+
+pub async fn clear_history(app: &AppHandle) -> Result<()> {
+    let _guard = CLIPBOARD_HISTORY_WRITE_LOCK.lock().await;
+    let pool = get_clipboard_pool(app).await?;
+
+    sqlx::query("DELETE FROM clipboard_history")
+        .execute(pool.as_ref())
+        .await
+        .map_err(database_error)?;
+
+    Ok(())
+}
+
+pub async fn get_pinned_entry_ids(app: &AppHandle) -> Result<Vec<String>> {
+    let pool = get_clipboard_pool(app).await?;
+    get_pinned_entry_ids_from_pool(pool.as_ref()).await
+}
+
+pub async fn set_entry_pinned(
+    app: &AppHandle,
+    copied_at: String,
+    _value: String,
     pinned: bool,
 ) -> Result<Vec<String>> {
-    let store = app
-        .store(&CLIPBOARD_CONFIG.store_file_name)
-        .map_err(|e| ClipboardError::StoreOpeningError(e.to_string()))?;
+    let _guard = CLIPBOARD_HISTORY_WRITE_LOCK.lock().await;
+    let pool = get_clipboard_pool(app).await?;
 
-    let entry_id = build_pinned_entry_id(&copied_at, &value);
-    let mut entry_ids = read_pinned_entry_ids(&store)?;
+    sqlx::query("UPDATE clipboard_history SET pinned = ? WHERE copied_at = ?")
+        .bind(pinned)
+        .bind(copied_at)
+        .execute(pool.as_ref())
+        .await
+        .map_err(database_error)?;
 
-    if pinned {
-        if !entry_ids.iter().any(|existing| existing == &entry_id) {
-            entry_ids.push(entry_id);
-        }
-    } else {
-        entry_ids.retain(|existing| existing != &entry_id);
-    }
-
-    dedupe_keep_order_strings(&mut entry_ids);
-    save_pinned_entry_ids(&store, &entry_ids)?;
-    Ok(entry_ids)
+    get_pinned_entry_ids_from_pool(pool.as_ref()).await
 }
 
-fn get_from_history(store: &Store<Wry>) -> Option<Value> {
-    store.get(&CLIPBOARD_CONFIG.history_key)
+async fn load_visible_history(
+    pool: &SqlitePool,
+) -> Result<(
+    Vec<VisibleClipboardHistoryEntry>,
+    Vec<StoredClipboardHistoryEntry>,
+)> {
+    let stored_history = load_stored_history(pool).await?;
+    get_decrypted_history_with_undecryptable(stored_history)
 }
 
-fn get_decrypted_history(store: &Store<Wry>) -> Result<Vec<ClipboardHistoryEntry>> {
-    let (history, _) = get_decrypted_history_with_undecryptable(store)?;
-    Ok(history)
+async fn load_stored_history(pool: &SqlitePool) -> Result<Vec<StoredClipboardHistoryEntry>> {
+    load_stored_history_with_executor(pool).await
+}
+
+async fn load_stored_history_with_executor<'a, E>(
+    executor: E,
+) -> Result<Vec<StoredClipboardHistoryEntry>>
+where
+    E: sqlx::Executor<'a, Database = sqlx::Sqlite>,
+{
+    sqlx::query_as::<_, StoredClipboardHistoryEntry>(
+        "SELECT copied_at, encrypted_value, pinned FROM clipboard_history ORDER BY copied_at DESC",
+    )
+    .fetch_all(executor)
+    .await
+    .map_err(database_error)
 }
 
 fn get_decrypted_history_with_undecryptable(
-    store: &Store<Wry>,
-) -> Result<(Vec<ClipboardHistoryEntry>, Vec<StoredClipboardHistoryEntry>)> {
-    let stored_history = get_stored_history(store);
+    stored_history: Vec<StoredClipboardHistoryEntry>,
+) -> Result<(
+    Vec<VisibleClipboardHistoryEntry>,
+    Vec<StoredClipboardHistoryEntry>,
+)> {
     let mut history = Vec::with_capacity(stored_history.len());
     let mut undecryptable_history = Vec::new();
 
     for stored_entry in stored_history {
-        let value = match decrypt_value(&stored_entry.value) {
+        let decrypted_value = match decrypt_value(&stored_entry.encrypted_value) {
             Ok(value) => value,
             Err(_) => {
                 undecryptable_history.push(stored_entry);
                 continue;
             }
         };
-        let value = value.trim().to_string();
 
-        if value.is_empty() {
+        if decrypted_value.trim().is_empty()
+            || decrypted_value.len() > CLIPBOARD_CONFIG.max_entry_bytes
+        {
             continue;
         }
 
-        if value.len() > CLIPBOARD_CONFIG.max_entry_bytes {
-            continue;
-        }
-
-        let copied_at = normalize_copied_at(stored_entry.copied_at);
-
-        history.push(build_entry_with_timestamp(value, copied_at));
+        history.push(VisibleClipboardHistoryEntry {
+            entry: build_entry_with_timestamp(decrypted_value, stored_entry.copied_at.clone()),
+            pinned: stored_entry.pinned,
+        });
     }
 
     dedupe_keep_order(&mut history);
@@ -216,148 +203,81 @@ fn get_decrypted_history_with_undecryptable(
     Ok((history, undecryptable_history))
 }
 
-fn get_stored_history(store: &Store<Wry>) -> Vec<StoredClipboardHistoryEntry> {
-    let Some(json_value) = get_from_history(store) else {
-        return Vec::new();
-    };
-
-    match json_value {
-        Value::Array(entries) => entries
-            .into_iter()
-            .filter_map(parse_stored_history_entry)
-            .collect(),
-        _ => Vec::new(),
-    }
+fn dedupe_keep_order(values: &mut Vec<VisibleClipboardHistoryEntry>) {
+    let mut seen = HashSet::new();
+    values.retain(|entry| seen.insert(entry.entry.value.clone()));
 }
 
-fn parse_stored_history_entry(value: Value) -> Option<StoredClipboardHistoryEntry> {
-    match value {
-        Value::String(raw_value) => Some(StoredClipboardHistoryEntry {
-            value: raw_value,
-            copied_at: None,
-        }),
-        Value::Object(object) => {
-            let value = object.get("value")?.as_str()?.to_string();
-            let copied_at = object
-                .get("copied_at")
-                .and_then(|copied_at| copied_at.as_str().map(ToString::to_string));
+async fn get_pinned_entry_ids_from_pool(pool: &SqlitePool) -> Result<Vec<String>> {
+    let stored_history = sqlx::query_as::<_, StoredClipboardHistoryEntry>(
+        "SELECT copied_at, encrypted_value, pinned FROM clipboard_history WHERE pinned = 1 ORDER BY copied_at DESC",
+    )
+    .fetch_all(pool)
+    .await
+    .map_err(database_error)?;
+    let (history, _) = get_decrypted_history_with_undecryptable(stored_history)?;
 
-            Some(StoredClipboardHistoryEntry { value, copied_at })
+    Ok(build_pinned_entry_ids(&history))
+}
+
+fn find_duplicate_rows(
+    stored_history: &[StoredClipboardHistoryEntry],
+    copy_value: &str,
+) -> (Vec<String>, bool) {
+    let mut duplicate_copied_ats = Vec::new();
+    let mut pinned = false;
+
+    for entry in stored_history {
+        let Ok(decrypted_value) = decrypt_value(&entry.encrypted_value) else {
+            continue;
+        };
+
+        if decrypted_value == copy_value {
+            duplicate_copied_ats.push(entry.copied_at.clone());
+            pinned |= entry.pinned;
         }
-        _ => None,
     }
+
+    (duplicate_copied_ats, pinned)
 }
 
-fn stored_history_entry_to_value(entry: StoredClipboardHistoryEntry) -> Value {
-    match entry.copied_at {
-        Some(copied_at) => json!({
-            "value": entry.value,
-            "copied_at": copied_at,
-        }),
-        None => Value::String(entry.value),
-    }
-}
-
-fn read_pinned_entry_ids(store: &Store<Wry>) -> Result<Vec<String>> {
-    let Some(value) = store.get(CLIPBOARD_CONFIG.pinned_entries_key) else {
-        return Ok(Vec::new());
-    };
-
-    let entry_ids = serde_json::from_value::<Vec<String>>(value)
-        .map_err(|e| ClipboardError::SerializationError(e.to_string()))?;
-    let mut normalized = entry_ids
-        .into_iter()
-        .map(|entry_id| entry_id.trim().to_string())
-        .filter(|entry_id| !entry_id.is_empty())
-        .collect::<Vec<_>>();
-    dedupe_keep_order_strings(&mut normalized);
-    Ok(normalized)
-}
-
-fn save_pinned_entry_ids(store: &Store<Wry>, entry_ids: &[String]) -> Result<()> {
-    let value = serde_json::to_value(entry_ids)
-        .map_err(|e| ClipboardError::SerializationError(e.to_string()))?;
-    store.set(CLIPBOARD_CONFIG.pinned_entries_key, value);
-    store
-        .save()
-        .map_err(|e| ClipboardError::StoreSaveError(e.to_string()))?;
-    Ok(())
-}
-
-fn persist_history_entries(
-    store: &Store<Wry>,
-    history: &[ClipboardHistoryEntry],
-    mut undecryptable_history: Vec<StoredClipboardHistoryEntry>,
+async fn delete_rows_by_copied_at(
+    tx: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
+    copied_ats: &[String],
 ) -> Result<()> {
-    let encrypted_history = encrypt_history_entries(history)?;
-    let remaining_slots = CLIPBOARD_CONFIG
-        .max_history_entries
-        .saturating_sub(encrypted_history.len());
-    undecryptable_history.truncate(remaining_slots);
-
-    let mut serialized_history =
-        Vec::with_capacity(encrypted_history.len() + undecryptable_history.len());
-    for entry in encrypted_history {
-        let json_entry = serde_json::to_value(entry)
-            .map_err(|e| ClipboardError::SerializationError(e.to_string()))?;
-        serialized_history.push(json_entry);
+    for copied_at in copied_ats {
+        sqlx::query("DELETE FROM clipboard_history WHERE copied_at = ?")
+            .bind(copied_at)
+            .execute(&mut **tx)
+            .await
+            .map_err(database_error)?;
     }
-
-    for entry in undecryptable_history {
-        serialized_history.push(stored_history_entry_to_value(entry));
-    }
-
-    store.set(
-        CLIPBOARD_CONFIG.history_key,
-        Value::Array(serialized_history),
-    );
-    store
-        .save()
-        .map_err(|e| ClipboardError::StoreSaveError(e.to_string()))?;
 
     Ok(())
 }
 
-fn encrypt_history_entries(
-    history: &[ClipboardHistoryEntry],
-) -> Result<Vec<ClipboardHistoryEntry>> {
+async fn trim_history(tx: &mut sqlx::Transaction<'_, sqlx::Sqlite>) -> Result<()> {
+    sqlx::query(
+        "DELETE FROM clipboard_history WHERE copied_at NOT IN (SELECT copied_at FROM clipboard_history ORDER BY copied_at DESC LIMIT ?)",
+    )
+    .bind(CLIPBOARD_CONFIG.max_history_entries as i64)
+    .execute(&mut **tx)
+    .await
+    .map_err(database_error)?;
+
+    Ok(())
+}
+
+fn build_pinned_entry_ids(history: &[VisibleClipboardHistoryEntry]) -> Vec<String> {
     history
         .iter()
-        .map(|entry| {
-            let mut encrypted_entry = entry.clone();
-            encrypted_entry.value = encrypt_value(&entry.value)?;
-            Ok(encrypted_entry)
-        })
+        .filter(|record| record.pinned)
+        .map(|record| build_pinned_entry_id(&record.entry.copied_at, &record.entry.value))
         .collect()
-}
-
-fn dedupe_keep_order(values: &mut Vec<ClipboardHistoryEntry>) {
-    let mut seen = HashSet::new();
-    values.retain(|entry| seen.insert(entry.value.clone()));
-}
-
-fn dedupe_keep_order_strings(values: &mut Vec<String>) {
-    let mut seen = HashSet::new();
-    values.retain(|entry| seen.insert(entry.clone()));
 }
 
 fn build_pinned_entry_id(copied_at: &str, value: &str) -> String {
     format!("{}::{}", copied_at.trim(), value)
-}
-
-fn pinned_entry_matches_id(entry_id: &str, copied_at: &str, value: &str) -> bool {
-    entry_id == build_pinned_entry_id(copied_at, value)
-}
-
-fn pinned_entry_matches_value(entry_id: &str, value: &str) -> bool {
-    entry_id
-        .split_once("::")
-        .map(|(_, stored_value)| stored_value == value)
-        .unwrap_or(false)
-}
-
-fn build_entry(value: String) -> ClipboardHistoryEntry {
-    build_entry_with_timestamp(value, now_rfc3339())
 }
 
 fn build_entry_with_timestamp(value: String, copied_at: String) -> ClipboardHistoryEntry {
@@ -412,21 +332,10 @@ fn count_words_and_characters(value: &str, content_type: &ClipboardContentType) 
     (character_count, word_count)
 }
 
-fn normalize_copied_at(copied_at: Option<String>) -> String {
-    copied_at
-        .and_then(normalized_optional_text)
-        .unwrap_or_else(now_rfc3339)
-}
-
-fn normalized_optional_text(value: String) -> Option<String> {
-    let trimmed = value.trim();
-    if trimmed.is_empty() {
-        return None;
-    }
-
-    Some(trimmed.to_string())
-}
-
 fn now_rfc3339() -> String {
-    Utc::now().to_rfc3339_opts(SecondsFormat::Millis, true)
+    Utc::now().to_rfc3339_opts(SecondsFormat::Micros, true)
+}
+
+fn database_error(error: sqlx::Error) -> ClipboardError {
+    ClipboardError::Database(error.to_string())
 }

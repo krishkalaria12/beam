@@ -5,17 +5,23 @@ pub type Result<T> = std::result::Result<T, CalculatorError>;
 
 #[derive(Debug, Clone, Error)]
 pub enum CalculatorError {
+    #[error("calculator app local data directory unavailable")]
+    AppDataDirUnavailable,
+
+    #[error("failed to create calculator data directory: {0}")]
+    CreateDirectory(String),
+
+    #[error("failed to connect calculator database: {0}")]
+    DatabaseConnection(String),
+
+    #[error("failed to initialize calculator schema: {0}")]
+    SchemaInitialization(String),
+
+    #[error("calculator database error: {0}")]
+    Database(String),
+
     #[error("Calculator evaluation failed: {0}")]
     EvaluationFailed(String),
-
-    #[error("Failed to open store: {0}")]
-    StoreOpeningError(String),
-
-    #[error("Failed to save store: {0}")]
-    StoreSaveError(String),
-
-    #[error("Serialization error: {0}")]
-    SerializationError(String),
 }
 
 impl Serialize for CalculatorError {
