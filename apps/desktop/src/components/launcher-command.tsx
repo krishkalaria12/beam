@@ -859,6 +859,7 @@ export default function LauncherCommand() {
       </Suspense>
       <Command
         shouldFilter={false}
+        smartPointerSelection
         onKeyDown={handleKeyDown}
         className="glass-effect beam-main-shell h-full w-full overflow-hidden text-foreground"
       >

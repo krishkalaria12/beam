@@ -289,6 +289,14 @@
   border-color: transparent;
 }
 
+[data-command-smart-pointer-selection="true"][data-command-interaction-mode="selection"]
+  .command-item:hover:not([data-selected="true"]),
+[data-command-smart-pointer-selection="true"][data-command-interaction-mode="selection"]
+  .command-item[data-disabled="true"]:hover:not([data-selected="true"]) {
+  background: transparent;
+  border-color: transparent;
+}
+
 /* Inside the actions panel, rely on cmdk's data-selected for highlighting
    and suppress the CSS :hover background to avoid dual-highlight conflict */
 .sc-actions-panel .command-item:hover:not([data-selected="true"]) {

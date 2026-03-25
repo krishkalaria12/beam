@@ -15,16 +15,136 @@ import {
 import { SearchIcon, CheckIcon } from "lucide-react";
 import beamLogo from "@/assets/beam-logo.png";
 
-function Command({ className, ...props }: React.ComponentProps<typeof CommandPrimitive>) {
-  return (
+type CommandInteractionMode = "pointer" | "selection";
+
+interface SmartPointerSelectionContextValue {
+  allowPointerSelection: (event: React.PointerEvent<HTMLDivElement>) => boolean;
+}
+
+const SmartPointerSelectionContext = React.createContext<SmartPointerSelectionContextValue | null>(
+  null,
+);
+
+const POINTER_SELECTION_GRACE_MS = 120;
+
+function isModifierOnlyKey(key: string) {
+  return key === "Alt" || key === "Control" || key === "Meta" || key === "Shift";
+}
+
+function Command({
+  className,
+  smartPointerSelection = false,
+  onPointerMoveCapture,
+  onKeyDownCapture,
+  onWheelCapture,
+  ...props
+}: React.ComponentProps<typeof CommandPrimitive> & {
+  smartPointerSelection?: boolean;
+}) {
+  const pointerStateRef = React.useRef<{
+    x: number | null;
+    y: number | null;
+    lastIntentAt: number;
+  }>({
+    x: null,
+    y: null,
+    lastIntentAt: 0,
+  });
+  const [interactionMode, setInteractionMode] = React.useState<CommandInteractionMode>("selection");
+
+  const setSelectionMode = React.useCallback(() => {
+    pointerStateRef.current.lastIntentAt = 0;
+    setInteractionMode((previous) => (previous === "selection" ? previous : "selection"));
+  }, []);
+
+  const allowPointerSelection = React.useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      if (!smartPointerSelection) {
+        return true;
+      }
+
+      if (event.pointerType === "touch") {
+        return false;
+      }
+
+      return performance.now() - pointerStateRef.current.lastIntentAt <= POINTER_SELECTION_GRACE_MS;
+    },
+    [smartPointerSelection],
+  );
+
+  const handlePointerMoveCapture = React.useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      if (smartPointerSelection && event.pointerType !== "touch") {
+        const previousX = pointerStateRef.current.x;
+        const previousY = pointerStateRef.current.y;
+        const hasMeaningfulMovement =
+          event.movementX !== 0 ||
+          event.movementY !== 0 ||
+          previousX === null ||
+          previousY === null ||
+          previousX !== event.clientX ||
+          previousY !== event.clientY;
+
+        pointerStateRef.current.x = event.clientX;
+        pointerStateRef.current.y = event.clientY;
+
+        if (hasMeaningfulMovement) {
+          pointerStateRef.current.lastIntentAt = performance.now();
+          setInteractionMode((previous) => (previous === "pointer" ? previous : "pointer"));
+        }
+      }
+
+      onPointerMoveCapture?.(event);
+    },
+    [onPointerMoveCapture, smartPointerSelection],
+  );
+
+  const handleKeyDownCapture = React.useCallback(
+    (event: React.KeyboardEvent<HTMLDivElement>) => {
+      if (smartPointerSelection && !isModifierOnlyKey(event.key)) {
+        setSelectionMode();
+      }
+
+      onKeyDownCapture?.(event);
+    },
+    [onKeyDownCapture, setSelectionMode, smartPointerSelection],
+  );
+
+  const handleWheelCapture = React.useCallback(
+    (event: React.WheelEvent<HTMLDivElement>) => {
+      if (smartPointerSelection) {
+        setSelectionMode();
+      }
+
+      onWheelCapture?.(event);
+    },
+    [onWheelCapture, setSelectionMode, smartPointerSelection],
+  );
+
+  const command = (
     <CommandPrimitive
       data-slot="command"
+      data-command-smart-pointer-selection={smartPointerSelection ? "true" : undefined}
+      data-command-interaction-mode={smartPointerSelection ? interactionMode : undefined}
       className={cn(
         "rounded-none flex size-full flex-col bg-transparent text-foreground",
         className,
       )}
+      onPointerMoveCapture={handlePointerMoveCapture}
+      onKeyDownCapture={handleKeyDownCapture}
+      onWheelCapture={handleWheelCapture}
       {...props}
     />
+  );
+
+  if (!smartPointerSelection) {
+    return command;
+  }
+
+  return (
+    <SmartPointerSelectionContext.Provider value={{ allowPointerSelection }}>
+      {command}
+    </SmartPointerSelectionContext.Provider>
   );
 }
 
@@ -159,8 +279,11 @@ function CommandSeparator({
 function CommandItem({
   className,
   children,
+  onPointerMoveCapture,
   ...props
 }: React.ComponentProps<typeof CommandPrimitive.Item>) {
+  const smartPointerSelection = React.useContext(SmartPointerSelectionContext);
+
   return (
     <CommandPrimitive.Item
       data-slot="command-item"
@@ -168,6 +291,16 @@ function CommandItem({
         "command-item text-launcher-md group/command-item relative flex cursor-default items-center gap-4 rounded-lg px-3 py-3 outline-hidden select-none",
         className,
       )}
+      onPointerMoveCapture={(event) => {
+        onPointerMoveCapture?.(event);
+        if (event.isPropagationStopped()) {
+          return;
+        }
+
+        if (smartPointerSelection && !smartPointerSelection.allowPointerSelection(event)) {
+          event.stopPropagation();
+        }
+      }}
       {...props}
     >
       <div className="flex flex-1 items-center gap-4 min-w-0">{children}</div>

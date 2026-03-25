@@ -671,6 +671,7 @@ function LauncherActionsPanelContent({
     >
       <Command
         shouldFilter={false}
+        smartPointerSelection
         value={currentPageId === "root" ? selectedRootItemId : ""}
         onValueChange={(value) => {
           if (currentPageId !== "root") {
