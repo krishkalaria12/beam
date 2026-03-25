@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 interface HotkeyRecorderProps {
   value: string;
   onChange: (nextHotkey: string) => void;
+  onEscape?: () => void;
   disabled?: boolean;
   className?: string;
   autoRecord?: boolean;
@@ -122,6 +123,7 @@ function formatHotkeyLabel(value: string): string {
 export default function HotkeyRecorder({
   value,
   onChange,
+  onEscape,
   disabled = false,
   className,
   autoRecord = false,
@@ -142,6 +144,7 @@ export default function HotkeyRecorder({
 
     if (event.key === "Escape") {
       setIsRecording(false);
+      onEscape?.();
       return;
     }
 

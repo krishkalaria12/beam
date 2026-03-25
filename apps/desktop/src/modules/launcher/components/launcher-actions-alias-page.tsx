@@ -81,6 +81,7 @@ export function LauncherActionsAliasPage({
         </Button>
         <Button
           type="button"
+          variant="secondary"
           size="sm"
           disabled={!canSave}
           onClick={onSave}

@@ -74,6 +74,42 @@ function buildDefaultRootItems(): LauncherActionItem[] {
   ];
 }
 
+function buildAutoRootItems(
+  defaultTarget: LauncherActionTarget | null | undefined,
+): LauncherActionItem[] {
+  if (!defaultTarget || defaultTarget.kind !== "command") {
+    return [];
+  }
+
+  return [
+    {
+      id: `${defaultTarget.commandId}-set-hotkey`,
+      label: "Set Hotkey...",
+      icon: <Keyboard />,
+      keywords: ["shortcut", "keys", "binding"],
+      nextPageId: "hotkey",
+      nextPageTarget: defaultTarget,
+      closeOnSelect: false,
+    },
+  ];
+}
+
+function insertItemsBeforeBack(
+  items: readonly LauncherActionItem[],
+  extraItems: readonly LauncherActionItem[],
+): LauncherActionItem[] {
+  if (extraItems.length === 0) {
+    return [...items];
+  }
+
+  const backIndex = items.findIndex((item) => item.label === "Back");
+  if (backIndex < 0) {
+    return [...items, ...extraItems];
+  }
+
+  return [...items.slice(0, backIndex), ...extraItems, ...items.slice(backIndex)];
+}
+
 function createEmptySelectionByPage(): Record<ActionPageId, string> {
   return {
     root: "",
@@ -241,6 +277,7 @@ function LauncherActionsPanelContent({
   anchorMode = "self",
   rootTitle,
   rootSearchPlaceholder,
+  showItemDescriptions = false,
   rootItems,
   defaultRootItemsMode = "replace",
   defaultTarget,
@@ -299,13 +336,17 @@ function LauncherActionsPanelContent({
     ? (hotkeyDraftsByTarget[currentTargetKey] ?? savedHotkeyValue)
     : savedHotkeyValue;
   const defaultRootItems = buildDefaultRootItems();
+  const autoRootItems = buildAutoRootItems(defaultTarget);
   const resolvedRootItems =
     rootItems == null
       ? defaultRootItems
       : defaultRootItemsMode === "append"
         ? [...rootItems, ...defaultRootItems]
         : rootItems;
-  const filteredRootItems = filterActionItems(resolvedRootItems, rootQuery);
+  const rootItemsWithAutoHotkey = resolvedRootItems.some((item) => item.nextPageId === "hotkey")
+    ? resolvedRootItems
+    : insertItemsBeforeBack(resolvedRootItems, autoRootItems);
+  const filteredRootItems = filterActionItems(rootItemsWithAutoHotkey, rootQuery);
   const hotkeyConflictCommandId = currentCommandId
     ? findHotkeyConflictCommandId(hotkeyMap, currentCommandId, hotkeyValue)
     : null;
@@ -774,6 +815,7 @@ function LauncherActionsPanelContent({
             inputRef={rootInputMountRef}
             query={rootQuery}
             searchPlaceholder={rootSearchPlaceholder ?? "Search actions..."}
+            showItemDescriptions={showItemDescriptions}
             items={filteredRootItems}
             onQueryChange={setRootQuery}
             onNavigate={(item) => {

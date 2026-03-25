@@ -51,24 +51,24 @@ export function useManagedItemActionItems(item: LauncherManagedItem | null): Lau
       });
     }
 
-    if (item.supportsAlias) {
-      if (item.commandTarget) {
-        items.push({
-          id: `${itemId}-set-hotkey`,
-          label: "Set Hotkey...",
-          description: `Assign a shortcut for ${item.title}`,
-          icon: <Keyboard className="size-4" />,
-          keywords: ["hotkey", "shortcut", "keys", item.kind],
-          nextPageId: "hotkey",
-          nextPageTarget: {
-            kind: "command",
-            commandId: item.commandTarget.commandId,
-            title: item.commandTarget.title ?? item.title,
-          },
-          closeOnSelect: false,
-        });
-      }
+    if (item.commandTarget) {
+      items.push({
+        id: `${itemId}-set-hotkey`,
+        label: "Set Hotkey...",
+        description: `Assign a shortcut for ${item.title}`,
+        icon: <Keyboard className="size-4" />,
+        keywords: ["hotkey", "shortcut", "keys", item.kind],
+        nextPageId: "hotkey",
+        nextPageTarget: {
+          kind: "command",
+          commandId: item.commandTarget.commandId,
+          title: item.commandTarget.title ?? item.title,
+        },
+        closeOnSelect: false,
+      });
+    }
 
+    if (item.supportsAlias) {
       items.push({
         id: `${itemId}-set-alias`,
         label: "Set Alias...",

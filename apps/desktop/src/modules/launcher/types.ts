@@ -34,6 +34,7 @@ export interface LauncherActionsPanelProps {
   anchorMode?: "self" | "panel-footer";
   rootTitle?: string;
   rootSearchPlaceholder?: string;
+  showItemDescriptions?: boolean;
   rootItems?: LauncherActionItem[];
   defaultRootItemsMode?: "replace" | "append";
   defaultTarget?: LauncherActionTarget | null;

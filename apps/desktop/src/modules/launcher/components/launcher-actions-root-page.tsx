@@ -11,6 +11,7 @@ interface LauncherActionsRootPageProps {
   inputRef: (node: HTMLInputElement | null) => void;
   query: string;
   searchPlaceholder: string;
+  showItemDescriptions: boolean;
   items: LauncherActionItem[];
   onQueryChange: (value: string) => void;
   onNavigate: (item: LauncherActionItem) => void;
@@ -21,6 +22,7 @@ export function LauncherActionsRootPage({
   inputRef,
   query,
   searchPlaceholder,
+  showItemDescriptions,
   items,
   onQueryChange,
   onNavigate,
@@ -44,7 +46,7 @@ export function LauncherActionsRootPage({
                 <p className="truncate text-launcher-md font-medium text-foreground">
                   {item.label}
                 </p>
-                {item.description ? (
+                {showItemDescriptions && item.description ? (
                   <p className="truncate text-launcher-xs text-muted-foreground/70">
                     {item.description}
                   </p>

@@ -47,6 +47,7 @@ export function LauncherActionsHotkeyPage({
                 <HotkeyRecorder
                   value={hotkeyValue}
                   onChange={onHotkeyChange}
+                  onEscape={onBack}
                   autoRecord={false}
                   disabled={false}
                 />
@@ -55,6 +56,7 @@ export function LauncherActionsHotkeyPage({
               <HotkeyRecorder
                 value={hotkeyValue}
                 onChange={onHotkeyChange}
+                onEscape={onBack}
                 autoRecord
                 disabled={false}
               />
@@ -95,6 +97,7 @@ export function LauncherActionsHotkeyPage({
         </Button>
         <Button
           type="button"
+          variant="secondary"
           size="sm"
           disabled={!canSave}
           onClick={onSave}
