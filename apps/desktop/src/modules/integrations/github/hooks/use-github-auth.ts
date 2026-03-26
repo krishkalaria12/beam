@@ -4,12 +4,12 @@ import { open as openExternal } from "@tauri-apps/plugin-shell";
 import { useRef, useState } from "react";
 
 import { parseOauthDeepLink } from "@/modules/extensions/extension-manager/deep-link";
+import { resolveGithubStoredTokens } from "@/modules/integrations/github/api/access-token";
 
 import {
   githubCreateAuthSession,
   githubExchangeCodeForTokens,
   githubGetCurrentUser,
-  githubRefreshAccessToken,
 } from "../api/github";
 import {
   getGithubStoredTokens,
@@ -24,7 +24,7 @@ import {
   savePendingGithubAuthSession,
   setStoredGithubClientId,
 } from "../lib/oauth-session";
-import { isTokenExpired, toStoredTokens } from "../lib/token";
+import { toStoredTokens } from "../lib/token";
 import type { GithubStoredTokenSet, GithubUserProfile } from "../types";
 import { useMountEffect } from "@/hooks/use-mount-effect";
 
@@ -53,44 +53,38 @@ export function useGithubAuth() {
   const isConnected = !!tokens?.accessToken;
 
   async function ensureAccessToken() {
-    const current = tokensRef.current ?? (await getGithubStoredTokens());
-
-    if (!current) {
-      setTokens(null);
-      tokensRef.current = null;
-      return null;
-    }
-
-    if (!isTokenExpired(current)) {
-      if (!tokensRef.current) {
-        setTokens(current);
-        tokensRef.current = current;
-      }
-      return current.accessToken;
-    }
-
-    if (!current.refreshToken) {
-      return current.accessToken;
-    }
-
-    const effectiveClientId = clientIdRef.current.trim() || getStoredGithubClientId();
-    if (!effectiveClientId) {
-      return current.accessToken;
-    }
-
     try {
-      setIsRefreshingToken(true);
-      const refreshed = await githubRefreshAccessToken({
-        clientId: effectiveClientId,
-        refreshToken: current.refreshToken,
-      });
-      const merged = toStoredTokens(refreshed, current);
-      await setGithubStoredTokens(merged);
-      setTokens(merged);
-      tokensRef.current = merged;
-      return merged.accessToken;
+      const current = tokensRef.current ?? (await getGithubStoredTokens());
+      if (!current) {
+        setTokens(null);
+        tokensRef.current = null;
+        return null;
+      }
+
+      const shouldRefresh =
+        Boolean(current.refreshToken) &&
+        Boolean((clientIdRef.current.trim() || getStoredGithubClientId()).trim());
+      if (shouldRefresh) {
+        setIsRefreshingToken(true);
+      }
+
+      const resolvedTokens = await resolveGithubStoredTokens(
+        current,
+        clientIdRef.current.trim() || getStoredGithubClientId(),
+      );
+      if (!resolvedTokens) {
+        setTokens(null);
+        tokensRef.current = null;
+        return null;
+      }
+
+      if (tokensRef.current !== resolvedTokens) {
+        setTokens(resolvedTokens);
+        tokensRef.current = resolvedTokens;
+      }
+
+      return resolvedTokens.accessToken;
     } catch (refreshError) {
-      await removeGithubStoredTokens();
       setTokens(null);
       tokensRef.current = null;
       setUser(null);

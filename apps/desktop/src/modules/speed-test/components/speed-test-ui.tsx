@@ -9,7 +9,7 @@ import {
   TriangleAlert,
   Wifi,
 } from "lucide-react";
-import { lazy, Suspense } from "react";
+import { useId, type ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 import { ModuleFooter } from "@/components/module";
@@ -22,32 +22,49 @@ interface ThroughputMiniChartProps {
   color: string;
 }
 
-const LazyThroughputMiniChart = lazy(async () => {
-  const module = await import("recharts");
-  const ThroughputMiniChart = ({ data, metric, color }: ThroughputMiniChartProps) => (
-    <module.ResponsiveContainer width="100%" height="100%">
-      <module.AreaChart data={data} margin={{ top: 2, right: 0, left: 0, bottom: 2 }}>
-        <defs>
-          <linearGradient id={`speedtest-${metric}-gradient`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor={color} stopOpacity={0.35} />
-            <stop offset="95%" stopColor={color} stopOpacity={0.02} />
-          </linearGradient>
-        </defs>
-        <module.Area
-          dataKey={metric}
-          type="monotone"
-          fill={`url(#speedtest-${metric}-gradient)`}
-          stroke={color}
-          strokeWidth={1.5}
-          dot={false}
-          isAnimationActive={false}
-        />
-      </module.AreaChart>
-    </module.ResponsiveContainer>
-  );
+const MINI_CHART_WIDTH = 240;
+const MINI_CHART_HEIGHT = 60;
+const MINI_CHART_PADDING = 2;
 
-  return { default: ThroughputMiniChart };
-});
+function ThroughputMiniChart({ data, metric, color }: ThroughputMiniChartProps) {
+  const gradientId = useId();
+  const points = toChartPoints(data, metric);
+
+  if (points.length < 2) {
+    return <div className="h-full w-full" />;
+  }
+
+  const firstPoint = points[0];
+  const lastPoint = points[points.length - 1];
+  const baseline = MINI_CHART_HEIGHT - MINI_CHART_PADDING;
+  const linePath = buildLinePath(points);
+  const fillPath = `${linePath} L ${lastPoint.x} ${baseline} L ${firstPoint.x} ${baseline} Z`;
+
+  return (
+    <svg
+      viewBox={`0 0 ${MINI_CHART_WIDTH} ${MINI_CHART_HEIGHT}`}
+      className="h-full w-full overflow-visible"
+      preserveAspectRatio="none"
+      aria-hidden="true"
+    >
+      <defs>
+        <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="5%" stopColor={color} stopOpacity="0.35" />
+          <stop offset="95%" stopColor={color} stopOpacity="0.02" />
+        </linearGradient>
+      </defs>
+      <path d={fillPath} fill={`url(#${gradientId})`} />
+      <path
+        d={linePath}
+        fill="none"
+        stroke={color}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
 
 /* =============================================================================
    STATUS BADGE
@@ -237,9 +254,7 @@ export function SpeedCard({ metric, valueMbps, p90Value, data, isRunning, index 
       {/* Mini chart - takes remaining space */}
       <div className="mt-auto h-[60px] w-full">
         {data.length > 1 ? (
-          <Suspense fallback={<div className="h-full w-full" />}>
-            <LazyThroughputMiniChart data={data} metric={metric} color={color} />
-          </Suspense>
+          <ThroughputMiniChart data={data} metric={metric} color={color} />
         ) : (
           <div className="flex h-full items-center justify-center">
             <div className="flex gap-0.5">
@@ -264,6 +279,47 @@ export function SpeedCard({ metric, valueMbps, p90Value, data, isRunning, index 
   );
 }
 
+type ThroughputChartPoint = {
+  x: number;
+  y: number;
+};
+
+function toChartPoints(
+  data: readonly ThroughputChartDatum[],
+  metric: SpeedMetric,
+): ThroughputChartPoint[] {
+  const values = data
+    .map((entry) => entry[metric])
+    .filter((value): value is number => Number.isFinite(value));
+
+  if (values.length < 2) {
+    return [];
+  }
+
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const valueRange = max - min || 1;
+  const chartWidth = MINI_CHART_WIDTH - MINI_CHART_PADDING * 2;
+  const chartHeight = MINI_CHART_HEIGHT - MINI_CHART_PADDING * 2;
+  const lastIndex = values.length - 1;
+
+  return values.map((value, index) => ({
+    x: MINI_CHART_PADDING + (chartWidth * index) / lastIndex,
+    y: MINI_CHART_PADDING + chartHeight - ((value - min) / valueRange) * chartHeight,
+  }));
+}
+
+function buildLinePath(points: readonly ThroughputChartPoint[]): string {
+  let path = "";
+
+  for (const [index, point] of points.entries()) {
+    const command = index === 0 ? "M" : "L";
+    path += `${command} ${point.x} ${point.y} `;
+  }
+
+  return path.trim();
+}
+
 /* =============================================================================
    METRIC CARD - Compact stat display
    ============================================================================= */
@@ -272,7 +328,7 @@ interface MetricCardProps {
   label: string;
   value: number | null;
   unit: string;
-  icon: React.ReactNode;
+  icon: ReactNode;
   gradient: string;
   ringColor: string;
   index: number;

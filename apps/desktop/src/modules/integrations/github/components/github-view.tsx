@@ -1,6 +1,6 @@
 import { isTauri } from "@tauri-apps/api/core";
 import { open as openExternal } from "@tauri-apps/plugin-shell";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowUpRight,
   ChevronLeft,
@@ -21,7 +21,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
-import { githubGetAssignedIssues, githubSearchIssuesAndPullRequests } from "../api/github";
+import {
+  fetchGithubAssignedItems,
+  getGithubAssignedItemsQueryOptions,
+  GITHUB_ASSIGNED_ITEMS_QUERY_KEY,
+} from "@/modules/integrations/github/api/query";
+import { githubSearchIssuesAndPullRequests } from "../api/github";
 import { setStoredGithubClientId } from "../lib/oauth-session";
 import { useGithubAuth } from "../hooks/use-github-auth";
 import type { GithubIssueItem } from "../types";
@@ -31,7 +36,6 @@ interface GithubViewProps {
   onBack: () => void;
 }
 
-const ASSIGNED_ITEMS_PER_PAGE = 20;
 const SEARCH_ITEMS_PER_PAGE = 10;
 
 async function openUrl(url: string) {
@@ -473,6 +477,7 @@ function GithubFooter() {
 }
 
 export function GithubView({ initialQuery, onBack }: GithubViewProps) {
+  const queryClient = useQueryClient();
   const [state, dispatch] = useReducer(githubViewReducer, {
     searchInputState: { key: initialQuery, value: initialQuery },
     assignedItems: [],
@@ -514,28 +519,9 @@ export function GithubView({ initialQuery, onBack }: GithubViewProps) {
     setError(null);
   }
 
-  async function fetchAssignedItems(accessToken: string) {
-    return githubGetAssignedIssues({
-      accessToken,
-      state: "open",
-      sort: "updated",
-      direction: "desc",
-      perPage: ASSIGNED_ITEMS_PER_PAGE,
-      page: 1,
-    });
-  }
   const assignedItemsQuery = useQuery({
-    queryKey: ["github-assigned-items", isConnected],
-    queryFn: async () => {
-      const accessToken = await ensureAccessToken();
-      if (!accessToken) {
-        return [];
-      }
-
-      return fetchAssignedItems(accessToken);
-    },
+    ...getGithubAssignedItemsQueryOptions(ensureAccessToken),
     enabled: isConnected,
-    staleTime: 0,
   });
 
   if (!isConnected && state.assignedItems.length > 0) {
@@ -574,6 +560,7 @@ export function GithubView({ initialQuery, onBack }: GithubViewProps) {
     try {
       await disconnect();
       toast.success("GitHub disconnected");
+      queryClient.removeQueries({ queryKey: GITHUB_ASSIGNED_ITEMS_QUERY_KEY });
       dispatch({ type: "set-assigned-items", value: [] });
       dispatch({ type: "set-search-items", value: [] });
     } catch (disconnectError) {
@@ -593,7 +580,9 @@ export function GithubView({ initialQuery, onBack }: GithubViewProps) {
         return;
       }
 
-      const issues = await fetchAssignedItems(accessToken);
+      const issues = await queryClient.fetchQuery(
+        getGithubAssignedItemsQueryOptions(() => Promise.resolve(accessToken)),
+      );
 
       dispatch({ type: "set-assigned-items", value: issues });
       await refreshUserProfile();

@@ -5,11 +5,14 @@ import {
   createTodo,
   deleteSubTodo,
   deleteTodo,
-  getTodo,
-  getTodos,
   updateSubTodo,
   updateTodo,
 } from "@/modules/todo/api/todo";
+import {
+  getTodoQueryOptions,
+  getTodosQueryOptions,
+  TODO_QUERY_KEY,
+} from "@/modules/todo/api/query";
 import type {
   CreateSubTodoInput,
   CreateTodoInput,
@@ -17,23 +20,16 @@ import type {
   UpdateTodoInput,
 } from "@/modules/todo/types";
 
-const TODO_QUERY_KEY = ["todo", "items"] as const;
-
 export function useTodos() {
   return useQuery({
-    queryKey: TODO_QUERY_KEY,
-    queryFn: getTodos,
-    staleTime: 0,
-    refetchOnWindowFocus: true,
+    ...getTodosQueryOptions(),
   });
 }
 
 export function useTodo(todoId: string | null) {
   return useQuery({
-    queryKey: ["todo", "item", todoId],
-    queryFn: () => getTodo(todoId as string),
+    ...(todoId ? getTodoQueryOptions(todoId) : getTodoQueryOptions("")),
     enabled: Boolean(todoId),
-    staleTime: 0,
   });
 }
 

@@ -1,18 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
-  getPinnedCalculatorHistoryTimestamps,
   pinnedCalculatorHistoryQueryKey,
   setCalculatorHistoryEntryPinned,
 } from "@/modules/calculator-history/api/history-actions";
 import type { CalculatorHistoryEntry } from "@/modules/calculator-history/api/get-calculator-history";
+import { getPinnedCalculatorHistoryQueryOptions } from "@/modules/calculator-history/api/query";
 
 export function usePinnedCalculatorHistory() {
-  return useQuery({
-    queryKey: pinnedCalculatorHistoryQueryKey,
-    queryFn: getPinnedCalculatorHistoryTimestamps,
-    staleTime: Infinity,
-  });
+  return useQuery(getPinnedCalculatorHistoryQueryOptions());
 }
 
 export function useSetPinnedCalculatorHistoryEntry() {

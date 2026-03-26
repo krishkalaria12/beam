@@ -61,6 +61,7 @@ export interface DispatchRuntime {
   setTranslationQuery: (query: string) => void;
   setSpotifyQuery: (query: string) => void;
   setGithubQuery: (query: string) => void;
+  preparePanel?: (panel: CommandPanel) => Promise<void>;
   openUrl?: (url: string) => void | Promise<void>;
   customActionHandler?: (request: CustomActionRequest) => Promise<DispatchResult>;
 }
@@ -251,6 +252,8 @@ async function dispatchPanelAction(
   if (panel === COMMAND_PANELS.GITHUB) {
     context.runtime.setGithubQuery(context.query);
   }
+
+  await context.runtime.preparePanel?.(panel);
 
   context.runtime.setActivePanel(panel);
 

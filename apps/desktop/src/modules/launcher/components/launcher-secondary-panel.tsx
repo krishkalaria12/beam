@@ -1,7 +1,6 @@
 import { ArrowLeft, CornerDownLeft } from "lucide-react";
-import { lazy, Suspense, useEffectEvent, useRef, useState, type ReactNode } from "react";
+import { useEffectEvent, useRef, useState, type ComponentType, type ReactNode } from "react";
 
-import { CommandLoadingState } from "@/components/command/command-loading-state";
 import {
   getPanelCommandRegistration,
   getPanelPrimaryActionLabel,
@@ -12,20 +11,13 @@ import { useMountEffect } from "@/hooks/use-mount-effect";
 import type { LauncherActionItem } from "@/modules/launcher/components/launcher-actions-panel";
 import { LauncherActionsPanel } from "@/modules/launcher/components/launcher-actions-panel";
 import { dispatchEnterToTarget } from "@/modules/launcher/helper";
+import {
+  getLoadedSecondaryPanel,
+  isSecondaryLauncherPanel,
+  type SecondaryLauncherPanel,
+} from "@/modules/launcher/lib/secondary-panel-loader";
 import { useCalculatorHistoryActionItems } from "@/modules/calculator-history/hooks/use-calculator-history-action-items";
 import { useEmojiActionItems } from "@/modules/emoji/hooks/use-emoji-action-items";
-
-const CalculatorHistoryCommandGroup = lazy(
-  () => import("@/modules/calculator-history/components/calculator-history-command-group"),
-);
-const EmojiCommandGroup = lazy(() => import("@/modules/emoji/components/emoji-command-group"));
-const SECONDARY_PANELS = ["calculator-history", "emoji"] as const;
-
-type SecondaryPanel = (typeof SECONDARY_PANELS)[number];
-
-function isSecondaryPanel(panel: CommandPanel): panel is SecondaryPanel {
-  return (SECONDARY_PANELS as readonly string[]).includes(panel);
-}
 
 interface SecondaryPanelRendererInput {
   onOpenCalculatorHistory: () => void;
@@ -46,17 +38,17 @@ interface LauncherSecondaryPanelProps extends SecondaryPanelRendererInput {
   activePanel: CommandPanel;
 }
 
-function SecondaryPanelFallback() {
-  return <CommandLoadingState label="Loading..." className="px-4 py-6 text-launcher-xs" />;
+interface LauncherSecondaryPanelContentProps extends SecondaryPanelRendererInput {
+  activePanel: SecondaryLauncherPanel;
 }
 
 export function LauncherSecondaryPanel(props: LauncherSecondaryPanelProps) {
   const { activePanel } = props;
-  if (!isSecondaryPanel(activePanel)) {
+  if (!isSecondaryLauncherPanel(activePanel)) {
     return null;
   }
 
-  return <LauncherSecondaryPanelContent key={activePanel} {...props} />;
+  return <LauncherSecondaryPanelContent key={activePanel} {...props} activePanel={activePanel} />;
 }
 
 function LauncherSecondaryPanelContent({
@@ -73,8 +65,8 @@ function LauncherSecondaryPanelContent({
   onMovePinned: _onMovePinned,
   onSetFallbackEnabled: _onSetFallbackEnabled,
   onSetFallbackCommandIds: _onSetFallbackCommandIds,
-}: LauncherSecondaryPanelProps) {
-  const secondaryPanelIsOpen = isSecondaryPanel(activePanel);
+}: LauncherSecondaryPanelContentProps) {
+  const secondaryPanelIsOpen = isSecondaryLauncherPanel(activePanel);
   const [actionsOpen, setActionsOpen] = useState(false);
   const actionsPreviousFocusRef = useRef<HTMLElement | null>(null);
   const panelRegistration = getPanelCommandRegistration(activePanel);
@@ -170,13 +162,12 @@ function LauncherSecondaryPanelContent({
       ]
     : [];
 
-  let content: ReactNode = null;
-
-  if (activePanel === "calculator-history") {
-    content = <CalculatorHistoryCommandGroup isOpen onOpen={onOpenCalculatorHistory} />;
-  } else if (activePanel === "emoji") {
-    content = <EmojiCommandGroup isOpen onOpen={onOpenEmoji} onBack={onBack} />;
-  }
+  const content = renderSecondaryPanel({
+    panel: activePanel,
+    onOpenCalculatorHistory,
+    onOpenEmoji,
+    onBack,
+  });
 
   if (!secondaryPanelIsOpen) {
     return null;
@@ -184,9 +175,7 @@ function LauncherSecondaryPanelContent({
 
   return (
     <div className="relative h-full w-full">
-      <Suspense fallback={<SecondaryPanelFallback />}>
-        <div className="takeover-enter h-full min-h-0">{content}</div>
-      </Suspense>
+      <div className="takeover-enter h-full min-h-0">{content}</div>
       <LauncherActionsPanel
         open={actionsOpen}
         onOpenChange={handleActionsOpenChange}
@@ -207,4 +196,39 @@ function LauncherSecondaryPanelContent({
       />
     </div>
   );
+}
+
+type CalculatorHistoryCommandGroupProps = {
+  isOpen: boolean;
+  onOpen: () => void;
+};
+
+type EmojiCommandGroupProps = {
+  isOpen: boolean;
+  onOpen: () => void;
+  onBack: () => void;
+};
+
+function renderSecondaryPanel(input: {
+  panel: SecondaryLauncherPanel;
+  onOpenCalculatorHistory: () => void;
+  onOpenEmoji: () => void;
+  onBack: () => void;
+}): ReactNode {
+  if (input.panel === "calculator-history") {
+    const CalculatorHistoryCommandGroup = getLoadedSecondaryPanel(
+      input.panel,
+    ) as ComponentType<CalculatorHistoryCommandGroupProps> | null;
+
+    return CalculatorHistoryCommandGroup ? (
+      <CalculatorHistoryCommandGroup isOpen onOpen={input.onOpenCalculatorHistory} />
+    ) : null;
+  }
+
+  const EmojiCommandGroup = getLoadedSecondaryPanel(
+    input.panel,
+  ) as ComponentType<EmojiCommandGroupProps> | null;
+  return EmojiCommandGroup ? (
+    <EmojiCommandGroup isOpen onOpen={input.onOpenEmoji} onBack={input.onBack} />
+  ) : null;
 }

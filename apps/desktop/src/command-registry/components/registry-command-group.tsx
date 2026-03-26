@@ -16,6 +16,7 @@ type RegistryCommandGroupProps = {
   query: string;
   mode: CommandMode;
   onSelect: (commandId: string) => void;
+  onCommandIntent: (command: CommandDescriptor) => void;
   orderedPinnedCommandIds: readonly string[];
   usageById: Readonly<Record<string, CommandUsageEntry>>;
   onSetPinned: (commandId: string, pinned: boolean) => void;
@@ -27,6 +28,7 @@ export default function RegistryCommandGroup({
   query,
   mode,
   onSelect,
+  onCommandIntent,
   orderedPinnedCommandIds,
   usageById,
   onSetPinned,
@@ -120,6 +122,7 @@ export default function RegistryCommandGroup({
         command={command}
         isDisabled={isDisabled}
         onSelect={onSelect}
+        onIntent={onCommandIntent}
         isPinned={pinnedCommandIdSet.has(command.id)}
         onSetPinned={onSetPinned}
       />
@@ -166,6 +169,7 @@ export default function RegistryCommandGroup({
                   command={command}
                   isDisabled={isDisabled}
                   onSelect={onSelect}
+                  onIntent={onCommandIntent}
                   isPinned={pinnedCommandIdSet.has(command.id)}
                   onSetPinned={onSetPinned}
                   compact

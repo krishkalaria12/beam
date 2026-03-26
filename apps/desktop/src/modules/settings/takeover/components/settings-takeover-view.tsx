@@ -1,11 +1,14 @@
 import { Blocks, ChevronLeft, Info, Keyboard, Settings } from "lucide-react";
-import { lazy, Suspense, useEffectEvent, useState, type ComponentType } from "react";
+import { useEffectEvent, useState, type ComponentType, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import { useMountEffect } from "@/hooks/use-mount-effect";
-import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { LauncherTakeoverSurface } from "@/modules/launcher/components/launcher-takeover-surface";
+import {
+  preloadSettingsTab,
+  getLoadedSettingsTab,
+} from "@/modules/settings/takeover/lib/settings-tab-loader";
 import { useSettingsWindowSizer } from "@/modules/settings/takeover/hooks/use-settings-window-sizer";
 import {
   type SettingsPageTab,
@@ -23,6 +26,26 @@ interface SettingsTakeoverViewProps {
   onMovePinned: (commandId: string, direction: "up" | "down") => void;
 }
 
+type GeneralTabProps = {
+  pinnedCommandIds: readonly string[];
+  hiddenCommandIds: ReadonlySet<string>;
+  onSetPinned: (commandId: string, pinned: boolean) => void;
+  onSetHidden: (commandId: string, hidden: boolean) => void;
+  onMovePinned: (commandId: string, direction: "up" | "down") => void;
+};
+
+type ExtensionsTabProps = {
+  isActive: boolean;
+  hiddenCommandIds: ReadonlySet<string>;
+  aliasesById: Record<string, string[]>;
+  onSetHidden: (commandId: string, hidden: boolean) => void;
+  onSetAliases: (commandId: string, aliases: readonly string[]) => void;
+};
+
+type KeybindsTabProps = {
+  isActive: boolean;
+};
+
 const SETTINGS_TABS: ReadonlyArray<{
   id: SettingsPageTab;
   label: string;
@@ -33,62 +56,6 @@ const SETTINGS_TABS: ReadonlyArray<{
   { id: "keybinds", label: "Keybinds", icon: Keyboard },
   { id: "about", label: "About", icon: Info },
 ];
-
-const GeneralTab = lazy(() =>
-  import("@/modules/settings/takeover/tabs/general/general-tab").then((mod) => ({
-    default: mod.GeneralTab,
-  })),
-);
-const ExtensionsTab = lazy(() =>
-  import("@/modules/settings/takeover/tabs/extensions/extensions-tab").then((mod) => ({
-    default: mod.ExtensionsTab,
-  })),
-);
-const KeybindsTab = lazy(() =>
-  import("@/modules/settings/takeover/tabs/keybinds/keybinds-tab").then((mod) => ({
-    default: mod.KeybindsTab,
-  })),
-);
-const AboutTab = lazy(() =>
-  import("@/modules/settings/takeover/tabs/about/about-tab").then((mod) => ({
-    default: mod.AboutTab,
-  })),
-);
-
-function SettingsTakeoverPlaceholder() {
-  return (
-    <div className="settings-content flex h-full min-h-0 flex-1 flex-col gap-5 px-6 py-6">
-      <div className="mx-auto w-full max-w-[820px] space-y-5">
-        <div className="space-y-2">
-          <Skeleton className="h-8 w-32 rounded-xl bg-[var(--launcher-card-hover-bg)]" />
-          <Skeleton className="h-4 w-64 rounded-lg bg-[var(--launcher-card-hover-bg)]" />
-        </div>
-        <div className="rounded-2xl bg-[var(--launcher-card-hover-bg)] p-5 ring-1 ring-[var(--launcher-card-border)]">
-          <div className="grid grid-cols-3 gap-3">
-            <Skeleton className="h-[116px] rounded-xl bg-[var(--launcher-card-bg)]" />
-            <Skeleton className="h-[116px] rounded-xl bg-[var(--launcher-card-bg)]" />
-            <Skeleton className="h-[116px] rounded-xl bg-[var(--launcher-card-bg)]" />
-          </div>
-        </div>
-        <div className="rounded-2xl bg-[var(--launcher-card-hover-bg)] p-5 ring-1 ring-[var(--launcher-card-border)]">
-          <div className="space-y-3">
-            <Skeleton className="h-10 rounded-xl bg-[var(--launcher-card-bg)]" />
-            <Skeleton className="h-10 rounded-xl bg-[var(--launcher-card-bg)]" />
-            <Skeleton className="h-10 rounded-xl bg-[var(--launcher-card-bg)]" />
-          </div>
-        </div>
-        <div className="rounded-2xl bg-[var(--launcher-card-hover-bg)] p-5 ring-1 ring-[var(--launcher-card-border)]">
-          <div className="space-y-3">
-            <Skeleton className="h-12 rounded-xl bg-[var(--launcher-card-bg)]" />
-            <Skeleton className="h-12 rounded-xl bg-[var(--launcher-card-bg)]" />
-            <Skeleton className="h-12 rounded-xl bg-[var(--launcher-card-bg)]" />
-            <Skeleton className="h-12 rounded-xl bg-[var(--launcher-card-bg)]" />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export function SettingsTakeoverView({
   onBack,
@@ -111,10 +78,11 @@ export function SettingsTakeoverView({
     if (!extensionTarget) {
       setActiveTab("general");
     }
-    // Transition from entering → ready after the enter animation completes
+
     const raf = window.requestAnimationFrame(() => {
       setPhase("ready");
     });
+
     return () => window.cancelAnimationFrame(raf);
   });
 
@@ -124,10 +92,26 @@ export function SettingsTakeoverView({
     }
 
     setPhase("closing");
-    // Wait for exit animation to finish before calling onBack
     window.setTimeout(() => {
       onBack();
     }, 180);
+  }
+
+  async function handleTabSelect(tab: SettingsPageTab) {
+    if (phase === "closing" || tab === activeTab) {
+      return;
+    }
+
+    await preloadSettingsTab(tab);
+    setActiveTab(tab);
+  }
+
+  function handleTabIntent(tab: SettingsPageTab) {
+    if (tab === activeTab) {
+      return;
+    }
+
+    void preloadSettingsTab(tab);
   }
 
   const handleBackHotkey = useEffectEvent(() => {
@@ -151,17 +135,29 @@ export function SettingsTakeoverView({
     };
   });
 
+  const content = renderSettingsTab({
+    activeTab,
+    pinnedCommandIds,
+    hiddenCommandIds,
+    aliasesById,
+    onSetPinned,
+    onSetHidden,
+    onSetAliases,
+    onMovePinned,
+  });
+
   return (
-    <LauncherTakeoverSurface className="h-full w-full backdrop-blur-sm" exiting={phase === "closing"}>
+    <LauncherTakeoverSurface
+      className="h-full w-full backdrop-blur-sm"
+      exiting={phase === "closing"}
+    >
       <div
         className={cn(
           "beam-takeover-shell flex h-full w-full flex-col overflow-hidden border border-[var(--launcher-card-border)]",
           phase === "closing" ? "takeover-shell-exit" : "takeover-shell-enter",
         )}
       >
-        {/* ── Settings navbar ── */}
         <div className="settings-navbar relative flex h-[72px] shrink-0 items-center border-b border-[var(--launcher-card-border)] bg-[var(--launcher-card-hover-bg)]/50 px-5">
-          {/* Back button */}
           <Button
             type="button"
             variant="ghost"
@@ -174,7 +170,6 @@ export function SettingsTakeoverView({
             <span>Back</span>
           </Button>
 
-          {/* Tab bar */}
           <div className="settings-tab-bar mx-auto flex items-center gap-1 rounded-2xl bg-[var(--launcher-card-bg)]/60 p-1 ring-1 ring-[var(--launcher-card-border)]">
             {SETTINGS_TABS.map((tab) => {
               const Icon = tab.icon;
@@ -185,7 +180,15 @@ export function SettingsTakeoverView({
                   key={tab.id}
                   type="button"
                   disabled={phase === "closing"}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => {
+                    void handleTabSelect(tab.id);
+                  }}
+                  onPointerEnter={() => {
+                    handleTabIntent(tab.id);
+                  }}
+                  onFocus={() => {
+                    handleTabIntent(tab.id);
+                  }}
                   className={cn(
                     "settings-tab-item group relative flex items-center gap-2 rounded-xl px-4 py-2 transition-all duration-200",
                     isActive
@@ -212,43 +215,68 @@ export function SettingsTakeoverView({
                   >
                     {tab.label}
                   </span>
-
-                  {/* Active indicator dot */}
-                  {isActive && (
+                  {isActive ? (
                     <span className="settings-tab-indicator absolute -bottom-[5px] left-1/2 h-[2px] w-5 -translate-x-1/2 rounded-full bg-[var(--ring)] opacity-80" />
-                  )}
+                  ) : null}
                 </button>
               );
             })}
           </div>
         </div>
 
-        {/* ── Content area ── */}
-        <div className="flex h-full min-h-0 flex-1 overflow-hidden">
-          <Suspense fallback={<SettingsTakeoverPlaceholder />}>
-            {activeTab === "general" ? (
-              <GeneralTab
-                pinnedCommandIds={pinnedCommandIds}
-                hiddenCommandIds={hiddenCommandIds}
-                onSetPinned={onSetPinned}
-                onSetHidden={onSetHidden}
-                onMovePinned={onMovePinned}
-              />
-            ) : null}
-            {activeTab === "extensions" ? (
-              <ExtensionsTab
-                isActive
-                hiddenCommandIds={hiddenCommandIds}
-                aliasesById={aliasesById}
-                onSetHidden={onSetHidden}
-                onSetAliases={onSetAliases}
-              />
-            ) : null}
-            {activeTab === "keybinds" ? <KeybindsTab isActive /> : null}
-            {activeTab === "about" ? <AboutTab /> : null}
-          </Suspense>
-        </div>
+        <div className="flex h-full min-h-0 flex-1 overflow-hidden">{content}</div>
       </div>
     </LauncherTakeoverSurface>
   );
+}
+
+function renderSettingsTab(
+  input: GeneralTabProps &
+    Pick<
+      ExtensionsTabProps,
+      "hiddenCommandIds" | "aliasesById" | "onSetHidden" | "onSetAliases"
+    > & {
+      activeTab: SettingsPageTab;
+    },
+): ReactNode {
+  switch (input.activeTab) {
+    case "general": {
+      const GeneralTab = getLoadedSettingsTab(
+        input.activeTab,
+      ) as ComponentType<GeneralTabProps> | null;
+      return GeneralTab ? (
+        <GeneralTab
+          pinnedCommandIds={input.pinnedCommandIds}
+          hiddenCommandIds={input.hiddenCommandIds}
+          onSetPinned={input.onSetPinned}
+          onSetHidden={input.onSetHidden}
+          onMovePinned={input.onMovePinned}
+        />
+      ) : null;
+    }
+    case "extensions": {
+      const ExtensionsTab = getLoadedSettingsTab(
+        input.activeTab,
+      ) as ComponentType<ExtensionsTabProps> | null;
+      return ExtensionsTab ? (
+        <ExtensionsTab
+          isActive
+          hiddenCommandIds={input.hiddenCommandIds}
+          aliasesById={input.aliasesById}
+          onSetHidden={input.onSetHidden}
+          onSetAliases={input.onSetAliases}
+        />
+      ) : null;
+    }
+    case "keybinds": {
+      const KeybindsTab = getLoadedSettingsTab(
+        input.activeTab,
+      ) as ComponentType<KeybindsTabProps> | null;
+      return KeybindsTab ? <KeybindsTab isActive /> : null;
+    }
+    case "about": {
+      const AboutTab = getLoadedSettingsTab(input.activeTab) as ComponentType | null;
+      return AboutTab ? <AboutTab /> : null;
+    }
+  }
 }

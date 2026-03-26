@@ -1,4 +1,9 @@
+import { useQueryClient, type QueryClient } from "@tanstack/react-query";
+
 import { useMountEffect } from "@/hooks/use-mount-effect";
+import { preloadExtensionInfrastructure } from "@/modules/extensions/lib/extension-infrastructure-loader";
+import { prepareLauncherPanel } from "@/modules/launcher/lib/launcher-panel-preparation";
+import { getLauncherPanelsForWarmupTier } from "@/modules/launcher/lib/panel-warmup-policy";
 
 type IdleCallbackHandle = number;
 type IdleCallbackOptions = { timeout?: number };
@@ -12,26 +17,15 @@ type IdleWindow = Window & {
   cancelIdleCallback?: (handle: IdleCallbackHandle) => void;
 };
 
-const launchPanelPreloaders = [
-  () => import("@/modules/ai/components/ai-command-group"),
-  () => import("@/modules/calculator-history/components/calculator-history-command-group"),
-  () => import("@/modules/clipboard/components/clipboard-command-group"),
-  () => import("@/modules/notes/components/notes-command-group"),
-  () => import("@/modules/quicklinks/components/quicklinks-command-group"),
-  () => import("@/modules/settings/takeover/components/settings-takeover-view"),
-  () => import("@/modules/settings/takeover/tabs/about/about-tab"),
-  () => import("@/modules/settings/takeover/tabs/extensions/extensions-tab"),
-  () => import("@/modules/settings/takeover/tabs/general/general-tab"),
-  () => import("@/modules/settings/takeover/tabs/keybinds/keybinds-tab"),
-];
-
-function preloadLauncherPanels() {
-  for (const preload of launchPanelPreloaders) {
-    void preload();
+function preloadLauncherPanels(queryClient: QueryClient) {
+  for (const panel of getLauncherPanelsForWarmupTier("idle")) {
+    void prepareLauncherPanel(panel, queryClient);
   }
 }
 
 export function useLauncherPanelPrefetch() {
+  const queryClient = useQueryClient();
+
   useMountEffect(() => {
     if (typeof window === "undefined") {
       return;
@@ -41,8 +35,14 @@ export function useLauncherPanelPrefetch() {
     let timeoutHandle: number | null = null;
     let idleHandle: IdleCallbackHandle | null = null;
 
+    void preloadExtensionInfrastructure();
+
+    for (const panel of getLauncherPanelsForWarmupTier("boot")) {
+      void prepareLauncherPanel(panel, queryClient);
+    }
+
     const runPrefetch = () => {
-      preloadLauncherPanels();
+      preloadLauncherPanels(queryClient);
     };
 
     if (idleWindow.requestIdleCallback) {

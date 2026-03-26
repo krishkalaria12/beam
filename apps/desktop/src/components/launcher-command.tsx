@@ -1,8 +1,12 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { isTauri } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
-import { getCurrentWindow } from "@tauri-apps/api/window";
-import { Suspense, lazy, useCallback, useEffectEvent, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffectEvent,
+  useMemo,
+  useState,
+} from "react";
 import { toast } from "sonner";
 
 import { buildCommandContext } from "@/command-registry/context";
@@ -17,30 +21,34 @@ import { staticCommandRegistry } from "@/command-registry/registry";
 import { createStaticCommandRegistryStore } from "@/command-registry/static-registry";
 import { logDispatchFailure } from "@/command-registry/telemetry";
 import { QUICKLINK_TRIGGER_MODE, SHELL_TRIGGER_MODE } from "@/command-registry/trigger-registry";
-import type { CommandDescriptor } from "@/command-registry/types";
+import type { CommandDescriptor, CommandPanel } from "@/command-registry/types";
 import { useCommandPreferences } from "@/command-registry/use-command-preferences";
-import { CommandLoadingState } from "@/components/command/command-loading-state";
 import { Command, CommandInput, CommandList } from "@/components/ui/command";
 import { useMountEffect } from "@/hooks/use-mount-effect";
 import { isLauncherActionsHotkey, requestLauncherActionsToggle } from "@/lib/launcher-actions";
 import { cn } from "@/lib/utils";
 
-import { saveCalculatorHistory } from "@/modules/calculator-history/api/save-calculator-history";
-import { CALCULATOR_AUTO_SAVE_DEBOUNCE_MS } from "@/modules/calculator/constants";
+import { calculatorHistoryQueryKey } from "@/modules/calculator-history/api/query";
 import { LauncherCommandModeContent } from "@/modules/launcher/components/launcher-command-mode-content";
 import { LauncherFooter } from "@/modules/launcher/components/launcher-footer";
+import { useLauncherCalculatorAutoSave } from "@/modules/launcher/hooks/use-launcher-calculator-auto-save";
 import { useExtensionManagerEvents } from "@/modules/launcher/hooks/use-extension-manager-events";
 import { useCliDmenuRequests } from "@/modules/launcher/hooks/use-cli-dmenu-requests";
 import { useLauncherDeepLinks } from "@/modules/launcher/hooks/use-launcher-deep-links";
+import { useLauncherFocusManagement } from "@/modules/launcher/hooks/use-launcher-focus-management";
+import { useLauncherPanelActions } from "@/modules/launcher/hooks/use-launcher-panel-actions";
 import { useLauncherPanelPrefetch } from "@/modules/launcher/hooks/use-launcher-panel-prefetch";
 import { useLauncherWindowSizeSync } from "@/modules/launcher/hooks/use-launcher-window-size-sync";
+import { LauncherTakeoverPanel } from "@/modules/launcher/components/launcher-takeover-panel";
 import { useRankedRegistryCommands } from "@/modules/launcher/hooks/use-ranked-registry-commands";
+import { LauncherSecondaryPanel } from "@/modules/launcher/components/launcher-secondary-panel";
 import {
   isLauncherBackHotkey,
   runLauncherPanelBackHandler,
 } from "@/modules/launcher/lib/back-navigation";
 import { createCustomActionHandler } from "@/modules/launcher/lib/create-custom-action-handler";
 import { useRunShellCommandMutation } from "@/modules/shell/hooks/use-run-shell-command-mutation";
+import { ShellCommandPanel } from "@/modules/shell/components/shell-command-panel";
 import type { ShellExecutionEntry } from "@/modules/shell/types";
 import { persistentExtensionRunnerManager } from "@/modules/extensions/background/persistent-runners";
 import {
@@ -48,6 +56,7 @@ import {
   getExtensionCatalogPlugins,
 } from "@/modules/extensions/extension-catalog";
 import { extensionManagerService } from "@/modules/extensions/extension-manager-service";
+import { useExtensionInfrastructure } from "@/modules/extensions/hooks/use-extension-infrastructure";
 import { useExtensionRuntimeStore } from "@/modules/extensions/runtime/store";
 import { findQuicklinkByKeywordOrAlias } from "@/modules/quicklinks/api/quicklinks";
 import { useQuicklinks } from "@/modules/quicklinks/hooks/use-quicklinks";
@@ -55,7 +64,6 @@ import { useManagedItemPreferencesStore } from "@/modules/launcher/managed-items
 import { HOTKEY_BACKEND_STATUS_EVENT, HOTKEY_COMMAND_EVENT } from "@/modules/settings/api/hotkeys";
 import { useTriggerSymbols } from "@/modules/settings/hooks/use-trigger-symbols";
 import { useUiLayout } from "@/modules/settings/hooks/use-ui-layout";
-import { useSettingsPageStore } from "@/modules/settings/takeover/store/use-settings-page-store";
 import { useAwakeStore } from "@/modules/system-actions/store/awake-store";
 import {
   isLauncherCommandListExpandedPanel,
@@ -64,66 +72,6 @@ import {
   isLauncherTakeoverPanel,
   useLauncherUiStore,
 } from "@/store/use-launcher-ui-store";
-
-const LazyLauncherTakeoverPanel = lazy(() =>
-  import("@/modules/launcher/components/launcher-takeover-panel").then((mod) => ({
-    default: mod.LauncherTakeoverPanel,
-  })),
-);
-const LazyLauncherSecondaryPanel = lazy(() =>
-  import("@/modules/launcher/components/launcher-secondary-panel").then((mod) => ({
-    default: mod.LauncherSecondaryPanel,
-  })),
-);
-const LazyShellCommandPanel = lazy(() =>
-  import("@/modules/shell/components/shell-command-panel").then((mod) => ({
-    default: mod.ShellCommandPanel,
-  })),
-);
-const LazyPersistentExtensionsHost = lazy(() =>
-  import("@/modules/extensions/components/persistent-extensions-host").then((mod) => ({
-    default: mod.PersistentExtensionsHost,
-  })),
-);
-const LazyExtensionToastBridge = lazy(() =>
-  import("@/modules/extensions/components/extension-toast-bridge").then((mod) => ({
-    default: mod.ExtensionToastBridge,
-  })),
-);
-
-function LazyPanelFallback() {
-  return (
-    <div className="min-h-0 flex-1 px-4 py-6">
-      <CommandLoadingState withSpinner className="py-4" />
-    </div>
-  );
-}
-
-function focusLauncherInputElement() {
-  const input = document.querySelector<HTMLInputElement>('[data-slot="command-input"]');
-  if (!input) {
-    return;
-  }
-
-  if (document.activeElement === input) {
-    return;
-  }
-
-  input.focus({ preventScroll: true });
-}
-
-async function focusLauncherWindow() {
-  if (!isTauri()) {
-    window.focus();
-    return;
-  }
-
-  try {
-    await getCurrentWindow().setFocus();
-  } catch {
-    window.focus();
-  }
-}
 
 interface HotkeyCommandEventPayload {
   command_id?: string;
@@ -139,6 +87,7 @@ interface HotkeyBackendStatusEventPayload {
 
 export default function LauncherCommand() {
   const queryClient = useQueryClient();
+  const extensionInfrastructure = useExtensionInfrastructure();
   const commandSearchSessionSeed = useLauncherUiStore((state) => state.commandSearchSessionSeed);
   const calculatorSessionId = useMemo(() => crypto.randomUUID(), [commandSearchSessionSeed]);
   const commandSearch = useLauncherUiStore((state) => state.commandSearch);
@@ -164,12 +113,15 @@ export default function LauncherCommand() {
   const openSpotify = useLauncherUiStore((state) => state.openSpotify);
   const openGithub = useLauncherUiStore((state) => state.openGithub);
   const backToCommands = useLauncherUiStore((state) => state.backToCommands);
-  const openExtensions = useCallback(() => {
-    openPanel("extensions", true);
-  }, [openPanel]);
-  const openSettings = useCallback(() => {
-    openPanel("settings", true);
-  }, [openPanel]);
+  const {
+    preparePanel,
+    openPreparedPanel,
+    openPreparedSecondaryPanel,
+    openExtensions,
+    openSettings,
+    prefetchRegistryCommand,
+    takeoverPanelOpeners,
+  } = useLauncherPanelActions({ openPanel });
 
   const { data: quicklinks = [] } = useQuicklinks();
   const quicklinkAliasesById = useManagedItemPreferencesStore((state) => state.aliasesById);
@@ -189,7 +141,7 @@ export default function LauncherCommand() {
     setFallbackActionsEnabled,
     setFallbackCommandIds,
   } = useCommandPreferences();
-  useLauncherDeepLinks({ openPanel, backToCommands });
+  useLauncherDeepLinks({ openPanel: openPreparedPanel, backToCommands });
   useExtensionManagerEvents({ backToCommands, openSettings });
   useCliDmenuRequests();
   useLauncherPanelPrefetch();
@@ -229,7 +181,7 @@ export default function LauncherCommand() {
       });
 
       if (input.pluginMode === "view") {
-        openPanel("extension-runner", true);
+        await openPreparedPanel("extension-runner", true);
       }
 
       try {
@@ -249,7 +201,7 @@ export default function LauncherCommand() {
         throw error;
       }
     },
-    [backToCommands, openPanel],
+    [backToCommands, openPreparedPanel],
   );
 
   const launchExtensionCommandByName = useCallback(
@@ -393,39 +345,7 @@ export default function LauncherCommand() {
 
     return { query, result };
   }, [rankedRegistryCommands]);
-  const calculatorSaveTimerRef = useRef<number | null>(null);
-  const calculatorSaveKeyRef = useRef("");
-  const calculatorPreviewKey = calculatorPreview
-    ? `${calculatorPreview.query}\u0000${calculatorPreview.result}\u0000${calculatorSessionId}`
-    : "";
-  const syncCalculatorAutoSave = useEffectEvent(() => {
-    if (calculatorPreviewKey && calculatorSaveKeyRef.current !== calculatorPreviewKey) {
-      calculatorSaveKeyRef.current = calculatorPreviewKey;
-      if (calculatorSaveTimerRef.current !== null) {
-        window.clearTimeout(calculatorSaveTimerRef.current);
-      }
-      calculatorSaveTimerRef.current = window.setTimeout(() => {
-        calculatorSaveTimerRef.current = null;
-        if (!calculatorPreview) {
-          return;
-        }
-        void saveCalculatorHistory(
-          calculatorPreview.query,
-          calculatorPreview.result,
-          calculatorSessionId,
-        ).then(() => {
-          queryClient.invalidateQueries({ queryKey: ["calculator", "history"] });
-        });
-      }, CALCULATOR_AUTO_SAVE_DEBOUNCE_MS);
-      return;
-    }
-
-    if (!calculatorPreviewKey && calculatorSaveTimerRef.current !== null) {
-      window.clearTimeout(calculatorSaveTimerRef.current);
-      calculatorSaveTimerRef.current = null;
-      calculatorSaveKeyRef.current = "";
-    }
-  });
+  useLauncherCalculatorAutoSave({ calculatorPreview, calculatorSessionId, queryClient });
 
   const customActionHandler = useMemo(
     () =>
@@ -483,7 +403,7 @@ export default function LauncherCommand() {
           });
         },
         onCalculatorHistoryChanged: () => {
-          void queryClient.invalidateQueries({ queryKey: ["calculator", "history"] });
+          void queryClient.invalidateQueries({ queryKey: calculatorHistoryQueryKey });
         },
       }),
     [calculatorSessionId, queryClient, runExtensionPlugin, setCommandSearch],
@@ -514,6 +434,7 @@ export default function LauncherCommand() {
           setTranslationQuery,
           setSpotifyQuery,
           setGithubQuery,
+          preparePanel,
           customActionHandler,
         },
       });
@@ -762,101 +683,20 @@ export default function LauncherCommand() {
   );
 
   useLauncherWindowSizeSync(activePanel === "commands", shouldCollapseToInputOnly);
+  useLauncherFocusManagement({ activePanel, isInputHidden });
 
-  useMountEffect(() => {
-    syncCalculatorAutoSave();
-    const intervalId = window.setInterval(() => {
-      syncCalculatorAutoSave();
-    }, 120);
-
-    return () => {
-      window.clearInterval(intervalId);
-    };
-  });
-
-  useMountEffect(() => {
-    return () => {
-      if (calculatorSaveTimerRef.current !== null) {
-        window.clearTimeout(calculatorSaveTimerRef.current);
-      }
-    };
-  });
-
-  useMountEffect(() => {
-    let cancelled = false;
-
-    const scheduleFocus = () => {
-      if (document.visibilityState === "hidden") {
-        return;
-      }
-
-      window.requestAnimationFrame(() => {
-        if (cancelled) {
-          return;
-        }
-        void focusLauncherWindow();
-        focusLauncherInputElement();
-      });
-    };
-
-    scheduleFocus();
-    window.addEventListener("focus", scheduleFocus);
-    document.addEventListener("visibilitychange", scheduleFocus);
-
-    return () => {
-      cancelled = true;
-      window.removeEventListener("focus", scheduleFocus);
-      document.removeEventListener("visibilitychange", scheduleFocus);
-    };
-  });
-  const focusInputFrameRef = useRef<number | null>(null);
-  const focusInputKeyRef = useRef("");
-  const syncFocusedInput = useEffectEvent(() => {
-    const focusInputKey = `${activePanel}:${isInputHidden}`;
-    if (focusInputKeyRef.current === focusInputKey) {
-      return;
-    }
-
-    focusInputKeyRef.current = focusInputKey;
-    if (focusInputFrameRef.current !== null) {
-      window.cancelAnimationFrame(focusInputFrameRef.current);
-    }
-    if (activePanel === "commands" && !isInputHidden) {
-      focusInputFrameRef.current = window.requestAnimationFrame(() => {
-        focusInputFrameRef.current = null;
-        focusLauncherInputElement();
-      });
-    }
-  });
-
-  useMountEffect(() => {
-    syncFocusedInput();
-    const intervalId = window.setInterval(() => {
-      syncFocusedInput();
-    }, 120);
-
-    return () => {
-      window.clearInterval(intervalId);
-    };
-  });
-
-  useMountEffect(() => {
-    return () => {
-      if (focusInputFrameRef.current !== null) {
-        window.cancelAnimationFrame(focusInputFrameRef.current);
-      }
-    };
-  });
+  const ExtensionToastBridge = extensionInfrastructure?.ExtensionToastBridge ?? null;
+  const PersistentExtensionsHost = extensionInfrastructure?.PersistentExtensionsHost ?? null;
 
   return (
     <div className="relative h-full w-full bg-transparent">
-      <Suspense fallback={null}>
-        <LazyExtensionToastBridge />
-        <LazyPersistentExtensionsHost
+      {ExtensionToastBridge ? <ExtensionToastBridge /> : null}
+      {PersistentExtensionsHost ? (
+        <PersistentExtensionsHost
           launchCommand={launchExtensionCommandByName}
           openExtensions={openExtensions}
         />
-      </Suspense>
+      ) : null}
       <Command
         shouldFilter={false}
         smartPointerSelection
@@ -877,75 +717,49 @@ export default function LauncherCommand() {
         {/* If File Search or Dictionary is open, it takes over the view entirely */}
 
         {hasTakeoverPanel && (
-          <Suspense fallback={<LazyPanelFallback />}>
-            <LazyLauncherTakeoverPanel
-              activePanel={activePanel}
-              fileSearchQuery={fileSearchQuery}
-              dictionaryQuery={dictionaryQuery}
-              translationQuery={translationQuery}
-              spotifyQuery={spotifyQuery}
-              githubQuery={githubQuery}
-              quicklinksView={quicklinksView}
-              setQuicklinksView={setQuicklinksView}
-              openFileSearch={openFileSearch}
-              openDictionary={openDictionary}
-              openTranslation={openTranslation}
-              openSpotify={openSpotify}
-              openGithub={openGithub}
-              openQuicklinks={() => {
-                openPanel("quicklinks");
-              }}
-              openSpeedTest={() => {
-                openPanel("speed-test", true);
-              }}
-              openClipboard={() => {
-                openPanel("clipboard", true);
-              }}
-              openAi={() => {
-                openPanel("ai", true);
-              }}
-              openTodo={() => {
-                openPanel("todo", true);
-              }}
-              openNotes={() => {
-                openPanel("notes", true);
-              }}
-              openSnippets={() => {
-                openPanel("snippets", true);
-              }}
-              openExtensions={() => {
-                openPanel("extensions", true);
-              }}
-              openSettings={() => {
-                useSettingsPageStore.getState().openGeneral();
-                openSettings();
-              }}
-              openScriptCommands={() => {
-                openPanel("script-commands", true);
-              }}
-              pinnedCommandIds={commandPreferences.pinnedCommandIds}
-              hiddenCommandIds={hiddenCommandIds}
-              aliasesById={commandPreferences.aliasesById}
-              onSetPinned={setPinned}
-              onSetHidden={setHidden}
-              onSetAliases={setAliases}
-              onMovePinned={movePinned}
-              backToCommands={backToCommands}
-            />
-          </Suspense>
+          <LauncherTakeoverPanel
+            activePanel={activePanel}
+            fileSearchQuery={fileSearchQuery}
+            dictionaryQuery={dictionaryQuery}
+            translationQuery={translationQuery}
+            spotifyQuery={spotifyQuery}
+            githubQuery={githubQuery}
+            quicklinksView={quicklinksView}
+            setQuicklinksView={setQuicklinksView}
+            openFileSearch={openFileSearch}
+            openDictionary={openDictionary}
+            openTranslation={openTranslation}
+            openSpotify={openSpotify}
+            openGithub={openGithub}
+            openQuicklinks={takeoverPanelOpeners.openQuicklinks}
+            openSpeedTest={takeoverPanelOpeners.openSpeedTest}
+            openClipboard={takeoverPanelOpeners.openClipboard}
+            openAi={takeoverPanelOpeners.openAi}
+            openTodo={takeoverPanelOpeners.openTodo}
+            openNotes={takeoverPanelOpeners.openNotes}
+            openSnippets={takeoverPanelOpeners.openSnippets}
+            openExtensions={takeoverPanelOpeners.openExtensions}
+            openScriptCommands={takeoverPanelOpeners.openScriptCommands}
+            pinnedCommandIds={commandPreferences.pinnedCommandIds}
+            hiddenCommandIds={hiddenCommandIds}
+            aliasesById={commandPreferences.aliasesById}
+            onSetPinned={setPinned}
+            onSetHidden={setHidden}
+            onSetAliases={setAliases}
+            onMovePinned={movePinned}
+            backToCommands={backToCommands}
+          />
         )}
 
         {hasTakeoverPanel || shouldCollapseToInputOnly ? null : activePanel === "commands" &&
           isShellTrigger ? (
-          <Suspense fallback={<LazyPanelFallback />}>
-            <div className="min-h-0 flex-1 overflow-hidden">
-              <LazyShellCommandPanel
-                shellSymbol={triggerSymbols.shell}
-                currentCommand={shellCommand}
-                history={shellHistory}
-              />
-            </div>
-          </Suspense>
+          <div className="min-h-0 flex-1 overflow-hidden">
+            <ShellCommandPanel
+              shellSymbol={triggerSymbols.shell}
+              currentCommand={shellCommand}
+              history={shellHistory}
+            />
+          </div>
         ) : (
           <CommandList
             className={cn(
@@ -975,31 +789,30 @@ export default function LauncherCommand() {
                 onRegistryCommandSelect={(commandId) => {
                   void handleRegistryCommandSelect(commandId);
                 }}
+                onRegistryCommandIntent={prefetchRegistryCommand}
                 onSetPinned={setPinned}
               />
             ) : null}
 
-            <Suspense fallback={null}>
-              <LazyLauncherSecondaryPanel
-                activePanel={activePanel}
-                onOpenCalculatorHistory={() => {
-                  openPanel("calculator-history", true);
-                }}
-                onOpenEmoji={() => {
-                  openPanel("emoji", true);
-                }}
-                onBack={backToCommands}
-                pinnedCommandIds={commandPreferences.pinnedCommandIds}
-                hiddenCommandIds={hiddenCommandIds}
-                fallbackEnabled={commandPreferences.fallbackEnabled}
-                fallbackCommandIds={commandPreferences.fallbackCommandIds}
-                onSetPinned={setPinned}
-                onSetHidden={setHidden}
-                onMovePinned={movePinned}
-                onSetFallbackEnabled={setFallbackActionsEnabled}
-                onSetFallbackCommandIds={setFallbackCommandIds}
-              />
-            </Suspense>
+            <LauncherSecondaryPanel
+              activePanel={activePanel}
+              onOpenCalculatorHistory={() => {
+                void openPreparedSecondaryPanel("calculator-history");
+              }}
+              onOpenEmoji={() => {
+                void openPreparedSecondaryPanel("emoji");
+              }}
+              onBack={backToCommands}
+              pinnedCommandIds={commandPreferences.pinnedCommandIds}
+              hiddenCommandIds={hiddenCommandIds}
+              fallbackEnabled={commandPreferences.fallbackEnabled}
+              fallbackCommandIds={commandPreferences.fallbackCommandIds}
+              onSetPinned={setPinned}
+              onSetHidden={setHidden}
+              onMovePinned={movePinned}
+              onSetFallbackEnabled={setFallbackActionsEnabled}
+              onSetFallbackCommandIds={setFallbackCommandIds}
+            />
           </CommandList>
         )}
 

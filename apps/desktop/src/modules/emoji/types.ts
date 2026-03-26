@@ -1,20 +1,8 @@
-export interface EmojiDataItem {
-  label: string;
-  hexcode: string;
-  emoji?: string;
-  tags?: string[];
-  text?: string;
-  type?: number;
-  order?: number;
-  group?: number;
-  subgroup?: number;
-  version?: number;
-}
-
 export interface EmojiData {
   emoji: string;
   label: string;
   tags: string[];
+  searchText: string;
   group: number;
   order: number;
   hexcode: string;

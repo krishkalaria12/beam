@@ -19,6 +19,7 @@ interface LauncherCommandModeContentProps {
   onQuicklinkExecute: (keyword: string, query: string) => void;
   onQuicklinkFill: (value: string) => void;
   onRegistryCommandSelect: (commandId: string) => void;
+  onRegistryCommandIntent: (command: CommandDescriptor) => void;
   onSetPinned: (commandId: string, pinned: boolean) => void;
 }
 
@@ -36,6 +37,7 @@ export function LauncherCommandModeContent({
   onQuicklinkExecute,
   onQuicklinkFill,
   onRegistryCommandSelect,
+  onRegistryCommandIntent,
   onSetPinned,
 }: LauncherCommandModeContentProps) {
   return (
@@ -57,6 +59,7 @@ export function LauncherCommandModeContent({
         query={commandContext.query}
         mode={commandContext.mode}
         onSelect={onRegistryCommandSelect}
+        onCommandIntent={onRegistryCommandIntent}
         orderedPinnedCommandIds={pinnedCommandIds}
         usageById={usageById}
         onSetPinned={onSetPinned}

@@ -1,49 +1,29 @@
-import { useQuery } from "@tanstack/react-query";
 import { useCommandState } from "cmdk";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { OpenModuleCommandRow } from "@/components/command/open-module-command-row";
 import { CommandIcon } from "@/components/icons/command-icon";
 import { CommandGroup } from "@/components/ui/command";
+import { EMOJI_DATA } from "@/generated/emoji-data";
+import { useMountEffect } from "@/hooks/use-mount-effect";
+import { usePinnedEmojis } from "@/modules/emoji/hooks/use-pinned-emojis";
 import {
   matchesCommandKeywords,
   normalizeCommandQuery,
 } from "@/modules/launcher/lib/command-query";
-
-// Import types
-import type { EmojiData } from "../types";
-import { CATEGORY_ORDER } from "../types";
-
-// Import hooks
-import { useRecentEmojis, copyEmojiToClipboard } from "../hooks/useEmoji";
 import {
   clearEmojiActionsState,
   syncEmojiActionsState,
   toManagedEmojiItem,
 } from "@/modules/emoji/hooks/use-emoji-action-items";
-import { usePinnedEmojis } from "@/modules/emoji/hooks/use-pinned-emojis";
-import { useMountEffect } from "@/hooks/use-mount-effect";
 import {
   useManagedItemPreferencesStore,
   useManagedItemRankedList,
 } from "@/modules/launcher/managed-items";
 
-// Import components
+import { copyEmojiToClipboard, useRecentEmojis } from "../hooks/useEmoji";
+import type { EmojiData } from "../types";
 import { EmojiPicker } from "./EmojiPicker";
-import { EmojiPickerLoading } from "./EmojiPickerLoading";
-
-interface EmojiDataItem {
-  label: string;
-  hexcode: string;
-  emoji?: string;
-  tags?: string[];
-  text?: string;
-  type?: number;
-  order?: number;
-  group?: number;
-  subgroup?: number;
-  version?: number;
-}
 
 const EMOJI_KEYWORDS = [
   "emoji",
@@ -55,40 +35,7 @@ const EMOJI_KEYWORDS = [
   "symbols",
 ] as const;
 
-function processEmojiData(data: EmojiDataItem[]): EmojiData[] {
-  const processed = data
-    .filter((item): item is EmojiDataItem & { emoji: string } => Boolean(item.emoji))
-    .map((item) => ({
-      emoji: item.emoji,
-      label: item.label.toLowerCase(),
-      tags: item.tags || [],
-      group: item.group ?? 0,
-      order: item.order ?? 0,
-      hexcode: item.hexcode,
-    }));
-
-  processed.sort((a, b) => {
-    const groupA = CATEGORY_ORDER.indexOf(a.group);
-    const groupB = CATEGORY_ORDER.indexOf(b.group);
-    if (groupA !== groupB) return groupA - groupB;
-    return a.order - b.order;
-  });
-
-  return processed;
-}
-
-// Lazy load emoji data - only loads when emoji picker is opened
-let emojiDataLoader: Promise<EmojiData[]> | null = null;
-
-function loadEmojiData(): Promise<EmojiData[]> {
-  if (!emojiDataLoader) {
-    emojiDataLoader = import("emojibase-data/en/data.json").then((module) => {
-      const data = module.default as unknown as EmojiDataItem[];
-      return processEmojiData(data);
-    });
-  }
-  return emojiDataLoader;
-}
+const EMOJI_BY_VALUE = new Map(EMOJI_DATA.map((emoji) => [emoji.emoji, emoji]));
 
 interface EmojiCommandGroupProps {
   isOpen: boolean;
@@ -106,13 +53,7 @@ export default function EmojiCommandGroup({ isOpen, onOpen, onBack }: EmojiComma
   const [selectedEmoji, setSelectedEmoji] = useState<EmojiData | null>(null);
   const copyErrorTimerRef = useRef<number | null>(null);
   const recordUsage = useManagedItemPreferencesStore((state) => state.recordUsage);
-  const { data: emojis = [], isLoading } = useQuery({
-    queryKey: ["emoji-data"],
-    queryFn: loadEmojiData,
-    enabled: isOpen,
-    staleTime: Number.POSITIVE_INFINITY,
-    gcTime: Number.POSITIVE_INFINITY,
-  });
+  const emojis = EMOJI_DATA;
 
   const { recentEmojis, saveEmoji } = useRecentEmojis(isOpen);
   const { data: pinnedHexcodes = [] } = usePinnedEmojis();
@@ -141,40 +82,35 @@ export default function EmojiCommandGroup({ isOpen, onOpen, onBack }: EmojiComma
     items: visibleEmojiPool,
     query: searchValue,
     getManagedItem: toManagedEmojiItem,
-    getSearchableText: (emoji) => `${emoji.label} ${emoji.tags.join(" ")}`,
+    getSearchableText: (emoji) => emoji.searchText,
     compareFallback: (left, right) => left.order - right.order,
   });
 
-  // Get recent emoji objects
   const recentEmojiObjects = useMemo(() => {
     return recentEmojis
-      .map((emoji) => emojis.find((e) => e.emoji === emoji))
-      .filter((e): e is EmojiData => e !== undefined);
-  }, [recentEmojis, emojis]);
+      .map((emoji) => EMOJI_BY_VALUE.get(emoji))
+      .filter((emoji): emoji is EmojiData => emoji !== undefined);
+  }, [recentEmojis]);
   const pinnedEmojiPool = useMemo(
-    () => emojis.filter((emoji) => pinnedHexcodeSet.has(emoji.hexcode.toUpperCase())).slice(0, 16),
+    () => emojis.filter((emoji) => pinnedHexcodeSet.has(emoji.hexcode)).slice(0, 16),
     [emojis, pinnedHexcodeSet],
   );
   const pinnedEmojiObjects = useManagedItemRankedList({
     items: pinnedEmojiPool,
     query: "",
     getManagedItem: toManagedEmojiItem,
-    getSearchableText: (emoji) => `${emoji.label} ${emoji.tags.join(" ")}`,
+    getSearchableText: (emoji) => emoji.searchText,
     compareFallback: (left, right) => left.order - right.order,
   });
   const orderedGridEmojis = useMemo(() => {
     if (searchValue) {
-      const pinnedSearchEmojis = filteredEmojis.filter((emoji) =>
-        pinnedHexcodeSet.has(emoji.hexcode.toUpperCase()),
-      );
-      const unpinnedSearchEmojis = filteredEmojis.filter(
-        (emoji) => !pinnedHexcodeSet.has(emoji.hexcode.toUpperCase()),
-      );
+      const pinnedSearchEmojis = filteredEmojis.filter((emoji) => pinnedHexcodeSet.has(emoji.hexcode));
+      const unpinnedSearchEmojis = filteredEmojis.filter((emoji) => !pinnedHexcodeSet.has(emoji.hexcode));
 
       return [...pinnedSearchEmojis, ...unpinnedSearchEmojis];
     }
 
-    return filteredEmojis.filter((emoji) => !pinnedHexcodeSet.has(emoji.hexcode.toUpperCase()));
+    return filteredEmojis.filter((emoji) => !pinnedHexcodeSet.has(emoji.hexcode));
   }, [filteredEmojis, pinnedHexcodeSet, searchValue]);
 
   const visibleSelectedEmoji = searchValue
@@ -254,12 +190,6 @@ export default function EmojiCommandGroup({ isOpen, onOpen, onBack }: EmojiComma
       </CommandGroup>
     );
   }
-
-  // Show skeleton loading state
-  if (isLoading || emojis.length === 0) {
-    return <EmojiPickerLoading />;
-  }
-
   return (
     <EmojiPicker
       emojis={orderedGridEmojis}

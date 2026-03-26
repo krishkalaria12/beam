@@ -1,12 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { getCalculatorHistory } from "../api/get-calculator-history";
+import { getCalculatorHistoryQueryOptions } from "../api/query";
 
 export function useCalculatorHistory(enabled: boolean) {
   return useQuery({
-    queryKey: ["calculator", "history"],
-    queryFn: getCalculatorHistory,
+    ...getCalculatorHistoryQueryOptions(),
     enabled,
-    refetchOnMount: true,
   });
 }

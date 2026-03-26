@@ -26,6 +26,7 @@ import { ClipboardList } from "./clipboard-list";
 import { useMountEffect } from "@/hooks/use-mount-effect";
 
 interface ClipboardViewProps {
+  isActive: boolean;
   onBack: () => void;
   onToggleActions: () => void;
 }
@@ -77,11 +78,11 @@ function clipboardViewReducer(
   }
 }
 
-export function ClipboardView({ onBack, onToggleActions }: ClipboardViewProps) {
+export function ClipboardView({ isActive, onBack, onToggleActions }: ClipboardViewProps) {
   const [state, dispatch] = useReducer(clipboardViewReducer, INITIAL_CLIPBOARD_VIEW_STATE);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const { data: history = [], isLoading } = useClipboardHistory(true);
+  const { data: history = [], isLoading } = useClipboardHistory(isActive);
   const { data: pinnedEntryIds = [] } = usePinnedClipboardHistory();
   const recordUsage = useManagedItemPreferencesStore((managedState) => managedState.recordUsage);
   const pinnedEntryIdSet = useMemo(() => new Set(pinnedEntryIds), [pinnedEntryIds]);

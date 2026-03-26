@@ -10,11 +10,12 @@ import {
   normalizeCommandQuery,
 } from "@/modules/launcher/lib/command-query";
 
-import { getClipboardHistory } from "../api/get-clipboard-history";
+import { getClipboardHistoryQueryOptions } from "../api/query";
 import { ClipboardView } from "./clipboard-view";
 
 type ClipboardCommandGroupProps = {
   isOpen: boolean;
+  isActive?: boolean;
   onOpen: () => void;
   onBack: () => void;
   onToggleActions: () => void;
@@ -24,6 +25,7 @@ const CLIPBOARD_KEYWORDS = ["clipboard", "clipboard history"] as const;
 
 export default function ClipboardCommandGroup({
   isOpen,
+  isActive = true,
   onOpen,
   onBack,
   onToggleActions,
@@ -33,17 +35,13 @@ export default function ClipboardCommandGroup({
   const query = normalizeCommandQuery(searchInput);
 
   const prefetchClipboardHistory = () => {
-    void queryClient.prefetchQuery({
-      queryKey: ["clipboard", "history"],
-      queryFn: getClipboardHistory,
-      staleTime: 15_000,
-    });
+    void queryClient.ensureQueryData(getClipboardHistoryQueryOptions());
   };
 
   if (isOpen) {
     return (
       <LauncherTakeoverSurface>
-        <ClipboardView onBack={onBack} onToggleActions={onToggleActions} />
+        <ClipboardView isActive={isActive} onBack={onBack} onToggleActions={onToggleActions} />
       </LauncherTakeoverSurface>
     );
   }

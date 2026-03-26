@@ -76,6 +76,10 @@
         "vite": "^8.0.0",
       },
     },
+    "apps/web": {
+      "name": "@beam/web",
+      "version": "0.0.1",
+    },
     "packages/beam-api": {
       "name": "@beam-launcher/api",
       "version": "1.0.0",
@@ -352,6 +356,8 @@
     "@beam/extension-protocol": ["@beam/extension-protocol@workspace:packages/extension-protocol"],
 
     "@beam/raycast-api-compat": ["@beam/raycast-api-compat@workspace:packages/raycast-api-compat"],
+
+    "@beam/web": ["@beam/web@workspace:apps/web"],
 
     "@borewit/text-codec": ["@borewit/text-codec@0.2.1", "", {}, "sha512-k7vvKPbf7J2fZ5klGRD9AeKfUvojuZIQ3BT5u7Jfv+puwXkUBUT5PVyMDfJZpy30CBDXGMgw7fguK/lpOMBvgw=="],
 

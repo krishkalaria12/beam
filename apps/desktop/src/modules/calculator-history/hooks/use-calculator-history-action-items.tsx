@@ -9,6 +9,7 @@ import {
   pinnedCalculatorHistoryQueryKey,
 } from "@/modules/calculator-history/api/history-actions";
 import type { CalculatorHistoryEntry } from "@/modules/calculator-history/api/get-calculator-history";
+import { calculatorHistoryQueryKey } from "@/modules/calculator-history/api/query";
 import {
   usePinnedCalculatorHistory,
   useSetPinnedCalculatorHistoryEntry,
@@ -69,14 +70,14 @@ export function useCalculatorHistoryActionItems(): LauncherActionItem[] {
   const deleteMutation = useMutation({
     mutationFn: deleteCalculatorHistoryEntry,
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["calculator", "history"] });
+      await queryClient.invalidateQueries({ queryKey: calculatorHistoryQueryKey });
       await queryClient.invalidateQueries({ queryKey: pinnedCalculatorHistoryQueryKey });
     },
   });
   const clearMutation = useMutation({
     mutationFn: clearCalculatorHistory,
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["calculator", "history"] });
+      await queryClient.invalidateQueries({ queryKey: calculatorHistoryQueryKey });
       await queryClient.invalidateQueries({ queryKey: pinnedCalculatorHistoryQueryKey });
     },
   });

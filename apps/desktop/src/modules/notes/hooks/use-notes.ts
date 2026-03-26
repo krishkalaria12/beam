@@ -1,16 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { createNote, deleteNote, getNotes, updateNote } from "@/modules/notes/api/notes";
+import { createNote, deleteNote, updateNote } from "@/modules/notes/api/notes";
+import { getNotesQueryOptions, NOTES_QUERY_KEY } from "@/modules/notes/api/query";
 import type { CreateNoteInput, UpdateNoteInput } from "@/modules/notes/types";
-
-const NOTES_QUERY_KEY = ["notes", "items"] as const;
 
 export function useNotesQuery() {
   return useQuery({
-    queryKey: NOTES_QUERY_KEY,
-    queryFn: getNotes,
-    staleTime: 0,
-    refetchOnWindowFocus: true,
+    ...getNotesQueryOptions(),
   });
 }
 

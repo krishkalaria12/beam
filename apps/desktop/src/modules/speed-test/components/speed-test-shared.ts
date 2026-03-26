@@ -1,5 +1,15 @@
-import type { ChartConfig } from "@/components/ui/chart";
 import type { SpeedTestSummary } from "../lib/cloudflare-speedtest";
+
+type SpeedTestChartConfig = Record<
+  "download" | "upload",
+  {
+    label: string;
+    theme: {
+      light: string;
+      dark: string;
+    };
+  }
+>;
 
 export type Metrics = {
   downloadMbps: number | null;
@@ -41,7 +51,7 @@ export const speedTestChartConfig = {
       dark: "var(--icon-cyan-fg)",
     },
   },
-} satisfies ChartConfig;
+} satisfies SpeedTestChartConfig;
 
 function toFiniteNumber(value: number | null | undefined): number | null {
   if (!Number.isFinite(value)) {

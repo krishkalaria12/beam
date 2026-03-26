@@ -10,6 +10,7 @@ interface RegistryCommandRowProps {
   command: CommandDescriptor;
   isDisabled: boolean;
   onSelect: (commandId: string) => void;
+  onIntent: (command: CommandDescriptor) => void;
   isPinned: boolean;
   onSetPinned: (commandId: string, pinned: boolean) => void;
   compact?: boolean;
@@ -30,6 +31,7 @@ export function RegistryCommandRow({
   command,
   isDisabled,
   onSelect,
+  onIntent,
   isPinned,
   onSetPinned,
   compact = false,
@@ -95,6 +97,12 @@ export function RegistryCommandRow({
           return;
         }
         onSelect(command.id);
+      }}
+      onPointerEnter={() => {
+        onIntent(command);
+      }}
+      onFocus={() => {
+        onIntent(command);
       }}
       icon={<RegistryCommandIcon command={command} />}
       title={command.title}

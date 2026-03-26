@@ -56,6 +56,7 @@ function SidebarSectionHeader({ title, count }: { title: string; count: string |
 
 interface ExtensionsSidebarProps {
   installedExtensions: InstalledExtensionSummary[];
+  isInstalledLoading: boolean;
   installedErrorMessage: string | null;
   selectedInstalledId: string | null;
   installedUpdateKeys: Set<string>;
@@ -73,6 +74,7 @@ interface ExtensionsSidebarProps {
 
 export function ExtensionsSidebar({
   installedExtensions,
+  isInstalledLoading,
   installedErrorMessage,
   selectedInstalledId,
   installedUpdateKeys,
@@ -96,6 +98,11 @@ export function ExtensionsSidebar({
         {installedErrorMessage ? (
           <div className="rounded-lg border border-[var(--icon-red-bg)] bg-[var(--icon-red-bg)] px-3 py-2 text-launcher-sm text-[var(--icon-red-fg)]">
             {installedErrorMessage}
+          </div>
+        ) : isInstalledLoading ? (
+          <div className="flex items-center gap-2 px-2 py-2 text-launcher-sm text-muted-foreground">
+            <Loader2 className="size-3.5 animate-spin" />
+            Loading installed extensions…
           </div>
         ) : installedExtensions.length === 0 ? (
           <EmptyView

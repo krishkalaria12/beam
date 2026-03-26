@@ -581,6 +581,7 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
         list={
           <ExtensionsSidebar
             installedExtensions={filteredInstalledExtensions}
+            isInstalledLoading={installedQuery.isLoading && installedQuery.data == null}
             installedErrorMessage={
               installedQuery.isError ? "Failed to load installed extensions." : null
             }
