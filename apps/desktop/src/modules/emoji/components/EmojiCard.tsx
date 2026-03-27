@@ -1,24 +1,23 @@
+import { memo } from "react";
+
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import type { EmojiData } from "../types";
-import type { CSSProperties } from "react";
 
 interface EmojiCardProps {
   emoji: EmojiData;
   onClick: (emoji: EmojiData) => void;
-  onHover?: (emoji: EmojiData) => void;
+  onFocusEmoji?: (emoji: EmojiData) => void;
   className?: string;
-  style?: CSSProperties;
   isSelected?: boolean;
   isRecent?: boolean;
 }
 
-export function EmojiCard({
+export const EmojiCard = memo(function EmojiCard({
   emoji,
   onClick,
-  onHover,
+  onFocusEmoji,
   className,
-  style,
   isSelected,
   isRecent,
 }: EmojiCardProps) {
@@ -28,9 +27,7 @@ export function EmojiCard({
       variant="ghost"
       size="icon"
       onClick={() => onClick(emoji)}
-      onPointerEnter={() => onHover?.(emoji)}
-      onFocus={() => onHover?.(emoji)}
-      style={style}
+      onFocus={() => onFocusEmoji?.(emoji)}
       className={cn(
         "emoji-card group relative flex items-center justify-center transition-all duration-150",
         "!h-auto !w-full aspect-square rounded-xl p-0",
@@ -48,4 +45,4 @@ export function EmojiCard({
       </span>
     </Button>
   );
-}
+});

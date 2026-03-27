@@ -1,5 +1,67 @@
 import { useCallback, useMemo, useState } from "react";
+
+import { useMountEffect } from "@/hooks/use-mount-effect";
+
 import type { EmojiData } from "../types";
+
+const RECENTLY_USED_STORAGE_KEY = "emoji-recently-used";
+const RECENTLY_USED_LIMIT = 16;
+
+let recentEmojiCache: string[] | null = null;
+let pendingRecentEmojiWrite: number | null = null;
+
+function readRecentlyUsedFromStorage(): string[] {
+  try {
+    const stored = localStorage.getItem(RECENTLY_USED_STORAGE_KEY);
+    return stored ? (JSON.parse(stored) as string[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function getRecentEmojiCache(): string[] {
+  if (recentEmojiCache !== null) {
+    return recentEmojiCache;
+  }
+
+  recentEmojiCache = readRecentlyUsedFromStorage();
+  return recentEmojiCache;
+}
+
+export function flushRecentlyUsed() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  if (pendingRecentEmojiWrite !== null) {
+    window.clearTimeout(pendingRecentEmojiWrite);
+    pendingRecentEmojiWrite = null;
+  }
+
+  if (recentEmojiCache === null) {
+    return;
+  }
+
+  try {
+    localStorage.setItem(RECENTLY_USED_STORAGE_KEY, JSON.stringify(recentEmojiCache));
+  } catch {
+    // Ignore localStorage errors
+  }
+}
+
+function scheduleRecentlyUsedFlush() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  if (pendingRecentEmojiWrite !== null) {
+    window.clearTimeout(pendingRecentEmojiWrite);
+  }
+
+  pendingRecentEmojiWrite = window.setTimeout(() => {
+    flushRecentlyUsed();
+  }, 120);
+}
 
 export function useRecentEmojis(isOpen: boolean) {
   const [recentRefreshToken, setRecentRefreshToken] = useState(0);
@@ -7,6 +69,21 @@ export function useRecentEmojis(isOpen: boolean) {
     () => (isOpen ? getRecentlyUsed() : []),
     [isOpen, recentRefreshToken],
   );
+
+  useMountEffect(() => {
+    const handleFlush = () => {
+      flushRecentlyUsed();
+    };
+
+    window.addEventListener("pagehide", handleFlush);
+    window.addEventListener("beforeunload", handleFlush);
+
+    return () => {
+      handleFlush();
+      window.removeEventListener("pagehide", handleFlush);
+      window.removeEventListener("beforeunload", handleFlush);
+    };
+  });
 
   const saveEmoji = useCallback((emoji: string) => {
     saveRecentlyUsed(emoji);
@@ -48,22 +125,13 @@ export function useFilteredEmojis(
 }
 
 export function getRecentlyUsed(): string[] {
-  try {
-    const stored = localStorage.getItem("emoji-recently-used");
-    return stored ? (JSON.parse(stored) as string[]) : [];
-  } catch {
-    return [];
-  }
+  return [...getRecentEmojiCache()];
 }
 
 export function saveRecentlyUsed(emoji: string) {
-  try {
-    const recent = getRecentlyUsed();
-    const updated = [emoji, ...recent.filter((e) => e !== emoji)].slice(0, 16);
-    localStorage.setItem("emoji-recently-used", JSON.stringify(updated));
-  } catch {
-    // Ignore localStorage errors
-  }
+  const recent = getRecentEmojiCache();
+  recentEmojiCache = [emoji, ...recent.filter((entry) => entry !== emoji)].slice(0, RECENTLY_USED_LIMIT);
+  scheduleRecentlyUsedFlush();
 }
 
 export async function copyEmojiToClipboard(value: string) {

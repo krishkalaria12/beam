@@ -4,14 +4,16 @@ import { EmojiCard } from "./EmojiCard";
 interface RecentlyUsedProps {
   emojis: EmojiData[];
   onEmojiClick: (emoji: EmojiData) => void;
-  onEmojiHover?: (emoji: EmojiData) => void;
+  onEmojiFocus?: (emoji: EmojiData) => void;
+  selectedEmojiHexcode: string | null;
   title?: string;
 }
 
 export function RecentlyUsed({
   emojis,
   onEmojiClick,
-  onEmojiHover,
+  onEmojiFocus,
+  selectedEmojiHexcode,
   title = "Recent",
 }: RecentlyUsedProps) {
   if (emojis.length === 0) return null;
@@ -28,14 +30,14 @@ export function RecentlyUsed({
 
       {/* Fixed 8-column layout using full row width */}
       <div className="grid w-full grid-cols-8 gap-2.5">
-        {emojis.slice(0, 16).map((emoji, idx) => (
+        {emojis.slice(0, 16).map((emoji) => (
           <EmojiCard
             key={`recent-${emoji.hexcode}`}
             emoji={emoji}
             onClick={onEmojiClick}
-            onHover={onEmojiHover}
+            onFocusEmoji={onEmojiFocus}
+            isSelected={selectedEmojiHexcode === emoji.hexcode}
             isRecent
-            style={{ animationDelay: `${idx * 12}ms` }}
           />
         ))}
       </div>

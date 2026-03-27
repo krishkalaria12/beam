@@ -1,4 +1,5 @@
-import { useRef } from "react";
+import { useCallback, useState } from "react";
+
 import { Smile, Sparkles } from "lucide-react";
 import { IconChip, ModuleFooter } from "@/components/module";
 import { type EmojiData } from "../types";
@@ -15,7 +16,8 @@ interface EmojiPickerProps {
   selectedCategory: string;
   onCategoryChange: (value: string) => void;
   onEmojiClick: (emoji: EmojiData) => void;
-  onEmojiHover?: (emoji: EmojiData) => void;
+  onEmojiFocus?: (emoji: EmojiData) => void;
+  selectedEmojiHexcode: string | null;
   onBack: () => void;
   showError?: boolean;
 }
@@ -29,11 +31,16 @@ export function EmojiPicker({
   selectedCategory,
   onCategoryChange,
   onEmojiClick,
-  onEmojiHover,
+  onEmojiFocus,
+  selectedEmojiHexcode,
   onBack,
   showError,
 }: EmojiPickerProps) {
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(null);
+  const [scrollMargin, setScrollMargin] = useState(0);
+  const setLeadingSectionsRef = useCallback((node: HTMLDivElement | null) => {
+    setScrollMargin(node?.offsetHeight ?? 0);
+  }, []);
 
   return (
     <div className="emoji-picker-enter flex h-full min-h-0 flex-col overflow-hidden text-foreground">
@@ -47,15 +54,20 @@ export function EmojiPicker({
       />
 
       <div
-        ref={scrollContainerRef}
-        className="emoji-content-enter flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-5 py-4 scroll-smooth scrollbar-hidden-until-hover"
+        ref={setScrollElement}
+        className="emoji-content-enter flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden px-5 py-4 scrollbar-hidden-until-hover"
       >
-        <div className="space-y-6 pb-4">
+        <div
+          key={`${searchValue ? "search" : "browse"}-${pinnedEmojis.length > 0 ? "pinned" : "unpinned"}-${recentEmojis.length > 0 ? "recent" : "empty"}`}
+          ref={setLeadingSectionsRef}
+          className="flex shrink-0 flex-col gap-6 pb-4"
+        >
           {!searchValue && pinnedEmojis.length > 0 ? (
             <RecentlyUsed
               emojis={pinnedEmojis}
               onEmojiClick={onEmojiClick}
-              onEmojiHover={onEmojiHover}
+              onEmojiFocus={onEmojiFocus}
+              selectedEmojiHexcode={selectedEmojiHexcode}
               title="Pinned"
             />
           ) : null}
@@ -64,12 +76,20 @@ export function EmojiPicker({
             <RecentlyUsed
               emojis={recentEmojis}
               onEmojiClick={onEmojiClick}
-              onEmojiHover={onEmojiHover}
+              onEmojiFocus={onEmojiFocus}
+              selectedEmojiHexcode={selectedEmojiHexcode}
             />
           )}
-
-          <EmojiGrid emojis={emojis} onEmojiClick={onEmojiClick} onEmojiHover={onEmojiHover} />
         </div>
+
+        <EmojiGrid
+          emojis={emojis}
+          onEmojiClick={onEmojiClick}
+          onEmojiFocus={onEmojiFocus}
+          selectedEmojiHexcode={selectedEmojiHexcode}
+          scrollElement={scrollElement}
+          scrollMargin={scrollMargin}
+        />
       </div>
 
       <ModuleFooter

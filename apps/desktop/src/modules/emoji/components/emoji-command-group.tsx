@@ -1,5 +1,5 @@
 import { useCommandState } from "cmdk";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 
 import { OpenModuleCommandRow } from "@/components/command/open-module-command-row";
 import { CommandIcon } from "@/components/icons/command-icon";
@@ -17,8 +17,8 @@ import {
   toManagedEmojiItem,
 } from "@/modules/emoji/hooks/use-emoji-action-items";
 import {
+  rankManagedItems,
   useManagedItemPreferencesStore,
-  useManagedItemRankedList,
 } from "@/modules/launcher/managed-items";
 
 import { copyEmojiToClipboard, useRecentEmojis } from "../hooks/useEmoji";
@@ -36,11 +36,40 @@ const EMOJI_KEYWORDS = [
 ] as const;
 
 const EMOJI_BY_VALUE = new Map(EMOJI_DATA.map((emoji) => [emoji.emoji, emoji]));
+const getEmojiSearchText = (emoji: EmojiData) => emoji.searchText;
+const compareEmojiOrder = (left: EmojiData, right: EmojiData) => left.order - right.order;
+
+function scheduleDeferredTask(task: () => void) {
+  if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+    window.requestIdleCallback(() => {
+      task();
+    }, { timeout: 300 });
+    return;
+  }
+
+  globalThis.setTimeout(task, 0);
+}
 
 interface EmojiCommandGroupProps {
   isOpen: boolean;
   onOpen: () => void;
   onBack: () => void;
+}
+
+interface EmojiActionsStateSyncProps {
+  selectedEmoji: EmojiData | null;
+  onCopySelected?: () => Promise<void> | void;
+}
+
+function EmojiActionsStateSync({ selectedEmoji, onCopySelected }: EmojiActionsStateSyncProps) {
+  useMountEffect(() => {
+    syncEmojiActionsState({
+      selectedEmoji,
+      onCopySelected,
+    });
+  });
+
+  return null;
 }
 
 export default function EmojiCommandGroup({ isOpen, onOpen, onBack }: EmojiCommandGroupProps) {
@@ -50,8 +79,11 @@ export default function EmojiCommandGroup({ isOpen, onOpen, onBack }: EmojiComma
   const [searchValue, setSearchValue] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [copyError, setCopyError] = useState<string | null>(null);
-  const [selectedEmoji, setSelectedEmoji] = useState<EmojiData | null>(null);
+  const [activeEmoji, setActiveEmoji] = useState<EmojiData | null>(null);
   const copyErrorTimerRef = useRef<number | null>(null);
+  const favoriteIds = useManagedItemPreferencesStore((state) => state.favoriteIds);
+  const aliasesById = useManagedItemPreferencesStore((state) => state.aliasesById);
+  const usageById = useManagedItemPreferencesStore((state) => state.usageById);
   const recordUsage = useManagedItemPreferencesStore((state) => state.recordUsage);
   const emojis = EMOJI_DATA;
 
@@ -62,66 +94,86 @@ export default function EmojiCommandGroup({ isOpen, onOpen, onBack }: EmojiComma
     [pinnedHexcodes],
   );
 
-  useMountEffect(() => clearEmojiActionsState);
-
-  const visibleEmojiPool = useMemo(() => {
-    let filtered = emojis;
-
-    if (selectedCategory !== "all") {
-      const groupNum = Number.parseInt(selectedCategory, 10);
-      filtered = filtered.filter((emoji) => emoji.group === groupNum);
-    }
-
-    if (selectedCategory === "all" && !searchValue) {
-      filtered = filtered.slice(26);
-    }
-
-    return filtered;
-  }, [emojis, searchValue, selectedCategory]);
-  const filteredEmojis = useManagedItemRankedList({
-    items: visibleEmojiPool,
-    query: searchValue,
-    getManagedItem: toManagedEmojiItem,
-    getSearchableText: (emoji) => emoji.searchText,
-    compareFallback: (left, right) => left.order - right.order,
+  useMountEffect(() => {
+    clearEmojiActionsState();
+    return clearEmojiActionsState;
   });
 
-  const recentEmojiObjects = useMemo(() => {
-    return recentEmojis
-      .map((emoji) => EMOJI_BY_VALUE.get(emoji))
-      .filter((emoji): emoji is EmojiData => emoji !== undefined);
-  }, [recentEmojis]);
-  const pinnedEmojiPool = useMemo(
-    () => emojis.filter((emoji) => pinnedHexcodeSet.has(emoji.hexcode)).slice(0, 16),
-    [emojis, pinnedHexcodeSet],
-  );
-  const pinnedEmojiObjects = useManagedItemRankedList({
-    items: pinnedEmojiPool,
-    query: "",
-    getManagedItem: toManagedEmojiItem,
-    getSearchableText: (emoji) => emoji.searchText,
-    compareFallback: (left, right) => left.order - right.order,
-  });
-  const orderedGridEmojis = useMemo(() => {
-    if (searchValue) {
-      const pinnedSearchEmojis = filteredEmojis.filter((emoji) => pinnedHexcodeSet.has(emoji.hexcode));
-      const unpinnedSearchEmojis = filteredEmojis.filter((emoji) => !pinnedHexcodeSet.has(emoji.hexcode));
+  const { orderedGridEmojis, pinnedEmojiObjects, recentEmojiObjects } = useMemo(() => {
+    const categoryFilter =
+      selectedCategory === "all" ? null : Number.parseInt(selectedCategory, 10);
+    const visibleEmojiPool: EmojiData[] = [];
+    const pinnedEmojiPool: EmojiData[] = [];
 
-      return [...pinnedSearchEmojis, ...unpinnedSearchEmojis];
+    for (const emoji of emojis) {
+      if (pinnedHexcodeSet.has(emoji.hexcode)) {
+        pinnedEmojiPool.push(emoji);
+      }
+
+      if (categoryFilter !== null && emoji.group !== categoryFilter) {
+        continue;
+      }
+
+      visibleEmojiPool.push(emoji);
     }
 
-    return filteredEmojis.filter((emoji) => !pinnedHexcodeSet.has(emoji.hexcode));
-  }, [filteredEmojis, pinnedHexcodeSet, searchValue]);
+    const baseVisiblePool =
+      categoryFilter === null && !searchValue ? visibleEmojiPool.slice(26) : visibleEmojiPool;
+    const rankedVisibleEmojis = rankManagedItems({
+      items: baseVisiblePool,
+      query: searchValue,
+      favorites: favoriteIds,
+      aliasesById,
+      usageById,
+      getManagedItem: toManagedEmojiItem,
+      getSearchableText: getEmojiSearchText,
+      compareFallback: compareEmojiOrder,
+    });
+    const rankedPinnedEmojis = rankManagedItems({
+      items: pinnedEmojiPool,
+      query: "",
+      favorites: favoriteIds,
+      aliasesById,
+      usageById,
+      getManagedItem: toManagedEmojiItem,
+      getSearchableText: getEmojiSearchText,
+      compareFallback: compareEmojiOrder,
+    }).slice(0, 16);
+    const pinnedSearchEmojis: EmojiData[] = [];
+    const unpinnedSearchEmojis: EmojiData[] = [];
+
+    for (const emoji of rankedVisibleEmojis) {
+      if (pinnedHexcodeSet.has(emoji.hexcode)) {
+        pinnedSearchEmojis.push(emoji);
+      } else {
+        unpinnedSearchEmojis.push(emoji);
+      }
+    }
+
+    const recentEmojiObjects: EmojiData[] = [];
+    for (const emojiValue of recentEmojis) {
+      const emoji = EMOJI_BY_VALUE.get(emojiValue);
+      if (emoji) {
+        recentEmojiObjects.push(emoji);
+      }
+    }
+
+    return {
+      orderedGridEmojis: searchValue ? [...pinnedSearchEmojis, ...unpinnedSearchEmojis] : unpinnedSearchEmojis,
+      pinnedEmojiObjects: rankedPinnedEmojis,
+      recentEmojiObjects,
+    };
+  }, [aliasesById, emojis, favoriteIds, pinnedHexcodeSet, recentEmojis, searchValue, selectedCategory, usageById]);
 
   const visibleSelectedEmoji = searchValue
-    ? orderedGridEmojis.some((emoji) => emoji.hexcode === selectedEmoji?.hexcode)
-      ? selectedEmoji
+    ? orderedGridEmojis.some((emoji) => emoji.hexcode === activeEmoji?.hexcode)
+      ? activeEmoji
       : null
-    : selectedEmoji &&
-        (orderedGridEmojis.some((emoji) => emoji.hexcode === selectedEmoji.hexcode) ||
-          pinnedEmojiObjects.some((emoji) => emoji.hexcode === selectedEmoji.hexcode) ||
-          recentEmojiObjects.some((emoji) => emoji.hexcode === selectedEmoji.hexcode))
-      ? selectedEmoji
+    : activeEmoji &&
+        (orderedGridEmojis.some((emoji) => emoji.hexcode === activeEmoji.hexcode) ||
+          pinnedEmojiObjects.some((emoji) => emoji.hexcode === activeEmoji.hexcode) ||
+          recentEmojiObjects.some((emoji) => emoji.hexcode === activeEmoji.hexcode))
+      ? activeEmoji
       : null;
 
   const resolvedSelectedEmoji = searchValue
@@ -135,10 +187,12 @@ export default function EmojiCommandGroup({ isOpen, onOpen, onBack }: EmojiComma
   const handleEmojiClick = useCallback(
     async (emojiData: EmojiData) => {
       try {
-        setSelectedEmoji(emojiData);
+        setActiveEmoji(emojiData);
         await copyEmojiToClipboard(emojiData.emoji);
-        recordUsage(toManagedEmojiItem(emojiData));
         saveEmoji(emojiData.emoji);
+        scheduleDeferredTask(() => {
+          recordUsage(toManagedEmojiItem(emojiData));
+        });
         if (copyErrorTimerRef.current !== null) {
           window.clearTimeout(copyErrorTimerRef.current);
         }
@@ -157,6 +211,12 @@ export default function EmojiCommandGroup({ isOpen, onOpen, onBack }: EmojiComma
     [recordUsage, saveEmoji],
   );
 
+  const handleEmojiFocus = useCallback((emojiData: EmojiData) => {
+    setActiveEmoji((previous) =>
+      previous?.hexcode === emojiData.hexcode ? previous : emojiData,
+    );
+  }, []);
+
   const handleCopySelected = useCallback(() => {
     if (!resolvedSelectedEmoji) {
       return;
@@ -164,13 +224,6 @@ export default function EmojiCommandGroup({ isOpen, onOpen, onBack }: EmojiComma
 
     return handleEmojiClick(resolvedSelectedEmoji);
   }, [handleEmojiClick, resolvedSelectedEmoji]);
-
-  useEffect(() => {
-    syncEmojiActionsState({
-      selectedEmoji: resolvedSelectedEmoji,
-      onCopySelected: handleCopySelected,
-    });
-  }, [handleCopySelected, resolvedSelectedEmoji]);
 
   if (!isOpen) {
     const shouldShowOpenEmoji = matchesCommandKeywords(query, EMOJI_KEYWORDS);
@@ -191,18 +244,26 @@ export default function EmojiCommandGroup({ isOpen, onOpen, onBack }: EmojiComma
     );
   }
   return (
-    <EmojiPicker
-      emojis={orderedGridEmojis}
-      pinnedEmojis={searchValue ? [] : pinnedEmojiObjects}
-      recentEmojis={recentEmojiObjects}
-      searchValue={searchValue}
-      onSearchChange={setSearchValue}
-      selectedCategory={selectedCategory}
-      onCategoryChange={setSelectedCategory}
-      onEmojiClick={handleEmojiClick}
-      onEmojiHover={setSelectedEmoji}
-      onBack={onBack}
-      showError={!!copyError}
-    />
+    <>
+      <EmojiActionsStateSync
+        key={resolvedSelectedEmoji?.hexcode ?? "none"}
+        selectedEmoji={resolvedSelectedEmoji}
+        onCopySelected={handleCopySelected}
+      />
+      <EmojiPicker
+        emojis={orderedGridEmojis}
+        pinnedEmojis={searchValue ? [] : pinnedEmojiObjects}
+        recentEmojis={recentEmojiObjects}
+        searchValue={searchValue}
+        onSearchChange={setSearchValue}
+        selectedCategory={selectedCategory}
+        onCategoryChange={setSelectedCategory}
+        onEmojiClick={handleEmojiClick}
+        onEmojiFocus={handleEmojiFocus}
+        selectedEmojiHexcode={resolvedSelectedEmoji?.hexcode ?? null}
+        onBack={onBack}
+        showError={!!copyError}
+      />
+    </>
   );
 }
