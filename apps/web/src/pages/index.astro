@@ -1,0 +1,25 @@
+---
+import Layout from '../layouts/Layout.astro';
+import LandingHeader from '../components/landing/LandingHeader.astro';
+import LandingHero from '../components/landing/LandingHero.astro';
+import LandingFeatures from '../components/landing/LandingFeatures.astro';
+import LandingBenchmarks from '../components/landing/LandingBenchmarks.astro';
+import LandingFooter from '../components/landing/LandingFooter.astro';
+import '../styles/landing.css';
+import '@fontsource/space-grotesk/400.css';
+import '@fontsource/space-grotesk/700.css';
+---
+
+<Layout title="Beam | A playful command layer for Linux">
+  <main class="beam-home">
+    <div class="beam-orb beam-orb-coral"></div>
+    <div class="beam-orb beam-orb-sky"></div>
+    <div class="beam-orb beam-orb-sun"></div>
+
+    <LandingHeader />
+    <LandingHero />
+    <LandingFeatures />
+    <LandingBenchmarks />
+    <LandingFooter />
+  </main>
+</Layout>
