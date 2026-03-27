@@ -59,8 +59,6 @@ export interface DispatchRuntime {
   setFileSearchQuery: (query: string) => void;
   setDictionaryQuery: (query: string) => void;
   setTranslationQuery: (query: string) => void;
-  setSpotifyQuery: (query: string) => void;
-  setGithubQuery: (query: string) => void;
   preparePanel?: (panel: CommandPanel) => Promise<void>;
   openUrl?: (url: string) => void | Promise<void>;
   customActionHandler?: (request: CustomActionRequest) => Promise<DispatchResult>;
@@ -246,12 +244,6 @@ async function dispatchPanelAction(
   if (panel === COMMAND_PANELS.TRANSLATION) {
     context.runtime.setTranslationQuery(context.query);
   }
-  if (panel === COMMAND_PANELS.SPOTIFY) {
-    context.runtime.setSpotifyQuery(context.query);
-  }
-  if (panel === COMMAND_PANELS.GITHUB) {
-    context.runtime.setGithubQuery(context.query);
-  }
 
   await context.runtime.preparePanel?.(panel);
 
@@ -260,9 +252,7 @@ async function dispatchPanelAction(
   if (
     panel !== COMMAND_PANELS.FILE_SEARCH &&
     panel !== COMMAND_PANELS.DICTIONARY &&
-    panel !== COMMAND_PANELS.TRANSLATION &&
-    panel !== COMMAND_PANELS.SPOTIFY &&
-    panel !== COMMAND_PANELS.GITHUB
+    panel !== COMMAND_PANELS.TRANSLATION
   ) {
     context.runtime.setCommandSearch("");
   }

@@ -12,8 +12,6 @@ interface LauncherUiSnapshot {
   fileSearchQuery: string;
   dictionaryQuery: string;
   translationQuery: string;
-  spotifyQuery: string;
-  githubQuery: string;
   quicklinksView: QuicklinksView;
 }
 
@@ -26,8 +24,6 @@ const TAKEOVER_PANELS = new Set<CommandPanel>([
   "file-search",
   "dictionary",
   "translation",
-  "spotify",
-  "github",
   "quicklinks",
   "speed-test",
   "clipboard",
@@ -50,8 +46,6 @@ export interface LauncherUiState {
   fileSearchQuery: string;
   dictionaryQuery: string;
   translationQuery: string;
-  spotifyQuery: string;
-  githubQuery: string;
   quicklinksView: QuicklinksView;
   dmenuSession: DmenuSession | null;
   dmenuQuery: string;
@@ -61,16 +55,12 @@ export interface LauncherUiState {
   setFileSearchQuery(query: string): void;
   setDictionaryQuery(query: string): void;
   setTranslationQuery(query: string): void;
-  setSpotifyQuery(query: string): void;
-  setGithubQuery(query: string): void;
   setQuicklinksView(view: QuicklinksView): void;
   setDmenuQuery(query: string): void;
   openPanel(panel: CommandPanel, clearCommandSearch?: boolean): void;
   openFileSearch(query: string): void;
   openDictionary(query: string): void;
   openTranslation(query: string): void;
-  openSpotify(query: string): void;
-  openGithub(query: string): void;
   openDmenuSession(session: DmenuSession): void;
   closeDmenuSession(): void;
   backToCommands(): void;
@@ -83,8 +73,6 @@ function createSnapshot(state: {
   fileSearchQuery: string;
   dictionaryQuery: string;
   translationQuery: string;
-  spotifyQuery: string;
-  githubQuery: string;
   quicklinksView: QuicklinksView;
 }): LauncherUiSnapshot {
   return {
@@ -94,8 +82,6 @@ function createSnapshot(state: {
     fileSearchQuery: state.fileSearchQuery,
     dictionaryQuery: state.dictionaryQuery,
     translationQuery: state.translationQuery,
-    spotifyQuery: state.spotifyQuery,
-    githubQuery: state.githubQuery,
     quicklinksView: state.quicklinksView,
   };
 }
@@ -117,8 +103,6 @@ export const useLauncherUiStore = create<LauncherUiState>((set) => ({
   fileSearchQuery: "",
   dictionaryQuery: "",
   translationQuery: "",
-  spotifyQuery: "",
-  githubQuery: "",
   quicklinksView: "manage",
   dmenuSession: null,
   dmenuQuery: "",
@@ -136,8 +120,6 @@ export const useLauncherUiStore = create<LauncherUiState>((set) => ({
   setFileSearchQuery: (query) => set({ fileSearchQuery: query }),
   setDictionaryQuery: (query) => set({ dictionaryQuery: query }),
   setTranslationQuery: (query) => set({ translationQuery: query }),
-  setSpotifyQuery: (query) => set({ spotifyQuery: query }),
-  setGithubQuery: (query) => set({ githubQuery: query }),
   setQuicklinksView: (view) => set({ quicklinksView: view }),
   setDmenuQuery: (query) => set({ dmenuQuery: query }),
   openPanel: (panel, clearCommandSearch = false) =>
@@ -162,16 +144,6 @@ export const useLauncherUiStore = create<LauncherUiState>((set) => ({
     set({
       translationQuery: query,
       activePanel: "translation",
-    }),
-  openSpotify: (query) =>
-    set({
-      spotifyQuery: query,
-      activePanel: "spotify",
-    }),
-  openGithub: (query) =>
-    set({
-      githubQuery: query,
-      activePanel: "github",
     }),
   openDmenuSession: (session) =>
     set((state) => ({
@@ -205,8 +177,6 @@ export const useLauncherUiStore = create<LauncherUiState>((set) => ({
         fileSearchQuery: snapshot.fileSearchQuery,
         dictionaryQuery: snapshot.dictionaryQuery,
         translationQuery: snapshot.translationQuery,
-        spotifyQuery: snapshot.spotifyQuery,
-        githubQuery: snapshot.githubQuery,
         quicklinksView: snapshot.quicklinksView,
         dmenuSession: null,
         dmenuQuery: "",

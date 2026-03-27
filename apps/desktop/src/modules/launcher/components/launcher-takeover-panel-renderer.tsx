@@ -137,32 +137,6 @@ function renderTakeoverPanel(input: RenderTakeoverPanelsInput): ReactNode {
         />
       ) : null;
     }
-    case COMMAND_PANELS.SPOTIFY: {
-      const SpotifyCommandGroup = getLoadedTakeoverPanel(
-        input.panel,
-      ) as ComponentType<QueryCommandGroupProps> | null;
-      return SpotifyCommandGroup ? (
-        <SpotifyCommandGroup
-          isOpen
-          query={input.spotifyQuery}
-          onOpen={input.openSpotify}
-          onBack={input.backToCommands}
-        />
-      ) : null;
-    }
-    case COMMAND_PANELS.GITHUB: {
-      const GithubCommandGroup = getLoadedTakeoverPanel(
-        input.panel,
-      ) as ComponentType<QueryCommandGroupProps> | null;
-      return GithubCommandGroup ? (
-        <GithubCommandGroup
-          isOpen
-          query={input.githubQuery}
-          onOpen={input.openGithub}
-          onBack={input.backToCommands}
-        />
-      ) : null;
-    }
     case COMMAND_PANELS.QUICKLINKS: {
       const QuicklinksCommandGroup = getLoadedTakeoverPanel(
         input.panel,

@@ -34,10 +34,6 @@ const takeoverPanelLoaders: Record<TakeoverCommandPanel, () => Promise<TakeoverP
     import("@/modules/file-search/components/file-search-command-group").then(
       (mod) => mod.default as TakeoverPanelComponent,
     ),
-  github: () =>
-    import("@/modules/integrations/github/components/github-command-group").then(
-      (mod) => mod.default as TakeoverPanelComponent,
-    ),
   hyprwhspr: () =>
     import("@/modules/hyprwhspr/components/hyprwhspr-view").then(
       (mod) => mod.HyprWhsprView as TakeoverPanelComponent,
@@ -60,10 +56,6 @@ const takeoverPanelLoaders: Record<TakeoverCommandPanel, () => Promise<TakeoverP
     ),
   "speed-test": () =>
     import("@/modules/speed-test/components/speed-test-command-group").then(
-      (mod) => mod.default as TakeoverPanelComponent,
-    ),
-  spotify: () =>
-    import("@/modules/integrations/spotify/components/spotify-command-group").then(
       (mod) => mod.default as TakeoverPanelComponent,
     ),
   "script-commands": () =>

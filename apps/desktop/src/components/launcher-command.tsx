@@ -95,23 +95,17 @@ export default function LauncherCommand() {
   const fileSearchQuery = useLauncherUiStore((state) => state.fileSearchQuery);
   const dictionaryQuery = useLauncherUiStore((state) => state.dictionaryQuery);
   const translationQuery = useLauncherUiStore((state) => state.translationQuery);
-  const spotifyQuery = useLauncherUiStore((state) => state.spotifyQuery);
-  const githubQuery = useLauncherUiStore((state) => state.githubQuery);
   const quicklinksView = useLauncherUiStore((state) => state.quicklinksView);
   const setCommandSearch = useLauncherUiStore((state) => state.setCommandSearch);
   const setActivePanel = useLauncherUiStore((state) => state.setActivePanel);
   const setFileSearchQuery = useLauncherUiStore((state) => state.setFileSearchQuery);
   const setDictionaryQuery = useLauncherUiStore((state) => state.setDictionaryQuery);
   const setTranslationQuery = useLauncherUiStore((state) => state.setTranslationQuery);
-  const setSpotifyQuery = useLauncherUiStore((state) => state.setSpotifyQuery);
-  const setGithubQuery = useLauncherUiStore((state) => state.setGithubQuery);
   const setQuicklinksView = useLauncherUiStore((state) => state.setQuicklinksView);
   const openPanel = useLauncherUiStore((state) => state.openPanel);
   const openFileSearch = useLauncherUiStore((state) => state.openFileSearch);
   const openDictionary = useLauncherUiStore((state) => state.openDictionary);
   const openTranslation = useLauncherUiStore((state) => state.openTranslation);
-  const openSpotify = useLauncherUiStore((state) => state.openSpotify);
-  const openGithub = useLauncherUiStore((state) => state.openGithub);
   const backToCommands = useLauncherUiStore((state) => state.backToCommands);
   const {
     preparePanel,
@@ -432,8 +426,6 @@ export default function LauncherCommand() {
           setFileSearchQuery,
           setDictionaryQuery,
           setTranslationQuery,
-          setSpotifyQuery,
-          setGithubQuery,
           preparePanel,
           customActionHandler,
         },
@@ -472,9 +464,7 @@ export default function LauncherCommand() {
       setCommandSearch,
       setDictionaryQuery,
       setFileSearchQuery,
-      setGithubQuery,
       setQuicklinksView,
-      setSpotifyQuery,
       setTranslationQuery,
     ],
   );
@@ -722,15 +712,11 @@ export default function LauncherCommand() {
             fileSearchQuery={fileSearchQuery}
             dictionaryQuery={dictionaryQuery}
             translationQuery={translationQuery}
-            spotifyQuery={spotifyQuery}
-            githubQuery={githubQuery}
             quicklinksView={quicklinksView}
             setQuicklinksView={setQuicklinksView}
             openFileSearch={openFileSearch}
             openDictionary={openDictionary}
             openTranslation={openTranslation}
-            openSpotify={openSpotify}
-            openGithub={openGithub}
             openQuicklinks={takeoverPanelOpeners.openQuicklinks}
             openSpeedTest={takeoverPanelOpeners.openSpeedTest}
             openClipboard={takeoverPanelOpeners.openClipboard}

@@ -7,15 +7,11 @@ export interface TakeoverPanelRendererInput {
   fileSearchQuery: string;
   dictionaryQuery: string;
   translationQuery: string;
-  spotifyQuery: string;
-  githubQuery: string;
   quicklinksView: QuicklinksView;
   setQuicklinksView: (view: QuicklinksView) => void;
   openFileSearch: (query: string) => void;
   openDictionary: (query: string) => void;
   openTranslation: (query: string) => void;
-  openSpotify: (query: string) => void;
-  openGithub: (query: string) => void;
   openQuicklinks: () => void;
   openSpeedTest: () => void;
   openClipboard: () => void;

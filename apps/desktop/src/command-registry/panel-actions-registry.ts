@@ -28,8 +28,6 @@ const PANEL_COMMAND_REGISTRY: Partial<Record<CommandPanel, PanelCommandRegistrat
     title: "focus open windows",
   },
   [COMMAND_PANELS.TRANSLATION]: { id: "translation.panel.open", title: "translate text" },
-  [COMMAND_PANELS.SPOTIFY]: { id: "spotify.panel.open", title: "spotify controls" },
-  [COMMAND_PANELS.GITHUB]: { id: "github.panel.open", title: "github activity" },
   [COMMAND_PANELS.EXTENSIONS]: { id: "extensions.panel.open", title: "manage extensions" },
   [COMMAND_PANELS.SCRIPT_COMMANDS]: {
     id: "script_commands.panel.open",
@@ -68,8 +66,6 @@ const PANEL_PRIMARY_ACTION_LABELS: Partial<Record<CommandPanel, string>> = {
   [COMMAND_PANELS.DICTIONARY]: "Copy",
   [COMMAND_PANELS.WINDOW_SWITCHER]: "Focus",
   [COMMAND_PANELS.TRANSLATION]: "Translate",
-  [COMMAND_PANELS.SPOTIFY]: "Search",
-  [COMMAND_PANELS.GITHUB]: "Search",
   [COMMAND_PANELS.QUICKLINKS]: "Open",
   [COMMAND_PANELS.EXTENSIONS]: "Open",
   [COMMAND_PANELS.SCRIPT_COMMANDS]: "Run",

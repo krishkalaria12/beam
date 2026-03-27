@@ -19,8 +19,6 @@ const PANEL_WARMUP_TIERS: Partial<Record<CommandPanel, LauncherPanelWarmupTier>>
   dictionary: "intent",
   "window-switcher": "intent",
   translation: "intent",
-  spotify: "intent",
-  github: "intent",
   extensions: "intent",
   "script-commands": "intent",
   hyprwhspr: "rare",

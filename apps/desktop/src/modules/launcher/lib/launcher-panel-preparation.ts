@@ -7,7 +7,6 @@ import { warmClipboardHistoryData } from "@/modules/clipboard/api/query";
 import { warmDictionaryData } from "@/modules/dictionary/api/query";
 import { warmExtensionsData } from "@/modules/extensions/api/query";
 import { warmFileSearchData } from "@/modules/file-search/api/query";
-import { warmGithubAssignedItemsData } from "@/modules/integrations/github/api/query";
 import {
   isSecondaryLauncherPanel,
   preloadSecondaryLauncherPanel,
@@ -100,11 +99,6 @@ export async function prepareLauncherPanel(
 
   if (panel === COMMAND_PANELS.WINDOW_SWITCHER) {
     await Promise.all([preloadTakeoverLauncherPanel(panel), warmWindowEntriesData(queryClient)]);
-    return;
-  }
-
-  if (panel === COMMAND_PANELS.GITHUB) {
-    await Promise.all([preloadTakeoverLauncherPanel(panel), warmGithubAssignedItemsData(queryClient)]);
     return;
   }
 
