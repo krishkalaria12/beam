@@ -1,12 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { isTauri } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
-import {
-  useCallback,
-  useEffectEvent,
-  useMemo,
-  useState,
-} from "react";
+import { useCallback, useEffectEvent, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { buildCommandContext } from "@/command-registry/context";
@@ -38,7 +33,11 @@ import { useLauncherDeepLinks } from "@/modules/launcher/hooks/use-launcher-deep
 import { useLauncherFocusManagement } from "@/modules/launcher/hooks/use-launcher-focus-management";
 import { useLauncherPanelActions } from "@/modules/launcher/hooks/use-launcher-panel-actions";
 import { useLauncherPanelPrefetch } from "@/modules/launcher/hooks/use-launcher-panel-prefetch";
-import { useLauncherWindowSizeSync } from "@/modules/launcher/hooks/use-launcher-window-size-sync";
+import {
+  getLauncherWindowSizeForPanel,
+  syncLauncherWindowToPanel,
+  useLauncherWindowSizeSync,
+} from "@/modules/launcher/hooks/use-launcher-window-size-sync";
 import { LauncherTakeoverPanel } from "@/modules/launcher/components/launcher-takeover-panel";
 import { useRankedRegistryCommands } from "@/modules/launcher/hooks/use-ranked-registry-commands";
 import { LauncherSecondaryPanel } from "@/modules/launcher/components/launcher-secondary-panel";
@@ -102,20 +101,11 @@ export default function LauncherCommand() {
   const setDictionaryQuery = useLauncherUiStore((state) => state.setDictionaryQuery);
   const setTranslationQuery = useLauncherUiStore((state) => state.setTranslationQuery);
   const setQuicklinksView = useLauncherUiStore((state) => state.setQuicklinksView);
-  const openPanel = useLauncherUiStore((state) => state.openPanel);
-  const openFileSearch = useLauncherUiStore((state) => state.openFileSearch);
-  const openDictionary = useLauncherUiStore((state) => state.openDictionary);
-  const openTranslation = useLauncherUiStore((state) => state.openTranslation);
-  const backToCommands = useLauncherUiStore((state) => state.backToCommands);
-  const {
-    preparePanel,
-    openPreparedPanel,
-    openPreparedSecondaryPanel,
-    openExtensions,
-    openSettings,
-    prefetchRegistryCommand,
-    takeoverPanelOpeners,
-  } = useLauncherPanelActions({ openPanel });
+  const rawOpenPanel = useLauncherUiStore((state) => state.openPanel);
+  const rawOpenFileSearch = useLauncherUiStore((state) => state.openFileSearch);
+  const rawOpenDictionary = useLauncherUiStore((state) => state.openDictionary);
+  const rawOpenTranslation = useLauncherUiStore((state) => state.openTranslation);
+  const rawBackToCommands = useLauncherUiStore((state) => state.backToCommands);
 
   const { data: quicklinks = [] } = useQuicklinks();
   const quicklinkAliasesById = useManagedItemPreferencesStore((state) => state.aliasesById);
@@ -135,6 +125,141 @@ export default function LauncherCommand() {
     setFallbackActionsEnabled,
     setFallbackCommandIds,
   } = useCommandPreferences();
+
+  const [shellSizeOverride, setShellSizeOverride] = useState<ReturnType<
+    typeof getLauncherWindowSizeForPanel
+  > | null>(null);
+  const [isPanelTransitioning, setIsPanelTransitioning] = useState(false);
+  const [hideShellDuringTransition, setHideShellDuringTransition] = useState(false);
+  const panelTransitionQueueRef = useRef<Promise<void>>(Promise.resolve());
+
+  const waitForWindowSettle = useCallback(() => {
+    return new Promise<void>((resolve) => {
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
+          resolve();
+        });
+      });
+    });
+  }, []);
+
+  const enqueuePanelTransition = useCallback(async (task: () => Promise<void>) => {
+    const queuedTask = panelTransitionQueueRef.current.catch(() => undefined).then(task);
+    panelTransitionQueueRef.current = queuedTask.catch(() => undefined);
+    await queuedTask;
+  }, []);
+
+  const transitionToPanel = useCallback(
+    async (nextPanel: CommandPanel, commit: () => void, nextCommandSearch: string) => {
+      await enqueuePanelTransition(async () => {
+        const currentState = useLauncherUiStore.getState();
+        const currentShouldCollapse =
+          currentState.activePanel === "commands" &&
+          isCompressed &&
+          currentState.commandSearch.trim().length === 0;
+        const nextShouldCollapse =
+          nextPanel === "commands" && isCompressed && nextCommandSearch.trim().length === 0;
+        const currentShellSize = getLauncherWindowSizeForPanel(
+          currentState.activePanel,
+          currentShouldCollapse,
+        );
+        const nextShellSize = getLauncherWindowSizeForPanel(nextPanel, nextShouldCollapse);
+        const needsNativeResize =
+          currentShellSize.width !== nextShellSize.width ||
+          currentShellSize.height !== nextShellSize.height;
+
+        if (!isTauri() || !needsNativeResize) {
+          commit();
+          return;
+        }
+
+        const expands =
+          nextShellSize.width > currentShellSize.width ||
+          nextShellSize.height > currentShellSize.height;
+
+        setIsPanelTransitioning(true);
+
+        try {
+          if (expands) {
+            setHideShellDuringTransition(true);
+            setShellSizeOverride(currentShellSize);
+            await syncLauncherWindowToPanel(nextPanel, nextShouldCollapse);
+            await waitForWindowSettle();
+            setShellSizeOverride(nextShellSize);
+            commit();
+            setHideShellDuringTransition(false);
+            await waitForWindowSettle();
+          } else {
+            setShellSizeOverride(nextShellSize);
+            commit();
+            await waitForWindowSettle();
+            await syncLauncherWindowToPanel(nextPanel, nextShouldCollapse);
+            await waitForWindowSettle();
+          }
+        } finally {
+          setShellSizeOverride(null);
+          setHideShellDuringTransition(false);
+          setIsPanelTransitioning(false);
+        }
+      });
+    },
+    [enqueuePanelTransition, isCompressed, waitForWindowSettle],
+  );
+
+  const openPanel = useCallback(
+    async (panel: CommandPanel, clearSearch = false) => {
+      const currentSearch = useLauncherUiStore.getState().commandSearch;
+      await transitionToPanel(
+        panel,
+        () => rawOpenPanel(panel, clearSearch),
+        clearSearch ? "" : currentSearch,
+      );
+    },
+    [rawOpenPanel, transitionToPanel],
+  );
+
+  const openFileSearch = useCallback(
+    async (query: string) => {
+      await transitionToPanel("file-search", () => rawOpenFileSearch(query), query);
+    },
+    [rawOpenFileSearch, transitionToPanel],
+  );
+
+  const openDictionary = useCallback(
+    async (query: string) => {
+      await transitionToPanel("dictionary", () => rawOpenDictionary(query), query);
+    },
+    [rawOpenDictionary, transitionToPanel],
+  );
+
+  const openTranslation = useCallback(
+    async (query: string) => {
+      await transitionToPanel("translation", () => rawOpenTranslation(query), query);
+    },
+    [rawOpenTranslation, transitionToPanel],
+  );
+
+  const backToCommands = useCallback(async () => {
+    await transitionToPanel("commands", () => rawBackToCommands(), "");
+  }, [rawBackToCommands, transitionToPanel]);
+
+  const transitionSetActivePanel = useCallback(
+    async (panel: CommandPanel) => {
+      const nextSearch = useLauncherUiStore.getState().commandSearch;
+      await transitionToPanel(panel, () => setActivePanel(panel), nextSearch);
+    },
+    [setActivePanel, transitionToPanel],
+  );
+
+  const {
+    preparePanel,
+    openPreparedPanel,
+    openPreparedSecondaryPanel,
+    openExtensions,
+    openSettings,
+    prefetchRegistryCommand,
+    takeoverPanelOpeners,
+  } = useLauncherPanelActions({ openPanel });
   useLauncherDeepLinks({ openPanel: openPreparedPanel, backToCommands });
   useExtensionManagerEvents({ backToCommands, openSettings });
   useCliDmenuRequests();
@@ -190,7 +315,7 @@ export default function LauncherCommand() {
       } catch (error) {
         useExtensionRuntimeStore.getState().resetRuntime();
         if (input.pluginMode === "view") {
-          backToCommands();
+          void backToCommands();
         }
         throw error;
       }
@@ -420,7 +545,7 @@ export default function LauncherCommand() {
         isDesktopRuntime: commandContext.isDesktopRuntime,
         registry,
         runtime: {
-          setActivePanel,
+          setActivePanel: transitionSetActivePanel,
           setCommandSearch,
           setQuicklinksView,
           setFileSearchQuery,
@@ -460,12 +585,12 @@ export default function LauncherCommand() {
       customActionHandler,
       markUsed,
       rankedRegistryCommands,
-      setActivePanel,
       setCommandSearch,
       setDictionaryQuery,
       setFileSearchQuery,
       setQuicklinksView,
       setTranslationQuery,
+      transitionSetActivePanel,
     ],
   );
 
@@ -603,7 +728,7 @@ export default function LauncherCommand() {
 
         const handledByPanel = runLauncherPanelBackHandler(activePanel);
         if (!handledByPanel) {
-          backToCommands();
+          void backToCommands();
         }
       }
 
@@ -636,7 +761,7 @@ export default function LauncherCommand() {
 
     const handledByPanel = runLauncherPanelBackHandler(activePanel);
     if (!handledByPanel) {
-      backToCommands();
+      void backToCommands();
     }
   });
 
@@ -656,6 +781,11 @@ export default function LauncherCommand() {
   const isInputHidden = isLauncherInputHidden(activePanel);
   const hasTakeoverPanel = isLauncherTakeoverPanel(activePanel);
   const isCommandListExpandedPanel = isLauncherCommandListExpandedPanel(activePanel);
+  const launcherShellSize = useMemo(
+    () =>
+      shellSizeOverride ?? getLauncherWindowSizeForPanel(activePanel, shouldCollapseToInputOnly),
+    [activePanel, shellSizeOverride, shouldCollapseToInputOnly],
+  );
 
   const shouldShowFooter =
     !isShellTrigger && !shouldCollapseToInputOnly && !isLauncherFooterHidden(activePanel);
@@ -672,7 +802,7 @@ export default function LauncherCommand() {
     [handleRunShellCommand, isShellTrigger, runShellCommandMutation.isPending, shellCommand.length],
   );
 
-  useLauncherWindowSizeSync(activePanel === "commands", shouldCollapseToInputOnly);
+  useLauncherWindowSizeSync(activePanel, shouldCollapseToInputOnly, !isPanelTransitioning);
   useLauncherFocusManagement({ activePanel, isInputHidden });
 
   const ExtensionToastBridge = extensionInfrastructure?.ExtensionToastBridge ?? null;
@@ -687,129 +817,148 @@ export default function LauncherCommand() {
           openExtensions={openExtensions}
         />
       ) : null}
-      <Command
-        shouldFilter={false}
-        smartPointerSelection
-        onKeyDown={handleKeyDown}
-        className="glass-effect beam-main-shell h-full w-full overflow-hidden text-foreground"
-      >
-        {!isInputHidden && (
-          <CommandInput
-            value={commandSearch}
-            onValueChange={setCommandSearch}
-            placeholder={isShellTrigger ? "Run shell command..." : "Search Beam..."}
-            showLogo
-            minimal
-            className="border-none"
-          />
-        )}
-
-        {/* If File Search or Dictionary is open, it takes over the view entirely */}
-
-        {hasTakeoverPanel && (
-          <LauncherTakeoverPanel
-            activePanel={activePanel}
-            fileSearchQuery={fileSearchQuery}
-            dictionaryQuery={dictionaryQuery}
-            translationQuery={translationQuery}
-            quicklinksView={quicklinksView}
-            setQuicklinksView={setQuicklinksView}
-            openFileSearch={openFileSearch}
-            openDictionary={openDictionary}
-            openTranslation={openTranslation}
-            openQuicklinks={takeoverPanelOpeners.openQuicklinks}
-            openSpeedTest={takeoverPanelOpeners.openSpeedTest}
-            openClipboard={takeoverPanelOpeners.openClipboard}
-            openAi={takeoverPanelOpeners.openAi}
-            openTodo={takeoverPanelOpeners.openTodo}
-            openNotes={takeoverPanelOpeners.openNotes}
-            openSnippets={takeoverPanelOpeners.openSnippets}
-            openExtensions={takeoverPanelOpeners.openExtensions}
-            openScriptCommands={takeoverPanelOpeners.openScriptCommands}
-            pinnedCommandIds={commandPreferences.pinnedCommandIds}
-            hiddenCommandIds={hiddenCommandIds}
-            aliasesById={commandPreferences.aliasesById}
-            onSetPinned={setPinned}
-            onSetHidden={setHidden}
-            onSetAliases={setAliases}
-            onMovePinned={movePinned}
-            backToCommands={backToCommands}
-          />
-        )}
-
-        {hasTakeoverPanel || shouldCollapseToInputOnly ? null : activePanel === "commands" &&
-          isShellTrigger ? (
-          <div className="min-h-0 flex-1 overflow-hidden">
-            <ShellCommandPanel
-              shellSymbol={triggerSymbols.shell}
-              currentCommand={shellCommand}
-              history={shellHistory}
-            />
-          </div>
-        ) : (
-          <CommandList
+      <div className="relative h-full w-full overflow-hidden">
+        {shellSizeOverride ? (
+          <div className="beam-window-overlay absolute inset-0 backdrop-blur-sm" />
+        ) : null}
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden">
+          <div
             className={cn(
-              "list-area flex-1 transition-all duration-300",
-              "custom-scrollbar px-1.5",
-              isCommandListExpandedPanel
-                ? "min-h-0 flex flex-col h-full [&_[cmdk-list-sizer]]:h-full [&_[cmdk-list-sizer]]:min-h-0 [&_[cmdk-list-sizer]]:flex-1 [&_[cmdk-list-sizer]]:flex [&_[cmdk-list-sizer]]:flex-col"
-                : "max-h-none overflow-y-auto",
+              "pointer-events-auto relative shrink-0 overflow-hidden transition-opacity duration-100 ease-out",
+              isPanelTransitioning && "pointer-events-none",
+              hideShellDuringTransition && "opacity-0",
             )}
+            style={{
+              width: launcherShellSize.width,
+              height: launcherShellSize.height,
+              maxWidth: "100%",
+              maxHeight: "100%",
+            }}
           >
-            {activePanel === "commands" ? (
-              <LauncherCommandModeContent
-                isQuicklinkTrigger={isQuicklinkTrigger}
-                quicklinks={quicklinks}
-                quicklinkAliasesById={quicklinkAliasesById}
-                quicklinkKeyword={quicklinkKeyword}
-                quicklinkQuery={quicklinkQuery}
-                rankedRegistryCommands={rankedRegistryCommands}
-                fallbackRegistryCommands={fallbackRegistryCommands}
-                pinnedCommandIds={commandPreferences.pinnedCommandIds}
-                usageById={commandPreferences.usageById}
-                commandContext={commandContext}
-                onQuicklinkExecute={(keyword, query) => {
-                  void handleQuicklinkExecute(keyword, query);
-                }}
-                onQuicklinkFill={setCommandSearch}
-                onRegistryCommandSelect={(commandId) => {
-                  void handleRegistryCommandSelect(commandId);
-                }}
-                onRegistryCommandIntent={prefetchRegistryCommand}
-                onSetPinned={setPinned}
-              />
-            ) : null}
+            <Command
+              shouldFilter={false}
+              smartPointerSelection
+              onKeyDown={handleKeyDown}
+              className="glass-effect beam-main-shell h-full w-full overflow-hidden text-foreground"
+            >
+              {!isInputHidden && (
+                <CommandInput
+                  value={commandSearch}
+                  onValueChange={setCommandSearch}
+                  placeholder={isShellTrigger ? "Run shell command..." : "Search Beam..."}
+                  showLogo
+                  minimal
+                  className="border-none"
+                />
+              )}
 
-            <LauncherSecondaryPanel
-              activePanel={activePanel}
-              onOpenCalculatorHistory={() => {
-                void openPreparedSecondaryPanel("calculator-history");
-              }}
-              onOpenEmoji={() => {
-                void openPreparedSecondaryPanel("emoji");
-              }}
-              onBack={backToCommands}
-              pinnedCommandIds={commandPreferences.pinnedCommandIds}
-              hiddenCommandIds={hiddenCommandIds}
-              fallbackEnabled={commandPreferences.fallbackEnabled}
-              fallbackCommandIds={commandPreferences.fallbackCommandIds}
-              onSetPinned={setPinned}
-              onSetHidden={setHidden}
-              onMovePinned={movePinned}
-              onSetFallbackEnabled={setFallbackActionsEnabled}
-              onSetFallbackCommandIds={setFallbackCommandIds}
-            />
-          </CommandList>
-        )}
+              {hasTakeoverPanel && (
+                <LauncherTakeoverPanel
+                  activePanel={activePanel}
+                  fileSearchQuery={fileSearchQuery}
+                  dictionaryQuery={dictionaryQuery}
+                  translationQuery={translationQuery}
+                  quicklinksView={quicklinksView}
+                  setQuicklinksView={setQuicklinksView}
+                  openFileSearch={openFileSearch}
+                  openDictionary={openDictionary}
+                  openTranslation={openTranslation}
+                  openQuicklinks={takeoverPanelOpeners.openQuicklinks}
+                  openSpeedTest={takeoverPanelOpeners.openSpeedTest}
+                  openClipboard={takeoverPanelOpeners.openClipboard}
+                  openAi={takeoverPanelOpeners.openAi}
+                  openTodo={takeoverPanelOpeners.openTodo}
+                  openNotes={takeoverPanelOpeners.openNotes}
+                  openSnippets={takeoverPanelOpeners.openSnippets}
+                  openExtensions={takeoverPanelOpeners.openExtensions}
+                  openScriptCommands={takeoverPanelOpeners.openScriptCommands}
+                  pinnedCommandIds={commandPreferences.pinnedCommandIds}
+                  hiddenCommandIds={hiddenCommandIds}
+                  aliasesById={commandPreferences.aliasesById}
+                  onSetPinned={setPinned}
+                  onSetHidden={setHidden}
+                  onSetAliases={setAliases}
+                  onMovePinned={movePinned}
+                  backToCommands={backToCommands}
+                />
+              )}
 
-        {shouldShowFooter && (
-          <LauncherFooter
-            leftSlot={isShellTrigger ? <span>Beam Shell</span> : undefined}
-            primaryAction={footerPrimaryAction}
-            actionsEnabled={activePanel === "commands"}
-          />
-        )}
-      </Command>
+              {hasTakeoverPanel || shouldCollapseToInputOnly ? null : activePanel === "commands" &&
+                isShellTrigger ? (
+                <div className="min-h-0 flex-1 overflow-hidden">
+                  <ShellCommandPanel
+                    shellSymbol={triggerSymbols.shell}
+                    currentCommand={shellCommand}
+                    history={shellHistory}
+                  />
+                </div>
+              ) : (
+                <CommandList
+                  className={cn(
+                    "list-area flex-1",
+                    "custom-scrollbar px-1.5",
+                    isCommandListExpandedPanel
+                      ? "min-h-0 flex h-full flex-col [&_[cmdk-list-sizer]]:flex [&_[cmdk-list-sizer]]:h-full [&_[cmdk-list-sizer]]:min-h-0 [&_[cmdk-list-sizer]]:flex-1 [&_[cmdk-list-sizer]]:flex-col"
+                      : "max-h-none overflow-y-auto",
+                  )}
+                >
+                  {activePanel === "commands" ? (
+                    <LauncherCommandModeContent
+                      isQuicklinkTrigger={isQuicklinkTrigger}
+                      quicklinks={quicklinks}
+                      quicklinkAliasesById={quicklinkAliasesById}
+                      quicklinkKeyword={quicklinkKeyword}
+                      quicklinkQuery={quicklinkQuery}
+                      rankedRegistryCommands={rankedRegistryCommands}
+                      fallbackRegistryCommands={fallbackRegistryCommands}
+                      pinnedCommandIds={commandPreferences.pinnedCommandIds}
+                      usageById={commandPreferences.usageById}
+                      commandContext={commandContext}
+                      onQuicklinkExecute={(keyword, query) => {
+                        void handleQuicklinkExecute(keyword, query);
+                      }}
+                      onQuicklinkFill={setCommandSearch}
+                      onRegistryCommandSelect={(commandId) => {
+                        void handleRegistryCommandSelect(commandId);
+                      }}
+                      onRegistryCommandIntent={prefetchRegistryCommand}
+                      onSetPinned={setPinned}
+                    />
+                  ) : null}
+
+                  <LauncherSecondaryPanel
+                    activePanel={activePanel}
+                    onOpenCalculatorHistory={() => {
+                      void openPreparedSecondaryPanel("calculator-history");
+                    }}
+                    onOpenEmoji={() => {
+                      void openPreparedSecondaryPanel("emoji");
+                    }}
+                    onBack={backToCommands}
+                    pinnedCommandIds={commandPreferences.pinnedCommandIds}
+                    hiddenCommandIds={hiddenCommandIds}
+                    fallbackEnabled={commandPreferences.fallbackEnabled}
+                    fallbackCommandIds={commandPreferences.fallbackCommandIds}
+                    onSetPinned={setPinned}
+                    onSetHidden={setHidden}
+                    onMovePinned={movePinned}
+                    onSetFallbackEnabled={setFallbackActionsEnabled}
+                    onSetFallbackCommandIds={setFallbackCommandIds}
+                  />
+                </CommandList>
+              )}
+
+              {shouldShowFooter && (
+                <LauncherFooter
+                  leftSlot={isShellTrigger ? <span>Beam Shell</span> : undefined}
+                  primaryAction={footerPrimaryAction}
+                  actionsEnabled={activePanel === "commands"}
+                />
+              )}
+            </Command>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

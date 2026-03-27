@@ -121,10 +121,7 @@ pub fn toggle_launcher(app: &AppHandle) {
         return;
     }
 
-    let _ = main_window.unminimize();
-    let _ = main_window.show();
-    let _ = main_window.center();
-    let _ = main_window.set_focus();
+    let _ = crate::launcher_window::reveal_launcher_window(app);
 }
 
 pub fn dispatch_hotkey_command(app: &AppHandle, command_id: String, source: &'static str) {
@@ -340,14 +337,7 @@ fn emit_hotkey_backend_status_event(
 }
 
 fn show_launcher_window(app: &AppHandle) {
-    let Some(main_window) = app.get_webview_window("main") else {
-        return;
-    };
-
-    let _ = main_window.unminimize();
-    let _ = main_window.show();
-    let _ = main_window.center();
-    let _ = main_window.set_focus();
+    let _ = crate::launcher_window::reveal_launcher_window(app);
 }
 
 fn detect_session_type() -> String {

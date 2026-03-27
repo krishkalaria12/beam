@@ -7,7 +7,6 @@ import { AI_DEFAULT_CONVERSATION_ID, getProviderDefinition } from "@/modules/ai/
 import { askAiStream, clearAiApiKey, clearAiChatHistory, setAiApiKey } from "../api/ai";
 import { useAiChatBootstrap } from "../hooks/use-ai-chat-bootstrap";
 import { useAiStreamListeners } from "../hooks/use-ai-stream-listeners";
-import { useAiWindowSizer } from "../hooks/use-ai-window-sizer";
 import { useAiChatStore } from "@/store/use-ai-chat-store";
 import type { AttachedFile } from "../types";
 import {
@@ -67,7 +66,9 @@ function AiMainView({
   onStartNewChat: () => void;
   onSelectConversation: (conversationId: string) => void;
   onOpenSettings: () => void;
-  onProviderChange: (providerId: ReturnType<typeof useAiChatStore.getState>["selectedProvider"]) => void;
+  onProviderChange: (
+    providerId: ReturnType<typeof useAiChatStore.getState>["selectedProvider"],
+  ) => void;
   onModelChange: (modelId: string) => void;
   onClearChat: () => void;
   onSubmit: (messageText: string, files?: AttachedFile[]) => void;
@@ -169,7 +170,9 @@ export function AiView({ onBack }: AiViewProps) {
         title: conversationTitleFromMessages(messages),
         lastMessagePreview: conversationPreviewFromMessages(messages),
         updatedAt:
-          messages[messages.length - 1]?.createdAt.getTime() ?? messages[0]?.createdAt.getTime() ?? 0,
+          messages[messages.length - 1]?.createdAt.getTime() ??
+          messages[0]?.createdAt.getTime() ??
+          0,
         messageCount: messages.length,
       },
       ...conversations,
@@ -179,7 +182,6 @@ export function AiView({ onBack }: AiViewProps) {
   const { refreshApiKeyStatus, refreshConversations, loadConversationHistory } =
     useAiChatBootstrap();
   useAiStreamListeners({ refreshConversations });
-  useAiWindowSizer(); // Window stays at 1100×750
 
   const handleProviderChange = useCallback(
     (providerId: typeof selectedProvider) => {

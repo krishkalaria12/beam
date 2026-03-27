@@ -1,70 +1,61 @@
 /* ── Takeover panel enter/exit animations ── */
 /* Used by LauncherTakeoverSurface and inner shells (settings, AI, etc.) */
 
-/* Overlay: top-down fade-in */
+/* Overlay: subtle fade-in */
 .takeover-enter {
-  animation: takeover-fade-slide-in 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: takeover-fade-in 140ms ease-out both;
 }
 
-@keyframes takeover-fade-slide-in {
+@keyframes takeover-fade-in {
   from {
     opacity: 0;
-    transform: translateY(-14px) scale(0.985);
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
   }
 }
 
-/* Overlay: slide-up fade-out */
+/* Overlay: subtle fade-out */
 .takeover-exit {
-  animation: takeover-fade-slide-out 180ms cubic-bezier(0.4, 0, 1, 1) both;
+  animation: takeover-fade-out 100ms ease-in both;
   pointer-events: none;
 }
 
-@keyframes takeover-fade-slide-out {
+@keyframes takeover-fade-out {
   from {
     opacity: 1;
-    transform: translateY(0) scale(1);
   }
   to {
     opacity: 0;
-    transform: translateY(-10px) scale(0.988);
   }
 }
 
 /* Shell inner container enter */
 .takeover-shell-enter {
-  animation: takeover-shell-in 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
-  animation-delay: 30ms;
+  animation: takeover-shell-fade-in 120ms ease-out both;
 }
 
-@keyframes takeover-shell-in {
+@keyframes takeover-shell-fade-in {
   from {
     opacity: 0;
-    transform: translateY(-8px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
   }
 }
 
 /* Shell inner container exit */
 .takeover-shell-exit {
-  animation: takeover-shell-out 160ms cubic-bezier(0.4, 0, 1, 1) both;
+  animation: takeover-shell-fade-out 100ms ease-in both;
   pointer-events: none;
 }
 
-@keyframes takeover-shell-out {
+@keyframes takeover-shell-fade-out {
   from {
     opacity: 1;
-    transform: translateY(0);
   }
   to {
     opacity: 0;
-    transform: translateY(-6px);
   }
 }
 
@@ -2511,17 +2502,15 @@
 
 /* AI view container - entrance animation */
 .ai-view-enter {
-  animation: ai-view-enter 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: ai-view-fade-in 120ms ease-out both;
 }
 
-@keyframes ai-view-enter {
+@keyframes ai-view-fade-in {
   from {
     opacity: 0;
-    transform: translateY(-10px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
   }
 }
 

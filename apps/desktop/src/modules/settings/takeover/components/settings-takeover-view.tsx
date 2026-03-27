@@ -1,5 +1,5 @@
 import { Blocks, ChevronLeft, Info, Keyboard, Settings } from "lucide-react";
-import { useEffectEvent, useState, type ComponentType, type ReactNode } from "react";
+import { useEffectEvent, type ComponentType, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import { useMountEffect } from "@/hooks/use-mount-effect";
@@ -9,7 +9,6 @@ import {
   preloadSettingsTab,
   getLoadedSettingsTab,
 } from "@/modules/settings/takeover/lib/settings-tab-loader";
-import { useSettingsWindowSizer } from "@/modules/settings/takeover/hooks/use-settings-window-sizer";
 import {
   type SettingsPageTab,
   useSettingsPageStore,
@@ -67,38 +66,22 @@ export function SettingsTakeoverView({
   onSetAliases,
   onMovePinned,
 }: SettingsTakeoverViewProps) {
-  useSettingsWindowSizer();
-
   const activeTab = useSettingsPageStore((state) => state.activeTab);
   const extensionTarget = useSettingsPageStore((state) => state.extensionTarget);
   const setActiveTab = useSettingsPageStore((state) => state.setActiveTab);
-  const [phase, setPhase] = useState<"entering" | "ready" | "closing">("entering");
 
   useMountEffect(() => {
     if (!extensionTarget) {
       setActiveTab("general");
     }
-
-    const raf = window.requestAnimationFrame(() => {
-      setPhase("ready");
-    });
-
-    return () => window.cancelAnimationFrame(raf);
   });
 
   function handleBack() {
-    if (phase === "closing") {
-      return;
-    }
-
-    setPhase("closing");
-    window.setTimeout(() => {
-      onBack();
-    }, 180);
+    onBack();
   }
 
   async function handleTabSelect(tab: SettingsPageTab) {
-    if (phase === "closing" || tab === activeTab) {
+    if (tab === activeTab) {
       return;
     }
 
@@ -147,14 +130,11 @@ export function SettingsTakeoverView({
   });
 
   return (
-    <LauncherTakeoverSurface
-      className="h-full w-full backdrop-blur-sm"
-      exiting={phase === "closing"}
-    >
+    <LauncherTakeoverSurface className="h-full w-full backdrop-blur-sm">
       <div
         className={cn(
           "beam-takeover-shell flex h-full w-full flex-col overflow-hidden border border-[var(--launcher-card-border)]",
-          phase === "closing" ? "takeover-shell-exit" : "takeover-shell-enter",
+          "takeover-shell-enter",
         )}
       >
         <div className="settings-navbar relative flex h-[72px] shrink-0 items-center border-b border-[var(--launcher-card-border)] bg-[var(--launcher-card-hover-bg)]/50 px-5">
@@ -163,7 +143,6 @@ export function SettingsTakeoverView({
             variant="ghost"
             size="sm"
             onClick={handleBack}
-            disabled={phase === "closing"}
             className="settings-back-btn absolute left-5 top-1/2 h-8 -translate-y-1/2 gap-1.5 rounded-xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-3 text-launcher-xs text-muted-foreground transition-all duration-200 hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground"
           >
             <ChevronLeft className="size-3.5" />
@@ -179,7 +158,6 @@ export function SettingsTakeoverView({
                 <button
                   key={tab.id}
                   type="button"
-                  disabled={phase === "closing"}
                   onClick={() => {
                     void handleTabSelect(tab.id);
                   }}
@@ -194,7 +172,6 @@ export function SettingsTakeoverView({
                     isActive
                       ? "settings-tab-active bg-[var(--launcher-card-hover-bg)] text-foreground shadow-sm ring-1 ring-[var(--launcher-card-border)]"
                       : "text-muted-foreground hover:bg-[var(--launcher-card-bg)] hover:text-foreground",
-                    phase === "closing" && "pointer-events-none opacity-70",
                   )}
                 >
                   <Icon

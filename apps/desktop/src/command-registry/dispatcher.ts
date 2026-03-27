@@ -53,7 +53,7 @@ export type DispatchResult =
   | { ok: false; code: DispatchErrorCode; message: string; backend?: DispatchBackendError };
 
 export interface DispatchRuntime {
-  setActivePanel: (panel: CommandPanel) => void;
+  setActivePanel: (panel: CommandPanel) => void | Promise<void>;
   setCommandSearch: (value: string) => void;
   setQuicklinksView: (view: "create" | "manage") => void;
   setFileSearchQuery: (query: string) => void;
@@ -247,7 +247,7 @@ async function dispatchPanelAction(
 
   await context.runtime.preparePanel?.(panel);
 
-  context.runtime.setActivePanel(panel);
+  await context.runtime.setActivePanel(panel);
 
   if (
     panel !== COMMAND_PANELS.FILE_SEARCH &&

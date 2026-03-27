@@ -161,14 +161,7 @@ impl CliBridgeRuntime {
 }
 
 fn show_launcher_window(app: &AppHandle) {
-    let Some(main_window) = app.get_webview_window("main") else {
-        return;
-    };
-
-    let _ = main_window.unminimize();
-    let _ = main_window.show();
-    let _ = main_window.center();
-    let _ = main_window.set_focus();
+    let _ = crate::launcher_window::reveal_launcher_window(app);
 }
 
 fn cli_bridge_address() -> String {
