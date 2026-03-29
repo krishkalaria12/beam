@@ -1,4 +1,8 @@
 import { createInterface } from "readline";
+import {
+  BridgeMessageKind,
+  readBridgeMessageEnvelope,
+} from "@beam/extension-protocol";
 import { writeLog, writeOutput } from "./io";
 import { instances, navigationStack, toasts, browserExtensionState } from "./state";
 import { batchedUpdates, updateContainer } from "./reconciler";
@@ -117,9 +121,14 @@ export const main = () => {
   rl.on("line", (line) => {
     batchedUpdates(() => {
       try {
-        const command: { action: string; payload: unknown } = JSON.parse(line);
+        const command = readBridgeMessageEnvelope(JSON.parse(line));
 
-        if (command.action === "runtime-rpc") {
+        if (!command) {
+          writeLog("Received invalid bridge payload from host.");
+          return;
+        }
+
+        if (command.kind === BridgeMessageKind.RuntimeRpc) {
           const rpc = parseRuntimeRpcInput(command.payload);
           if (!rpc?.response) {
             writeLog("Received invalid runtime-rpc payload from host.");
@@ -235,7 +244,7 @@ export const main = () => {
           return;
         }
 
-        if (command.action === "manager-request") {
+        if (command.kind === BridgeMessageKind.ManagerRequest) {
           const request = parseManagerRequestPayload(command.payload);
 
           if (request.ping) {
@@ -364,7 +373,7 @@ export const main = () => {
           return;
         }
 
-        writeLog(`Unknown command action: ${command.action}`);
+        writeLog(`Unknown command kind: ${command.kind}`);
       } catch (err: unknown) {
         reportRuntimeError(err);
       }

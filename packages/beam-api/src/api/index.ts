@@ -398,6 +398,115 @@ export const Clipboard = createRuntimeNamespace("Clipboard", {
 
 export const LocalStorage = createRuntimeNamespace("LocalStorage", fallbackLocalStorageApi);
 
+enum LocalOAuthRedirectMethod {
+  Web = "web",
+  App = "app",
+  AppURI = "app-uri",
+}
+
+interface OAuthPKCEClientOptions {
+  redirectMethod: LocalOAuthRedirectMethod;
+  providerName: string;
+  providerIcon?: ImageLike;
+  description?: string;
+  providerId?: string;
+}
+
+interface OAuthAuthorizationRequestOptions {
+  endpoint: string;
+  clientId: string;
+  scope: string;
+  extraParameters?: { [key: string]: string };
+}
+
+interface OAuthAuthorizationRequest {
+  url: string;
+  codeVerifier: string;
+  codeChallenge: string;
+  redirectURI: string;
+  state: string;
+  toURL(): string;
+}
+
+interface OAuthAuthorizationOptions {
+  url: string;
+}
+
+interface OAuthAuthorizationResponse {
+  authorizationCode: string;
+}
+
+interface OAuthTokenResponse {
+  access_token: string;
+  refresh_token?: string;
+  expires_in?: number;
+  scope?: string | string[];
+  id_token?: string;
+}
+
+interface OAuthTokenSetOptions {
+  accessToken: string;
+  refreshToken?: string;
+  expiresIn?: number;
+  scope?: string;
+  idToken?: string;
+}
+
+interface OAuthTokenSet {
+  accessToken: string;
+  refreshToken?: string;
+  expiresIn?: number;
+  scope?: string;
+  idToken?: string;
+  updatedAt: Date;
+  isExpired(): boolean;
+}
+
+class LocalPKCEClient {
+  providerName: string;
+  providerIcon?: ImageLike;
+  description?: string;
+  providerId?: string;
+
+  constructor(options: OAuthPKCEClientOptions) {
+    this.providerName = options.providerName;
+    this.providerIcon = options.providerIcon;
+    this.description = options.description;
+    this.providerId = options.providerId;
+  }
+
+  async authorizationRequest(
+    _options: OAuthAuthorizationRequestOptions,
+  ): Promise<OAuthAuthorizationRequest> {
+    throw unavailable("OAuth.PKCEClient.authorizationRequest");
+  }
+
+  async authorize(
+    _authRequest: OAuthAuthorizationRequest | OAuthAuthorizationOptions,
+  ): Promise<OAuthAuthorizationResponse> {
+    throw unavailable("OAuth.PKCEClient.authorize");
+  }
+
+  async getTokens(): Promise<OAuthTokenSet | undefined> {
+    throw unavailable("OAuth.PKCEClient.getTokens");
+  }
+
+  async setTokens(
+    _tokens: OAuthTokenSetOptions | OAuthTokenResponse,
+  ): Promise<void> {
+    throw unavailable("OAuth.PKCEClient.setTokens");
+  }
+
+  async removeTokens(): Promise<void> {
+    throw unavailable("OAuth.PKCEClient.removeTokens");
+  }
+}
+
+type OAuthNamespace = {
+  RedirectMethod: typeof LocalOAuthRedirectMethod;
+  PKCEClient: typeof LocalPKCEClient;
+};
+
 export const Cache = createRuntimeNamespace("Cache", {} as Record<string, unknown>);
 export const FileSearch = createRuntimeNamespace("FileSearch", {
   async search(): Promise<unknown[]> {
@@ -471,7 +580,10 @@ export const WindowManagement = createRuntimeNamespace("WindowManagement", {
   setWindowBounds(payload: Record<string, unknown>): Promise<void>;
   focusWindow(window: WindowManagementWindow): Promise<boolean>;
 };
-export const OAuth = createRuntimeNamespace("OAuth", {} as Record<string, unknown>);
+export const OAuth = createRuntimeNamespace("OAuth", {
+  RedirectMethod: LocalOAuthRedirectMethod,
+  PKCEClient: LocalPKCEClient,
+}) as OAuthNamespace;
 export const AI = createRuntimeNamespace("AI", {
   name: "AI",
   async ask(): Promise<string> {

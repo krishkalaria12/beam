@@ -32,6 +32,10 @@ import {
 } from "@/modules/extensions/extension-manager/runtime-bridge";
 import { persistentExtensionRunnerManager } from "@/modules/extensions/background/persistent-runners";
 import { useExtensionRuntimeStore } from "@/modules/extensions/runtime/store";
+import {
+  BridgeMessageKind,
+  readBridgeMessageEnvelope,
+} from "@beam/extension-protocol";
 import type {
   ManagerRequest,
   ManagerResponse,
@@ -794,95 +798,102 @@ class ExtensionManagerService {
   }
 
   private handleDecodedMessage(raw: unknown): void {
-    const runtimeRender = parseRuntimeRender(raw);
-    if (runtimeRender?.kind === "batch") {
-      this.applyRuntimeCommands(runtimeRender.commands);
-      return;
+    const envelope = readBridgeMessageEnvelope(raw);
+
+    if (envelope?.kind === BridgeMessageKind.RuntimeRender) {
+      const runtimeRender = parseRuntimeRender(raw);
+      if (runtimeRender?.kind === "batch") {
+        this.applyRuntimeCommands(runtimeRender.commands);
+        return;
+      }
+
+      if (runtimeRender?.kind === "command") {
+        this.applyRuntimeCommands([runtimeRender.command]);
+        return;
+      }
+
+      if (runtimeRender?.kind === "log") {
+        this.emit({ type: "log", payload: runtimeRender.payload });
+        return;
+      }
+
+      if (runtimeRender?.kind === "error") {
+        console.error(
+          "[extensions-manager] runtime error:",
+          runtimeRender.message,
+          runtimeRender.stack,
+        );
+        this.emit({
+          type: "log",
+          payload: {
+            message: runtimeRender.message,
+            stack: runtimeRender.stack,
+          },
+        });
+        return;
+      }
     }
 
-    if (runtimeRender?.kind === "command") {
-      this.applyRuntimeCommands([runtimeRender.command]);
-      return;
+    if (envelope?.kind === BridgeMessageKind.RuntimeOutput) {
+      const runtimeOutput = parseRuntimeOutput(raw);
+      if (runtimeOutput?.clearSearchBar) {
+        this.emit({ type: "clear-search-bar" });
+        return;
+      }
+
+      if (runtimeOutput?.updateCommandMetadata) {
+        this.emit({
+          type: "update-command-metadata",
+          subtitle: runtimeOutput.updateCommandMetadata.subtitle,
+        });
+        return;
+      }
+
+      if (runtimeOutput?.openExtensionPreferences) {
+        this.emit({
+          type: "open-extension-preferences",
+          extensionName: runtimeOutput.openExtensionPreferences.extensionName || undefined,
+        });
+        return;
+      }
+
+      if (runtimeOutput?.openCommandPreferences) {
+        this.emit({
+          type: "open-command-preferences",
+          extensionName: runtimeOutput.openCommandPreferences.extensionName || undefined,
+          commandName: runtimeOutput.openCommandPreferences.commandName || undefined,
+        });
+        return;
+      }
+
+      if (runtimeOutput?.goBackToPluginList) {
+        this.emit({ type: "go-back-to-plugin-list" });
+        return;
+      }
+
+      if (runtimeOutput?.open) {
+        this.openTarget(runtimeOutput.open.target, runtimeOutput.open.application || undefined);
+        return;
+      }
+
+      if (runtimeOutput?.showHud) {
+        this.emit({ type: "show-hud", title: runtimeOutput.showHud.text });
+        return;
+      }
+
+      if (runtimeOutput?.focusElement) {
+        this.emit({ type: "focus-element", elementId: runtimeOutput.focusElement.elementId });
+        return;
+      }
+
+      if (runtimeOutput?.resetElement) {
+        this.emit({ type: "reset-element", elementId: runtimeOutput.resetElement.elementId });
+        return;
+      }
     }
 
-    if (runtimeRender?.kind === "log") {
-      this.emit({ type: "log", payload: runtimeRender.payload });
-      return;
-    }
-
-    if (runtimeRender?.kind === "error") {
-      console.error(
-        "[extensions-manager] runtime error:",
-        runtimeRender.message,
-        runtimeRender.stack,
-      );
-      this.emit({
-        type: "log",
-        payload: {
-          message: runtimeRender.message,
-          stack: runtimeRender.stack,
-        },
-      });
-      return;
-    }
-
-    const runtimeOutput = parseRuntimeOutput(raw);
-    if (runtimeOutput?.clearSearchBar) {
-      this.emit({ type: "clear-search-bar" });
-      return;
-    }
-
-    if (runtimeOutput?.updateCommandMetadata) {
-      this.emit({
-        type: "update-command-metadata",
-        subtitle: runtimeOutput.updateCommandMetadata.subtitle,
-      });
-      return;
-    }
-
-    if (runtimeOutput?.openExtensionPreferences) {
-      this.emit({
-        type: "open-extension-preferences",
-        extensionName: runtimeOutput.openExtensionPreferences.extensionName || undefined,
-      });
-      return;
-    }
-
-    if (runtimeOutput?.openCommandPreferences) {
-      this.emit({
-        type: "open-command-preferences",
-        extensionName: runtimeOutput.openCommandPreferences.extensionName || undefined,
-        commandName: runtimeOutput.openCommandPreferences.commandName || undefined,
-      });
-      return;
-    }
-
-    if (runtimeOutput?.goBackToPluginList) {
-      this.emit({ type: "go-back-to-plugin-list" });
-      return;
-    }
-
-    if (runtimeOutput?.open) {
-      this.openTarget(runtimeOutput.open.target, runtimeOutput.open.application || undefined);
-      return;
-    }
-
-    if (runtimeOutput?.showHud) {
-      this.emit({ type: "show-hud", title: runtimeOutput.showHud.text });
-      return;
-    }
-
-    if (runtimeOutput?.focusElement) {
-      this.emit({ type: "focus-element", elementId: runtimeOutput.focusElement.elementId });
-      return;
-    }
-
-    if (runtimeOutput?.resetElement) {
-      this.emit({ type: "reset-element", elementId: runtimeOutput.resetElement.elementId });
-      return;
-    }
-
-    const runtimeRpc = parseRuntimeRpc(raw);
+    const runtimeRpc =
+      envelope?.kind === BridgeMessageKind.RuntimeRpc ? parseRuntimeRpc(raw) : null;
     if (runtimeRpc?.request?.invokeCommand) {
       void this.handleInvokeCommand({
         requestId: runtimeRpc.request.invokeCommand.requestId,

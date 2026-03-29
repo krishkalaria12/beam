@@ -189,14 +189,10 @@ export function useForm<T extends Form.Values>(props: {
     // we have to use a proxy because we don't actually have any object to iterate through
     // so instead we dynamically create the props when required
     return new Proxy<{ [id in keyof Required<T>]: Partial<Form.ItemProps<T[id]>> & { id: string } }>(
-      {} as { [id in keyof Required<T>]: Partial<Form.ItemProps<T[id]>> & { id: string } },
+      // @ts-expect-error the whole point of a proxy...
+      {},
       {
-        get(target, property: string | symbol) {
-          if (typeof property !== "string") {
-            return undefined;
-          }
-
-          const id = property as keyof T;
+        get(target, id: keyof T) {
           const validation = latestValidation.current[id];
           const value = values[id];
           return {

@@ -1,6 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import {
+  BridgeMessageKind,
   RuntimeRpc,
   type ManagerRequest,
   type ManagerResponse,
@@ -48,7 +49,7 @@ export async function stopExtensionRuntime(runtimeId?: string): Promise<void> {
 export async function sendExtensionRuntimeMessage(
   runtimeId: string | undefined,
   action: string,
-  payload: Record<string, unknown>,
+  payload: unknown,
 ): Promise<void> {
   await invoke("extension_runtime_send_message", {
     runtimeId: normalizeRuntimeId(runtimeId),
@@ -61,9 +62,11 @@ export async function sendExtensionRuntimeRpc(
   runtimeId: string | undefined,
   message: RuntimeRpcMessage,
 ): Promise<void> {
-  await sendExtensionRuntimeMessage(runtimeId, "runtime-rpc", {
-    runtimeRpc: RuntimeRpc.toJSON(message),
-  });
+  await sendExtensionRuntimeMessage(
+    runtimeId,
+    BridgeMessageKind.RuntimeRpc,
+    RuntimeRpc.toJSON(message),
+  );
 }
 
 export async function sendExtensionRuntimeManagerRequest(

@@ -37,7 +37,8 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsdown --config-loader unrun --config tsdown.config.ts",
+    "sync:upstream": "node scripts/sync-upstream-utils.mjs",
+    "build": "bun run sync:upstream && tsdown --config-loader unrun --config tsdown.config.ts",
     "check": "bunx tsc --noEmit",
     "check-types": "bunx tsc --noEmit",
     "pack": "bun run build && npm pack --dry-run"

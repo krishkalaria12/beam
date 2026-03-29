@@ -1,19 +1,29 @@
-import { RuntimeRpc, type RuntimeRpc as RuntimeRpcMessage } from "@beam/extension-protocol";
+import {
+  BridgeMessageKind,
+  RuntimeRpc,
+  createBridgeMessageEnvelope,
+  readBridgeMessageEnvelope,
+  type RuntimeRpc as RuntimeRpcMessage,
+} from "@beam/extension-protocol";
 
 import { writeOutput } from "../io";
 
 export function writeRuntimeRpc(message: RuntimeRpcMessage): void {
-  writeOutput({
-    runtimeRpc: RuntimeRpc.toJSON(message),
-  });
+  writeOutput(
+    createBridgeMessageEnvelope(
+      BridgeMessageKind.RuntimeRpc,
+      RuntimeRpc.toJSON(message),
+    ),
+  );
 }
 
 export function parseRuntimeRpcInput(raw: unknown): RuntimeRpcMessage | null {
-  if (!raw || typeof raw !== "object") {
+  const envelope = readBridgeMessageEnvelope(raw);
+  if (!envelope || envelope.kind !== BridgeMessageKind.RuntimeRpc) {
     return null;
   }
 
-  const payload = (raw as { runtimeRpc?: unknown }).runtimeRpc;
+  const payload = envelope.payload;
   if (!payload || typeof payload !== "object") {
     return null;
   }

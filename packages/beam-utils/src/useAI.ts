@@ -46,8 +46,8 @@ export function useAI(
       if (shouldStream === false) {
         setData(await stream);
       } else {
-        stream.on("data", (chunk: string) => {
-          setData((x) => x + chunk);
+        stream.on("data", (data) => {
+          setData((x) => x + data);
         });
         await stream;
       }

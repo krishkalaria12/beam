@@ -130,12 +130,9 @@ export function useCachedPromise<T extends FunctionReturningPromise, U = undefin
 
 export function useCachedPromise<
   T extends FunctionReturningPromise | FunctionReturningPaginatedPromise,
-  U = undefined,
->(
-  fn: T,
-  args?: Parameters<T>,
-  options?: CachedPromiseOptions<T, U>,
-): UseCachedPromiseReturnType<UnwrapReturn<T>, U> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  U extends any[] | undefined = undefined,
+>(fn: T, args?: Parameters<T>, options?: CachedPromiseOptions<T, U>) {
   /**
    * The hook generates a cache key from the promise it receives & its arguments.
    * Sometimes that's not enough to guarantee uniqueness, so hooks that build on top of `useCachedPromise` can
@@ -160,7 +157,7 @@ export function useCachedPromise<
   );
 
   // Use a ref to store previous returned data. Use the inital data as its inital value from the cache.
-  const laggyDataRef = useRef<UnwrapReturn<T> | U>(cachedData !== emptyCache ? cachedData : (initialData as U));
+  const laggyDataRef = useRef<Awaited<ReturnType<T>> | U>(cachedData !== emptyCache ? cachedData : (initialData as U));
   const paginationArgsRef = useRef<PaginationOptions<UnwrapReturn<T> | U> | undefined>(undefined);
 
   const {
@@ -186,7 +183,7 @@ export function useCachedPromise<
     },
   });
 
-  let returnedData: U | UnwrapReturn<T>;
+  let returnedData: U | Awaited<ReturnType<T>> | UnwrapReturn<T>;
   const pagination = state.pagination;
   // when paginating, only the first page gets cached, so we return the data we get from `usePromise`, because
   // it will be accumulated.
@@ -200,9 +197,7 @@ export function useCachedPromise<
     returnedData = cachedData;
     if (pagination) {
       pagination.hasMore = true;
-      if (Array.isArray(cachedData)) {
-        pagination.pageSize = (cachedData as unknown[]).length;
-      }
+      pagination.pageSize = cachedData.length;
     }
   } else if (keepPreviousData && cachedData === emptyCache) {
     // if the cache is empty, we will return the previous data
@@ -212,9 +207,7 @@ export function useCachedPromise<
     returnedData = cachedData;
     if (pagination) {
       pagination.hasMore = true;
-      if (Array.isArray(cachedData)) {
-        pagination.pageSize = (cachedData as unknown[]).length;
-      }
+      pagination.pageSize = cachedData.length;
     }
   } else {
     returnedData = initialData as U;
@@ -223,7 +216,7 @@ export function useCachedPromise<
   const latestData = useLatest(returnedData);
 
   // we rewrite the mutate function to update the cache instead
-  const mutate = useCallback<MutatePromise<UnwrapReturn<T> | U>>(
+  const mutate = useCallback<MutatePromise<Awaited<ReturnType<T>> | U>>(
     async (asyncUpdate, options) => {
       let dataBeforeOptimisticUpdate;
       try {
@@ -269,10 +262,8 @@ export function useCachedPromise<
     data: returnedData,
     isLoading: state.isLoading,
     error: state.error,
-    mutate: (paginationArgsRef.current && paginationArgsRef.current.page > 0 ? _mutate : mutate) as MutatePromise<
-      UnwrapReturn<T> | U
-    >,
+    mutate: paginationArgsRef.current && paginationArgsRef.current.page > 0 ? _mutate : mutate,
     pagination,
     revalidate,
-  } as UseCachedPromiseReturnType<UnwrapReturn<T>, U>;
+  };
 }

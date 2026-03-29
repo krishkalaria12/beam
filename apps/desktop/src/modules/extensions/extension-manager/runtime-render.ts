@@ -1,21 +1,23 @@
 import {
+  BridgeMessageKind,
   RuntimeRender,
   decodeRuntimeRenderMessage,
+  readBridgeMessageEnvelope,
   type RuntimeRenderEnvelope,
 } from "@beam/extension-protocol";
 
 export function parseRuntimeRender(raw: unknown): RuntimeRenderEnvelope | null {
-  if (!raw || typeof raw !== "object") {
+  const envelope = readBridgeMessageEnvelope(raw);
+  if (!envelope || envelope.kind !== BridgeMessageKind.RuntimeRender) {
     return null;
   }
 
-  const payload = (raw as { runtimeRender?: unknown }).runtimeRender;
-  if (!payload || typeof payload !== "object") {
+  if (!envelope.payload || typeof envelope.payload !== "object") {
     return null;
   }
 
   try {
-    return decodeRuntimeRenderMessage(RuntimeRender.fromJSON(payload));
+    return decodeRuntimeRenderMessage(RuntimeRender.fromJSON(envelope.payload));
   } catch {
     return null;
   }

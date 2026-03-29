@@ -1,4 +1,5 @@
 import {
+  BridgeMessageKind,
   CommandMode,
   LaunchType,
   ManagerRequest,
@@ -10,8 +11,29 @@ import {
 export type LaunchMode = "view" | "no-view" | "menu-bar";
 export type RuntimeLaunchType = "background" | "userInitiated";
 
+type ProtobufBridgePayload = {
+  requestId?: string;
+  messageBase64?: string;
+};
+
+function encodeBase64(bytes: Uint8Array): string {
+  return Buffer.from(bytes).toString("base64");
+}
+
+function decodeBase64(value: string): Uint8Array {
+  return Uint8Array.from(Buffer.from(value, "base64"));
+}
+
 export function parseManagerRequestPayload(payload: unknown): ManagerRequest {
-  return ManagerRequest.fromJSON(payload);
+  if (
+    !payload ||
+    typeof payload !== "object" ||
+    typeof (payload as ProtobufBridgePayload).messageBase64 !== "string"
+  ) {
+    throw new Error("manager request bridge payload is missing messageBase64");
+  }
+
+  return ManagerRequest.decode(decodeBase64((payload as ProtobufBridgePayload).messageBase64!));
 }
 
 export function toLaunchMode(mode: CommandMode): LaunchMode {
@@ -41,12 +63,15 @@ export function toLaunchType(value: LaunchType): RuntimeLaunchType {
 }
 
 export function createManagerResponseOutput(response: ManagerResponse): {
-  type: "manager-response";
-  payload: ReturnType<typeof ManagerResponse.toJSON>;
+  kind: "manager-response";
+  payload: ProtobufBridgePayload;
 } {
   return {
-    type: "manager-response",
-    payload: ManagerResponse.toJSON(response),
+    kind: BridgeMessageKind.ManagerResponse,
+    payload: {
+      requestId: response.requestId,
+      messageBase64: encodeBase64(ManagerResponse.encode(response).finish()),
+    },
   };
 }
 

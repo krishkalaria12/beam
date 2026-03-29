@@ -14,6 +14,8 @@ export { useLocalStorage } from "./useLocalStorage";
 
 export { getAvatarIcon, getFavicon, getProgressIcon } from "./icon";
 
+export { OAuthService, withAccessToken, getAccessToken } from "./oauth";
+
 export { createDeeplink, createExtensionDeeplink, createScriptCommandDeeplink, DeeplinkType } from "./createDeeplink";
 export { executeSQL } from "./executeSQL";
 export { runAppleScript } from "./run-applescript";
@@ -23,4 +25,11 @@ export { withCache } from "./cache";
 
 export type { PromiseOptions } from "./usePromise";
 export type { CachedPromiseOptions } from "./useCachedPromise";
+export type {
+  OAuthServiceOptions,
+  OnAuthorizeParams,
+  WithAccessTokenComponentOrFn,
+  ProviderWithDefaultClientOptions,
+  ProviderOptions,
+} from "./oauth";
 export type { AsyncState, MutatePromise } from "./types";

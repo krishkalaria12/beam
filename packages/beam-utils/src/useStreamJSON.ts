@@ -463,5 +463,5 @@ export function useStreamJSON<T, U extends any[] = any[]>(
       },
     [url, pageSize, fetchOptions, dataPath, filter, transform],
     useCachedPromiseOptions,
-  ) as UseCachedPromiseReturnType<T extends unknown[] ? T : T[], U>;
+  );
 }

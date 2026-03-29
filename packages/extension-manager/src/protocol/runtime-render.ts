@@ -1,5 +1,7 @@
 import {
+  BridgeMessageKind,
   RuntimeRender,
+  createBridgeMessageEnvelope,
   type RuntimeCommand,
   type RuntimeRender as RuntimeRenderMessage,
   createRuntimeRenderBatch,
@@ -11,9 +13,12 @@ import {
 import { writeOutput } from "../io";
 
 export function writeRuntimeRender(message: RuntimeRenderMessage): void {
-  writeOutput({
-    runtimeRender: RuntimeRender.toJSON(message),
-  });
+  writeOutput(
+    createBridgeMessageEnvelope(
+      BridgeMessageKind.RuntimeRender,
+      RuntimeRender.toJSON(message),
+    ),
+  );
 }
 
 export function writeRuntimeRenderBatchMessage(commands: readonly RuntimeCommand[]): void {

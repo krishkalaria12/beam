@@ -1,3 +1,4 @@
+export * from "./bridge-envelope";
 export * from "./generated/common";
 export * from "./generated/environment";
 export * from "./generated/manifest";
