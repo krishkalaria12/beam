@@ -15,6 +15,6 @@ export default defineConfig({
     onlyBundle: false,
   },
   outExtensions: () => ({
-    js: ".js",
+    js: ".cjs",
   }),
 });

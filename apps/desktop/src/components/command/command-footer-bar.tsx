@@ -166,8 +166,11 @@ export function CommandFooterBar({
             {primaryAction && <ActionButton action={primaryAction} isPrimary />}
 
             {/* Secondary actions */}
-            {secondaryActions?.map((action) => (
-              <ActionButton key={action.label} action={action} />
+            {secondaryActions?.map((action, index) => (
+              <ActionButton
+                key={`${action.label}:${action.shortcut?.join("+") ?? ""}:${index}`}
+                action={action}
+              />
             ))}
 
             {/* Divider before actions button */}

@@ -319,7 +319,7 @@ struct RawRaycastListing {
     #[serde(default)]
     contributors: Vec<RawRaycastUser>,
     #[serde(default)]
-    tools: Vec<String>,
+    tools: Vec<JsonValue>,
 }
 
 #[derive(Deserialize, Debug, Clone, Default)]
@@ -365,6 +365,48 @@ fn normalize_string_list(values: Vec<String>) -> Vec<String> {
         .into_iter()
         .filter_map(|value| normalize_optional_string(Some(value)))
         .collect()
+}
+
+fn json_array_strings(value: Option<&JsonValue>) -> Vec<String> {
+    value
+        .and_then(JsonValue::as_array)
+        .into_iter()
+        .flatten()
+        .filter_map(|entry| entry.as_str())
+        .filter_map(|entry| normalize_optional_string(Some(entry.to_string())))
+        .collect()
+}
+
+fn raycast_tool_tags(tools: &[JsonValue]) -> Vec<String> {
+    let mut tags = Vec::new();
+
+    for tool in tools {
+        if let Some(value) = tool.as_str() {
+            if let Some(value) = normalize_optional_string(Some(value.to_string())) {
+                tags.push(value);
+            }
+            continue;
+        }
+
+        let Some(tool_object) = tool.as_object() else {
+            continue;
+        };
+
+        for field in ["name", "title", "description"] {
+            if let Some(value) = tool_object
+                .get(field)
+                .and_then(JsonValue::as_str)
+                .and_then(|value| normalize_optional_string(Some(value.to_string())))
+            {
+                tags.push(value);
+            }
+        }
+
+        tags.extend(json_array_strings(tool_object.get("keywords")));
+        tags.extend(json_array_strings(tool_object.get("functionalities")));
+    }
+
+    tags
 }
 
 fn timestamp_to_rfc3339(value: Option<i64>) -> Option<String> {
@@ -1251,7 +1293,7 @@ fn raycast_listing_to_proto(listing: RawRaycastListing) -> Option<proto::Extensi
     };
 
     let mut tags = listing.seo_categories.clone();
-    tags.extend(listing.tools.clone());
+    tags.extend(raycast_tool_tags(&listing.tools));
 
     Some(proto::ExtensionStorePackage {
         id: package_id,
@@ -2136,5 +2178,40 @@ mod tests {
         )
         .expect("beta release should resolve");
         assert_eq!(beta_release.version, "1.0.0-beta.1");
+    }
+
+    #[test]
+    fn raycast_search_response_accepts_object_tools() {
+        let payload = r#"
+        {
+          "data": [
+            {
+              "name": "git-stats",
+              "title": "Git Stats",
+              "description": "Inspect repository metrics",
+              "author": { "name": "Raycast", "handle": "raycast" },
+              "owner": { "name": "Raycast", "handle": "raycast" },
+              "commands": [],
+              "contributors": [],
+              "tools": [
+                {
+                  "id": "repo-insights",
+                  "name": "repo-insights",
+                  "title": "Repository Insights",
+                  "description": "Inspect stars and forks",
+                  "keywords": ["git", "repo"],
+                  "functionalities": ["analyze"]
+                }
+              ]
+            }
+          ]
+        }
+        "#;
+
+        let parsed: RawRaycastSearchResponse =
+            serde_json::from_str(payload).expect("raycast payload should parse");
+
+        assert_eq!(parsed.data.len(), 1);
+        assert_eq!(raycast_tool_tags(&parsed.data[0].tools).len(), 6);
     }
 }

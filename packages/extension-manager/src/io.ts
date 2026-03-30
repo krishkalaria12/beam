@@ -1,4 +1,9 @@
-import { RuntimeRender, createRuntimeRenderLog } from "@beam/extension-protocol";
+import {
+  BridgeMessageKind,
+  RuntimeRender,
+  createBridgeMessageEnvelope,
+  createRuntimeRenderLog,
+} from "@beam/extension-protocol";
 import { deflate } from "pako";
 import { normalizeTransportValue } from "./utils";
 
@@ -38,7 +43,10 @@ export const writeOutput = (data: object): void => {
   } catch (e: unknown) {
     const errorString = e instanceof Error ? e.toString() : String(e);
     const errorPayload = encodePayload({
-      runtimeRender: RuntimeRender.toJSON(createRuntimeRenderLog(errorString)),
+      ...createBridgeMessageEnvelope(
+        BridgeMessageKind.RuntimeRender,
+        RuntimeRender.toJSON(createRuntimeRenderLog(errorString)),
+      ),
     });
     const errorHeader = Buffer.alloc(4);
     errorHeader.writeUInt32BE(errorPayload.length);
@@ -49,6 +57,9 @@ export const writeOutput = (data: object): void => {
 
 export const writeLog = (message: unknown): void => {
   writeOutput({
-    runtimeRender: RuntimeRender.toJSON(createRuntimeRenderLog(message)),
+    ...createBridgeMessageEnvelope(
+      BridgeMessageKind.RuntimeRender,
+      RuntimeRender.toJSON(createRuntimeRenderLog(message)),
+    ),
   });
 };

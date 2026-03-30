@@ -4,3 +4,4 @@
 /gen/schemas
 /binaries/app*
 /binaries/extension-manager.js
+/binaries/extension-manager.cjs

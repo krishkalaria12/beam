@@ -51,7 +51,7 @@
     "targets": "all",
     "externalBin": ["binaries/beam-data-control-server"],
     "resources": [
-      "binaries/extension-manager.js",
+      "binaries/extension-manager.cjs",
       "../../../infra/desktop-integrations/gnome-shell/beam@beam-linux",
       "../../../infra/desktop-integrations/udev/70-beam-snippets.rules"
     ],

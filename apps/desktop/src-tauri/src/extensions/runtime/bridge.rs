@@ -90,18 +90,28 @@ fn resolve_extension_manager_entry(app: &AppHandle) -> Result<PathBuf, String> {
         }
     }
 
-    Err("failed to locate extension-manager.js for the extension runtime".to_string())
+    Err("failed to locate an extension-manager entry for the extension runtime".to_string())
 }
 
 fn find_extension_manager_entry_in_dir(directory: &Path) -> Option<PathBuf> {
-    let copied_entry = directory.join("extension-manager.js");
+    let copied_entry = directory.join("extension-manager.cjs");
     if copied_entry.is_file() {
         return Some(copied_entry);
     }
 
-    let dist_entry = directory.join("index.js");
+    let dist_entry = directory.join("index.cjs");
     if dist_entry.is_file() {
         return Some(dist_entry);
+    }
+
+    let legacy_copied_entry = directory.join("extension-manager.js");
+    if legacy_copied_entry.is_file() {
+        return Some(legacy_copied_entry);
+    }
+
+    let legacy_dist_entry = directory.join("index.js");
+    if legacy_dist_entry.is_file() {
+        return Some(legacy_dist_entry);
     }
 
     None

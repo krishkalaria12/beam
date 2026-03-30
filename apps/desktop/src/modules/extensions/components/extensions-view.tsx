@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { RefreshCcw } from "lucide-react";
+import { Loader2, RefreshCcw } from "lucide-react";
 import { useCallback, useMemo, useReducer } from "react";
 import { toast } from "sonner";
 
@@ -84,14 +84,11 @@ function InlineBadge({ value }: { value: string | number }) {
   );
 }
 
-function SummaryMetric({ label, value }: { label: string; value: string }) {
+function FooterChip({ value }: { value: string }) {
   return (
-    <div className="rounded-lg border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-3 py-2">
-      <div className="text-launcher-2xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
-        {label}
-      </div>
-      <div className="mt-1 text-launcher-lg font-semibold text-foreground">{value}</div>
-    </div>
+    <span className="inline-flex h-7 items-center rounded-full border border-[var(--launcher-chip-border)] bg-[var(--launcher-chip-bg)] px-2.5 text-launcher-2xs font-medium text-muted-foreground">
+      {value}
+    </span>
   );
 }
 
@@ -220,17 +217,14 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
     [filteredInstalledExtensions, state.selectedRow],
   );
 
-  const selectedStore = useMemo(
-    () => {
-      const selectedStoreRow = state.selectedRow;
-      if (!selectedStoreRow || selectedStoreRow.kind !== "store") {
-        return null;
-      }
+  const selectedStore = useMemo(() => {
+    const selectedStoreRow = state.selectedRow;
+    if (!selectedStoreRow || selectedStoreRow.kind !== "store") {
+      return null;
+    }
 
-      return (storeSearchQuery.data ?? []).find((entry) => entry.id === selectedStoreRow.id) ?? null;
-    },
-    [state.selectedRow, storeSearchQuery.data],
-  );
+    return (storeSearchQuery.data ?? []).find((entry) => entry.id === selectedStoreRow.id) ?? null;
+  }, [state.selectedRow, storeSearchQuery.data]);
 
   const selectedStorePackageQuery = useStoreExtensionPackageQuery(selectedStore?.id ?? null);
   const selectedStoreDetail = selectedStorePackageQuery.data ?? selectedStore;
@@ -274,14 +268,14 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
     if (selectedKind === "installed" && selectedId) {
       const exists = filteredInstalledExtensions.some((entry) => entry.id === selectedId);
       if (exists) {
-          return state.selectedRow;
+        return state.selectedRow;
       }
     }
 
     if (selectedKind === "store" && selectedId) {
       const exists = (storeSearchQuery.data ?? []).some((entry) => entry.id === selectedId);
       if (exists) {
-          return state.selectedRow;
+        return state.selectedRow;
       }
     }
 
@@ -318,12 +312,15 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
   );
 
   if (state.preferenceDraftState.key !== preferenceDraftKey) {
-    dispatch({ type: "set-preference-draft-state", value: {
-      key: preferenceDraftKey,
-      values: seededPreferenceValues,
-      validationError: null,
-      saveError: null,
-    }});
+    dispatch({
+      type: "set-preference-draft-state",
+      value: {
+        key: preferenceDraftKey,
+        values: seededPreferenceValues,
+        validationError: null,
+        saveError: null,
+      },
+    });
   }
 
   const resolvedOptimisticInstalledSlugs = useMemo(() => {
@@ -332,7 +329,9 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
     }
 
     const installedSlugSet = new Set(installedExtensions.map((entry) => entry.slug.toLowerCase()));
-    return state.optimisticInstalledSlugs.filter((entry) => !installedSlugSet.has(entry.toLowerCase()));
+    return state.optimisticInstalledSlugs.filter(
+      (entry) => !installedSlugSet.has(entry.toLowerCase()),
+    );
   }, [installedExtensions, state.optimisticInstalledSlugs]);
 
   if (
@@ -482,18 +481,24 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
       isMissingRequiredField(field, state.preferenceDraftState.values[field.name]),
     );
     if (missingRequiredField) {
-      dispatch({ type: "set-preference-draft-state", value: {
-        ...state.preferenceDraftState,
-        validationError: `"${missingRequiredField.title}" is required.`,
-      }});
+      dispatch({
+        type: "set-preference-draft-state",
+        value: {
+          ...state.preferenceDraftState,
+          validationError: `"${missingRequiredField.title}" is required.`,
+        },
+      });
       return;
     }
 
-    dispatch({ type: "set-preference-draft-state", value: {
-      ...state.preferenceDraftState,
-      validationError: null,
-      saveError: null,
-    }});
+    dispatch({
+      type: "set-preference-draft-state",
+      value: {
+        ...state.preferenceDraftState,
+        validationError: null,
+        saveError: null,
+      },
+    });
     dispatch({ type: "set-preference-saving", value: true });
     try {
       await extensionManagerService.setPreferences(
@@ -507,10 +512,14 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
       toast.success(`Saved setup for ${selectedInstalled.title}.`);
       await handleRefreshInstalled();
     } catch (error) {
-      dispatch({ type: "set-preference-draft-state", value: {
-        ...state.preferenceDraftState,
-        saveError: error instanceof Error ? error.message : "Failed to save extension preferences.",
-      }});
+      dispatch({
+        type: "set-preference-draft-state",
+        value: {
+          ...state.preferenceDraftState,
+          saveError:
+            error instanceof Error ? error.message : "Failed to save extension preferences.",
+        },
+      });
     }
 
     dispatch({ type: "set-preference-saving", value: false });
@@ -530,6 +539,21 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
         extensionKey(entry.owner, entry.slug) ===
         extensionKey(selectedStoreDetail.author.handle, selectedStoreDetail.slug),
     );
+  const footerSelectionTitle = selectedInstalled?.title ?? selectedStoreDetail?.title ?? null;
+  const footerStatusLabel = state.pendingInstallSlug
+    ? `Installing ${state.pendingInstallSlug}...`
+    : state.pendingUninstallSlug
+      ? `Removing ${state.pendingUninstallSlug}...`
+      : state.actionError
+        ? state.actionError
+        : footerSelectionTitle
+          ? `Viewing ${footerSelectionTitle}`
+          : "Search installed extensions and community packages.";
+  const footerStatusToneClass = state.actionError
+    ? "bg-[var(--icon-red-fg)]"
+    : state.pendingInstallSlug || state.pendingUninstallSlug
+      ? "bg-sky-400"
+      : "bg-emerald-400/80";
 
   return (
     <div className="flex h-full w-full flex-col overflow-hidden bg-[var(--solid-bg)] text-foreground">
@@ -543,6 +567,7 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
         rightSlot={
           <div className="flex items-center gap-2">
             <InlineBadge value={`${displayedInstalledExtensions.length} installed`} />
+            <InlineBadge value={`${updateCount} updates`} />
             <Button
               type="button"
               variant="outline"
@@ -557,27 +582,37 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
         }
       />
 
-      <div className="border-b border-[var(--ui-divider)] bg-[var(--solid-bg-header)] px-4 py-3">
-        <div className="grid grid-cols-4 gap-2">
-          <SummaryMetric label="Installed" value={String(displayedInstalledExtensions.length)} />
-          <SummaryMetric label="Updates" value={String(updateCount)} />
-          <SummaryMetric label="Store" value={String(storeResultCount)} />
-          <SummaryMetric
-            label="Search"
-            value={
-              normalizedSearch.length >= EXTENSIONS_STORE_SEARCH_MIN_LENGTH
-                ? "Store"
-                : `Min ${EXTENSIONS_STORE_SEARCH_MIN_LENGTH}`
-            }
-          />
-        </div>
-      </div>
-
       <GenericListView
         detailVisible
-        templateColumns="320px minmax(0, 1fr)"
-        listPaneClassName="overflow-y-auto border-r border-[var(--ui-divider)] bg-[var(--solid-bg-base)] p-3"
+        templateColumns="360px minmax(0, 1fr)"
+        listPaneClassName="overflow-y-auto border-r border-[var(--ui-divider)] bg-[var(--solid-bg-base)] px-3 py-4"
         detailPaneClassName="overflow-y-auto bg-[var(--solid-bg-recessed)]"
+        footer={
+          <div className="flex items-center justify-between gap-3 border-t border-[var(--ui-divider)] bg-[var(--solid-bg-header)] px-4 py-3">
+            <div className="flex min-w-0 items-center gap-2">
+              {state.pendingInstallSlug || state.pendingUninstallSlug ? (
+                <Loader2 className="size-3.5 shrink-0 animate-spin text-sky-300" />
+              ) : (
+                <span className={`size-2 shrink-0 rounded-full ${footerStatusToneClass}`} />
+              )}
+              <span className="truncate text-launcher-sm text-foreground/85">
+                {footerStatusLabel}
+              </span>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <FooterChip
+                value={
+                  normalizedSearch.length >= EXTENSIONS_STORE_SEARCH_MIN_LENGTH
+                    ? `${storeResultCount} store results`
+                    : `type ${EXTENSIONS_STORE_SEARCH_MIN_LENGTH}+ chars`
+                }
+              />
+              <FooterChip
+                value={updateCount > 0 ? `${updateCount} updates ready` : "everything up to date"}
+              />
+            </div>
+          </div>
+        }
         list={
           <ExtensionsSidebar
             installedExtensions={filteredInstalledExtensions}
@@ -585,14 +620,20 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
             installedErrorMessage={
               installedQuery.isError ? "Failed to load installed extensions." : null
             }
-             selectedInstalledId={state.selectedRow?.kind === "installed" ? state.selectedRow.id : null}
-             installedUpdateKeys={installedUpdateKeys}
-             onSelectInstalled={(id) => dispatch({ type: "set-selected-row", value: { kind: "installed", id } })}
+            selectedInstalledId={
+              state.selectedRow?.kind === "installed" ? state.selectedRow.id : null
+            }
+            installedUpdateKeys={installedUpdateKeys}
+            onSelectInstalled={(id) =>
+              dispatch({ type: "set-selected-row", value: { kind: "installed", id } })
+            }
             search={normalizedSearch}
             minimumSearchLength={EXTENSIONS_STORE_SEARCH_MIN_LENGTH}
             storeResults={storeSearchQuery.data ?? []}
-             selectedStoreId={state.selectedRow?.kind === "store" ? state.selectedRow.id : null}
-             onSelectStore={(id) => dispatch({ type: "set-selected-row", value: { kind: "store", id } })}
+            selectedStoreId={state.selectedRow?.kind === "store" ? state.selectedRow.id : null}
+            onSelectStore={(id) =>
+              dispatch({ type: "set-selected-row", value: { kind: "store", id } })
+            }
             isStoreLoading={Boolean(storeSearchQuery.isLoading)}
             isStoreError={Boolean(storeSearchQuery.isError)}
             storeErrorMessage={
@@ -611,34 +652,37 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
             selectedInstalledUpdate={selectedInstalledUpdate}
             selectedStoreDetail={selectedStoreDetail ?? null}
             selectedStoreInstalled={Boolean(selectedStoreInstalled)}
-             pendingInstallSlug={state.pendingInstallSlug}
-             pendingUninstallSlug={state.pendingUninstallSlug}
-             onInstall={handleInstall}
-             onUninstall={handleUninstall}
+            pendingInstallSlug={state.pendingInstallSlug}
+            pendingUninstallSlug={state.pendingUninstallSlug}
+            onInstall={handleInstall}
+            onUninstall={handleUninstall}
             isPreferenceLoading={
               selectedInstalledPluginName.length > 0 &&
               selectedInstalledPreferences.length > 0 &&
               installedPreferencesQuery.isLoading
             }
-             isPreferenceSaving={state.isPreferenceSaving}
-             preferenceValues={state.preferenceDraftState.values}
-             preferenceError={
-               state.preferenceDraftState.saveError ??
-               (installedPreferencesQuery.error instanceof Error
+            isPreferenceSaving={state.isPreferenceSaving}
+            preferenceValues={state.preferenceDraftState.values}
+            preferenceError={
+              state.preferenceDraftState.saveError ??
+              (installedPreferencesQuery.error instanceof Error
                 ? installedPreferencesQuery.error.message
                 : installedPreferencesQuery.isError
                   ? "Failed to load extension preferences."
                   : null)
             }
-             validationError={state.preferenceDraftState.validationError}
-             onChangePreference={(key, value) => {
-               dispatch({ type: "set-preference-draft-state", value: {
-                 ...state.preferenceDraftState,
-                 validationError: null,
-                 saveError: null,
-                 values: { ...state.preferenceDraftState.values, [key]: value },
-               }});
-             }}
+            validationError={state.preferenceDraftState.validationError}
+            onChangePreference={(key, value) => {
+              dispatch({
+                type: "set-preference-draft-state",
+                value: {
+                  ...state.preferenceDraftState,
+                  validationError: null,
+                  saveError: null,
+                  values: { ...state.preferenceDraftState.values, [key]: value },
+                },
+              });
+            }}
             onSavePreferences={handleSavePreferences}
             storeDetailIsLoading={
               Boolean(selectedStorePackageQuery.isLoading) && selectedStorePackageQuery.data == null
@@ -653,12 +697,6 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
           />
         }
       />
-
-      {state.actionError ? (
-        <div className="border-t border-[var(--ui-divider)] px-4 py-2 text-launcher-sm text-[var(--icon-red-fg)]">
-          {state.actionError}
-        </div>
-      ) : null}
     </div>
   );
 }
