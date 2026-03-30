@@ -1,4 +1,6 @@
 import { ChevronDown, FileText, Search, Tag } from "lucide-react";
+import { useLayoutEffect, useMemo, useRef } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 
 import {
   DropdownMenu,
@@ -11,6 +13,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import type { Snippet } from "@/modules/snippets/types";
+
+const SNIPPET_HEADER_HEIGHT = 34;
+const SNIPPET_ROW_HEIGHT = 78;
+
+type SnippetVirtualRow =
+  | {
+      key: string;
+      type: "header";
+    }
+  | {
+      key: string;
+      type: "item";
+      snippet: Snippet;
+    };
 
 interface SnippetListProps {
   snippets: Snippet[];
@@ -38,6 +54,40 @@ export function SnippetList({
   onSelectedTagChange,
 }: SnippetListProps) {
   const currentTagLabel = selectedTag === "all" ? "All tags" : selectedTag;
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const rows = useMemo<SnippetVirtualRow[]>(() => {
+    if (snippets.length === 0) {
+      return [];
+    }
+
+    return [
+      { key: "snippets-header", type: "header" },
+      ...snippets.map((snippet) => ({
+        key: snippet.id,
+        type: "item" as const,
+        snippet,
+      })),
+    ];
+  }, [snippets]);
+  const rowVirtualizer = useVirtualizer({
+    count: rows.length,
+    getScrollElement: () => scrollContainerRef.current,
+    estimateSize: (index) =>
+      rows[index]?.type === "header" ? SNIPPET_HEADER_HEIGHT : SNIPPET_ROW_HEIGHT,
+    overscan: 8,
+  });
+  const virtualRows = rowVirtualizer.getVirtualItems();
+  const selectedSnippetRowIndex = selectedSnippetId
+    ? rows.findIndex((row) => row.type === "item" && row.snippet.id === selectedSnippetId)
+    : -1;
+
+  useLayoutEffect(() => {
+    if (selectedSnippetRowIndex < 0) {
+      return;
+    }
+
+    rowVirtualizer.scrollToIndex(selectedSnippetRowIndex, { align: "auto" });
+  }, [rowVirtualizer, selectedSnippetRowIndex]);
 
   return (
     <aside className="flex h-full min-h-0 w-[38%] shrink-0 flex-col border-r border-[var(--launcher-card-border)]">
@@ -96,14 +146,10 @@ export function SnippetList({
       </div>
 
       {/* Snippet List */}
-      <div className="list-area custom-scrollbar min-h-0 flex-1 overflow-y-auto p-2">
-        {/* Section Header */}
-        <div className="mb-2 flex items-center gap-3 px-2 pt-1">
-          <span className="text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-            Snippets
-          </span>
-          <div className="h-px flex-1 bg-[var(--launcher-chip-bg)]" />
-        </div>
+      <div
+        ref={scrollContainerRef}
+        className="list-area custom-scrollbar min-h-0 flex-1 overflow-y-auto p-2"
+      >
 
         {/* Loading State */}
         {isLoading && (
@@ -129,81 +175,97 @@ export function SnippetList({
         )}
 
         {/* Snippet Items */}
-        {!isLoading &&
-          snippets.map((snippet, index) => {
-            const isSelected = snippet.id === selectedSnippetId;
-            return (
-              <Button
-                key={snippet.id}
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  onSelectSnippet(snippet.id);
-                }}
-                className={cn(
-                  "snippet-list-item group relative mb-1.5 flex w-full items-center gap-3 rounded-xl p-3 text-left transition-all duration-200",
-                  isSelected
-                    ? "bg-[var(--launcher-chip-bg)] ring-1 ring-[var(--launcher-card-selected-border)]"
-                    : "hover:bg-[var(--launcher-card-hover-bg)]",
-                )}
-                style={{ animationDelay: `${index * 30}ms` }}
-              >
-                {/* Left Accent Bar */}
-                <div
-                  className={cn(
-                    "absolute left-0 top-1/2 h-6 w-0.5 -translate-y-1/2 rounded-full transition-all duration-200",
-                    isSelected
-                      ? "bg-[var(--ring)]"
-                      : "bg-transparent group-hover:bg-[var(--launcher-card-selected-bg)]",
-                  )}
-                />
+        {!isLoading && snippets.length > 0 ? (
+          <div className="relative" style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
+            {virtualRows.map((virtualRow) => {
+              const row = rows[virtualRow.index];
+              if (!row) {
+                return null;
+              }
 
-                {/* Icon */}
+              return (
                 <div
-                  className={cn(
-                    "flex size-9 shrink-0 items-center justify-center rounded-lg transition-all duration-200",
-                    isSelected
-                      ? "bg-[var(--launcher-card-bg)]"
-                      : "bg-[var(--launcher-card-hover-bg)] group-hover:bg-[var(--launcher-chip-bg)]",
-                  )}
+                  key={row.key}
+                  className="absolute left-0 top-0 w-full"
+                  style={{ transform: `translateY(${virtualRow.start}px)` }}
                 >
-                  <FileText
-                    className={cn(
-                      "size-4 transition-colors duration-200",
-                      isSelected
-                        ? "text-[var(--icon-orange-fg)]"
-                        : "text-muted-foreground group-hover:text-muted-foreground",
-                    )}
-                  />
-                </div>
+                  {row.type === "header" ? (
+                    <div className="mb-2 flex items-center gap-3 px-2 pt-1">
+                      <span className="text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                        Snippets
+                      </span>
+                      <div className="h-px flex-1 bg-[var(--launcher-chip-bg)]" />
+                    </div>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        onSelectSnippet(row.snippet.id);
+                      }}
+                      className={cn(
+                        "snippet-list-item group relative mb-1.5 flex w-full items-center gap-3 rounded-xl p-3 text-left transition-all duration-200",
+                        row.snippet.id === selectedSnippetId
+                          ? "bg-[var(--launcher-chip-bg)] ring-1 ring-[var(--launcher-card-selected-border)]"
+                          : "hover:bg-[var(--launcher-card-hover-bg)]",
+                      )}
+                    >
+                      <div
+                        className={cn(
+                          "absolute left-0 top-1/2 h-6 w-0.5 -translate-y-1/2 rounded-full transition-all duration-200",
+                          row.snippet.id === selectedSnippetId
+                            ? "bg-[var(--ring)]"
+                            : "bg-transparent group-hover:bg-[var(--launcher-card-selected-bg)]",
+                        )}
+                      />
 
-                {/* Content */}
-                <div className="min-w-0 flex-1">
-                  <p
-                    className={cn(
-                      "truncate text-launcher-md font-medium tracking-[-0.01em] transition-colors duration-200",
-                      isSelected
-                        ? "text-foreground"
-                        : "text-muted-foreground group-hover:text-foreground",
-                    )}
-                  >
-                    {snippet.name}
-                  </p>
-                  <p className="truncate text-launcher-xs text-muted-foreground">
-                    {snippet.trigger}
-                  </p>
-                </div>
+                      <div
+                        className={cn(
+                          "flex size-9 shrink-0 items-center justify-center rounded-lg transition-all duration-200",
+                          row.snippet.id === selectedSnippetId
+                            ? "bg-[var(--launcher-card-bg)]"
+                            : "bg-[var(--launcher-card-hover-bg)] group-hover:bg-[var(--launcher-chip-bg)]",
+                        )}
+                      >
+                        <FileText
+                          className={cn(
+                            "size-4 transition-colors duration-200",
+                            row.snippet.id === selectedSnippetId
+                              ? "text-[var(--icon-orange-fg)]"
+                              : "text-muted-foreground group-hover:text-muted-foreground",
+                          )}
+                        />
+                      </div>
 
-                {/* Tags indicator */}
-                {snippet.tags.length > 0 && (
-                  <span className="shrink-0 rounded-full bg-[var(--launcher-chip-bg)] px-1.5 py-0.5 text-launcher-2xs text-muted-foreground">
-                    {snippet.tags.length}
-                  </span>
-                )}
-              </Button>
-            );
-          })}
+                      <div className="min-w-0 flex-1">
+                        <p
+                          className={cn(
+                            "truncate text-launcher-md font-medium tracking-[-0.01em] transition-colors duration-200",
+                            row.snippet.id === selectedSnippetId
+                              ? "text-foreground"
+                              : "text-muted-foreground group-hover:text-foreground",
+                          )}
+                        >
+                          {row.snippet.name}
+                        </p>
+                        <p className="truncate text-launcher-xs text-muted-foreground">
+                          {row.snippet.trigger}
+                        </p>
+                      </div>
+
+                      {row.snippet.tags.length > 0 ? (
+                        <span className="shrink-0 rounded-full bg-[var(--launcher-chip-bg)] px-1.5 py-0.5 text-launcher-2xs text-muted-foreground">
+                          {row.snippet.tags.length}
+                        </span>
+                      ) : null}
+                    </Button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        ) : null}
       </div>
     </aside>
   );

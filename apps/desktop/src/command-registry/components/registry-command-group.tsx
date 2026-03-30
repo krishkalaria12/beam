@@ -184,7 +184,7 @@ export default function RegistryCommandGroup({
 
   if (commands.length === 0) {
     return fallbackCommands.length > 0 ? (
-      <CommandGroup heading="Fallback">
+      <CommandGroup heading="Other actions">
         {fallbackCommands.map((command) => renderCommandRow(command))}
       </CommandGroup>
     ) : null;
@@ -208,7 +208,7 @@ export default function RegistryCommandGroup({
         </CommandGroup>
       ) : null}
       {fallbackCommands.length > 0 ? (
-        <CommandGroup heading="Fallback">
+        <CommandGroup heading="Other actions">
           {fallbackCommands.map((command) => renderCommandRow(command))}
         </CommandGroup>
       ) : null}

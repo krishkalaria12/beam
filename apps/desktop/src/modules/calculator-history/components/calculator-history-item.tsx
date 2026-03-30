@@ -21,7 +21,7 @@ export function CalculatorHistoryItem({
   return (
     <CommandItem
       value={`calculator-history-${entry.timestamp}`}
-      className="calc-history-item group relative rounded-xl p-0 overflow-hidden data-[selected=true]:bg-[var(--launcher-card-hover-bg)]"
+      className="calc-history-item group relative overflow-hidden rounded-xl p-0 data-[selected=true]:bg-[var(--launcher-card-hover-bg)]"
       onSelect={onSelect}
       onPointerEnter={onActivate}
       onFocus={onActivate}
@@ -39,7 +39,7 @@ export function CalculatorHistoryItem({
         <div className="flex items-center gap-4">
           {/* Expression */}
           <div className="min-w-0 flex-1">
-            <p className="truncate font-mono text-launcher-md font-medium tracking-[-0.01em] text-muted-foreground group-data-[selected=true]:text-muted-foreground">
+            <p className="truncate font-mono text-launcher-md font-medium tracking-[-0.01em] text-muted-foreground">
               {entry.query}
             </p>
           </div>
@@ -53,7 +53,7 @@ export function CalculatorHistoryItem({
             <span
               className={cn(
                 "hidden sm:flex items-center gap-1.5 text-launcher-2xs font-medium uppercase tracking-[0.06em] transition-all duration-200",
-                "opacity-0 translate-x-2 group-data-[selected=true]:opacity-100 group-data-[selected=true]:translate-x-0",
+                "translate-x-2 opacity-0 group-data-[selected=true]:translate-x-0 group-data-[selected=true]:opacity-100",
                 isCopied ? "text-[var(--icon-green-fg)]" : "text-muted-foreground",
               )}
             >

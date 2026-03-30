@@ -1,9 +1,13 @@
 import { Book, Pin, Plus, Search } from "lucide-react";
+import { useLayoutEffect, useRef } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import type { Note } from "@/modules/notes/types";
+
+const NOTE_ROW_HEIGHT = 96;
 
 interface NotesListProps {
   notes: Note[];
@@ -35,6 +39,24 @@ export function NotesList({
   onSelectNote,
   onCreateNote,
 }: NotesListProps) {
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const rowVirtualizer = useVirtualizer({
+    count: notes.length,
+    getScrollElement: () => scrollContainerRef.current,
+    estimateSize: () => NOTE_ROW_HEIGHT,
+    overscan: 8,
+  });
+  const virtualRows = rowVirtualizer.getVirtualItems();
+  const selectedNoteIndex = selectedNoteId ? notes.findIndex((note) => note.id === selectedNoteId) : -1;
+
+  useLayoutEffect(() => {
+    if (selectedNoteIndex < 0) {
+      return;
+    }
+
+    rowVirtualizer.scrollToIndex(selectedNoteIndex, { align: "auto" });
+  }, [rowVirtualizer, selectedNoteIndex]);
+
   return (
     <aside className="flex h-full min-h-0 w-[38%] shrink-0 flex-col border-r border-[var(--launcher-card-border)]">
       <div className="space-y-2 border-b border-[var(--launcher-card-border)] px-3 py-3">
@@ -77,7 +99,7 @@ export function NotesList({
         </div>
       </div>
 
-      <div className="list-area custom-scrollbar min-h-0 flex-1 overflow-y-auto p-2">
+      <div ref={scrollContainerRef} className="list-area custom-scrollbar min-h-0 flex-1 overflow-y-auto p-2">
         {isLoading ? (
           <div className="space-y-1.5 px-1">
             {SKELETON_DELAYS_MS.map((delayMs) => (
@@ -99,76 +121,88 @@ export function NotesList({
           </div>
         ) : null}
 
-        {!isLoading &&
-          notes.map((note, index) => {
-            const isSelected = note.id === selectedNoteId;
+        {!isLoading && notes.length > 0 ? (
+          <div className="relative" style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
+            {virtualRows.map((virtualRow) => {
+              const note = notes[virtualRow.index];
+              if (!note) {
+                return null;
+              }
 
-            return (
-              <Button
-                key={note.id}
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  onSelectNote(note.id);
-                }}
-                className={cn(
-                  "notes-list-item group relative mb-1.5 flex h-auto w-full items-start gap-3 rounded-xl p-3 text-left transition-all duration-200",
-                  isSelected
-                    ? "bg-[var(--launcher-chip-bg)] ring-1 ring-[var(--launcher-card-selected-border)]"
-                    : "hover:bg-[var(--launcher-card-hover-bg)]",
-                )}
-                style={{ animationDelay: `${index * 30}ms` }}
-              >
-                <div
-                  className={cn(
-                    "absolute left-0 top-1/2 h-7 w-0.5 -translate-y-1/2 rounded-full transition-all duration-200",
-                    isSelected
-                      ? "bg-[var(--ring)]"
-                      : "bg-transparent group-hover:bg-[var(--launcher-card-selected-bg)]",
-                  )}
-                />
+              const isSelected = note.id === selectedNoteId;
 
+              return (
                 <div
-                  className={cn(
-                    "mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg transition-all duration-200",
-                    isSelected
-                      ? "bg-[var(--launcher-card-bg)]"
-                      : "bg-[var(--launcher-card-hover-bg)] group-hover:bg-[var(--launcher-chip-bg)]",
-                  )}
+                  key={note.id}
+                  className="absolute left-0 top-0 w-full"
+                  style={{ transform: `translateY(${virtualRow.start}px)` }}
                 >
-                  {note.pinned ? (
-                    <Pin className="size-4 text-[var(--icon-orange-fg)]" />
-                  ) : (
-                    <Book className="size-4 text-muted-foreground" />
-                  )}
-                </div>
-
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <p
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      onSelectNote(note.id);
+                    }}
+                    className={cn(
+                      "notes-list-item group relative mb-1.5 flex h-auto w-full items-start gap-3 rounded-xl p-3 text-left transition-all duration-200",
+                      isSelected
+                        ? "bg-[var(--launcher-chip-bg)] ring-1 ring-[var(--launcher-card-selected-border)]"
+                        : "hover:bg-[var(--launcher-card-hover-bg)]",
+                    )}
+                  >
+                    <div
                       className={cn(
-                        "truncate text-launcher-md font-medium tracking-[-0.01em] transition-colors duration-200",
+                        "absolute left-0 top-1/2 h-7 w-0.5 -translate-y-1/2 rounded-full transition-all duration-200",
                         isSelected
-                          ? "text-foreground"
-                          : "text-muted-foreground group-hover:text-foreground",
+                          ? "bg-[var(--ring)]"
+                          : "bg-transparent group-hover:bg-[var(--launcher-card-selected-bg)]",
+                      )}
+                    />
+
+                    <div
+                      className={cn(
+                        "mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg transition-all duration-200",
+                        isSelected
+                          ? "bg-[var(--launcher-card-bg)]"
+                          : "bg-[var(--launcher-card-hover-bg)] group-hover:bg-[var(--launcher-chip-bg)]",
                       )}
                     >
-                      {note.title}
-                    </p>
-                    {note.pinned ? (
-                      <span className="shrink-0 rounded-full bg-[var(--icon-orange-bg)] px-1.5 py-0.5 text-launcher-2xs font-medium text-[var(--icon-orange-fg)]">
-                        Pinned
-                      </span>
-                    ) : null}
-                  </div>
-                  <p className="mt-1 line-clamp-2 text-launcher-xs leading-5 text-muted-foreground">
-                    {excerptContent(note.content)}
-                  </p>
+                      {note.pinned ? (
+                        <Pin className="size-4 text-[var(--icon-orange-fg)]" />
+                      ) : (
+                        <Book className="size-4 text-muted-foreground" />
+                      )}
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <p
+                          className={cn(
+                            "truncate text-launcher-md font-medium tracking-[-0.01em] transition-colors duration-200",
+                            isSelected
+                              ? "text-foreground"
+                              : "text-muted-foreground group-hover:text-foreground",
+                          )}
+                        >
+                          {note.title}
+                        </p>
+                        {note.pinned ? (
+                          <span className="shrink-0 rounded-full bg-[var(--icon-orange-bg)] px-1.5 py-0.5 text-launcher-2xs font-medium text-[var(--icon-orange-fg)]">
+                            Pinned
+                          </span>
+                        ) : null}
+                      </div>
+                      <p className="mt-1 line-clamp-2 text-launcher-xs leading-5 text-muted-foreground">
+                        {excerptContent(note.content)}
+                      </p>
+                    </div>
+                  </Button>
                 </div>
-              </Button>
-            );
-          })}
+              );
+            })}
+          </div>
+        ) : null}
       </div>
     </aside>
   );

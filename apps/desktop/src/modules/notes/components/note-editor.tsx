@@ -117,7 +117,7 @@ export function NoteEditor({
           size="sm"
           onClick={onSubmit}
           disabled={isSubmitting}
-          className="inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-launcher-sm"
+          className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-[var(--ring)] px-3 text-launcher-sm text-[var(--primary-foreground)] hover:bg-[var(--ring)]/90"
         >
           {isSubmitting ? "Saving..." : mode === "create" ? "Create note" : "Save changes"}
         </Button>

@@ -38,6 +38,7 @@ export function useApplicationSearch(query: string) {
     queryKey: ["applications", "search", debouncedQuery],
     queryFn: () => searchApplications(debouncedQuery),
     enabled: debouncedQuery.length > 0,
+    placeholderData: (previousData) => previousData,
     staleTime: 15 * 60_000,
     gcTime: 60 * 60_000,
     refetchOnMount: false,

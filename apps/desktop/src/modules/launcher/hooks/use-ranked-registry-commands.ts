@@ -71,6 +71,7 @@ export function useRankedRegistryCommands({
       });
       return result;
     },
+    placeholderData: (previousData) => previousData,
     staleTime: 0,
   });
 

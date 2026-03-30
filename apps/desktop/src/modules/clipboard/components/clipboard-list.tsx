@@ -1,5 +1,6 @@
 import { FileText, ImageIcon, Link, Clipboard } from "lucide-react";
-import { useMemo } from "react";
+import { useLayoutEffect, useMemo, useRef } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { isToday, isYesterday, parseISO, format } from "date-fns";
 
 import { CommandLoadingState } from "@/components/command/command-loading-state";
@@ -10,8 +11,23 @@ interface ClipboardListItemProps {
   entry: ClipboardHistoryEntry;
   isSelected: boolean;
   onSelect: () => void;
-  itemRef?: (node: HTMLDivElement | null) => void;
 }
+
+const CLIPBOARD_HEADER_HEIGHT = 32;
+const CLIPBOARD_ITEM_HEIGHT = 62;
+
+type ClipboardVirtualRow =
+  | {
+      key: string;
+      type: "header";
+      title: string;
+    }
+  | {
+      key: string;
+      type: "item";
+      entry: ClipboardHistoryEntry;
+      originalIndex: number;
+    };
 
 const getEntryIconConfig = (type: ClipboardContentType) => {
   switch (type) {
@@ -36,12 +52,11 @@ const getEntryIconConfig = (type: ClipboardContentType) => {
   }
 };
 
-function ClipboardListItem({ entry, isSelected, onSelect, itemRef }: ClipboardListItemProps) {
+function ClipboardListItem({ entry, isSelected, onSelect }: ClipboardListItemProps) {
   const iconConfig = getEntryIconConfig(entry.content_type);
 
   return (
     <div
-      ref={itemRef}
       onClick={onSelect}
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {
@@ -115,6 +130,8 @@ interface ClipboardListProps {
 export function ClipboardList({ entries, selectedIndex, onSelect, isLoading }: ClipboardListProps) {
   "use no memo";
 
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+
   const groupedEntries = useMemo(() => {
     const groups: Array<{
       title: string;
@@ -151,10 +168,56 @@ export function ClipboardList({ entries, selectedIndex, onSelect, isLoading }: C
 
     return groups;
   }, [entries]);
+  const rows = useMemo<ClipboardVirtualRow[]>(() => {
+    const nextRows: ClipboardVirtualRow[] = [];
+
+    for (const group of groupedEntries) {
+      nextRows.push({
+        key: `group-${group.title}`,
+        type: "header",
+        title: group.title,
+      });
+
+      for (const item of group.items) {
+        nextRows.push({
+          key: `item-${item.entry.copied_at}-${item.entry.content_type}-${item.entry.value.slice(0, 20)}`,
+          type: "item",
+          entry: item.entry,
+          originalIndex: item.originalIndex,
+        });
+      }
+    }
+
+    return nextRows;
+  }, [groupedEntries]);
+  const rowVirtualizer = useVirtualizer({
+    count: rows.length,
+    getScrollElement: () => scrollContainerRef.current,
+    estimateSize: (index) =>
+      rows[index]?.type === "header" ? CLIPBOARD_HEADER_HEIGHT : CLIPBOARD_ITEM_HEIGHT,
+    measureElement: (element) => element.getBoundingClientRect().height,
+    overscan: 8,
+  });
+  const virtualRows = rowVirtualizer.getVirtualItems();
+
+  useLayoutEffect(() => {
+    if (entries.length === 0) {
+      return;
+    }
+
+    const selectedRowIndex = rows.findIndex(
+      (row) => row.type === "item" && row.originalIndex === selectedIndex,
+    );
+    if (selectedRowIndex < 0) {
+      return;
+    }
+
+    rowVirtualizer.scrollToIndex(selectedRowIndex, { align: "auto" });
+  }, [entries.length, rowVirtualizer, rows, selectedIndex]);
 
   return (
     <div className="clipboard-list-panel flex w-[42%] flex-col border-r border-[var(--launcher-card-border)]">
-      <div className="custom-scrollbar flex-1 overflow-y-auto p-3">
+      <div ref={scrollContainerRef} className="custom-scrollbar flex-1 overflow-y-auto p-3">
         {isLoading ? (
           <div className="flex h-full items-center justify-center">
             <CommandLoadingState label="Loading history..." withSpinner />
@@ -172,25 +235,38 @@ export function ClipboardList({ entries, selectedIndex, onSelect, isLoading }: C
             </div>
           </div>
         ) : (
-          <div className="w-full">
-            {groupedEntries.map((group) => (
-              <div key={`group-${group.title}`}>
-                <div className="flex items-center gap-3 px-3 py-1">
-                  <h3 className="text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-                    {group.title}
-                  </h3>
-                  <div className="h-px flex-1 bg-[var(--launcher-card-hover-bg)]" />
+          <div className="relative w-full" style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
+            {virtualRows.map((virtualRow) => {
+              const row = rows[virtualRow.index];
+              if (!row) {
+                return null;
+              }
+
+              return (
+                <div
+                  key={row.key}
+                  data-index={virtualRow.index}
+                  ref={rowVirtualizer.measureElement}
+                  className="absolute left-0 top-0 w-full"
+                  style={{ transform: `translateY(${virtualRow.start}px)` }}
+                >
+                  {row.type === "header" ? (
+                    <div className="flex items-center gap-3 px-3 py-1">
+                      <h3 className="text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                        {row.title}
+                      </h3>
+                      <div className="h-px flex-1 bg-[var(--launcher-card-hover-bg)]" />
+                    </div>
+                  ) : (
+                    <ClipboardListItem
+                      entry={row.entry}
+                      isSelected={row.originalIndex === selectedIndex}
+                      onSelect={() => onSelect(row.originalIndex)}
+                    />
+                  )}
                 </div>
-                {group.items.map((item) => (
-                  <ClipboardListItem
-                    key={`item-${item.entry.copied_at}-${item.entry.content_type}-${item.entry.value.slice(0, 20)}`}
-                    entry={item.entry}
-                    isSelected={item.originalIndex === selectedIndex}
-                    onSelect={() => onSelect(item.originalIndex)}
-                  />
-                ))}
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

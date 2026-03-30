@@ -77,11 +77,31 @@ export default function CalculatorHistoryCommandGroup({
     ) ??
     filteredHistory[0] ??
     null;
+
   useEffect(() => {
     syncCalculatorHistoryActionsState({
       selectedEntry: isOpen ? selectedEntry : null,
     });
   }, [isOpen, selectedEntry]);
+
+  const handleCopyEntry = (entry: (typeof filteredHistory)[number]) => {
+    copyCalculatorEntry(entry.result)
+      .then(() => {
+        recordUsage(toManagedCalculatorHistoryItem(entry));
+        setCopiedEntryTimestamp(entry.timestamp);
+        setCopyError(null);
+        if (copiedResetTimerRef.current !== null) {
+          window.clearTimeout(copiedResetTimerRef.current);
+        }
+        copiedResetTimerRef.current = window.setTimeout(() => {
+          copiedResetTimerRef.current = null;
+          setCopiedEntryTimestamp(null);
+        }, HISTORY_COPY_FEEDBACK_MS);
+      })
+      .catch(() => {
+        setCopyError("Could not copy to clipboard");
+      });
+  };
 
   if (!isOpen) {
     const shouldShowOpenHistory = matchesCommandKeywords(query, CALCULATOR_HISTORY_KEYWORDS);
@@ -104,65 +124,41 @@ export default function CalculatorHistoryCommandGroup({
 
   return (
     <CommandGroup>
-      {/* Loading state */}
-      {isLoading && (
+      {isLoading ? (
         <CommandItem disabled className="calc-history-loading px-4 py-6">
-          <div className="flex flex-col items-center justify-center w-full text-center">
-            <div className="size-10 rounded-xl bg-[var(--launcher-card-bg)] p-2.5 mb-3">
-              <Loader2 className="size-full text-[var(--icon-orange-fg)] animate-spin" />
+          <div className="flex w-full flex-col items-center justify-center text-center">
+            <div className="mb-3 size-10 rounded-xl bg-[var(--launcher-card-bg)] p-2.5">
+              <Loader2 className="size-full animate-spin text-[var(--icon-orange-fg)]" />
             </div>
             <p className="text-launcher-sm text-muted-foreground">Loading history...</p>
           </div>
         </CommandItem>
-      )}
+      ) : null}
 
-      {/* Error state */}
-      {isError && <CalculatorHistoryError />}
+      {isError ? <CalculatorHistoryError /> : null}
 
-      {/* Copy error */}
-      {!isLoading && !isError && copyError && <CalculatorHistoryError message={copyError} />}
+      {!isLoading && !isError && copyError ? <CalculatorHistoryError message={copyError} /> : null}
 
-      {/* Empty state */}
-      {!isLoading && !isError && filteredHistory.length === 0 && <CalculatorHistoryEmpty />}
+      {!isLoading && !isError && filteredHistory.length === 0 ? <CalculatorHistoryEmpty /> : null}
 
-      {/* History items */}
       {!isLoading &&
         !isError &&
-        filteredHistory.map((entry, index) => {
-          const isCopied = copiedEntryTimestamp === entry.timestamp;
-
-          return (
-            <CalculatorHistoryItem
-              key={`${entry.timestamp}:${entry.result}`}
-              entry={entry}
-              index={index}
-              isCopied={isCopied}
-              onActivate={() => {
-                syncCalculatorHistoryActionsState({
-                  selectedEntry: entry,
-                });
-              }}
-              onSelect={() => {
-                copyCalculatorEntry(entry.result)
-                  .then(() => {
-                    recordUsage(toManagedCalculatorHistoryItem(entry));
-                    setCopiedEntryTimestamp(entry.timestamp);
-                    setCopyError(null);
-                    if (copiedResetTimerRef.current !== null) {
-                      window.clearTimeout(copiedResetTimerRef.current);
-                    }
-                    copiedResetTimerRef.current = window.setTimeout(() => {
-                      copiedResetTimerRef.current = null;
-                      setCopiedEntryTimestamp(null);
-                    }, HISTORY_COPY_FEEDBACK_MS);
-                  })
-                  .catch(() => {
-                    setCopyError("Could not copy to clipboard");
-                  });
-              }}
-            />
-          );
-        })}
+        filteredHistory.map((entry, index) => (
+          <CalculatorHistoryItem
+            key={`${entry.timestamp}:${entry.result}`}
+            entry={entry}
+            index={index}
+            isCopied={copiedEntryTimestamp === entry.timestamp}
+            onActivate={() => {
+              syncCalculatorHistoryActionsState({
+                selectedEntry: entry,
+              });
+            }}
+            onSelect={() => {
+              handleCopyEntry(entry);
+            }}
+          />
+        ))}
     </CommandGroup>
   );
 }
