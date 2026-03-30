@@ -1,19 +1,11 @@
 import { isTauri } from "@tauri-apps/api/core";
 import { getName, getVersion } from "@tauri-apps/api/app";
-import { open as shellOpen } from "@tauri-apps/plugin-shell";
 import { BookOpen, Bug, Github, Info } from "lucide-react";
 import { useState } from "react";
 
 import { useMountEffect } from "@/hooks/use-mount-effect";
+import { openExternalUrl } from "@/lib/open-external-url";
 import { AboutLink } from "./components/about-link";
-
-async function openExternal(target: string) {
-  try {
-    await shellOpen(target);
-  } catch {
-    window.open(target, "_blank", "noopener,noreferrer");
-  }
-}
 
 export function AboutTab() {
   const [version, setVersion] = useState("0.1.0");
@@ -60,21 +52,21 @@ export function AboutTab() {
             icon={Github}
             label="GitHub"
             onClick={() => {
-              void openExternal("https://github.com/krishkalaria12/beam");
+              void openExternalUrl("https://github.com/krishkalaria12/beam");
             }}
           />
           <AboutLink
             icon={BookOpen}
             label="Docs"
             onClick={() => {
-              void openExternal("https://github.com/krishkalaria12/beam");
+              void openExternalUrl("https://github.com/krishkalaria12/beam");
             }}
           />
           <AboutLink
             icon={Bug}
             label="Report Bug"
             onClick={() => {
-              void openExternal("https://github.com/krishkalaria12/beam/issues/new");
+              void openExternalUrl("https://github.com/krishkalaria12/beam/issues/new");
             }}
           />
         </div>

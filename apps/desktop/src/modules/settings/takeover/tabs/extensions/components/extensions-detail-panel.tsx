@@ -5,7 +5,7 @@ import { PreferenceEditor } from "@/modules/extensions/components/extensions-vie
 import type { ExtensionCommandEntry, ExtensionGroupEntry } from "../types";
 import { ExtensionsEntryIcon } from "./extensions-entry-icon";
 
-interface ExtensionsDetailPaneProps {
+interface ExtensionsDetailPanelProps {
   selectedGroup: ExtensionGroupEntry | null;
   selectedCommand: ExtensionCommandEntry | null;
   selectedFields: ExtensionPreferenceField[];
@@ -18,7 +18,7 @@ interface ExtensionsDetailPaneProps {
   onSavePreferences: () => Promise<void>;
 }
 
-export function ExtensionsDetailPane({
+export function ExtensionsDetailPanel({
   selectedGroup,
   selectedCommand,
   selectedFields,
@@ -29,7 +29,7 @@ export function ExtensionsDetailPane({
   validationError,
   onChangePreference,
   onSavePreferences,
-}: ExtensionsDetailPaneProps) {
+}: ExtensionsDetailPanelProps) {
   return (
     <DetailPanel className="min-h-0 bg-transparent">
       {!selectedGroup ? (

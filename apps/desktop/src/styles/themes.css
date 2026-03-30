@@ -211,7 +211,7 @@
 .beam-window-overlay {
   background: color-mix(
     in srgb,
-    var(--command-item-selected-bg) calc(var(--beam-launcher-opacity) * 100%),
+    var(--background) calc(var(--beam-launcher-opacity) * 100%),
     transparent
   );
 }
@@ -219,7 +219,7 @@
 .beam-takeover-shell {
   background: color-mix(
     in srgb,
-    var(--command-item-selected-bg) calc(var(--beam-launcher-opacity) * 100%),
+    var(--background) calc(var(--beam-launcher-opacity) * 100%),
     transparent
   );
 }

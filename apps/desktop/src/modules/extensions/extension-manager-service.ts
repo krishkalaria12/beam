@@ -2,6 +2,7 @@ import { isTauri } from "@tauri-apps/api/core";
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { open as shellOpen } from "@tauri-apps/plugin-shell";
+import { fallbackOpenExternalUrl } from "@/lib/open-external-url";
 import { parseRaycastDeepLink } from "@/modules/extensions/extension-manager/deep-link";
 import { emitClipboardHistoryUpdated } from "@/modules/clipboard/lib/updates";
 import { type ExtensionMode } from "@/modules/extensions/extension-manager/discovery";
@@ -32,10 +33,7 @@ import {
 } from "@/modules/extensions/extension-manager/runtime-bridge";
 import { persistentExtensionRunnerManager } from "@/modules/extensions/background/persistent-runners";
 import { useExtensionRuntimeStore } from "@/modules/extensions/runtime/store";
-import {
-  BridgeMessageKind,
-  readBridgeMessageEnvelope,
-} from "@beam/extension-protocol";
+import { BridgeMessageKind, readBridgeMessageEnvelope } from "@beam/extension-protocol";
 import type {
   ManagerRequest,
   ManagerResponse,
@@ -776,7 +774,7 @@ class ExtensionManagerService {
         typeof window !== "undefined" &&
         (target.startsWith("http://") || target.startsWith("https://"))
       ) {
-        window.open(target, "_blank", "noopener,noreferrer");
+        fallbackOpenExternalUrl(target);
       }
       this.logRequestFailure({
         tag: "extensions-manager-request-failure",

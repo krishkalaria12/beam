@@ -33,6 +33,7 @@ interface BuildSharedTakeoverActionItemsInput {
   handlePrimaryActionSelect: () => void;
   dispatchShortcut: (options: ActionShortcutOptions) => void;
   clipboardActionItems: readonly LauncherActionItem[];
+  extensionActionItems: readonly LauncherActionItem[];
   fileSearchActionItems: readonly LauncherActionItem[];
   quicklinksActionItems: readonly LauncherActionItem[];
   scriptCommandActionItems: readonly LauncherActionItem[];
@@ -56,6 +57,7 @@ export function buildSharedTakeoverActionItems({
   handlePrimaryActionSelect,
   dispatchShortcut,
   clipboardActionItems,
+  extensionActionItems,
   fileSearchActionItems,
   quicklinksActionItems,
   scriptCommandActionItems,
@@ -172,6 +174,10 @@ export function buildSharedTakeoverActionItems({
 
   if (activePanel === COMMAND_PANELS.FILE_SEARCH) {
     panelSpecificRootItems.unshift(...fileSearchActionItems);
+  }
+
+  if (activePanel === COMMAND_PANELS.EXTENSIONS) {
+    panelSpecificRootItems.unshift(...extensionActionItems);
   }
 
   if (activePanel === COMMAND_PANELS.QUICKLINKS && quicklinksView === "manage") {

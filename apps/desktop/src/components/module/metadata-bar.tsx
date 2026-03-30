@@ -1,5 +1,6 @@
 import type { CSSProperties, ReactNode } from "react";
 
+import { openExternalUrl } from "@/lib/open-external-url";
 import { cn } from "@/lib/utils";
 
 type MetadataLabelItem = {
@@ -169,7 +170,7 @@ export function MetadataBar({
                 )}
                 style={item.valueStyle}
                 onClick={() => {
-                  window.open(item.url, "_blank", "noopener,noreferrer");
+                  void openExternalUrl(item.url);
                 }}
               >
                 {item.value}

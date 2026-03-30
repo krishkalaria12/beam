@@ -57,7 +57,7 @@ export function ExtensionRuntimeShell({ state, onOpenExtensions }: ExtensionRunt
 
   return (
     <div
-      className="extension-runtime-shell ext-shell flex h-full w-full flex-col overflow-hidden bg-[var(--solid-bg)] text-foreground"
+      className="extension-runtime-shell ext-shell flex h-full w-full flex-col overflow-hidden bg-background text-foreground"
       onKeyDownCapture={state.handleRootKeyDownCapture}
       onKeyDown={state.handleRootKeyDown}
       role="application"

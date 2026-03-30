@@ -1,4 +1,5 @@
 import { type CSSProperties } from "react";
+import { openExternalUrl } from "@/lib/open-external-url";
 import { cn } from "@/lib/utils";
 
 import { SearchableDropdown } from "@/components/module";
@@ -109,7 +110,7 @@ export function RuntimeDropdownAccessory({ nodeId, state }: RuntimeDropdownAcces
             : undefined
         }
         onClick={() => {
-          window.open(target, "_blank", "noopener,noreferrer");
+          void openExternalUrl(target);
         }}
       >
         {text}

@@ -7,7 +7,7 @@ import { extensionManagerService } from "@/modules/extensions/extension-manager-
 import type { ExtensionPreferenceField, PluginInfo } from "@/modules/extensions/types";
 import { useSettingsPageStore } from "@/modules/settings/takeover/store/use-settings-page-store";
 
-import { ExtensionsDetailPane } from "./components/extensions-detail-pane";
+import { ExtensionsDetailPanel } from "./components/extensions-detail-panel";
 import { ExtensionsListPane } from "./components/extensions-list-pane";
 import {
   buildExtensionSettingsGroups,
@@ -313,7 +313,7 @@ export function ExtensionsTab({
           onSetAliases={onSetAliases}
         />
 
-        <ExtensionsDetailPane
+        <ExtensionsDetailPanel
           selectedGroup={selectedGroup}
           selectedCommand={selectedCommand}
           selectedFields={selectedFields}

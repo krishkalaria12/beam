@@ -4,6 +4,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { openExternalUrl } from "@/lib/open-external-url";
 import { RunnerIcon } from "@/modules/extensions/components/runner/nodes/shared/runner-icon";
 import type { FormField as RunnerFormField } from "@/modules/extensions/components/runner/types";
 import type { UseExtensionRunnerStateResult } from "@/modules/extensions/components/runner/use-extension-runner-state";
@@ -287,7 +288,7 @@ export function RuntimeFormView({ state }: RuntimeFormViewProps) {
                 .join(" ")}
               style={readStyle(child.props.style)}
               onClick={() => {
-                window.open(target, "_blank", "noopener,noreferrer");
+                void openExternalUrl(target);
               }}
             >
               {text}

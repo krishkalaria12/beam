@@ -4,6 +4,7 @@ import { searchWithBrowser } from "@/modules/search/api/search-with-browser";
 import { executeSystemAction } from "@/modules/system-actions/api/execute-system-action";
 import { getAwakeStatus, toggleAwake } from "@/modules/system-actions/api/toggle-awake";
 import type { SystemAction } from "@/modules/system-actions/types";
+import { openExternalUrl } from "@/lib/open-external-url";
 
 import { isCommandMode } from "@/command-registry/modes";
 import { COMMAND_PANELS, isCommandPanel } from "@/command-registry/panels";
@@ -387,7 +388,7 @@ async function dispatchOpenUrlAction(
     if (context.runtime.openUrl) {
       await context.runtime.openUrl(url);
     } else {
-      window.open(url, "_blank", "noopener,noreferrer");
+      await openExternalUrl(url);
     }
     context.runtime.setCommandSearch("");
     return ok({ url });
@@ -461,7 +462,7 @@ async function dispatchCustomAction(
       if (context.runtime.openUrl) {
         await context.runtime.openUrl(parsed.toString());
       } else {
-        window.open(parsed.toString(), "_blank", "noopener,noreferrer");
+        await openExternalUrl(parsed.toString());
       }
       return ok({ url: parsed.toString() });
     } catch (err) {
