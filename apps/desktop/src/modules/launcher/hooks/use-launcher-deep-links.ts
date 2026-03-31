@@ -115,6 +115,10 @@ export function useLauncherDeepLinks({ openPanel, backToCommands }: UseLauncherD
 
     void listen<string>("deep-link", (event) => {
       const deepLinkUrl = event.payload;
+      if (persistentExtensionRunnerManager.handleDeepLink(deepLinkUrl)) {
+        return;
+      }
+
       if (extensionManagerService.handleDeepLink(deepLinkUrl)) {
         return;
       }

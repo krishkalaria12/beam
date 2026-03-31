@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 
 import { COMMAND_PANELS, type TakeoverCommandPanel } from "@/command-registry/panels";
-import type { LauncherActionItem } from "@/modules/launcher/components/launcher-actions-panel";
+import type { LauncherActionItem, LauncherActionSection } from "@/modules/launcher/types";
 import type { QuicklinksView } from "@/store/use-launcher-ui-store";
 
 interface ActionShortcutOptions {
@@ -34,9 +34,14 @@ interface BuildSharedTakeoverActionItemsInput {
   dispatchShortcut: (options: ActionShortcutOptions) => void;
   clipboardActionItems: readonly LauncherActionItem[];
   extensionActionItems: readonly LauncherActionItem[];
+  extensionRunnerActionSections: readonly LauncherActionSection[];
   fileSearchActionItems: readonly LauncherActionItem[];
   quicklinksActionItems: readonly LauncherActionItem[];
   scriptCommandActionItems: readonly LauncherActionItem[];
+}
+
+function createSection(id: string, items: readonly LauncherActionItem[], title?: string) {
+  return items.length > 0 ? [{ id, title, items: [...items] }] : [];
 }
 
 function getPrimaryShortcutLabel(panel: TakeoverCommandPanel): string {
@@ -58,10 +63,11 @@ export function buildSharedTakeoverActionItems({
   dispatchShortcut,
   clipboardActionItems,
   extensionActionItems,
+  extensionRunnerActionSections,
   fileSearchActionItems,
   quicklinksActionItems,
   scriptCommandActionItems,
-}: BuildSharedTakeoverActionItemsInput): LauncherActionItem[] {
+}: BuildSharedTakeoverActionItemsInput): LauncherActionSection[] {
   const panelSpecificRootItems: LauncherActionItem[] = [];
 
   if (activePanel === COMMAND_PANELS.TRANSLATION) {
@@ -188,7 +194,7 @@ export function buildSharedTakeoverActionItems({
     panelSpecificRootItems.unshift(...scriptCommandActionItems);
   }
 
-  return [
+  const shellItems: LauncherActionItem[] = [
     {
       id: `${activePanel}-primary-action`,
       label: primaryActionLabel,
@@ -207,4 +213,10 @@ export function buildSharedTakeoverActionItems({
       onSelect: backToCommands,
     },
   ];
+
+  if (activePanel === COMMAND_PANELS.EXTENSION_RUNNER) {
+    return [...createSection(`${activePanel}-shell`, shellItems), ...extensionRunnerActionSections];
+  }
+
+  return createSection(`${activePanel}-root`, shellItems);
 }

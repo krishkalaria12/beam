@@ -9,6 +9,7 @@ import { useMountEffect } from "@/hooks/use-mount-effect";
 import { isLauncherActionsHotkey, listenLauncherActionsToggle } from "@/lib/launcher-actions";
 import { useClipboardActionItems } from "@/modules/clipboard/hooks/use-clipboard-action-items";
 import { useExtensionActionItems } from "@/modules/extensions/hooks/use-extension-action-items";
+import { useExtensionRunnerActionSections } from "@/modules/extensions/hooks/use-extension-runner-action-items";
 import { useFileSearchActionItems } from "@/modules/file-search/hooks/use-file-search-action-items";
 import { LauncherActionsPanel } from "@/modules/launcher/components/launcher-actions-panel";
 import { buildSharedTakeoverActionItems } from "@/modules/launcher/components/launcher-takeover-panel-actions";
@@ -51,6 +52,7 @@ function LauncherTakeoverPanelContent({
   const primaryActionLabel = getPanelPrimaryActionLabel(activePanel);
   const clipboardActionItems = useClipboardActionItems();
   const extensionActionItems = useExtensionActionItems();
+  const extensionRunnerActionSections = useExtensionRunnerActionSections();
   const fileSearchActionItems = useFileSearchActionItems();
   const quicklinksActionItems = useQuicklinksActionItems();
   const scriptCommandActionItems = useScriptCommandActionItems();
@@ -155,6 +157,7 @@ function LauncherTakeoverPanelContent({
         dispatchShortcut,
         clipboardActionItems,
         extensionActionItems,
+        extensionRunnerActionSections,
         fileSearchActionItems,
         quicklinksActionItems,
         scriptCommandActionItems,
@@ -188,7 +191,7 @@ function LauncherTakeoverPanelContent({
           anchorMode="panel-footer"
           rootTitle={`${panelRegistration?.title ?? "Module"} Actions...`}
           rootSearchPlaceholder="Search for actions..."
-          rootItems={sharedRootItems}
+          rootSections={sharedRootItems}
           defaultTarget={
             panelRegistration
               ? {

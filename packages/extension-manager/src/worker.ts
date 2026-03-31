@@ -129,7 +129,7 @@ export const main = () => {
         }
 
         if (command.kind === BridgeMessageKind.RuntimeRpc) {
-          const rpc = parseRuntimeRpcInput(command.payload);
+          const rpc = parseRuntimeRpcInput(command);
           if (!rpc?.response) {
             writeLog("Received invalid runtime-rpc payload from host.");
             return;

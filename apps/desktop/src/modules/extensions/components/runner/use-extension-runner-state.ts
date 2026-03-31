@@ -3,7 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 
 import { copyToClipboard } from "@/modules/clipboard/api/copy-to-clipboard";
 import { emitClipboardHistoryUpdated } from "@/modules/clipboard/lib/updates";
-import { isLauncherActionsHotkey } from "@/lib/launcher-actions";
+import { isLauncherActionsHotkey, requestLauncherActionsToggle } from "@/lib/launcher-actions";
 import { extensionManagerService } from "@/modules/extensions/extension-manager-service";
 import {
   type ExtensionToast,
@@ -11,7 +11,6 @@ import {
   type RunningExtensionSession,
   useExtensionRuntimeStore,
 } from "@/modules/extensions/runtime/store";
-import { requestExtensionRunnerActionsToggle } from "@/modules/extensions/components/runner/runner-actions-toggle";
 import {
   getPrimaryExtensionAction,
   getTopLevelExtensionShortcutActions,
@@ -600,6 +599,60 @@ export function useExtensionRunnerState({
     }
   }, []);
 
+  const handleAvailableActionShortcuts = useCallback(
+    (event: KeyboardEvent<HTMLElement>, availableActions: ExtensionAction[]) => {
+      if (availableActions.length > 0 && isLauncherActionsHotkey(event)) {
+        event.preventDefault();
+        event.stopPropagation();
+        requestLauncherActionsToggle();
+        return true;
+      }
+
+      if (
+        event.key === "Enter" &&
+        !event.ctrlKey &&
+        !event.metaKey &&
+        !event.shiftKey &&
+        !event.altKey
+      ) {
+        event.preventDefault();
+        event.stopPropagation();
+        runPrimarySelectionAction();
+        return true;
+      }
+
+      if (
+        event.key === "Enter" &&
+        event.ctrlKey &&
+        !event.metaKey &&
+        !event.shiftKey &&
+        !event.altKey &&
+        availableActions[1]
+      ) {
+        event.preventDefault();
+        event.stopPropagation();
+        void executeAction(availableActions[1]);
+        return true;
+      }
+
+      for (const action of availableActions) {
+        if (!action.shortcutDefinition) {
+          continue;
+        }
+
+        if (keyMatchesShortcut(event, action.shortcutDefinition)) {
+          event.preventDefault();
+          event.stopPropagation();
+          void executeAction(action);
+          return true;
+        }
+      }
+
+      return false;
+    },
+    [executeAction, runPrimarySelectionAction],
+  );
+
   const handleRootKeyDown = useCallback(
     (event: KeyboardEvent<HTMLDivElement>) => {
       if (isEditableTarget(event.target)) {
@@ -618,50 +671,8 @@ export function useExtensionRunnerState({
           ? getTopLevelExtensionShortcutActions(selectedEntryActions)
           : getTopLevelExtensionShortcutActions(rootActions);
 
-      if (availableActions.length > 0 && isLauncherActionsHotkey(event)) {
-        event.preventDefault();
-        event.stopPropagation();
-        requestExtensionRunnerActionsToggle();
+      if (handleAvailableActionShortcuts(event, availableActions)) {
         return;
-      }
-
-      if (
-        event.key === "Enter" &&
-        !event.ctrlKey &&
-        !event.metaKey &&
-        !event.shiftKey &&
-        !event.altKey
-      ) {
-        event.preventDefault();
-        event.stopPropagation();
-        runPrimarySelectionAction();
-        return;
-      }
-
-      if (
-        event.key === "Enter" &&
-        event.ctrlKey &&
-        !event.metaKey &&
-        !event.shiftKey &&
-        !event.altKey &&
-        availableActions[1]
-      ) {
-        event.preventDefault();
-        event.stopPropagation();
-        void executeAction(availableActions[1]);
-        return;
-      }
-
-      for (const action of availableActions) {
-        if (!action.shortcutDefinition) {
-          continue;
-        }
-        if (keyMatchesShortcut(event, action.shortcutDefinition)) {
-          event.preventDefault();
-          event.stopPropagation();
-          void executeAction(action);
-          return;
-        }
       }
 
       if (rootType === "List") {
@@ -835,11 +846,10 @@ export function useExtensionRunnerState({
     },
     [
       currentEntries,
-      executeAction,
       handleBack,
+      handleAvailableActionShortcuts,
       rootActions,
       rootType,
-      runPrimarySelectionAction,
       selectedEntryActions,
       selectedIndex,
     ],
@@ -870,58 +880,13 @@ export function useExtensionRunnerState({
         return;
       }
 
-      if (availableActions.length > 0 && isLauncherActionsHotkey(event)) {
-        event.preventDefault();
-        event.stopPropagation();
-        requestExtensionRunnerActionsToggle();
-        return;
-      }
-
-      if (
-        event.key === "Enter" &&
-        !event.ctrlKey &&
-        !event.metaKey &&
-        !event.shiftKey &&
-        !event.altKey
-      ) {
-        event.preventDefault();
-        event.stopPropagation();
-        runPrimarySelectionAction();
-        return;
-      }
-
-      if (
-        event.key === "Enter" &&
-        event.ctrlKey &&
-        !event.metaKey &&
-        !event.shiftKey &&
-        !event.altKey &&
-        availableActions[1]
-      ) {
-        event.preventDefault();
-        event.stopPropagation();
-        void executeAction(availableActions[1]);
-        return;
-      }
-
-      for (const action of availableActions) {
-        if (!action.shortcutDefinition) {
-          continue;
-        }
-        if (keyMatchesShortcut(event, action.shortcutDefinition)) {
-          event.preventDefault();
-          event.stopPropagation();
-          void executeAction(action);
-          return;
-        }
-      }
+      handleAvailableActionShortcuts(event, availableActions);
     },
     [
-      executeAction,
       handleBack,
+      handleAvailableActionShortcuts,
       handleSearchInputChange,
       rootActions,
-      runPrimarySelectionAction,
       searchText,
       selectedEntryActions,
     ],

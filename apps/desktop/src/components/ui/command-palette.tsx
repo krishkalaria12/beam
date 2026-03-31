@@ -278,7 +278,7 @@ function CommandPaletteSections({
             return (
               <CommandItem
                 key={item.id}
-                value={item.value ?? getDefaultItemValue(item)}
+                value={item.id}
                 keywords={item.keywords}
                 disabled={isDisabled}
                 onSelect={() => {
@@ -288,10 +288,7 @@ function CommandPaletteSections({
                 className={cn(mergedClassNames.item, item.className)}
               >
                 {item.icon ? (
-                  <div
-                    data-slot="command-palette-item-icon"
-                    className={mergedClassNames.itemIcon}
-                  >
+                  <div data-slot="command-palette-item-icon" className={mergedClassNames.itemIcon}>
                     {item.icon}
                   </div>
                 ) : null}
@@ -371,16 +368,6 @@ function isTextInputTarget(target: EventTarget | null): boolean {
     return true;
   }
   return Boolean(target.closest("[contenteditable=true]"));
-}
-
-function getDefaultItemValue(item: CommandPaletteItem): string {
-  const text =
-    typeof item.label === "string"
-      ? item.label
-      : typeof item.description === "string"
-        ? item.description
-        : item.id;
-  return [text, ...(item.keywords ?? [])].join(" ");
 }
 
 function matchesItemQuery(item: CommandPaletteItem, query: string): boolean {

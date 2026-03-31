@@ -481,6 +481,10 @@ class ExtensionManagerService {
     }
 
     if (parsed.kind === "success") {
+      if (!this.pendingOauthStates.has(parsed.state)) {
+        return false;
+      }
+
       this.pendingOauthStates.delete(parsed.state);
       this.sendRuntimeRpc({
         response: {
@@ -496,6 +500,10 @@ class ExtensionManagerService {
 
     let resolvedState = parsed.state;
     if (resolvedState) {
+      if (!this.pendingOauthStates.has(resolvedState)) {
+        return false;
+      }
+
       this.pendingOauthStates.delete(resolvedState);
     } else if (this.pendingOauthStates.size === 1) {
       resolvedState = this.pendingOauthStates.values().next().value as string | undefined;
@@ -1018,6 +1026,7 @@ class ExtensionManagerService {
           }
 
           this.runtimeStarted = false;
+          this.pendingOauthStates.clear();
           this.stopBrowserExtensionStatusPolling();
         });
       }
@@ -1037,6 +1046,7 @@ class ExtensionManagerService {
 
   stop(): void {
     this.runtimeStarted = false;
+    this.pendingOauthStates.clear();
     this.stopBrowserExtensionStatusPolling();
     if (this.runtimeMessageUnlisten) {
       this.runtimeMessageUnlisten();

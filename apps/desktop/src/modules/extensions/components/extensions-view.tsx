@@ -1,8 +1,25 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronLeft, Loader2, RefreshCcw, Search } from "lucide-react";
-import { useCallback, useEffect, useMemo, useReducer, useRef, type KeyboardEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+  type KeyboardEvent,
+} from "react";
 import { toast } from "sonner";
 
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import debounce from "@/lib/debounce";
 import { requestLauncherActionsToggle } from "@/lib/launcher-actions";
 import { ExtensionsDetailPanel } from "@/modules/extensions/components/extensions-view/extensions-detail-panel";
@@ -36,6 +53,7 @@ import { useUninstallExtensionMutation } from "@/modules/extensions/hooks/use-un
 import { useExtensionsUiStore } from "@/modules/extensions/store/use-extensions-ui-store";
 import type {
   ExtensionPreferenceField,
+  HeuristicViolation,
   InstalledExtensionSummary,
 } from "@/modules/extensions/types";
 import { useLauncherPanelBackHandler } from "@/modules/launcher/lib/back-navigation";
@@ -43,6 +61,11 @@ import { useMountEffect } from "@/hooks/use-mount-effect";
 
 interface ExtensionsViewProps {
   onBack: () => void;
+}
+
+interface InstallConfirmationState {
+  title: string;
+  violations: HeuristicViolation[];
 }
 
 type SelectedExtensionsRow =
@@ -491,6 +514,30 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
     [selectableRows, state.selectedRow],
   );
 
+  const [installConfirmation, setInstallConfirmation] = useState<InstallConfirmationState | null>(
+    null,
+  );
+  const installConfirmationResolverRef = useRef<((confirmed: boolean) => void) | null>(null);
+
+  const closeInstallConfirmation = useCallback((confirmed: boolean) => {
+    const resolve = installConfirmationResolverRef.current;
+    installConfirmationResolverRef.current = null;
+    setInstallConfirmation(null);
+    resolve?.(confirmed);
+  }, []);
+
+  const requestInstallConfirmation = useCallback(
+    (title: string, violations: HeuristicViolation[]) => {
+      installConfirmationResolverRef.current?.(false);
+
+      return new Promise<boolean>((resolve) => {
+        installConfirmationResolverRef.current = resolve;
+        setInstallConfirmation({ title, violations });
+      });
+    },
+    [],
+  );
+
   const handleInstall = useCallback(
     async (input: {
       packageId: string;
@@ -512,12 +559,9 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
         });
 
         if (result.status === "requiresConfirmation") {
-          const reasons = result.violations
-            .slice(0, 4)
-            .map((entry) => `- ${entry.commandName}: ${entry.reason}`)
-            .join("\n");
-          const shouldForceInstall = window.confirm(
-            `Potential compatibility risks were found for "${input.title}".\n\n${reasons}\n\nInstall anyway?`,
+          const shouldForceInstall = await requestInstallConfirmation(
+            input.title,
+            result.violations,
           );
           if (!shouldForceInstall) {
             return;
@@ -550,11 +594,16 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
           type: "set-action-error",
           value: error instanceof Error ? error.message : "Failed to install extension.",
         });
+      } finally {
+        dispatch({ type: "set-pending-install-slug", value: null });
       }
-
-      dispatch({ type: "set-pending-install-slug", value: null });
     },
-    [handleRefreshInstalled, installExtensionMutation, state.optimisticInstalledSlugs],
+    [
+      handleRefreshInstalled,
+      installExtensionMutation,
+      requestInstallConfirmation,
+      state.optimisticInstalledSlugs,
+    ],
   );
 
   const handleUninstall = useCallback(
@@ -610,6 +659,13 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
   useEffect(() => {
     handleSelectedUninstallActionRef.current = handleSelectedUninstall;
   }, [handleSelectedUninstall]);
+
+  useMountEffect(() => {
+    return () => {
+      installConfirmationResolverRef.current?.(false);
+      installConfirmationResolverRef.current = null;
+    };
+  });
 
   const handleInstallAction = useCallback(
     (input: {
@@ -779,6 +835,11 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
       ? "bg-sky-400"
       : "bg-emerald-400/80";
   const actionsShortcutLabel = isMacPlatform() ? "⌘K" : "Ctrl+K";
+  const visibleInstallViolations = installConfirmation?.violations.slice(0, 4) ?? [];
+  const hiddenInstallViolationCount = Math.max(
+    0,
+    (installConfirmation?.violations.length ?? 0) - visibleInstallViolations.length,
+  );
 
   useEffect(() => {
     syncExtensionActionsState({
@@ -801,183 +862,240 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
   ]);
 
   return (
-    <div className="flex h-full w-full flex-col overflow-hidden bg-background text-foreground">
-      <div className="flex shrink-0 items-center justify-between border-b border-[var(--ui-divider)] px-4 py-3">
-        <div className="flex items-center gap-2 text-foreground/80 hover:text-foreground">
-          <button
-            type="button"
-            onClick={onBack}
-            aria-label="Go back"
-            className="flex items-center justify-center rounded-md p-1 transition-colors hover:bg-[var(--launcher-card-hover-bg)]"
-          >
-            <ChevronLeft className="size-5" />
-          </button>
-          <h2 className="text-[15px] font-semibold text-foreground">Community</h2>
-        </div>
-        <span className="text-[12px] tracking-wide text-muted-foreground">
-          Installed extensions appear first.
-        </span>
-      </div>
-
-      <div className="flex min-h-0 flex-1 flex-col">
-        <div className="flex shrink-0 items-center gap-3 border-b border-[var(--ui-divider)] px-4 py-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Search extensions..."
-              value={extensionsUi.search}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              onKeyDown={handleSearchKeyDown}
-              className="w-full rounded-lg border border-[var(--ui-divider)] bg-[var(--launcher-card-bg)] py-2 pl-10 pr-4 text-sm text-foreground/90 outline-none transition-colors placeholder:text-muted-foreground focus:border-[var(--ring)]"
-              autoFocus
-            />
-          </div>
-          <button
-            type="button"
-            onClick={() => void handleRefreshInstalled()}
-            className="flex items-center gap-1.5 rounded-lg border border-[var(--ui-divider)] bg-[var(--launcher-card-bg)] px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground disabled:opacity-40"
-          >
-            <RefreshCcw className="size-3.5" />
-            Refresh
-          </button>
-        </div>
-
-        <div className="flex-1 min-h-0 grid grid-cols-12 bg-transparent">
-          <div className="custom-scrollbar col-span-5 h-full min-h-0 overflow-y-auto border-r border-[var(--ui-divider)] p-2">
-            <ExtensionsSidebar
-              installedExtensions={filteredInstalledExtensions}
-              isInstalledLoading={installedQuery.isLoading && installedQuery.data == null}
-              installedErrorMessage={
-                installedQuery.isError ? "Failed to load installed extensions." : null
-              }
-              selectedInstalledId={
-                state.selectedRow?.kind === "installed" ? state.selectedRow.id : null
-              }
-              installedUpdateKeys={installedUpdateKeys}
-              onSelectInstalled={(id) =>
-                dispatch({ type: "set-selected-row", value: { kind: "installed", id } })
-              }
-              search={normalizedSearch}
-              minimumSearchLength={EXTENSIONS_STORE_SEARCH_MIN_LENGTH}
-              storeResults={storeSearchQuery.data ?? []}
-              selectedStoreId={state.selectedRow?.kind === "store" ? state.selectedRow.id : null}
-              onSelectStore={(id) =>
-                dispatch({ type: "set-selected-row", value: { kind: "store", id } })
-              }
-              isStoreLoading={Boolean(storeSearchQuery.isLoading)}
-              isStoreError={Boolean(storeSearchQuery.isError)}
-              storeErrorMessage={
-                storeSearchQuery.error instanceof Error
-                  ? storeSearchQuery.error.message
-                  : storeSearchQuery.isError
-                    ? "Store search failed."
-                    : null
-              }
-              isSearchDebouncing={extensionsUi.isSearchDebouncing}
-            />
-          </div>
-          <div className="custom-scrollbar col-span-7 flex min-h-0 flex-col overflow-y-auto p-4">
-            <ExtensionsDetailPanel
-              selectedInstalled={selectedInstalled}
-              selectedInstalledUpdate={selectedInstalledUpdate}
-              selectedStoreDetail={selectedStoreDetail ?? null}
-              selectedStoreInstalled={Boolean(selectedStoreInstalled)}
-              pendingInstallSlug={state.pendingInstallSlug}
-              pendingUninstallSlug={state.pendingUninstallSlug}
-              onInstall={handleInstall}
-              onUninstall={handleUninstall}
-              isPreferenceLoading={
-                selectedInstalledPluginName.length > 0 &&
-                selectedInstalledPreferences.length > 0 &&
-                installedPreferencesQuery.isLoading
-              }
-              isPreferenceSaving={state.isPreferenceSaving}
-              preferenceValues={state.preferenceDraftState.values}
-              preferenceError={
-                state.preferenceDraftState.saveError ??
-                (installedPreferencesQuery.error instanceof Error
-                  ? installedPreferencesQuery.error.message
-                  : installedPreferencesQuery.isError
-                    ? "Failed to load extension preferences."
-                    : null)
-              }
-              validationError={state.preferenceDraftState.validationError}
-              onChangePreference={(key, value) => {
-                dispatch({
-                  type: "set-preference-draft-state",
-                  value: {
-                    ...state.preferenceDraftState,
-                    validationError: null,
-                    saveError: null,
-                    values: { ...state.preferenceDraftState.values, [key]: value },
-                  },
-                });
-              }}
-              onSavePreferences={handleSavePreferences}
-              storeDetailIsLoading={
-                Boolean(selectedStorePackageQuery.isLoading) &&
-                selectedStorePackageQuery.data == null
-              }
-              storeDetailError={
-                selectedStorePackageQuery.error instanceof Error
-                  ? selectedStorePackageQuery.error.message
-                  : selectedStorePackageQuery.isError
-                    ? "Failed to load package details."
-                    : null
-              }
-            />
-          </div>
-        </div>
-
-        <div
-          className="flex shrink-0 items-center justify-between border-t border-[var(--footer-border)] px-4 py-3.5"
-          style={{
-            backdropFilter: "blur(48px) saturate(170%)",
-            background: "var(--actions-panel-bg)",
-          }}
-        >
-          <div className="flex min-w-0 items-center gap-2 text-xs font-medium text-[var(--foreground)]">
-            {state.pendingInstallSlug || state.pendingUninstallSlug ? (
-              <Loader2 className="size-3.5 shrink-0 animate-spin text-sky-400" />
-            ) : (
-              <span
-                className={`size-2 shrink-0 rounded-full ${footerStatusToneClass}`}
-                style={{
-                  boxShadow: footerStatusToneClass.includes("sky")
-                    ? "0 0 0 4px rgba(56, 189, 248, 0.18)"
-                    : footerStatusToneClass.includes("red")
-                      ? "0 0 0 4px rgba(239, 68, 68, 0.16)"
-                      : "0 0 0 4px rgba(52, 211, 153, 0.18)",
-                }}
-              />
-            )}
-            <span className="truncate">{footerStatusLabel}</span>
-          </div>
-          <div className="flex shrink-0 items-center gap-3 text-[11.5px] font-medium text-muted-foreground/80">
+    <>
+      <div className="flex h-full w-full flex-col overflow-hidden bg-background text-foreground">
+        <div className="flex shrink-0 items-center justify-between border-b border-[var(--ui-divider)] px-4 py-3">
+          <div className="flex items-center gap-2 text-foreground/80 hover:text-foreground">
             <button
               type="button"
-              onClick={() => requestLauncherActionsToggle()}
-              className="inline-flex items-center gap-2 rounded-md border border-[var(--ui-divider)] bg-[var(--launcher-card-bg)] px-2.5 py-1.5 text-[11.5px] text-muted-foreground transition-colors hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground"
+              onClick={onBack}
+              aria-label="Go back"
+              className="flex items-center justify-center rounded-md p-1 transition-colors hover:bg-[var(--launcher-card-hover-bg)]"
             >
-              <span>Actions</span>
-              <span className="rounded border border-[var(--launcher-chip-border)] bg-[var(--launcher-chip-bg)] px-1.5 py-0.5 text-[10.5px] leading-none text-muted-foreground/90">
-                {actionsShortcutLabel}
-              </span>
+              <ChevronLeft className="size-5" />
             </button>
-            <span className="size-1 rounded-full bg-muted-foreground/30" />
-            <span>
-              {normalizedSearch.length >= EXTENSIONS_STORE_SEARCH_MIN_LENGTH
-                ? `${storeResultCount} store results`
-                : `type ${EXTENSIONS_STORE_SEARCH_MIN_LENGTH}+ chars`}
-            </span>
-            <span className="size-1 rounded-full bg-muted-foreground/30" />
-            <span>
-              {updateCount > 0 ? `${updateCount} updates ready` : "everything up to date"}
-            </span>
+            <h2 className="text-[15px] font-semibold text-foreground">Community</h2>
+          </div>
+          <span className="text-[12px] tracking-wide text-muted-foreground">
+            Installed extensions appear first.
+          </span>
+        </div>
+
+        <div className="flex min-h-0 flex-1 flex-col">
+          <div className="flex shrink-0 items-center gap-3 border-b border-[var(--ui-divider)] px-4 py-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Search extensions..."
+                value={extensionsUi.search}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                onKeyDown={handleSearchKeyDown}
+                className="w-full rounded-lg border border-[var(--ui-divider)] bg-[var(--launcher-card-bg)] py-2 pl-10 pr-4 text-sm text-foreground/90 outline-none transition-colors placeholder:text-muted-foreground focus:border-[var(--ring)]"
+                autoFocus
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => void handleRefreshInstalled()}
+              className="flex items-center gap-1.5 rounded-lg border border-[var(--ui-divider)] bg-[var(--launcher-card-bg)] px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground disabled:opacity-40"
+            >
+              <RefreshCcw className="size-3.5" />
+              Refresh
+            </button>
+          </div>
+
+          <div className="flex-1 min-h-0 grid grid-cols-12 bg-transparent">
+            <div className="custom-scrollbar col-span-5 h-full min-h-0 overflow-y-auto border-r border-[var(--ui-divider)] p-2">
+              <ExtensionsSidebar
+                installedExtensions={filteredInstalledExtensions}
+                isInstalledLoading={installedQuery.isLoading && installedQuery.data == null}
+                installedErrorMessage={
+                  installedQuery.isError ? "Failed to load installed extensions." : null
+                }
+                selectedInstalledId={
+                  state.selectedRow?.kind === "installed" ? state.selectedRow.id : null
+                }
+                installedUpdateKeys={installedUpdateKeys}
+                onSelectInstalled={(id) =>
+                  dispatch({ type: "set-selected-row", value: { kind: "installed", id } })
+                }
+                search={normalizedSearch}
+                minimumSearchLength={EXTENSIONS_STORE_SEARCH_MIN_LENGTH}
+                storeResults={storeSearchQuery.data ?? []}
+                selectedStoreId={state.selectedRow?.kind === "store" ? state.selectedRow.id : null}
+                onSelectStore={(id) =>
+                  dispatch({ type: "set-selected-row", value: { kind: "store", id } })
+                }
+                isStoreLoading={Boolean(storeSearchQuery.isLoading)}
+                isStoreError={Boolean(storeSearchQuery.isError)}
+                storeErrorMessage={
+                  storeSearchQuery.error instanceof Error
+                    ? storeSearchQuery.error.message
+                    : storeSearchQuery.isError
+                      ? "Store search failed."
+                      : null
+                }
+                isSearchDebouncing={extensionsUi.isSearchDebouncing}
+              />
+            </div>
+            <div className="custom-scrollbar col-span-7 flex min-h-0 flex-col overflow-y-auto p-4">
+              <ExtensionsDetailPanel
+                selectedInstalled={selectedInstalled}
+                selectedInstalledUpdate={selectedInstalledUpdate}
+                selectedStoreDetail={selectedStoreDetail ?? null}
+                selectedStoreInstalled={Boolean(selectedStoreInstalled)}
+                pendingInstallSlug={state.pendingInstallSlug}
+                pendingUninstallSlug={state.pendingUninstallSlug}
+                onInstall={handleInstall}
+                onUninstall={handleUninstall}
+                isPreferenceLoading={
+                  selectedInstalledPluginName.length > 0 &&
+                  selectedInstalledPreferences.length > 0 &&
+                  installedPreferencesQuery.isLoading
+                }
+                isPreferenceSaving={state.isPreferenceSaving}
+                preferenceValues={state.preferenceDraftState.values}
+                preferenceError={
+                  state.preferenceDraftState.saveError ??
+                  (installedPreferencesQuery.error instanceof Error
+                    ? installedPreferencesQuery.error.message
+                    : installedPreferencesQuery.isError
+                      ? "Failed to load extension preferences."
+                      : null)
+                }
+                validationError={state.preferenceDraftState.validationError}
+                onChangePreference={(key, value) => {
+                  dispatch({
+                    type: "set-preference-draft-state",
+                    value: {
+                      ...state.preferenceDraftState,
+                      validationError: null,
+                      saveError: null,
+                      values: { ...state.preferenceDraftState.values, [key]: value },
+                    },
+                  });
+                }}
+                onSavePreferences={handleSavePreferences}
+                storeDetailIsLoading={
+                  Boolean(selectedStorePackageQuery.isLoading) &&
+                  selectedStorePackageQuery.data == null
+                }
+                storeDetailError={
+                  selectedStorePackageQuery.error instanceof Error
+                    ? selectedStorePackageQuery.error.message
+                    : selectedStorePackageQuery.isError
+                      ? "Failed to load package details."
+                      : null
+                }
+              />
+            </div>
+          </div>
+
+          <div
+            className="flex shrink-0 items-center justify-between border-t border-[var(--footer-border)] px-4 py-3.5"
+            style={{
+              backdropFilter: "blur(48px) saturate(170%)",
+              background: "var(--actions-panel-bg)",
+            }}
+          >
+            <div className="flex min-w-0 items-center gap-2 text-xs font-medium text-[var(--foreground)]">
+              {state.pendingInstallSlug || state.pendingUninstallSlug ? (
+                <Loader2 className="size-3.5 shrink-0 animate-spin text-sky-400" />
+              ) : (
+                <span
+                  className={`size-2 shrink-0 rounded-full ${footerStatusToneClass}`}
+                  style={{
+                    boxShadow: footerStatusToneClass.includes("sky")
+                      ? "0 0 0 4px rgba(56, 189, 248, 0.18)"
+                      : footerStatusToneClass.includes("red")
+                        ? "0 0 0 4px rgba(239, 68, 68, 0.16)"
+                        : "0 0 0 4px rgba(52, 211, 153, 0.18)",
+                  }}
+                />
+              )}
+              <span className="truncate">{footerStatusLabel}</span>
+            </div>
+            <div className="flex shrink-0 items-center gap-3 text-[11.5px] font-medium text-muted-foreground/80">
+              <button
+                type="button"
+                onClick={() => requestLauncherActionsToggle()}
+                className="inline-flex items-center gap-2 rounded-md border border-[var(--ui-divider)] bg-[var(--launcher-card-bg)] px-2.5 py-1.5 text-[11.5px] text-muted-foreground transition-colors hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground"
+              >
+                <span>Actions</span>
+                <span className="rounded border border-[var(--launcher-chip-border)] bg-[var(--launcher-chip-bg)] px-1.5 py-0.5 text-[10.5px] leading-none text-muted-foreground/90">
+                  {actionsShortcutLabel}
+                </span>
+              </button>
+              <span className="size-1 rounded-full bg-muted-foreground/30" />
+              <span>
+                {normalizedSearch.length >= EXTENSIONS_STORE_SEARCH_MIN_LENGTH
+                  ? `${storeResultCount} store results`
+                  : `type ${EXTENSIONS_STORE_SEARCH_MIN_LENGTH}+ chars`}
+              </span>
+              <span className="size-1 rounded-full bg-muted-foreground/30" />
+              <span>
+                {updateCount > 0 ? `${updateCount} updates ready` : "everything up to date"}
+              </span>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+
+      <Dialog
+        open={installConfirmation !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            closeInstallConfirmation(false);
+          }
+        }}
+      >
+        <DialogContent showCloseButton={false} className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Potential compatibility risks</DialogTitle>
+            <DialogDescription>
+              Beam found a few commands in{" "}
+              {installConfirmation?.title ? `"${installConfirmation.title}"` : "this extension"}{" "}
+              that may rely on APIs Beam does not fully support yet.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            <div className="space-y-2">
+              {visibleInstallViolations.map((entry, index) => (
+                <div
+                  key={`${entry.commandName}:${entry.reason}:${index}`}
+                  className="rounded-xl border border-[var(--ui-divider)] bg-[var(--launcher-card-bg)] px-3 py-2.5"
+                >
+                  <div className="text-sm font-medium text-foreground">{entry.commandName}</div>
+                  <div className="mt-1 text-xs leading-5 text-muted-foreground">{entry.reason}</div>
+                </div>
+              ))}
+            </div>
+
+            {hiddenInstallViolationCount > 0 ? (
+              <div className="text-xs text-muted-foreground">
+                +{hiddenInstallViolationCount} more potential issue
+                {hiddenInstallViolationCount === 1 ? "" : "s"} not shown here.
+              </div>
+            ) : null}
+
+            <div className="text-xs leading-5 text-muted-foreground">
+              You can still install it, but some commands may not behave correctly until Beam adds
+              support for the missing APIs.
+            </div>
+          </div>
+
+          <DialogFooter className="sm:justify-end">
+            <Button type="button" variant="outline" onClick={() => closeInstallConfirmation(false)}>
+              Cancel
+            </Button>
+            <Button type="button" onClick={() => closeInstallConfirmation(true)}>
+              Install anyway
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

@@ -87,14 +87,76 @@ function collectChildKeyParts(children: React.ReactNode, limit = 3): string[] {
   return parts;
 }
 
-function inferCompatKey(type: unknown, props: Record<string, unknown> | null): CompatKey | undefined {
+function collectScalarPropKeyParts(
+  props: Record<string, unknown>,
+  limit = 3,
+): Array<string | number> {
+  const parts: Array<string | number> = [];
+
+  for (const propName of AUTO_KEY_PROP_NAMES) {
+    const candidate = readAutoKeyValue(props[propName]);
+    if (candidate !== undefined) {
+      parts.push(candidate);
+      if (parts.length >= limit) {
+        return parts;
+      }
+    }
+  }
+
+  for (const [propName, value] of Object.entries(props)) {
+    if (
+      propName === "children" ||
+      propName === "key" ||
+      propName === "ref" ||
+      AUTO_KEY_PROP_NAMES.includes(propName as (typeof AUTO_KEY_PROP_NAMES)[number])
+    ) {
+      continue;
+    }
+
+    if (typeof value === "string") {
+      const trimmed = value.trim();
+      if (trimmed.length > 0) {
+        parts.push(`${propName}:${trimmed}`);
+      }
+    } else if (typeof value === "number" && Number.isFinite(value)) {
+      parts.push(`${propName}:${value}`);
+    } else if (typeof value === "boolean") {
+      parts.push(`${propName}:${value}`);
+    }
+
+    if (parts.length >= limit) {
+      break;
+    }
+  }
+
+  return parts;
+}
+
+function inferCompatKey(
+  type: unknown,
+  props: Record<string, unknown> | null,
+): CompatKey | undefined {
   if (!props) {
     return undefined;
   }
 
-  const typeName = getCompatTypeName(type);
-  if (!/(?:^|\.)(?:Item|Section)$/.test(typeName)) {
+  const typeName = getCompatTypeName(type).trim();
+  if (!typeName) {
     return undefined;
+  }
+
+  if (!/(?:^|\.)(?:Item|Section)$/.test(typeName)) {
+    const scalarKeyParts = collectScalarPropKeyParts(props);
+    if (scalarKeyParts.length > 0) {
+      return `${typeName}:${scalarKeyParts.join("|")}`;
+    }
+
+    const childKeyParts = collectChildKeyParts(props.children as React.ReactNode);
+    if (childKeyParts.length > 0) {
+      return `${typeName}:${childKeyParts.join("|")}`;
+    }
+
+    return /^[a-z]/.test(typeName) || typeName.startsWith("_") ? undefined : typeName;
   }
 
   for (const propName of AUTO_KEY_PROP_NAMES) {
@@ -156,7 +218,7 @@ export const createCompatElement = (
   const resolvedKey =
     typeof maybeKey === "string" || typeof maybeKey === "number"
       ? maybeKey
-      : normalized.key ?? inferCompatKey(type, normalized.props);
+      : (normalized.key ?? inferCompatKey(type, normalized.props));
 
   if (resolvedKey !== undefined) {
     return React.createElement(type as React.ElementType, {
@@ -177,7 +239,7 @@ export const createCompatElementDev = (
   const resolvedKey =
     typeof key === "string" || typeof key === "number"
       ? key
-      : normalized.key ?? inferCompatKey(type, normalized.props);
+      : (normalized.key ?? inferCompatKey(type, normalized.props));
   if (resolvedKey == null) {
     return React.createElement(type as React.ElementType, normalized.props);
   }

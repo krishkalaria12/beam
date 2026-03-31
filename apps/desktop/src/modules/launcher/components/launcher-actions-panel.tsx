@@ -21,7 +21,8 @@ import { useMountEffect } from "@/hooks/use-mount-effect";
 import { LauncherActionsAliasPage } from "./launcher-actions-alias-page";
 import { LauncherActionsHotkeyPage } from "./launcher-actions-hotkey-page";
 import {
-  filterActionItems,
+  filterActionSections,
+  flattenActionSections,
   findAliasConflictCommandId,
   findHotkeyConflictCommandId,
   formatCommandName,
@@ -36,13 +37,17 @@ import {
 } from "@/modules/launcher/managed-items";
 import type {
   ActionPageId,
+  LauncherActionCustomPage,
   LauncherActionItem,
+  LauncherActionSection,
   LauncherActionsPanelProps,
   LauncherActionTarget,
   SaveFeedback,
 } from "@/modules/launcher/types";
 
 export type { LauncherActionItem } from "@/modules/launcher/types";
+
+const ROOT_ACTION_PAGE_KEY = "__root__";
 
 function buildDefaultRootItems(): LauncherActionItem[] {
   return [
@@ -102,7 +107,7 @@ function insertItemsBeforeBack(
     return [...items];
   }
 
-  const backIndex = items.findIndex((item) => item.label === "Back");
+  const backIndex = items.findIndex((item) => item.id.endsWith("-back"));
   if (backIndex < 0) {
     return [...items, ...extraItems];
   }
@@ -110,12 +115,50 @@ function insertItemsBeforeBack(
   return [...items.slice(0, backIndex), ...extraItems, ...items.slice(backIndex)];
 }
 
-function createEmptySelectionByPage(): Record<ActionPageId, string> {
+function createActionSection(id: string, items: readonly LauncherActionItem[], title?: string) {
   return {
-    root: "",
-    hotkey: "",
-    alias: "",
-  };
+    id,
+    title,
+    items: [...items],
+  } satisfies LauncherActionSection;
+}
+
+function insertSectionItemsBeforeBack(
+  sections: readonly LauncherActionSection[],
+  extraItems: readonly LauncherActionItem[],
+): LauncherActionSection[] {
+  if (extraItems.length === 0) {
+    return sections.map((section) => ({ ...section, items: [...section.items] }));
+  }
+
+  for (let index = 0; index < sections.length; index += 1) {
+    const backIndex = sections[index].items.findIndex((item) => item.label === "Back");
+    if (backIndex < 0) {
+      continue;
+    }
+
+    return sections.map((section, sectionIndex) =>
+      sectionIndex === index
+        ? {
+            ...section,
+            items: insertItemsBeforeBack(section.items, extraItems),
+          }
+        : { ...section, items: [...section.items] },
+    );
+  }
+
+  if (sections.length === 0) {
+    return [createActionSection(`${ROOT_ACTION_PAGE_KEY}-extras`, extraItems)];
+  }
+
+  return sections.map((section, index) =>
+    index === sections.length - 1
+      ? {
+          ...section,
+          items: [...section.items, ...extraItems],
+        }
+      : { ...section, items: [...section.items] },
+  );
 }
 
 function getAliasSaveSuccessMessage(normalizedAlias: string) {
@@ -256,6 +299,7 @@ function buildAliasAvailability(options: {
 interface PageStackEntry {
   id: ActionPageId;
   target: LauncherActionTarget | null;
+  customPage?: LauncherActionCustomPage;
 }
 
 export function LauncherActionsPanel({ open, ...props }: LauncherActionsPanelProps) {
@@ -279,6 +323,7 @@ function LauncherActionsPanelContent({
   rootSearchPlaceholder,
   showItemDescriptions = false,
   rootItems,
+  rootSections,
   defaultRootItemsMode = "replace",
   defaultTarget,
 }: Omit<LauncherActionsPanelProps, "open">) {
@@ -296,7 +341,7 @@ function LauncherActionsPanelContent({
   const [pageStack, setPageStack] = React.useState<PageStackEntry[]>([
     { id: "root", target: defaultTarget ?? null },
   ]);
-  const [rootQuery, setRootQuery] = React.useState("");
+  const [queryByPageKey, setQueryByPageKey] = React.useState<Record<string, string>>({});
   const [hotkeyDraftsByTarget, setHotkeyDraftsByTarget] = React.useState<Record<string, string>>(
     {},
   );
@@ -306,9 +351,7 @@ function LauncherActionsPanelContent({
   const [savingPage, setSavingPage] = React.useState<"hotkey" | "alias" | null>(null);
   const [hotkeyFeedback, setHotkeyFeedback] = React.useState<SaveFeedback | null>(null);
   const [aliasFeedback, setAliasFeedback] = React.useState<SaveFeedback | null>(null);
-  const [selectedItemByPage, setSelectedItemByPage] = React.useState<Record<ActionPageId, string>>(
-    createEmptySelectionByPage,
-  );
+  const [selectedItemByPage, setSelectedItemByPage] = React.useState<Record<string, string>>({});
 
   const currentPage = pageStack[pageStack.length - 1] ?? {
     id: "root" as ActionPageId,
@@ -337,16 +380,48 @@ function LauncherActionsPanelContent({
     : savedHotkeyValue;
   const defaultRootItems = buildDefaultRootItems();
   const autoRootItems = buildAutoRootItems(defaultTarget);
-  const resolvedRootItems =
-    rootItems == null
-      ? defaultRootItems
-      : defaultRootItemsMode === "append"
-        ? [...rootItems, ...defaultRootItems]
-        : rootItems;
-  const rootItemsWithAutoHotkey = resolvedRootItems.some((item) => item.nextPageId === "hotkey")
-    ? resolvedRootItems
-    : insertItemsBeforeBack(resolvedRootItems, autoRootItems);
-  const filteredRootItems = filterActionItems(rootItemsWithAutoHotkey, rootQuery);
+  const resolvedTopLevelRootSections = (() => {
+    const baseSections =
+      rootSections != null
+        ? defaultRootItemsMode === "append"
+          ? [
+              ...rootSections,
+              createActionSection(`${ROOT_ACTION_PAGE_KEY}-default`, defaultRootItems),
+            ]
+          : rootSections.map((section) => ({ ...section, items: [...section.items] }))
+        : [
+            createActionSection(
+              `${ROOT_ACTION_PAGE_KEY}-root`,
+              rootItems == null
+                ? defaultRootItems
+                : defaultRootItemsMode === "append"
+                  ? [...rootItems, ...defaultRootItems]
+                  : rootItems,
+            ),
+          ];
+
+    const hasHotkeyPage = baseSections.some((section) =>
+      section.items.some((item) => item.nextPageId === "hotkey"),
+    );
+
+    return hasHotkeyPage ? baseSections : insertSectionItemsBeforeBack(baseSections, autoRootItems);
+  })();
+  const currentRootPage =
+    currentPageId === "root"
+      ? (currentPage.customPage ?? {
+          id: ROOT_ACTION_PAGE_KEY,
+          title: rootTitle,
+          subtitle: undefined,
+          searchPlaceholder: rootSearchPlaceholder ?? "Search actions...",
+          sections: resolvedTopLevelRootSections,
+        })
+      : null;
+  const currentRootPageKey = currentRootPage?.id ?? ROOT_ACTION_PAGE_KEY;
+  const currentRootQuery = queryByPageKey[currentRootPageKey] ?? "";
+  const filteredRootSections = currentRootPage
+    ? filterActionSections(currentRootPage.sections, currentRootQuery)
+    : [];
+  const filteredRootItems = flattenActionSections(filteredRootSections);
   const hotkeyConflictCommandId = currentCommandId
     ? findHotkeyConflictCommandId(hotkeyMap, currentCommandId, hotkeyValue)
     : null;
@@ -361,7 +436,7 @@ function LauncherActionsPanelContent({
     commandAliasesById,
     managedAliasesById,
   });
-  const preferredRootItemId = selectedItemByPage.root;
+  const preferredRootItemId = selectedItemByPage[currentRootPageKey] ?? "";
   const hasPreferredRootItem = filteredRootItems.some(
     (item) => item.id === preferredRootItemId && !item.disabled,
   );
@@ -374,14 +449,14 @@ function LauncherActionsPanelContent({
       ? "Set Hotkey"
       : currentPageId === "alias"
         ? "Set Alias"
-        : (rootTitle ?? "Configure Application...");
+        : (currentRootPage?.title ?? rootTitle ?? "Configure Application...");
 
   const panelSubtitle =
     currentPageId === "hotkey"
       ? (getActionTargetTitle(currentTarget) ?? "Assign quick keyboard shortcuts.")
       : currentPageId === "alias"
         ? (getActionTargetTitle(currentTarget) ?? "Create quick trigger phrases.")
-        : undefined;
+        : currentRootPage?.subtitle;
 
   function goBack() {
     setPageStack((previous) => {
@@ -720,11 +795,11 @@ function LauncherActionsPanelContent({
           }
 
           setSelectedItemByPage((previous) =>
-            previous.root === value
+            previous[currentRootPageKey] === value
               ? previous
               : {
                   ...previous,
-                  root: value,
+                  [currentRootPageKey]: value,
                 },
           );
         }}
@@ -747,7 +822,7 @@ function LauncherActionsPanelContent({
 
           if (
             event.key === "Backspace" &&
-            rootQuery.length === 0 &&
+            currentRootQuery.length === 0 &&
             pageStack.length > 1 &&
             currentPageId === "root" &&
             event.target instanceof HTMLElement &&
@@ -782,7 +857,7 @@ function LauncherActionsPanelContent({
           }
         }}
       >
-        {currentPageId !== "root" ? (
+        {currentPageId !== "root" || pageStack.length > 1 ? (
           <div className="border-b border-[var(--ui-divider)] px-3.5 py-3">
             <div className="flex items-center gap-2">
               {pageStack.length > 1 ? (
@@ -813,22 +888,50 @@ function LauncherActionsPanelContent({
           <LauncherActionsRootPage
             inputId={inputId}
             inputRef={rootInputMountRef}
-            query={rootQuery}
-            searchPlaceholder={rootSearchPlaceholder ?? "Search actions..."}
+            query={currentRootQuery}
+            searchPlaceholder={
+              currentRootPage?.searchPlaceholder ?? rootSearchPlaceholder ?? "Search actions..."
+            }
             showItemDescriptions={showItemDescriptions}
-            items={filteredRootItems}
-            onQueryChange={setRootQuery}
+            sections={filteredRootSections}
+            onQueryChange={(value) => {
+              setQueryByPageKey((previous) => ({
+                ...previous,
+                [currentRootPageKey]: value,
+              }));
+            }}
             onNavigate={(item) => {
               if (item.nextPageId) {
                 setSelectedItemByPage((previous) =>
-                  previous.root === item.id
+                  previous[currentRootPageKey] === item.id
                     ? previous
                     : {
                         ...previous,
-                        root: item.id,
+                        [currentRootPageKey]: item.id,
                       },
                 );
                 openNextPage(item.nextPageId, item.nextPageTarget ?? currentTarget);
+                return;
+              }
+
+              if (item.childPage) {
+                item.onNavigate?.();
+                setSelectedItemByPage((previous) =>
+                  previous[currentRootPageKey] === item.id
+                    ? previous
+                    : {
+                        ...previous,
+                        [currentRootPageKey]: item.id,
+                      },
+                );
+                setPageStack((previous) => [
+                  ...previous,
+                  {
+                    id: "root",
+                    target: item.nextPageTarget ?? currentTarget,
+                    customPage: item.childPage,
+                  },
+                ]);
                 return;
               }
 
