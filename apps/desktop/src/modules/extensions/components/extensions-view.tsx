@@ -12,6 +12,7 @@ import {
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { CommandFooterBar } from "@/components/command/command-footer-bar";
 import {
   Dialog,
   DialogContent,
@@ -21,7 +22,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import debounce from "@/lib/debounce";
-import { requestLauncherActionsToggle } from "@/lib/launcher-actions";
 import { ExtensionsDetailPanel } from "@/modules/extensions/components/extensions-view/extensions-detail-panel";
 import { ExtensionsSidebar } from "@/modules/extensions/components/extensions-view/extensions-sidebar";
 import {
@@ -120,14 +120,6 @@ function toInstallInput(
     releaseVersion: input.latestRelease.version,
     channel: input.latestRelease.channelName || undefined,
   };
-}
-
-function isMacPlatform(): boolean {
-  if (typeof navigator === "undefined") {
-    return false;
-  }
-
-  return /mac/i.test(navigator.platform);
 }
 
 function isMissingRequiredField(field: ExtensionPreferenceField, value: unknown): boolean {
@@ -807,7 +799,6 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
     return clearExtensionActionsState;
   });
 
-  const updateCount = storeUpdatesQuery.data?.length ?? 0;
   const storeResultCount =
     normalizedSearch.length >= EXTENSIONS_STORE_SEARCH_MIN_LENGTH
       ? (storeSearchQuery.data?.length ?? 0)
@@ -834,7 +825,6 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
     : state.pendingInstallSlug || state.pendingUninstallSlug
       ? "bg-sky-400"
       : "bg-emerald-400/80";
-  const actionsShortcutLabel = isMacPlatform() ? "⌘K" : "Ctrl+K";
   const visibleInstallViolations = installConfirmation?.violations.slice(0, 4) ?? [];
   const hiddenInstallViolationCount = Math.max(
     0,
@@ -992,53 +982,36 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
             </div>
           </div>
 
-          <div
-            className="flex shrink-0 items-center justify-between border-t border-[var(--footer-border)] px-4 py-3.5"
-            style={{
-              backdropFilter: "blur(48px) saturate(170%)",
-              background: "var(--actions-panel-bg)",
-            }}
-          >
-            <div className="flex min-w-0 items-center gap-2 text-xs font-medium text-[var(--foreground)]">
-              {state.pendingInstallSlug || state.pendingUninstallSlug ? (
-                <Loader2 className="size-3.5 shrink-0 animate-spin text-sky-400" />
-              ) : (
-                <span
-                  className={`size-2 shrink-0 rounded-full ${footerStatusToneClass}`}
-                  style={{
-                    boxShadow: footerStatusToneClass.includes("sky")
-                      ? "0 0 0 4px rgba(56, 189, 248, 0.18)"
-                      : footerStatusToneClass.includes("red")
-                        ? "0 0 0 4px rgba(239, 68, 68, 0.16)"
-                        : "0 0 0 4px rgba(52, 211, 153, 0.18)",
-                  }}
-                />
-              )}
-              <span className="truncate">{footerStatusLabel}</span>
-            </div>
-            <div className="flex shrink-0 items-center gap-3 text-[11.5px] font-medium text-muted-foreground/80">
-              <button
-                type="button"
-                onClick={() => requestLauncherActionsToggle()}
-                className="inline-flex items-center gap-2 rounded-md border border-[var(--ui-divider)] bg-[var(--launcher-card-bg)] px-2.5 py-1.5 text-[11.5px] text-muted-foreground transition-colors hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground"
-              >
-                <span>Actions</span>
-                <span className="rounded border border-[var(--launcher-chip-border)] bg-[var(--launcher-chip-bg)] px-1.5 py-0.5 text-[10.5px] leading-none text-muted-foreground/90">
-                  {actionsShortcutLabel}
-                </span>
-              </button>
-              <span className="size-1 rounded-full bg-muted-foreground/30" />
+          <CommandFooterBar
+            className="extensions-footer h-10 border-t border-[var(--footer-border)] px-4"
+            leftSlot={
+              <>
+                {state.pendingInstallSlug || state.pendingUninstallSlug ? (
+                  <Loader2 className="size-3.5 shrink-0 animate-spin text-sky-400" />
+                ) : (
+                  <span
+                    className={`size-2 shrink-0 rounded-full ${footerStatusToneClass}`}
+                    style={{
+                      boxShadow: footerStatusToneClass.includes("sky")
+                        ? "0 0 0 4px rgba(56, 189, 248, 0.18)"
+                        : footerStatusToneClass.includes("red")
+                          ? "0 0 0 4px rgba(239, 68, 68, 0.16)"
+                          : "0 0 0 4px rgba(52, 211, 153, 0.18)",
+                    }}
+                  />
+                )}
+                <span className="truncate font-medium text-foreground">{footerStatusLabel}</span>
+              </>
+            }
+            rightSlot={
               <span>
                 {normalizedSearch.length >= EXTENSIONS_STORE_SEARCH_MIN_LENGTH
                   ? `${storeResultCount} store results`
                   : `type ${EXTENSIONS_STORE_SEARCH_MIN_LENGTH}+ chars`}
               </span>
-              <span className="size-1 rounded-full bg-muted-foreground/30" />
-              <span>
-                {updateCount > 0 ? `${updateCount} updates ready` : "everything up to date"}
-              </span>
-            </div>
-          </div>
+            }
+            rightSlotClassName="text-[11.5px] font-medium text-muted-foreground/80"
+          />
         </div>
       </div>
 

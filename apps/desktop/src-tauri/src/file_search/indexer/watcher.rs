@@ -3,6 +3,7 @@ use notify_debouncer_mini::{
     new_debouncer, notify::RecommendedWatcher, notify::RecursiveMode, DebounceEventResult,
     Debouncer,
 };
+use std::fs;
 use std::time::Duration;
 use tokio::sync::mpsc::UnboundedSender;
 
@@ -62,8 +63,39 @@ pub fn start_watcher(tx: UnboundedSender<IndexUpdate>) -> Result<Debouncer<Recom
 
     debouncer
         .watcher()
-        .watch(&root, RecursiveMode::Recursive)
+        .watch(&root, RecursiveMode::NonRecursive)
         .map_err(|e| IndexerError::WatcherError(e.to_string()))?;
+
+    let root_entries =
+        fs::read_dir(&root).map_err(|e| IndexerError::WatcherError(e.to_string()))?;
+
+    for entry_result in root_entries {
+        let entry = match entry_result {
+            Ok(entry) => entry,
+            Err(error) => {
+                warn!("Skipping watcher entry in {}: {}", root.display(), error);
+                continue;
+            }
+        };
+
+        let path = entry.path();
+        if is_ignored_path(&path) {
+            continue;
+        }
+
+        let recursive_mode = match entry.file_type() {
+            Ok(file_type) if file_type.is_dir() => RecursiveMode::Recursive,
+            Ok(_) => RecursiveMode::NonRecursive,
+            Err(error) => {
+                warn!("Skipping watcher path {}: {}", path.display(), error);
+                continue;
+            }
+        };
+
+        if let Err(error) = debouncer.watcher().watch(&path, recursive_mode) {
+            warn!("Skipping watcher path {}: {}", path.display(), error);
+        }
+    }
 
     Ok(debouncer)
 }
