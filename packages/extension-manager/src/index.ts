@@ -1,4 +1,10 @@
 import "./globals";
-import { main } from "./worker";
+import { isMainThread } from "node:worker_threads";
+import { startCommandWorker } from "./command-worker";
+import { startSupervisor } from "./supervisor";
 
-main();
+if (isMainThread) {
+  startSupervisor();
+} else {
+  startCommandWorker();
+}

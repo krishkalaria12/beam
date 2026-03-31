@@ -5,6 +5,27 @@ import { useMountEffect } from "@/hooks/use-mount-effect";
 import { extensionManagerService } from "@/modules/extensions/extension-manager-service";
 import { type ExtensionToast, useExtensionRuntimeStore } from "@/modules/extensions/runtime/store";
 
+const MAX_BRIDGE_TOAST_TITLE_LENGTH = 120;
+const MAX_BRIDGE_TOAST_MESSAGE_LENGTH = 320;
+const MAX_BRIDGE_TOAST_ACTION_LENGTH = 48;
+
+function clampToastText(value: string | undefined, maxLength: number): string | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  const compact = value.replace(/\s+/g, " ").trim();
+  if (compact.length === 0) {
+    return undefined;
+  }
+
+  if (compact.length <= maxLength) {
+    return compact;
+  }
+
+  return `${compact.slice(0, maxLength - 1).trimEnd()}…`;
+}
+
 function safeDispatchToastAction(toastId: number, actionType: "primary" | "secondary") {
   try {
     extensionManagerService.dispatchToastAction(toastId, actionType);
@@ -22,8 +43,8 @@ function safeTriggerToastHide(toastId: number) {
 }
 
 function showOrUpdateToast(entry: ExtensionToast) {
-  const title = entry.title.trim() || "Extension";
-  const description = entry.message?.trim() || undefined;
+  const title = clampToastText(entry.title, MAX_BRIDGE_TOAST_TITLE_LENGTH) || "Extension";
+  const description = clampToastText(entry.message, MAX_BRIDGE_TOAST_MESSAGE_LENGTH);
 
   const options: ExternalToast = {
     id: entry.id,
@@ -40,7 +61,7 @@ function showOrUpdateToast(entry: ExtensionToast) {
 
   if (entry.primaryAction?.onAction) {
     options.action = {
-      label: entry.primaryAction.title.trim() || "Action",
+      label: clampToastText(entry.primaryAction.title, MAX_BRIDGE_TOAST_ACTION_LENGTH) || "Action",
       onClick: () => {
         safeDispatchToastAction(entry.id, "primary");
       },
@@ -49,7 +70,7 @@ function showOrUpdateToast(entry: ExtensionToast) {
 
   if (entry.secondaryAction?.onAction) {
     options.cancel = {
-      label: entry.secondaryAction.title.trim() || "Cancel",
+      label: clampToastText(entry.secondaryAction.title, MAX_BRIDGE_TOAST_ACTION_LENGTH) || "Cancel",
       onClick: () => {
         safeDispatchToastAction(entry.id, "secondary");
       },

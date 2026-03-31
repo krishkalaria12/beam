@@ -1,3 +1,4 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { isTauri } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { useCallback } from "react";
@@ -8,16 +9,16 @@ import { persistentExtensionRunnerManager } from "@/modules/extensions/backgroun
 import { findExtensionCommandByQualifiedName } from "@/modules/extensions/extension-catalog";
 import { extensionManagerService } from "@/modules/extensions/extension-manager-service";
 import { parseRaycastDeepLink } from "@/modules/extensions/extension-manager/deep-link";
-import { useExtensionRuntimeStore } from "@/modules/extensions/runtime/store";
+import { prepareLauncherPanel } from "@/modules/launcher/lib/launcher-panel-preparation";
 import { useExtensionsUiStore } from "@/modules/extensions/store/use-extensions-ui-store";
 import { useMountEffect } from "@/hooks/use-mount-effect";
 
 interface UseLauncherDeepLinksInput {
   openPanel: (panel: CommandPanel, takeover?: boolean) => void;
-  backToCommands: () => void;
 }
 
-export function useLauncherDeepLinks({ openPanel, backToCommands }: UseLauncherDeepLinksInput) {
+export function useLauncherDeepLinks({ openPanel }: UseLauncherDeepLinksInput) {
+  const queryClient = useQueryClient();
   const openExtensionsFromDeepLink = useCallback(
     (extensionSlug?: string) => {
       openPanel("extensions", true);
@@ -73,36 +74,37 @@ export function useLauncherDeepLinks({ openPanel, backToCommands }: UseLauncherD
         return;
       }
 
-      useExtensionRuntimeStore.getState().resetForNewPlugin({
-        pluginPath: matchedPlugin.pluginPath,
-        pluginMode,
+      const subtitle =
+        [matchedPlugin.pluginTitle, matchedPlugin.description ?? ""]
+          .filter((part) => part.trim().length > 0)
+          .join(" - ") || undefined;
+
+      const launchPromise = extensionManagerService.launchForegroundPlugin({
         title: matchedPlugin.title,
-        subtitle:
-          [matchedPlugin.pluginTitle, matchedPlugin.description ?? ""]
-            .filter((part) => part.trim().length > 0)
-            .join(" - ") || undefined,
+        subtitle,
+        pluginPath: matchedPlugin.pluginPath,
+        mode: pluginMode,
+        aiAccessStatus: false,
       });
 
       if (pluginMode === "view") {
-        openPanel("extension-runner", true);
+        await Promise.all([
+          prepareLauncherPanel("extension-runner", queryClient).then(() => {
+            openPanel("extension-runner", true);
+          }),
+          launchPromise,
+        ]);
+        return;
       }
 
       try {
-        await extensionManagerService.runPlugin({
-          pluginPath: matchedPlugin.pluginPath,
-          mode: pluginMode,
-          aiAccessStatus: false,
-        });
+        await launchPromise;
       } catch (error) {
-        useExtensionRuntimeStore.getState().resetRuntime();
-        if (pluginMode === "view") {
-          backToCommands();
-        }
         const message = error instanceof Error ? error.message : String(error);
         toast.error(`Failed to launch extension command: ${message}`);
       }
     },
-    [backToCommands, openExtensionsFromDeepLink, openPanel],
+    [openExtensionsFromDeepLink, openPanel, queryClient],
   );
 
   useMountEffect(() => {

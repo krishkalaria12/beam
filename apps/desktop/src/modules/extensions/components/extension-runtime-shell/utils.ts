@@ -7,6 +7,8 @@ import type { ExtensionActionPanelPage } from "@/modules/extensions/components/r
 import type { UseExtensionRunnerStateResult } from "@/modules/extensions/components/runner/use-extension-runner-state";
 import { asString } from "@/modules/extensions/components/runner/utils";
 
+const FAILURE_EMPTY_DESCRIPTION_MAX_LENGTH = 320;
+
 export interface AccessoryDescriptor {
   key: string;
   text?: string;
@@ -235,6 +237,45 @@ export function resolveContentValue(content: unknown): unknown {
     return (content as { value?: unknown }).value;
   }
   return content;
+}
+
+function compactInlineErrorText(value: string | undefined, maxLength: number): string | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  const compact = value.replace(/\s+/g, " ").trim();
+  if (compact.length === 0) {
+    return undefined;
+  }
+
+  if (compact.length <= maxLength) {
+    return compact;
+  }
+
+  return `${compact.slice(0, maxLength - 1).trimEnd()}…`;
+}
+
+export function readRuntimeFailureEmptyState(state: UseExtensionRunnerStateResult): {
+  title: string;
+  description?: string;
+} | null {
+  const failureToast =
+    state.activeToast?.style === "FAILURE" &&
+    (state.activeToast.title.trim() || state.activeToast.message?.trim())
+      ? state.activeToast
+      : null;
+
+  if (!failureToast) {
+    return null;
+  }
+
+  return {
+    title: compactInlineErrorText(failureToast.title, 120) || "Extension request failed",
+    description:
+      compactInlineErrorText(failureToast.message, FAILURE_EMPTY_DESCRIPTION_MAX_LENGTH) ||
+      "The extension could not load any rows because its latest request failed.",
+  };
 }
 
 export function selectedActions(state: UseExtensionRunnerStateResult): ExtensionActionPanelPage {

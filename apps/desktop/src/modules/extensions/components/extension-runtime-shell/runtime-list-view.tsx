@@ -19,6 +19,7 @@ import {
   type AccessoryDescriptor,
   getEmptyViewIconClassName,
   isAnimatedEmptyViewIcon,
+  readRuntimeFailureEmptyState,
   readAccessory,
   readClassName,
   readStyle,
@@ -67,6 +68,7 @@ export function RuntimeListView({ state }: RuntimeListViewProps) {
   const emptyViewNode = rootNode?.children
     .map((childId) => state.uiTree.get(childId))
     .find((child): child is NonNullable<typeof child> => child?.type === "List.EmptyView");
+  const failureEmptyState = readRuntimeFailureEmptyState(state);
   const emptyView =
     emptyViewNode?.type === "List.EmptyView" ? (
       <EmptyView
@@ -96,8 +98,11 @@ export function RuntimeListView({ state }: RuntimeListViewProps) {
     ) : (
       <EmptyView
         className="ext-empty-view"
-        title="No results"
-        description="This extension did not return any rows for the current query."
+        title={failureEmptyState?.title || "No results"}
+        description={
+          failureEmptyState?.description ||
+          "This extension did not return any rows for the current query."
+        }
       />
     );
 

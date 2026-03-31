@@ -24,15 +24,17 @@ import {
   FOREGROUND_EXTENSION_RUNTIME_ID,
   listenToExtensionRuntimeExit,
   listenToExtensionRuntimeMessages,
-  sendExtensionRuntimeRpc,
   listenToExtensionRuntimeStderr,
   sendExtensionRuntimeManagerRequest,
-  sendExtensionRuntimeMessage,
+  sendExtensionRuntimeRpc,
   startExtensionRuntime,
   stopExtensionRuntime,
 } from "@/modules/extensions/extension-manager/runtime-bridge";
 import { persistentExtensionRunnerManager } from "@/modules/extensions/background/persistent-runners";
-import { useExtensionRuntimeStore } from "@/modules/extensions/runtime/store";
+import {
+  type RunningExtensionSession,
+  useExtensionRuntimeStore,
+} from "@/modules/extensions/runtime/store";
 import { BridgeMessageKind, readBridgeMessageEnvelope } from "@beam/extension-protocol";
 import type {
   ManagerRequest,
@@ -51,11 +53,6 @@ interface RunPluginPayload {
   commandName?: string;
 }
 
-interface ExtensionManagerEventEnvelope {
-  action: string;
-  payload: Record<string, unknown>;
-}
-
 export type ExtensionManagerMessageEvent =
   | { type: "go-back-to-plugin-list" }
   | { type: "open"; target: string; application?: string }
@@ -69,6 +66,11 @@ export type ExtensionManagerMessageEvent =
   | { type: "log"; payload: unknown };
 
 type ExtensionManagerEventListener = (event: ExtensionManagerMessageEvent) => void;
+
+type ForegroundLaunchSnapshot = {
+  payload: RunPluginPayload;
+  session: Omit<RunningExtensionSession, "status" | "error">;
+};
 
 interface ExtensionManagerRequestFailureLog {
   tag: "extensions-manager-request-failure";
@@ -101,9 +103,12 @@ class ExtensionManagerService {
   private runtimeMessageUnlisten: (() => void) | null = null;
   private runtimeStderrUnlisten: (() => void) | null = null;
   private runtimeExitUnlisten: (() => void) | null = null;
+  private bridgeListenersPromise: Promise<void> | null = null;
   private listeners = new Set<ExtensionManagerEventListener>();
   private browserExtensionStatusPollId: ReturnType<typeof setInterval> | null = null;
   private pendingOauthStates = new Set<string>();
+  private activeSessionId: string | null = null;
+  private lastForegroundLaunch: ForegroundLaunchSnapshot | null = null;
 
   private toErrorMessage(error: unknown): string {
     return error instanceof Error ? error.message : String(error);
@@ -134,7 +139,10 @@ class ExtensionManagerService {
   }
 
   async getPreferences(pluginName: string): Promise<Record<string, unknown>> {
-    const response = await this.sendManagerRequest(buildGetPreferencesManagerRequest(pluginName));
+    const response = await this.sendManagerRequestForRuntime(
+      FOREGROUND_EXTENSION_RUNTIME_ID,
+      buildGetPreferencesManagerRequest(pluginName),
+    );
     if (response.error) {
       throw new Error(response.error.message);
     }
@@ -143,7 +151,8 @@ class ExtensionManagerService {
   }
 
   async setPreferences(pluginName: string, values: Record<string, unknown>): Promise<void> {
-    const response = await this.sendManagerRequest(
+    const response = await this.sendManagerRequestForRuntime(
+      FOREGROUND_EXTENSION_RUNTIME_ID,
       buildSetPreferencesManagerRequest(pluginName, values),
     );
     if (response.error) {
@@ -151,10 +160,11 @@ class ExtensionManagerService {
     }
   }
 
-  popView(): void {
-    void this.sendManagerRequest(buildPopViewManagerRequest()).catch((error) => {
-      console.error("[extensions-manager] pop view failed:", error);
-    });
+  async popView(): Promise<void> {
+    const response = await this.sendManagerRequest(buildPopViewManagerRequest());
+    if (response.error) {
+      throw new Error(response.error.message);
+    }
   }
 
   dispatchToastAction(toastId: number, actionType: "primary" | "secondary"): void {
@@ -184,16 +194,88 @@ class ExtensionManagerService {
     }
   }
 
+  private buildForegroundSessionId(): string {
+    return `foreground.session.${crypto.randomUUID()}`;
+  }
+
+  private clearActiveSession(): void {
+    this.activeSessionId = null;
+    this.pendingOauthStates.clear();
+    this.stopBrowserExtensionStatusPolling();
+  }
+
+  private async ensureBridgeListeners(): Promise<void> {
+    if (this.runtimeMessageUnlisten && this.runtimeStderrUnlisten && this.runtimeExitUnlisten) {
+      return;
+    }
+
+    if (this.bridgeListenersPromise) {
+      return this.bridgeListenersPromise;
+    }
+
+    this.bridgeListenersPromise = (async () => {
+      if (!this.runtimeMessageUnlisten) {
+        this.runtimeMessageUnlisten = await listenToExtensionRuntimeMessages((runtimeId, message) => {
+          if (runtimeId !== FOREGROUND_EXTENSION_RUNTIME_ID) {
+            return;
+          }
+
+          this.handleDecodedMessage(message);
+        });
+      }
+
+      if (!this.runtimeStderrUnlisten) {
+        this.runtimeStderrUnlisten = await listenToExtensionRuntimeStderr((runtimeId, line) => {
+          if (runtimeId !== FOREGROUND_EXTENSION_RUNTIME_ID) {
+            return;
+          }
+
+          console.error("[extensions-manager] stderr:", line);
+        });
+      }
+
+      if (!this.runtimeExitUnlisten) {
+        this.runtimeExitUnlisten = await listenToExtensionRuntimeExit((runtimeId) => {
+          if (runtimeId !== FOREGROUND_EXTENSION_RUNTIME_ID) {
+            return;
+          }
+
+          this.runtimeStarted = false;
+          const sessionId = this.activeSessionId;
+          this.clearActiveSession();
+          if (!sessionId) {
+            return;
+          }
+
+          useExtensionRuntimeStore.getState().markForegroundSessionCrashed(sessionId, {
+            message: "The extension runtime exited unexpectedly.",
+          });
+        });
+      }
+    })();
+
+    try {
+      await this.bridgeListenersPromise;
+    } finally {
+      this.bridgeListenersPromise = null;
+    }
+  }
+
   private applyRuntimeCommands(commands: RuntimeCommand[]): void {
     useExtensionRuntimeStore.getState().applyCommands(commands);
   }
 
   private setBrowserExtensionConnectionStatus(isConnected: boolean): void {
-    void this.sendManagerRequest(buildBrowserExtensionStatusManagerRequest(isConnected)).catch(
-      (error) => {
-        console.error("[extensions-manager] browser extension status update failed:", error);
-      },
-    );
+    if (!this.runtimeStarted) {
+      return;
+    }
+
+    void this.sendManagerRequestForRuntime(
+      FOREGROUND_EXTENSION_RUNTIME_ID,
+      buildBrowserExtensionStatusManagerRequest(isConnected),
+    ).catch((error) => {
+      console.error("[extensions-manager] browser extension status update failed:", error);
+    });
   }
 
   private async refreshBrowserExtensionConnectionStatus(): Promise<void> {
@@ -229,6 +311,7 @@ class ExtensionManagerService {
   }
 
   private handleConfirmAlert(payload: {
+    runtimeId: string;
     requestId: string;
     title?: string;
     message?: string;
@@ -250,7 +333,7 @@ class ExtensionManagerService {
       confirmed = window.confirm(prompt || "Continue?");
     }
 
-    this.sendRuntimeRpc({
+    this.sendRuntimeRpc(payload.runtimeId, {
       response: {
         confirmAlert: {
           requestId: payload.requestId,
@@ -262,6 +345,7 @@ class ExtensionManagerService {
   }
 
   private async handleLaunchCommand(payload: {
+    runtimeId: string;
     requestId: string;
     name: string;
     type?: string;
@@ -300,7 +384,7 @@ class ExtensionManagerService {
           payload.type === "background" ? "background" : "userInitiated",
         );
 
-        this.sendRuntimeRpc({
+        this.sendRuntimeRpc(payload.runtimeId, {
           response: {
             launchCommand: {
               requestId: payload.requestId,
@@ -312,27 +396,12 @@ class ExtensionManagerService {
         return;
       }
 
-      useExtensionRuntimeStore.getState().resetForNewPlugin({
-        pluginPath: command.pluginPath,
-        pluginMode: commandMode,
-        title: command.title,
-        subtitle:
-          [command.pluginTitle, command.description ?? ""]
-            .filter((part) => part.trim().length > 0)
-            .join(" - ") || undefined,
-      });
+      const subtitle =
+        [command.pluginTitle, command.description ?? ""]
+          .filter((part) => part.trim().length > 0)
+          .join(" - ") || undefined;
 
-      await this.runPlugin({
-        pluginPath: command.pluginPath,
-        mode: commandMode,
-        aiAccessStatus: false,
-        arguments: toRecord(payload.arguments),
-        launchContext: toRecord(payload.context),
-        launchType: payload.type,
-        commandName: command.commandName,
-      });
-
-      this.sendRuntimeRpc({
+      this.sendRuntimeRpc(payload.runtimeId, {
         response: {
           launchCommand: {
             requestId: payload.requestId,
@@ -341,6 +410,34 @@ class ExtensionManagerService {
           },
         },
       });
+
+      void this.launchForegroundPlugin({
+        title: command.title,
+        subtitle,
+        pluginPath: command.pluginPath,
+        mode: commandMode,
+        aiAccessStatus: false,
+        arguments: toRecord(payload.arguments),
+        launchContext: toRecord(payload.context),
+        launchType: payload.type,
+        commandName: command.commandName,
+      }).catch((error: unknown) => {
+        const message = this.toErrorMessage(error);
+        this.logRequestFailure({
+          tag: "extensions-manager-request-failure",
+          channel: "launch-command",
+          requestId: payload.requestId,
+          operation: payload.name,
+          message,
+          metadata: {
+            extensionName: payload.extensionName,
+            type: payload.type,
+            hasArguments: Boolean(payload.arguments),
+            hasContext: Boolean(payload.context),
+          },
+        });
+      });
+      return;
     } catch (error) {
       const message = this.toErrorMessage(error);
       this.logRequestFailure({
@@ -356,7 +453,7 @@ class ExtensionManagerService {
           hasContext: Boolean(payload.context),
         },
       });
-      this.sendRuntimeRpc({
+      this.sendRuntimeRpc(payload.runtimeId, {
         response: {
           launchCommand: {
             requestId: payload.requestId,
@@ -368,8 +465,13 @@ class ExtensionManagerService {
     }
   }
 
-  private sendInvokeCommandResponse(requestId: string, result?: unknown, error?: string): void {
-    this.sendRuntimeRpc({
+  private sendInvokeCommandResponse(
+    runtimeId: string,
+    requestId: string,
+    result?: unknown,
+    error?: string,
+  ): void {
+    this.sendRuntimeRpc(runtimeId, {
       response: {
         invokeCommand: {
           requestId,
@@ -382,12 +484,13 @@ class ExtensionManagerService {
 
   private sendOauthResponse(
     kind: "get" | "set" | "remove",
+    runtimeId: string,
     requestId: string,
     result?: unknown,
     error?: string,
   ): void {
     if (kind === "get") {
-      this.sendRuntimeRpc({
+      this.sendRuntimeRpc(runtimeId, {
         response: {
           oauthGetTokens: {
             requestId,
@@ -403,7 +506,7 @@ class ExtensionManagerService {
     }
 
     if (kind === "set") {
-      this.sendRuntimeRpc({
+      this.sendRuntimeRpc(runtimeId, {
         response: {
           oauthSetTokens: {
             requestId,
@@ -415,7 +518,7 @@ class ExtensionManagerService {
       return;
     }
 
-    this.sendRuntimeRpc({
+    this.sendRuntimeRpc(runtimeId, {
       response: {
         oauthRemoveTokens: {
           requestId,
@@ -427,6 +530,7 @@ class ExtensionManagerService {
   }
 
   private async handleInvokeCommand(payload: {
+    runtimeId: string;
     requestId: string;
     command: string;
     params?: Record<string, unknown>;
@@ -440,7 +544,7 @@ class ExtensionManagerService {
       ) {
         emitClipboardHistoryUpdated();
       }
-      this.sendInvokeCommandResponse(payload.requestId, result);
+      this.sendInvokeCommandResponse(payload.runtimeId, payload.requestId, result);
     } catch (error) {
       const message = this.toErrorMessage(error);
       this.logRequestFailure({
@@ -450,7 +554,7 @@ class ExtensionManagerService {
         operation: payload.command,
         message,
       });
-      this.sendInvokeCommandResponse(payload.requestId, undefined, message);
+      this.sendInvokeCommandResponse(payload.runtimeId, payload.requestId, undefined, message);
     }
   }
 
@@ -476,7 +580,7 @@ class ExtensionManagerService {
       return false;
     }
 
-    if (!this.runtimeStarted) {
+    if (!this.runtimeStarted || !this.activeSessionId) {
       return false;
     }
 
@@ -486,7 +590,7 @@ class ExtensionManagerService {
       }
 
       this.pendingOauthStates.delete(parsed.state);
-      this.sendRuntimeRpc({
+      this.sendRuntimeRpc(FOREGROUND_EXTENSION_RUNTIME_ID, {
         response: {
           oauthAuthorize: {
             state: parsed.state,
@@ -512,7 +616,7 @@ class ExtensionManagerService {
       }
     }
 
-    this.sendRuntimeRpc({
+    this.sendRuntimeRpc(FOREGROUND_EXTENSION_RUNTIME_ID, {
       response: {
         oauthAuthorize: {
           state: resolvedState ?? "",
@@ -525,12 +629,13 @@ class ExtensionManagerService {
   }
 
   private async handleOauthGetTokens(payload: {
+    runtimeId: string;
     requestId: string;
     providerId: string;
   }): Promise<void> {
     try {
       const cached = await invoke("oauth_get_tokens", { providerId: payload.providerId });
-      this.sendOauthResponse("get", payload.requestId, cached);
+      this.sendOauthResponse("get", payload.runtimeId, payload.requestId, cached);
     } catch (error) {
       const message = this.toErrorMessage(error);
       this.logRequestFailure({
@@ -543,11 +648,12 @@ class ExtensionManagerService {
           providerId: payload.providerId,
         },
       });
-      this.sendOauthResponse("get", payload.requestId, undefined, message);
+      this.sendOauthResponse("get", payload.runtimeId, payload.requestId, undefined, message);
     }
   }
 
   private async handleOauthSetTokens(payload: {
+    runtimeId: string;
     requestId: string;
     providerId: string;
     tokens: Record<string, unknown>;
@@ -557,7 +663,7 @@ class ExtensionManagerService {
         providerId: payload.providerId,
         tokens: payload.tokens,
       });
-      this.sendOauthResponse("set", payload.requestId, true);
+      this.sendOauthResponse("set", payload.runtimeId, payload.requestId, true);
     } catch (error) {
       const message = this.toErrorMessage(error);
       this.logRequestFailure({
@@ -570,17 +676,18 @@ class ExtensionManagerService {
           providerId: payload.providerId,
         },
       });
-      this.sendOauthResponse("set", payload.requestId, false, message);
+      this.sendOauthResponse("set", payload.runtimeId, payload.requestId, false, message);
     }
   }
 
   private async handleOauthRemoveTokens(payload: {
+    runtimeId: string;
     requestId: string;
     providerId: string;
   }): Promise<void> {
     try {
       await invoke("oauth_remove_tokens", { providerId: payload.providerId });
-      this.sendOauthResponse("remove", payload.requestId, true);
+      this.sendOauthResponse("remove", payload.runtimeId, payload.requestId, true);
     } catch (error) {
       const message = this.toErrorMessage(error);
       this.logRequestFailure({
@@ -593,11 +700,12 @@ class ExtensionManagerService {
           providerId: payload.providerId,
         },
       });
-      this.sendOauthResponse("remove", payload.requestId, false, message);
+      this.sendOauthResponse("remove", payload.runtimeId, payload.requestId, false, message);
     }
   }
 
   private async handleBrowserExtensionRequest(payload: {
+    runtimeId: string;
     requestId: string;
     method: string;
     params: unknown;
@@ -607,7 +715,7 @@ class ExtensionManagerService {
         method: payload.method,
         params: payload.params,
       });
-      this.sendRuntimeRpc({
+      this.sendRuntimeRpc(payload.runtimeId, {
         response: {
           browserExtension: {
             requestId: payload.requestId,
@@ -625,7 +733,7 @@ class ExtensionManagerService {
         operation: payload.method,
         message,
       });
-      this.sendRuntimeRpc({
+      this.sendRuntimeRpc(payload.runtimeId, {
         response: {
           browserExtension: {
             requestId: payload.requestId,
@@ -640,6 +748,7 @@ class ExtensionManagerService {
   }
 
   private async handleAiAsk(payload: {
+    runtimeId: string;
     requestId: string;
     streamRequestId: string;
     prompt: string;
@@ -663,7 +772,7 @@ class ExtensionManagerService {
       }
       settled = true;
       cleanup();
-      this.sendRuntimeRpc({
+      this.sendRuntimeRpc(payload.runtimeId, {
         response: {
           aiAsk: {
             requestId: payload.requestId,
@@ -680,7 +789,7 @@ class ExtensionManagerService {
       }
       settled = true;
       cleanup();
-      this.sendRuntimeRpc({
+      this.sendRuntimeRpc(payload.runtimeId, {
         response: {
           aiAskError: {
             streamRequestId: payload.streamRequestId,
@@ -688,7 +797,7 @@ class ExtensionManagerService {
           },
         },
       });
-      this.sendRuntimeRpc({
+      this.sendRuntimeRpc(payload.runtimeId, {
         response: {
           aiAsk: {
             requestId: payload.requestId,
@@ -706,7 +815,7 @@ class ExtensionManagerService {
             return;
           }
 
-          this.sendRuntimeRpc({
+          this.sendRuntimeRpc(payload.runtimeId, {
             response: {
               aiAskChunk: {
                 streamRequestId: payload.streamRequestId,
@@ -724,7 +833,7 @@ class ExtensionManagerService {
           }
 
           const fullText = typeof event.payload.fullText === "string" ? event.payload.fullText : "";
-          this.sendRuntimeRpc({
+          this.sendRuntimeRpc(payload.runtimeId, {
             response: {
               aiAskEnd: {
                 streamRequestId: payload.streamRequestId,
@@ -797,8 +906,8 @@ class ExtensionManagerService {
     });
   }
 
-  private sendRuntimeRpc(message: RuntimeRpc): void {
-    void sendExtensionRuntimeRpc(FOREGROUND_EXTENSION_RUNTIME_ID, message).catch((error) => {
+  private sendRuntimeRpc(runtimeId: string, message: RuntimeRpc): void {
+    void sendExtensionRuntimeRpc(runtimeId, message).catch((error) => {
       console.error("[extensions-manager] runtime rpc response write failed:", error);
     });
   }
@@ -836,6 +945,15 @@ class ExtensionManagerService {
             stack: runtimeRender.stack,
           },
         });
+
+        const sessionId = this.activeSessionId;
+        this.clearActiveSession();
+        if (sessionId) {
+          useExtensionRuntimeStore.getState().markForegroundSessionCrashed(sessionId, {
+            message: runtimeRender.message,
+            stack: runtimeRender.stack || undefined,
+          });
+        }
         return;
       }
     }
@@ -873,6 +991,7 @@ class ExtensionManagerService {
       }
 
       if (runtimeOutput?.goBackToPluginList) {
+        this.clearActiveSession();
         this.emit({ type: "go-back-to-plugin-list" });
         return;
       }
@@ -902,6 +1021,7 @@ class ExtensionManagerService {
       envelope?.kind === BridgeMessageKind.RuntimeRpc ? parseRuntimeRpc(raw) : null;
     if (runtimeRpc?.request?.invokeCommand) {
       void this.handleInvokeCommand({
+        runtimeId: FOREGROUND_EXTENSION_RUNTIME_ID,
         requestId: runtimeRpc.request.invokeCommand.requestId,
         command: runtimeRpc.request.invokeCommand.command,
         params: toRecord(runtimeRpc.request.invokeCommand.params),
@@ -911,6 +1031,7 @@ class ExtensionManagerService {
 
     if (runtimeRpc?.request?.browserExtension) {
       void this.handleBrowserExtensionRequest({
+        runtimeId: FOREGROUND_EXTENSION_RUNTIME_ID,
         requestId: runtimeRpc.request.browserExtension.requestId,
         method: runtimeRpc.request.browserExtension.method,
         params: runtimeRpc.request.browserExtension.params,
@@ -927,6 +1048,7 @@ class ExtensionManagerService {
 
     if (runtimeRpc?.request?.oauthGetTokens) {
       void this.handleOauthGetTokens({
+        runtimeId: FOREGROUND_EXTENSION_RUNTIME_ID,
         requestId: runtimeRpc.request.oauthGetTokens.requestId,
         providerId: runtimeRpc.request.oauthGetTokens.providerId,
       });
@@ -935,6 +1057,7 @@ class ExtensionManagerService {
 
     if (runtimeRpc?.request?.oauthSetTokens) {
       void this.handleOauthSetTokens({
+        runtimeId: FOREGROUND_EXTENSION_RUNTIME_ID,
         requestId: runtimeRpc.request.oauthSetTokens.requestId,
         providerId: runtimeRpc.request.oauthSetTokens.providerId,
         tokens: runtimeRpc.request.oauthSetTokens.tokens ?? {},
@@ -944,6 +1067,7 @@ class ExtensionManagerService {
 
     if (runtimeRpc?.request?.oauthRemoveTokens) {
       void this.handleOauthRemoveTokens({
+        runtimeId: FOREGROUND_EXTENSION_RUNTIME_ID,
         requestId: runtimeRpc.request.oauthRemoveTokens.requestId,
         providerId: runtimeRpc.request.oauthRemoveTokens.providerId,
       });
@@ -952,6 +1076,7 @@ class ExtensionManagerService {
 
     if (runtimeRpc?.request?.confirmAlert) {
       this.handleConfirmAlert({
+        runtimeId: FOREGROUND_EXTENSION_RUNTIME_ID,
         requestId: runtimeRpc.request.confirmAlert.requestId,
         title: runtimeRpc.request.confirmAlert.title || undefined,
         message: runtimeRpc.request.confirmAlert.message || undefined,
@@ -962,6 +1087,7 @@ class ExtensionManagerService {
 
     if (runtimeRpc?.request?.launchCommand) {
       void this.handleLaunchCommand({
+        runtimeId: FOREGROUND_EXTENSION_RUNTIME_ID,
         requestId: runtimeRpc.request.launchCommand.requestId,
         name: runtimeRpc.request.launchCommand.name,
         type: runtimeRpc.request.launchCommand.type || undefined,
@@ -974,6 +1100,7 @@ class ExtensionManagerService {
 
     if (runtimeRpc?.request?.aiAsk) {
       void this.handleAiAsk({
+        runtimeId: FOREGROUND_EXTENSION_RUNTIME_ID,
         requestId: runtimeRpc.request.aiAsk.requestId,
         streamRequestId: runtimeRpc.request.aiAsk.streamRequestId,
         prompt: runtimeRpc.request.aiAsk.prompt,
@@ -989,52 +1116,19 @@ class ExtensionManagerService {
     if (!isTauri()) {
       throw new Error("desktop runtime is required");
     }
+
     if (this.runtimeStarted) {
       return;
     }
+
     if (this.startPromise) {
       return this.startPromise;
     }
 
     this.startPromise = (async () => {
-      if (!this.runtimeMessageUnlisten) {
-        this.runtimeMessageUnlisten = await listenToExtensionRuntimeMessages(
-          (runtimeId, message) => {
-            if (runtimeId !== FOREGROUND_EXTENSION_RUNTIME_ID) {
-              return;
-            }
-
-            this.handleDecodedMessage(message);
-          },
-        );
-      }
-
-      if (!this.runtimeStderrUnlisten) {
-        this.runtimeStderrUnlisten = await listenToExtensionRuntimeStderr((runtimeId, line) => {
-          if (runtimeId !== FOREGROUND_EXTENSION_RUNTIME_ID) {
-            return;
-          }
-
-          console.error("[extensions-manager] stderr:", line);
-        });
-      }
-
-      if (!this.runtimeExitUnlisten) {
-        this.runtimeExitUnlisten = await listenToExtensionRuntimeExit((runtimeId) => {
-          if (runtimeId !== FOREGROUND_EXTENSION_RUNTIME_ID) {
-            return;
-          }
-
-          this.runtimeStarted = false;
-          this.pendingOauthStates.clear();
-          this.stopBrowserExtensionStatusPolling();
-        });
-      }
-
+      await this.ensureBridgeListeners();
       await startExtensionRuntime(FOREGROUND_EXTENSION_RUNTIME_ID);
       this.runtimeStarted = true;
-      void this.refreshBrowserExtensionConnectionStatus();
-      this.startBrowserExtensionStatusPolling();
     })();
 
     try {
@@ -1044,10 +1138,88 @@ class ExtensionManagerService {
     }
   }
 
-  stop(): void {
-    this.runtimeStarted = false;
+  async launchForegroundPlugin(
+    input: RunPluginPayload & { title: string; subtitle?: string },
+  ): Promise<void> {
+    await this.start();
+
+    const sessionId = this.buildForegroundSessionId();
+    const session: Omit<RunningExtensionSession, "status" | "error"> = {
+      runtimeId: sessionId,
+      pluginPath: input.pluginPath,
+      pluginMode: input.mode,
+      title: input.title,
+      subtitle: input.subtitle,
+    };
+
+    this.activeSessionId = sessionId;
     this.pendingOauthStates.clear();
-    this.stopBrowserExtensionStatusPolling();
+    this.lastForegroundLaunch = {
+      payload: {
+        pluginPath: input.pluginPath,
+        mode: input.mode,
+        aiAccessStatus: input.aiAccessStatus,
+        arguments: input.arguments,
+        launchContext: input.launchContext,
+        launchType: input.launchType,
+        commandName: input.commandName,
+      },
+      session,
+    };
+
+    useExtensionRuntimeStore.getState().startForegroundSession(session);
+
+    try {
+      const response = await this.sendManagerRequest(
+        buildLaunchPluginManagerRequest({
+          pluginPath: input.pluginPath,
+          mode: input.mode,
+          aiAccessStatus: input.aiAccessStatus,
+          arguments: input.arguments,
+          launchContext: input.launchContext,
+          launchType: input.launchType,
+          commandName: input.commandName,
+        }),
+      );
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+
+      void this.refreshBrowserExtensionConnectionStatus();
+      this.startBrowserExtensionStatusPolling();
+    } catch (error) {
+      this.clearActiveSession();
+      useExtensionRuntimeStore.getState().markForegroundSessionCrashed(sessionId, {
+        message: this.toErrorMessage(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      });
+      throw error;
+    }
+  }
+
+  async retryLastForegroundLaunch(): Promise<void> {
+    if (!this.lastForegroundLaunch) {
+      throw new Error("No extension launch is available to retry.");
+    }
+
+    await this.launchForegroundPlugin({
+      title: this.lastForegroundLaunch.session.title,
+      subtitle: this.lastForegroundLaunch.session.subtitle,
+      pluginPath: this.lastForegroundLaunch.payload.pluginPath,
+      mode: this.lastForegroundLaunch.payload.mode,
+      aiAccessStatus: this.lastForegroundLaunch.payload.aiAccessStatus,
+      arguments: this.lastForegroundLaunch.payload.arguments,
+      launchContext: this.lastForegroundLaunch.payload.launchContext,
+      launchType: this.lastForegroundLaunch.payload.launchType,
+      commandName: this.lastForegroundLaunch.payload.commandName,
+    });
+  }
+
+  stop(): void {
+    this.clearActiveSession();
+    this.lastForegroundLaunch = null;
+    this.runtimeStarted = false;
+    this.startPromise = null;
     if (this.runtimeMessageUnlisten) {
       this.runtimeMessageUnlisten();
       this.runtimeMessageUnlisten = null;
@@ -1065,21 +1237,16 @@ class ExtensionManagerService {
     });
   }
 
-  private async writeEvent(event: ExtensionManagerEventEnvelope): Promise<void> {
+  private async sendManagerRequestForRuntime(
+    runtimeId: string,
+    request: ManagerRequest,
+  ): Promise<ManagerResponse> {
     await this.start();
-    await sendExtensionRuntimeMessage(FOREGROUND_EXTENSION_RUNTIME_ID, event.action, event.payload);
+    return sendExtensionRuntimeManagerRequest(runtimeId, request);
   }
 
   private async sendManagerRequest(request: ManagerRequest): Promise<ManagerResponse> {
-    await this.start();
-    return sendExtensionRuntimeManagerRequest(FOREGROUND_EXTENSION_RUNTIME_ID, request);
-  }
-
-  async runPlugin(payload: RunPluginPayload): Promise<void> {
-    const response = await this.sendManagerRequest(buildLaunchPluginManagerRequest(payload));
-    if (response.error) {
-      throw new Error(response.error.message);
-    }
+    return this.sendManagerRequestForRuntime(FOREGROUND_EXTENSION_RUNTIME_ID, request);
   }
 }
 

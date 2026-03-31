@@ -23,7 +23,7 @@ export function invokeCommand<T>(command: string, params: object = {}): Promise<
         requestId: "",
       },
     },
-    "invoke_command",
+    `invoke_command:${command}`,
   );
 }
 

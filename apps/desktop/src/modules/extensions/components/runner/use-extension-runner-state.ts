@@ -174,12 +174,13 @@ export function useExtensionRunnerState({
 
   const rootNode = rootNodeId ? uiTree.get(rootNodeId) : undefined;
   const rootType = rootNode?.type ?? "";
+  const sessionScope = runningSession?.runtimeId ?? "no-session";
   const isSearchableRoot = rootType === "List" || rootType === "Grid";
   const controlledSearchText =
     isSearchableRoot && rootNode ? asString(rootNode.props.searchText) : "";
   const isControlledSearch =
     isSearchableRoot && rootNode ? asBoolean(rootNode.props.onSearchTextChange) : false;
-  const searchStateKey = `${rootNode?.id ?? 0}:${rootType}`;
+  const searchStateKey = `${sessionScope}:${rootNode?.id ?? 0}:${rootType}`;
   const localSearchText =
     searchState.key === searchStateKey ? searchState.value : controlledSearchText;
   const pendingSearchText =
@@ -243,11 +244,11 @@ export function useExtensionRunnerState({
   const formStateKey = useMemo(
     () =>
       rootNode?.type === "Form"
-        ? `${rootNode.id}:${formFields
+        ? `${sessionScope}:${rootNode.id}:${formFields
             .map((field) => `${field.nodeId}:${JSON.stringify(field.controlledValue ?? null)}`)
             .join("|")}`
         : "",
-    [formFields, rootNode?.id, rootNode?.type],
+    [formFields, rootNode?.id, rootNode?.type, sessionScope],
   );
   const formEdits = formState.key === formStateKey ? formState.values : {};
   const formValues = useMemo(() => {
@@ -310,7 +311,7 @@ export function useExtensionRunnerState({
 
     return currentEntries.findIndex((entry) => entry.itemId === selectedItemId);
   }, [currentEntries, rootNode, rootType]);
-  const selectionStateKey = `${rootNode?.id ?? 0}:${currentEntries.length}`;
+  const selectionStateKey = `${sessionScope}:${rootNode?.id ?? 0}:${currentEntries.length}`;
   const uncontrolledSelectedIndex =
     selectionState.key === selectionStateKey ? selectionState.index : 0;
   const selectedIndex = Math.min(
@@ -350,7 +351,7 @@ export function useExtensionRunnerState({
   );
   const selectionSync = useMemo(
     () => ({
-      key: `${rootNode?.id ?? 0}:${selectedEntry?.nodeId ?? ""}:${selectedEntry?.itemId ?? ""}:${rootType === "List" || rootType === "Grid" ? Number(asBoolean(rootNode?.props.onSelectionChange)) : 0}`,
+      key: `${sessionScope}:${rootNode?.id ?? 0}:${selectedEntry?.nodeId ?? ""}:${selectedEntry?.itemId ?? ""}:${rootType === "List" || rootType === "Grid" ? Number(asBoolean(rootNode?.props.onSelectionChange)) : 0}`,
       selectedNodeId: selectedEntry?.nodeId,
       rootNodeId:
         rootNode && (rootType === "List" || rootType === "Grid") ? rootNode.id : undefined,
@@ -360,7 +361,7 @@ export function useExtensionRunnerState({
         (rootType === "List" || rootType === "Grid") &&
         asBoolean(rootNode.props.onSelectionChange),
     }),
-    [rootNode, rootType, selectedEntry?.itemId, selectedEntry?.nodeId],
+    [rootNode, rootType, selectedEntry?.itemId, selectedEntry?.nodeId, sessionScope],
   );
 
   const formFieldByNodeIdRef = useRef(formFieldByNodeId);
@@ -408,12 +409,19 @@ export function useExtensionRunnerState({
   });
 
   const handleBack = useCallback(() => {
-    try {
-      extensionManagerService.popView();
-    } catch {
+    if (runningSession?.status === "crashed") {
+      useExtensionRuntimeStore.getState().clearForegroundSession(runningSession.runtimeId);
       onBack();
+      return;
     }
-  }, [onBack]);
+
+    void extensionManagerService.popView().catch(() => {
+      if (runningSession?.runtimeId) {
+        useExtensionRuntimeStore.getState().clearForegroundSession(runningSession.runtimeId);
+      }
+      onBack();
+    });
+  }, [onBack, runningSession?.runtimeId, runningSession?.status]);
 
   const executeAction = useCallback(
     async (action: ExtensionAction) => {

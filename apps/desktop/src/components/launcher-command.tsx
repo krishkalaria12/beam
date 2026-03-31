@@ -56,7 +56,6 @@ import {
 } from "@/modules/extensions/extension-catalog";
 import { extensionManagerService } from "@/modules/extensions/extension-manager-service";
 import { useExtensionInfrastructure } from "@/modules/extensions/hooks/use-extension-infrastructure";
-import { useExtensionRuntimeStore } from "@/modules/extensions/runtime/store";
 import { findQuicklinkByKeywordOrAlias } from "@/modules/quicklinks/api/quicklinks";
 import { useQuicklinks } from "@/modules/quicklinks/hooks/use-quicklinks";
 import { useManagedItemPreferencesStore } from "@/modules/launcher/managed-items";
@@ -260,7 +259,7 @@ export default function LauncherCommand() {
     prefetchRegistryCommand,
     takeoverPanelOpeners,
   } = useLauncherPanelActions({ openPanel });
-  useLauncherDeepLinks({ openPanel: openPreparedPanel, backToCommands });
+  useLauncherDeepLinks({ openPanel: openPreparedPanel });
   useExtensionManagerEvents({ backToCommands, openSettings });
   useCliDmenuRequests();
   useLauncherPanelPrefetch();
@@ -292,35 +291,25 @@ export default function LauncherCommand() {
         return;
       }
 
-      useExtensionRuntimeStore.getState().resetForNewPlugin({
-        pluginPath: input.pluginPath,
-        pluginMode: input.pluginMode,
+      const launchPromise = extensionManagerService.launchForegroundPlugin({
         title: input.title,
         subtitle: input.subtitle,
+        pluginPath: input.pluginPath,
+        mode: input.pluginMode,
+        aiAccessStatus: false,
+        arguments: input.launchArguments,
+        launchContext: input.launchContext,
+        launchType,
       });
 
       if (input.pluginMode === "view") {
-        await openPreparedPanel("extension-runner", true);
+        await Promise.all([openPreparedPanel("extension-runner", true), launchPromise]);
+        return;
       }
 
-      try {
-        await extensionManagerService.runPlugin({
-          pluginPath: input.pluginPath,
-          mode: input.pluginMode,
-          aiAccessStatus: false,
-          arguments: input.launchArguments,
-          launchContext: input.launchContext,
-          launchType,
-        });
-      } catch (error) {
-        useExtensionRuntimeStore.getState().resetRuntime();
-        if (input.pluginMode === "view") {
-          void backToCommands();
-        }
-        throw error;
-      }
+      await launchPromise;
     },
-    [backToCommands, openPreparedPanel],
+    [openPreparedPanel],
   );
 
   const launchExtensionCommandByName = useCallback(
