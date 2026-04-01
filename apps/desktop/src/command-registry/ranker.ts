@@ -41,7 +41,32 @@ function getAliases(
   return aliasesById?.get(commandId) ?? [];
 }
 
-function compareRankedCommands(left: RankedCommand, right: RankedCommand): number {
+function isBeamNativeCommand(command: CommandDescriptor): boolean {
+  return !(
+    command.id.startsWith("applications.open.") ||
+    command.id.startsWith("script_commands.run.") ||
+    command.id.startsWith("extension.") ||
+    command.id.startsWith("extensions.store.install.")
+  );
+}
+
+function compareRankedCommands(
+  left: RankedCommand,
+  right: RankedCommand,
+  options: { preferBeamNative: boolean },
+): number {
+  if (options.preferBeamNative && left.match.score !== right.match.score) {
+    return right.match.score - left.match.score;
+  }
+
+  if (options.preferBeamNative) {
+    const leftIsBeamNative = isBeamNativeCommand(left.command);
+    const rightIsBeamNative = isBeamNativeCommand(right.command);
+    if (leftIsBeamNative !== rightIsBeamNative) {
+      return leftIsBeamNative ? -1 : 1;
+    }
+  }
+
   if (left.score !== right.score) {
     return right.score - left.score;
   }
@@ -115,5 +140,7 @@ export function rankCommands(options: {
     });
   }
 
-  return ranked.sort(compareRankedCommands);
+  return ranked.sort((left, right) =>
+    compareRankedCommands(left, right, { preferBeamNative: options.context.query.trim().length > 0 }),
+  );
 }

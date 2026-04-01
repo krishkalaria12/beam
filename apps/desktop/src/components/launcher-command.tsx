@@ -884,7 +884,7 @@ export default function LauncherCommand() {
               ) : (
                 <CommandList
                   className={cn(
-                    "list-area flex-1",
+                    "list-area flex-1 scroll-pt-0",
                     "custom-scrollbar px-1.5",
                     isCommandListExpandedPanel
                       ? "min-h-0 flex h-full flex-col [&_[cmdk-list-sizer]]:flex [&_[cmdk-list-sizer]]:h-full [&_[cmdk-list-sizer]]:min-h-0 [&_[cmdk-list-sizer]]:flex-1 [&_[cmdk-list-sizer]]:flex-col"

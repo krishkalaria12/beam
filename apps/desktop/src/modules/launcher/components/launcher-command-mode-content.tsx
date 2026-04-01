@@ -41,7 +41,7 @@ export function LauncherCommandModeContent({
   onSetPinned,
 }: LauncherCommandModeContentProps) {
   return (
-    <div className="py-1">
+    <div className="pb-1">
       {isQuicklinkTrigger ? (
         <QuicklinkPreview
           quicklinks={quicklinks}

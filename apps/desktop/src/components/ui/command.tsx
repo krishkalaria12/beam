@@ -199,7 +199,7 @@ function CommandInput({
         <CommandPrimitive.Input
           data-slot="command-input"
           className={cn(
-            "text-launcher-2xl w-full bg-transparent font-medium tracking-[0.005em] text-foreground outline-hidden placeholder:text-muted-foreground/55 disabled:cursor-not-allowed disabled:opacity-50",
+            "text-launcher-2xl w-full bg-transparent font-medium tracking-[0.005em] text-foreground caret-[var(--ring)] outline-hidden placeholder:text-muted-foreground/55 disabled:cursor-not-allowed disabled:opacity-50",
             minimal && "focus:ring-0 focus:outline-none",
             className,
           )}
