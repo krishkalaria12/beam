@@ -1,36 +1,32 @@
 ---
 ---
 
-<section class="hero shell">
-  <div class="sticker">Linux launcher for fast workflows</div>
+<section class="shell flex flex-col items-center text-center py-20">
+  <div class="inline-block mb-8 -rotate-2 rounded-[0.9rem] border-2 border-black bg-[#ffe066] px-4 py-3 text-[0.9rem] font-bold tracking-[-0.02em] [box-shadow:2px_2px_0_0_#000]">Linux launcher for fast workflows</div>
 
-  <h1>
+  <h1 class="mb-6 text-[clamp(3.8rem,9vw,7.4rem)] leading-[1.02] tracking-[-0.08em] font-bold">
     Search your system.
     <br />
-    <span>Keep the speed.</span>
+    <span class="text-transparent bg-gradient-to-r from-[#ff7e5f] to-[#feb47b] bg-clip-text">Keep the speed.</span>
   </h1>
 
-  <p class="hero-copy">
+  <p class="max-w-[48rem] mb-10 text-[clamp(1.1rem,2vw,1.45rem)] leading-[1.7] text-[#616161] font-medium">
     Beam is a lightweight command layer for Linux that brings apps, files,
     actions, and AI tools into one fast, playful surface
   </p>
 
-  <div class="hero-actions">
-    <button class="solid-button" type="button" disabled>Install</button>
-    <a
-      class="outline-button"
-      href="https://github.com/krishkalaria12/beam"
-      target="_blank">View repository</a
-    >
+  <div class="flex flex-wrap gap-4 mb-12">
+    <button class="inline-flex items-center justify-center rounded-[1.2rem] border-2 border-black bg-[#7ed2ff] px-[1.65rem] py-4 text-base font-bold text-black [box-shadow:6px_6px_0_0_#000] transition-transform hover:translate-x-1 hover:translate-y-1 hover:[box-shadow:2px_2px_0_0_#000] disabled:opacity-100 disabled:cursor-default" type="button" disabled>Install</button>
+    <a class="inline-flex items-center justify-center rounded-[1.2rem] border-2 border-black bg-white px-[1.65rem] py-4 text-base font-bold text-black no-underline [box-shadow:6px_6px_0_0_#000] transition-transform hover:translate-x-1 hover:translate-y-1 hover:[box-shadow:2px_2px_0_0_#000]" href="https://github.com/krishkalaria12/beam" target="_blank">View repository</a>
   </div>
 
-  <div class="product-frame">
-    <div class="frame-topbar">
-      <span></span>
-      <span></span>
-      <span></span>
+  <div class="w-full mt-20 overflow-hidden rotate-[1deg] rounded-[2rem] border-4 border-black bg-white [box-shadow:12px_12px_0_0_#000] transition-transform duration-[220ms] hover:rotate-0 cursor-pointer">
+    <div class="flex items-center gap-[0.7rem] h-[3.4rem] px-6 bg-[#ffe066] border-b-4 border-black">
+      <span class="w-4 h-4 border-2 border-black rounded-full bg-white"></span>
+      <span class="w-4 h-4 border-2 border-black rounded-full bg-white"></span>
+      <span class="w-4 h-4 border-2 border-black rounded-full bg-white"></span>
     </div>
 
-    <img class="hero-image" src="/main.png" alt="Beam showing its search functionality" />
+    <img class="block w-full h-auto" src="/main.png" alt="Beam showing its search functionality" />
   </div>
 </section>

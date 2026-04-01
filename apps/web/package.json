@@ -14,7 +14,9 @@
   },
   "dependencies": {
     "@fontsource/space-grotesk": "^5.2.10",
-    "astro": "^6.0.8"
+    "@tailwindcss/vite": "^4.2.2",
+    "astro": "^6.0.8",
+    "tailwindcss": "^4.2.2"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.4"
