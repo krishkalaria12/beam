@@ -742,7 +742,7 @@ body {
   }
 
   .frame-content,
-  .feature-grid {
+  .feature-grid,
   .footer-shell,
   .extensions-layout {
     grid-template-columns: 1fr;
@@ -981,7 +981,23 @@ body {
   .sidebar-card,
   .launcher-card,
   .feature-card,
-  .benchmark-panel {
+  .benchmark-panel,
+  .extensions-layout {
+    border-width: 2px;
+    box-shadow: 5px 5px 0 0 #000;
+  }
+
+  .extensions-layout {
+    padding: 1.5rem;
+    gap: 1.5rem;
+    border-radius: 1.5rem;
+  }
+
+  .marquee-content img {
+    height: 24px;
+  }
+
+  .extensions-store-img {
     border-width: 2px;
     box-shadow: 5px 5px 0 0 #000;
   }
