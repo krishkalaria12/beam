@@ -34,6 +34,13 @@ pub mod translation;
 pub mod utils;
 pub mod window_switcher;
 
+#[cfg(target_os = "linux")]
+use std::fs;
+#[cfg(target_os = "linux")]
+use std::path::{Path, PathBuf};
+#[cfg(target_os = "linux")]
+use std::process::Command;
+
 use tauri::{Emitter, Manager, WindowEvent};
 
 use crate::settings::UiLayoutMode;
@@ -105,6 +112,59 @@ fn handle_activation_args(app: &tauri::AppHandle, args: &[String], startup: bool
 
     if args.iter().any(|arg| arg == "--toggle") {
         toggle_launcher(app);
+    }
+}
+
+#[cfg(target_os = "linux")]
+fn desktop_exec_value(path: &Path) -> String {
+    let escaped = path
+        .display()
+        .to_string()
+        .replace('\\', "\\\\")
+        .replace('"', "\\\"");
+    format!("\"{escaped}\"")
+}
+
+#[cfg(target_os = "linux")]
+fn maybe_register_dev_scheme_handlers() {
+    if !cfg!(debug_assertions) {
+        return;
+    }
+
+    let Some(home_dir) = std::env::var_os("HOME") else {
+        return;
+    };
+
+    let applications_dir = PathBuf::from(home_dir)
+        .join(".local")
+        .join("share")
+        .join("applications");
+    if fs::create_dir_all(&applications_dir).is_err() {
+        return;
+    }
+
+    let Ok(executable_path) = std::env::current_exe() else {
+        return;
+    };
+
+    let desktop_id = "beam-dev-url-handler.desktop";
+    let desktop_file = applications_dir.join(desktop_id);
+    let desktop_entry = format!(
+        "[Desktop Entry]\nType=Application\nName=Beam Dev URL Handler\nExec={} %u\nTerminal=false\nNoDisplay=true\nMimeType=x-scheme-handler/beam;x-scheme-handler/raycast;\n",
+        desktop_exec_value(&executable_path)
+    );
+
+    let should_write = fs::read_to_string(&desktop_file)
+        .map(|existing| existing != desktop_entry)
+        .unwrap_or(true);
+    if should_write && fs::write(&desktop_file, desktop_entry).is_err() {
+        return;
+    }
+
+    for scheme in ["beam", "raycast"] {
+        let _ = Command::new("xdg-mime")
+            .args(["default", desktop_id, &format!("x-scheme-handler/{scheme}")])
+            .output();
     }
 }
 
@@ -187,6 +247,9 @@ pub fn run(startup_args: Vec<String>) {
                         .build(),
                 )?;
             }
+
+            #[cfg(target_os = "linux")]
+            maybe_register_dev_scheme_handlers();
 
             calculator::db::init(&app.handle());
             clipboard::db::init(&app.handle());

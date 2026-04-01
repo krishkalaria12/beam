@@ -38,7 +38,7 @@ export const loadCommandModule = async ({
   mode,
   pluginPath,
 }: CommandLoadOptions) => {
-  const { launchProps, payload, scriptText } = await createRuntimeLaunchPlan({
+  const { launchProps, metadata, scriptText } = await createRuntimeLaunchPlan({
     aiAccessStatus,
     commandName,
     launchArguments,
@@ -49,9 +49,7 @@ export const loadCommandModule = async ({
   });
 
   loadBeamGlobals();
-  writeLog(
-    `[runtime-launch] ${payload.extensionId} (${payload.environment?.commandName ?? environment.commandName})`,
-  );
+  writeLog(`[runtime-launch] ${metadata.extensionId} (${environment.commandName})`);
 
   const pluginModule = {
     exports: {} as {

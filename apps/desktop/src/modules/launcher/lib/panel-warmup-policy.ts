@@ -20,10 +20,10 @@ const PANEL_WARMUP_TIERS: Partial<Record<CommandPanel, LauncherPanelWarmupTier>>
   "window-switcher": "intent",
   translation: "intent",
   extensions: "intent",
+  "extension-runner": "intent",
   "script-commands": "intent",
   hyprwhspr: "rare",
   dmenu: "rare",
-  "extension-runner": "rare",
 };
 
 export function getLauncherPanelWarmupTier(panel: CommandPanel): LauncherPanelWarmupTier {

@@ -2,14 +2,12 @@ import {
   parseExtensionManifest,
   type ExtensionPreference as Preference,
 } from "@beam/extension-protocol";
-import type { RuntimeLaunchPayload } from "@beam/extension-protocol";
 import * as fs from "fs";
 import * as path from "path";
-import { environment, getEnvironmentProtocolSnapshot } from "../api/environment";
+import { environment } from "../api/environment";
 import { LaunchType } from "../api/types";
 import { config } from "../config";
 import { writeLog } from "../io";
-import { preferencesStore } from "../preferences";
 import { aiContext, setCurrentPlugin } from "../state";
 
 export type LaunchMode = "view" | "no-view" | "menu-bar";
@@ -41,7 +39,6 @@ export interface CreateRuntimeLaunchPayloadOptions {
 export interface RuntimeLaunchPlan {
   launchProps: LaunchProps;
   metadata: PluginMetadata;
-  payload: RuntimeLaunchPayload;
   scriptText: string;
 }
 
@@ -140,7 +137,6 @@ export const createRuntimeLaunchPlan = async (
     mode,
   });
 
-  const snapshot = await getEnvironmentProtocolSnapshot();
   const launchArguments = toRecord(options.launchArguments);
   const launchContext = options.launchContext ? toRecord(options.launchContext) : undefined;
 
@@ -151,20 +147,6 @@ export const createRuntimeLaunchPlan = async (
       arguments: launchArguments,
       launchContext,
       launchType: environment.launchType,
-    },
-    payload: {
-      extensionId: metadata.extensionId,
-      extensionPath: metadata.extensionPath,
-      entrypointPath: metadata.entrypointPath,
-      environment: snapshot.environment,
-      desktopContext: snapshot.desktopContext,
-      preferenceValues: preferencesStore.getPreferenceValues(
-        metadata.extensionId,
-        metadata.preferences,
-      ),
-      launchArguments,
-      launchContext,
-      fallbackText: options.fallbackText ?? "",
     },
   };
 };

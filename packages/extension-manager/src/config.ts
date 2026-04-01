@@ -1,4 +1,5 @@
 import * as path from "path";
+import { isMainThread, workerData } from "node:worker_threads";
 
 export interface ExtensionManagerConfig {
   dataDir: string;
@@ -24,7 +25,37 @@ function getArg(name: string): string | undefined {
   return undefined;
 }
 
+function isConfigShape(value: unknown): value is ExtensionManagerConfig {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const candidate = value as Record<string, unknown>;
+  return (
+    typeof candidate.dataDir === "string" &&
+    typeof candidate.cacheDir === "string" &&
+    typeof candidate.supportDir === "string" &&
+    typeof candidate.pluginsDir === "string" &&
+    typeof candidate.preferencesFile === "string" &&
+    typeof candidate.assetsDir === "string"
+  );
+}
+
+function getWorkerConfig(): ExtensionManagerConfig | null {
+  if (isMainThread || !workerData || typeof workerData !== "object") {
+    return null;
+  }
+
+  const config = (workerData as { extensionManagerConfig?: unknown }).extensionManagerConfig;
+  return isConfigShape(config) ? config : null;
+}
+
 export function createConfig(): ExtensionManagerConfig {
+  const inheritedConfig = getWorkerConfig();
+  if (inheritedConfig) {
+    return inheritedConfig;
+  }
+
   const dataDir = getArg("data-dir");
   const cacheBase = getArg("cache-dir");
 

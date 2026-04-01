@@ -86,7 +86,6 @@ function buildRelativeIconCandidates(iconReference: string, baseDirectory: strin
   }
 
   const candidates: string[] = [];
-  pushCandidateWithCommonExtensions(candidates, joinFilePath(baseDirectory, relativePath));
 
   if (!relativePath.includes("/") && !relativePath.includes("\\")) {
     for (const prefix of COMMON_ICON_DIRECTORIES) {
@@ -96,6 +95,8 @@ function buildRelativeIconCandidates(iconReference: string, baseDirectory: strin
       );
     }
   }
+
+  pushCandidateWithCommonExtensions(candidates, joinFilePath(baseDirectory, relativePath));
 
   return Array.from(new Set(candidates));
 }

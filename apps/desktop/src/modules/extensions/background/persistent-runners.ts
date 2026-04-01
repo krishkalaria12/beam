@@ -8,6 +8,7 @@ import {
   buildDispatchViewEventManagerRequest,
   buildLaunchPluginManagerRequest,
 } from "@/modules/extensions/extension-manager/manager-protocol";
+import { parseOauthDeepLink } from "@/modules/extensions/extension-manager/deep-link";
 import {
   listenToExtensionRuntimeExit,
   listenToExtensionRuntimeMessages,
@@ -247,6 +248,8 @@ class PersistentRunnerSession {
   >();
   private callbacks: RunnerManagerCallbacks;
   private onExit?: () => void;
+  private pendingOauthStates = new Set<string>();
+  private oauthKickoffListeners = new Set<() => void>();
 
   constructor(
     runtimeId: string,
@@ -293,6 +296,7 @@ class PersistentRunnerSession {
     this.runtimeStarted = false;
     this.tree = createEmptyRuntimeTreeSnapshot();
     this.propTemplates.clear();
+    this.pendingOauthStates.clear();
 
     if (this.mode === "menu-bar") {
       try {
@@ -322,6 +326,7 @@ class PersistentRunnerSession {
     this.runtimeStarted = false;
     this.tree = createEmptyRuntimeTreeSnapshot();
     this.propTemplates.clear();
+    this.pendingOauthStates.clear();
 
     if (this.mode === "menu-bar") {
       try {
@@ -501,9 +506,96 @@ class PersistentRunnerSession {
   }
 
   private handleOauthAuthorize(payload: { url: string }): void {
+    try {
+      const state = new URL(payload.url).searchParams.get("state") ?? "";
+      if (state) {
+        this.pendingOauthStates.add(state);
+      }
+    } catch {
+      // Ignore malformed OAuth URLs and let the runtime timeout naturally.
+    }
+
+    for (const listener of this.oauthKickoffListeners) {
+      listener();
+    }
+    this.oauthKickoffListeners.clear();
+
     void shellOpen(payload.url).catch((error) => {
       console.error(`[persistent-runner:${this.runnerId}] oauth open failed`, error);
     });
+  }
+
+  waitForOauthKickoff(timeoutMs: number): Promise<boolean> {
+    if (this.pendingOauthStates.size > 0) {
+      return Promise.resolve(true);
+    }
+
+    return new Promise((resolve) => {
+      const onKickoff = () => {
+        clearTimeout(timeoutId);
+        this.oauthKickoffListeners.delete(onKickoff);
+        resolve(true);
+      };
+
+      const timeoutId = setTimeout(() => {
+        this.oauthKickoffListeners.delete(onKickoff);
+        resolve(false);
+      }, timeoutMs);
+
+      this.oauthKickoffListeners.add(onKickoff);
+    });
+  }
+
+  handleDeepLink(url: string): boolean {
+    const parsed = parseOauthDeepLink(url);
+    if (!parsed.handled || !this.runtimeStarted) {
+      return false;
+    }
+
+    if (parsed.kind === "success") {
+      if (!this.pendingOauthStates.has(parsed.state)) {
+        return false;
+      }
+
+      this.pendingOauthStates.delete(parsed.state);
+      this.sendRuntimeRpc({
+        response: {
+          oauthAuthorize: {
+            state: parsed.state,
+            code: parsed.code,
+            error: "",
+          },
+        },
+      });
+      return true;
+    }
+
+    let resolvedState = parsed.state;
+    if (resolvedState) {
+      if (!this.pendingOauthStates.has(resolvedState)) {
+        return false;
+      }
+
+      this.pendingOauthStates.delete(resolvedState);
+    } else if (this.pendingOauthStates.size === 1) {
+      resolvedState = this.pendingOauthStates.values().next().value as string | undefined;
+      if (resolvedState) {
+        this.pendingOauthStates.delete(resolvedState);
+      }
+    } else {
+      return false;
+    }
+
+    this.sendRuntimeRpc({
+      response: {
+        oauthAuthorize: {
+          state: resolvedState ?? "",
+          code: "",
+          error: parsed.error,
+        },
+      },
+    });
+    return true;
   }
 
   private sendRuntimeRpc(message: RuntimeRpc): void {
@@ -862,6 +954,16 @@ class PersistentExtensionRunnerManager {
     this.callbacks = callbacks;
   }
 
+  handleDeepLink(url: string): boolean {
+    for (const session of this.activeSessions.values()) {
+      if (session.handleDeepLink(url)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   private async ensureBridgeListeners(): Promise<void> {
     if (this.runtimeMessageUnlisten && this.runtimeStderrUnlisten && this.runtimeExitUnlisten) {
       return;
@@ -928,6 +1030,11 @@ class PersistentExtensionRunnerManager {
       const mode = plugin.mode?.trim().toLowerCase();
       if (mode === "menu-bar") {
         await this.startMenuBar(plugin, "background");
+
+        const runner = this.menuBarSessions.get(buildRunnerId(plugin));
+        if (runner && (await runner.waitForOauthKickoff(1500))) {
+          break;
+        }
       }
 
       const intervalMs = normalizeIntervalToMs(plugin.interval);

@@ -15,6 +15,10 @@ export function useExtensionManagerEvents({
   openSettings,
 }: UseExtensionManagerEventsInput) {
   useMountEffect(() => {
+    void extensionManagerService.start().catch((error) => {
+      console.error("[extensions-manager] failed to prewarm foreground runtime:", error);
+    });
+
     const unsubscribe = extensionManagerService.subscribe((event) => {
       if (event.type === "go-back-to-plugin-list") {
         useExtensionRuntimeStore.getState().resetRuntime();

@@ -3,7 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 
 import { copyToClipboard } from "@/modules/clipboard/api/copy-to-clipboard";
 import { emitClipboardHistoryUpdated } from "@/modules/clipboard/lib/updates";
-import { isLauncherActionsHotkey } from "@/lib/launcher-actions";
+import { isLauncherActionsHotkey, requestLauncherActionsToggle } from "@/lib/launcher-actions";
 import { extensionManagerService } from "@/modules/extensions/extension-manager-service";
 import {
   type ExtensionToast,
@@ -11,7 +11,6 @@ import {
   type RunningExtensionSession,
   useExtensionRuntimeStore,
 } from "@/modules/extensions/runtime/store";
-import { requestExtensionRunnerActionsToggle } from "@/modules/extensions/components/runner/runner-actions-toggle";
 import {
   getPrimaryExtensionAction,
   getTopLevelExtensionShortcutActions,
@@ -175,12 +174,13 @@ export function useExtensionRunnerState({
 
   const rootNode = rootNodeId ? uiTree.get(rootNodeId) : undefined;
   const rootType = rootNode?.type ?? "";
+  const sessionScope = runningSession?.runtimeId ?? "no-session";
   const isSearchableRoot = rootType === "List" || rootType === "Grid";
   const controlledSearchText =
     isSearchableRoot && rootNode ? asString(rootNode.props.searchText) : "";
   const isControlledSearch =
     isSearchableRoot && rootNode ? asBoolean(rootNode.props.onSearchTextChange) : false;
-  const searchStateKey = `${rootNode?.id ?? 0}:${rootType}`;
+  const searchStateKey = `${sessionScope}:${rootNode?.id ?? 0}:${rootType}`;
   const localSearchText =
     searchState.key === searchStateKey ? searchState.value : controlledSearchText;
   const pendingSearchText =
@@ -244,11 +244,11 @@ export function useExtensionRunnerState({
   const formStateKey = useMemo(
     () =>
       rootNode?.type === "Form"
-        ? `${rootNode.id}:${formFields
+        ? `${sessionScope}:${rootNode.id}:${formFields
             .map((field) => `${field.nodeId}:${JSON.stringify(field.controlledValue ?? null)}`)
             .join("|")}`
         : "",
-    [formFields, rootNode?.id, rootNode?.type],
+    [formFields, rootNode?.id, rootNode?.type, sessionScope],
   );
   const formEdits = formState.key === formStateKey ? formState.values : {};
   const formValues = useMemo(() => {
@@ -311,7 +311,7 @@ export function useExtensionRunnerState({
 
     return currentEntries.findIndex((entry) => entry.itemId === selectedItemId);
   }, [currentEntries, rootNode, rootType]);
-  const selectionStateKey = `${rootNode?.id ?? 0}:${currentEntries.length}`;
+  const selectionStateKey = `${sessionScope}:${rootNode?.id ?? 0}:${currentEntries.length}`;
   const uncontrolledSelectedIndex =
     selectionState.key === selectionStateKey ? selectionState.index : 0;
   const selectedIndex = Math.min(
@@ -351,7 +351,7 @@ export function useExtensionRunnerState({
   );
   const selectionSync = useMemo(
     () => ({
-      key: `${rootNode?.id ?? 0}:${selectedEntry?.nodeId ?? ""}:${selectedEntry?.itemId ?? ""}:${rootType === "List" || rootType === "Grid" ? Number(asBoolean(rootNode?.props.onSelectionChange)) : 0}`,
+      key: `${sessionScope}:${rootNode?.id ?? 0}:${selectedEntry?.nodeId ?? ""}:${selectedEntry?.itemId ?? ""}:${rootType === "List" || rootType === "Grid" ? Number(asBoolean(rootNode?.props.onSelectionChange)) : 0}`,
       selectedNodeId: selectedEntry?.nodeId,
       rootNodeId:
         rootNode && (rootType === "List" || rootType === "Grid") ? rootNode.id : undefined,
@@ -361,7 +361,7 @@ export function useExtensionRunnerState({
         (rootType === "List" || rootType === "Grid") &&
         asBoolean(rootNode.props.onSelectionChange),
     }),
-    [rootNode, rootType, selectedEntry?.itemId, selectedEntry?.nodeId],
+    [rootNode, rootType, selectedEntry?.itemId, selectedEntry?.nodeId, sessionScope],
   );
 
   const formFieldByNodeIdRef = useRef(formFieldByNodeId);
@@ -409,12 +409,19 @@ export function useExtensionRunnerState({
   });
 
   const handleBack = useCallback(() => {
-    try {
-      extensionManagerService.popView();
-    } catch {
+    if (runningSession?.status === "crashed") {
+      useExtensionRuntimeStore.getState().clearForegroundSession(runningSession.runtimeId);
       onBack();
+      return;
     }
-  }, [onBack]);
+
+    void extensionManagerService.popView().catch(() => {
+      if (runningSession?.runtimeId) {
+        useExtensionRuntimeStore.getState().clearForegroundSession(runningSession.runtimeId);
+      }
+      onBack();
+    });
+  }, [onBack, runningSession?.runtimeId, runningSession?.status]);
 
   const executeAction = useCallback(
     async (action: ExtensionAction) => {
@@ -600,6 +607,60 @@ export function useExtensionRunnerState({
     }
   }, []);
 
+  const handleAvailableActionShortcuts = useCallback(
+    (event: KeyboardEvent<HTMLElement>, availableActions: ExtensionAction[]) => {
+      if (availableActions.length > 0 && isLauncherActionsHotkey(event)) {
+        event.preventDefault();
+        event.stopPropagation();
+        requestLauncherActionsToggle();
+        return true;
+      }
+
+      if (
+        event.key === "Enter" &&
+        !event.ctrlKey &&
+        !event.metaKey &&
+        !event.shiftKey &&
+        !event.altKey
+      ) {
+        event.preventDefault();
+        event.stopPropagation();
+        runPrimarySelectionAction();
+        return true;
+      }
+
+      if (
+        event.key === "Enter" &&
+        event.ctrlKey &&
+        !event.metaKey &&
+        !event.shiftKey &&
+        !event.altKey &&
+        availableActions[1]
+      ) {
+        event.preventDefault();
+        event.stopPropagation();
+        void executeAction(availableActions[1]);
+        return true;
+      }
+
+      for (const action of availableActions) {
+        if (!action.shortcutDefinition) {
+          continue;
+        }
+
+        if (keyMatchesShortcut(event, action.shortcutDefinition)) {
+          event.preventDefault();
+          event.stopPropagation();
+          void executeAction(action);
+          return true;
+        }
+      }
+
+      return false;
+    },
+    [executeAction, runPrimarySelectionAction],
+  );
+
   const handleRootKeyDown = useCallback(
     (event: KeyboardEvent<HTMLDivElement>) => {
       if (isEditableTarget(event.target)) {
@@ -618,50 +679,8 @@ export function useExtensionRunnerState({
           ? getTopLevelExtensionShortcutActions(selectedEntryActions)
           : getTopLevelExtensionShortcutActions(rootActions);
 
-      if (availableActions.length > 0 && isLauncherActionsHotkey(event)) {
-        event.preventDefault();
-        event.stopPropagation();
-        requestExtensionRunnerActionsToggle();
+      if (handleAvailableActionShortcuts(event, availableActions)) {
         return;
-      }
-
-      if (
-        event.key === "Enter" &&
-        !event.ctrlKey &&
-        !event.metaKey &&
-        !event.shiftKey &&
-        !event.altKey
-      ) {
-        event.preventDefault();
-        event.stopPropagation();
-        runPrimarySelectionAction();
-        return;
-      }
-
-      if (
-        event.key === "Enter" &&
-        event.ctrlKey &&
-        !event.metaKey &&
-        !event.shiftKey &&
-        !event.altKey &&
-        availableActions[1]
-      ) {
-        event.preventDefault();
-        event.stopPropagation();
-        void executeAction(availableActions[1]);
-        return;
-      }
-
-      for (const action of availableActions) {
-        if (!action.shortcutDefinition) {
-          continue;
-        }
-        if (keyMatchesShortcut(event, action.shortcutDefinition)) {
-          event.preventDefault();
-          event.stopPropagation();
-          void executeAction(action);
-          return;
-        }
       }
 
       if (rootType === "List") {
@@ -835,11 +854,10 @@ export function useExtensionRunnerState({
     },
     [
       currentEntries,
-      executeAction,
       handleBack,
+      handleAvailableActionShortcuts,
       rootActions,
       rootType,
-      runPrimarySelectionAction,
       selectedEntryActions,
       selectedIndex,
     ],
@@ -870,58 +888,13 @@ export function useExtensionRunnerState({
         return;
       }
 
-      if (availableActions.length > 0 && isLauncherActionsHotkey(event)) {
-        event.preventDefault();
-        event.stopPropagation();
-        requestExtensionRunnerActionsToggle();
-        return;
-      }
-
-      if (
-        event.key === "Enter" &&
-        !event.ctrlKey &&
-        !event.metaKey &&
-        !event.shiftKey &&
-        !event.altKey
-      ) {
-        event.preventDefault();
-        event.stopPropagation();
-        runPrimarySelectionAction();
-        return;
-      }
-
-      if (
-        event.key === "Enter" &&
-        event.ctrlKey &&
-        !event.metaKey &&
-        !event.shiftKey &&
-        !event.altKey &&
-        availableActions[1]
-      ) {
-        event.preventDefault();
-        event.stopPropagation();
-        void executeAction(availableActions[1]);
-        return;
-      }
-
-      for (const action of availableActions) {
-        if (!action.shortcutDefinition) {
-          continue;
-        }
-        if (keyMatchesShortcut(event, action.shortcutDefinition)) {
-          event.preventDefault();
-          event.stopPropagation();
-          void executeAction(action);
-          return;
-        }
-      }
+      handleAvailableActionShortcuts(event, availableActions);
     },
     [
-      executeAction,
       handleBack,
+      handleAvailableActionShortcuts,
       handleSearchInputChange,
       rootActions,
-      runPrimarySelectionAction,
       searchText,
       selectedEntryActions,
     ],

@@ -418,14 +418,14 @@ export function ActionListPanel({
         <div
           className={cn(
             "sc-actions-panel module-action-list-overlay",
-            "absolute bottom-[calc(100%+10px)] right-0 z-50 w-[400px] max-w-[calc(100vw-32px)] overflow-hidden rounded-2xl border border-[var(--launcher-card-border)] bg-[var(--popover)] shadow-2xl",
+            "absolute bottom-[calc(100%+8px)] right-0 z-50 w-[352px] max-w-[calc(100vw-24px)] overflow-hidden rounded-xl border border-[var(--launcher-card-border)] bg-[var(--popover)] shadow-2xl",
             panelClassName,
           )}
           style={panelStyle}
           data-slot="launcher-actions-panel"
         >
           {panelTitle || navigationPath.length > 0 ? (
-            <div className="flex items-center gap-2 border-b border-[var(--ui-divider)] px-3 py-2.5">
+            <div className="flex items-center gap-2 border-b border-[var(--ui-divider)] px-3 py-2">
               {navigationPath.length > 0 ? (
                 <button
                   type="button"
@@ -451,7 +451,7 @@ export function ActionListPanel({
             </div>
           ) : null}
 
-          <div className="module-action-list-search border-b border-[var(--ui-divider)] p-3">
+          <div className="module-action-list-search border-b border-[var(--ui-divider)] p-2.5">
             <SearchInput
               ref={inputMountRef}
               value={query}
@@ -467,18 +467,18 @@ export function ActionListPanel({
               }
               leftIcon={<Search />}
               className="text-launcher-sm"
-              containerClassName="h-10 rounded-xl"
+              containerClassName="h-9 rounded-lg"
               onKeyDown={handleKeyDown}
             />
           </div>
 
-          <div className="module-action-list-content custom-scrollbar max-h-[420px] overflow-y-auto overscroll-contain p-2.5">
+          <div className="module-action-list-content custom-scrollbar max-h-[360px] overflow-y-auto overscroll-contain p-2">
             {itemRows.length === 0 ? (
               <div className="module-action-list-empty px-4 py-12 text-center text-launcher-sm text-muted-foreground">
                 No matching actions
               </div>
             ) : (
-              <div className="module-action-list-items space-y-1.5">
+              <div className="module-action-list-items space-y-1">
                 {rows.map((row) => {
                   if (row.type === "section") {
                     return (
@@ -505,7 +505,7 @@ export function ActionListPanel({
                       }}
                       leftSlot={
                         row.item.icon ? (
-                          <div className="flex size-9 items-center justify-center rounded-xl bg-[var(--launcher-card-bg)] ring-1 ring-[var(--launcher-card-border)]">
+                          <div className="flex size-8 items-center justify-center rounded-lg bg-[var(--launcher-card-bg)] ring-1 ring-[var(--launcher-card-border)]">
                             {row.item.icon}
                           </div>
                         ) : undefined
@@ -528,7 +528,7 @@ export function ActionListPanel({
                         ) : undefined
                       }
                       className={cn(
-                        "module-action-list-row rounded-xl px-3 py-2.5",
+                        "module-action-list-row rounded-lg px-2.5 py-2",
                         row.item.danger && "text-[var(--icon-red-fg)]",
                       )}
                     >

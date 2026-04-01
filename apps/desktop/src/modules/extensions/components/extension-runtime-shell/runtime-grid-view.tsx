@@ -11,6 +11,7 @@ import { RuntimeActionFooter } from "./runtime-action-footer";
 import {
   getEmptyViewIconClassName,
   isAnimatedEmptyViewIcon,
+  readRuntimeFailureEmptyState,
   readClassName,
   readStyle,
   resolveColorContent,
@@ -76,6 +77,7 @@ export function RuntimeGridView({ state }: RuntimeGridViewProps) {
   const emptyViewNode = rootNode?.children
     .map((childId) => state.uiTree.get(childId))
     .find((child): child is NonNullable<typeof child> => child?.type === "Grid.EmptyView");
+  const failureEmptyState = readRuntimeFailureEmptyState(state);
   const className = readClassName(rootNode?.props.className);
   const style = readStyle(rootNode?.props.style);
   const contentClassName = readClassName(rootNode?.props.contentClassName);
@@ -113,12 +115,12 @@ export function RuntimeGridView({ state }: RuntimeGridViewProps) {
           title={
             emptyViewNode
               ? asString(emptyViewNode.props.title).trim() || "No results"
-              : "No results"
+              : (failureEmptyState?.title ?? "No results")
           }
           description={
             emptyViewNode
               ? asString(emptyViewNode.props.description).trim() || undefined
-              : "This extension did not return any grid items."
+              : (failureEmptyState?.description ?? "This extension did not return any grid items.")
           }
           icon={
             emptyViewNode?.props.icon ? (

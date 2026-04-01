@@ -23,8 +23,24 @@ export interface LauncherActionItem {
   disabled?: boolean;
   nextPageId?: "hotkey" | "alias";
   nextPageTarget?: LauncherActionTarget;
+  childPage?: LauncherActionCustomPage;
+  onNavigate?: () => void;
   closeOnSelect?: boolean;
   onSelect?: () => void;
+}
+
+export interface LauncherActionSection {
+  id: string;
+  title?: string;
+  items: LauncherActionItem[];
+}
+
+export interface LauncherActionCustomPage {
+  id: string;
+  title?: string;
+  subtitle?: string;
+  searchPlaceholder?: string;
+  sections: LauncherActionSection[];
 }
 
 export interface LauncherActionsPanelProps {
@@ -36,19 +52,12 @@ export interface LauncherActionsPanelProps {
   rootSearchPlaceholder?: string;
   showItemDescriptions?: boolean;
   rootItems?: LauncherActionItem[];
+  rootSections?: LauncherActionSection[];
   defaultRootItemsMode?: "replace" | "append";
   defaultTarget?: LauncherActionTarget | null;
 }
 
 export type ActionPageId = "root" | "hotkey" | "alias";
-
-export interface ActionPage {
-  id: ActionPageId;
-  title: string;
-  subtitle?: string;
-  searchPlaceholder: string;
-  items: LauncherActionItem[];
-}
 
 export type FeedbackTone = "neutral" | "success" | "error";
 

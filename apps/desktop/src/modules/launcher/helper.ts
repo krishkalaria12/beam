@@ -1,6 +1,6 @@
 import { staticCommandRegistry } from "@/command-registry/registry";
 
-import type { LauncherActionItem, SaveFeedback } from "./types";
+import type { LauncherActionItem, LauncherActionSection } from "./types";
 
 export const HOTKEY_EXAMPLE = "CTRL+SUPER+A";
 
@@ -19,6 +19,28 @@ export function filterActionItems(
       .toLowerCase();
     return searchable.includes(normalized);
   });
+}
+
+export function filterActionSections(
+  sections: LauncherActionSection[],
+  query: string,
+): LauncherActionSection[] {
+  if (query.trim().length === 0) {
+    return sections;
+  }
+
+  return sections.flatMap((section) => {
+    const items = filterActionItems(section.items, query);
+    if (items.length === 0) {
+      return [];
+    }
+
+    return [{ ...section, items }];
+  });
+}
+
+export function flattenActionSections(sections: LauncherActionSection[]): LauncherActionItem[] {
+  return sections.flatMap((section) => section.items);
 }
 
 export function formatCommandName(
@@ -141,91 +163,6 @@ export function findHotkeyConflictCommandId(
   }
 
   return null;
-}
-
-export function buildHotkeyAvailability({
-  targetCommandId,
-  targetCommandTitle,
-  hotkeyValue,
-  hotkeyConflictCommandId,
-}: {
-  targetCommandId?: string;
-  targetCommandTitle?: string;
-  hotkeyValue: string;
-  hotkeyConflictCommandId: string | null;
-}): SaveFeedback {
-  if (!targetCommandId) {
-    return {
-      tone: "error",
-      text: "No command context. Open this from a command panel action.",
-    };
-  }
-
-  if (!hotkeyValue.trim()) {
-    return {
-      tone: "neutral",
-      text: "Empty value removes the current shortcut.",
-    };
-  }
-
-  if (hotkeyConflictCommandId) {
-    return {
-      tone: "error",
-      text: `"${hotkeyValue}" is already used by ${formatCommandName(
-        hotkeyConflictCommandId,
-        targetCommandTitle,
-        targetCommandId,
-      )}.`,
-    };
-  }
-
-  return {
-    tone: "success",
-    text: `"${hotkeyValue}" is available.`,
-  };
-}
-
-export function buildAliasAvailability({
-  targetCommandId,
-  targetCommandTitle,
-  aliasValue,
-  aliasConflictCommandId,
-}: {
-  targetCommandId?: string;
-  targetCommandTitle?: string;
-  aliasValue: string;
-  aliasConflictCommandId: string | null;
-}): SaveFeedback {
-  if (!targetCommandId) {
-    return {
-      tone: "error",
-      text: "No command context. Open this from a command panel action.",
-    };
-  }
-
-  const normalizedAlias = normalizeAlias(aliasValue);
-  if (!normalizedAlias) {
-    return {
-      tone: "neutral",
-      text: "Empty value removes the current alias.",
-    };
-  }
-
-  if (aliasConflictCommandId) {
-    return {
-      tone: "error",
-      text: `"${aliasValue.trim()}" is already used by ${formatCommandName(
-        aliasConflictCommandId,
-        targetCommandTitle,
-        targetCommandId,
-      )}.`,
-    };
-  }
-
-  return {
-    tone: "success",
-    text: `"${aliasValue.trim()}" is available.`,
-  };
 }
 
 export function dispatchEnterToTarget(target: HTMLElement | null): void {

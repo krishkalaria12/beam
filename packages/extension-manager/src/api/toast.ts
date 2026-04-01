@@ -16,6 +16,50 @@ interface ToastOptions {
   secondaryAction?: RuntimeToastActionOptions;
 }
 
+const MAX_TOAST_TITLE_LENGTH = 120;
+const MAX_TOAST_MESSAGE_LENGTH = 320;
+const MAX_TOAST_ACTION_TITLE_LENGTH = 48;
+
+function compactToastText(value: string | undefined, maxLength: number): string | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  const compact = value.replace(/\s+/g, " ").trim();
+  if (compact.length === 0) {
+    return undefined;
+  }
+
+  if (compact.length <= maxLength) {
+    return compact;
+  }
+
+  return `${compact.slice(0, maxLength - 1).trimEnd()}…`;
+}
+
+function sanitizeToastAction(
+  action: RuntimeToastActionOptions | undefined,
+): RuntimeToastActionOptions | undefined {
+  if (!action) {
+    return undefined;
+  }
+
+  return {
+    ...action,
+    title: compactToastText(action.title, MAX_TOAST_ACTION_TITLE_LENGTH) || "Action",
+  };
+}
+
+function sanitizeToastOptions(options: ToastOptions): ToastOptions {
+  return {
+    ...options,
+    title: compactToastText(options.title, MAX_TOAST_TITLE_LENGTH) || "Extension",
+    message: compactToastText(options.message, MAX_TOAST_MESSAGE_LENGTH),
+    primaryAction: sanitizeToastAction(options.primaryAction),
+    secondaryAction: sanitizeToastAction(options.secondaryAction),
+  };
+}
+
 function toShortcut(
   shortcut: RuntimeToastActionOptions["shortcut"],
 ): { modifiers: Array<"cmd" | "ctrl" | "opt" | "shift">; key: string } | undefined {
@@ -40,7 +84,7 @@ function toToastAction(action: RuntimeToastActionOptions | undefined) {
   }
 
   return {
-    title: action.title,
+    title: compactToastText(action.title, MAX_TOAST_ACTION_TITLE_LENGTH) || "Action",
     onAction: !!action.onAction,
     shortcut: toShortcut(action.shortcut),
   };
@@ -57,8 +101,8 @@ class ToastImpl implements RuntimeToast {
   constructor(options: ToastOptions) {
     this.#id = getNextInstanceId();
     this.#style = options.style ?? ToastStyle.Success;
-    this.#title = options.title;
-    this.#message = options.message;
+    this.#title = compactToastText(options.title, MAX_TOAST_TITLE_LENGTH) || "Extension";
+    this.#message = compactToastText(options.message, MAX_TOAST_MESSAGE_LENGTH);
     this.primaryAction = options.primaryAction;
     this.secondaryAction = options.secondaryAction;
   }
@@ -79,7 +123,7 @@ class ToastImpl implements RuntimeToast {
     return this.#title;
   }
   set title(newTitle: string) {
-    this.#title = newTitle;
+    this.#title = compactToastText(newTitle, MAX_TOAST_TITLE_LENGTH) || "Extension";
     this._update();
   }
 
@@ -87,7 +131,7 @@ class ToastImpl implements RuntimeToast {
     return this.#message;
   }
   set message(newMessage: string | undefined) {
-    this.#message = newMessage;
+    this.#message = compactToastText(newMessage, MAX_TOAST_MESSAGE_LENGTH);
     this._update();
   }
 
@@ -156,6 +200,8 @@ export async function showToast(
       message,
     };
   }
+
+  options = sanitizeToastOptions(options);
 
   const toast = new ToastImpl(options);
   if (activeToastId !== null && activeToastId !== toast.id) {
