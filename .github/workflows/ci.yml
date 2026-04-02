@@ -35,7 +35,8 @@ jobs:
             libgtk-3-dev \
             libappindicator3-dev \
             librsvg2-dev \
-            patchelf
+            patchelf \
+            protobuf-compiler
 
       - name: install dependencies
         run: bun install --frozen-lockfile

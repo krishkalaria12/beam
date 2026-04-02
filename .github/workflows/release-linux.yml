@@ -38,7 +38,8 @@ jobs:
             libappindicator3-dev \
             librsvg2-dev \
             patchelf \
-            rpm
+            rpm \
+            protobuf-compiler
 
       - name: install dependencies
         run: bun install --frozen-lockfile
@@ -110,22 +111,22 @@ jobs:
 
       - name: clone aur repo
         if: steps.aur_secret.outputs.enabled == 'true'
-        run: git clone ssh://aur@aur.archlinux.org/beam-bin.git aur-beam-bin
+        run: git clone ssh://aur@aur.archlinux.org/beam-launcher-bin.git aur-beam-launcher-bin
 
       - name: render aur package files
         if: steps.aur_secret.outputs.enabled == 'true'
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: bun infra/scripts/update-aur-beam-bin.ts --repo-dir aur-beam-bin --tag "${GITHUB_REF_NAME}" --github-repo "${GITHUB_REPOSITORY}"
+        run: bun infra/scripts/update-aur-beam-launcher-bin.ts --repo-dir aur-beam-launcher-bin --tag "${GITHUB_REF_NAME}" --github-repo "${GITHUB_REPOSITORY}"
 
       - name: commit and push aur update
         if: steps.aur_secret.outputs.enabled == 'true'
         run: |
-          if [ -z "$(git -C aur-beam-bin status --porcelain)" ]; then
+          if [ -z "$(git -C aur-beam-launcher-bin status --porcelain)" ]; then
             echo "No AUR changes to publish."
             exit 0
           fi
 
-          git -C aur-beam-bin add PKGBUILD .SRCINFO beam.desktop beam.png LICENSE
-          git -C aur-beam-bin -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -m "beam-bin ${GITHUB_REF_NAME#v}"
-          git -C aur-beam-bin push
+          git -C aur-beam-launcher-bin add PKGBUILD .SRCINFO beam.desktop beam.png LICENSE
+          git -C aur-beam-launcher-bin -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -m "beam-launcher-bin ${GITHUB_REF_NAME#v}"
+          git -C aur-beam-launcher-bin push

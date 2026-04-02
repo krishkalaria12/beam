@@ -22,7 +22,7 @@ type AssetInfo = {
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(scriptDir, "..", "..");
-const aurTemplateDir = path.join(repoRoot, "infra", "aur", "beam-bin");
+const aurTemplateDir = path.join(repoRoot, "infra", "aur", "beam-launcher-bin");
 const desktopTemplatePath = path.join(aurTemplateDir, "beam.desktop");
 const iconTemplatePath = path.join(
   repoRoot,
@@ -34,7 +34,7 @@ const iconTemplatePath = path.join(
 );
 const licenseTemplatePath = path.join(repoRoot, "LICENSE");
 
-const packageName = "beam-bin";
+const packageName = "beam-launcher-bin";
 const appName = "beam";
 const githubProjectUrl = "https://github.com/krishkalaria12/beam";
 const packageDescription = "A blazing-fast, open-source command launcher for Linux";
