@@ -1,0 +1,131 @@
+name: release-linux
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-release:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: setup bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.2.19
+
+      - name: setup rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: install linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libgtk-3-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            rpm
+
+      - name: install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: build linux bundles
+        run: bun run --cwd apps/desktop desktop:build -- --bundles appimage,deb,rpm
+
+      - name: collect release artifacts
+        run: |
+          mkdir -p release-assets
+          cp apps/desktop/src-tauri/target/release/bundle/appimage/*.AppImage release-assets/
+          cp apps/desktop/src-tauri/target/release/bundle/deb/*.deb release-assets/
+          cp apps/desktop/src-tauri/target/release/bundle/rpm/*.rpm release-assets/
+          cd release-assets
+          sha256sum * > SHA256SUMS.txt
+
+      - name: publish github release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            release-assets/*
+          generate_release_notes: true
+          prerelease: ${{ contains(github.ref_name, '-') }}
+
+  publish-aur:
+    runs-on: ubuntu-22.04
+    needs: build-release
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: check aur secret
+        id: aur_secret
+        env:
+          AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+        run: |
+          if [ -z "$AUR_SSH_PRIVATE_KEY" ]; then
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping AUR publish because AUR_SSH_PRIVATE_KEY is not configured."
+            exit 0
+          fi
+
+          echo "enabled=true" >> "$GITHUB_OUTPUT"
+
+      - name: setup node
+        if: steps.aur_secret.outputs.enabled == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: setup bun
+        if: steps.aur_secret.outputs.enabled == 'true'
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.2.19
+
+      - name: load aur ssh key
+        if: steps.aur_secret.outputs.enabled == 'true'
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+
+      - name: trust aur host
+        if: steps.aur_secret.outputs.enabled == 'true'
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan aur.archlinux.org >> ~/.ssh/known_hosts
+
+      - name: clone aur repo
+        if: steps.aur_secret.outputs.enabled == 'true'
+        run: git clone ssh://aur@aur.archlinux.org/beam-bin.git aur-beam-bin
+
+      - name: render aur package files
+        if: steps.aur_secret.outputs.enabled == 'true'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: bun infra/scripts/update-aur-beam-bin.ts --repo-dir aur-beam-bin --tag "${GITHUB_REF_NAME}" --github-repo "${GITHUB_REPOSITORY}"
+
+      - name: commit and push aur update
+        if: steps.aur_secret.outputs.enabled == 'true'
+        run: |
+          if [ -z "$(git -C aur-beam-bin status --porcelain)" ]; then
+            echo "No AUR changes to publish."
+            exit 0
+          fi
+
+          git -C aur-beam-bin add PKGBUILD .SRCINFO beam.desktop beam.png LICENSE
+          git -C aur-beam-bin -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -m "beam-bin ${GITHUB_REF_NAME#v}"
+          git -C aur-beam-bin push
