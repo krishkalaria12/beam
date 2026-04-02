@@ -49,10 +49,11 @@ jobs:
 
       - name: collect release artifacts
         run: |
+          bundle_dir="target/rust/release/bundle"
           mkdir -p release-assets
-          cp apps/desktop/src-tauri/target/release/bundle/appimage/*.AppImage release-assets/
-          cp apps/desktop/src-tauri/target/release/bundle/deb/*.deb release-assets/
-          cp apps/desktop/src-tauri/target/release/bundle/rpm/*.rpm release-assets/
+          cp "$bundle_dir"/appimage/*.AppImage release-assets/
+          cp "$bundle_dir"/deb/*.deb release-assets/
+          cp "$bundle_dir"/rpm/*.rpm release-assets/
           cd release-assets
           sha256sum * > SHA256SUMS.txt
 
