@@ -88,8 +88,14 @@ reactCompiler.rolldown.filter.id = {
   exclude: ["**/*.d.ts", "src/assets/**", "src/routeTree.gen.ts", "src/styles/**", "src/types/**"],
 };
 
+// GitHub Actions can resolve a stricter Babel options type here than local dev.
+// The runtime config is valid, so we narrow the shape explicitly for type-check stability.
+const reactCompilerBabelOptions = {
+  presets: [reactCompiler],
+} as Parameters<typeof babel>[0];
+
 export default defineConfig({
-  plugins: [tailwindcss(), tanstackRouter({}), react(), babel({ presets: [reactCompiler] })],
+  plugins: [tailwindcss(), tanstackRouter({}), react(), babel(reactCompilerBabelOptions)],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
