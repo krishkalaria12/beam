@@ -19,7 +19,7 @@ function SidebarBadge({
   return (
     <span
       className={cn(
-        "rounded border px-1.5 py-0.5 text-[10px] font-medium",
+        "rounded border px-1.5 py-0.5 text-launcher-2xs font-medium",
         tone === "success"
           ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
           : tone === "info"
@@ -75,10 +75,10 @@ function SidebarRow({
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <span className="truncate text-sm font-medium text-foreground">{title}</span>
+          <span className="truncate text-launcher-sm font-medium text-foreground">{title}</span>
           {badges ? <div className="flex shrink-0 items-center gap-1.5">{badges}</div> : null}
         </div>
-        <div className="truncate text-xs text-muted-foreground">{description}</div>
+        <div className="truncate text-launcher-xs text-muted-foreground">{description}</div>
       </div>
     </button>
   );
@@ -130,11 +130,11 @@ export function ExtensionsSidebar({
     <div className="flex h-full flex-col gap-6">
       <section className="space-y-1">
         {installedErrorMessage ? (
-          <div className="rounded-lg border border-[var(--icon-red-bg)] bg-[var(--icon-red-bg)] px-3 py-2 text-xs text-[var(--icon-red-fg)]">
+          <div className="rounded-lg border border-[var(--icon-red-bg)] bg-[var(--icon-red-bg)] px-3 py-2 text-launcher-xs text-[var(--icon-red-fg)]">
             {installedErrorMessage}
           </div>
         ) : isInstalledLoading ? (
-          <div className="flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground">
+          <div className="flex items-center gap-2 px-3 py-2 text-launcher-xs text-muted-foreground">
             <Loader2 className="size-3.5 animate-spin" />
             Loading installed...
           </div>
@@ -165,7 +165,7 @@ export function ExtensionsSidebar({
             );
           })
         ) : !hasSearch ? (
-          <div className="px-3 py-4 text-center text-xs text-muted-foreground">
+          <div className="px-3 py-4 text-center text-launcher-xs text-muted-foreground">
             No extensions installed yet.
           </div>
         ) : null}
@@ -174,17 +174,17 @@ export function ExtensionsSidebar({
       {isStoreActive || isStoreLoading || isSearchDebouncing || storeResults.length > 0 ? (
         <section className="space-y-1">
           {!isStoreLoading && !isSearchDebouncing && storeResults.length > 0 ? (
-            <div className="mb-2 px-3 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
+            <div className="mb-2 px-3 text-launcher-xs font-semibold tracking-wider text-muted-foreground uppercase">
               Store Results
             </div>
           ) : null}
 
           {isStoreError ? (
-            <div className="rounded-lg border border-[var(--icon-red-bg)] bg-[var(--icon-red-bg)] px-3 py-2 text-xs text-[var(--icon-red-fg)]">
+            <div className="rounded-lg border border-[var(--icon-red-bg)] bg-[var(--icon-red-bg)] px-3 py-2 text-launcher-xs text-[var(--icon-red-fg)]">
               {storeErrorMessage || "Store search failed."}
             </div>
           ) : isStoreLoading || isSearchDebouncing ? (
-            <div className="flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground">
+            <div className="flex items-center gap-2 px-3 py-2 text-launcher-xs text-muted-foreground">
               <Loader2 className="size-3.5 animate-spin" />
               Searching store...
             </div>
@@ -216,13 +216,13 @@ export function ExtensionsSidebar({
               );
             })
           ) : (
-            <div className="px-3 py-4 text-center text-xs text-muted-foreground">
+            <div className="px-3 py-4 text-center text-launcher-xs text-muted-foreground">
               No store results found for "{search}".
             </div>
           )}
         </section>
       ) : hasSearch && search.length < minimumSearchLength ? (
-        <div className="px-3 py-4 text-center text-xs text-muted-foreground">
+        <div className="px-3 py-4 text-center text-launcher-xs text-muted-foreground">
           Type {minimumSearchLength} or more characters to search the store.
         </div>
       ) : null}
@@ -232,8 +232,8 @@ export function ExtensionsSidebar({
           <div className="mb-4 flex size-12 items-center justify-center rounded-2xl border border-[var(--ui-divider)] bg-[var(--launcher-card-hover-bg)] text-muted-foreground">
             <Package className="size-5" />
           </div>
-          <p className="text-sm font-semibold text-foreground">No extensions installed</p>
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="text-launcher-sm font-semibold text-foreground">No extensions installed</p>
+          <p className="mt-1 text-launcher-xs text-muted-foreground">
             Search above to browse community extensions.
           </p>
         </div>

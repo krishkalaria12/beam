@@ -110,7 +110,7 @@ function DetailTabButton({
       type="button"
       onClick={onClick}
       className={cn(
-        "flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors hover:text-foreground",
+        "flex items-center gap-1.5 px-3 py-1.5 text-launcher-xs font-medium transition-colors hover:text-foreground",
         active ? "text-foreground" : "text-muted-foreground",
       )}
     >
@@ -125,7 +125,7 @@ function DetailContainer({ children }: { children: ReactNode }) {
 }
 
 function DetailSectionTitle({ children }: { children: ReactNode }) {
-  return <h3 className="mb-3 text-[13px] font-semibold text-foreground">{children}</h3>;
+  return <h3 className="mb-3 text-launcher-md font-semibold text-foreground">{children}</h3>;
 }
 
 function DetailBadge({
@@ -138,7 +138,7 @@ function DetailBadge({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded bg-[var(--launcher-card-bg)] px-2 py-0.5 text-[11px] font-medium border",
+        "inline-flex items-center gap-1.5 rounded bg-[var(--launcher-card-bg)] px-2 py-0.5 text-launcher-xs font-medium border",
         tone === "success"
           ? "border-[color:var(--status-success)] bg-[color:var(--status-success-soft)] text-[color:var(--status-success)]"
           : tone === "info"
@@ -153,7 +153,7 @@ function DetailBadge({
 
 function DetailMetaRow({ label, value }: { label: string; value: ReactNode }) {
   return (
-    <div className="flex border-b border-[var(--ui-divider)] py-2.5 last:border-0 text-sm">
+    <div className="flex border-b border-[var(--ui-divider)] py-2.5 last:border-0 text-launcher-sm">
       <div className="w-1/3 text-muted-foreground">{label}</div>
       <div className="w-2/3 text-foreground font-medium">{value}</div>
     </div>
@@ -166,7 +166,7 @@ function LinkAction({ label, url }: { label: string; url: string | undefined }) 
     <button
       type="button"
       onClick={() => openExtensionExternalUrl(url)}
-      className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--ui-divider)] bg-[var(--launcher-card-bg)] px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-[var(--ring)] hover:bg-[var(--launcher-card-hover-bg)]"
+      className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--ui-divider)] bg-[var(--launcher-card-bg)] px-3 py-1.5 text-launcher-xs font-medium text-foreground transition-colors hover:border-[var(--ring)] hover:bg-[var(--launcher-card-hover-bg)]"
     >
       <ExternalLink className="size-3.5" />
       {label}
@@ -176,7 +176,7 @@ function LinkAction({ label, url }: { label: string; url: string | undefined }) 
 
 function ScreenshotGrid({ screenshots }: { screenshots: string[] }) {
   if (screenshots.length === 0) {
-    return <div className="text-sm text-muted-foreground">No screenshots available.</div>;
+    return <div className="text-launcher-sm text-muted-foreground">No screenshots available.</div>;
   }
   return (
     <div className="grid gap-3 md:grid-cols-2">
@@ -206,7 +206,7 @@ function StoreCommandsList({
   commands: Array<{ name: string; title?: string; description?: string }>;
 }) {
   if (!commands || commands.length === 0) {
-    return <div className="text-sm text-muted-foreground">No commands available.</div>;
+    return <div className="text-launcher-sm text-muted-foreground">No commands available.</div>;
   }
   return (
     <div className="space-y-2">
@@ -219,10 +219,10 @@ function StoreCommandsList({
             <Terminal className="size-3.5" />
           </div>
           <div className="min-w-0 flex-1">
-            <div className="text-sm font-medium text-foreground">
+            <div className="text-launcher-sm font-medium text-foreground">
               {command.title?.trim() || command.name}
             </div>
-            <div className="truncate text-xs text-muted-foreground">
+            <div className="truncate text-launcher-xs text-muted-foreground">
               {command.description?.trim() || "No description"}
             </div>
           </div>
@@ -260,7 +260,7 @@ interface ExtensionsDetailPanelProps {
 
 function EmptyExtensionsDetailPanel() {
   return (
-    <div className="flex h-full items-center justify-center p-6 text-center text-sm text-muted-foreground">
+    <div className="flex h-full items-center justify-center p-6 text-center text-launcher-sm text-muted-foreground">
       Select an extension to view details
     </div>
   );
@@ -316,10 +316,10 @@ function InstalledExtensionDetailPane({
           />
         </div>
         <div className="min-w-0 flex-1 pt-1">
-          <h1 className="truncate text-xl font-semibold text-foreground">
+          <h1 className="truncate text-launcher-xl font-semibold text-foreground">
             {selectedInstalled.title}
           </h1>
-          <div className="mt-1 flex items-center gap-2 text-sm font-medium text-muted-foreground">
+          <div className="mt-1 flex items-center gap-2 text-launcher-sm font-medium text-muted-foreground">
             <span>
               {selectedInstalled.owner}/{selectedInstalled.slug}
             </span>
@@ -395,17 +395,17 @@ function InstalledExtensionDetailPane({
       <div className="flex-1 overflow-y-auto pt-4">
         {tab === "overview" && (
           <DetailContainer>
-            <div className="text-[13px] leading-relaxed text-foreground/90">
+            <div className="text-launcher-md leading-relaxed text-foreground/90">
               {selectedInstalled.description || "This extension is installed and ready to use."}
             </div>
 
             {selectedInstalledUpdate && (
               <div className="rounded-lg border border-[var(--ui-divider)] bg-[var(--launcher-card-bg)] p-3">
-                <div className="flex items-center gap-2 text-[13px] font-medium text-sky-400">
+                <div className="flex items-center gap-2 text-launcher-md font-medium text-sky-400">
                   <RefreshCcw className="size-3.5" />
                   Update available
                 </div>
-                <div className="mt-1 text-xs text-muted-foreground">
+                <div className="mt-1 text-launcher-xs text-muted-foreground">
                   Version {selectedInstalledUpdate.latestVersion} is available.
                 </div>
               </div>
@@ -429,7 +429,7 @@ function InstalledExtensionDetailPane({
           <DetailContainer>
             <DetailSectionTitle>Configuration</DetailSectionTitle>
             {!hasPreferences ? (
-              <div className="text-sm text-muted-foreground">
+              <div className="text-launcher-sm text-muted-foreground">
                 This extension has no configurable preferences.
               </div>
             ) : (
@@ -493,10 +493,10 @@ function StoreExtensionDetailPane({
           />
         </div>
         <div className="min-w-0 flex-1 pt-1">
-          <h1 className="truncate text-xl font-semibold text-foreground">
+          <h1 className="truncate text-launcher-xl font-semibold text-foreground">
             {selectedStoreDetail.title}
           </h1>
-          <div className="mt-1 flex items-center gap-2 text-sm font-medium text-muted-foreground">
+          <div className="mt-1 flex items-center gap-2 text-launcher-sm font-medium text-muted-foreground">
             <span>{formatStoreHeaderMeta(selectedStoreDetail)}</span>
           </div>
           <div className="mt-2 flex flex-wrap gap-2 text-muted-foreground">
@@ -577,14 +577,14 @@ function StoreExtensionDetailPane({
         )}
 
         {storeDetailError && (
-          <div className="rounded-lg border border-[var(--icon-red-bg)] bg-[var(--icon-red-bg)] px-4 py-3 text-sm text-[var(--icon-red-fg)] mb-4">
+          <div className="rounded-lg border border-[var(--icon-red-bg)] bg-[var(--icon-red-bg)] px-4 py-3 text-launcher-sm text-[var(--icon-red-fg)] mb-4">
             {storeDetailError}
           </div>
         )}
 
         {tab === "overview" && (
           <DetailContainer>
-            <div className="text-[14px] leading-relaxed text-foreground/90 font-medium">
+            <div className="text-launcher-lg leading-relaxed text-foreground/90 font-medium">
               {selectedStoreDetail.description ||
                 selectedStoreDetail.summary ||
                 "No description provided."}
@@ -673,7 +673,7 @@ function StoreExtensionDetailPane({
             ) : selectedStoreDetail.latestRelease.releaseNotes?.summary ? (
               <div>
                 <DetailSectionTitle>Release Summary</DetailSectionTitle>
-                <div className="text-[13px] text-foreground/90">
+                <div className="text-launcher-md text-foreground/90">
                   {selectedStoreDetail.latestRelease.releaseNotes.summary}
                 </div>
               </div>

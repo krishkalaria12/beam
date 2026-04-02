@@ -54,7 +54,7 @@ export function RunnerActionBar({
             className="ext-footer-actions-toggle h-7 rounded-md px-2 text-launcher-xs font-medium text-muted-foreground hover:bg-[var(--launcher-card-hover-bg)] hover:text-foreground"
           >
             <span>Actions</span>
-            <span className="rounded-md bg-[var(--launcher-card-bg)] px-1.5 py-0.5 text-[11px] text-muted-foreground/80">
+            <span className="rounded-md bg-[var(--launcher-card-bg)] px-1.5 py-0.5 text-launcher-xs text-muted-foreground/80">
               {actionCount}
             </span>
             <ChevronsUpDown className="size-3 text-muted-foreground/70" />

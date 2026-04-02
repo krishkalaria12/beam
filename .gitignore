@@ -64,10 +64,6 @@ dev-dist
 
 .open-next
 
-vicinae-main/
-utils-main/
-SuperCmd-main/
-
 # Generated local store artifacts
 infra/store/artifacts/*.zip
 

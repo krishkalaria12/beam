@@ -438,7 +438,7 @@ export function ActionListPanel({
               ) : null}
               <div className="min-w-0 flex-1">
                 {breadcrumbs.length > 1 ? (
-                  <p className="truncate text-[11px] uppercase tracking-[0.14em] text-muted-foreground/70">
+                  <p className="truncate text-launcher-xs uppercase tracking-[0.14em] text-muted-foreground/70">
                     {breadcrumbs.map((crumb) => crumb.title).join(" / ")}
                   </p>
                 ) : null}
@@ -514,7 +514,7 @@ export function ActionListPanel({
                         row.item.shortcut?.length || row.item.primary || row.item.submenu ? (
                           <div className="flex items-center gap-2 text-muted-foreground">
                             {row.item.primary ? (
-                              <span className="rounded-md border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/80">
+                              <span className="rounded-md border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-1.5 py-0.5 text-launcher-2xs font-semibold uppercase tracking-[0.12em] text-muted-foreground/80">
                                 default
                               </span>
                             ) : null}
