@@ -144,7 +144,9 @@ function normalizeAuthorInput(author: unknown): Record<string, unknown> | undefi
     return { simple };
   }
 
-  const detailedFromProto = isRecord(author.detailed) ? readOptionalString(author.detailed.name) : undefined;
+  const detailedFromProto = isRecord(author.detailed)
+    ? readOptionalString(author.detailed.name)
+    : undefined;
   if (detailedFromProto) {
     return { detailed: { name: detailedFromProto } };
   }

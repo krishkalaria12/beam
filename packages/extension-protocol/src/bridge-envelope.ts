@@ -6,8 +6,7 @@ export const BridgeMessageKind = {
   RuntimeRpc: "runtime-rpc",
 } as const;
 
-export type BridgeMessageKind =
-  (typeof BridgeMessageKind)[keyof typeof BridgeMessageKind];
+export type BridgeMessageKind = (typeof BridgeMessageKind)[keyof typeof BridgeMessageKind];
 
 export type BridgeMessageEnvelope = {
   kind: BridgeMessageKind;
@@ -32,9 +31,7 @@ export function createBridgeMessageEnvelope(
   return { kind, payload };
 }
 
-export function readBridgeMessageEnvelope(
-  raw: unknown,
-): BridgeMessageEnvelope | null {
+export function readBridgeMessageEnvelope(raw: unknown): BridgeMessageEnvelope | null {
   if (!isRecord(raw)) {
     return null;
   }
@@ -46,7 +43,6 @@ export function readBridgeMessageEnvelope(
   return {
     kind: raw.kind,
     payload: raw.payload,
-    timestamp:
-      typeof raw.timestamp === "number" ? raw.timestamp : undefined,
+    timestamp: typeof raw.timestamp === "number" ? raw.timestamp : undefined,
   };
 }

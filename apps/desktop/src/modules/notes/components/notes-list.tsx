@@ -47,7 +47,9 @@ export function NotesList({
     overscan: 8,
   });
   const virtualRows = rowVirtualizer.getVirtualItems();
-  const selectedNoteIndex = selectedNoteId ? notes.findIndex((note) => note.id === selectedNoteId) : -1;
+  const selectedNoteIndex = selectedNoteId
+    ? notes.findIndex((note) => note.id === selectedNoteId)
+    : -1;
 
   useLayoutEffect(() => {
     if (selectedNoteIndex < 0) {
@@ -99,7 +101,10 @@ export function NotesList({
         </div>
       </div>
 
-      <div ref={scrollContainerRef} className="list-area custom-scrollbar min-h-0 flex-1 overflow-y-auto p-2">
+      <div
+        ref={scrollContainerRef}
+        className="list-area custom-scrollbar min-h-0 flex-1 overflow-y-auto p-2"
+      >
         {isLoading ? (
           <div className="space-y-1.5 px-1">
             {SKELETON_DELAYS_MS.map((delayMs) => (

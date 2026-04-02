@@ -36,7 +36,9 @@ type WithAccessTokenParameters = {
 /**
  * The component (for a view/menu-bar commands) or function (for a no-view command) that is passed to withAccessToken.
  */
-export type WithAccessTokenComponentOrFn<T = any, U = any> = ((params: T) => Promise<U> | U) | React.ComponentType<T>;
+export type WithAccessTokenComponentOrFn<T = any, U = any> =
+  | ((params: T) => Promise<U> | U)
+  | React.ComponentType<T>;
 
 /**
  * Higher-order component to wrap a given component or function and set an access token in a shared global variable.
@@ -142,7 +144,9 @@ export function getAccessToken(): {
   type: "oauth" | "personal";
 } {
   if (!token || !type) {
-    throw new Error("getAccessToken must be used when authenticated (eg. used inside `withAccessToken`)");
+    throw new Error(
+      "getAccessToken must be used when authenticated (eg. used inside `withAccessToken`)",
+    );
   }
 
   return { token, type };

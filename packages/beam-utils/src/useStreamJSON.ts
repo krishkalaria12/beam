@@ -38,7 +38,9 @@ async function cacheURL(url: RequestInfo, destination: string, fetchOptions?: Re
     throw new Error("URL does not return JSON");
   }
   if (!response.body) {
-    throw new Error("Failed to retrieve expected JSON content: Response body is missing or inaccessible.");
+    throw new Error(
+      "Failed to retrieve expected JSON content: Response body is missing or inaccessible.",
+    );
   }
   await pipeline(
     response.body as unknown as NodeJS.ReadableStream,
@@ -376,12 +378,16 @@ export function useStreamJSON<T, U = unknown>(url: RequestInfo): UseCachedPromis
  */
 export function useStreamJSON<T, U extends any[] = any[]>(
   url: RequestInfo,
-  options: Options<T> & RequestInit & Omit<CachedPromiseOptions<FunctionReturningPaginatedPromise, U>, "abortable">,
+  options: Options<T> &
+    RequestInit &
+    Omit<CachedPromiseOptions<FunctionReturningPaginatedPromise, U>, "abortable">,
 ): UseCachedPromiseReturnType<T extends unknown[] ? T : T[], U>;
 
 export function useStreamJSON<T, U extends any[] = any[]>(
   url: RequestInfo,
-  options?: Options<T> & RequestInit & Omit<CachedPromiseOptions<FunctionReturningPaginatedPromise, U>, "abortable">,
+  options?: Options<T> &
+    RequestInit &
+    Omit<CachedPromiseOptions<FunctionReturningPaginatedPromise, U>, "abortable">,
 ): UseCachedPromiseReturnType<T extends unknown[] ? T : T[], U> {
   const {
     initialData,
@@ -435,9 +441,9 @@ export function useStreamJSON<T, U extends any[] = any[]>(
            */
           const forceCacheUpdate = Boolean(
             previousUrl.current &&
-              previousUrl.current !== url &&
-              previousDestination.current &&
-              previousDestination.current === destination,
+            previousUrl.current !== url &&
+            previousDestination.current &&
+            previousDestination.current === destination,
           );
           previousUrl.current = url;
           previousDestination.current = destination;
@@ -459,7 +465,10 @@ export function useStreamJSON<T, U extends any[] = any[]>(
         }
         const { value: newData, done } = await generatorRef.current.next();
         hasMoreRef.current = !done;
-        return { hasMore: hasMoreRef.current, data: (newData ?? []) as T extends unknown[] ? T : T[] };
+        return {
+          hasMore: hasMoreRef.current,
+          data: (newData ?? []) as T extends unknown[] ? T : T[],
+        };
       },
     [url, pageSize, fetchOptions, dataPath, filter, transform],
     useCachedPromiseOptions,

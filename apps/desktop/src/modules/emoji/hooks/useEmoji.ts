@@ -130,7 +130,10 @@ export function getRecentlyUsed(): string[] {
 
 export function saveRecentlyUsed(emoji: string) {
   const recent = getRecentEmojiCache();
-  recentEmojiCache = [emoji, ...recent.filter((entry) => entry !== emoji)].slice(0, RECENTLY_USED_LIMIT);
+  recentEmojiCache = [emoji, ...recent.filter((entry) => entry !== emoji)].slice(
+    0,
+    RECENTLY_USED_LIMIT,
+  );
   scheduleRecentlyUsedFlush();
 }
 

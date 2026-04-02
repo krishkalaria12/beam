@@ -14,10 +14,7 @@ import { writeOutput } from "../io";
 
 export function writeRuntimeRender(message: RuntimeRenderMessage): void {
   writeOutput(
-    createBridgeMessageEnvelope(
-      BridgeMessageKind.RuntimeRender,
-      RuntimeRender.toJSON(message),
-    ),
+    createBridgeMessageEnvelope(BridgeMessageKind.RuntimeRender, RuntimeRender.toJSON(message)),
   );
 }
 

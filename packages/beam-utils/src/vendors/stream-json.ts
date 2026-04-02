@@ -77,7 +77,8 @@ const jsonParser = (options?: any) => {
     "packKeys" in options && (packKeys = options.packKeys);
     "packStrings" in options && (packStrings = options.packStrings);
     "packNumbers" in options && (packNumbers = options.packNumbers);
-    "streamValues" in options && (streamKeys = streamStrings = streamNumbers = options.streamValues);
+    "streamValues" in options &&
+      (streamKeys = streamStrings = streamNumbers = options.streamValues);
     "streamKeys" in options && (streamKeys = options.streamKeys);
     "streamStrings" in options && (streamStrings = options.streamStrings);
     "streamNumbers" in options && (streamNumbers = options.streamNumbers);
@@ -118,7 +119,8 @@ const jsonParser = (options?: any) => {
           match = patterns.value1.exec(buffer);
           if (!match) {
             if (done || index + MAX_PATTERN_SIZE < buffer.length) {
-              if (index < buffer.length) throw new Error("Parser cannot parse input: expected a value");
+              if (index < buffer.length)
+                throw new Error("Parser cannot parse input: expected a value");
               throw new Error("Parser has expected a value");
             }
             break main; // wait for more input
@@ -142,7 +144,8 @@ const jsonParser = (options?: any) => {
               expect = "value1";
               break;
             case "]":
-              if (expect !== "value1") throw new Error("Parser cannot parse input: unexpected token ']'");
+              if (expect !== "value1")
+                throw new Error("Parser cannot parse input: unexpected token ']'");
               if (openNumber) {
                 if (streamNumbers) tokens.push({ name: "endNumber" });
                 openNumber = false;
@@ -248,7 +251,8 @@ const jsonParser = (options?: any) => {
           patterns.key1.lastIndex = index;
           match = patterns.key1.exec(buffer);
           if (!match) {
-            if (index < buffer.length || done) throw new Error("Parser cannot parse input: expected an object key");
+            if (index < buffer.length || done)
+              throw new Error("Parser cannot parse input: expected an object key");
             break main; // wait for more input
           }
           value = match[0];
@@ -256,7 +260,8 @@ const jsonParser = (options?: any) => {
             if (streamKeys) tokens.push({ name: "startKey" });
             expect = "keyVal";
           } else if (value === "}") {
-            if (expect !== "key1") throw new Error("Parser cannot parse input: unexpected token '}'");
+            if (expect !== "key1")
+              throw new Error("Parser cannot parse input: unexpected token '}'");
             tokens.push({ name: "endObject" });
             parent = stack.pop();
             expect = expected[parent];
@@ -267,7 +272,8 @@ const jsonParser = (options?: any) => {
           patterns.colon.lastIndex = index;
           match = patterns.colon.exec(buffer);
           if (!match) {
-            if (index < buffer.length || done) throw new Error("Parser cannot parse input: expected ':'");
+            if (index < buffer.length || done)
+              throw new Error("Parser cannot parse input: expected ':'");
             break main; // wait for more input
           }
           value = match[0];
@@ -279,7 +285,8 @@ const jsonParser = (options?: any) => {
           patterns.comma.lastIndex = index;
           match = patterns.comma.exec(buffer);
           if (!match) {
-            if (index < buffer.length || done) throw new Error("Parser cannot parse input: expected ','");
+            if (index < buffer.length || done)
+              throw new Error("Parser cannot parse input: expected ','");
             break main; // wait for more input
           }
           if (openNumber) {
@@ -295,7 +302,11 @@ const jsonParser = (options?: any) => {
             expect = expect === "arrayStop" ? "value" : "key";
           } else if (value === "}" || value === "]") {
             if (value === "}" ? expect === "arrayStop" : expect !== "arrayStop") {
-              throw new Error("Parser cannot parse input: expected '" + (expect === "arrayStop" ? "]" : "}") + "'");
+              throw new Error(
+                "Parser cannot parse input: expected '" +
+                  (expect === "arrayStop" ? "]" : "}") +
+                  "'",
+              );
             }
             tokens.push({ name: value === "}" ? "endObject" : "endArray" });
             parent = stack.pop();
@@ -308,7 +319,8 @@ const jsonParser = (options?: any) => {
           patterns.numberStart.lastIndex = index;
           match = patterns.numberStart.exec(buffer);
           if (!match) {
-            if (index < buffer.length || done) throw new Error("Parser cannot parse input: expected a starting digit");
+            if (index < buffer.length || done)
+              throw new Error("Parser cannot parse input: expected a starting digit");
             break main; // wait for more input
           }
           value = match[0];
@@ -321,7 +333,8 @@ const jsonParser = (options?: any) => {
           patterns.numberDigit.lastIndex = index;
           match = patterns.numberDigit.exec(buffer);
           if (!match) {
-            if (index < buffer.length || done) throw new Error("Parser cannot parse input: expected a digit");
+            if (index < buffer.length || done)
+              throw new Error("Parser cannot parse input: expected a digit");
             break main; // wait for more input
           }
           value = match[0];
@@ -567,7 +580,8 @@ const filterBase =
       startTransition = false;
     return flushable((chunk) => {
       // the flush
-      if (chunk === none) return transition ? transition([], null, "flush", sanitizedOptions) : none;
+      if (chunk === none)
+        return transition ? transition([], null, "flush", sanitizedOptions) : none;
 
       // process the optional value token (unfinished)
       if (optionalToken) {
@@ -684,7 +698,11 @@ const filterBase =
         // check the token
         const action =
           // @ts-ignore
-          checkableTokens[chunk.name] !== 1 ? nonCheckableAction : filter(stack, chunk) ? specialAction : defaultAction;
+          checkableTokens[chunk.name] !== 1
+            ? nonCheckableAction
+            : filter(stack, chunk)
+              ? specialAction
+              : defaultAction;
 
         // @ts-ignore
         endToken = stopTokens[chunk.name] || "";
@@ -750,7 +768,8 @@ const filterBase =
     });
   };
 
-export const PickParser = (options?: any) => withParser(filterBase(), Object.assign({ packKeys: true }, options));
+export const PickParser = (options?: any) =>
+  withParser(filterBase(), Object.assign({ packKeys: true }, options));
 
 class Counter {
   depth: number;

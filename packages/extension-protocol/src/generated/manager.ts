@@ -40,8 +40,7 @@ export interface LaunchPluginRequest {
   fallbackText: string;
 }
 
-export interface PingRequest {
-}
+export interface PingRequest {}
 
 export interface PingResponse {
   ok: boolean;
@@ -139,11 +138,9 @@ export interface ManagerResponse {
   setPreferences?: SetPreferencesResponse | undefined;
 }
 
-export interface ShutdownEvent {
-}
+export interface ShutdownEvent {}
 
-export interface PopViewEvent {
-}
+export interface PopViewEvent {}
 
 export interface PreferencesChangedEvent {
   values: { [key: string]: any } | undefined;
@@ -294,44 +291,46 @@ export const RuntimeLaunchPayload: MessageFns<RuntimeLaunchPayload> = {
       extensionId: isSet(object.extensionId)
         ? globalThis.String(object.extensionId)
         : isSet(object.extension_id)
-        ? globalThis.String(object.extension_id)
-        : "",
+          ? globalThis.String(object.extension_id)
+          : "",
       extensionPath: isSet(object.extensionPath)
         ? globalThis.String(object.extensionPath)
         : isSet(object.extension_path)
-        ? globalThis.String(object.extension_path)
-        : "",
+          ? globalThis.String(object.extension_path)
+          : "",
       entrypointPath: isSet(object.entrypointPath)
         ? globalThis.String(object.entrypointPath)
         : isSet(object.entrypoint_path)
-        ? globalThis.String(object.entrypoint_path)
-        : "",
-      environment: isSet(object.environment) ? EnvironmentSnapshot.fromJSON(object.environment) : undefined,
+          ? globalThis.String(object.entrypoint_path)
+          : "",
+      environment: isSet(object.environment)
+        ? EnvironmentSnapshot.fromJSON(object.environment)
+        : undefined,
       desktopContext: isSet(object.desktopContext)
         ? DesktopContextSnapshot.fromJSON(object.desktopContext)
         : isSet(object.desktop_context)
-        ? DesktopContextSnapshot.fromJSON(object.desktop_context)
-        : undefined,
+          ? DesktopContextSnapshot.fromJSON(object.desktop_context)
+          : undefined,
       preferenceValues: isObject(object.preferenceValues)
         ? object.preferenceValues
         : isObject(object.preference_values)
-        ? object.preference_values
-        : undefined,
+          ? object.preference_values
+          : undefined,
       launchArguments: isObject(object.launchArguments)
         ? object.launchArguments
         : isObject(object.launch_arguments)
-        ? object.launch_arguments
-        : undefined,
+          ? object.launch_arguments
+          : undefined,
       launchContext: isObject(object.launchContext)
         ? object.launchContext
         : isObject(object.launch_context)
-        ? object.launch_context
-        : undefined,
+          ? object.launch_context
+          : undefined,
       fallbackText: isSet(object.fallbackText)
         ? globalThis.String(object.fallbackText)
         : isSet(object.fallback_text)
-        ? globalThis.String(object.fallback_text)
-        : "",
+          ? globalThis.String(object.fallback_text)
+          : "",
     };
   },
 
@@ -375,12 +374,14 @@ export const RuntimeLaunchPayload: MessageFns<RuntimeLaunchPayload> = {
     message.extensionId = object.extensionId ?? "";
     message.extensionPath = object.extensionPath ?? "";
     message.entrypointPath = object.entrypointPath ?? "";
-    message.environment = (object.environment !== undefined && object.environment !== null)
-      ? EnvironmentSnapshot.fromPartial(object.environment)
-      : undefined;
-    message.desktopContext = (object.desktopContext !== undefined && object.desktopContext !== null)
-      ? DesktopContextSnapshot.fromPartial(object.desktopContext)
-      : undefined;
+    message.environment =
+      object.environment !== undefined && object.environment !== null
+        ? EnvironmentSnapshot.fromPartial(object.environment)
+        : undefined;
+    message.desktopContext =
+      object.desktopContext !== undefined && object.desktopContext !== null
+        ? DesktopContextSnapshot.fromPartial(object.desktopContext)
+        : undefined;
     message.preferenceValues = object.preferenceValues ?? undefined;
     message.launchArguments = object.launchArguments ?? undefined;
     message.launchContext = object.launchContext ?? undefined;
@@ -516,39 +517,39 @@ export const LaunchPluginRequest: MessageFns<LaunchPluginRequest> = {
       pluginPath: isSet(object.pluginPath)
         ? globalThis.String(object.pluginPath)
         : isSet(object.plugin_path)
-        ? globalThis.String(object.plugin_path)
-        : "",
+          ? globalThis.String(object.plugin_path)
+          : "",
       mode: isSet(object.mode) ? commandModeFromJSON(object.mode) : 0,
       aiAccess: isSet(object.aiAccess)
         ? globalThis.Boolean(object.aiAccess)
         : isSet(object.ai_access)
-        ? globalThis.Boolean(object.ai_access)
-        : false,
+          ? globalThis.Boolean(object.ai_access)
+          : false,
       launchArguments: isObject(object.launchArguments)
         ? object.launchArguments
         : isObject(object.launch_arguments)
-        ? object.launch_arguments
-        : undefined,
+          ? object.launch_arguments
+          : undefined,
       launchContext: isObject(object.launchContext)
         ? object.launchContext
         : isObject(object.launch_context)
-        ? object.launch_context
-        : undefined,
+          ? object.launch_context
+          : undefined,
       launchType: isSet(object.launchType)
         ? launchTypeFromJSON(object.launchType)
         : isSet(object.launch_type)
-        ? launchTypeFromJSON(object.launch_type)
-        : 0,
+          ? launchTypeFromJSON(object.launch_type)
+          : 0,
       commandName: isSet(object.commandName)
         ? globalThis.String(object.commandName)
         : isSet(object.command_name)
-        ? globalThis.String(object.command_name)
-        : "",
+          ? globalThis.String(object.command_name)
+          : "",
       fallbackText: isSet(object.fallbackText)
         ? globalThis.String(object.fallbackText)
         : isSet(object.fallback_text)
-        ? globalThis.String(object.fallback_text)
-        : "",
+          ? globalThis.String(object.fallback_text)
+          : "",
     };
   },
 
@@ -856,8 +857,8 @@ export const StartDevSessionRequest: MessageFns<StartDevSessionRequest> = {
       extensionId: isSet(object.extensionId)
         ? globalThis.String(object.extensionId)
         : isSet(object.extension_id)
-        ? globalThis.String(object.extension_id)
-        : "",
+          ? globalThis.String(object.extension_id)
+          : "",
     };
   },
 
@@ -884,7 +885,10 @@ function createBaseStartDevSessionResponse(): StartDevSessionResponse {
 }
 
 export const StartDevSessionResponse: MessageFns<StartDevSessionResponse> = {
-  encode(message: StartDevSessionResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: StartDevSessionResponse,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     if (message.ok !== false) {
       writer.uint32(8).bool(message.ok);
     }
@@ -942,7 +946,10 @@ function createBaseRefreshDevSessionRequest(): RefreshDevSessionRequest {
 }
 
 export const RefreshDevSessionRequest: MessageFns<RefreshDevSessionRequest> = {
-  encode(message: RefreshDevSessionRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: RefreshDevSessionRequest,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     if (message.extensionId !== "") {
       writer.uint32(10).string(message.extensionId);
     }
@@ -978,8 +985,8 @@ export const RefreshDevSessionRequest: MessageFns<RefreshDevSessionRequest> = {
       extensionId: isSet(object.extensionId)
         ? globalThis.String(object.extensionId)
         : isSet(object.extension_id)
-        ? globalThis.String(object.extension_id)
-        : "",
+          ? globalThis.String(object.extension_id)
+          : "",
     };
   },
 
@@ -1006,7 +1013,10 @@ function createBaseRefreshDevSessionResponse(): RefreshDevSessionResponse {
 }
 
 export const RefreshDevSessionResponse: MessageFns<RefreshDevSessionResponse> = {
-  encode(message: RefreshDevSessionResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: RefreshDevSessionResponse,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     if (message.ok !== false) {
       writer.uint32(8).bool(message.ok);
     }
@@ -1100,8 +1110,8 @@ export const StopDevSessionRequest: MessageFns<StopDevSessionRequest> = {
       extensionId: isSet(object.extensionId)
         ? globalThis.String(object.extensionId)
         : isSet(object.extension_id)
-        ? globalThis.String(object.extension_id)
-        : "",
+          ? globalThis.String(object.extension_id)
+          : "",
     };
   },
 
@@ -1222,8 +1232,8 @@ export const GetPreferencesRequest: MessageFns<GetPreferencesRequest> = {
       extensionId: isSet(object.extensionId)
         ? globalThis.String(object.extensionId)
         : isSet(object.extension_id)
-        ? globalThis.String(object.extension_id)
-        : "",
+          ? globalThis.String(object.extension_id)
+          : "",
     };
   },
 
@@ -1297,8 +1307,8 @@ export const GetPreferencesResponse: MessageFns<GetPreferencesResponse> = {
       extensionId: isSet(object.extensionId)
         ? globalThis.String(object.extensionId)
         : isSet(object.extension_id)
-        ? globalThis.String(object.extension_id)
-        : "",
+          ? globalThis.String(object.extension_id)
+          : "",
       values: isObject(object.values) ? object.values : undefined,
     };
   },
@@ -1377,8 +1387,8 @@ export const SetPreferencesRequest: MessageFns<SetPreferencesRequest> = {
       extensionId: isSet(object.extensionId)
         ? globalThis.String(object.extensionId)
         : isSet(object.extension_id)
-        ? globalThis.String(object.extension_id)
-        : "",
+          ? globalThis.String(object.extension_id)
+          : "",
       values: isObject(object.values) ? object.values : undefined,
     };
   },
@@ -1457,8 +1467,8 @@ export const SetPreferencesResponse: MessageFns<SetPreferencesResponse> = {
       extensionId: isSet(object.extensionId)
         ? globalThis.String(object.extensionId)
         : isSet(object.extension_id)
-        ? globalThis.String(object.extension_id)
-        : "",
+          ? globalThis.String(object.extension_id)
+          : "",
       ok: isSet(object.ok) ? globalThis.Boolean(object.ok) : false,
     };
   },
@@ -1490,7 +1500,10 @@ function createBaseDispatchViewEventRequest(): DispatchViewEventRequest {
 }
 
 export const DispatchViewEventRequest: MessageFns<DispatchViewEventRequest> = {
-  encode(message: DispatchViewEventRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: DispatchViewEventRequest,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     if (message.instanceId !== 0) {
       writer.uint32(8).uint32(message.instanceId);
     }
@@ -1548,13 +1561,13 @@ export const DispatchViewEventRequest: MessageFns<DispatchViewEventRequest> = {
       instanceId: isSet(object.instanceId)
         ? globalThis.Number(object.instanceId)
         : isSet(object.instance_id)
-        ? globalThis.Number(object.instance_id)
-        : 0,
+          ? globalThis.Number(object.instance_id)
+          : 0,
       handlerName: isSet(object.handlerName)
         ? globalThis.String(object.handlerName)
         : isSet(object.handler_name)
-        ? globalThis.String(object.handler_name)
-        : "",
+          ? globalThis.String(object.handler_name)
+          : "",
       args: globalThis.Array.isArray(object?.args) ? [...object.args] : [],
     };
   },
@@ -1590,7 +1603,10 @@ function createBaseDispatchToastActionRequest(): DispatchToastActionRequest {
 }
 
 export const DispatchToastActionRequest: MessageFns<DispatchToastActionRequest> = {
-  encode(message: DispatchToastActionRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: DispatchToastActionRequest,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     if (message.toastId !== 0) {
       writer.uint32(8).uint32(message.toastId);
     }
@@ -1637,13 +1653,13 @@ export const DispatchToastActionRequest: MessageFns<DispatchToastActionRequest> 
       toastId: isSet(object.toastId)
         ? globalThis.Number(object.toastId)
         : isSet(object.toast_id)
-        ? globalThis.Number(object.toast_id)
-        : 0,
+          ? globalThis.Number(object.toast_id)
+          : 0,
       actionType: isSet(object.actionType)
         ? globalThis.String(object.actionType)
         : isSet(object.action_type)
-        ? globalThis.String(object.action_type)
-        : "",
+          ? globalThis.String(object.action_type)
+          : "",
     };
   },
 
@@ -1674,7 +1690,10 @@ function createBaseTriggerToastHideRequest(): TriggerToastHideRequest {
 }
 
 export const TriggerToastHideRequest: MessageFns<TriggerToastHideRequest> = {
-  encode(message: TriggerToastHideRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: TriggerToastHideRequest,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     if (message.toastId !== 0) {
       writer.uint32(8).uint32(message.toastId);
     }
@@ -1710,8 +1729,8 @@ export const TriggerToastHideRequest: MessageFns<TriggerToastHideRequest> = {
       toastId: isSet(object.toastId)
         ? globalThis.Number(object.toastId)
         : isSet(object.toast_id)
-        ? globalThis.Number(object.toast_id)
-        : 0,
+          ? globalThis.Number(object.toast_id)
+          : 0,
     };
   },
 
@@ -1737,67 +1756,76 @@ function createBaseSetBrowserExtensionConnectionStatusRequest(): SetBrowserExten
   return { isConnected: false };
 }
 
-export const SetBrowserExtensionConnectionStatusRequest: MessageFns<SetBrowserExtensionConnectionStatusRequest> = {
-  encode(message: SetBrowserExtensionConnectionStatusRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.isConnected !== false) {
-      writer.uint32(8).bool(message.isConnected);
-    }
-    return writer;
-  },
+export const SetBrowserExtensionConnectionStatusRequest: MessageFns<SetBrowserExtensionConnectionStatusRequest> =
+  {
+    encode(
+      message: SetBrowserExtensionConnectionStatusRequest,
+      writer: BinaryWriter = new BinaryWriter(),
+    ): BinaryWriter {
+      if (message.isConnected !== false) {
+        writer.uint32(8).bool(message.isConnected);
+      }
+      return writer;
+    },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): SetBrowserExtensionConnectionStatusRequest {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseSetBrowserExtensionConnectionStatusRequest();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1: {
-          if (tag !== 8) {
-            break;
+    decode(
+      input: BinaryReader | Uint8Array,
+      length?: number,
+    ): SetBrowserExtensionConnectionStatusRequest {
+      const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+      const end = length === undefined ? reader.len : reader.pos + length;
+      const message = createBaseSetBrowserExtensionConnectionStatusRequest();
+      while (reader.pos < end) {
+        const tag = reader.uint32();
+        switch (tag >>> 3) {
+          case 1: {
+            if (tag !== 8) {
+              break;
+            }
+
+            message.isConnected = reader.bool();
+            continue;
           }
-
-          message.isConnected = reader.bool();
-          continue;
         }
+        if ((tag & 7) === 4 || tag === 0) {
+          break;
+        }
+        reader.skip(tag & 7);
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
+      return message;
+    },
+
+    fromJSON(object: any): SetBrowserExtensionConnectionStatusRequest {
+      return {
+        isConnected: isSet(object.isConnected)
+          ? globalThis.Boolean(object.isConnected)
+          : isSet(object.is_connected)
+            ? globalThis.Boolean(object.is_connected)
+            : false,
+      };
+    },
+
+    toJSON(message: SetBrowserExtensionConnectionStatusRequest): unknown {
+      const obj: any = {};
+      if (message.isConnected !== false) {
+        obj.isConnected = message.isConnected;
       }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
+      return obj;
+    },
 
-  fromJSON(object: any): SetBrowserExtensionConnectionStatusRequest {
-    return {
-      isConnected: isSet(object.isConnected)
-        ? globalThis.Boolean(object.isConnected)
-        : isSet(object.is_connected)
-        ? globalThis.Boolean(object.is_connected)
-        : false,
-    };
-  },
-
-  toJSON(message: SetBrowserExtensionConnectionStatusRequest): unknown {
-    const obj: any = {};
-    if (message.isConnected !== false) {
-      obj.isConnected = message.isConnected;
-    }
-    return obj;
-  },
-
-  create(base?: DeepPartial<SetBrowserExtensionConnectionStatusRequest>): SetBrowserExtensionConnectionStatusRequest {
-    return SetBrowserExtensionConnectionStatusRequest.fromPartial(base ?? {});
-  },
-  fromPartial(
-    object: DeepPartial<SetBrowserExtensionConnectionStatusRequest>,
-  ): SetBrowserExtensionConnectionStatusRequest {
-    const message = createBaseSetBrowserExtensionConnectionStatusRequest();
-    message.isConnected = object.isConnected ?? false;
-    return message;
-  },
-};
+    create(
+      base?: DeepPartial<SetBrowserExtensionConnectionStatusRequest>,
+    ): SetBrowserExtensionConnectionStatusRequest {
+      return SetBrowserExtensionConnectionStatusRequest.fromPartial(base ?? {});
+    },
+    fromPartial(
+      object: DeepPartial<SetBrowserExtensionConnectionStatusRequest>,
+    ): SetBrowserExtensionConnectionStatusRequest {
+      const message = createBaseSetBrowserExtensionConnectionStatusRequest();
+      message.isConnected = object.isConnected ?? false;
+      return message;
+    },
+  };
 
 function createBaseManagerRequest(): ManagerRequest {
   return {
@@ -1838,7 +1866,10 @@ export const ManagerRequest: MessageFns<ManagerRequest> = {
       RuntimeEvent.encode(message.runtimeEvent, writer.uint32(122).fork()).join();
     }
     if (message.dispatchToastAction !== undefined) {
-      DispatchToastActionRequest.encode(message.dispatchToastAction, writer.uint32(130).fork()).join();
+      DispatchToastActionRequest.encode(
+        message.dispatchToastAction,
+        writer.uint32(130).fork(),
+      ).join();
     }
     if (message.triggerToastHide !== undefined) {
       TriggerToastHideRequest.encode(message.triggerToastHide, writer.uint32(138).fork()).join();
@@ -1936,10 +1967,8 @@ export const ManagerRequest: MessageFns<ManagerRequest> = {
             break;
           }
 
-          message.setBrowserExtensionConnectionStatus = SetBrowserExtensionConnectionStatusRequest.decode(
-            reader,
-            reader.uint32(),
-          );
+          message.setBrowserExtensionConnectionStatus =
+            SetBrowserExtensionConnectionStatusRequest.decode(reader, reader.uint32());
           continue;
         }
       }
@@ -1956,49 +1985,53 @@ export const ManagerRequest: MessageFns<ManagerRequest> = {
       requestId: isSet(object.requestId)
         ? globalThis.String(object.requestId)
         : isSet(object.request_id)
-        ? globalThis.String(object.request_id)
-        : "",
+          ? globalThis.String(object.request_id)
+          : "",
       ping: isSet(object.ping) ? PingRequest.fromJSON(object.ping) : undefined,
       launchPlugin: isSet(object.launchPlugin)
         ? LaunchPluginRequest.fromJSON(object.launchPlugin)
         : isSet(object.launch_plugin)
-        ? LaunchPluginRequest.fromJSON(object.launch_plugin)
-        : undefined,
+          ? LaunchPluginRequest.fromJSON(object.launch_plugin)
+          : undefined,
       getPreferences: isSet(object.getPreferences)
         ? GetPreferencesRequest.fromJSON(object.getPreferences)
         : isSet(object.get_preferences)
-        ? GetPreferencesRequest.fromJSON(object.get_preferences)
-        : undefined,
+          ? GetPreferencesRequest.fromJSON(object.get_preferences)
+          : undefined,
       setPreferences: isSet(object.setPreferences)
         ? SetPreferencesRequest.fromJSON(object.setPreferences)
         : isSet(object.set_preferences)
-        ? SetPreferencesRequest.fromJSON(object.set_preferences)
-        : undefined,
+          ? SetPreferencesRequest.fromJSON(object.set_preferences)
+          : undefined,
       dispatchViewEvent: isSet(object.dispatchViewEvent)
         ? DispatchViewEventRequest.fromJSON(object.dispatchViewEvent)
         : isSet(object.dispatch_view_event)
-        ? DispatchViewEventRequest.fromJSON(object.dispatch_view_event)
-        : undefined,
+          ? DispatchViewEventRequest.fromJSON(object.dispatch_view_event)
+          : undefined,
       runtimeEvent: isSet(object.runtimeEvent)
         ? RuntimeEvent.fromJSON(object.runtimeEvent)
         : isSet(object.runtime_event)
-        ? RuntimeEvent.fromJSON(object.runtime_event)
-        : undefined,
+          ? RuntimeEvent.fromJSON(object.runtime_event)
+          : undefined,
       dispatchToastAction: isSet(object.dispatchToastAction)
         ? DispatchToastActionRequest.fromJSON(object.dispatchToastAction)
         : isSet(object.dispatch_toast_action)
-        ? DispatchToastActionRequest.fromJSON(object.dispatch_toast_action)
-        : undefined,
+          ? DispatchToastActionRequest.fromJSON(object.dispatch_toast_action)
+          : undefined,
       triggerToastHide: isSet(object.triggerToastHide)
         ? TriggerToastHideRequest.fromJSON(object.triggerToastHide)
         : isSet(object.trigger_toast_hide)
-        ? TriggerToastHideRequest.fromJSON(object.trigger_toast_hide)
-        : undefined,
+          ? TriggerToastHideRequest.fromJSON(object.trigger_toast_hide)
+          : undefined,
       setBrowserExtensionConnectionStatus: isSet(object.setBrowserExtensionConnectionStatus)
-        ? SetBrowserExtensionConnectionStatusRequest.fromJSON(object.setBrowserExtensionConnectionStatus)
+        ? SetBrowserExtensionConnectionStatusRequest.fromJSON(
+            object.setBrowserExtensionConnectionStatus,
+          )
         : isSet(object.set_browser_extension_connection_status)
-        ? SetBrowserExtensionConnectionStatusRequest.fromJSON(object.set_browser_extension_connection_status)
-        : undefined,
+          ? SetBrowserExtensionConnectionStatusRequest.fromJSON(
+              object.set_browser_extension_connection_status,
+            )
+          : undefined,
     };
   },
 
@@ -2045,33 +2078,44 @@ export const ManagerRequest: MessageFns<ManagerRequest> = {
   fromPartial(object: DeepPartial<ManagerRequest>): ManagerRequest {
     const message = createBaseManagerRequest();
     message.requestId = object.requestId ?? "";
-    message.ping = (object.ping !== undefined && object.ping !== null)
-      ? PingRequest.fromPartial(object.ping)
-      : undefined;
-    message.launchPlugin = (object.launchPlugin !== undefined && object.launchPlugin !== null)
-      ? LaunchPluginRequest.fromPartial(object.launchPlugin)
-      : undefined;
-    message.getPreferences = (object.getPreferences !== undefined && object.getPreferences !== null)
-      ? GetPreferencesRequest.fromPartial(object.getPreferences)
-      : undefined;
-    message.setPreferences = (object.setPreferences !== undefined && object.setPreferences !== null)
-      ? SetPreferencesRequest.fromPartial(object.setPreferences)
-      : undefined;
-    message.dispatchViewEvent = (object.dispatchViewEvent !== undefined && object.dispatchViewEvent !== null)
-      ? DispatchViewEventRequest.fromPartial(object.dispatchViewEvent)
-      : undefined;
-    message.runtimeEvent = (object.runtimeEvent !== undefined && object.runtimeEvent !== null)
-      ? RuntimeEvent.fromPartial(object.runtimeEvent)
-      : undefined;
-    message.dispatchToastAction = (object.dispatchToastAction !== undefined && object.dispatchToastAction !== null)
-      ? DispatchToastActionRequest.fromPartial(object.dispatchToastAction)
-      : undefined;
-    message.triggerToastHide = (object.triggerToastHide !== undefined && object.triggerToastHide !== null)
-      ? TriggerToastHideRequest.fromPartial(object.triggerToastHide)
-      : undefined;
+    message.ping =
+      object.ping !== undefined && object.ping !== null
+        ? PingRequest.fromPartial(object.ping)
+        : undefined;
+    message.launchPlugin =
+      object.launchPlugin !== undefined && object.launchPlugin !== null
+        ? LaunchPluginRequest.fromPartial(object.launchPlugin)
+        : undefined;
+    message.getPreferences =
+      object.getPreferences !== undefined && object.getPreferences !== null
+        ? GetPreferencesRequest.fromPartial(object.getPreferences)
+        : undefined;
+    message.setPreferences =
+      object.setPreferences !== undefined && object.setPreferences !== null
+        ? SetPreferencesRequest.fromPartial(object.setPreferences)
+        : undefined;
+    message.dispatchViewEvent =
+      object.dispatchViewEvent !== undefined && object.dispatchViewEvent !== null
+        ? DispatchViewEventRequest.fromPartial(object.dispatchViewEvent)
+        : undefined;
+    message.runtimeEvent =
+      object.runtimeEvent !== undefined && object.runtimeEvent !== null
+        ? RuntimeEvent.fromPartial(object.runtimeEvent)
+        : undefined;
+    message.dispatchToastAction =
+      object.dispatchToastAction !== undefined && object.dispatchToastAction !== null
+        ? DispatchToastActionRequest.fromPartial(object.dispatchToastAction)
+        : undefined;
+    message.triggerToastHide =
+      object.triggerToastHide !== undefined && object.triggerToastHide !== null
+        ? TriggerToastHideRequest.fromPartial(object.triggerToastHide)
+        : undefined;
     message.setBrowserExtensionConnectionStatus =
-      (object.setBrowserExtensionConnectionStatus !== undefined && object.setBrowserExtensionConnectionStatus !== null)
-        ? SetBrowserExtensionConnectionStatusRequest.fromPartial(object.setBrowserExtensionConnectionStatus)
+      object.setBrowserExtensionConnectionStatus !== undefined &&
+      object.setBrowserExtensionConnectionStatus !== null
+        ? SetBrowserExtensionConnectionStatusRequest.fromPartial(
+            object.setBrowserExtensionConnectionStatus,
+          )
         : undefined;
     return message;
   },
@@ -2180,21 +2224,21 @@ export const ManagerResponse: MessageFns<ManagerResponse> = {
       requestId: isSet(object.requestId)
         ? globalThis.String(object.requestId)
         : isSet(object.request_id)
-        ? globalThis.String(object.request_id)
-        : "",
+          ? globalThis.String(object.request_id)
+          : "",
       ping: isSet(object.ping) ? PingResponse.fromJSON(object.ping) : undefined,
       ack: isSet(object.ack) ? AckResponse.fromJSON(object.ack) : undefined,
       error: isSet(object.error) ? ErrorResponse.fromJSON(object.error) : undefined,
       getPreferences: isSet(object.getPreferences)
         ? GetPreferencesResponse.fromJSON(object.getPreferences)
         : isSet(object.get_preferences)
-        ? GetPreferencesResponse.fromJSON(object.get_preferences)
-        : undefined,
+          ? GetPreferencesResponse.fromJSON(object.get_preferences)
+          : undefined,
       setPreferences: isSet(object.setPreferences)
         ? SetPreferencesResponse.fromJSON(object.setPreferences)
         : isSet(object.set_preferences)
-        ? SetPreferencesResponse.fromJSON(object.set_preferences)
-        : undefined,
+          ? SetPreferencesResponse.fromJSON(object.set_preferences)
+          : undefined,
     };
   },
 
@@ -2227,19 +2271,26 @@ export const ManagerResponse: MessageFns<ManagerResponse> = {
   fromPartial(object: DeepPartial<ManagerResponse>): ManagerResponse {
     const message = createBaseManagerResponse();
     message.requestId = object.requestId ?? "";
-    message.ping = (object.ping !== undefined && object.ping !== null)
-      ? PingResponse.fromPartial(object.ping)
-      : undefined;
-    message.ack = (object.ack !== undefined && object.ack !== null) ? AckResponse.fromPartial(object.ack) : undefined;
-    message.error = (object.error !== undefined && object.error !== null)
-      ? ErrorResponse.fromPartial(object.error)
-      : undefined;
-    message.getPreferences = (object.getPreferences !== undefined && object.getPreferences !== null)
-      ? GetPreferencesResponse.fromPartial(object.getPreferences)
-      : undefined;
-    message.setPreferences = (object.setPreferences !== undefined && object.setPreferences !== null)
-      ? SetPreferencesResponse.fromPartial(object.setPreferences)
-      : undefined;
+    message.ping =
+      object.ping !== undefined && object.ping !== null
+        ? PingResponse.fromPartial(object.ping)
+        : undefined;
+    message.ack =
+      object.ack !== undefined && object.ack !== null
+        ? AckResponse.fromPartial(object.ack)
+        : undefined;
+    message.error =
+      object.error !== undefined && object.error !== null
+        ? ErrorResponse.fromPartial(object.error)
+        : undefined;
+    message.getPreferences =
+      object.getPreferences !== undefined && object.getPreferences !== null
+        ? GetPreferencesResponse.fromPartial(object.getPreferences)
+        : undefined;
+    message.setPreferences =
+      object.setPreferences !== undefined && object.setPreferences !== null
+        ? SetPreferencesResponse.fromPartial(object.setPreferences)
+        : undefined;
     return message;
   },
 };
@@ -2335,7 +2386,10 @@ function createBasePreferencesChangedEvent(): PreferencesChangedEvent {
 }
 
 export const PreferencesChangedEvent: MessageFns<PreferencesChangedEvent> = {
-  encode(message: PreferencesChangedEvent, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: PreferencesChangedEvent,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     if (message.values !== undefined) {
       Struct.encode(Struct.wrap(message.values), writer.uint32(10).fork()).join();
     }
@@ -2452,13 +2506,13 @@ export const RuntimeEvent: MessageFns<RuntimeEvent> = {
       popView: isSet(object.popView)
         ? PopViewEvent.fromJSON(object.popView)
         : isSet(object.pop_view)
-        ? PopViewEvent.fromJSON(object.pop_view)
-        : undefined,
+          ? PopViewEvent.fromJSON(object.pop_view)
+          : undefined,
       preferencesChanged: isSet(object.preferencesChanged)
         ? PreferencesChangedEvent.fromJSON(object.preferencesChanged)
         : isSet(object.preferences_changed)
-        ? PreferencesChangedEvent.fromJSON(object.preferences_changed)
-        : undefined,
+          ? PreferencesChangedEvent.fromJSON(object.preferences_changed)
+          : undefined,
     };
   },
 
@@ -2481,26 +2535,33 @@ export const RuntimeEvent: MessageFns<RuntimeEvent> = {
   },
   fromPartial(object: DeepPartial<RuntimeEvent>): RuntimeEvent {
     const message = createBaseRuntimeEvent();
-    message.shutdown = (object.shutdown !== undefined && object.shutdown !== null)
-      ? ShutdownEvent.fromPartial(object.shutdown)
-      : undefined;
-    message.popView = (object.popView !== undefined && object.popView !== null)
-      ? PopViewEvent.fromPartial(object.popView)
-      : undefined;
-    message.preferencesChanged = (object.preferencesChanged !== undefined && object.preferencesChanged !== null)
-      ? PreferencesChangedEvent.fromPartial(object.preferencesChanged)
-      : undefined;
+    message.shutdown =
+      object.shutdown !== undefined && object.shutdown !== null
+        ? ShutdownEvent.fromPartial(object.shutdown)
+        : undefined;
+    message.popView =
+      object.popView !== undefined && object.popView !== null
+        ? PopViewEvent.fromPartial(object.popView)
+        : undefined;
+    message.preferencesChanged =
+      object.preferencesChanged !== undefined && object.preferencesChanged !== null
+        ? PreferencesChangedEvent.fromPartial(object.preferencesChanged)
+        : undefined;
     return message;
   },
 };
 
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
 
-type DeepPartial<T> = T extends Builtin ? T
-  : T extends globalThis.Array<infer U> ? globalThis.Array<DeepPartial<U>>
-  : T extends ReadonlyArray<infer U> ? ReadonlyArray<DeepPartial<U>>
-  : T extends {} ? { [K in keyof T]?: DeepPartial<T[K]> }
-  : Partial<T>;
+type DeepPartial<T> = T extends Builtin
+  ? T
+  : T extends globalThis.Array<infer U>
+    ? globalThis.Array<DeepPartial<U>>
+    : T extends ReadonlyArray<infer U>
+      ? ReadonlyArray<DeepPartial<U>>
+      : T extends {}
+        ? { [K in keyof T]?: DeepPartial<T[K]> }
+        : Partial<T>;
 
 function isObject(value: any): boolean {
   return typeof value === "object" && value !== null;

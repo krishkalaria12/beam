@@ -53,11 +53,7 @@ export function writeJsonFile(filePath: string, data: unknown): void {
   writeFileSync(filePath, `${JSON.stringify(data, null, 2)}\n`, "utf8");
 }
 
-export function runCommand(
-  command: string,
-  args: string[],
-  options: { cwd?: string } = {},
-): void {
+export function runCommand(command: string, args: string[], options: { cwd?: string } = {}): void {
   const result = spawnSync(command, args, {
     cwd: options.cwd ?? repoRoot,
     stdio: "inherit",

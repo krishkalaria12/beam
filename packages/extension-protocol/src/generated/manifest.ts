@@ -235,9 +235,10 @@ export const ManifestAuthor: MessageFns<ManifestAuthor> = {
   fromPartial(object: DeepPartial<ManifestAuthor>): ManifestAuthor {
     const message = createBaseManifestAuthor();
     message.simple = object.simple ?? undefined;
-    message.detailed = (object.detailed !== undefined && object.detailed !== null)
-      ? AuthorName.fromPartial(object.detailed)
-      : undefined;
+    message.detailed =
+      object.detailed !== undefined && object.detailed !== null
+        ? AuthorName.fromPartial(object.detailed)
+        : undefined;
     return message;
   },
 };
@@ -526,9 +527,11 @@ export const PreferenceDefinition: MessageFns<PreferenceDefinition> = {
       defaultValue: isSet(object?.defaultValue)
         ? object.defaultValue
         : isSet(object?.default_value)
-        ? object.default_value
-        : undefined,
-      data: globalThis.Array.isArray(object?.data) ? object.data.map((e: any) => PreferenceOption.fromJSON(e)) : [],
+          ? object.default_value
+          : undefined,
+      data: globalThis.Array.isArray(object?.data)
+        ? object.data.map((e: any) => PreferenceOption.fromJSON(e))
+        : [],
       label: isSet(object.label) ? globalThis.String(object.label) : undefined,
     };
   },
@@ -665,7 +668,9 @@ export const ArgumentDefinition: MessageFns<ArgumentDefinition> = {
       type: isSet(object.type) ? globalThis.String(object.type) : "",
       placeholder: isSet(object.placeholder) ? globalThis.String(object.placeholder) : undefined,
       required: isSet(object.required) ? globalThis.Boolean(object.required) : undefined,
-      data: globalThis.Array.isArray(object?.data) ? object.data.map((e: any) => ArgumentOption.fromJSON(e)) : [],
+      data: globalThis.Array.isArray(object?.data)
+        ? object.data.map((e: any) => ArgumentOption.fromJSON(e))
+        : [],
     };
   },
 
@@ -873,15 +878,17 @@ export const CommandManifest: MessageFns<CommandManifest> = {
         ? object.preferences.map((e: any) => PreferenceDefinition.fromJSON(e))
         : [],
       subtitle: isSet(object.subtitle) ? globalThis.String(object.subtitle) : undefined,
-      keywords: globalThis.Array.isArray(object?.keywords) ? object.keywords.map((e: any) => globalThis.String(e)) : [],
+      keywords: globalThis.Array.isArray(object?.keywords)
+        ? object.keywords.map((e: any) => globalThis.String(e))
+        : [],
       arguments: globalThis.Array.isArray(object?.arguments)
         ? object.arguments.map((e: any) => ArgumentDefinition.fromJSON(e))
         : [],
       disabledByDefault: isSet(object.disabledByDefault)
         ? globalThis.Boolean(object.disabledByDefault)
         : isSet(object.disabled_by_default)
-        ? globalThis.Boolean(object.disabled_by_default)
-        : undefined,
+          ? globalThis.Boolean(object.disabled_by_default)
+          : undefined,
     };
   },
 
@@ -1190,8 +1197,8 @@ export const ExtensionManifest: MessageFns<ExtensionManifest> = {
       pastContributors: globalThis.Array.isArray(object?.pastContributors)
         ? object.pastContributors.map((e: any) => globalThis.String(e))
         : globalThis.Array.isArray(object?.past_contributors)
-        ? object.past_contributors.map((e: any) => globalThis.String(e))
-        : [],
+          ? object.past_contributors.map((e: any) => globalThis.String(e))
+          : [],
       keywords: globalThis.Array.isArray(object?.keywords)
         ? object.keywords.map((e: any) => globalThis.String(e))
         : [],
@@ -1260,9 +1267,10 @@ export const ExtensionManifest: MessageFns<ExtensionManifest> = {
     message.title = object.title ?? undefined;
     message.description = object.description ?? undefined;
     message.icon = object.icon ?? undefined;
-    message.author = (object.author !== undefined && object.author !== null)
-      ? ManifestAuthor.fromPartial(object.author)
-      : undefined;
+    message.author =
+      object.author !== undefined && object.author !== null
+        ? ManifestAuthor.fromPartial(object.author)
+        : undefined;
     message.owner = object.owner ?? undefined;
     message.commands = object.commands?.map((e) => CommandManifest.fromPartial(e)) || [];
     message.preferences = object.preferences?.map((e) => PreferenceDefinition.fromPartial(e)) || [];
@@ -1599,23 +1607,23 @@ export const DiscoveredPlugin: MessageFns<DiscoveredPlugin> = {
       pluginTitle: isSet(object.pluginTitle)
         ? globalThis.String(object.pluginTitle)
         : isSet(object.plugin_title)
-        ? globalThis.String(object.plugin_title)
-        : "",
+          ? globalThis.String(object.plugin_title)
+          : "",
       pluginName: isSet(object.pluginName)
         ? globalThis.String(object.pluginName)
         : isSet(object.plugin_name)
-        ? globalThis.String(object.plugin_name)
-        : "",
+          ? globalThis.String(object.plugin_name)
+          : "",
       commandName: isSet(object.commandName)
         ? globalThis.String(object.commandName)
         : isSet(object.command_name)
-        ? globalThis.String(object.command_name)
-        : "",
+          ? globalThis.String(object.command_name)
+          : "",
       pluginPath: isSet(object.pluginPath)
         ? globalThis.String(object.pluginPath)
         : isSet(object.plugin_path)
-        ? globalThis.String(object.plugin_path)
-        : "",
+          ? globalThis.String(object.plugin_path)
+          : "",
       icon: isSet(object.icon) ? globalThis.String(object.icon) : undefined,
       preferences: globalThis.Array.isArray(object?.preferences)
         ? object.preferences.map((e: any) => PreferenceDefinition.fromJSON(e))
@@ -1623,8 +1631,8 @@ export const DiscoveredPlugin: MessageFns<DiscoveredPlugin> = {
       commandPreferences: globalThis.Array.isArray(object?.commandPreferences)
         ? object.commandPreferences.map((e: any) => PreferenceDefinition.fromJSON(e))
         : globalThis.Array.isArray(object?.command_preferences)
-        ? object.command_preferences.map((e: any) => PreferenceDefinition.fromJSON(e))
-        : [],
+          ? object.command_preferences.map((e: any) => PreferenceDefinition.fromJSON(e))
+          : [],
       mode: isSet(object.mode) ? globalThis.String(object.mode) : undefined,
       interval: isSet(object.interval) ? globalThis.String(object.interval) : undefined,
       author: isSet(object.author) ? ManifestAuthor.fromJSON(object.author) : undefined,
@@ -1640,8 +1648,8 @@ export const DiscoveredPlugin: MessageFns<DiscoveredPlugin> = {
       disabledByDefault: isSet(object.disabledByDefault)
         ? globalThis.Boolean(object.disabledByDefault)
         : isSet(object.disabled_by_default)
-        ? globalThis.Boolean(object.disabled_by_default)
-        : undefined,
+          ? globalThis.Boolean(object.disabled_by_default)
+          : undefined,
       access: isSet(object.access) ? globalThis.String(object.access) : undefined,
       license: isSet(object.license) ? globalThis.String(object.license) : undefined,
       platforms: globalThis.Array.isArray(object?.platforms)
@@ -1656,8 +1664,8 @@ export const DiscoveredPlugin: MessageFns<DiscoveredPlugin> = {
       pastContributors: globalThis.Array.isArray(object?.pastContributors)
         ? object.pastContributors.map((e: any) => globalThis.String(e))
         : globalThis.Array.isArray(object?.past_contributors)
-        ? object.past_contributors.map((e: any) => globalThis.String(e))
-        : [],
+          ? object.past_contributors.map((e: any) => globalThis.String(e))
+          : [],
     };
   },
 
@@ -1688,7 +1696,9 @@ export const DiscoveredPlugin: MessageFns<DiscoveredPlugin> = {
       obj.preferences = message.preferences.map((e) => PreferenceDefinition.toJSON(e));
     }
     if (message.commandPreferences?.length) {
-      obj.commandPreferences = message.commandPreferences.map((e) => PreferenceDefinition.toJSON(e));
+      obj.commandPreferences = message.commandPreferences.map((e) =>
+        PreferenceDefinition.toJSON(e),
+      );
     }
     if (message.mode !== undefined) {
       obj.mode = message.mode;
@@ -1751,12 +1761,14 @@ export const DiscoveredPlugin: MessageFns<DiscoveredPlugin> = {
     message.pluginPath = object.pluginPath ?? "";
     message.icon = object.icon ?? undefined;
     message.preferences = object.preferences?.map((e) => PreferenceDefinition.fromPartial(e)) || [];
-    message.commandPreferences = object.commandPreferences?.map((e) => PreferenceDefinition.fromPartial(e)) || [];
+    message.commandPreferences =
+      object.commandPreferences?.map((e) => PreferenceDefinition.fromPartial(e)) || [];
     message.mode = object.mode ?? undefined;
     message.interval = object.interval ?? undefined;
-    message.author = (object.author !== undefined && object.author !== null)
-      ? ManifestAuthor.fromPartial(object.author)
-      : undefined;
+    message.author =
+      object.author !== undefined && object.author !== null
+        ? ManifestAuthor.fromPartial(object.author)
+        : undefined;
     message.owner = object.owner ?? undefined;
     message.version = object.version ?? undefined;
     message.subtitle = object.subtitle ?? undefined;
@@ -1775,11 +1787,15 @@ export const DiscoveredPlugin: MessageFns<DiscoveredPlugin> = {
 
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
 
-type DeepPartial<T> = T extends Builtin ? T
-  : T extends globalThis.Array<infer U> ? globalThis.Array<DeepPartial<U>>
-  : T extends ReadonlyArray<infer U> ? ReadonlyArray<DeepPartial<U>>
-  : T extends {} ? { [K in keyof T]?: DeepPartial<T[K]> }
-  : Partial<T>;
+type DeepPartial<T> = T extends Builtin
+  ? T
+  : T extends globalThis.Array<infer U>
+    ? globalThis.Array<DeepPartial<U>>
+    : T extends ReadonlyArray<infer U>
+      ? ReadonlyArray<DeepPartial<U>>
+      : T extends {}
+        ? { [K in keyof T]?: DeepPartial<T[K]> }
+        : Partial<T>;
 
 function isSet(value: any): boolean {
   return value !== null && value !== undefined;

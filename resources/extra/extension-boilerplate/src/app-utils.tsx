@@ -14,7 +14,9 @@ function OpenInView({ target }: { target: string }) {
   const [applications, setApplications] = useState<Application[]>([]);
 
   useEffect(() => {
-    void getApplications(target).then(setApplications).catch(() => setApplications([]));
+    void getApplications(target)
+      .then(setApplications)
+      .catch(() => setApplications([]));
   }, [target]);
 
   return (
@@ -27,7 +29,11 @@ function OpenInView({ target }: { target: string }) {
             icon={application.name.slice(0, 1)}
             actions={
               <ActionPanel>
-                <Action.Open title={`Open in ${application.name}`} app={application} target={target} />
+                <Action.Open
+                  title={`Open in ${application.name}`}
+                  app={application}
+                  target={target}
+                />
               </ActionPanel>
             }
           />

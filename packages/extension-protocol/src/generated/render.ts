@@ -206,8 +206,8 @@ export const ParentRef: MessageFns<ParentRef> = {
       nodeId: isSet(object.nodeId)
         ? globalThis.Number(object.nodeId)
         : isSet(object.node_id)
-        ? globalThis.Number(object.node_id)
-        : undefined,
+          ? globalThis.Number(object.node_id)
+          : undefined,
     };
   },
 
@@ -227,7 +227,10 @@ export const ParentRef: MessageFns<ParentRef> = {
   },
   fromPartial(object: DeepPartial<ParentRef>): ParentRef {
     const message = createBaseParentRef();
-    message.root = (object.root !== undefined && object.root !== null) ? Empty.fromPartial(object.root) : undefined;
+    message.root =
+      object.root !== undefined && object.root !== null
+        ? Empty.fromPartial(object.root)
+        : undefined;
     message.nodeId = object.nodeId ?? undefined;
     return message;
   },
@@ -375,8 +378,8 @@ export const RuntimeToastAction: MessageFns<RuntimeToastAction> = {
       onAction: isSet(object.onAction)
         ? globalThis.Boolean(object.onAction)
         : isSet(object.on_action)
-        ? globalThis.Boolean(object.on_action)
-        : false,
+          ? globalThis.Boolean(object.on_action)
+          : false,
       shortcut: isSet(object.shortcut) ? KeyboardShortcut.fromJSON(object.shortcut) : undefined,
     };
   },
@@ -402,15 +405,23 @@ export const RuntimeToastAction: MessageFns<RuntimeToastAction> = {
     const message = createBaseRuntimeToastAction();
     message.title = object.title ?? "";
     message.onAction = object.onAction ?? false;
-    message.shortcut = (object.shortcut !== undefined && object.shortcut !== null)
-      ? KeyboardShortcut.fromPartial(object.shortcut)
-      : undefined;
+    message.shortcut =
+      object.shortcut !== undefined && object.shortcut !== null
+        ? KeyboardShortcut.fromPartial(object.shortcut)
+        : undefined;
     return message;
   },
 };
 
 function createBaseToastModel(): ToastModel {
-  return { id: 0, title: "", message: "", style: 0, primaryAction: undefined, secondaryAction: undefined };
+  return {
+    id: 0,
+    title: "",
+    message: "",
+    style: 0,
+    primaryAction: undefined,
+    secondaryAction: undefined,
+  };
 }
 
 export const ToastModel: MessageFns<ToastModel> = {
@@ -509,13 +520,13 @@ export const ToastModel: MessageFns<ToastModel> = {
       primaryAction: isSet(object.primaryAction)
         ? RuntimeToastAction.fromJSON(object.primaryAction)
         : isSet(object.primary_action)
-        ? RuntimeToastAction.fromJSON(object.primary_action)
-        : undefined,
+          ? RuntimeToastAction.fromJSON(object.primary_action)
+          : undefined,
       secondaryAction: isSet(object.secondaryAction)
         ? RuntimeToastAction.fromJSON(object.secondaryAction)
         : isSet(object.secondary_action)
-        ? RuntimeToastAction.fromJSON(object.secondary_action)
-        : undefined,
+          ? RuntimeToastAction.fromJSON(object.secondary_action)
+          : undefined,
     };
   },
 
@@ -551,12 +562,14 @@ export const ToastModel: MessageFns<ToastModel> = {
     message.title = object.title ?? "";
     message.message = object.message ?? "";
     message.style = object.style ?? 0;
-    message.primaryAction = (object.primaryAction !== undefined && object.primaryAction !== null)
-      ? RuntimeToastAction.fromPartial(object.primaryAction)
-      : undefined;
-    message.secondaryAction = (object.secondaryAction !== undefined && object.secondaryAction !== null)
-      ? RuntimeToastAction.fromPartial(object.secondaryAction)
-      : undefined;
+    message.primaryAction =
+      object.primaryAction !== undefined && object.primaryAction !== null
+        ? RuntimeToastAction.fromPartial(object.primaryAction)
+        : undefined;
+    message.secondaryAction =
+      object.secondaryAction !== undefined && object.secondaryAction !== null
+        ? RuntimeToastAction.fromPartial(object.secondaryAction)
+        : undefined;
     return message;
   },
 };
@@ -582,7 +595,10 @@ export const CreateInstanceCommand: MessageFns<CreateInstanceCommand> = {
     }
     writer.join();
     globalThis.Object.entries(message.namedChildren).forEach(([key, value]: [string, number]) => {
-      CreateInstanceCommand_NamedChildrenEntry.encode({ key: key as any, value }, writer.uint32(42).fork()).join();
+      CreateInstanceCommand_NamedChildrenEntry.encode(
+        { key: key as any, value },
+        writer.uint32(42).fork(),
+      ).join();
     });
     return writer;
   },
@@ -661,24 +677,26 @@ export const CreateInstanceCommand: MessageFns<CreateInstanceCommand> = {
       id: isSet(object.id) ? globalThis.Number(object.id) : 0,
       type: isSet(object.type) ? globalThis.String(object.type) : "",
       props: isObject(object.props) ? object.props : undefined,
-      children: globalThis.Array.isArray(object?.children) ? object.children.map((e: any) => globalThis.Number(e)) : [],
+      children: globalThis.Array.isArray(object?.children)
+        ? object.children.map((e: any) => globalThis.Number(e))
+        : [],
       namedChildren: isObject(object.namedChildren)
         ? (globalThis.Object.entries(object.namedChildren) as [string, any][]).reduce(
-          (acc: { [key: string]: number }, [key, value]: [string, any]) => {
-            acc[key] = globalThis.Number(value);
-            return acc;
-          },
-          {},
-        )
+            (acc: { [key: string]: number }, [key, value]: [string, any]) => {
+              acc[key] = globalThis.Number(value);
+              return acc;
+            },
+            {},
+          )
         : isObject(object.named_children)
-        ? (globalThis.Object.entries(object.named_children) as [string, any][]).reduce(
-          (acc: { [key: string]: number }, [key, value]: [string, any]) => {
-            acc[key] = globalThis.Number(value);
-            return acc;
-          },
-          {},
-        )
-        : {},
+          ? (globalThis.Object.entries(object.named_children) as [string, any][]).reduce(
+              (acc: { [key: string]: number }, [key, value]: [string, any]) => {
+                acc[key] = globalThis.Number(value);
+                return acc;
+              },
+              {},
+            )
+          : {},
     };
   },
 
@@ -717,15 +735,14 @@ export const CreateInstanceCommand: MessageFns<CreateInstanceCommand> = {
     message.type = object.type ?? "";
     message.props = object.props ?? undefined;
     message.children = object.children?.map((e) => e) || [];
-    message.namedChildren = (globalThis.Object.entries(object.namedChildren ?? {}) as [string, number][]).reduce(
-      (acc: { [key: string]: number }, [key, value]: [string, number]) => {
-        if (value !== undefined) {
-          acc[key] = globalThis.Number(value);
-        }
-        return acc;
-      },
-      {},
-    );
+    message.namedChildren = (
+      globalThis.Object.entries(object.namedChildren ?? {}) as [string, number][]
+    ).reduce((acc: { [key: string]: number }, [key, value]: [string, number]) => {
+      if (value !== undefined) {
+        acc[key] = globalThis.Number(value);
+      }
+      return acc;
+    }, {});
     return message;
   },
 };
@@ -734,84 +751,98 @@ function createBaseCreateInstanceCommand_NamedChildrenEntry(): CreateInstanceCom
   return { key: "", value: 0 };
 }
 
-export const CreateInstanceCommand_NamedChildrenEntry: MessageFns<CreateInstanceCommand_NamedChildrenEntry> = {
-  encode(message: CreateInstanceCommand_NamedChildrenEntry, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.key !== "") {
-      writer.uint32(10).string(message.key);
-    }
-    if (message.value !== 0) {
-      writer.uint32(16).uint32(message.value);
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): CreateInstanceCommand_NamedChildrenEntry {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseCreateInstanceCommand_NamedChildrenEntry();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1: {
-          if (tag !== 10) {
-            break;
-          }
-
-          message.key = reader.string();
-          continue;
-        }
-        case 2: {
-          if (tag !== 16) {
-            break;
-          }
-
-          message.value = reader.uint32();
-          continue;
-        }
+export const CreateInstanceCommand_NamedChildrenEntry: MessageFns<CreateInstanceCommand_NamedChildrenEntry> =
+  {
+    encode(
+      message: CreateInstanceCommand_NamedChildrenEntry,
+      writer: BinaryWriter = new BinaryWriter(),
+    ): BinaryWriter {
+      if (message.key !== "") {
+        writer.uint32(10).string(message.key);
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
+      if (message.value !== 0) {
+        writer.uint32(16).uint32(message.value);
       }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
+      return writer;
+    },
 
-  fromJSON(object: any): CreateInstanceCommand_NamedChildrenEntry {
-    return {
-      key: isSet(object.key) ? globalThis.String(object.key) : "",
-      value: isSet(object.value) ? globalThis.Number(object.value) : 0,
-    };
-  },
+    decode(
+      input: BinaryReader | Uint8Array,
+      length?: number,
+    ): CreateInstanceCommand_NamedChildrenEntry {
+      const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+      const end = length === undefined ? reader.len : reader.pos + length;
+      const message = createBaseCreateInstanceCommand_NamedChildrenEntry();
+      while (reader.pos < end) {
+        const tag = reader.uint32();
+        switch (tag >>> 3) {
+          case 1: {
+            if (tag !== 10) {
+              break;
+            }
 
-  toJSON(message: CreateInstanceCommand_NamedChildrenEntry): unknown {
-    const obj: any = {};
-    if (message.key !== "") {
-      obj.key = message.key;
-    }
-    if (message.value !== 0) {
-      obj.value = Math.round(message.value);
-    }
-    return obj;
-  },
+            message.key = reader.string();
+            continue;
+          }
+          case 2: {
+            if (tag !== 16) {
+              break;
+            }
 
-  create(base?: DeepPartial<CreateInstanceCommand_NamedChildrenEntry>): CreateInstanceCommand_NamedChildrenEntry {
-    return CreateInstanceCommand_NamedChildrenEntry.fromPartial(base ?? {});
-  },
-  fromPartial(object: DeepPartial<CreateInstanceCommand_NamedChildrenEntry>): CreateInstanceCommand_NamedChildrenEntry {
-    const message = createBaseCreateInstanceCommand_NamedChildrenEntry();
-    message.key = object.key ?? "";
-    message.value = object.value ?? 0;
-    return message;
-  },
-};
+            message.value = reader.uint32();
+            continue;
+          }
+        }
+        if ((tag & 7) === 4 || tag === 0) {
+          break;
+        }
+        reader.skip(tag & 7);
+      }
+      return message;
+    },
+
+    fromJSON(object: any): CreateInstanceCommand_NamedChildrenEntry {
+      return {
+        key: isSet(object.key) ? globalThis.String(object.key) : "",
+        value: isSet(object.value) ? globalThis.Number(object.value) : 0,
+      };
+    },
+
+    toJSON(message: CreateInstanceCommand_NamedChildrenEntry): unknown {
+      const obj: any = {};
+      if (message.key !== "") {
+        obj.key = message.key;
+      }
+      if (message.value !== 0) {
+        obj.value = Math.round(message.value);
+      }
+      return obj;
+    },
+
+    create(
+      base?: DeepPartial<CreateInstanceCommand_NamedChildrenEntry>,
+    ): CreateInstanceCommand_NamedChildrenEntry {
+      return CreateInstanceCommand_NamedChildrenEntry.fromPartial(base ?? {});
+    },
+    fromPartial(
+      object: DeepPartial<CreateInstanceCommand_NamedChildrenEntry>,
+    ): CreateInstanceCommand_NamedChildrenEntry {
+      const message = createBaseCreateInstanceCommand_NamedChildrenEntry();
+      message.key = object.key ?? "";
+      message.value = object.value ?? 0;
+      return message;
+    },
+  };
 
 function createBaseCreateTextInstanceCommand(): CreateTextInstanceCommand {
   return { id: 0, text: "" };
 }
 
 export const CreateTextInstanceCommand: MessageFns<CreateTextInstanceCommand> = {
-  encode(message: CreateTextInstanceCommand, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: CreateTextInstanceCommand,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     if (message.id !== 0) {
       writer.uint32(8).uint32(message.id);
     }
@@ -935,8 +966,8 @@ export const ParentChildCommand: MessageFns<ParentChildCommand> = {
       childId: isSet(object.childId)
         ? globalThis.Number(object.childId)
         : isSet(object.child_id)
-        ? globalThis.Number(object.child_id)
-        : 0,
+          ? globalThis.Number(object.child_id)
+          : 0,
     };
   },
 
@@ -956,9 +987,10 @@ export const ParentChildCommand: MessageFns<ParentChildCommand> = {
   },
   fromPartial(object: DeepPartial<ParentChildCommand>): ParentChildCommand {
     const message = createBaseParentChildCommand();
-    message.parent = (object.parent !== undefined && object.parent !== null)
-      ? ParentRef.fromPartial(object.parent)
-      : undefined;
+    message.parent =
+      object.parent !== undefined && object.parent !== null
+        ? ParentRef.fromPartial(object.parent)
+        : undefined;
     message.childId = object.childId ?? 0;
     return message;
   },
@@ -1028,13 +1060,13 @@ export const InsertBeforeCommand: MessageFns<InsertBeforeCommand> = {
       childId: isSet(object.childId)
         ? globalThis.Number(object.childId)
         : isSet(object.child_id)
-        ? globalThis.Number(object.child_id)
-        : 0,
+          ? globalThis.Number(object.child_id)
+          : 0,
       beforeId: isSet(object.beforeId)
         ? globalThis.Number(object.beforeId)
         : isSet(object.before_id)
-        ? globalThis.Number(object.before_id)
-        : 0,
+          ? globalThis.Number(object.before_id)
+          : 0,
     };
   },
 
@@ -1057,9 +1089,10 @@ export const InsertBeforeCommand: MessageFns<InsertBeforeCommand> = {
   },
   fromPartial(object: DeepPartial<InsertBeforeCommand>): InsertBeforeCommand {
     const message = createBaseInsertBeforeCommand();
-    message.parent = (object.parent !== undefined && object.parent !== null)
-      ? ParentRef.fromPartial(object.parent)
-      : undefined;
+    message.parent =
+      object.parent !== undefined && object.parent !== null
+        ? ParentRef.fromPartial(object.parent)
+        : undefined;
     message.childId = object.childId ?? 0;
     message.beforeId = object.beforeId ?? 0;
     return message;
@@ -1079,7 +1112,10 @@ export const UpdatePropsCommand: MessageFns<UpdatePropsCommand> = {
       Struct.encode(Struct.wrap(message.props), writer.uint32(18).fork()).join();
     }
     globalThis.Object.entries(message.namedChildren).forEach(([key, value]: [string, number]) => {
-      UpdatePropsCommand_NamedChildrenEntry.encode({ key: key as any, value }, writer.uint32(26).fork()).join();
+      UpdatePropsCommand_NamedChildrenEntry.encode(
+        { key: key as any, value },
+        writer.uint32(26).fork(),
+      ).join();
     });
     return writer;
   },
@@ -1133,21 +1169,21 @@ export const UpdatePropsCommand: MessageFns<UpdatePropsCommand> = {
       props: isObject(object.props) ? object.props : undefined,
       namedChildren: isObject(object.namedChildren)
         ? (globalThis.Object.entries(object.namedChildren) as [string, any][]).reduce(
-          (acc: { [key: string]: number }, [key, value]: [string, any]) => {
-            acc[key] = globalThis.Number(value);
-            return acc;
-          },
-          {},
-        )
+            (acc: { [key: string]: number }, [key, value]: [string, any]) => {
+              acc[key] = globalThis.Number(value);
+              return acc;
+            },
+            {},
+          )
         : isObject(object.named_children)
-        ? (globalThis.Object.entries(object.named_children) as [string, any][]).reduce(
-          (acc: { [key: string]: number }, [key, value]: [string, any]) => {
-            acc[key] = globalThis.Number(value);
-            return acc;
-          },
-          {},
-        )
-        : {},
+          ? (globalThis.Object.entries(object.named_children) as [string, any][]).reduce(
+              (acc: { [key: string]: number }, [key, value]: [string, any]) => {
+                acc[key] = globalThis.Number(value);
+                return acc;
+              },
+              {},
+            )
+          : {},
     };
   },
 
@@ -1178,15 +1214,14 @@ export const UpdatePropsCommand: MessageFns<UpdatePropsCommand> = {
     const message = createBaseUpdatePropsCommand();
     message.id = object.id ?? 0;
     message.props = object.props ?? undefined;
-    message.namedChildren = (globalThis.Object.entries(object.namedChildren ?? {}) as [string, number][]).reduce(
-      (acc: { [key: string]: number }, [key, value]: [string, number]) => {
-        if (value !== undefined) {
-          acc[key] = globalThis.Number(value);
-        }
-        return acc;
-      },
-      {},
-    );
+    message.namedChildren = (
+      globalThis.Object.entries(object.namedChildren ?? {}) as [string, number][]
+    ).reduce((acc: { [key: string]: number }, [key, value]: [string, number]) => {
+      if (value !== undefined) {
+        acc[key] = globalThis.Number(value);
+      }
+      return acc;
+    }, {});
     return message;
   },
 };
@@ -1195,77 +1230,88 @@ function createBaseUpdatePropsCommand_NamedChildrenEntry(): UpdatePropsCommand_N
   return { key: "", value: 0 };
 }
 
-export const UpdatePropsCommand_NamedChildrenEntry: MessageFns<UpdatePropsCommand_NamedChildrenEntry> = {
-  encode(message: UpdatePropsCommand_NamedChildrenEntry, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.key !== "") {
-      writer.uint32(10).string(message.key);
-    }
-    if (message.value !== 0) {
-      writer.uint32(16).uint32(message.value);
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): UpdatePropsCommand_NamedChildrenEntry {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseUpdatePropsCommand_NamedChildrenEntry();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1: {
-          if (tag !== 10) {
-            break;
-          }
-
-          message.key = reader.string();
-          continue;
-        }
-        case 2: {
-          if (tag !== 16) {
-            break;
-          }
-
-          message.value = reader.uint32();
-          continue;
-        }
+export const UpdatePropsCommand_NamedChildrenEntry: MessageFns<UpdatePropsCommand_NamedChildrenEntry> =
+  {
+    encode(
+      message: UpdatePropsCommand_NamedChildrenEntry,
+      writer: BinaryWriter = new BinaryWriter(),
+    ): BinaryWriter {
+      if (message.key !== "") {
+        writer.uint32(10).string(message.key);
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
+      if (message.value !== 0) {
+        writer.uint32(16).uint32(message.value);
       }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
+      return writer;
+    },
 
-  fromJSON(object: any): UpdatePropsCommand_NamedChildrenEntry {
-    return {
-      key: isSet(object.key) ? globalThis.String(object.key) : "",
-      value: isSet(object.value) ? globalThis.Number(object.value) : 0,
-    };
-  },
+    decode(
+      input: BinaryReader | Uint8Array,
+      length?: number,
+    ): UpdatePropsCommand_NamedChildrenEntry {
+      const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+      const end = length === undefined ? reader.len : reader.pos + length;
+      const message = createBaseUpdatePropsCommand_NamedChildrenEntry();
+      while (reader.pos < end) {
+        const tag = reader.uint32();
+        switch (tag >>> 3) {
+          case 1: {
+            if (tag !== 10) {
+              break;
+            }
 
-  toJSON(message: UpdatePropsCommand_NamedChildrenEntry): unknown {
-    const obj: any = {};
-    if (message.key !== "") {
-      obj.key = message.key;
-    }
-    if (message.value !== 0) {
-      obj.value = Math.round(message.value);
-    }
-    return obj;
-  },
+            message.key = reader.string();
+            continue;
+          }
+          case 2: {
+            if (tag !== 16) {
+              break;
+            }
 
-  create(base?: DeepPartial<UpdatePropsCommand_NamedChildrenEntry>): UpdatePropsCommand_NamedChildrenEntry {
-    return UpdatePropsCommand_NamedChildrenEntry.fromPartial(base ?? {});
-  },
-  fromPartial(object: DeepPartial<UpdatePropsCommand_NamedChildrenEntry>): UpdatePropsCommand_NamedChildrenEntry {
-    const message = createBaseUpdatePropsCommand_NamedChildrenEntry();
-    message.key = object.key ?? "";
-    message.value = object.value ?? 0;
-    return message;
-  },
-};
+            message.value = reader.uint32();
+            continue;
+          }
+        }
+        if ((tag & 7) === 4 || tag === 0) {
+          break;
+        }
+        reader.skip(tag & 7);
+      }
+      return message;
+    },
+
+    fromJSON(object: any): UpdatePropsCommand_NamedChildrenEntry {
+      return {
+        key: isSet(object.key) ? globalThis.String(object.key) : "",
+        value: isSet(object.value) ? globalThis.Number(object.value) : 0,
+      };
+    },
+
+    toJSON(message: UpdatePropsCommand_NamedChildrenEntry): unknown {
+      const obj: any = {};
+      if (message.key !== "") {
+        obj.key = message.key;
+      }
+      if (message.value !== 0) {
+        obj.value = Math.round(message.value);
+      }
+      return obj;
+    },
+
+    create(
+      base?: DeepPartial<UpdatePropsCommand_NamedChildrenEntry>,
+    ): UpdatePropsCommand_NamedChildrenEntry {
+      return UpdatePropsCommand_NamedChildrenEntry.fromPartial(base ?? {});
+    },
+    fromPartial(
+      object: DeepPartial<UpdatePropsCommand_NamedChildrenEntry>,
+    ): UpdatePropsCommand_NamedChildrenEntry {
+      const message = createBaseUpdatePropsCommand_NamedChildrenEntry();
+      message.key = object.key ?? "";
+      message.value = object.value ?? 0;
+      return message;
+    },
+  };
 
 function createBaseUpdateTextCommand(): UpdateTextCommand {
   return { id: 0, text: "" };
@@ -1408,8 +1454,8 @@ export const ReplaceChildrenCommand: MessageFns<ReplaceChildrenCommand> = {
       childrenIds: globalThis.Array.isArray(object?.childrenIds)
         ? object.childrenIds.map((e: any) => globalThis.Number(e))
         : globalThis.Array.isArray(object?.children_ids)
-        ? object.children_ids.map((e: any) => globalThis.Number(e))
-        : [],
+          ? object.children_ids.map((e: any) => globalThis.Number(e))
+          : [],
     };
   },
 
@@ -1429,9 +1475,10 @@ export const ReplaceChildrenCommand: MessageFns<ReplaceChildrenCommand> = {
   },
   fromPartial(object: DeepPartial<ReplaceChildrenCommand>): ReplaceChildrenCommand {
     const message = createBaseReplaceChildrenCommand();
-    message.parent = (object.parent !== undefined && object.parent !== null)
-      ? ParentRef.fromPartial(object.parent)
-      : undefined;
+    message.parent =
+      object.parent !== undefined && object.parent !== null
+        ? ParentRef.fromPartial(object.parent)
+        : undefined;
     message.childrenIds = object.childrenIds?.map((e) => e) || [];
     return message;
   },
@@ -1478,8 +1525,8 @@ export const ClearContainerCommand: MessageFns<ClearContainerCommand> = {
       containerId: isSet(object.containerId)
         ? globalThis.String(object.containerId)
         : isSet(object.container_id)
-        ? globalThis.String(object.container_id)
-        : "",
+          ? globalThis.String(object.container_id)
+          : "",
     };
   },
 
@@ -1506,7 +1553,10 @@ function createBaseDefinePropsTemplateCommand(): DefinePropsTemplateCommand {
 }
 
 export const DefinePropsTemplateCommand: MessageFns<DefinePropsTemplateCommand> = {
-  encode(message: DefinePropsTemplateCommand, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: DefinePropsTemplateCommand,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     if (message.templateId !== 0) {
       writer.uint32(8).uint32(message.templateId);
     }
@@ -1514,7 +1564,10 @@ export const DefinePropsTemplateCommand: MessageFns<DefinePropsTemplateCommand> 
       Struct.encode(Struct.wrap(message.props), writer.uint32(18).fork()).join();
     }
     globalThis.Object.entries(message.namedChildren).forEach(([key, value]: [string, number]) => {
-      DefinePropsTemplateCommand_NamedChildrenEntry.encode({ key: key as any, value }, writer.uint32(26).fork()).join();
+      DefinePropsTemplateCommand_NamedChildrenEntry.encode(
+        { key: key as any, value },
+        writer.uint32(26).fork(),
+      ).join();
     });
     return writer;
   },
@@ -1547,7 +1600,10 @@ export const DefinePropsTemplateCommand: MessageFns<DefinePropsTemplateCommand> 
             break;
           }
 
-          const entry3 = DefinePropsTemplateCommand_NamedChildrenEntry.decode(reader, reader.uint32());
+          const entry3 = DefinePropsTemplateCommand_NamedChildrenEntry.decode(
+            reader,
+            reader.uint32(),
+          );
           if (entry3.value !== undefined) {
             message.namedChildren[entry3.key] = entry3.value;
           }
@@ -1567,26 +1623,26 @@ export const DefinePropsTemplateCommand: MessageFns<DefinePropsTemplateCommand> 
       templateId: isSet(object.templateId)
         ? globalThis.Number(object.templateId)
         : isSet(object.template_id)
-        ? globalThis.Number(object.template_id)
-        : 0,
+          ? globalThis.Number(object.template_id)
+          : 0,
       props: isObject(object.props) ? object.props : undefined,
       namedChildren: isObject(object.namedChildren)
         ? (globalThis.Object.entries(object.namedChildren) as [string, any][]).reduce(
-          (acc: { [key: string]: number }, [key, value]: [string, any]) => {
-            acc[key] = globalThis.Number(value);
-            return acc;
-          },
-          {},
-        )
+            (acc: { [key: string]: number }, [key, value]: [string, any]) => {
+              acc[key] = globalThis.Number(value);
+              return acc;
+            },
+            {},
+          )
         : isObject(object.named_children)
-        ? (globalThis.Object.entries(object.named_children) as [string, any][]).reduce(
-          (acc: { [key: string]: number }, [key, value]: [string, any]) => {
-            acc[key] = globalThis.Number(value);
-            return acc;
-          },
-          {},
-        )
-        : {},
+          ? (globalThis.Object.entries(object.named_children) as [string, any][]).reduce(
+              (acc: { [key: string]: number }, [key, value]: [string, any]) => {
+                acc[key] = globalThis.Number(value);
+                return acc;
+              },
+              {},
+            )
+          : {},
     };
   },
 
@@ -1617,15 +1673,14 @@ export const DefinePropsTemplateCommand: MessageFns<DefinePropsTemplateCommand> 
     const message = createBaseDefinePropsTemplateCommand();
     message.templateId = object.templateId ?? 0;
     message.props = object.props ?? undefined;
-    message.namedChildren = (globalThis.Object.entries(object.namedChildren ?? {}) as [string, number][]).reduce(
-      (acc: { [key: string]: number }, [key, value]: [string, number]) => {
-        if (value !== undefined) {
-          acc[key] = globalThis.Number(value);
-        }
-        return acc;
-      },
-      {},
-    );
+    message.namedChildren = (
+      globalThis.Object.entries(object.namedChildren ?? {}) as [string, number][]
+    ).reduce((acc: { [key: string]: number }, [key, value]: [string, number]) => {
+      if (value !== undefined) {
+        acc[key] = globalThis.Number(value);
+      }
+      return acc;
+    }, {});
     return message;
   },
 };
@@ -1649,7 +1704,10 @@ export const DefinePropsTemplateCommand_NamedChildrenEntry: MessageFns<DefinePro
       return writer;
     },
 
-    decode(input: BinaryReader | Uint8Array, length?: number): DefinePropsTemplateCommand_NamedChildrenEntry {
+    decode(
+      input: BinaryReader | Uint8Array,
+      length?: number,
+    ): DefinePropsTemplateCommand_NamedChildrenEntry {
       const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
       const end = length === undefined ? reader.len : reader.pos + length;
       const message = createBaseDefinePropsTemplateCommand_NamedChildrenEntry();
@@ -1719,7 +1777,10 @@ function createBaseApplyPropsTemplateCommand(): ApplyPropsTemplateCommand {
 }
 
 export const ApplyPropsTemplateCommand: MessageFns<ApplyPropsTemplateCommand> = {
-  encode(message: ApplyPropsTemplateCommand, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: ApplyPropsTemplateCommand,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     if (message.templateId !== 0) {
       writer.uint32(8).uint32(message.templateId);
     }
@@ -1778,13 +1839,13 @@ export const ApplyPropsTemplateCommand: MessageFns<ApplyPropsTemplateCommand> = 
       templateId: isSet(object.templateId)
         ? globalThis.Number(object.templateId)
         : isSet(object.template_id)
-        ? globalThis.Number(object.template_id)
-        : 0,
+          ? globalThis.Number(object.template_id)
+          : 0,
       targetIds: globalThis.Array.isArray(object?.targetIds)
         ? object.targetIds.map((e: any) => globalThis.Number(e))
         : globalThis.Array.isArray(object?.target_ids)
-        ? object.target_ids.map((e: any) => globalThis.Number(e))
-        : [],
+          ? object.target_ids.map((e: any) => globalThis.Number(e))
+          : [],
     };
   },
 
@@ -1863,9 +1924,10 @@ export const ShowToastCommand: MessageFns<ShowToastCommand> = {
   },
   fromPartial(object: DeepPartial<ShowToastCommand>): ShowToastCommand {
     const message = createBaseShowToastCommand();
-    message.toast = (object.toast !== undefined && object.toast !== null)
-      ? ToastModel.fromPartial(object.toast)
-      : undefined;
+    message.toast =
+      object.toast !== undefined && object.toast !== null
+        ? ToastModel.fromPartial(object.toast)
+        : undefined;
     return message;
   },
 };
@@ -1923,9 +1985,10 @@ export const UpdateToastCommand: MessageFns<UpdateToastCommand> = {
   },
   fromPartial(object: DeepPartial<UpdateToastCommand>): UpdateToastCommand {
     const message = createBaseUpdateToastCommand();
-    message.toast = (object.toast !== undefined && object.toast !== null)
-      ? ToastModel.fromPartial(object.toast)
-      : undefined;
+    message.toast =
+      object.toast !== undefined && object.toast !== null
+        ? ToastModel.fromPartial(object.toast)
+        : undefined;
     return message;
   },
 };
@@ -2046,10 +2109,16 @@ export const RenderCommand: MessageFns<RenderCommand> = {
       HideToastCommand.encode(message.hideToast, writer.uint32(98).fork()).join();
     }
     if (message.definePropsTemplate !== undefined) {
-      DefinePropsTemplateCommand.encode(message.definePropsTemplate, writer.uint32(106).fork()).join();
+      DefinePropsTemplateCommand.encode(
+        message.definePropsTemplate,
+        writer.uint32(106).fork(),
+      ).join();
     }
     if (message.applyPropsTemplate !== undefined) {
-      ApplyPropsTemplateCommand.encode(message.applyPropsTemplate, writer.uint32(114).fork()).join();
+      ApplyPropsTemplateCommand.encode(
+        message.applyPropsTemplate,
+        writer.uint32(114).fork(),
+      ).join();
     }
     return writer;
   },
@@ -2187,73 +2256,73 @@ export const RenderCommand: MessageFns<RenderCommand> = {
       createInstance: isSet(object.createInstance)
         ? CreateInstanceCommand.fromJSON(object.createInstance)
         : isSet(object.create_instance)
-        ? CreateInstanceCommand.fromJSON(object.create_instance)
-        : undefined,
+          ? CreateInstanceCommand.fromJSON(object.create_instance)
+          : undefined,
       createTextInstance: isSet(object.createTextInstance)
         ? CreateTextInstanceCommand.fromJSON(object.createTextInstance)
         : isSet(object.create_text_instance)
-        ? CreateTextInstanceCommand.fromJSON(object.create_text_instance)
-        : undefined,
+          ? CreateTextInstanceCommand.fromJSON(object.create_text_instance)
+          : undefined,
       appendChild: isSet(object.appendChild)
         ? ParentChildCommand.fromJSON(object.appendChild)
         : isSet(object.append_child)
-        ? ParentChildCommand.fromJSON(object.append_child)
-        : undefined,
+          ? ParentChildCommand.fromJSON(object.append_child)
+          : undefined,
       insertBefore: isSet(object.insertBefore)
         ? InsertBeforeCommand.fromJSON(object.insertBefore)
         : isSet(object.insert_before)
-        ? InsertBeforeCommand.fromJSON(object.insert_before)
-        : undefined,
+          ? InsertBeforeCommand.fromJSON(object.insert_before)
+          : undefined,
       removeChild: isSet(object.removeChild)
         ? ParentChildCommand.fromJSON(object.removeChild)
         : isSet(object.remove_child)
-        ? ParentChildCommand.fromJSON(object.remove_child)
-        : undefined,
+          ? ParentChildCommand.fromJSON(object.remove_child)
+          : undefined,
       updateProps: isSet(object.updateProps)
         ? UpdatePropsCommand.fromJSON(object.updateProps)
         : isSet(object.update_props)
-        ? UpdatePropsCommand.fromJSON(object.update_props)
-        : undefined,
+          ? UpdatePropsCommand.fromJSON(object.update_props)
+          : undefined,
       updateText: isSet(object.updateText)
         ? UpdateTextCommand.fromJSON(object.updateText)
         : isSet(object.update_text)
-        ? UpdateTextCommand.fromJSON(object.update_text)
-        : undefined,
+          ? UpdateTextCommand.fromJSON(object.update_text)
+          : undefined,
       replaceChildren: isSet(object.replaceChildren)
         ? ReplaceChildrenCommand.fromJSON(object.replaceChildren)
         : isSet(object.replace_children)
-        ? ReplaceChildrenCommand.fromJSON(object.replace_children)
-        : undefined,
+          ? ReplaceChildrenCommand.fromJSON(object.replace_children)
+          : undefined,
       clearContainer: isSet(object.clearContainer)
         ? ClearContainerCommand.fromJSON(object.clearContainer)
         : isSet(object.clear_container)
-        ? ClearContainerCommand.fromJSON(object.clear_container)
-        : undefined,
+          ? ClearContainerCommand.fromJSON(object.clear_container)
+          : undefined,
       showToast: isSet(object.showToast)
         ? ShowToastCommand.fromJSON(object.showToast)
         : isSet(object.show_toast)
-        ? ShowToastCommand.fromJSON(object.show_toast)
-        : undefined,
+          ? ShowToastCommand.fromJSON(object.show_toast)
+          : undefined,
       updateToast: isSet(object.updateToast)
         ? UpdateToastCommand.fromJSON(object.updateToast)
         : isSet(object.update_toast)
-        ? UpdateToastCommand.fromJSON(object.update_toast)
-        : undefined,
+          ? UpdateToastCommand.fromJSON(object.update_toast)
+          : undefined,
       hideToast: isSet(object.hideToast)
         ? HideToastCommand.fromJSON(object.hideToast)
         : isSet(object.hide_toast)
-        ? HideToastCommand.fromJSON(object.hide_toast)
-        : undefined,
+          ? HideToastCommand.fromJSON(object.hide_toast)
+          : undefined,
       definePropsTemplate: isSet(object.definePropsTemplate)
         ? DefinePropsTemplateCommand.fromJSON(object.definePropsTemplate)
         : isSet(object.define_props_template)
-        ? DefinePropsTemplateCommand.fromJSON(object.define_props_template)
-        : undefined,
+          ? DefinePropsTemplateCommand.fromJSON(object.define_props_template)
+          : undefined,
       applyPropsTemplate: isSet(object.applyPropsTemplate)
         ? ApplyPropsTemplateCommand.fromJSON(object.applyPropsTemplate)
         : isSet(object.apply_props_template)
-        ? ApplyPropsTemplateCommand.fromJSON(object.apply_props_template)
-        : undefined,
+          ? ApplyPropsTemplateCommand.fromJSON(object.apply_props_template)
+          : undefined,
     };
   },
 
@@ -2309,48 +2378,62 @@ export const RenderCommand: MessageFns<RenderCommand> = {
   },
   fromPartial(object: DeepPartial<RenderCommand>): RenderCommand {
     const message = createBaseRenderCommand();
-    message.createInstance = (object.createInstance !== undefined && object.createInstance !== null)
-      ? CreateInstanceCommand.fromPartial(object.createInstance)
-      : undefined;
-    message.createTextInstance = (object.createTextInstance !== undefined && object.createTextInstance !== null)
-      ? CreateTextInstanceCommand.fromPartial(object.createTextInstance)
-      : undefined;
-    message.appendChild = (object.appendChild !== undefined && object.appendChild !== null)
-      ? ParentChildCommand.fromPartial(object.appendChild)
-      : undefined;
-    message.insertBefore = (object.insertBefore !== undefined && object.insertBefore !== null)
-      ? InsertBeforeCommand.fromPartial(object.insertBefore)
-      : undefined;
-    message.removeChild = (object.removeChild !== undefined && object.removeChild !== null)
-      ? ParentChildCommand.fromPartial(object.removeChild)
-      : undefined;
-    message.updateProps = (object.updateProps !== undefined && object.updateProps !== null)
-      ? UpdatePropsCommand.fromPartial(object.updateProps)
-      : undefined;
-    message.updateText = (object.updateText !== undefined && object.updateText !== null)
-      ? UpdateTextCommand.fromPartial(object.updateText)
-      : undefined;
-    message.replaceChildren = (object.replaceChildren !== undefined && object.replaceChildren !== null)
-      ? ReplaceChildrenCommand.fromPartial(object.replaceChildren)
-      : undefined;
-    message.clearContainer = (object.clearContainer !== undefined && object.clearContainer !== null)
-      ? ClearContainerCommand.fromPartial(object.clearContainer)
-      : undefined;
-    message.showToast = (object.showToast !== undefined && object.showToast !== null)
-      ? ShowToastCommand.fromPartial(object.showToast)
-      : undefined;
-    message.updateToast = (object.updateToast !== undefined && object.updateToast !== null)
-      ? UpdateToastCommand.fromPartial(object.updateToast)
-      : undefined;
-    message.hideToast = (object.hideToast !== undefined && object.hideToast !== null)
-      ? HideToastCommand.fromPartial(object.hideToast)
-      : undefined;
-    message.definePropsTemplate = (object.definePropsTemplate !== undefined && object.definePropsTemplate !== null)
-      ? DefinePropsTemplateCommand.fromPartial(object.definePropsTemplate)
-      : undefined;
-    message.applyPropsTemplate = (object.applyPropsTemplate !== undefined && object.applyPropsTemplate !== null)
-      ? ApplyPropsTemplateCommand.fromPartial(object.applyPropsTemplate)
-      : undefined;
+    message.createInstance =
+      object.createInstance !== undefined && object.createInstance !== null
+        ? CreateInstanceCommand.fromPartial(object.createInstance)
+        : undefined;
+    message.createTextInstance =
+      object.createTextInstance !== undefined && object.createTextInstance !== null
+        ? CreateTextInstanceCommand.fromPartial(object.createTextInstance)
+        : undefined;
+    message.appendChild =
+      object.appendChild !== undefined && object.appendChild !== null
+        ? ParentChildCommand.fromPartial(object.appendChild)
+        : undefined;
+    message.insertBefore =
+      object.insertBefore !== undefined && object.insertBefore !== null
+        ? InsertBeforeCommand.fromPartial(object.insertBefore)
+        : undefined;
+    message.removeChild =
+      object.removeChild !== undefined && object.removeChild !== null
+        ? ParentChildCommand.fromPartial(object.removeChild)
+        : undefined;
+    message.updateProps =
+      object.updateProps !== undefined && object.updateProps !== null
+        ? UpdatePropsCommand.fromPartial(object.updateProps)
+        : undefined;
+    message.updateText =
+      object.updateText !== undefined && object.updateText !== null
+        ? UpdateTextCommand.fromPartial(object.updateText)
+        : undefined;
+    message.replaceChildren =
+      object.replaceChildren !== undefined && object.replaceChildren !== null
+        ? ReplaceChildrenCommand.fromPartial(object.replaceChildren)
+        : undefined;
+    message.clearContainer =
+      object.clearContainer !== undefined && object.clearContainer !== null
+        ? ClearContainerCommand.fromPartial(object.clearContainer)
+        : undefined;
+    message.showToast =
+      object.showToast !== undefined && object.showToast !== null
+        ? ShowToastCommand.fromPartial(object.showToast)
+        : undefined;
+    message.updateToast =
+      object.updateToast !== undefined && object.updateToast !== null
+        ? UpdateToastCommand.fromPartial(object.updateToast)
+        : undefined;
+    message.hideToast =
+      object.hideToast !== undefined && object.hideToast !== null
+        ? HideToastCommand.fromPartial(object.hideToast)
+        : undefined;
+    message.definePropsTemplate =
+      object.definePropsTemplate !== undefined && object.definePropsTemplate !== null
+        ? DefinePropsTemplateCommand.fromPartial(object.definePropsTemplate)
+        : undefined;
+    message.applyPropsTemplate =
+      object.applyPropsTemplate !== undefined && object.applyPropsTemplate !== null
+        ? ApplyPropsTemplateCommand.fromPartial(object.applyPropsTemplate)
+        : undefined;
     return message;
   },
 };
@@ -2651,27 +2734,37 @@ export const RuntimeRender: MessageFns<RuntimeRender> = {
   },
   fromPartial(object: DeepPartial<RuntimeRender>): RuntimeRender {
     const message = createBaseRuntimeRender();
-    message.batch = (object.batch !== undefined && object.batch !== null)
-      ? RenderBatch.fromPartial(object.batch)
-      : undefined;
-    message.command = (object.command !== undefined && object.command !== null)
-      ? RenderCommand.fromPartial(object.command)
-      : undefined;
-    message.log = (object.log !== undefined && object.log !== null) ? RuntimeLog.fromPartial(object.log) : undefined;
-    message.error = (object.error !== undefined && object.error !== null)
-      ? RuntimeError.fromPartial(object.error)
-      : undefined;
+    message.batch =
+      object.batch !== undefined && object.batch !== null
+        ? RenderBatch.fromPartial(object.batch)
+        : undefined;
+    message.command =
+      object.command !== undefined && object.command !== null
+        ? RenderCommand.fromPartial(object.command)
+        : undefined;
+    message.log =
+      object.log !== undefined && object.log !== null
+        ? RuntimeLog.fromPartial(object.log)
+        : undefined;
+    message.error =
+      object.error !== undefined && object.error !== null
+        ? RuntimeError.fromPartial(object.error)
+        : undefined;
     return message;
   },
 };
 
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
 
-type DeepPartial<T> = T extends Builtin ? T
-  : T extends globalThis.Array<infer U> ? globalThis.Array<DeepPartial<U>>
-  : T extends ReadonlyArray<infer U> ? ReadonlyArray<DeepPartial<U>>
-  : T extends {} ? { [K in keyof T]?: DeepPartial<T[K]> }
-  : Partial<T>;
+type DeepPartial<T> = T extends Builtin
+  ? T
+  : T extends globalThis.Array<infer U>
+    ? globalThis.Array<DeepPartial<U>>
+    : T extends ReadonlyArray<infer U>
+      ? ReadonlyArray<DeepPartial<U>>
+      : T extends {}
+        ? { [K in keyof T]?: DeepPartial<T[K]> }
+        : Partial<T>;
 
 function isObject(value: any): boolean {
   return typeof value === "object" && value !== null;

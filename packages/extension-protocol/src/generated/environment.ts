@@ -88,8 +88,7 @@ export interface EnvironmentSnapshot {
   browserExtensionAccess: boolean;
 }
 
-export interface GetEnvironmentRequest {
-}
+export interface GetEnvironmentRequest {}
 
 export interface GetEnvironmentResponse {
   environment: EnvironmentSnapshot | undefined;
@@ -249,7 +248,9 @@ export const FileListContextValue: MessageFns<FileListContextValue> = {
   fromJSON(object: any): FileListContextValue {
     return {
       state: isSet(object.state) ? desktopContextStateFromJSON(object.state) : 0,
-      value: globalThis.Array.isArray(object?.value) ? object.value.map((e: any) => FileSystemItem.fromJSON(e)) : [],
+      value: globalThis.Array.isArray(object?.value)
+        ? object.value.map((e: any) => FileSystemItem.fromJSON(e))
+        : [],
       reason: isSet(object.reason) ? globalThis.String(object.reason) : "",
     };
   },
@@ -285,7 +286,10 @@ function createBaseApplicationContextValue(): ApplicationContextValue {
 }
 
 export const ApplicationContextValue: MessageFns<ApplicationContextValue> = {
-  encode(message: ApplicationContextValue, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: ApplicationContextValue,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     if (message.state !== 0) {
       writer.uint32(8).int32(message.state);
     }
@@ -366,9 +370,10 @@ export const ApplicationContextValue: MessageFns<ApplicationContextValue> = {
   fromPartial(object: DeepPartial<ApplicationContextValue>): ApplicationContextValue {
     const message = createBaseApplicationContextValue();
     message.state = object.state ?? 0;
-    message.value = (object.value !== undefined && object.value !== null)
-      ? Application.fromPartial(object.value)
-      : undefined;
+    message.value =
+      object.value !== undefined && object.value !== null
+        ? Application.fromPartial(object.value)
+        : undefined;
     message.reason = object.reason ?? "";
     return message;
   },
@@ -379,7 +384,10 @@ function createBaseFocusedWindowContextValue(): FocusedWindowContextValue {
 }
 
 export const FocusedWindowContextValue: MessageFns<FocusedWindowContextValue> = {
-  encode(message: FocusedWindowContextValue, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: FocusedWindowContextValue,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     if (message.state !== 0) {
       writer.uint32(8).int32(message.state);
     }
@@ -460,16 +468,22 @@ export const FocusedWindowContextValue: MessageFns<FocusedWindowContextValue> = 
   fromPartial(object: DeepPartial<FocusedWindowContextValue>): FocusedWindowContextValue {
     const message = createBaseFocusedWindowContextValue();
     message.state = object.state ?? 0;
-    message.value = (object.value !== undefined && object.value !== null)
-      ? FocusedWindow.fromPartial(object.value)
-      : undefined;
+    message.value =
+      object.value !== undefined && object.value !== null
+        ? FocusedWindow.fromPartial(object.value)
+        : undefined;
     message.reason = object.reason ?? "";
     return message;
   },
 };
 
 function createBaseDesktopContextSources(): DesktopContextSources {
-  return { selectedTextBackend: "", selectedFilesBackend: "", windowBackend: "", applicationBackend: "" };
+  return {
+    selectedTextBackend: "",
+    selectedFilesBackend: "",
+    windowBackend: "",
+    applicationBackend: "",
+  };
 }
 
 export const DesktopContextSources: MessageFns<DesktopContextSources> = {
@@ -542,23 +556,23 @@ export const DesktopContextSources: MessageFns<DesktopContextSources> = {
       selectedTextBackend: isSet(object.selectedTextBackend)
         ? globalThis.String(object.selectedTextBackend)
         : isSet(object.selected_text_backend)
-        ? globalThis.String(object.selected_text_backend)
-        : "",
+          ? globalThis.String(object.selected_text_backend)
+          : "",
       selectedFilesBackend: isSet(object.selectedFilesBackend)
         ? globalThis.String(object.selectedFilesBackend)
         : isSet(object.selected_files_backend)
-        ? globalThis.String(object.selected_files_backend)
-        : "",
+          ? globalThis.String(object.selected_files_backend)
+          : "",
       windowBackend: isSet(object.windowBackend)
         ? globalThis.String(object.windowBackend)
         : isSet(object.window_backend)
-        ? globalThis.String(object.window_backend)
-        : "",
+          ? globalThis.String(object.window_backend)
+          : "",
       applicationBackend: isSet(object.applicationBackend)
         ? globalThis.String(object.applicationBackend)
         : isSet(object.application_backend)
-        ? globalThis.String(object.application_backend)
-        : "",
+          ? globalThis.String(object.application_backend)
+          : "",
     };
   },
 
@@ -593,11 +607,19 @@ export const DesktopContextSources: MessageFns<DesktopContextSources> = {
 };
 
 function createBaseDesktopContextCapabilities(): DesktopContextCapabilities {
-  return { selectedText: false, selectedFiles: false, focusedWindow: false, frontmostApplication: false };
+  return {
+    selectedText: false,
+    selectedFiles: false,
+    focusedWindow: false,
+    frontmostApplication: false,
+  };
 }
 
 export const DesktopContextCapabilities: MessageFns<DesktopContextCapabilities> = {
-  encode(message: DesktopContextCapabilities, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: DesktopContextCapabilities,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     if (message.selectedText !== false) {
       writer.uint32(8).bool(message.selectedText);
     }
@@ -666,23 +688,23 @@ export const DesktopContextCapabilities: MessageFns<DesktopContextCapabilities> 
       selectedText: isSet(object.selectedText)
         ? globalThis.Boolean(object.selectedText)
         : isSet(object.selected_text)
-        ? globalThis.Boolean(object.selected_text)
-        : false,
+          ? globalThis.Boolean(object.selected_text)
+          : false,
       selectedFiles: isSet(object.selectedFiles)
         ? globalThis.Boolean(object.selectedFiles)
         : isSet(object.selected_files)
-        ? globalThis.Boolean(object.selected_files)
-        : false,
+          ? globalThis.Boolean(object.selected_files)
+          : false,
       focusedWindow: isSet(object.focusedWindow)
         ? globalThis.Boolean(object.focusedWindow)
         : isSet(object.focused_window)
-        ? globalThis.Boolean(object.focused_window)
-        : false,
+          ? globalThis.Boolean(object.focused_window)
+          : false,
       frontmostApplication: isSet(object.frontmostApplication)
         ? globalThis.Boolean(object.frontmostApplication)
         : isSet(object.frontmost_application)
-        ? globalThis.Boolean(object.frontmost_application)
-        : false,
+          ? globalThis.Boolean(object.frontmost_application)
+          : false,
     };
   },
 
@@ -819,25 +841,27 @@ export const DesktopContextSnapshot: MessageFns<DesktopContextSnapshot> = {
       selectedText: isSet(object.selectedText)
         ? StringContextValue.fromJSON(object.selectedText)
         : isSet(object.selected_text)
-        ? StringContextValue.fromJSON(object.selected_text)
-        : undefined,
+          ? StringContextValue.fromJSON(object.selected_text)
+          : undefined,
       selectedFiles: isSet(object.selectedFiles)
         ? FileListContextValue.fromJSON(object.selectedFiles)
         : isSet(object.selected_files)
-        ? FileListContextValue.fromJSON(object.selected_files)
-        : undefined,
+          ? FileListContextValue.fromJSON(object.selected_files)
+          : undefined,
       focusedWindow: isSet(object.focusedWindow)
         ? FocusedWindowContextValue.fromJSON(object.focusedWindow)
         : isSet(object.focused_window)
-        ? FocusedWindowContextValue.fromJSON(object.focused_window)
-        : undefined,
+          ? FocusedWindowContextValue.fromJSON(object.focused_window)
+          : undefined,
       frontmostApplication: isSet(object.frontmostApplication)
         ? ApplicationContextValue.fromJSON(object.frontmostApplication)
         : isSet(object.frontmost_application)
-        ? ApplicationContextValue.fromJSON(object.frontmost_application)
-        : undefined,
+          ? ApplicationContextValue.fromJSON(object.frontmost_application)
+          : undefined,
       sources: isSet(object.sources) ? DesktopContextSources.fromJSON(object.sources) : undefined,
-      capabilities: isSet(object.capabilities) ? DesktopContextCapabilities.fromJSON(object.capabilities) : undefined,
+      capabilities: isSet(object.capabilities)
+        ? DesktopContextCapabilities.fromJSON(object.capabilities)
+        : undefined,
     };
   },
 
@@ -869,24 +893,30 @@ export const DesktopContextSnapshot: MessageFns<DesktopContextSnapshot> = {
   },
   fromPartial(object: DeepPartial<DesktopContextSnapshot>): DesktopContextSnapshot {
     const message = createBaseDesktopContextSnapshot();
-    message.selectedText = (object.selectedText !== undefined && object.selectedText !== null)
-      ? StringContextValue.fromPartial(object.selectedText)
-      : undefined;
-    message.selectedFiles = (object.selectedFiles !== undefined && object.selectedFiles !== null)
-      ? FileListContextValue.fromPartial(object.selectedFiles)
-      : undefined;
-    message.focusedWindow = (object.focusedWindow !== undefined && object.focusedWindow !== null)
-      ? FocusedWindowContextValue.fromPartial(object.focusedWindow)
-      : undefined;
-    message.frontmostApplication = (object.frontmostApplication !== undefined && object.frontmostApplication !== null)
-      ? ApplicationContextValue.fromPartial(object.frontmostApplication)
-      : undefined;
-    message.sources = (object.sources !== undefined && object.sources !== null)
-      ? DesktopContextSources.fromPartial(object.sources)
-      : undefined;
-    message.capabilities = (object.capabilities !== undefined && object.capabilities !== null)
-      ? DesktopContextCapabilities.fromPartial(object.capabilities)
-      : undefined;
+    message.selectedText =
+      object.selectedText !== undefined && object.selectedText !== null
+        ? StringContextValue.fromPartial(object.selectedText)
+        : undefined;
+    message.selectedFiles =
+      object.selectedFiles !== undefined && object.selectedFiles !== null
+        ? FileListContextValue.fromPartial(object.selectedFiles)
+        : undefined;
+    message.focusedWindow =
+      object.focusedWindow !== undefined && object.focusedWindow !== null
+        ? FocusedWindowContextValue.fromPartial(object.focusedWindow)
+        : undefined;
+    message.frontmostApplication =
+      object.frontmostApplication !== undefined && object.frontmostApplication !== null
+        ? ApplicationContextValue.fromPartial(object.frontmostApplication)
+        : undefined;
+    message.sources =
+      object.sources !== undefined && object.sources !== null
+        ? DesktopContextSources.fromPartial(object.sources)
+        : undefined;
+    message.capabilities =
+      object.capabilities !== undefined && object.capabilities !== null
+        ? DesktopContextCapabilities.fromPartial(object.capabilities)
+        : undefined;
     return message;
   },
 };
@@ -1114,75 +1144,75 @@ export const EnvironmentSnapshot: MessageFns<EnvironmentSnapshot> = {
       ownerOrAuthorName: isSet(object.ownerOrAuthorName)
         ? globalThis.String(object.ownerOrAuthorName)
         : isSet(object.owner_or_author_name)
-        ? globalThis.String(object.owner_or_author_name)
-        : "",
+          ? globalThis.String(object.owner_or_author_name)
+          : "",
       extensionName: isSet(object.extensionName)
         ? globalThis.String(object.extensionName)
         : isSet(object.extension_name)
-        ? globalThis.String(object.extension_name)
-        : "",
+          ? globalThis.String(object.extension_name)
+          : "",
       commandName: isSet(object.commandName)
         ? globalThis.String(object.commandName)
         : isSet(object.command_name)
-        ? globalThis.String(object.command_name)
-        : "",
+          ? globalThis.String(object.command_name)
+          : "",
       commandMode: isSet(object.commandMode)
         ? commandModeFromJSON(object.commandMode)
         : isSet(object.command_mode)
-        ? commandModeFromJSON(object.command_mode)
-        : 0,
+          ? commandModeFromJSON(object.command_mode)
+          : 0,
       assetsPath: isSet(object.assetsPath)
         ? globalThis.String(object.assetsPath)
         : isSet(object.assets_path)
-        ? globalThis.String(object.assets_path)
-        : "",
+          ? globalThis.String(object.assets_path)
+          : "",
       supportPath: isSet(object.supportPath)
         ? globalThis.String(object.supportPath)
         : isSet(object.support_path)
-        ? globalThis.String(object.support_path)
-        : "",
+          ? globalThis.String(object.support_path)
+          : "",
       isDevelopment: isSet(object.isDevelopment)
         ? globalThis.Boolean(object.isDevelopment)
         : isSet(object.is_development)
-        ? globalThis.Boolean(object.is_development)
-        : false,
+          ? globalThis.Boolean(object.is_development)
+          : false,
       isRaycast: isSet(object.isRaycast)
         ? globalThis.Boolean(object.isRaycast)
         : isSet(object.is_raycast)
-        ? globalThis.Boolean(object.is_raycast)
-        : false,
+          ? globalThis.Boolean(object.is_raycast)
+          : false,
       appearance: isSet(object.appearance) ? globalThis.String(object.appearance) : "",
       theme: isSet(object.theme) ? globalThis.String(object.theme) : "",
       textSize: isSet(object.textSize)
         ? globalThis.String(object.textSize)
         : isSet(object.text_size)
-        ? globalThis.String(object.text_size)
-        : "",
+          ? globalThis.String(object.text_size)
+          : "",
       raycastVersion: isSet(object.raycastVersion)
         ? globalThis.String(object.raycastVersion)
         : isSet(object.raycast_version)
-        ? globalThis.String(object.raycast_version)
-        : "",
+          ? globalThis.String(object.raycast_version)
+          : "",
       beamVersion: isSet(object.beamVersion)
         ? VersionInfo.fromJSON(object.beamVersion)
         : isSet(object.beam_version)
-        ? VersionInfo.fromJSON(object.beam_version)
-        : undefined,
+          ? VersionInfo.fromJSON(object.beam_version)
+          : undefined,
       launchType: isSet(object.launchType)
         ? launchTypeFromJSON(object.launchType)
         : isSet(object.launch_type)
-        ? launchTypeFromJSON(object.launch_type)
-        : 0,
+          ? launchTypeFromJSON(object.launch_type)
+          : 0,
       aiAccess: isSet(object.aiAccess)
         ? globalThis.Boolean(object.aiAccess)
         : isSet(object.ai_access)
-        ? globalThis.Boolean(object.ai_access)
-        : false,
+          ? globalThis.Boolean(object.ai_access)
+          : false,
       browserExtensionAccess: isSet(object.browserExtensionAccess)
         ? globalThis.Boolean(object.browserExtensionAccess)
         : isSet(object.browser_extension_access)
-        ? globalThis.Boolean(object.browser_extension_access)
-        : false,
+          ? globalThis.Boolean(object.browser_extension_access)
+          : false,
     };
   },
 
@@ -1256,9 +1286,10 @@ export const EnvironmentSnapshot: MessageFns<EnvironmentSnapshot> = {
     message.theme = object.theme ?? "";
     message.textSize = object.textSize ?? "";
     message.raycastVersion = object.raycastVersion ?? "";
-    message.beamVersion = (object.beamVersion !== undefined && object.beamVersion !== null)
-      ? VersionInfo.fromPartial(object.beamVersion)
-      : undefined;
+    message.beamVersion =
+      object.beamVersion !== undefined && object.beamVersion !== null
+        ? VersionInfo.fromPartial(object.beamVersion)
+        : undefined;
     message.launchType = object.launchType ?? 0;
     message.aiAccess = object.aiAccess ?? false;
     message.browserExtensionAccess = object.browserExtensionAccess ?? false;
@@ -1358,12 +1389,14 @@ export const GetEnvironmentResponse: MessageFns<GetEnvironmentResponse> = {
 
   fromJSON(object: any): GetEnvironmentResponse {
     return {
-      environment: isSet(object.environment) ? EnvironmentSnapshot.fromJSON(object.environment) : undefined,
+      environment: isSet(object.environment)
+        ? EnvironmentSnapshot.fromJSON(object.environment)
+        : undefined,
       desktopContext: isSet(object.desktopContext)
         ? DesktopContextSnapshot.fromJSON(object.desktopContext)
         : isSet(object.desktop_context)
-        ? DesktopContextSnapshot.fromJSON(object.desktop_context)
-        : undefined,
+          ? DesktopContextSnapshot.fromJSON(object.desktop_context)
+          : undefined,
     };
   },
 
@@ -1383,23 +1416,29 @@ export const GetEnvironmentResponse: MessageFns<GetEnvironmentResponse> = {
   },
   fromPartial(object: DeepPartial<GetEnvironmentResponse>): GetEnvironmentResponse {
     const message = createBaseGetEnvironmentResponse();
-    message.environment = (object.environment !== undefined && object.environment !== null)
-      ? EnvironmentSnapshot.fromPartial(object.environment)
-      : undefined;
-    message.desktopContext = (object.desktopContext !== undefined && object.desktopContext !== null)
-      ? DesktopContextSnapshot.fromPartial(object.desktopContext)
-      : undefined;
+    message.environment =
+      object.environment !== undefined && object.environment !== null
+        ? EnvironmentSnapshot.fromPartial(object.environment)
+        : undefined;
+    message.desktopContext =
+      object.desktopContext !== undefined && object.desktopContext !== null
+        ? DesktopContextSnapshot.fromPartial(object.desktopContext)
+        : undefined;
     return message;
   },
 };
 
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
 
-type DeepPartial<T> = T extends Builtin ? T
-  : T extends globalThis.Array<infer U> ? globalThis.Array<DeepPartial<U>>
-  : T extends ReadonlyArray<infer U> ? ReadonlyArray<DeepPartial<U>>
-  : T extends {} ? { [K in keyof T]?: DeepPartial<T[K]> }
-  : Partial<T>;
+type DeepPartial<T> = T extends Builtin
+  ? T
+  : T extends globalThis.Array<infer U>
+    ? globalThis.Array<DeepPartial<U>>
+    : T extends ReadonlyArray<infer U>
+      ? ReadonlyArray<DeepPartial<U>>
+      : T extends {}
+        ? { [K in keyof T]?: DeepPartial<T[K]> }
+        : Partial<T>;
 
 function isSet(value: any): boolean {
   return value !== null && value !== undefined;

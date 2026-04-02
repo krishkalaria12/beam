@@ -13,38 +13,42 @@ import {
 import { useLatest } from "./useLatest";
 import { showFailureToast } from "./showFailureToast";
 
-export type PromiseOptions<T extends FunctionReturningPromise | FunctionReturningPaginatedPromise> = {
-  /**
-   * A reference to an `AbortController` to cancel a previous call when triggering a new one
-   */
-  abortable?: RefObject<AbortController | null | undefined>;
-  /**
-   * Whether to actually execute the function or not.
-   * This is useful for cases where one of the function's arguments depends on something that
-   * might not be available right away (for example, depends on some user inputs). Because React requires
-   * every hooks to be defined on the render, this flag enables you to define the hook right away but
-   * wait util you have all the arguments ready to execute the function.
-   */
-  execute?: boolean;
-  /**
-   * Options for the generic failure toast.
-   * It allows you to customize the title, message, and primary action of the failure toast.
-   */
-  failureToastOptions?: Partial<Pick<Toast.Options, "title" | "primaryAction" | "message">>;
-  /**
-   * Called when an execution fails. By default it will log the error and show
-   * a generic failure toast.
-   */
-  onError?: (error: Error) => void | Promise<void>;
-  /**
-   * Called when an execution succeeds.
-   */
-  onData?: (data: UnwrapReturn<T>, pagination?: PaginationOptions<UnwrapReturn<T>>) => void | Promise<void>;
-  /**
-   * Called when an execution will start
-   */
-  onWillExecute?: (parameters: Parameters<T>) => void;
-};
+export type PromiseOptions<T extends FunctionReturningPromise | FunctionReturningPaginatedPromise> =
+  {
+    /**
+     * A reference to an `AbortController` to cancel a previous call when triggering a new one
+     */
+    abortable?: RefObject<AbortController | null | undefined>;
+    /**
+     * Whether to actually execute the function or not.
+     * This is useful for cases where one of the function's arguments depends on something that
+     * might not be available right away (for example, depends on some user inputs). Because React requires
+     * every hooks to be defined on the render, this flag enables you to define the hook right away but
+     * wait util you have all the arguments ready to execute the function.
+     */
+    execute?: boolean;
+    /**
+     * Options for the generic failure toast.
+     * It allows you to customize the title, message, and primary action of the failure toast.
+     */
+    failureToastOptions?: Partial<Pick<Toast.Options, "title" | "primaryAction" | "message">>;
+    /**
+     * Called when an execution fails. By default it will log the error and show
+     * a generic failure toast.
+     */
+    onError?: (error: Error) => void | Promise<void>;
+    /**
+     * Called when an execution succeeds.
+     */
+    onData?: (
+      data: UnwrapReturn<T>,
+      pagination?: PaginationOptions<UnwrapReturn<T>>,
+    ) => void | Promise<void>;
+    /**
+     * Called when an execution will start
+     */
+    onWillExecute?: (parameters: Parameters<T>) => void;
+  };
 
 /**
  * Wraps an asynchronous function or a function that returns a Promise in another function, and returns the {@link AsyncState} corresponding to the execution of the function.
@@ -132,7 +136,9 @@ export function usePromise<T extends FunctionReturningPaginatedPromise>(
  * };
  * ```
  */
-export function usePromise<T extends FunctionReturningPromise<[]>>(fn: T): UsePromiseReturnType<UnwrapReturn<T>>;
+export function usePromise<T extends FunctionReturningPromise<[]>>(
+  fn: T,
+): UsePromiseReturnType<UnwrapReturn<T>>;
 export function usePromise<T extends FunctionReturningPromise>(
   fn: T,
   args: Parameters<T>,
@@ -214,7 +220,15 @@ export function usePromise<T extends FunctionReturningPromise | FunctionReturnin
         usePaginationRef.current = true;
         return promiseOrPaginatedPromise(paginationArgsRef.current).then(
           // @ts-expect-error too complicated for TS
-          ({ data, hasMore, cursor }: { data: UnwrapReturn<T>; hasMore: boolean; cursor?: any }) => {
+          ({
+            data,
+            hasMore,
+            cursor,
+          }: {
+            data: UnwrapReturn<T>;
+            hasMore: boolean;
+            cursor?: any;
+          }) => {
             if (callId === lastCallId.current) {
               if (paginationArgsRef.current) {
                 paginationArgsRef.current.cursor = cursor;
@@ -292,7 +306,10 @@ export function usePromise<T extends FunctionReturningPromise | FunctionReturnin
           // cancel the in-flight request to make sure it won't overwrite the optimistic update
           abort();
 
-          if (typeof options?.rollbackOnError !== "function" && options?.rollbackOnError !== false) {
+          if (
+            typeof options?.rollbackOnError !== "function" &&
+            options?.rollbackOnError !== false
+          ) {
             // keep track of the data before the optimistic update,
             // but only if we need it (eg. only when we want to automatically rollback after)
             dataBeforeOptimisticUpdate = structuredClone(latestValue.current?.value);
@@ -311,7 +328,10 @@ export function usePromise<T extends FunctionReturningPromise | FunctionReturnin
         throw err;
       } finally {
         if (options?.shouldRevalidateAfter !== false) {
-          if (environment.launchType === LaunchType.Background || environment.commandMode === "menu-bar") {
+          if (
+            environment.launchType === LaunchType.Background ||
+            environment.commandMode === "menu-bar"
+          ) {
             // when in the background or in a menu bar, we are going to await the revalidation
             // to make sure we get the right data at the end of the mutation
             await revalidate();

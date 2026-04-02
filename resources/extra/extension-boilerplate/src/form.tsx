@@ -28,7 +28,11 @@ export default function FormElements() {
     >
       <Form.TextField id="name" title="TextField" value={name} onChange={setName} />
       <Form.PasswordField id="password" title="PasswordField" />
-      <Form.TextArea id="description" title="TextArea" defaultValue="Describe your extension here." />
+      <Form.TextArea
+        id="description"
+        title="TextArea"
+        defaultValue="Describe your extension here."
+      />
       <Form.Checkbox
         id="enabled"
         title="Checkbox"

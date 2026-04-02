@@ -23,17 +23,12 @@ type GeneratedEmojiData = {
 };
 
 const CATEGORY_ORDER = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] as const;
-const CATEGORY_INDEX = new Map<number, number>(CATEGORY_ORDER.map((category, index) => [category, index]));
+const CATEGORY_INDEX = new Map<number, number>(
+  CATEGORY_ORDER.map((category, index) => [category, index]),
+);
 
 const sourcePath = path.join(repoRoot, "node_modules", "emojibase-data", "en", "compact.json");
-const outputPath = path.join(
-  repoRoot,
-  "apps",
-  "desktop",
-  "src",
-  "generated",
-  "emoji-data.ts",
-);
+const outputPath = path.join(repoRoot, "apps", "desktop", "src", "generated", "emoji-data.ts");
 const outputDir = path.dirname(outputPath);
 
 function normalizeText(value: string): string {
@@ -51,7 +46,11 @@ function normalizeTags(tags: readonly string[] | undefined, label: string): stri
 
   for (const tag of tags) {
     const normalizedTag = normalizeText(tag);
-    if (normalizedTag.length === 0 || normalizedTag === normalizedLabel || seen.has(normalizedTag)) {
+    if (
+      normalizedTag.length === 0 ||
+      normalizedTag === normalizedLabel ||
+      seen.has(normalizedTag)
+    ) {
       continue;
     }
     seen.add(normalizedTag);
@@ -115,7 +114,9 @@ function main() {
   writeFileSync(outputPath, output, "utf8");
 
   const outputBytes = fileSizeBytes(outputPath);
-  console.log(`generated ${generatedItems.length} emojis -> ${path.relative(repoRoot, outputPath)} (${outputBytes} bytes)`);
+  console.log(
+    `generated ${generatedItems.length} emojis -> ${path.relative(repoRoot, outputPath)} (${outputBytes} bytes)`,
+  );
 }
 
 main();

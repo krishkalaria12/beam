@@ -1,7 +1,12 @@
 import { environment, Color } from "@beam-launcher/api";
 import type { Image } from "@beam-launcher/api";
 
-function polarToCartesian(centerX: number, centerY: number, radius: number, angleInDegrees: number) {
+function polarToCartesian(
+  centerX: number,
+  centerY: number,
+  radius: number,
+  angleInDegrees: number,
+) {
   const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180.0;
 
   return {
@@ -16,7 +21,9 @@ function describeArc(x: number, y: number, radius: number, startAngle: number, e
 
   const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
 
-  const d = ["M", start.x, start.y, "A", radius, radius, 0, largeArcFlag, 0, end.x, end.y].join(" ");
+  const d = ["M", start.x, start.y, "A", radius, radius, 0, largeArcFlag, 0, end.x, end.y].join(
+    " ",
+  );
 
   return d;
 }
@@ -39,7 +46,8 @@ export function getProgressIcon(
   color: Color | string = Color.Red,
   options?: { background?: Color | string; backgroundOpacity?: number },
 ): Image.Asset {
-  const background = options?.background || (environment.appearance === "light" ? "black" : "white");
+  const background =
+    options?.background || (environment.appearance === "light" ? "black" : "white");
   const backgroundOpacity = options?.backgroundOpacity || 0.1;
 
   const stroke = 10;

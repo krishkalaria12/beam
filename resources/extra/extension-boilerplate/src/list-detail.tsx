@@ -20,7 +20,7 @@ export default function ListDetail() {
                     <List.Item.Detail.Metadata.TagList title="Color">
                       <List.Item.Detail.Metadata.TagList.Item
                         text={fruit.name}
-                        color={(fruit.color as typeof Color[keyof typeof Color]) ?? Color.Blue}
+                        color={(fruit.color as (typeof Color)[keyof typeof Color]) ?? Color.Blue}
                       />
                     </List.Item.Detail.Metadata.TagList>
                     <List.Item.Detail.Metadata.Separator />

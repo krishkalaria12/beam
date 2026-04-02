@@ -27,7 +27,8 @@ function getNewFrecency(item?: Frecency): Frecency {
 
   const visitAgeInDays = (now - lastVisited) / MS_PER_DAY;
   const DECAY_RATE_CONSTANT = Math.log(2) / (HALF_LIFE_DAYS * MS_PER_DAY);
-  const currentVisitValue = VISIT_TYPE_POINTS.Default * Math.exp(-DECAY_RATE_CONSTANT * visitAgeInDays);
+  const currentVisitValue =
+    VISIT_TYPE_POINTS.Default * Math.exp(-DECAY_RATE_CONSTANT * visitAgeInDays);
   const totalVisitValue = frecency + currentVisitValue;
 
   return {
@@ -82,7 +83,11 @@ const defaultKey = (item: any): string => {
  */
 export function useFrecencySorting<T extends { id: string }>(
   data?: T[],
-  options?: { namespace?: string; key?: (item: T) => string; sortUnvisited?: (a: T, b: T) => number },
+  options?: {
+    namespace?: string;
+    key?: (item: T) => string;
+    sortUnvisited?: (a: T, b: T) => number;
+  },
 ): {
   data: T[];
   visitItem: (item: T) => Promise<void>;
@@ -98,7 +103,11 @@ export function useFrecencySorting<T>(
 };
 export function useFrecencySorting<T>(
   data?: T[],
-  options?: { namespace?: string; key?: (item: T) => string; sortUnvisited?: (a: T, b: T) => number },
+  options?: {
+    namespace?: string;
+    key?: (item: T) => string;
+    sortUnvisited?: (a: T, b: T) => number;
+  },
 ): {
   data: T[];
   visitItem: (item: T) => Promise<void>;
@@ -107,10 +116,9 @@ export function useFrecencySorting<T>(
   const keyRef = useLatest(options?.key || defaultKey);
   const sortUnvisitedRef = useLatest(options?.sortUnvisited);
 
-  const [storedFrecencies, setStoredFrecencies] = useCachedState<Record<string, Frecency | undefined>>(
-    `raycast_frecency_${options?.namespace}`,
-    {},
-  );
+  const [storedFrecencies, setStoredFrecencies] = useCachedState<
+    Record<string, Frecency | undefined>
+  >(`raycast_frecency_${options?.namespace}`, {});
 
   const visitItem = useCallback(
     async function updateFrecency(item: T) {

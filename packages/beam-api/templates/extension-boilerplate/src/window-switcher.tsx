@@ -4,7 +4,9 @@ import { useEffect, useState } from "react";
 const REFRESH_INTERVAL_MS = 1000;
 
 export default function WindowSwitcher() {
-  const [windows, setWindows] = useState<Awaited<ReturnType<typeof WindowManagement.getWindows>>>([]);
+  const [windows, setWindows] = useState<Awaited<ReturnType<typeof WindowManagement.getWindows>>>(
+    [],
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

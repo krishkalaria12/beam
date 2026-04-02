@@ -272,8 +272,7 @@ export function alertActionStyleToJSON(object: AlertActionStyle): string {
   }
 }
 
-export interface Empty {
-}
+export interface Empty {}
 
 export interface VersionInfo {
   tag: string;
@@ -559,13 +558,13 @@ export const Application: MessageFns<Application> = {
       bundleId: isSet(object.bundleId)
         ? globalThis.String(object.bundleId)
         : isSet(object.bundle_id)
-        ? globalThis.String(object.bundle_id)
-        : "",
+          ? globalThis.String(object.bundle_id)
+          : "",
       localizedName: isSet(object.localizedName)
         ? globalThis.String(object.localizedName)
         : isSet(object.localized_name)
-        ? globalThis.String(object.localized_name)
-        : "",
+          ? globalThis.String(object.localized_name)
+          : "",
     };
   },
 
@@ -600,7 +599,16 @@ export const Application: MessageFns<Application> = {
 };
 
 function createBaseFocusedWindow(): FocusedWindow {
-  return { id: "", title: "", appName: "", className: "", appId: "", pid: 0, workspace: "", isFocused: false };
+  return {
+    id: "",
+    title: "",
+    appName: "",
+    className: "",
+    appId: "",
+    pid: 0,
+    workspace: "",
+    isFocused: false,
+  };
 }
 
 export const FocusedWindow: MessageFns<FocusedWindow> = {
@@ -719,25 +727,25 @@ export const FocusedWindow: MessageFns<FocusedWindow> = {
       appName: isSet(object.appName)
         ? globalThis.String(object.appName)
         : isSet(object.app_name)
-        ? globalThis.String(object.app_name)
-        : "",
+          ? globalThis.String(object.app_name)
+          : "",
       className: isSet(object.className)
         ? globalThis.String(object.className)
         : isSet(object.class_name)
-        ? globalThis.String(object.class_name)
-        : "",
+          ? globalThis.String(object.class_name)
+          : "",
       appId: isSet(object.appId)
         ? globalThis.String(object.appId)
         : isSet(object.app_id)
-        ? globalThis.String(object.app_id)
-        : "",
+          ? globalThis.String(object.app_id)
+          : "",
       pid: isSet(object.pid) ? globalThis.Number(object.pid) : 0,
       workspace: isSet(object.workspace) ? globalThis.String(object.workspace) : "",
       isFocused: isSet(object.isFocused)
         ? globalThis.Boolean(object.isFocused)
         : isSet(object.is_focused)
-        ? globalThis.Boolean(object.is_focused)
-        : false,
+          ? globalThis.Boolean(object.is_focused)
+          : false,
     };
   },
 
@@ -847,11 +855,15 @@ export const JsonObject: MessageFns<JsonObject> = {
 
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
 
-type DeepPartial<T> = T extends Builtin ? T
-  : T extends globalThis.Array<infer U> ? globalThis.Array<DeepPartial<U>>
-  : T extends ReadonlyArray<infer U> ? ReadonlyArray<DeepPartial<U>>
-  : T extends {} ? { [K in keyof T]?: DeepPartial<T[K]> }
-  : Partial<T>;
+type DeepPartial<T> = T extends Builtin
+  ? T
+  : T extends globalThis.Array<infer U>
+    ? globalThis.Array<DeepPartial<U>>
+    : T extends ReadonlyArray<infer U>
+      ? ReadonlyArray<DeepPartial<U>>
+      : T extends {}
+        ? { [K in keyof T]?: DeepPartial<T[K]> }
+        : Partial<T>;
 
 function isObject(value: any): boolean {
   return typeof value === "object" && value !== null;

@@ -144,7 +144,17 @@ function hslToHex(hsl: { h: number; s: number; l: number }) {
 }
 
 function clamp(value: number, min: number, max: number) {
-  return min < max ? (value < min ? min : value > max ? max : value) : value < max ? max : value > min ? min : value;
+  return min < max
+    ? value < min
+      ? min
+      : value > max
+        ? max
+        : value
+    : value < max
+      ? max
+      : value > min
+        ? min
+        : value;
 }
 
 const offset = 12;

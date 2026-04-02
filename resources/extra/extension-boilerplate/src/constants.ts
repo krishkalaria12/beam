@@ -27,7 +27,8 @@ export const fruits: Fruit[] = [
     name: "Banana",
     keywords: ["yellow", "potassium", "smoothie", "energy"],
     color: "raycast-yellow",
-    description: "# Banana\n\nA fast source of energy and a good placeholder record for sample commands.",
+    description:
+      "# Banana\n\nA fast source of energy and a good placeholder record for sample commands.",
   },
   {
     emoji: "🍇",

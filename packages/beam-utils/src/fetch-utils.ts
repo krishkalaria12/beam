@@ -41,11 +41,15 @@ export function isJSON(contentTypeHeader: string | null | undefined): boolean {
  * ALPHA =  %x41-5A / %x61-7A   ; A-Z / a-z
  * DIGIT =  %x30-39             ; 0-9
  */
-const MEDIA_TYPE_REGEXP = /^([A-Za-z0-9][A-Za-z0-9!#$&^_-]{0,126})\/([A-Za-z0-9][A-Za-z0-9!#$&^_.+-]{0,126});?$/;
+const MEDIA_TYPE_REGEXP =
+  /^([A-Za-z0-9][A-Za-z0-9!#$&^_-]{0,126})\/([A-Za-z0-9][A-Za-z0-9!#$&^_.+-]{0,126});?$/;
 
 function parseContentType(header: string) {
   const headerDelimitationindex = header.indexOf(";");
-  const contentType = headerDelimitationindex !== -1 ? header.slice(0, headerDelimitationindex).trim() : header.trim();
+  const contentType =
+    headerDelimitationindex !== -1
+      ? header.slice(0, headerDelimitationindex).trim()
+      : header.trim();
 
   const match = MEDIA_TYPE_REGEXP.exec(contentType.toLowerCase().toLowerCase());
 

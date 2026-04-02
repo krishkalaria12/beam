@@ -120,19 +120,24 @@ function toChannelEnum(value: string | undefined): string {
   }
 }
 
-function assertCompatibleManifest(sourceDir: string, manifest: PackageJsonManifest, publish: StorePublishConfig): void {
+function assertCompatibleManifest(
+  sourceDir: string,
+  manifest: PackageJsonManifest,
+  publish: StorePublishConfig,
+): void {
   const platforms = (publish.compatibility?.platforms ?? []).map((entry) => entry.toLowerCase());
   if (!platforms.includes("linux")) {
     throw new Error(`${sourceDir}: compatibility.platforms must include linux.`);
   }
 
-  if (
-    !normalizeOptionalString(publish.compatibility?.minimumBeamVersion)
-  ) {
+  if (!normalizeOptionalString(publish.compatibility?.minimumBeamVersion)) {
     throw new Error(`${sourceDir}: minimumBeamVersion is required.`);
   }
 
-  const version = requireValue(normalizeOptionalString(manifest.version), `${sourceDir}: package.json version is required.`);
+  const version = requireValue(
+    normalizeOptionalString(manifest.version),
+    `${sourceDir}: package.json version is required.`,
+  );
   const channel = toChannelEnum(publish.release?.channel);
   const prerelease = Boolean(publish.release?.prerelease);
 
@@ -141,10 +146,15 @@ function assertCompatibleManifest(sourceDir: string, manifest: PackageJsonManife
   }
 
   if (channel !== "EXTENSION_RELEASE_CHANNEL_STABLE" && !prerelease && !version.includes("-")) {
-    throw new Error(`${sourceDir}: non-stable releases must be prerelease builds or set prerelease=true.`);
+    throw new Error(
+      `${sourceDir}: non-stable releases must be prerelease builds or set prerelease=true.`,
+    );
   }
 
-  if (channel === "EXTENSION_RELEASE_CHANNEL_CUSTOM" && !normalizeOptionalString(publish.release?.channelName)) {
+  if (
+    channel === "EXTENSION_RELEASE_CHANNEL_CUSTOM" &&
+    !normalizeOptionalString(publish.release?.channelName)
+  ) {
     throw new Error(`${sourceDir}: custom releases require release.channelName.`);
   }
 }
@@ -170,7 +180,10 @@ function validateCatalog(catalog: Catalog, artifactsDir: string): void {
     }
     packageIds.add(pkg.id);
 
-    if (pkg.defaultChannel && !pkg.releases.some((release) => release.channel === pkg.defaultChannel)) {
+    if (
+      pkg.defaultChannel &&
+      !pkg.releases.some((release) => release.channel === pkg.defaultChannel)
+    ) {
       throw new Error(`Catalog package ${pkg.id} defaultChannel has no matching release.`);
     }
 
@@ -228,7 +241,9 @@ function main(): void {
   const packagesRoot = path.join(repoRoot, "store", "packages");
   const catalogPath = path.join(repoRoot, "store", "catalog.json");
   const artifactsDir = path.join(repoRoot, "store", "artifacts");
-  const requestedSource = normalizeOptionalString(typeof args.source === "string" ? args.source : undefined);
+  const requestedSource = normalizeOptionalString(
+    typeof args.source === "string" ? args.source : undefined,
+  );
   const validateAll = args.all === true || !requestedSource;
 
   const sourceDirs = validateAll

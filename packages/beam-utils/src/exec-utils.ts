@@ -66,8 +66,10 @@ function bufferStream<T extends string | Buffer>(options: { encoding: BufferEnco
   const isBuffer = encoding === "buffer";
 
   // @ts-expect-error missing the methods we are adding below
-  const stream: Stream.PassThrough & { getBufferedValue: () => T; getBufferedLength: () => number } =
-    new Stream.PassThrough({ objectMode: false });
+  const stream: Stream.PassThrough & {
+    getBufferedValue: () => T;
+    getBufferedLength: () => number;
+  } = new Stream.PassThrough({ objectMode: false });
 
   if (encoding && encoding !== "buffer") {
     stream.setEncoding(encoding);
@@ -128,7 +130,10 @@ async function getStream<T extends string | Buffer>(
 }
 
 // On failure, `result.stdout|stderr` should contain the currently buffered stream
-async function getBufferedData<T extends string | Buffer>(stream: Stream.Readable, streamPromise: Promise<T>) {
+async function getBufferedData<T extends string | Buffer>(
+  stream: Stream.Readable,
+  streamPromise: Promise<T>,
+) {
   stream.destroy();
 
   try {
@@ -179,7 +184,10 @@ function stripFinalNewline<T extends string | Buffer>(input: T) {
   return input;
 }
 
-export function handleOutput<T extends string | Buffer>(options: { stripFinalNewline?: boolean }, value: T) {
+export function handleOutput<T extends string | Buffer>(
+  options: { stripFinalNewline?: boolean },
+  value: T,
+) {
   if (options.stripFinalNewline) {
     return stripFinalNewline(value);
   }

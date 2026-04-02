@@ -9,7 +9,9 @@ export default function ControlledList() {
   const filtered = useMemo(
     () =>
       fruits.filter((fruit) =>
-        `${fruit.name} ${fruit.keywords.join(" ")}`.toLowerCase().includes(searchText.toLowerCase()),
+        `${fruit.name} ${fruit.keywords.join(" ")}`
+          .toLowerCase()
+          .includes(searchText.toLowerCase()),
       ),
     [searchText],
   );

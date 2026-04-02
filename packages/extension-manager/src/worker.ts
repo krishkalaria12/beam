@@ -1,7 +1,4 @@
-import {
-  BridgeMessageKind,
-  readBridgeMessageEnvelope,
-} from "@beam/extension-protocol";
+import { BridgeMessageKind, readBridgeMessageEnvelope } from "@beam/extension-protocol";
 import { writeLog, writeOutput } from "./io";
 import { instances, navigationStack, toasts, browserExtensionState } from "./state";
 import { batchedUpdates, updateContainer } from "./reconciler";
@@ -324,7 +321,8 @@ export function handleBridgePayload(raw: unknown): void {
         }
 
         if (request.setBrowserExtensionConnectionStatus) {
-          browserExtensionState.isConnected = request.setBrowserExtensionConnectionStatus.isConnected;
+          browserExtensionState.isConnected =
+            request.setBrowserExtensionConnectionStatus.isConnected;
           writeOutput(
             createManagerResponseOutput(withRequestId(createAckResponse(), request.requestId)),
           );

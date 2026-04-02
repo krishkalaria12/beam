@@ -11,9 +11,7 @@
     "declaration": false,
     "noEmit": true,
     "paths": {
-      "@beam-launcher/api": [
-        "../beam-api/types/index.d.ts"
-      ]
+      "@beam-launcher/api": ["../beam-api/types/index.d.ts"]
     }
   },
   "include": ["src"]

@@ -145,7 +145,9 @@ function SearchableDropdownPanel({
         "fixed flex flex-col overflow-hidden rounded-xl border border-[var(--launcher-card-border)] bg-[var(--popover)] shadow-lg",
         panelClassName,
       )}
-      style={resolvedPanelPositionStyle ? { ...resolvedPanelPositionStyle, ...panelStyle } : panelStyle}
+      style={
+        resolvedPanelPositionStyle ? { ...resolvedPanelPositionStyle, ...panelStyle } : panelStyle
+      }
     >
       <div className="module-searchable-dropdown-search border-b border-[var(--ui-divider)] p-2">
         <SearchInput
@@ -162,7 +164,10 @@ function SearchableDropdownPanel({
 
       <div className="module-searchable-dropdown-content custom-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain p-2">
         {itemRows.length === 0 ? (
-          <EmptyView className="module-searchable-dropdown-empty min-h-[120px]" title={emptyTitle} />
+          <EmptyView
+            className="module-searchable-dropdown-empty min-h-[120px]"
+            title={emptyTitle}
+          />
         ) : (
           <div className="module-searchable-dropdown-items space-y-1">
             {rows.map((row) => {
@@ -484,28 +489,26 @@ export function SearchableDropdown({
         }}
       />
 
-      {open && typeof document !== "undefined"
-        ? (
-            <SearchableDropdownPanel
-              panelRef={panelRef}
-              panelClassName={panelClassName}
-              panelStyle={panelStyle}
-              resolvedPanelPositionStyle={resolvedPanelPositionStyle}
-              inputMountRef={inputMountRef}
-              query={query}
-              searchPlaceholder={searchPlaceholder}
-              onQueryChange={setQuery}
-              onKeyDown={handleKeyDown}
-              itemRows={itemRows}
-              rows={rows}
-              emptyTitle={emptyTitle}
-              highlightedIndex={highlightedIndex}
-              value={value}
-              onActivateItem={activateItem}
-              onHighlightIndex={setHighlightedIndex}
-            />
-          )
-        : null}
+      {open && typeof document !== "undefined" ? (
+        <SearchableDropdownPanel
+          panelRef={panelRef}
+          panelClassName={panelClassName}
+          panelStyle={panelStyle}
+          resolvedPanelPositionStyle={resolvedPanelPositionStyle}
+          inputMountRef={inputMountRef}
+          query={query}
+          searchPlaceholder={searchPlaceholder}
+          onQueryChange={setQuery}
+          onKeyDown={handleKeyDown}
+          itemRows={itemRows}
+          rows={rows}
+          emptyTitle={emptyTitle}
+          highlightedIndex={highlightedIndex}
+          value={value}
+          onActivateItem={activateItem}
+          onHighlightIndex={setHighlightedIndex}
+        />
+      ) : null}
     </div>
   );
 }

@@ -9,15 +9,9 @@
     "skipLibCheck": true,
     "noEmit": true,
     "paths": {
-      "@beam-launcher/api": [
-        "../../packages/beam-api/types/index.d.ts"
-      ]
+      "@beam-launcher/api": ["../../packages/beam-api/types/index.d.ts"]
     },
-    "types": [
-      "node"
-    ]
+    "types": ["node"]
   },
-  "include": [
-    "src"
-  ]
+  "include": ["src"]
 }

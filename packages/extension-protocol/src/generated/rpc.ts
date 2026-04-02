@@ -230,8 +230,8 @@ export const InvokeCommandRequest: MessageFns<InvokeCommandRequest> = {
       requestId: isSet(object.requestId)
         ? globalThis.String(object.requestId)
         : isSet(object.request_id)
-        ? globalThis.String(object.request_id)
-        : "",
+          ? globalThis.String(object.request_id)
+          : "",
       command: isSet(object.command) ? globalThis.String(object.command) : "",
       params: isObject(object.params) ? object.params : undefined,
     };
@@ -268,7 +268,10 @@ function createBaseRuntimeConfirmAlertRequest(): RuntimeConfirmAlertRequest {
 }
 
 export const RuntimeConfirmAlertRequest: MessageFns<RuntimeConfirmAlertRequest> = {
-  encode(message: RuntimeConfirmAlertRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: RuntimeConfirmAlertRequest,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     if (message.requestId !== "") {
       writer.uint32(10).string(message.requestId);
     }
@@ -337,15 +340,15 @@ export const RuntimeConfirmAlertRequest: MessageFns<RuntimeConfirmAlertRequest> 
       requestId: isSet(object.requestId)
         ? globalThis.String(object.requestId)
         : isSet(object.request_id)
-        ? globalThis.String(object.request_id)
-        : "",
+          ? globalThis.String(object.request_id)
+          : "",
       title: isSet(object.title) ? globalThis.String(object.title) : "",
       message: isSet(object.message) ? globalThis.String(object.message) : "",
       primaryActionTitle: isSet(object.primaryActionTitle)
         ? globalThis.String(object.primaryActionTitle)
         : isSet(object.primary_action_title)
-        ? globalThis.String(object.primary_action_title)
-        : "",
+          ? globalThis.String(object.primary_action_title)
+          : "",
     };
   },
 
@@ -384,7 +387,10 @@ function createBaseRuntimeConfirmAlertResponse(): RuntimeConfirmAlertResponse {
 }
 
 export const RuntimeConfirmAlertResponse: MessageFns<RuntimeConfirmAlertResponse> = {
-  encode(message: RuntimeConfirmAlertResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: RuntimeConfirmAlertResponse,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     if (message.requestId !== "") {
       writer.uint32(10).string(message.requestId);
     }
@@ -442,8 +448,8 @@ export const RuntimeConfirmAlertResponse: MessageFns<RuntimeConfirmAlertResponse
       requestId: isSet(object.requestId)
         ? globalThis.String(object.requestId)
         : isSet(object.request_id)
-        ? globalThis.String(object.request_id)
-        : "",
+          ? globalThis.String(object.request_id)
+          : "",
       confirmed: isSet(object.confirmed) ? globalThis.Boolean(object.confirmed) : false,
       error: isSet(object.error) ? globalThis.String(object.error) : "",
     };
@@ -476,7 +482,14 @@ export const RuntimeConfirmAlertResponse: MessageFns<RuntimeConfirmAlertResponse
 };
 
 function createBaseLaunchCommandRequest(): LaunchCommandRequest {
-  return { requestId: "", name: "", type: "", context: undefined, arguments: undefined, extensionName: "" };
+  return {
+    requestId: "",
+    name: "",
+    type: "",
+    context: undefined,
+    arguments: undefined,
+    extensionName: "",
+  };
 }
 
 export const LaunchCommandRequest: MessageFns<LaunchCommandRequest> = {
@@ -571,8 +584,8 @@ export const LaunchCommandRequest: MessageFns<LaunchCommandRequest> = {
       requestId: isSet(object.requestId)
         ? globalThis.String(object.requestId)
         : isSet(object.request_id)
-        ? globalThis.String(object.request_id)
-        : "",
+          ? globalThis.String(object.request_id)
+          : "",
       name: isSet(object.name) ? globalThis.String(object.name) : "",
       type: isSet(object.type) ? globalThis.String(object.type) : "",
       context: isObject(object.context) ? object.context : undefined,
@@ -580,8 +593,8 @@ export const LaunchCommandRequest: MessageFns<LaunchCommandRequest> = {
       extensionName: isSet(object.extensionName)
         ? globalThis.String(object.extensionName)
         : isSet(object.extension_name)
-        ? globalThis.String(object.extension_name)
-        : "",
+          ? globalThis.String(object.extension_name)
+          : "",
     };
   },
 
@@ -686,8 +699,8 @@ export const LaunchCommandResponse: MessageFns<LaunchCommandResponse> = {
       requestId: isSet(object.requestId)
         ? globalThis.String(object.requestId)
         : isSet(object.request_id)
-        ? globalThis.String(object.request_id)
-        : "",
+          ? globalThis.String(object.request_id)
+          : "",
       ok: isSet(object.ok) ? globalThis.Boolean(object.ok) : false,
       error: isSet(object.error) ? globalThis.String(object.error) : "",
     };
@@ -782,8 +795,8 @@ export const InvokeCommandResponse: MessageFns<InvokeCommandResponse> = {
       requestId: isSet(object.requestId)
         ? globalThis.String(object.requestId)
         : isSet(object.request_id)
-        ? globalThis.String(object.request_id)
-        : "",
+          ? globalThis.String(object.request_id)
+          : "",
       result: isSet(object?.result) ? object.result : undefined,
       error: isSet(object.error) ? globalThis.String(object.error) : "",
     };
@@ -820,7 +833,10 @@ function createBaseBrowserExtensionRequest(): BrowserExtensionRequest {
 }
 
 export const BrowserExtensionRequest: MessageFns<BrowserExtensionRequest> = {
-  encode(message: BrowserExtensionRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: BrowserExtensionRequest,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     if (message.requestId !== "") {
       writer.uint32(10).string(message.requestId);
     }
@@ -878,8 +894,8 @@ export const BrowserExtensionRequest: MessageFns<BrowserExtensionRequest> = {
       requestId: isSet(object.requestId)
         ? globalThis.String(object.requestId)
         : isSet(object.request_id)
-        ? globalThis.String(object.request_id)
-        : "",
+          ? globalThis.String(object.request_id)
+          : "",
       method: isSet(object.method) ? globalThis.String(object.method) : "",
       params: isSet(object?.params) ? object.params : undefined,
     };
@@ -916,7 +932,10 @@ function createBaseBrowserExtensionResponse(): BrowserExtensionResponse {
 }
 
 export const BrowserExtensionResponse: MessageFns<BrowserExtensionResponse> = {
-  encode(message: BrowserExtensionResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: BrowserExtensionResponse,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     if (message.requestId !== "") {
       writer.uint32(10).string(message.requestId);
     }
@@ -974,8 +993,8 @@ export const BrowserExtensionResponse: MessageFns<BrowserExtensionResponse> = {
       requestId: isSet(object.requestId)
         ? globalThis.String(object.requestId)
         : isSet(object.request_id)
-        ? globalThis.String(object.request_id)
-        : "",
+          ? globalThis.String(object.request_id)
+          : "",
       result: isSet(object?.result) ? object.result : undefined,
       error: isSet(object.error) ? globalThis.String(object.error) : "",
     };
@@ -1082,13 +1101,13 @@ export const OauthAuthorizeRequest: MessageFns<OauthAuthorizeRequest> = {
       providerName: isSet(object.providerName)
         ? globalThis.String(object.providerName)
         : isSet(object.provider_name)
-        ? globalThis.String(object.provider_name)
-        : "",
+          ? globalThis.String(object.provider_name)
+          : "",
       providerIcon: isSet(object.providerIcon)
         ? globalThis.String(object.providerIcon)
         : isSet(object.provider_icon)
-        ? globalThis.String(object.provider_icon)
-        : "",
+          ? globalThis.String(object.provider_icon)
+          : "",
       description: isSet(object.description) ? globalThis.String(object.description) : "",
     };
   },
@@ -1267,13 +1286,13 @@ export const OauthGetTokensRequest: MessageFns<OauthGetTokensRequest> = {
       requestId: isSet(object.requestId)
         ? globalThis.String(object.requestId)
         : isSet(object.request_id)
-        ? globalThis.String(object.request_id)
-        : "",
+          ? globalThis.String(object.request_id)
+          : "",
       providerId: isSet(object.providerId)
         ? globalThis.String(object.providerId)
         : isSet(object.provider_id)
-        ? globalThis.String(object.provider_id)
-        : "",
+          ? globalThis.String(object.provider_id)
+          : "",
     };
   },
 
@@ -1362,8 +1381,8 @@ export const OauthGetTokensResponse: MessageFns<OauthGetTokensResponse> = {
       requestId: isSet(object.requestId)
         ? globalThis.String(object.requestId)
         : isSet(object.request_id)
-        ? globalThis.String(object.request_id)
-        : "",
+          ? globalThis.String(object.request_id)
+          : "",
       result: isObject(object.result) ? object.result : undefined,
       error: isSet(object.error) ? globalThis.String(object.error) : "",
     };
@@ -1458,13 +1477,13 @@ export const OauthSetTokensRequest: MessageFns<OauthSetTokensRequest> = {
       requestId: isSet(object.requestId)
         ? globalThis.String(object.requestId)
         : isSet(object.request_id)
-        ? globalThis.String(object.request_id)
-        : "",
+          ? globalThis.String(object.request_id)
+          : "",
       providerId: isSet(object.providerId)
         ? globalThis.String(object.providerId)
         : isSet(object.provider_id)
-        ? globalThis.String(object.provider_id)
-        : "",
+          ? globalThis.String(object.provider_id)
+          : "",
       tokens: isObject(object.tokens) ? object.tokens : undefined,
     };
   },
@@ -1558,8 +1577,8 @@ export const OauthSetTokensResponse: MessageFns<OauthSetTokensResponse> = {
       requestId: isSet(object.requestId)
         ? globalThis.String(object.requestId)
         : isSet(object.request_id)
-        ? globalThis.String(object.request_id)
-        : "",
+          ? globalThis.String(object.request_id)
+          : "",
       ok: isSet(object.ok) ? globalThis.Boolean(object.ok) : false,
       error: isSet(object.error) ? globalThis.String(object.error) : "",
     };
@@ -1596,7 +1615,10 @@ function createBaseOauthRemoveTokensRequest(): OauthRemoveTokensRequest {
 }
 
 export const OauthRemoveTokensRequest: MessageFns<OauthRemoveTokensRequest> = {
-  encode(message: OauthRemoveTokensRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: OauthRemoveTokensRequest,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     if (message.requestId !== "") {
       writer.uint32(10).string(message.requestId);
     }
@@ -1643,13 +1665,13 @@ export const OauthRemoveTokensRequest: MessageFns<OauthRemoveTokensRequest> = {
       requestId: isSet(object.requestId)
         ? globalThis.String(object.requestId)
         : isSet(object.request_id)
-        ? globalThis.String(object.request_id)
-        : "",
+          ? globalThis.String(object.request_id)
+          : "",
       providerId: isSet(object.providerId)
         ? globalThis.String(object.providerId)
         : isSet(object.provider_id)
-        ? globalThis.String(object.provider_id)
-        : "",
+          ? globalThis.String(object.provider_id)
+          : "",
     };
   },
 
@@ -1680,7 +1702,10 @@ function createBaseOauthRemoveTokensResponse(): OauthRemoveTokensResponse {
 }
 
 export const OauthRemoveTokensResponse: MessageFns<OauthRemoveTokensResponse> = {
-  encode(message: OauthRemoveTokensResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: OauthRemoveTokensResponse,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     if (message.requestId !== "") {
       writer.uint32(10).string(message.requestId);
     }
@@ -1738,8 +1763,8 @@ export const OauthRemoveTokensResponse: MessageFns<OauthRemoveTokensResponse> = 
       requestId: isSet(object.requestId)
         ? globalThis.String(object.requestId)
         : isSet(object.request_id)
-        ? globalThis.String(object.request_id)
-        : "",
+          ? globalThis.String(object.request_id)
+          : "",
       ok: isSet(object.ok) ? globalThis.Boolean(object.ok) : false,
       error: isSet(object.error) ? globalThis.String(object.error) : "",
     };
@@ -1845,13 +1870,13 @@ export const AiAskRequest: MessageFns<AiAskRequest> = {
       requestId: isSet(object.requestId)
         ? globalThis.String(object.requestId)
         : isSet(object.request_id)
-        ? globalThis.String(object.request_id)
-        : "",
+          ? globalThis.String(object.request_id)
+          : "",
       streamRequestId: isSet(object.streamRequestId)
         ? globalThis.String(object.streamRequestId)
         : isSet(object.stream_request_id)
-        ? globalThis.String(object.stream_request_id)
-        : "",
+          ? globalThis.String(object.stream_request_id)
+          : "",
       prompt: isSet(object.prompt) ? globalThis.String(object.prompt) : "",
       options: isObject(object.options) ? object.options : undefined,
     };
@@ -1950,13 +1975,13 @@ export const AiAskResponse: MessageFns<AiAskResponse> = {
       requestId: isSet(object.requestId)
         ? globalThis.String(object.requestId)
         : isSet(object.request_id)
-        ? globalThis.String(object.request_id)
-        : "",
+          ? globalThis.String(object.request_id)
+          : "",
       fullText: isSet(object.fullText)
         ? globalThis.String(object.fullText)
         : isSet(object.full_text)
-        ? globalThis.String(object.full_text)
-        : "",
+          ? globalThis.String(object.full_text)
+          : "",
       error: isSet(object.error) ? globalThis.String(object.error) : "",
     };
   },
@@ -2039,8 +2064,8 @@ export const AiAskChunkEvent: MessageFns<AiAskChunkEvent> = {
       streamRequestId: isSet(object.streamRequestId)
         ? globalThis.String(object.streamRequestId)
         : isSet(object.stream_request_id)
-        ? globalThis.String(object.stream_request_id)
-        : "",
+          ? globalThis.String(object.stream_request_id)
+          : "",
       chunk: isSet(object.chunk) ? globalThis.String(object.chunk) : "",
     };
   },
@@ -2119,13 +2144,13 @@ export const AiAskEndEvent: MessageFns<AiAskEndEvent> = {
       streamRequestId: isSet(object.streamRequestId)
         ? globalThis.String(object.streamRequestId)
         : isSet(object.stream_request_id)
-        ? globalThis.String(object.stream_request_id)
-        : "",
+          ? globalThis.String(object.stream_request_id)
+          : "",
       fullText: isSet(object.fullText)
         ? globalThis.String(object.fullText)
         : isSet(object.full_text)
-        ? globalThis.String(object.full_text)
-        : "",
+          ? globalThis.String(object.full_text)
+          : "",
     };
   },
 
@@ -2203,8 +2228,8 @@ export const AiAskErrorEvent: MessageFns<AiAskErrorEvent> = {
       streamRequestId: isSet(object.streamRequestId)
         ? globalThis.String(object.streamRequestId)
         : isSet(object.stream_request_id)
-        ? globalThis.String(object.stream_request_id)
-        : "",
+          ? globalThis.String(object.stream_request_id)
+          : "",
       error: isSet(object.error) ? globalThis.String(object.error) : "",
     };
   },
@@ -2370,48 +2395,48 @@ export const RuntimeRpcRequest: MessageFns<RuntimeRpcRequest> = {
       invokeCommand: isSet(object.invokeCommand)
         ? InvokeCommandRequest.fromJSON(object.invokeCommand)
         : isSet(object.invoke_command)
-        ? InvokeCommandRequest.fromJSON(object.invoke_command)
-        : undefined,
+          ? InvokeCommandRequest.fromJSON(object.invoke_command)
+          : undefined,
       browserExtension: isSet(object.browserExtension)
         ? BrowserExtensionRequest.fromJSON(object.browserExtension)
         : isSet(object.browser_extension)
-        ? BrowserExtensionRequest.fromJSON(object.browser_extension)
-        : undefined,
+          ? BrowserExtensionRequest.fromJSON(object.browser_extension)
+          : undefined,
       oauthAuthorize: isSet(object.oauthAuthorize)
         ? OauthAuthorizeRequest.fromJSON(object.oauthAuthorize)
         : isSet(object.oauth_authorize)
-        ? OauthAuthorizeRequest.fromJSON(object.oauth_authorize)
-        : undefined,
+          ? OauthAuthorizeRequest.fromJSON(object.oauth_authorize)
+          : undefined,
       oauthGetTokens: isSet(object.oauthGetTokens)
         ? OauthGetTokensRequest.fromJSON(object.oauthGetTokens)
         : isSet(object.oauth_get_tokens)
-        ? OauthGetTokensRequest.fromJSON(object.oauth_get_tokens)
-        : undefined,
+          ? OauthGetTokensRequest.fromJSON(object.oauth_get_tokens)
+          : undefined,
       oauthSetTokens: isSet(object.oauthSetTokens)
         ? OauthSetTokensRequest.fromJSON(object.oauthSetTokens)
         : isSet(object.oauth_set_tokens)
-        ? OauthSetTokensRequest.fromJSON(object.oauth_set_tokens)
-        : undefined,
+          ? OauthSetTokensRequest.fromJSON(object.oauth_set_tokens)
+          : undefined,
       oauthRemoveTokens: isSet(object.oauthRemoveTokens)
         ? OauthRemoveTokensRequest.fromJSON(object.oauthRemoveTokens)
         : isSet(object.oauth_remove_tokens)
-        ? OauthRemoveTokensRequest.fromJSON(object.oauth_remove_tokens)
-        : undefined,
+          ? OauthRemoveTokensRequest.fromJSON(object.oauth_remove_tokens)
+          : undefined,
       confirmAlert: isSet(object.confirmAlert)
         ? RuntimeConfirmAlertRequest.fromJSON(object.confirmAlert)
         : isSet(object.confirm_alert)
-        ? RuntimeConfirmAlertRequest.fromJSON(object.confirm_alert)
-        : undefined,
+          ? RuntimeConfirmAlertRequest.fromJSON(object.confirm_alert)
+          : undefined,
       launchCommand: isSet(object.launchCommand)
         ? LaunchCommandRequest.fromJSON(object.launchCommand)
         : isSet(object.launch_command)
-        ? LaunchCommandRequest.fromJSON(object.launch_command)
-        : undefined,
+          ? LaunchCommandRequest.fromJSON(object.launch_command)
+          : undefined,
       aiAsk: isSet(object.aiAsk)
         ? AiAskRequest.fromJSON(object.aiAsk)
         : isSet(object.ai_ask)
-        ? AiAskRequest.fromJSON(object.ai_ask)
-        : undefined,
+          ? AiAskRequest.fromJSON(object.ai_ask)
+          : undefined,
     };
   },
 
@@ -2452,33 +2477,42 @@ export const RuntimeRpcRequest: MessageFns<RuntimeRpcRequest> = {
   },
   fromPartial(object: DeepPartial<RuntimeRpcRequest>): RuntimeRpcRequest {
     const message = createBaseRuntimeRpcRequest();
-    message.invokeCommand = (object.invokeCommand !== undefined && object.invokeCommand !== null)
-      ? InvokeCommandRequest.fromPartial(object.invokeCommand)
-      : undefined;
-    message.browserExtension = (object.browserExtension !== undefined && object.browserExtension !== null)
-      ? BrowserExtensionRequest.fromPartial(object.browserExtension)
-      : undefined;
-    message.oauthAuthorize = (object.oauthAuthorize !== undefined && object.oauthAuthorize !== null)
-      ? OauthAuthorizeRequest.fromPartial(object.oauthAuthorize)
-      : undefined;
-    message.oauthGetTokens = (object.oauthGetTokens !== undefined && object.oauthGetTokens !== null)
-      ? OauthGetTokensRequest.fromPartial(object.oauthGetTokens)
-      : undefined;
-    message.oauthSetTokens = (object.oauthSetTokens !== undefined && object.oauthSetTokens !== null)
-      ? OauthSetTokensRequest.fromPartial(object.oauthSetTokens)
-      : undefined;
-    message.oauthRemoveTokens = (object.oauthRemoveTokens !== undefined && object.oauthRemoveTokens !== null)
-      ? OauthRemoveTokensRequest.fromPartial(object.oauthRemoveTokens)
-      : undefined;
-    message.confirmAlert = (object.confirmAlert !== undefined && object.confirmAlert !== null)
-      ? RuntimeConfirmAlertRequest.fromPartial(object.confirmAlert)
-      : undefined;
-    message.launchCommand = (object.launchCommand !== undefined && object.launchCommand !== null)
-      ? LaunchCommandRequest.fromPartial(object.launchCommand)
-      : undefined;
-    message.aiAsk = (object.aiAsk !== undefined && object.aiAsk !== null)
-      ? AiAskRequest.fromPartial(object.aiAsk)
-      : undefined;
+    message.invokeCommand =
+      object.invokeCommand !== undefined && object.invokeCommand !== null
+        ? InvokeCommandRequest.fromPartial(object.invokeCommand)
+        : undefined;
+    message.browserExtension =
+      object.browserExtension !== undefined && object.browserExtension !== null
+        ? BrowserExtensionRequest.fromPartial(object.browserExtension)
+        : undefined;
+    message.oauthAuthorize =
+      object.oauthAuthorize !== undefined && object.oauthAuthorize !== null
+        ? OauthAuthorizeRequest.fromPartial(object.oauthAuthorize)
+        : undefined;
+    message.oauthGetTokens =
+      object.oauthGetTokens !== undefined && object.oauthGetTokens !== null
+        ? OauthGetTokensRequest.fromPartial(object.oauthGetTokens)
+        : undefined;
+    message.oauthSetTokens =
+      object.oauthSetTokens !== undefined && object.oauthSetTokens !== null
+        ? OauthSetTokensRequest.fromPartial(object.oauthSetTokens)
+        : undefined;
+    message.oauthRemoveTokens =
+      object.oauthRemoveTokens !== undefined && object.oauthRemoveTokens !== null
+        ? OauthRemoveTokensRequest.fromPartial(object.oauthRemoveTokens)
+        : undefined;
+    message.confirmAlert =
+      object.confirmAlert !== undefined && object.confirmAlert !== null
+        ? RuntimeConfirmAlertRequest.fromPartial(object.confirmAlert)
+        : undefined;
+    message.launchCommand =
+      object.launchCommand !== undefined && object.launchCommand !== null
+        ? LaunchCommandRequest.fromPartial(object.launchCommand)
+        : undefined;
+    message.aiAsk =
+      object.aiAsk !== undefined && object.aiAsk !== null
+        ? AiAskRequest.fromPartial(object.aiAsk)
+        : undefined;
     return message;
   },
 };
@@ -2658,63 +2692,63 @@ export const RuntimeRpcResponse: MessageFns<RuntimeRpcResponse> = {
       invokeCommand: isSet(object.invokeCommand)
         ? InvokeCommandResponse.fromJSON(object.invokeCommand)
         : isSet(object.invoke_command)
-        ? InvokeCommandResponse.fromJSON(object.invoke_command)
-        : undefined,
+          ? InvokeCommandResponse.fromJSON(object.invoke_command)
+          : undefined,
       browserExtension: isSet(object.browserExtension)
         ? BrowserExtensionResponse.fromJSON(object.browserExtension)
         : isSet(object.browser_extension)
-        ? BrowserExtensionResponse.fromJSON(object.browser_extension)
-        : undefined,
+          ? BrowserExtensionResponse.fromJSON(object.browser_extension)
+          : undefined,
       oauthAuthorize: isSet(object.oauthAuthorize)
         ? OauthAuthorizeResponse.fromJSON(object.oauthAuthorize)
         : isSet(object.oauth_authorize)
-        ? OauthAuthorizeResponse.fromJSON(object.oauth_authorize)
-        : undefined,
+          ? OauthAuthorizeResponse.fromJSON(object.oauth_authorize)
+          : undefined,
       oauthGetTokens: isSet(object.oauthGetTokens)
         ? OauthGetTokensResponse.fromJSON(object.oauthGetTokens)
         : isSet(object.oauth_get_tokens)
-        ? OauthGetTokensResponse.fromJSON(object.oauth_get_tokens)
-        : undefined,
+          ? OauthGetTokensResponse.fromJSON(object.oauth_get_tokens)
+          : undefined,
       oauthSetTokens: isSet(object.oauthSetTokens)
         ? OauthSetTokensResponse.fromJSON(object.oauthSetTokens)
         : isSet(object.oauth_set_tokens)
-        ? OauthSetTokensResponse.fromJSON(object.oauth_set_tokens)
-        : undefined,
+          ? OauthSetTokensResponse.fromJSON(object.oauth_set_tokens)
+          : undefined,
       oauthRemoveTokens: isSet(object.oauthRemoveTokens)
         ? OauthRemoveTokensResponse.fromJSON(object.oauthRemoveTokens)
         : isSet(object.oauth_remove_tokens)
-        ? OauthRemoveTokensResponse.fromJSON(object.oauth_remove_tokens)
-        : undefined,
+          ? OauthRemoveTokensResponse.fromJSON(object.oauth_remove_tokens)
+          : undefined,
       confirmAlert: isSet(object.confirmAlert)
         ? RuntimeConfirmAlertResponse.fromJSON(object.confirmAlert)
         : isSet(object.confirm_alert)
-        ? RuntimeConfirmAlertResponse.fromJSON(object.confirm_alert)
-        : undefined,
+          ? RuntimeConfirmAlertResponse.fromJSON(object.confirm_alert)
+          : undefined,
       launchCommand: isSet(object.launchCommand)
         ? LaunchCommandResponse.fromJSON(object.launchCommand)
         : isSet(object.launch_command)
-        ? LaunchCommandResponse.fromJSON(object.launch_command)
-        : undefined,
+          ? LaunchCommandResponse.fromJSON(object.launch_command)
+          : undefined,
       aiAsk: isSet(object.aiAsk)
         ? AiAskResponse.fromJSON(object.aiAsk)
         : isSet(object.ai_ask)
-        ? AiAskResponse.fromJSON(object.ai_ask)
-        : undefined,
+          ? AiAskResponse.fromJSON(object.ai_ask)
+          : undefined,
       aiAskChunk: isSet(object.aiAskChunk)
         ? AiAskChunkEvent.fromJSON(object.aiAskChunk)
         : isSet(object.ai_ask_chunk)
-        ? AiAskChunkEvent.fromJSON(object.ai_ask_chunk)
-        : undefined,
+          ? AiAskChunkEvent.fromJSON(object.ai_ask_chunk)
+          : undefined,
       aiAskEnd: isSet(object.aiAskEnd)
         ? AiAskEndEvent.fromJSON(object.aiAskEnd)
         : isSet(object.ai_ask_end)
-        ? AiAskEndEvent.fromJSON(object.ai_ask_end)
-        : undefined,
+          ? AiAskEndEvent.fromJSON(object.ai_ask_end)
+          : undefined,
       aiAskError: isSet(object.aiAskError)
         ? AiAskErrorEvent.fromJSON(object.aiAskError)
         : isSet(object.ai_ask_error)
-        ? AiAskErrorEvent.fromJSON(object.ai_ask_error)
-        : undefined,
+          ? AiAskErrorEvent.fromJSON(object.ai_ask_error)
+          : undefined,
     };
   },
 
@@ -2764,42 +2798,54 @@ export const RuntimeRpcResponse: MessageFns<RuntimeRpcResponse> = {
   },
   fromPartial(object: DeepPartial<RuntimeRpcResponse>): RuntimeRpcResponse {
     const message = createBaseRuntimeRpcResponse();
-    message.invokeCommand = (object.invokeCommand !== undefined && object.invokeCommand !== null)
-      ? InvokeCommandResponse.fromPartial(object.invokeCommand)
-      : undefined;
-    message.browserExtension = (object.browserExtension !== undefined && object.browserExtension !== null)
-      ? BrowserExtensionResponse.fromPartial(object.browserExtension)
-      : undefined;
-    message.oauthAuthorize = (object.oauthAuthorize !== undefined && object.oauthAuthorize !== null)
-      ? OauthAuthorizeResponse.fromPartial(object.oauthAuthorize)
-      : undefined;
-    message.oauthGetTokens = (object.oauthGetTokens !== undefined && object.oauthGetTokens !== null)
-      ? OauthGetTokensResponse.fromPartial(object.oauthGetTokens)
-      : undefined;
-    message.oauthSetTokens = (object.oauthSetTokens !== undefined && object.oauthSetTokens !== null)
-      ? OauthSetTokensResponse.fromPartial(object.oauthSetTokens)
-      : undefined;
-    message.oauthRemoveTokens = (object.oauthRemoveTokens !== undefined && object.oauthRemoveTokens !== null)
-      ? OauthRemoveTokensResponse.fromPartial(object.oauthRemoveTokens)
-      : undefined;
-    message.confirmAlert = (object.confirmAlert !== undefined && object.confirmAlert !== null)
-      ? RuntimeConfirmAlertResponse.fromPartial(object.confirmAlert)
-      : undefined;
-    message.launchCommand = (object.launchCommand !== undefined && object.launchCommand !== null)
-      ? LaunchCommandResponse.fromPartial(object.launchCommand)
-      : undefined;
-    message.aiAsk = (object.aiAsk !== undefined && object.aiAsk !== null)
-      ? AiAskResponse.fromPartial(object.aiAsk)
-      : undefined;
-    message.aiAskChunk = (object.aiAskChunk !== undefined && object.aiAskChunk !== null)
-      ? AiAskChunkEvent.fromPartial(object.aiAskChunk)
-      : undefined;
-    message.aiAskEnd = (object.aiAskEnd !== undefined && object.aiAskEnd !== null)
-      ? AiAskEndEvent.fromPartial(object.aiAskEnd)
-      : undefined;
-    message.aiAskError = (object.aiAskError !== undefined && object.aiAskError !== null)
-      ? AiAskErrorEvent.fromPartial(object.aiAskError)
-      : undefined;
+    message.invokeCommand =
+      object.invokeCommand !== undefined && object.invokeCommand !== null
+        ? InvokeCommandResponse.fromPartial(object.invokeCommand)
+        : undefined;
+    message.browserExtension =
+      object.browserExtension !== undefined && object.browserExtension !== null
+        ? BrowserExtensionResponse.fromPartial(object.browserExtension)
+        : undefined;
+    message.oauthAuthorize =
+      object.oauthAuthorize !== undefined && object.oauthAuthorize !== null
+        ? OauthAuthorizeResponse.fromPartial(object.oauthAuthorize)
+        : undefined;
+    message.oauthGetTokens =
+      object.oauthGetTokens !== undefined && object.oauthGetTokens !== null
+        ? OauthGetTokensResponse.fromPartial(object.oauthGetTokens)
+        : undefined;
+    message.oauthSetTokens =
+      object.oauthSetTokens !== undefined && object.oauthSetTokens !== null
+        ? OauthSetTokensResponse.fromPartial(object.oauthSetTokens)
+        : undefined;
+    message.oauthRemoveTokens =
+      object.oauthRemoveTokens !== undefined && object.oauthRemoveTokens !== null
+        ? OauthRemoveTokensResponse.fromPartial(object.oauthRemoveTokens)
+        : undefined;
+    message.confirmAlert =
+      object.confirmAlert !== undefined && object.confirmAlert !== null
+        ? RuntimeConfirmAlertResponse.fromPartial(object.confirmAlert)
+        : undefined;
+    message.launchCommand =
+      object.launchCommand !== undefined && object.launchCommand !== null
+        ? LaunchCommandResponse.fromPartial(object.launchCommand)
+        : undefined;
+    message.aiAsk =
+      object.aiAsk !== undefined && object.aiAsk !== null
+        ? AiAskResponse.fromPartial(object.aiAsk)
+        : undefined;
+    message.aiAskChunk =
+      object.aiAskChunk !== undefined && object.aiAskChunk !== null
+        ? AiAskChunkEvent.fromPartial(object.aiAskChunk)
+        : undefined;
+    message.aiAskEnd =
+      object.aiAskEnd !== undefined && object.aiAskEnd !== null
+        ? AiAskEndEvent.fromPartial(object.aiAskEnd)
+        : undefined;
+    message.aiAskError =
+      object.aiAskError !== undefined && object.aiAskError !== null
+        ? AiAskErrorEvent.fromPartial(object.aiAskError)
+        : undefined;
     return message;
   },
 };
@@ -2874,23 +2920,29 @@ export const RuntimeRpc: MessageFns<RuntimeRpc> = {
   },
   fromPartial(object: DeepPartial<RuntimeRpc>): RuntimeRpc {
     const message = createBaseRuntimeRpc();
-    message.request = (object.request !== undefined && object.request !== null)
-      ? RuntimeRpcRequest.fromPartial(object.request)
-      : undefined;
-    message.response = (object.response !== undefined && object.response !== null)
-      ? RuntimeRpcResponse.fromPartial(object.response)
-      : undefined;
+    message.request =
+      object.request !== undefined && object.request !== null
+        ? RuntimeRpcRequest.fromPartial(object.request)
+        : undefined;
+    message.response =
+      object.response !== undefined && object.response !== null
+        ? RuntimeRpcResponse.fromPartial(object.response)
+        : undefined;
     return message;
   },
 };
 
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
 
-type DeepPartial<T> = T extends Builtin ? T
-  : T extends globalThis.Array<infer U> ? globalThis.Array<DeepPartial<U>>
-  : T extends ReadonlyArray<infer U> ? ReadonlyArray<DeepPartial<U>>
-  : T extends {} ? { [K in keyof T]?: DeepPartial<T[K]> }
-  : Partial<T>;
+type DeepPartial<T> = T extends Builtin
+  ? T
+  : T extends globalThis.Array<infer U>
+    ? globalThis.Array<DeepPartial<U>>
+    : T extends ReadonlyArray<infer U>
+      ? ReadonlyArray<DeepPartial<U>>
+      : T extends {}
+        ? { [K in keyof T]?: DeepPartial<T[K]> }
+        : Partial<T>;
 
 function isObject(value: any): boolean {
   return typeof value === "object" && value !== null;

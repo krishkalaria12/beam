@@ -53,7 +53,8 @@ export class OAuthService implements OAuthServiceOptions {
     this.refreshTokenUrl = options.refreshTokenUrl;
     this.onAuthorize = options.onAuthorize;
     this.tokenResponseParser = options.tokenResponseParser ?? ((x) => x as OAuth.TokenResponse);
-    this.tokenRefreshResponseParser = options.tokenRefreshResponseParser ?? ((x) => x as OAuth.TokenResponse);
+    this.tokenRefreshResponseParser =
+      options.tokenRefreshResponseParser ?? ((x) => x as OAuth.TokenResponse);
     this.authorize = this.authorize.bind(this);
   }
 
@@ -268,7 +269,7 @@ export class OAuthService implements OAuthServiceOptions {
         user_scope: options.scope,
       },
       personalAccessToken: options.personalAccessToken,
-      bodyEncoding: options.tokenUrl ? options.bodyEncoding ?? "url-encoded" : "json",
+      bodyEncoding: options.tokenUrl ? (options.bodyEncoding ?? "url-encoded") : "json",
       onAuthorize: options.onAuthorize,
       tokenRefreshResponseParser: options.tokenRefreshResponseParser,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -397,7 +398,9 @@ export class OAuthService implements OAuthServiceOptions {
     if (!response.ok) {
       const responseText = await response.text();
       console.error("fetch tokens error:", responseText);
-      throw new Error(`Error while fetching tokens: ${response.status} (${response.statusText})\n${responseText}`);
+      throw new Error(
+        `Error while fetching tokens: ${response.status} (${response.statusText})\n${responseText}`,
+      );
     }
     const tokens = this.tokenResponseParser(await response.json());
 
@@ -425,7 +428,10 @@ export class OAuthService implements OAuthServiceOptions {
       };
     }
 
-    const response = await fetch(this.refreshTokenUrl ?? this.tokenUrl, { method: "POST", ...options });
+    const response = await fetch(this.refreshTokenUrl ?? this.tokenUrl, {
+      method: "POST",
+      ...options,
+    });
     if (!response.ok) {
       const responseText = await response.text();
       console.error("refresh tokens error:", responseText);

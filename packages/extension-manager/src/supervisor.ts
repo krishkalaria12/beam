@@ -55,7 +55,9 @@ export class ExtensionManagerSupervisor {
       try {
         this.handleBridgePayload(JSON.parse(line));
       } catch (error) {
-        writeLog(`Failed to read bridge payload: ${error instanceof Error ? error.message : String(error)}`);
+        writeLog(
+          `Failed to read bridge payload: ${error instanceof Error ? error.message : String(error)}`,
+        );
       }
     });
 
@@ -165,7 +167,10 @@ export class ExtensionManagerSupervisor {
     this.activeWorker = nextWorker;
 
     if (previousWorker) {
-      this.disposeWorker(previousWorker, "The extension worker was replaced before the request completed.");
+      this.disposeWorker(
+        previousWorker,
+        "The extension worker was replaced before the request completed.",
+      );
     }
   }
 
@@ -191,7 +196,10 @@ export class ExtensionManagerSupervisor {
     }, WORKER_GRACE_PERIOD_MS);
   }
 
-  private failPendingManagerRequests(workerId: string, message = "The extension worker stopped before the request completed."): void {
+  private failPendingManagerRequests(
+    workerId: string,
+    message = "The extension worker stopped before the request completed.",
+  ): void {
     for (const [requestId, ownerId] of this.pendingManagerRequests.entries()) {
       if (ownerId !== workerId) {
         continue;

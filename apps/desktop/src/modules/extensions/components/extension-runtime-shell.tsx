@@ -117,7 +117,8 @@ export function ExtensionRuntimeShell({ state, onOpenExtensions }: ExtensionRunt
   const sessionStatus = state.runningSession?.status ?? (rootNode ? "ready" : "launching");
   const rootType = rootNode?.type ?? "";
   const showSearchInput = sessionStatus === "ready" && (rootType === "List" || rootType === "Grid");
-  const searchBarAccessoryNodeId = sessionStatus === "ready" ? rootNode?.namedChildren?.searchBarAccessory : undefined;
+  const searchBarAccessoryNodeId =
+    sessionStatus === "ready" ? rootNode?.namedChildren?.searchBarAccessory : undefined;
   const searchPlaceholder =
     typeof rootNode?.props.searchBarPlaceholder === "string"
       ? rootNode.props.searchBarPlaceholder

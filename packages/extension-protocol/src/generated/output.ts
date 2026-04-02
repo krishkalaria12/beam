@@ -8,8 +8,7 @@
 import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
 import { ShowHudRequest, UpdateCommandMetadataRequest } from "./ui";
 
-export interface GoBackToPluginListOutput {
-}
+export interface GoBackToPluginListOutput {}
 
 export interface OpenTargetOutput {
   target: string;
@@ -24,8 +23,7 @@ export interface ResetElementOutput {
   elementId: number;
 }
 
-export interface ClearSearchBarOutput {
-}
+export interface ClearSearchBarOutput {}
 
 export interface OpenExtensionPreferencesOutput {
   extensionName: string;
@@ -208,8 +206,8 @@ export const FocusElementOutput: MessageFns<FocusElementOutput> = {
       elementId: isSet(object.elementId)
         ? globalThis.Number(object.elementId)
         : isSet(object.element_id)
-        ? globalThis.Number(object.element_id)
-        : 0,
+          ? globalThis.Number(object.element_id)
+          : 0,
     };
   },
 
@@ -272,8 +270,8 @@ export const ResetElementOutput: MessageFns<ResetElementOutput> = {
       elementId: isSet(object.elementId)
         ? globalThis.Number(object.elementId)
         : isSet(object.element_id)
-        ? globalThis.Number(object.element_id)
-        : 0,
+          ? globalThis.Number(object.element_id)
+          : 0,
     };
   },
 
@@ -343,7 +341,10 @@ function createBaseOpenExtensionPreferencesOutput(): OpenExtensionPreferencesOut
 }
 
 export const OpenExtensionPreferencesOutput: MessageFns<OpenExtensionPreferencesOutput> = {
-  encode(message: OpenExtensionPreferencesOutput, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: OpenExtensionPreferencesOutput,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     if (message.extensionName !== "") {
       writer.uint32(10).string(message.extensionName);
     }
@@ -379,8 +380,8 @@ export const OpenExtensionPreferencesOutput: MessageFns<OpenExtensionPreferences
       extensionName: isSet(object.extensionName)
         ? globalThis.String(object.extensionName)
         : isSet(object.extension_name)
-        ? globalThis.String(object.extension_name)
-        : "",
+          ? globalThis.String(object.extension_name)
+          : "",
     };
   },
 
@@ -407,7 +408,10 @@ function createBaseOpenCommandPreferencesOutput(): OpenCommandPreferencesOutput 
 }
 
 export const OpenCommandPreferencesOutput: MessageFns<OpenCommandPreferencesOutput> = {
-  encode(message: OpenCommandPreferencesOutput, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: OpenCommandPreferencesOutput,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     if (message.extensionName !== "") {
       writer.uint32(10).string(message.extensionName);
     }
@@ -454,13 +458,13 @@ export const OpenCommandPreferencesOutput: MessageFns<OpenCommandPreferencesOutp
       extensionName: isSet(object.extensionName)
         ? globalThis.String(object.extensionName)
         : isSet(object.extension_name)
-        ? globalThis.String(object.extension_name)
-        : "",
+          ? globalThis.String(object.extension_name)
+          : "",
       commandName: isSet(object.commandName)
         ? globalThis.String(object.commandName)
         : isSet(object.command_name)
-        ? globalThis.String(object.command_name)
-        : "",
+          ? globalThis.String(object.command_name)
+          : "",
     };
   },
 
@@ -521,13 +525,22 @@ export const RuntimeOutput: MessageFns<RuntimeOutput> = {
       ClearSearchBarOutput.encode(message.clearSearchBar, writer.uint32(50).fork()).join();
     }
     if (message.updateCommandMetadata !== undefined) {
-      UpdateCommandMetadataRequest.encode(message.updateCommandMetadata, writer.uint32(58).fork()).join();
+      UpdateCommandMetadataRequest.encode(
+        message.updateCommandMetadata,
+        writer.uint32(58).fork(),
+      ).join();
     }
     if (message.openExtensionPreferences !== undefined) {
-      OpenExtensionPreferencesOutput.encode(message.openExtensionPreferences, writer.uint32(66).fork()).join();
+      OpenExtensionPreferencesOutput.encode(
+        message.openExtensionPreferences,
+        writer.uint32(66).fork(),
+      ).join();
     }
     if (message.openCommandPreferences !== undefined) {
-      OpenCommandPreferencesOutput.encode(message.openCommandPreferences, writer.uint32(74).fork()).join();
+      OpenCommandPreferencesOutput.encode(
+        message.openCommandPreferences,
+        writer.uint32(74).fork(),
+      ).join();
     }
     return writer;
   },
@@ -592,7 +605,10 @@ export const RuntimeOutput: MessageFns<RuntimeOutput> = {
             break;
           }
 
-          message.updateCommandMetadata = UpdateCommandMetadataRequest.decode(reader, reader.uint32());
+          message.updateCommandMetadata = UpdateCommandMetadataRequest.decode(
+            reader,
+            reader.uint32(),
+          );
           continue;
         }
         case 8: {
@@ -600,7 +616,10 @@ export const RuntimeOutput: MessageFns<RuntimeOutput> = {
             break;
           }
 
-          message.openExtensionPreferences = OpenExtensionPreferencesOutput.decode(reader, reader.uint32());
+          message.openExtensionPreferences = OpenExtensionPreferencesOutput.decode(
+            reader,
+            reader.uint32(),
+          );
           continue;
         }
         case 9: {
@@ -608,7 +627,10 @@ export const RuntimeOutput: MessageFns<RuntimeOutput> = {
             break;
           }
 
-          message.openCommandPreferences = OpenCommandPreferencesOutput.decode(reader, reader.uint32());
+          message.openCommandPreferences = OpenCommandPreferencesOutput.decode(
+            reader,
+            reader.uint32(),
+          );
           continue;
         }
       }
@@ -625,44 +647,44 @@ export const RuntimeOutput: MessageFns<RuntimeOutput> = {
       goBackToPluginList: isSet(object.goBackToPluginList)
         ? GoBackToPluginListOutput.fromJSON(object.goBackToPluginList)
         : isSet(object.go_back_to_plugin_list)
-        ? GoBackToPluginListOutput.fromJSON(object.go_back_to_plugin_list)
-        : undefined,
+          ? GoBackToPluginListOutput.fromJSON(object.go_back_to_plugin_list)
+          : undefined,
       open: isSet(object.open) ? OpenTargetOutput.fromJSON(object.open) : undefined,
       showHud: isSet(object.showHud)
         ? ShowHudRequest.fromJSON(object.showHud)
         : isSet(object.show_hud)
-        ? ShowHudRequest.fromJSON(object.show_hud)
-        : undefined,
+          ? ShowHudRequest.fromJSON(object.show_hud)
+          : undefined,
       focusElement: isSet(object.focusElement)
         ? FocusElementOutput.fromJSON(object.focusElement)
         : isSet(object.focus_element)
-        ? FocusElementOutput.fromJSON(object.focus_element)
-        : undefined,
+          ? FocusElementOutput.fromJSON(object.focus_element)
+          : undefined,
       resetElement: isSet(object.resetElement)
         ? ResetElementOutput.fromJSON(object.resetElement)
         : isSet(object.reset_element)
-        ? ResetElementOutput.fromJSON(object.reset_element)
-        : undefined,
+          ? ResetElementOutput.fromJSON(object.reset_element)
+          : undefined,
       clearSearchBar: isSet(object.clearSearchBar)
         ? ClearSearchBarOutput.fromJSON(object.clearSearchBar)
         : isSet(object.clear_search_bar)
-        ? ClearSearchBarOutput.fromJSON(object.clear_search_bar)
-        : undefined,
+          ? ClearSearchBarOutput.fromJSON(object.clear_search_bar)
+          : undefined,
       updateCommandMetadata: isSet(object.updateCommandMetadata)
         ? UpdateCommandMetadataRequest.fromJSON(object.updateCommandMetadata)
         : isSet(object.update_command_metadata)
-        ? UpdateCommandMetadataRequest.fromJSON(object.update_command_metadata)
-        : undefined,
+          ? UpdateCommandMetadataRequest.fromJSON(object.update_command_metadata)
+          : undefined,
       openExtensionPreferences: isSet(object.openExtensionPreferences)
         ? OpenExtensionPreferencesOutput.fromJSON(object.openExtensionPreferences)
         : isSet(object.open_extension_preferences)
-        ? OpenExtensionPreferencesOutput.fromJSON(object.open_extension_preferences)
-        : undefined,
+          ? OpenExtensionPreferencesOutput.fromJSON(object.open_extension_preferences)
+          : undefined,
       openCommandPreferences: isSet(object.openCommandPreferences)
         ? OpenCommandPreferencesOutput.fromJSON(object.openCommandPreferences)
         : isSet(object.open_command_preferences)
-        ? OpenCommandPreferencesOutput.fromJSON(object.open_command_preferences)
-        : undefined,
+          ? OpenCommandPreferencesOutput.fromJSON(object.open_command_preferences)
+          : undefined,
     };
   },
 
@@ -687,13 +709,19 @@ export const RuntimeOutput: MessageFns<RuntimeOutput> = {
       obj.clearSearchBar = ClearSearchBarOutput.toJSON(message.clearSearchBar);
     }
     if (message.updateCommandMetadata !== undefined) {
-      obj.updateCommandMetadata = UpdateCommandMetadataRequest.toJSON(message.updateCommandMetadata);
+      obj.updateCommandMetadata = UpdateCommandMetadataRequest.toJSON(
+        message.updateCommandMetadata,
+      );
     }
     if (message.openExtensionPreferences !== undefined) {
-      obj.openExtensionPreferences = OpenExtensionPreferencesOutput.toJSON(message.openExtensionPreferences);
+      obj.openExtensionPreferences = OpenExtensionPreferencesOutput.toJSON(
+        message.openExtensionPreferences,
+      );
     }
     if (message.openCommandPreferences !== undefined) {
-      obj.openCommandPreferences = OpenCommandPreferencesOutput.toJSON(message.openCommandPreferences);
+      obj.openCommandPreferences = OpenCommandPreferencesOutput.toJSON(
+        message.openCommandPreferences,
+      );
     }
     return obj;
   },
@@ -703,34 +731,40 @@ export const RuntimeOutput: MessageFns<RuntimeOutput> = {
   },
   fromPartial(object: DeepPartial<RuntimeOutput>): RuntimeOutput {
     const message = createBaseRuntimeOutput();
-    message.goBackToPluginList = (object.goBackToPluginList !== undefined && object.goBackToPluginList !== null)
-      ? GoBackToPluginListOutput.fromPartial(object.goBackToPluginList)
-      : undefined;
-    message.open = (object.open !== undefined && object.open !== null)
-      ? OpenTargetOutput.fromPartial(object.open)
-      : undefined;
-    message.showHud = (object.showHud !== undefined && object.showHud !== null)
-      ? ShowHudRequest.fromPartial(object.showHud)
-      : undefined;
-    message.focusElement = (object.focusElement !== undefined && object.focusElement !== null)
-      ? FocusElementOutput.fromPartial(object.focusElement)
-      : undefined;
-    message.resetElement = (object.resetElement !== undefined && object.resetElement !== null)
-      ? ResetElementOutput.fromPartial(object.resetElement)
-      : undefined;
-    message.clearSearchBar = (object.clearSearchBar !== undefined && object.clearSearchBar !== null)
-      ? ClearSearchBarOutput.fromPartial(object.clearSearchBar)
-      : undefined;
+    message.goBackToPluginList =
+      object.goBackToPluginList !== undefined && object.goBackToPluginList !== null
+        ? GoBackToPluginListOutput.fromPartial(object.goBackToPluginList)
+        : undefined;
+    message.open =
+      object.open !== undefined && object.open !== null
+        ? OpenTargetOutput.fromPartial(object.open)
+        : undefined;
+    message.showHud =
+      object.showHud !== undefined && object.showHud !== null
+        ? ShowHudRequest.fromPartial(object.showHud)
+        : undefined;
+    message.focusElement =
+      object.focusElement !== undefined && object.focusElement !== null
+        ? FocusElementOutput.fromPartial(object.focusElement)
+        : undefined;
+    message.resetElement =
+      object.resetElement !== undefined && object.resetElement !== null
+        ? ResetElementOutput.fromPartial(object.resetElement)
+        : undefined;
+    message.clearSearchBar =
+      object.clearSearchBar !== undefined && object.clearSearchBar !== null
+        ? ClearSearchBarOutput.fromPartial(object.clearSearchBar)
+        : undefined;
     message.updateCommandMetadata =
-      (object.updateCommandMetadata !== undefined && object.updateCommandMetadata !== null)
+      object.updateCommandMetadata !== undefined && object.updateCommandMetadata !== null
         ? UpdateCommandMetadataRequest.fromPartial(object.updateCommandMetadata)
         : undefined;
     message.openExtensionPreferences =
-      (object.openExtensionPreferences !== undefined && object.openExtensionPreferences !== null)
+      object.openExtensionPreferences !== undefined && object.openExtensionPreferences !== null
         ? OpenExtensionPreferencesOutput.fromPartial(object.openExtensionPreferences)
         : undefined;
     message.openCommandPreferences =
-      (object.openCommandPreferences !== undefined && object.openCommandPreferences !== null)
+      object.openCommandPreferences !== undefined && object.openCommandPreferences !== null
         ? OpenCommandPreferencesOutput.fromPartial(object.openCommandPreferences)
         : undefined;
     return message;
@@ -739,11 +773,15 @@ export const RuntimeOutput: MessageFns<RuntimeOutput> = {
 
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
 
-type DeepPartial<T> = T extends Builtin ? T
-  : T extends globalThis.Array<infer U> ? globalThis.Array<DeepPartial<U>>
-  : T extends ReadonlyArray<infer U> ? ReadonlyArray<DeepPartial<U>>
-  : T extends {} ? { [K in keyof T]?: DeepPartial<T[K]> }
-  : Partial<T>;
+type DeepPartial<T> = T extends Builtin
+  ? T
+  : T extends globalThis.Array<infer U>
+    ? globalThis.Array<DeepPartial<U>>
+    : T extends ReadonlyArray<infer U>
+      ? ReadonlyArray<DeepPartial<U>>
+      : T extends {}
+        ? { [K in keyof T]?: DeepPartial<T[K]> }
+        : Partial<T>;
 
 function isSet(value: any): boolean {
   return value !== null && value !== undefined;

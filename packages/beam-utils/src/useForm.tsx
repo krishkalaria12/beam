@@ -180,15 +180,22 @@ export function useForm<T extends Form.Values>(props: {
 
   const setValue = useCallback(
     function <K extends keyof T>(id: K, value: SetStateAction<T[K]>) {
-      setValues((values) => ({ ...values, [id]: typeof value === "function" ? value(values[id]) : value }));
+      setValues((values) => ({
+        ...values,
+        [id]: typeof value === "function" ? value(values[id]) : value,
+      }));
     },
     [setValues],
   );
 
-  const itemProps = useMemo<{ [id in keyof Required<T>]: Partial<Form.ItemProps<T[id]>> & { id: string } }>(() => {
+  const itemProps = useMemo<{
+    [id in keyof Required<T>]: Partial<Form.ItemProps<T[id]>> & { id: string };
+  }>(() => {
     // we have to use a proxy because we don't actually have any object to iterate through
     // so instead we dynamically create the props when required
-    return new Proxy<{ [id in keyof Required<T>]: Partial<Form.ItemProps<T[id]>> & { id: string } }>(
+    return new Proxy<{
+      [id in keyof Required<T>]: Partial<Form.ItemProps<T[id]>> & { id: string };
+    }>(
       // @ts-expect-error the whole point of a proxy...
       {},
       {

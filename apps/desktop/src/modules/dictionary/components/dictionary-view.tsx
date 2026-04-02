@@ -109,7 +109,8 @@ function DictionaryResults({
             </span>
           </div>
           <p className="text-launcher-sm text-muted-foreground">
-            {data.entries.length} meaning{data.entries.length !== 1 ? "s" : ""} • {totalSenses} sense
+            {data.entries.length} meaning{data.entries.length !== 1 ? "s" : ""} • {totalSenses}{" "}
+            sense
             {totalSenses !== 1 ? "s" : ""}
           </p>
         </div>
@@ -165,7 +166,9 @@ function DictionaryResults({
                     senseNumber={senseIdx + 1}
                     entryNumber={entryIdx + 1}
                     isSelected={globalIdx === selectedSenseIndex}
-                    containerRef={globalIdx === selectedSenseIndex ? setSelectedSenseRef : undefined}
+                    containerRef={
+                      globalIdx === selectedSenseIndex ? setSelectedSenseRef : undefined
+                    }
                     onSelect={() => setSelectedSenseIndex(globalIdx)}
                     onSynonymClick={onSynonymClick}
                   />

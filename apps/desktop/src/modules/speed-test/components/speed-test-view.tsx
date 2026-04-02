@@ -136,7 +136,10 @@ function SpeedTestCharts({
   isRunning: boolean;
 }) {
   return (
-    <section className="speedtest-section grid flex-1 grid-cols-2 gap-4" style={{ animationDelay: "0ms" }}>
+    <section
+      className="speedtest-section grid flex-1 grid-cols-2 gap-4"
+      style={{ animationDelay: "0ms" }}
+    >
       <SpeedCard
         metric="download"
         valueMbps={latestDownload}
@@ -159,7 +162,10 @@ function SpeedTestCharts({
 
 function SpeedTestMetrics({ metrics }: { metrics: SpeedTestViewState["metrics"] }) {
   return (
-    <section className="speedtest-section grid grid-cols-3 gap-4" style={{ animationDelay: "60ms" }}>
+    <section
+      className="speedtest-section grid grid-cols-3 gap-4"
+      style={{ animationDelay: "60ms" }}
+    >
       <MetricCard
         icon={<Clock className="size-4 text-[var(--icon-orange-fg)]" />}
         gradient="bg-[var(--launcher-card-bg)]"
@@ -266,7 +272,10 @@ export function SpeedTestView({ onBack, autoStart = true }: SpeedTestViewProps) 
         if (!mountedRef.current) {
           return;
         }
-        dispatch({ type: "set-error", value: normalizeSpeedTestError(error || "Speed test failed.") });
+        dispatch({
+          type: "set-error",
+          value: normalizeSpeedTestError(error || "Speed test failed."),
+        });
         syncFromSpeedTest();
       };
 
@@ -276,8 +285,9 @@ export function SpeedTestView({ onBack, autoStart = true }: SpeedTestViewProps) 
       return speedTest;
     } catch (error) {
       if (mountedRef.current) {
-        dispatch({ type: "set-error", value:
-          error instanceof Error ? error.message : "Could not initialize speed test engine.",
+        dispatch({
+          type: "set-error",
+          value: error instanceof Error ? error.message : "Could not initialize speed test engine.",
         });
       }
       return null;
@@ -452,7 +462,8 @@ export function SpeedTestView({ onBack, autoStart = true }: SpeedTestViewProps) 
   );
 
   const latestDownload =
-    state.downloadHistory[state.downloadHistory.length - 1]?.valueMbps ?? state.metrics.downloadMbps;
+    state.downloadHistory[state.downloadHistory.length - 1]?.valueMbps ??
+    state.metrics.downloadMbps;
   const latestUpload =
     state.uploadHistory[state.uploadHistory.length - 1]?.valueMbps ?? state.metrics.uploadMbps;
 

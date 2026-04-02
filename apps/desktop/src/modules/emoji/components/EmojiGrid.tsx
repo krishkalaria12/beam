@@ -77,7 +77,8 @@ export function EmojiGrid({
   const rowVirtualizer = useVirtualizer({
     count: rows.length,
     getScrollElement: () => scrollElement,
-    estimateSize: (index) => (rows[index]?.type === "header" ? EMOJI_HEADER_ESTIMATE : EMOJI_ROW_ESTIMATE),
+    estimateSize: (index) =>
+      rows[index]?.type === "header" ? EMOJI_HEADER_ESTIMATE : EMOJI_ROW_ESTIMATE,
     overscan: 8,
     scrollMargin,
   });
@@ -97,10 +98,7 @@ export function EmojiGrid({
 
   return (
     <div className="emoji-grid-container pr-1">
-      <div
-        className="relative"
-        style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
-      >
+      <div className="relative" style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
         {virtualRows.map((virtualRow) => {
           const row = rows[virtualRow.index];
           if (!row) {

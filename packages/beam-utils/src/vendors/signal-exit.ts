@@ -168,7 +168,10 @@ class SignalExit {
         // created.
         /* c8 ignore start */
         const p = process;
-        if (typeof p.__signal_exit_emitter__ === "object" && typeof p.__signal_exit_emitter__.count === "number") {
+        if (
+          typeof p.__signal_exit_emitter__ === "object" &&
+          typeof p.__signal_exit_emitter__.count === "number"
+        ) {
           count += p.__signal_exit_emitter__.count;
         }
         /* c8 ignore stop */
@@ -198,7 +201,10 @@ class SignalExit {
     this.#emitter.on(ev, cb);
     return () => {
       this.#emitter.removeListener(ev, cb);
-      if (this.#emitter.listeners["exit"].length === 0 && this.#emitter.listeners["afterExit"].length === 0) {
+      if (
+        this.#emitter.listeners["exit"].length === 0 &&
+        this.#emitter.listeners["afterExit"].length === 0
+      ) {
         this.unload();
       }
     };

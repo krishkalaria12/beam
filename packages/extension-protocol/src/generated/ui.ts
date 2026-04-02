@@ -98,8 +98,7 @@ export interface SetSearchTextResponse {
   ok: boolean;
 }
 
-export interface GetSelectedTextRequest {
-}
+export interface GetSelectedTextRequest {}
 
 export interface GetSelectedTextResponse {
   text: string;
@@ -113,15 +112,13 @@ export interface PopToRootResponse {
   ok: boolean;
 }
 
-export interface PushViewRequest {
-}
+export interface PushViewRequest {}
 
 export interface PushViewResponse {
   ok: boolean;
 }
 
-export interface PopViewRequest {
-}
+export interface PopViewRequest {}
 
 export interface PopViewResponse {
   ok: boolean;
@@ -188,8 +185,8 @@ export const ToastAction: MessageFns<ToastAction> = {
       callbackId: isSet(object.callbackId)
         ? globalThis.String(object.callbackId)
         : isSet(object.callback_id)
-        ? globalThis.String(object.callback_id)
-        : "",
+          ? globalThis.String(object.callback_id)
+          : "",
     };
   },
 
@@ -216,7 +213,14 @@ export const ToastAction: MessageFns<ToastAction> = {
 };
 
 function createBaseShowToastRequest(): ShowToastRequest {
-  return { id: 0, style: 0, title: "", message: "", primaryAction: undefined, secondaryAction: undefined };
+  return {
+    id: 0,
+    style: 0,
+    title: "",
+    message: "",
+    primaryAction: undefined,
+    secondaryAction: undefined,
+  };
 }
 
 export const ShowToastRequest: MessageFns<ShowToastRequest> = {
@@ -315,13 +319,13 @@ export const ShowToastRequest: MessageFns<ShowToastRequest> = {
       primaryAction: isSet(object.primaryAction)
         ? ToastAction.fromJSON(object.primaryAction)
         : isSet(object.primary_action)
-        ? ToastAction.fromJSON(object.primary_action)
-        : undefined,
+          ? ToastAction.fromJSON(object.primary_action)
+          : undefined,
       secondaryAction: isSet(object.secondaryAction)
         ? ToastAction.fromJSON(object.secondaryAction)
         : isSet(object.secondary_action)
-        ? ToastAction.fromJSON(object.secondary_action)
-        : undefined,
+          ? ToastAction.fromJSON(object.secondary_action)
+          : undefined,
     };
   },
 
@@ -357,12 +361,14 @@ export const ShowToastRequest: MessageFns<ShowToastRequest> = {
     message.style = object.style ?? 0;
     message.title = object.title ?? "";
     message.message = object.message ?? "";
-    message.primaryAction = (object.primaryAction !== undefined && object.primaryAction !== null)
-      ? ToastAction.fromPartial(object.primaryAction)
-      : undefined;
-    message.secondaryAction = (object.secondaryAction !== undefined && object.secondaryAction !== null)
-      ? ToastAction.fromPartial(object.secondaryAction)
-      : undefined;
+    message.primaryAction =
+      object.primaryAction !== undefined && object.primaryAction !== null
+        ? ToastAction.fromPartial(object.primaryAction)
+        : undefined;
+    message.secondaryAction =
+      object.secondaryAction !== undefined && object.secondaryAction !== null
+        ? ToastAction.fromPartial(object.secondaryAction)
+        : undefined;
     return message;
   },
 };
@@ -771,13 +777,13 @@ export const ShowHudRequest: MessageFns<ShowHudRequest> = {
       clearRootSearch: isSet(object.clearRootSearch)
         ? globalThis.Boolean(object.clearRootSearch)
         : isSet(object.clear_root_search)
-        ? globalThis.Boolean(object.clear_root_search)
-        : false,
+          ? globalThis.Boolean(object.clear_root_search)
+          : false,
       popToRoot: isSet(object.popToRoot)
         ? popToRootTypeFromJSON(object.popToRoot)
         : isSet(object.pop_to_root)
-        ? popToRootTypeFromJSON(object.pop_to_root)
-        : 0,
+          ? popToRootTypeFromJSON(object.pop_to_root)
+          : 0,
     };
   },
 
@@ -1017,13 +1023,13 @@ export const ConfirmAlertRequest: MessageFns<ConfirmAlertRequest> = {
       primaryAction: isSet(object.primaryAction)
         ? ConfirmAlertAction.fromJSON(object.primaryAction)
         : isSet(object.primary_action)
-        ? ConfirmAlertAction.fromJSON(object.primary_action)
-        : undefined,
+          ? ConfirmAlertAction.fromJSON(object.primary_action)
+          : undefined,
       dismissAction: isSet(object.dismissAction)
         ? ConfirmAlertAction.fromJSON(object.dismissAction)
         : isSet(object.dismiss_action)
-        ? ConfirmAlertAction.fromJSON(object.dismiss_action)
-        : undefined,
+          ? ConfirmAlertAction.fromJSON(object.dismiss_action)
+          : undefined,
     };
   },
 
@@ -1051,12 +1057,14 @@ export const ConfirmAlertRequest: MessageFns<ConfirmAlertRequest> = {
     const message = createBaseConfirmAlertRequest();
     message.title = object.title ?? "";
     message.message = object.message ?? "";
-    message.primaryAction = (object.primaryAction !== undefined && object.primaryAction !== null)
-      ? ConfirmAlertAction.fromPartial(object.primaryAction)
-      : undefined;
-    message.dismissAction = (object.dismissAction !== undefined && object.dismissAction !== null)
-      ? ConfirmAlertAction.fromPartial(object.dismissAction)
-      : undefined;
+    message.primaryAction =
+      object.primaryAction !== undefined && object.primaryAction !== null
+        ? ConfirmAlertAction.fromPartial(object.primaryAction)
+        : undefined;
+    message.dismissAction =
+      object.dismissAction !== undefined && object.dismissAction !== null
+        ? ConfirmAlertAction.fromPartial(object.dismissAction)
+        : undefined;
     return message;
   },
 };
@@ -1171,13 +1179,13 @@ export const CloseMainWindowRequest: MessageFns<CloseMainWindowRequest> = {
       clearRootSearch: isSet(object.clearRootSearch)
         ? globalThis.Boolean(object.clearRootSearch)
         : isSet(object.clear_root_search)
-        ? globalThis.Boolean(object.clear_root_search)
-        : false,
+          ? globalThis.Boolean(object.clear_root_search)
+          : false,
       popToRoot: isSet(object.popToRoot)
         ? popToRootTypeFromJSON(object.popToRoot)
         : isSet(object.pop_to_root)
-        ? popToRootTypeFromJSON(object.pop_to_root)
-        : 0,
+          ? popToRootTypeFromJSON(object.pop_to_root)
+          : 0,
     };
   },
 
@@ -1208,7 +1216,10 @@ function createBaseCloseMainWindowResponse(): CloseMainWindowResponse {
 }
 
 export const CloseMainWindowResponse: MessageFns<CloseMainWindowResponse> = {
-  encode(message: CloseMainWindowResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: CloseMainWindowResponse,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     if (message.ok !== false) {
       writer.uint32(8).bool(message.ok);
     }
@@ -1425,7 +1436,10 @@ function createBaseGetSelectedTextResponse(): GetSelectedTextResponse {
 }
 
 export const GetSelectedTextResponse: MessageFns<GetSelectedTextResponse> = {
-  encode(message: GetSelectedTextResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: GetSelectedTextResponse,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     if (message.text !== "") {
       writer.uint32(10).string(message.text);
     }
@@ -1519,8 +1533,8 @@ export const PopToRootRequest: MessageFns<PopToRootRequest> = {
       clearSearchBar: isSet(object.clearSearchBar)
         ? globalThis.Boolean(object.clearSearchBar)
         : isSet(object.clear_search_bar)
-        ? globalThis.Boolean(object.clear_search_bar)
-        : false,
+          ? globalThis.Boolean(object.clear_search_bar)
+          : false,
     };
   },
 
@@ -1807,7 +1821,10 @@ function createBaseUpdateCommandMetadataRequest(): UpdateCommandMetadataRequest 
 }
 
 export const UpdateCommandMetadataRequest: MessageFns<UpdateCommandMetadataRequest> = {
-  encode(message: UpdateCommandMetadataRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: UpdateCommandMetadataRequest,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     if (message.subtitle !== undefined) {
       writer.uint32(10).string(message.subtitle);
     }
@@ -1865,7 +1882,10 @@ function createBaseUpdateCommandMetadataResponse(): UpdateCommandMetadataRespons
 }
 
 export const UpdateCommandMetadataResponse: MessageFns<UpdateCommandMetadataResponse> = {
-  encode(message: UpdateCommandMetadataResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: UpdateCommandMetadataResponse,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     if (message.ok !== false) {
       writer.uint32(8).bool(message.ok);
     }
@@ -1920,11 +1940,15 @@ export const UpdateCommandMetadataResponse: MessageFns<UpdateCommandMetadataResp
 
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
 
-type DeepPartial<T> = T extends Builtin ? T
-  : T extends globalThis.Array<infer U> ? globalThis.Array<DeepPartial<U>>
-  : T extends ReadonlyArray<infer U> ? ReadonlyArray<DeepPartial<U>>
-  : T extends {} ? { [K in keyof T]?: DeepPartial<T[K]> }
-  : Partial<T>;
+type DeepPartial<T> = T extends Builtin
+  ? T
+  : T extends globalThis.Array<infer U>
+    ? globalThis.Array<DeepPartial<U>>
+    : T extends ReadonlyArray<infer U>
+      ? ReadonlyArray<DeepPartial<U>>
+      : T extends {}
+        ? { [K in keyof T]?: DeepPartial<T[K]> }
+        : Partial<T>;
 
 function isSet(value: any): boolean {
   return value !== null && value !== undefined;

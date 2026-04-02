@@ -298,15 +298,17 @@ function validateCompatibilityPolicy(
   manifest: PackageJsonManifest,
 ): void {
   if (!(compatibility.platforms ?? []).map((entry) => entry.toLowerCase()).includes("linux")) {
-    throw new Error(`${sourceDir}: Beam store packages must declare linux support in compatibility.platforms.`);
+    throw new Error(
+      `${sourceDir}: Beam store packages must declare linux support in compatibility.platforms.`,
+    );
   }
 
-  const minimumBeamVersion =
-    normalizeOptionalString(compatibility.minimumBeamVersion) ??
-    undefined;
+  const minimumBeamVersion = normalizeOptionalString(compatibility.minimumBeamVersion) ?? undefined;
 
   if (!minimumBeamVersion) {
-    throw new Error(`${sourceDir}: minimumBeamVersion is required in beam-store.json compatibility.`);
+    throw new Error(
+      `${sourceDir}: minimumBeamVersion is required in beam-store.json compatibility.`,
+    );
   }
 }
 
@@ -325,7 +327,9 @@ function validateChannelPolicy(
       throw new Error(`${sourceDir}: stable releases cannot be prerelease builds.`);
     }
   } else if (!prerelease && !isPrereleaseVersion(version)) {
-    throw new Error(`${sourceDir}: non-stable channels must use prerelease versions or set release.prerelease=true.`);
+    throw new Error(
+      `${sourceDir}: non-stable channels must use prerelease versions or set release.prerelease=true.`,
+    );
   }
 
   if (releaseChannel === "EXTENSION_RELEASE_CHANNEL_CUSTOM" && !channelName) {
@@ -388,7 +392,7 @@ function publishPackage(
       name:
         typeof manifest.author === "string"
           ? manifest.author
-          : normalizeOptionalString(manifest.author?.name) ?? owner,
+          : (normalizeOptionalString(manifest.author?.name) ?? owner),
     } satisfies StoreAuthor);
 
   if (!author?.handle) {
@@ -429,7 +433,8 @@ function publishPackage(
     channel: releaseChannel,
     channelName: normalizeOptionalString(publishConfig.release?.channelName),
     prerelease: Boolean(publishConfig.release?.prerelease),
-    publishedAt: normalizeOptionalString(publishConfig.release?.publishedAt) ?? new Date().toISOString(),
+    publishedAt:
+      normalizeOptionalString(publishConfig.release?.publishedAt) ?? new Date().toISOString(),
     publishedBy: normalizeOptionalString(publishConfig.release?.publishedBy) ?? "beam-cli",
     primaryArtifactId:
       normalizeOptionalString(publishConfig.release?.primaryArtifactId) ?? artifactId,
@@ -524,8 +529,7 @@ function main(): void {
   const dryRun = asFlag(args["dry-run"]);
   const packagesRoot = path.join(repoRoot, "store", "packages");
   const catalogPath = asString(args.catalog) ?? path.join(repoRoot, "store", "catalog.json");
-  const artifactsDir =
-    asString(args["artifacts-dir"]) ?? path.join(repoRoot, "store", "artifacts");
+  const artifactsDir = asString(args["artifacts-dir"]) ?? path.join(repoRoot, "store", "artifacts");
   const requestedSource = asString(args.source);
   const publishAll = asFlag(args.all);
 
@@ -550,7 +554,9 @@ function main(): void {
     ? listSourceDirectories(packagesRoot)
     : [path.resolve(repoRoot, requestedSource!)];
 
-  const results = sourceDirs.map((sourceDir) => publishPackage(sourceDir, catalog, artifactsDir, dryRun));
+  const results = sourceDirs.map((sourceDir) =>
+    publishPackage(sourceDir, catalog, artifactsDir, dryRun),
+  );
 
   if (!dryRun) {
     catalog.formatVersion = "1";

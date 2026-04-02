@@ -77,7 +77,10 @@ export type CachedPromiseOptions<
 export function useCachedPromise<T extends FunctionReturningPaginatedPromise<[]>>(
   fn: T,
 ): UseCachedPromiseReturnType<UnwrapReturn<T>, undefined>;
-export function useCachedPromise<T extends FunctionReturningPaginatedPromise, U extends any[] = any[]>(
+export function useCachedPromise<
+  T extends FunctionReturningPaginatedPromise,
+  U extends any[] = any[],
+>(
   fn: T,
   args: Parameters<T>,
   options?: CachedPromiseOptions<T, U>,
@@ -157,7 +160,9 @@ export function useCachedPromise<
   );
 
   // Use a ref to store previous returned data. Use the inital data as its inital value from the cache.
-  const laggyDataRef = useRef<Awaited<ReturnType<T>> | U>(cachedData !== emptyCache ? cachedData : (initialData as U));
+  const laggyDataRef = useRef<Awaited<ReturnType<T>> | U>(
+    cachedData !== emptyCache ? cachedData : (initialData as U),
+  );
   const paginationArgsRef = useRef<PaginationOptions<UnwrapReturn<T> | U> | undefined>(undefined);
 
   const {
@@ -221,7 +226,10 @@ export function useCachedPromise<
       let dataBeforeOptimisticUpdate;
       try {
         if (options?.optimisticUpdate) {
-          if (typeof options?.rollbackOnError !== "function" && options?.rollbackOnError !== false) {
+          if (
+            typeof options?.rollbackOnError !== "function" &&
+            options?.rollbackOnError !== false
+          ) {
             // keep track of the data before the optimistic update,
             // but only if we need it (eg. only when we want to automatically rollback after)
             dataBeforeOptimisticUpdate = structuredClone(latestData.current);
@@ -231,7 +239,9 @@ export function useCachedPromise<
           laggyDataRef.current = data;
           mutateCache(data);
         }
-        return await _mutate(asyncUpdate, { shouldRevalidateAfter: options?.shouldRevalidateAfter });
+        return await _mutate(asyncUpdate, {
+          shouldRevalidateAfter: options?.shouldRevalidateAfter,
+        });
       } catch (err) {
         if (typeof options?.rollbackOnError === "function") {
           const data = options.rollbackOnError(latestData.current);

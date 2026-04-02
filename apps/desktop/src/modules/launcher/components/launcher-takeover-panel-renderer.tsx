@@ -2,9 +2,7 @@ import type { ComponentType, ReactNode } from "react";
 
 import { COMMAND_PANELS } from "@/command-registry/panels";
 import { LauncherTakeoverSurface } from "@/modules/launcher/components/launcher-takeover-surface";
-import {
-  getLoadedTakeoverPanel,
-} from "@/modules/launcher/lib/takeover-panel-loader";
+import { getLoadedTakeoverPanel } from "@/modules/launcher/lib/takeover-panel-loader";
 import { isRetainedTakeoverPanel } from "@/modules/launcher/lib/takeover-panel-retention";
 
 import type {

@@ -151,8 +151,8 @@ export function KeybindsTab({ isActive }: KeybindsTabProps) {
       dispatch({
         type: "set-status",
         value: {
-        tone: "error",
-        text: "Failed to load hotkey settings.",
+          tone: "error",
+          text: "Failed to load hotkey settings.",
         },
       });
     }
@@ -175,8 +175,8 @@ export function KeybindsTab({ isActive }: KeybindsTabProps) {
           dispatch({
             type: "set-status",
             value: {
-            tone: "error",
-            text: "Global launcher hotkey cannot be empty.",
+              tone: "error",
+              text: "Global launcher hotkey cannot be empty.",
             },
           });
           return true;
@@ -187,8 +187,8 @@ export function KeybindsTab({ isActive }: KeybindsTabProps) {
           dispatch({
             type: "set-status",
             value: {
-            tone: "error",
-            text: "Failed to update the launcher shortcut.",
+              tone: "error",
+              text: "Failed to update the launcher shortcut.",
             },
           });
           return true;
@@ -196,16 +196,15 @@ export function KeybindsTab({ isActive }: KeybindsTabProps) {
 
         dispatch({
           type: "set-settings",
-          value:
-            state.settings
-              ? { ...state.settings, globalShortcut: normalized }
-              : { globalShortcut: normalized, commandHotkeys: {} },
+          value: state.settings
+            ? { ...state.settings, globalShortcut: normalized }
+            : { globalShortcut: normalized, commandHotkeys: {} },
         });
         dispatch({
           type: "set-status",
           value: {
-          tone: "success",
-          text: "Launcher shortcut updated.",
+            tone: "success",
+            text: "Launcher shortcut updated.",
           },
         });
         return true;
@@ -218,8 +217,8 @@ export function KeybindsTab({ isActive }: KeybindsTabProps) {
           dispatch({
             type: "set-status",
             value: {
-            tone: "error",
-            text: "Failed to remove the command shortcut.",
+              tone: "error",
+              text: "Failed to remove the command shortcut.",
             },
           });
           return true;
@@ -229,23 +228,23 @@ export function KeybindsTab({ isActive }: KeybindsTabProps) {
           type: "set-settings",
           value: (() => {
             const previous = state.settings;
-          if (!previous) {
-            return previous;
-          }
+            if (!previous) {
+              return previous;
+            }
 
-          const commandHotkeys = { ...previous.commandHotkeys };
-          delete commandHotkeys[selectedRow.id];
-          return {
-            ...previous,
-            commandHotkeys,
-          };
+            const commandHotkeys = { ...previous.commandHotkeys };
+            delete commandHotkeys[selectedRow.id];
+            return {
+              ...previous,
+              commandHotkeys,
+            };
           })(),
         });
         dispatch({
           type: "set-status",
           value: {
-          tone: "success",
-          text: "Command shortcut removed.",
+            tone: "success",
+            text: "Command shortcut removed.",
           },
         });
         return true;
@@ -256,11 +255,11 @@ export function KeybindsTab({ isActive }: KeybindsTabProps) {
         dispatch({
           type: "set-status",
           value: {
-          tone: "error",
-          text:
-            result.error === "duplicate"
-              ? `Shortcut already used by ${result.conflictCommandId ?? "another command"}.`
-              : "Failed to update the command shortcut.",
+            tone: "error",
+            text:
+              result.error === "duplicate"
+                ? `Shortcut already used by ${result.conflictCommandId ?? "another command"}.`
+                : "Failed to update the command shortcut.",
           },
         });
         return true;
@@ -272,15 +271,15 @@ export function KeybindsTab({ isActive }: KeybindsTabProps) {
           globalShortcut: state.settings?.globalShortcut ?? "SUPER+Space",
           commandHotkeys: {
             ...state.settings?.commandHotkeys,
-          [selectedRow.id]: normalized,
-        },
+            [selectedRow.id]: normalized,
+          },
         },
       });
       dispatch({
         type: "set-status",
         value: {
-        tone: "success",
-        text: "Command shortcut updated.",
+          tone: "success",
+          text: "Command shortcut updated.",
         },
       });
       return true;

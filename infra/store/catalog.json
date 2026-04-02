@@ -19,14 +19,8 @@
         "name": "Beam Team",
         "profileUrl": "https://beam.sh"
       },
-      "categories": [
-        "Developer Tools"
-      ],
-      "tags": [
-        "beam",
-        "sample",
-        "local-store"
-      ],
+      "categories": ["Developer Tools"],
+      "tags": ["beam", "sample", "local-store"],
       "verification": {
         "status": "EXTENSION_VERIFICATION_STATUS_VERIFIED",
         "label": "Beam Verified",
@@ -34,22 +28,13 @@
         "summary": "Built and signed from the Beam repository store fixture."
       },
       "compatibility": {
-        "platforms": [
-          "linux"
-        ],
-        "desktopEnvironments": [
-          "gnome",
-          "kde",
-          "hyprland",
-          "sway"
-        ],
+        "platforms": ["linux"],
+        "desktopEnvironments": ["gnome", "kde", "hyprland", "sway"],
         "minimumBeamVersion": "1.0.0",
         "linuxTested": true,
         "waylandTested": true,
         "x11Tested": true,
-        "notes": [
-          "Installs from a local file-backed store artifact."
-        ]
+        "notes": ["Installs from a local file-backed store artifact."]
       },
       "defaultChannel": "EXTENSION_RELEASE_CHANNEL_STABLE",
       "packageFormatVersion": "1",
@@ -103,15 +88,8 @@
               "fileName": "beam-demo-tools-1.1.0.zip",
               "mimeType": "application/zip",
               "sizeBytes": 730,
-              "platforms": [
-                "linux"
-              ],
-              "desktopEnvironments": [
-                "gnome",
-                "kde",
-                "hyprland",
-                "sway"
-              ],
+              "platforms": ["linux"],
+              "desktopEnvironments": ["gnome", "kde", "hyprland", "sway"],
               "checksums": [
                 {
                   "algorithm": "EXTENSION_CHECKSUM_ALGORITHM_SHA256",
@@ -144,15 +122,8 @@
               "fileName": "beam-demo-tools-1.0.0.zip",
               "mimeType": "application/zip",
               "sizeBytes": 718,
-              "platforms": [
-                "linux"
-              ],
-              "desktopEnvironments": [
-                "gnome",
-                "kde",
-                "hyprland",
-                "sway"
-              ],
+              "platforms": ["linux"],
+              "desktopEnvironments": ["gnome", "kde", "hyprland", "sway"],
               "checksums": [
                 {
                   "algorithm": "EXTENSION_CHECKSUM_ALGORITHM_SHA256",
@@ -180,14 +151,8 @@
         "name": "Beam Team",
         "profileUrl": "https://beam.sh"
       },
-      "categories": [
-        "Window Management"
-      ],
-      "tags": [
-        "beam",
-        "sample",
-        "beta"
-      ],
+      "categories": ["Window Management"],
+      "tags": ["beam", "sample", "beta"],
       "verification": {
         "status": "EXTENSION_VERIFICATION_STATUS_CURATED",
         "label": "Beam Curated",
@@ -195,22 +160,13 @@
         "summary": "Used to exercise release channel resolution."
       },
       "compatibility": {
-        "platforms": [
-          "linux"
-        ],
-        "desktopEnvironments": [
-          "gnome",
-          "kde",
-          "hyprland",
-          "sway"
-        ],
+        "platforms": ["linux"],
+        "desktopEnvironments": ["gnome", "kde", "hyprland", "sway"],
         "minimumBeamVersion": "1.0.0",
         "linuxTested": true,
         "waylandTested": true,
         "x11Tested": true,
-        "notes": [
-          "Stable and beta releases are both shipped for this package."
-        ]
+        "notes": ["Stable and beta releases are both shipped for this package."]
       },
       "defaultChannel": "EXTENSION_RELEASE_CHANNEL_STABLE",
       "packageFormatVersion": "1",
@@ -256,9 +212,7 @@
               "fileName": "beam-window-recipes-1.0.0-beta.1.zip",
               "mimeType": "application/zip",
               "sizeBytes": 666,
-              "platforms": [
-                "linux"
-              ],
+              "platforms": ["linux"],
               "desktopEnvironments": [],
               "checksums": [
                 {
@@ -292,9 +246,7 @@
               "fileName": "beam-window-recipes-0.9.0.zip",
               "mimeType": "application/zip",
               "sizeBytes": 672,
-              "platforms": [
-                "linux"
-              ],
+              "platforms": ["linux"],
               "desktopEnvironments": [],
               "checksums": [
                 {

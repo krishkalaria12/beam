@@ -54,7 +54,12 @@ export async function baseExecuteSQL<T = unknown>(
 
     return result as T[];
   } catch (error: any) {
-    if (error.errcode === 5 || error.errcode === 14 || error.message.match("(5)") || error.message.match("(14)")) {
+    if (
+      error.errcode === 5 ||
+      error.errcode === 14 ||
+      error.message.match("(5)") ||
+      error.message.match("(14)")
+    ) {
       // That means that the DB is busy because of another app is locking it
       // This happens when Chrome or Arc is opened: they lock the History db.
       // As an ugly workaround, we duplicate the file and read that instead
@@ -101,7 +106,9 @@ async function sqliteFallback<T = unknown>(
 ): Promise<T[]> {
   const abortSignal = options?.signal;
 
-  let spawned = childProcess.spawn("sqlite3", ["--json", "--readonly", databasePath, query], { signal: abortSignal });
+  let spawned = childProcess.spawn("sqlite3", ["--json", "--readonly", databasePath, query], {
+    signal: abortSignal,
+  });
   let spawnedPromise = getSpawnedPromise(spawned);
   let [{ error, exitCode, signal }, stdoutResult, stderrResult] = await getSpawnedResult<string>(
     spawned,
@@ -130,9 +137,13 @@ async function sqliteFallback<T = unknown>(
       checkAborted(abortSignal);
     }
 
-    spawned = childProcess.spawn("sqlite3", ["--json", "--readonly", "--vfs", "unix-none", workaroundCopiedDb, query], {
-      signal: abortSignal,
-    });
+    spawned = childProcess.spawn(
+      "sqlite3",
+      ["--json", "--readonly", "--vfs", "unix-none", workaroundCopiedDb, query],
+      {
+        signal: abortSignal,
+      },
+    );
     spawnedPromise = getSpawnedPromise(spawned);
     [{ error, exitCode, signal }, stdoutResult, stderrResult] = await getSpawnedResult<string>(
       spawned,

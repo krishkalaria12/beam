@@ -34,15 +34,13 @@ export interface RemoveLocalStorageItemResponse {
   ok: boolean;
 }
 
-export interface ClearLocalStorageRequest {
-}
+export interface ClearLocalStorageRequest {}
 
 export interface ClearLocalStorageResponse {
   ok: boolean;
 }
 
-export interface ListLocalStorageItemsRequest {
-}
+export interface ListLocalStorageItemsRequest {}
 
 export interface ListLocalStorageItemsResponse {
   items: { [key: string]: any | undefined };
@@ -58,7 +56,10 @@ function createBaseGetLocalStorageItemRequest(): GetLocalStorageItemRequest {
 }
 
 export const GetLocalStorageItemRequest: MessageFns<GetLocalStorageItemRequest> = {
-  encode(message: GetLocalStorageItemRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: GetLocalStorageItemRequest,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     if (message.key !== "") {
       writer.uint32(10).string(message.key);
     }
@@ -116,7 +117,10 @@ function createBaseGetLocalStorageItemResponse(): GetLocalStorageItemResponse {
 }
 
 export const GetLocalStorageItemResponse: MessageFns<GetLocalStorageItemResponse> = {
-  encode(message: GetLocalStorageItemResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: GetLocalStorageItemResponse,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     if (message.value !== undefined) {
       Value.encode(Value.wrap(message.value), writer.uint32(10).fork()).join();
     }
@@ -192,7 +196,10 @@ function createBaseSetLocalStorageItemRequest(): SetLocalStorageItemRequest {
 }
 
 export const SetLocalStorageItemRequest: MessageFns<SetLocalStorageItemRequest> = {
-  encode(message: SetLocalStorageItemRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: SetLocalStorageItemRequest,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     if (message.key !== "") {
       writer.uint32(10).string(message.key);
     }
@@ -268,7 +275,10 @@ function createBaseSetLocalStorageItemResponse(): SetLocalStorageItemResponse {
 }
 
 export const SetLocalStorageItemResponse: MessageFns<SetLocalStorageItemResponse> = {
-  encode(message: SetLocalStorageItemResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: SetLocalStorageItemResponse,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     if (message.ok !== false) {
       writer.uint32(8).bool(message.ok);
     }
@@ -326,7 +336,10 @@ function createBaseRemoveLocalStorageItemRequest(): RemoveLocalStorageItemReques
 }
 
 export const RemoveLocalStorageItemRequest: MessageFns<RemoveLocalStorageItemRequest> = {
-  encode(message: RemoveLocalStorageItemRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: RemoveLocalStorageItemRequest,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     if (message.key !== "") {
       writer.uint32(10).string(message.key);
     }
@@ -384,7 +397,10 @@ function createBaseRemoveLocalStorageItemResponse(): RemoveLocalStorageItemRespo
 }
 
 export const RemoveLocalStorageItemResponse: MessageFns<RemoveLocalStorageItemResponse> = {
-  encode(message: RemoveLocalStorageItemResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: RemoveLocalStorageItemResponse,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     if (message.ok !== false) {
       writer.uint32(8).bool(message.ok);
     }
@@ -485,7 +501,10 @@ function createBaseClearLocalStorageResponse(): ClearLocalStorageResponse {
 }
 
 export const ClearLocalStorageResponse: MessageFns<ClearLocalStorageResponse> = {
-  encode(message: ClearLocalStorageResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: ClearLocalStorageResponse,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     if (message.ok !== false) {
       writer.uint32(8).bool(message.ok);
     }
@@ -586,10 +605,16 @@ function createBaseListLocalStorageItemsResponse(): ListLocalStorageItemsRespons
 }
 
 export const ListLocalStorageItemsResponse: MessageFns<ListLocalStorageItemsResponse> = {
-  encode(message: ListLocalStorageItemsResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: ListLocalStorageItemsResponse,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     globalThis.Object.entries(message.items).forEach(([key, value]: [string, any | undefined]) => {
       if (value !== undefined) {
-        ListLocalStorageItemsResponse_ItemsEntry.encode({ key: key as any, value }, writer.uint32(10).fork()).join();
+        ListLocalStorageItemsResponse_ItemsEntry.encode(
+          { key: key as any, value },
+          writer.uint32(10).fork(),
+        ).join();
       }
     });
     return writer;
@@ -626,12 +651,12 @@ export const ListLocalStorageItemsResponse: MessageFns<ListLocalStorageItemsResp
     return {
       items: isObject(object.items)
         ? (globalThis.Object.entries(object.items) as [string, any][]).reduce(
-          (acc: { [key: string]: any | undefined }, [key, value]: [string, any]) => {
-            acc[key] = value as any | undefined;
-            return acc;
-          },
-          {},
-        )
+            (acc: { [key: string]: any | undefined }, [key, value]: [string, any]) => {
+              acc[key] = value as any | undefined;
+              return acc;
+            },
+            {},
+          )
         : {},
     };
   },
@@ -655,15 +680,14 @@ export const ListLocalStorageItemsResponse: MessageFns<ListLocalStorageItemsResp
   },
   fromPartial(object: DeepPartial<ListLocalStorageItemsResponse>): ListLocalStorageItemsResponse {
     const message = createBaseListLocalStorageItemsResponse();
-    message.items = (globalThis.Object.entries(object.items ?? {}) as [string, any | undefined][]).reduce(
-      (acc: { [key: string]: any | undefined }, [key, value]: [string, any | undefined]) => {
-        if (value !== undefined) {
-          acc[key] = value;
-        }
-        return acc;
-      },
-      {},
-    );
+    message.items = (
+      globalThis.Object.entries(object.items ?? {}) as [string, any | undefined][]
+    ).reduce((acc: { [key: string]: any | undefined }, [key, value]: [string, any | undefined]) => {
+      if (value !== undefined) {
+        acc[key] = value;
+      }
+      return acc;
+    }, {});
     return message;
   },
 };
@@ -672,85 +696,100 @@ function createBaseListLocalStorageItemsResponse_ItemsEntry(): ListLocalStorageI
   return { key: "", value: undefined };
 }
 
-export const ListLocalStorageItemsResponse_ItemsEntry: MessageFns<ListLocalStorageItemsResponse_ItemsEntry> = {
-  encode(message: ListLocalStorageItemsResponse_ItemsEntry, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.key !== "") {
-      writer.uint32(10).string(message.key);
-    }
-    if (message.value !== undefined) {
-      Value.encode(Value.wrap(message.value), writer.uint32(18).fork()).join();
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): ListLocalStorageItemsResponse_ItemsEntry {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseListLocalStorageItemsResponse_ItemsEntry();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1: {
-          if (tag !== 10) {
-            break;
-          }
-
-          message.key = reader.string();
-          continue;
-        }
-        case 2: {
-          if (tag !== 18) {
-            break;
-          }
-
-          message.value = Value.unwrap(Value.decode(reader, reader.uint32()));
-          continue;
-        }
+export const ListLocalStorageItemsResponse_ItemsEntry: MessageFns<ListLocalStorageItemsResponse_ItemsEntry> =
+  {
+    encode(
+      message: ListLocalStorageItemsResponse_ItemsEntry,
+      writer: BinaryWriter = new BinaryWriter(),
+    ): BinaryWriter {
+      if (message.key !== "") {
+        writer.uint32(10).string(message.key);
       }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
+      if (message.value !== undefined) {
+        Value.encode(Value.wrap(message.value), writer.uint32(18).fork()).join();
       }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
+      return writer;
+    },
 
-  fromJSON(object: any): ListLocalStorageItemsResponse_ItemsEntry {
-    return {
-      key: isSet(object.key) ? globalThis.String(object.key) : "",
-      value: isSet(object?.value) ? object.value : undefined,
-    };
-  },
+    decode(
+      input: BinaryReader | Uint8Array,
+      length?: number,
+    ): ListLocalStorageItemsResponse_ItemsEntry {
+      const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+      const end = length === undefined ? reader.len : reader.pos + length;
+      const message = createBaseListLocalStorageItemsResponse_ItemsEntry();
+      while (reader.pos < end) {
+        const tag = reader.uint32();
+        switch (tag >>> 3) {
+          case 1: {
+            if (tag !== 10) {
+              break;
+            }
 
-  toJSON(message: ListLocalStorageItemsResponse_ItemsEntry): unknown {
-    const obj: any = {};
-    if (message.key !== "") {
-      obj.key = message.key;
-    }
-    if (message.value !== undefined) {
-      obj.value = message.value;
-    }
-    return obj;
-  },
+            message.key = reader.string();
+            continue;
+          }
+          case 2: {
+            if (tag !== 18) {
+              break;
+            }
 
-  create(base?: DeepPartial<ListLocalStorageItemsResponse_ItemsEntry>): ListLocalStorageItemsResponse_ItemsEntry {
-    return ListLocalStorageItemsResponse_ItemsEntry.fromPartial(base ?? {});
-  },
-  fromPartial(object: DeepPartial<ListLocalStorageItemsResponse_ItemsEntry>): ListLocalStorageItemsResponse_ItemsEntry {
-    const message = createBaseListLocalStorageItemsResponse_ItemsEntry();
-    message.key = object.key ?? "";
-    message.value = object.value ?? undefined;
-    return message;
-  },
-};
+            message.value = Value.unwrap(Value.decode(reader, reader.uint32()));
+            continue;
+          }
+        }
+        if ((tag & 7) === 4 || tag === 0) {
+          break;
+        }
+        reader.skip(tag & 7);
+      }
+      return message;
+    },
+
+    fromJSON(object: any): ListLocalStorageItemsResponse_ItemsEntry {
+      return {
+        key: isSet(object.key) ? globalThis.String(object.key) : "",
+        value: isSet(object?.value) ? object.value : undefined,
+      };
+    },
+
+    toJSON(message: ListLocalStorageItemsResponse_ItemsEntry): unknown {
+      const obj: any = {};
+      if (message.key !== "") {
+        obj.key = message.key;
+      }
+      if (message.value !== undefined) {
+        obj.value = message.value;
+      }
+      return obj;
+    },
+
+    create(
+      base?: DeepPartial<ListLocalStorageItemsResponse_ItemsEntry>,
+    ): ListLocalStorageItemsResponse_ItemsEntry {
+      return ListLocalStorageItemsResponse_ItemsEntry.fromPartial(base ?? {});
+    },
+    fromPartial(
+      object: DeepPartial<ListLocalStorageItemsResponse_ItemsEntry>,
+    ): ListLocalStorageItemsResponse_ItemsEntry {
+      const message = createBaseListLocalStorageItemsResponse_ItemsEntry();
+      message.key = object.key ?? "";
+      message.value = object.value ?? undefined;
+      return message;
+    },
+  };
 
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
 
-type DeepPartial<T> = T extends Builtin ? T
-  : T extends globalThis.Array<infer U> ? globalThis.Array<DeepPartial<U>>
-  : T extends ReadonlyArray<infer U> ? ReadonlyArray<DeepPartial<U>>
-  : T extends {} ? { [K in keyof T]?: DeepPartial<T[K]> }
-  : Partial<T>;
+type DeepPartial<T> = T extends Builtin
+  ? T
+  : T extends globalThis.Array<infer U>
+    ? globalThis.Array<DeepPartial<U>>
+    : T extends ReadonlyArray<infer U>
+      ? ReadonlyArray<DeepPartial<U>>
+      : T extends {}
+        ? { [K in keyof T]?: DeepPartial<T[K]> }
+        : Partial<T>;
 
 function isObject(value: any): boolean {
   return typeof value === "object" && value !== null;

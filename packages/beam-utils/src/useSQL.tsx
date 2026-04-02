@@ -1,4 +1,13 @@
-import { List, MenuBarExtra, Icon, open, LaunchType, environment, ActionPanel, Action } from "@beam-launcher/api";
+import {
+  List,
+  MenuBarExtra,
+  Icon,
+  open,
+  LaunchType,
+  environment,
+  ActionPanel,
+  Action,
+} from "@beam-launcher/api";
 import { existsSync } from "node:fs";
 import os from "node:os";
 import { useRef, useState, useCallback, useMemo } from "react";
@@ -64,7 +73,9 @@ export function useSQL<T = unknown>(
           : (_error as Error);
 
       if (isPermissionError(error)) {
-        setPermissionView(<PermissionErrorScreen priming={latestOptions.current.permissionPriming} />);
+        setPermissionView(
+          <PermissionErrorScreen priming={latestOptions.current.permissionPriming} />,
+        );
       } else {
         if (latestOptions.current.onError) {
           latestOptions.current.onError(error);

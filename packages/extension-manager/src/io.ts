@@ -15,7 +15,9 @@ type OutputWriter = (data: object) => void;
 let customOutputWriter: OutputWriter | null = null;
 
 function encodePayload(data: object): Uint8Array {
-  return encoder.encode(JSON.stringify(normalizeTransportValue({ ...data, timestamp: Date.now() })));
+  return encoder.encode(
+    JSON.stringify(normalizeTransportValue({ ...data, timestamp: Date.now() })),
+  );
 }
 
 function writeFramedPayload(payloadToWrite: Uint8Array, isCompressed: boolean): void {

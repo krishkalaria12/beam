@@ -370,7 +370,16 @@ function normalizeUpdate(entry: ExtensionStoreUpdate): ExtensionStoreUpdateRecor
   const author = normalizeAuthor(entry.author);
   const source = normalizeSource(entry.source);
 
-  if (!id || !slug || !title || !installedVersion || !latestVersion || !latestRelease || !author || !source) {
+  if (
+    !id ||
+    !slug ||
+    !title ||
+    !installedVersion ||
+    !latestVersion ||
+    !latestRelease ||
+    !author ||
+    !source
+  ) {
     return null;
   }
 

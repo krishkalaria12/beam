@@ -30,15 +30,10 @@ interface ExtensionRuntimeState {
   selectedNodeId?: number;
   toasts: ExtensionToast[];
   runningSession: RunningExtensionSession | null;
-  startForegroundSession: (
-    session: Omit<RunningExtensionSession, "status" | "error">,
-  ) => void;
+  startForegroundSession: (session: Omit<RunningExtensionSession, "status" | "error">) => void;
   clearForegroundSession: (runtimeId?: string) => void;
   markForegroundSessionReady: (runtimeId: string) => void;
-  markForegroundSessionCrashed: (
-    runtimeId: string,
-    error: RunningExtensionSessionError,
-  ) => void;
+  markForegroundSessionCrashed: (runtimeId: string, error: RunningExtensionSessionError) => void;
   resetRuntime: () => void;
   applyCommands: (commands: RuntimeCommand[]) => void;
   setSelectedNodeId: (nodeId?: number) => void;

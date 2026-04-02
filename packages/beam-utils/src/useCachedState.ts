@@ -19,7 +19,9 @@ export function useCachedState<T>(
   initialState: T,
   config?: { cacheNamespace?: string },
 ): [T, Dispatch<SetStateAction<T>>];
-export function useCachedState<T = undefined>(key: string): [T | undefined, Dispatch<SetStateAction<T | undefined>>];
+export function useCachedState<T = undefined>(
+  key: string,
+): [T | undefined, Dispatch<SetStateAction<T | undefined>>];
 export function useCachedState<T>(
   key: string,
   initialState?: T,
@@ -27,7 +29,8 @@ export function useCachedState<T>(
 ): [T, Dispatch<SetStateAction<T>>] {
   const cacheKey = config?.cacheNamespace || rootCache;
   const cache =
-    cacheMap.get(cacheKey) || cacheMap.set(cacheKey, new Cache({ namespace: config?.cacheNamespace })).get(cacheKey);
+    cacheMap.get(cacheKey) ||
+    cacheMap.set(cacheKey, new Cache({ namespace: config?.cacheNamespace })).get(cacheKey);
 
   if (!cache) {
     throw new Error("Missing cache");

@@ -1,12 +1,25 @@
 {
   "$schema": "../schemas/extension.json",
   "name": "template",
-  "title": "Template",
-  "description": "A collection of command templates to build Beam extensions from",
-  "icon": "icon.svg",
-  "author": "beam",
-  "owner": "beam",
   "version": "0.1.0",
+  "description": "A collection of command templates to build Beam extensions from",
+  "author": "beam",
+  "scripts": {
+    "build": "beam-api build",
+    "dev": "beam-api develop",
+    "check": "bunx tsc --noEmit",
+    "format": "biome format --write src"
+  },
+  "dependencies": {
+    "@beam-launcher/api": "file:../../packages/beam-api"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.3.2",
+    "@types/node": "^24.9.2",
+    "@types/react": "^19.2.2",
+    "typescript": "^5.9.2"
+  },
+  "icon": "icon.svg",
   "commands": [
     {
       "name": "list",
@@ -69,20 +82,7 @@
       "mode": "view"
     }
   ],
+  "owner": "beam",
   "preferences": [],
-  "scripts": {
-    "build": "beam-api build",
-    "dev": "beam-api develop",
-    "check": "bunx tsc --noEmit",
-    "format": "biome format --write src"
-  },
-  "dependencies": {
-    "@beam-launcher/api": "file:../../packages/beam-api"
-  },
-  "devDependencies": {
-    "@biomejs/biome": "2.3.2",
-    "@types/node": "^24.9.2",
-    "@types/react": "^19.2.2",
-    "typescript": "^5.9.2"
-  }
+  "title": "Template"
 }

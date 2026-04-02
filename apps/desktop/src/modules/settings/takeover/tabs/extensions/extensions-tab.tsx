@@ -119,9 +119,7 @@ export function ExtensionsTab({
   const filteredGroups = filterExtensionSettingsGroups(groups, state.query);
   const defaultExpandedGroupIds = useMemo(
     () =>
-      new Set(
-        (state.query.trim().length > 0 ? filteredGroups : groups).map((group) => group.id),
-      ),
+      new Set((state.query.trim().length > 0 ? filteredGroups : groups).map((group) => group.id)),
     [filteredGroups, groups, state.query],
   );
 
@@ -217,7 +215,8 @@ export function ExtensionsTab({
   let selectedCommand = null;
   if (selectedEntry && selectedEntry.kind === "command" && selectedGroup) {
     selectedCommand =
-      selectedGroup.commands.find((command) => command.commandId === selectedEntry.commandId) ?? null;
+      selectedGroup.commands.find((command) => command.commandId === selectedEntry.commandId) ??
+      null;
   }
 
   const selectedFields: ExtensionPreferenceField[] =
@@ -242,12 +241,15 @@ export function ExtensionsTab({
       : "";
 
   if (state.preferenceDraftState.key !== preferenceDraftKey) {
-    dispatch({ type: "set-preference-draft-state", value: {
-      key: preferenceDraftKey,
-      values: preferenceSeedValues,
-      validationError: null,
-      saveError: null,
-    }});
+    dispatch({
+      type: "set-preference-draft-state",
+      value: {
+        key: preferenceDraftKey,
+        values: preferenceSeedValues,
+        validationError: null,
+        saveError: null,
+      },
+    });
   }
 
   const isPreferenceLoading = selectedPreferencesQuery.isLoading;
@@ -267,18 +269,24 @@ export function ExtensionsTab({
       isMissingRequiredField(field, state.preferenceDraftState.values[field.name]),
     );
     if (missingField) {
-      dispatch({ type: "set-preference-draft-state", value: {
-        ...state.preferenceDraftState,
-        validationError: `"${missingField.title}" is required.`,
-      }});
+      dispatch({
+        type: "set-preference-draft-state",
+        value: {
+          ...state.preferenceDraftState,
+          validationError: `"${missingField.title}" is required.`,
+        },
+      });
       return;
     }
 
-    dispatch({ type: "set-preference-draft-state", value: {
-      ...state.preferenceDraftState,
-      validationError: null,
-      saveError: null,
-    }});
+    dispatch({
+      type: "set-preference-draft-state",
+      value: {
+        ...state.preferenceDraftState,
+        validationError: null,
+        saveError: null,
+      },
+    });
     dispatch({ type: "set-preference-saving", value: true });
     try {
       await extensionManagerService.setPreferences(
@@ -286,10 +294,13 @@ export function ExtensionsTab({
         state.preferenceDraftState.values,
       );
     } catch (error) {
-      dispatch({ type: "set-preference-draft-state", value: {
-        ...state.preferenceDraftState,
-        saveError: error instanceof Error ? error.message : "Failed to save preferences.",
-      }});
+      dispatch({
+        type: "set-preference-draft-state",
+        value: {
+          ...state.preferenceDraftState,
+          saveError: error instanceof Error ? error.message : "Failed to save preferences.",
+        },
+      });
     }
 
     dispatch({ type: "set-preference-saving", value: false });
@@ -323,15 +334,18 @@ export function ExtensionsTab({
           preferenceError={preferenceError}
           validationError={validationError}
           onChangePreference={(key, value) => {
-            dispatch({ type: "set-preference-draft-state", value: {
-              ...state.preferenceDraftState,
-              values: {
-                ...state.preferenceDraftState.values,
-                [key]: value,
+            dispatch({
+              type: "set-preference-draft-state",
+              value: {
+                ...state.preferenceDraftState,
+                values: {
+                  ...state.preferenceDraftState.values,
+                  [key]: value,
+                },
+                validationError: null,
+                saveError: null,
               },
-              validationError: null,
-              saveError: null,
-            }});
+            });
           }}
           onSavePreferences={handleSavePreferences}
         />

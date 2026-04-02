@@ -115,15 +115,38 @@ function AppearanceStyleSection({
                 )}
               >
                 <IconChip
-                  variant={option.id === "default" ? "neutral" : option.id === "glassy" ? "cyan" : "primary"}
+                  variant={
+                    option.id === "default"
+                      ? "neutral"
+                      : option.id === "glassy"
+                        ? "cyan"
+                        : "primary"
+                  }
                   size="lg"
-                  className={cn("size-10 rounded-xl transition-all duration-200", !isSelected && "opacity-70")}
+                  className={cn(
+                    "size-10 rounded-xl transition-all duration-200",
+                    !isSelected && "opacity-70",
+                  )}
                 >
                   <Icon className="size-4.5 transition-colors" />
                 </IconChip>
                 <div className="min-w-0 text-left">
-                  <p className={cn("truncate text-launcher-md font-semibold tracking-[-0.02em]", isSelected ? "text-secondary-foreground" : "text-foreground")}>{option.title}</p>
-                  <p className={cn("mt-0.5 text-launcher-xs", isSelected ? "text-secondary-foreground/80" : "text-muted-foreground")}>{option.description}</p>
+                  <p
+                    className={cn(
+                      "truncate text-launcher-md font-semibold tracking-[-0.02em]",
+                      isSelected ? "text-secondary-foreground" : "text-foreground",
+                    )}
+                  >
+                    {option.title}
+                  </p>
+                  <p
+                    className={cn(
+                      "mt-0.5 text-launcher-xs",
+                      isSelected ? "text-secondary-foreground/80" : "text-muted-foreground",
+                    )}
+                  >
+                    {option.description}
+                  </p>
                 </div>
                 {isSelected ? (
                   <div className="absolute right-2.5 top-2.5 flex size-5 items-center justify-center rounded-full bg-[var(--ring)]">
@@ -146,7 +169,9 @@ function AppearanceStyleSection({
         <div className="rounded-xl border border-[var(--launcher-card-border)] bg-[var(--launcher-card-bg)] px-4 py-3.5">
           <div className="flex items-center justify-between gap-3">
             <span className="text-launcher-xs text-muted-foreground">Surface Alpha</span>
-            <span className="rounded-full border border-[var(--launcher-card-border)] bg-[var(--launcher-card-hover-bg)] px-2.5 py-0.5 font-mono text-launcher-xs text-foreground">{opacity.toFixed(2)}</span>
+            <span className="rounded-full border border-[var(--launcher-card-border)] bg-[var(--launcher-card-hover-bg)] px-2.5 py-0.5 font-mono text-launcher-xs text-foreground">
+              {opacity.toFixed(2)}
+            </span>
           </div>
           <input
             type="range"

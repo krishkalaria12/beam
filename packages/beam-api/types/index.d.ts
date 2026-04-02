@@ -288,7 +288,9 @@ export declare namespace OAuth {
     providerId?: string;
     constructor(options: PKCEClientOptions);
     authorizationRequest(options: AuthorizationRequestOptions): Promise<AuthorizationRequest>;
-    authorize(authRequest: AuthorizationRequest | AuthorizationOptions): Promise<AuthorizationResponse>;
+    authorize(
+      authRequest: AuthorizationRequest | AuthorizationOptions,
+    ): Promise<AuthorizationResponse>;
     getTokens(): Promise<TokenSet | undefined>;
     setTokens(tokens: TokenSetOptions | TokenResponse): Promise<void>;
     removeTokens(): Promise<void>;
@@ -895,13 +897,11 @@ export interface FormComponent extends React.FC<Form.Props> {
   Separator: React.FC<Record<string, never>>;
 }
 
-export interface ListItemDetailMetadataTagListComponent
-  extends React.FC<List.Item.Detail.Metadata.TagList.Props> {
+export interface ListItemDetailMetadataTagListComponent extends React.FC<List.Item.Detail.Metadata.TagList.Props> {
   Item: React.FC<List.Item.Detail.Metadata.TagList.Item.Props>;
 }
 
-export interface ListItemDetailMetadataComponent
-  extends React.FC<List.Item.Detail.Metadata.Props> {
+export interface ListItemDetailMetadataComponent extends React.FC<List.Item.Detail.Metadata.Props> {
   Label: React.FC<List.Item.Detail.Metadata.Label.Props>;
   Link: React.FC<List.Item.Detail.Metadata.Link.Props>;
   TagList: ListItemDetailMetadataTagListComponent;

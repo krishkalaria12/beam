@@ -70,7 +70,8 @@ function showOrUpdateToast(entry: ExtensionToast) {
 
   if (entry.secondaryAction?.onAction) {
     options.cancel = {
-      label: clampToastText(entry.secondaryAction.title, MAX_BRIDGE_TOAST_ACTION_LENGTH) || "Cancel",
+      label:
+        clampToastText(entry.secondaryAction.title, MAX_BRIDGE_TOAST_ACTION_LENGTH) || "Cancel",
       onClick: () => {
         safeDispatchToastAction(entry.id, "secondary");
       },

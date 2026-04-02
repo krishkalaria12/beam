@@ -33,7 +33,8 @@ export function withCache<Fn extends (...args: any) => Promise<any>>(
 
   const wrappedFn = async (...args: Parameters<Fn>) => {
     const key =
-      hash(args || []) + (options as unknown as { internal_cacheKeySuffix?: string })?.internal_cacheKeySuffix;
+      hash(args || []) +
+      (options as unknown as { internal_cacheKeySuffix?: string })?.internal_cacheKeySuffix;
     const cached = cache.get(key);
     if (cached) {
       const { data, timestamp } = JSON.parse(cached, reviver);

@@ -1040,8 +1040,12 @@ export function ExtensionsView({ onBack }: ExtensionsViewProps) {
                   key={`${entry.commandName}:${entry.reason}:${index}`}
                   className="rounded-xl border border-[var(--ui-divider)] bg-[var(--launcher-card-bg)] px-3 py-2.5"
                 >
-                  <div className="text-launcher-sm font-medium text-foreground">{entry.commandName}</div>
-                  <div className="mt-1 text-launcher-xs leading-5 text-muted-foreground">{entry.reason}</div>
+                  <div className="text-launcher-sm font-medium text-foreground">
+                    {entry.commandName}
+                  </div>
+                  <div className="mt-1 text-launcher-xs leading-5 text-muted-foreground">
+                    {entry.reason}
+                  </div>
                 </div>
               ))}
             </div>

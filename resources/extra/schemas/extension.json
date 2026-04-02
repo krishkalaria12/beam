@@ -36,9 +36,7 @@
               "minLength": 1
             }
           },
-          "required": [
-            "name"
-          ]
+          "required": ["name"]
         }
       ]
     },
@@ -50,10 +48,7 @@
     },
     "access": {
       "type": "string",
-      "enum": [
-        "public",
-        "private"
-      ]
+      "enum": ["public", "private"]
     },
     "license": {
       "type": "string"
@@ -113,11 +108,7 @@
           },
           "mode": {
             "type": "string",
-            "enum": [
-              "view",
-              "no-view",
-              "menu-bar"
-            ]
+            "enum": ["view", "no-view", "menu-bar"]
           },
           "interval": {
             "type": "string"
@@ -141,10 +132,7 @@
             "$ref": "#/$defs/preferences"
           }
         },
-        "required": [
-          "name",
-          "mode"
-        ]
+        "required": ["name", "mode"]
       }
     },
     "preferences": {
@@ -169,11 +157,7 @@
       }
     }
   },
-  "required": [
-    "name",
-    "title",
-    "commands"
-  ],
+  "required": ["name", "title", "commands"],
   "$defs": {
     "preferenceOption": {
       "type": "object",
@@ -186,9 +170,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "value"
-      ]
+      "required": ["value"]
     },
     "argumentOption": {
       "type": "object",
@@ -201,9 +183,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "value"
-      ]
+      "required": ["value"]
     },
     "argument": {
       "type": "object",
@@ -230,10 +210,7 @@
           }
         }
       },
-      "required": [
-        "name",
-        "type"
-      ]
+      "required": ["name", "type"]
     },
     "preference": {
       "type": "object",
@@ -267,10 +244,7 @@
           }
         }
       },
-      "required": [
-        "name",
-        "type"
-      ]
+      "required": ["name", "type"]
     },
     "preferences": {
       "type": "array",

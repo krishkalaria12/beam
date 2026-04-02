@@ -342,7 +342,7 @@ export function TodoView({ onBack }: TodoViewProps) {
     }
 
     try {
-        await updateTodoMutation.mutateAsync({
+      await updateTodoMutation.mutateAsync({
         id: state.editingTodoId,
         title: nextTitle,
       });
@@ -383,7 +383,7 @@ export function TodoView({ onBack }: TodoViewProps) {
     }
 
     try {
-        await updateSubTodoMutation.mutateAsync({
+      await updateSubTodoMutation.mutateAsync({
         id: state.editingSubTodoId,
         title: nextTitle,
       });

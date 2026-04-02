@@ -125,8 +125,12 @@ export function UiStyleProvider({
   defaultUiStyle = "glassy",
   defaultBaseColor = DEFAULT_BASE_COLOR_HEX,
 }: UiStyleProviderProps) {
-  const [uiStyle, setUiStyleState] = useState<UiStylePreference>(() => normalizeUiStyle(defaultUiStyle));
-  const [baseColor, setBaseColorState] = useState<string>(() => normalizeBaseColor(defaultBaseColor));
+  const [uiStyle, setUiStyleState] = useState<UiStylePreference>(() =>
+    normalizeUiStyle(defaultUiStyle),
+  );
+  const [baseColor, setBaseColorState] = useState<string>(() =>
+    normalizeBaseColor(defaultBaseColor),
+  );
   const [customThemeActive, setCustomThemeActive] = useState<boolean>(false);
   const uiStyleRef = useRef(uiStyle);
   const baseColorRef = useRef(baseColor);

@@ -215,13 +215,15 @@ class ExtensionManagerService {
 
     this.bridgeListenersPromise = (async () => {
       if (!this.runtimeMessageUnlisten) {
-        this.runtimeMessageUnlisten = await listenToExtensionRuntimeMessages((runtimeId, message) => {
-          if (runtimeId !== FOREGROUND_EXTENSION_RUNTIME_ID) {
-            return;
-          }
+        this.runtimeMessageUnlisten = await listenToExtensionRuntimeMessages(
+          (runtimeId, message) => {
+            if (runtimeId !== FOREGROUND_EXTENSION_RUNTIME_ID) {
+              return;
+            }
 
-          this.handleDecodedMessage(message);
-        });
+            this.handleDecodedMessage(message);
+          },
+        );
       }
 
       if (!this.runtimeStderrUnlisten) {

@@ -35,7 +35,9 @@ export const combineManyMut = (a: any, b: any) => {
 };
 
 export const flushable = (write: (value: any) => any, final = null) => {
-  const fn = final ? (value: any) => (value === none ? finalValue(undefined) : write(value)) : write;
+  const fn = final
+    ? (value: any) => (value === none ? finalValue(undefined) : write(value))
+    : write;
   // @ts-ignore
   fn[flushSymbol] = 1;
   return fn;
@@ -52,14 +54,16 @@ const isReadableNodeStream = (obj: any) =>
   obj &&
   typeof obj.pipe === "function" &&
   typeof obj.on === "function" &&
-  (!obj._writableState || (typeof obj._readableState === "object" ? obj._readableState.readable : null) !== false) && // Duplex
+  (!obj._writableState ||
+    (typeof obj._readableState === "object" ? obj._readableState.readable : null) !== false) && // Duplex
   (!obj._writableState || obj._readableState); // Writable has .pipe.
 
 const isWritableNodeStream = (obj: any) =>
   obj &&
   typeof obj.write === "function" &&
   typeof obj.on === "function" &&
-  (!obj._readableState || (typeof obj._writableState === "object" ? obj._writableState.writable : null) !== false); // Duplex
+  (!obj._readableState ||
+    (typeof obj._writableState === "object" ? obj._writableState.writable : null) !== false); // Duplex
 
 const isDuplexNodeStream = (obj: any) =>
   obj &&
@@ -68,9 +72,11 @@ const isDuplexNodeStream = (obj: any) =>
   typeof obj.on === "function" &&
   typeof obj.write === "function";
 
-const isReadableWebStream = (obj: any) => obj && globalThis.ReadableStream && obj instanceof globalThis.ReadableStream;
+const isReadableWebStream = (obj: any) =>
+  obj && globalThis.ReadableStream && obj instanceof globalThis.ReadableStream;
 
-const isWritableWebStream = (obj: any) => obj && globalThis.WritableStream && obj instanceof globalThis.WritableStream;
+const isWritableWebStream = (obj: any) =>
+  obj && globalThis.WritableStream && obj instanceof globalThis.WritableStream;
 
 const isDuplexWebStream = (obj: any) =>
   obj &&
@@ -100,7 +106,8 @@ const groupFunctions = (output: any, fn: any, index: any, fns: any) => {
     output.push(Writable.fromWeb(fn, { objectMode: true }));
     return output;
   }
-  if (typeof fn != "function") throw TypeError("Item #" + index + " is not a proper stream, nor a function.");
+  if (typeof fn != "function")
+    throw TypeError("Item #" + index + " is not a proper stream, nor a function.");
   if (!output.length) output.push([]);
   const last = output[output.length - 1];
   if (Array.isArray(last)) {
@@ -361,7 +368,8 @@ export default function chain(fns: any) {
   // eslint-disable-next-line prefer-const
   let stream: Duplex; // will be assigned later
 
-  let writeMethod = (chunk: any, encoding: any, callback: any) => write(input, chunk, encoding, callback),
+  let writeMethod = (chunk: any, encoding: any, callback: any) =>
+      write(input, chunk, encoding, callback),
     finalMethod = (callback: any) => final(input, callback),
     readMethod = () => read(output);
 

@@ -172,7 +172,9 @@ function SnippetsHeader({
           <NotebookTabs className="size-full text-[var(--icon-orange-fg)]" />
         </div>
         <div className="min-w-0 flex-1">
-          <h1 className="text-launcher-lg font-semibold tracking-[-0.02em] text-foreground">Snippets</h1>
+          <h1 className="text-launcher-lg font-semibold tracking-[-0.02em] text-foreground">
+            Snippets
+          </h1>
           <p className="text-launcher-sm tracking-[-0.01em] text-muted-foreground">
             Create, preview, and paste text snippets
           </p>
@@ -180,7 +182,9 @@ function SnippetsHeader({
       </div>
 
       <div className="flex items-center gap-2">
-        {viewMode === "view" && isFetching ? <Loader2 className="size-3.5 animate-spin text-muted-foreground" /> : null}
+        {viewMode === "view" && isFetching ? (
+          <Loader2 className="size-3.5 animate-spin text-muted-foreground" />
+        ) : null}
         <span className="rounded-full bg-[var(--launcher-chip-bg)] px-2.5 py-1 text-launcher-xs font-medium text-muted-foreground">
           {snippets.length} {snippets.length === 1 ? "snippet" : "snippets"}
         </span>

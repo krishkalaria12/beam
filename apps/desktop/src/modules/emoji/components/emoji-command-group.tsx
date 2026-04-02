@@ -16,10 +16,7 @@ import {
   syncEmojiActionsState,
   toManagedEmojiItem,
 } from "@/modules/emoji/hooks/use-emoji-action-items";
-import {
-  rankManagedItems,
-  useManagedItemPreferencesStore,
-} from "@/modules/launcher/managed-items";
+import { rankManagedItems, useManagedItemPreferencesStore } from "@/modules/launcher/managed-items";
 
 import { copyEmojiToClipboard, useRecentEmojis } from "../hooks/useEmoji";
 import type { EmojiData } from "../types";
@@ -41,9 +38,12 @@ const compareEmojiOrder = (left: EmojiData, right: EmojiData) => left.order - ri
 
 function scheduleDeferredTask(task: () => void) {
   if (typeof window !== "undefined" && "requestIdleCallback" in window) {
-    window.requestIdleCallback(() => {
-      task();
-    }, { timeout: 300 });
+    window.requestIdleCallback(
+      () => {
+        task();
+      },
+      { timeout: 300 },
+    );
     return;
   }
 
@@ -159,11 +159,22 @@ export default function EmojiCommandGroup({ isOpen, onOpen, onBack }: EmojiComma
     }
 
     return {
-      orderedGridEmojis: searchValue ? [...pinnedSearchEmojis, ...unpinnedSearchEmojis] : unpinnedSearchEmojis,
+      orderedGridEmojis: searchValue
+        ? [...pinnedSearchEmojis, ...unpinnedSearchEmojis]
+        : unpinnedSearchEmojis,
       pinnedEmojiObjects: rankedPinnedEmojis,
       recentEmojiObjects,
     };
-  }, [aliasesById, emojis, favoriteIds, pinnedHexcodeSet, recentEmojis, searchValue, selectedCategory, usageById]);
+  }, [
+    aliasesById,
+    emojis,
+    favoriteIds,
+    pinnedHexcodeSet,
+    recentEmojis,
+    searchValue,
+    selectedCategory,
+    usageById,
+  ]);
 
   const visibleSelectedEmoji = searchValue
     ? orderedGridEmojis.some((emoji) => emoji.hexcode === activeEmoji?.hexcode)
@@ -212,9 +223,7 @@ export default function EmojiCommandGroup({ isOpen, onOpen, onBack }: EmojiComma
   );
 
   const handleEmojiFocus = useCallback((emojiData: EmojiData) => {
-    setActiveEmoji((previous) =>
-      previous?.hexcode === emojiData.hexcode ? previous : emojiData,
-    );
+    setActiveEmoji((previous) => (previous?.hexcode === emojiData.hexcode ? previous : emojiData));
   }, []);
 
   const handleCopySelected = useCallback(() => {

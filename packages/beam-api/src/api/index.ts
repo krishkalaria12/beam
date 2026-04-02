@@ -190,7 +190,9 @@ type LocalStorageValues = Record<string, LocalStorageValue>;
 const fallbackLocalStorage = new Map<string, LocalStorageValue>();
 
 function unavailable(path: string): Error {
-  return new Error(`@beam-launcher/api runtime is unavailable. Missing Beam runtime binding for "${path}".`);
+  return new Error(
+    `@beam-launcher/api runtime is unavailable. Missing Beam runtime binding for "${path}".`,
+  );
 }
 
 function pathGet(value: unknown, path: string): unknown {
@@ -491,9 +493,7 @@ class LocalPKCEClient {
     throw unavailable("OAuth.PKCEClient.getTokens");
   }
 
-  async setTokens(
-    _tokens: OAuthTokenSetOptions | OAuthTokenResponse,
-  ): Promise<void> {
+  async setTokens(_tokens: OAuthTokenSetOptions | OAuthTokenResponse): Promise<void> {
     throw unavailable("OAuth.PKCEClient.setTokens");
   }
 
@@ -1058,13 +1058,4 @@ Object.assign(MenuBarExtra, {
   },
 });
 
-export {
-  Action,
-  ActionPanel,
-  Detail,
-  Form,
-  Grid,
-  List,
-  MenuBarExtra,
-  Icon,
-};
+export { Action, ActionPanel, Detail, Form, Grid, List, MenuBarExtra, Icon };

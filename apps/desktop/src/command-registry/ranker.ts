@@ -141,6 +141,8 @@ export function rankCommands(options: {
   }
 
   return ranked.sort((left, right) =>
-    compareRankedCommands(left, right, { preferBeamNative: options.context.query.trim().length > 0 }),
+    compareRankedCommands(left, right, {
+      preferBeamNative: options.context.query.trim().length > 0,
+    }),
   );
 }

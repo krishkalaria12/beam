@@ -7,7 +7,9 @@ export const handleErrorToastAction = (error: unknown): Toast.ActionOptions => {
   let title = "[Extension Name]...";
   let extensionURL = "";
   try {
-    const packageJSON = JSON.parse(fs.readFileSync(path.join(environment.assetsPath, "..", "package.json"), "utf8"));
+    const packageJSON = JSON.parse(
+      fs.readFileSync(path.join(environment.assetsPath, "..", "package.json"), "utf8"),
+    );
     title = `[${packageJSON.title}]...`;
     extensionURL = `https://raycast.com/${packageJSON.owner || packageJSON.author}/${packageJSON.name}`;
     if (!packageJSON.owner || packageJSON.access === "public") {

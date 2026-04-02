@@ -107,11 +107,8 @@ export async function runAppleScript<T = string>(
 
   spawned.stdin.end(script);
 
-  const [{ error, exitCode, signal, timedOut }, stdoutResult, stderrResult] = await getSpawnedResult<string>(
-    spawned,
-    { encoding: "utf8" },
-    spawnedPromise,
-  );
+  const [{ error, exitCode, signal, timedOut }, stdoutResult, stderrResult] =
+    await getSpawnedResult<string>(spawned, { encoding: "utf8" }, spawnedPromise);
   const stdout = handleOutput({ stripFinalNewline: true }, stdoutResult);
   const stderr = handleOutput({ stripFinalNewline: true }, stderrResult);
 

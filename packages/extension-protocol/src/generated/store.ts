@@ -439,8 +439,8 @@ export const ExtensionStoreSource: MessageFns<ExtensionStoreSource> = {
       homepageUrl: isSet(object.homepageUrl)
         ? globalThis.String(object.homepageUrl)
         : isSet(object.homepage_url)
-        ? globalThis.String(object.homepage_url)
-        : undefined,
+          ? globalThis.String(object.homepage_url)
+          : undefined,
     };
   },
 
@@ -550,13 +550,13 @@ export const ExtensionStoreAuthor: MessageFns<ExtensionStoreAuthor> = {
       avatarUrl: isSet(object.avatarUrl)
         ? globalThis.String(object.avatarUrl)
         : isSet(object.avatar_url)
-        ? globalThis.String(object.avatar_url)
-        : undefined,
+          ? globalThis.String(object.avatar_url)
+          : undefined,
       profileUrl: isSet(object.profileUrl)
         ? globalThis.String(object.profileUrl)
         : isSet(object.profile_url)
-        ? globalThis.String(object.profile_url)
-        : undefined,
+          ? globalThis.String(object.profile_url)
+          : undefined,
     };
   },
 
@@ -671,7 +671,10 @@ function createBaseExtensionStoreVerification(): ExtensionStoreVerification {
 }
 
 export const ExtensionStoreVerification: MessageFns<ExtensionStoreVerification> = {
-  encode(message: ExtensionStoreVerification, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: ExtensionStoreVerification,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     if (message.status !== 0) {
       writer.uint32(8).int32(message.status);
     }
@@ -742,8 +745,8 @@ export const ExtensionStoreVerification: MessageFns<ExtensionStoreVerification> 
       verifiedBy: isSet(object.verifiedBy)
         ? globalThis.String(object.verifiedBy)
         : isSet(object.verified_by)
-        ? globalThis.String(object.verified_by)
-        : undefined,
+          ? globalThis.String(object.verified_by)
+          : undefined,
       summary: isSet(object.summary) ? globalThis.String(object.summary) : undefined,
     };
   },
@@ -792,7 +795,10 @@ function createBaseExtensionStoreCompatibility(): ExtensionStoreCompatibility {
 }
 
 export const ExtensionStoreCompatibility: MessageFns<ExtensionStoreCompatibility> = {
-  encode(message: ExtensionStoreCompatibility, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: ExtensionStoreCompatibility,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     for (const v of message.platforms) {
       writer.uint32(10).string(v!);
     }
@@ -908,33 +914,33 @@ export const ExtensionStoreCompatibility: MessageFns<ExtensionStoreCompatibility
       desktopEnvironments: globalThis.Array.isArray(object?.desktopEnvironments)
         ? object.desktopEnvironments.map((e: any) => globalThis.String(e))
         : globalThis.Array.isArray(object?.desktop_environments)
-        ? object.desktop_environments.map((e: any) => globalThis.String(e))
-        : [],
+          ? object.desktop_environments.map((e: any) => globalThis.String(e))
+          : [],
       minimumBeamVersion: isSet(object.minimumBeamVersion)
         ? globalThis.String(object.minimumBeamVersion)
         : isSet(object.minimum_beam_version)
-        ? globalThis.String(object.minimum_beam_version)
-        : undefined,
+          ? globalThis.String(object.minimum_beam_version)
+          : undefined,
       maximumBeamVersion: isSet(object.maximumBeamVersion)
         ? globalThis.String(object.maximumBeamVersion)
         : isSet(object.maximum_beam_version)
-        ? globalThis.String(object.maximum_beam_version)
-        : undefined,
+          ? globalThis.String(object.maximum_beam_version)
+          : undefined,
       linuxTested: isSet(object.linuxTested)
         ? globalThis.Boolean(object.linuxTested)
         : isSet(object.linux_tested)
-        ? globalThis.Boolean(object.linux_tested)
-        : false,
+          ? globalThis.Boolean(object.linux_tested)
+          : false,
       waylandTested: isSet(object.waylandTested)
         ? globalThis.Boolean(object.waylandTested)
         : isSet(object.wayland_tested)
-        ? globalThis.Boolean(object.wayland_tested)
-        : false,
+          ? globalThis.Boolean(object.wayland_tested)
+          : false,
       x11Tested: isSet(object.x11Tested)
         ? globalThis.Boolean(object.x11Tested)
         : isSet(object.x11_tested)
-        ? globalThis.Boolean(object.x11_tested)
-        : false,
+          ? globalThis.Boolean(object.x11_tested)
+          : false,
       notes: globalThis.Array.isArray(object?.notes)
         ? object.notes.map((e: any) => globalThis.String(e))
         : [],
@@ -1064,11 +1070,19 @@ export const ExtensionStoreChecksum: MessageFns<ExtensionStoreChecksum> = {
 };
 
 function createBaseExtensionStoreArtifactVerification(): ExtensionStoreArtifactVerification {
-  return { signer: undefined, signature: undefined, provenanceUrl: undefined, transparencyLogUrl: undefined };
+  return {
+    signer: undefined,
+    signature: undefined,
+    provenanceUrl: undefined,
+    transparencyLogUrl: undefined,
+  };
 }
 
 export const ExtensionStoreArtifactVerification: MessageFns<ExtensionStoreArtifactVerification> = {
-  encode(message: ExtensionStoreArtifactVerification, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: ExtensionStoreArtifactVerification,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     if (message.signer !== undefined) {
       writer.uint32(10).string(message.signer);
     }
@@ -1139,13 +1153,13 @@ export const ExtensionStoreArtifactVerification: MessageFns<ExtensionStoreArtifa
       provenanceUrl: isSet(object.provenanceUrl)
         ? globalThis.String(object.provenanceUrl)
         : isSet(object.provenance_url)
-        ? globalThis.String(object.provenance_url)
-        : undefined,
+          ? globalThis.String(object.provenance_url)
+          : undefined,
       transparencyLogUrl: isSet(object.transparencyLogUrl)
         ? globalThis.String(object.transparencyLogUrl)
         : isSet(object.transparency_log_url)
-        ? globalThis.String(object.transparency_log_url)
-        : undefined,
+          ? globalThis.String(object.transparency_log_url)
+          : undefined,
     };
   },
 
@@ -1166,10 +1180,14 @@ export const ExtensionStoreArtifactVerification: MessageFns<ExtensionStoreArtifa
     return obj;
   },
 
-  create(base?: DeepPartial<ExtensionStoreArtifactVerification>): ExtensionStoreArtifactVerification {
+  create(
+    base?: DeepPartial<ExtensionStoreArtifactVerification>,
+  ): ExtensionStoreArtifactVerification {
     return ExtensionStoreArtifactVerification.fromPartial(base ?? {});
   },
-  fromPartial(object: DeepPartial<ExtensionStoreArtifactVerification>): ExtensionStoreArtifactVerification {
+  fromPartial(
+    object: DeepPartial<ExtensionStoreArtifactVerification>,
+  ): ExtensionStoreArtifactVerification {
     const message = createBaseExtensionStoreArtifactVerification();
     message.signer = object.signer ?? undefined;
     message.signature = object.signature ?? undefined;
@@ -1218,7 +1236,10 @@ export const ExtensionStoreArtifact: MessageFns<ExtensionStoreArtifact> = {
       ExtensionStoreChecksum.encode(v!, writer.uint32(58).fork()).join();
     }
     if (message.verification !== undefined) {
-      ExtensionStoreArtifactVerification.encode(message.verification, writer.uint32(66).fork()).join();
+      ExtensionStoreArtifactVerification.encode(
+        message.verification,
+        writer.uint32(66).fork(),
+      ).join();
     }
     for (const v of message.platforms) {
       writer.uint32(74).string(v!);
@@ -1332,23 +1353,23 @@ export const ExtensionStoreArtifact: MessageFns<ExtensionStoreArtifact> = {
       downloadUrl: isSet(object.downloadUrl)
         ? globalThis.String(object.downloadUrl)
         : isSet(object.download_url)
-        ? globalThis.String(object.download_url)
-        : "",
+          ? globalThis.String(object.download_url)
+          : "",
       fileName: isSet(object.fileName)
         ? globalThis.String(object.fileName)
         : isSet(object.file_name)
-        ? globalThis.String(object.file_name)
-        : undefined,
+          ? globalThis.String(object.file_name)
+          : undefined,
       mimeType: isSet(object.mimeType)
         ? globalThis.String(object.mimeType)
         : isSet(object.mime_type)
-        ? globalThis.String(object.mime_type)
-        : undefined,
+          ? globalThis.String(object.mime_type)
+          : undefined,
       sizeBytes: isSet(object.sizeBytes)
         ? globalThis.Number(object.sizeBytes)
         : isSet(object.size_bytes)
-        ? globalThis.Number(object.size_bytes)
-        : undefined,
+          ? globalThis.Number(object.size_bytes)
+          : undefined,
       checksums: globalThis.Array.isArray(object?.checksums)
         ? object.checksums.map((e: any) => ExtensionStoreChecksum.fromJSON(e))
         : [],
@@ -1361,8 +1382,8 @@ export const ExtensionStoreArtifact: MessageFns<ExtensionStoreArtifact> = {
       desktopEnvironments: globalThis.Array.isArray(object?.desktopEnvironments)
         ? object.desktopEnvironments.map((e: any) => globalThis.String(e))
         : globalThis.Array.isArray(object?.desktop_environments)
-        ? object.desktop_environments.map((e: any) => globalThis.String(e))
-        : [],
+          ? object.desktop_environments.map((e: any) => globalThis.String(e))
+          : [],
     };
   },
 
@@ -1413,9 +1434,10 @@ export const ExtensionStoreArtifact: MessageFns<ExtensionStoreArtifact> = {
     message.mimeType = object.mimeType ?? undefined;
     message.sizeBytes = object.sizeBytes ?? undefined;
     message.checksums = object.checksums?.map((e) => ExtensionStoreChecksum.fromPartial(e)) || [];
-    message.verification = (object.verification !== undefined && object.verification !== null)
-      ? ExtensionStoreArtifactVerification.fromPartial(object.verification)
-      : undefined;
+    message.verification =
+      object.verification !== undefined && object.verification !== null
+        ? ExtensionStoreArtifactVerification.fromPartial(object.verification)
+        : undefined;
     message.platforms = object.platforms?.map((e) => e) || [];
     message.desktopEnvironments = object.desktopEnvironments?.map((e) => e) || [];
     return message;
@@ -1427,7 +1449,10 @@ function createBaseExtensionStoreReleaseNotes(): ExtensionStoreReleaseNotes {
 }
 
 export const ExtensionStoreReleaseNotes: MessageFns<ExtensionStoreReleaseNotes> = {
-  encode(message: ExtensionStoreReleaseNotes, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: ExtensionStoreReleaseNotes,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     if (message.summary !== undefined) {
       writer.uint32(10).string(message.summary);
     }
@@ -1487,8 +1512,8 @@ export const ExtensionStoreReleaseNotes: MessageFns<ExtensionStoreReleaseNotes> 
       changelogUrl: isSet(object.changelogUrl)
         ? globalThis.String(object.changelogUrl)
         : isSet(object.changelog_url)
-        ? globalThis.String(object.changelog_url)
-        : undefined,
+          ? globalThis.String(object.changelog_url)
+          : undefined,
     };
   },
 
@@ -1694,29 +1719,29 @@ export const ExtensionStoreRelease: MessageFns<ExtensionStoreRelease> = {
       downloadUrl: isSet(object.downloadUrl)
         ? globalThis.String(object.downloadUrl)
         : isSet(object.download_url)
-        ? globalThis.String(object.download_url)
-        : "",
+          ? globalThis.String(object.download_url)
+          : "",
       publishedAt: isSet(object.publishedAt)
         ? globalThis.String(object.publishedAt)
         : isSet(object.published_at)
-        ? globalThis.String(object.published_at)
-        : undefined,
+          ? globalThis.String(object.published_at)
+          : undefined,
       checksumSha256: isSet(object.checksumSha256)
         ? globalThis.String(object.checksumSha256)
         : isSet(object.checksum_sha256)
-        ? globalThis.String(object.checksum_sha256)
-        : undefined,
+          ? globalThis.String(object.checksum_sha256)
+          : undefined,
       changelogUrl: isSet(object.changelogUrl)
         ? globalThis.String(object.changelogUrl)
         : isSet(object.changelog_url)
-        ? globalThis.String(object.changelog_url)
-        : undefined,
+          ? globalThis.String(object.changelog_url)
+          : undefined,
       channel: isSet(object.channel) ? extensionReleaseChannelFromJSON(object.channel) : 0,
       channelName: isSet(object.channelName)
         ? globalThis.String(object.channelName)
         : isSet(object.channel_name)
-        ? globalThis.String(object.channel_name)
-        : undefined,
+          ? globalThis.String(object.channel_name)
+          : undefined,
       prerelease: isSet(object.prerelease) ? globalThis.Boolean(object.prerelease) : false,
       artifacts: globalThis.Array.isArray(object?.artifacts)
         ? object.artifacts.map((e: any) => ExtensionStoreArtifact.fromJSON(e))
@@ -1724,18 +1749,18 @@ export const ExtensionStoreRelease: MessageFns<ExtensionStoreRelease> = {
       primaryArtifactId: isSet(object.primaryArtifactId)
         ? globalThis.String(object.primaryArtifactId)
         : isSet(object.primary_artifact_id)
-        ? globalThis.String(object.primary_artifact_id)
-        : undefined,
+          ? globalThis.String(object.primary_artifact_id)
+          : undefined,
       releaseNotes: isSet(object.releaseNotes)
         ? ExtensionStoreReleaseNotes.fromJSON(object.releaseNotes)
         : isSet(object.release_notes)
-        ? ExtensionStoreReleaseNotes.fromJSON(object.release_notes)
-        : undefined,
+          ? ExtensionStoreReleaseNotes.fromJSON(object.release_notes)
+          : undefined,
       publishedBy: isSet(object.publishedBy)
         ? globalThis.String(object.publishedBy)
         : isSet(object.published_by)
-        ? globalThis.String(object.published_by)
-        : undefined,
+          ? globalThis.String(object.published_by)
+          : undefined,
     };
   },
 
@@ -1795,9 +1820,10 @@ export const ExtensionStoreRelease: MessageFns<ExtensionStoreRelease> = {
     message.prerelease = object.prerelease ?? false;
     message.artifacts = object.artifacts?.map((e) => ExtensionStoreArtifact.fromPartial(e)) || [];
     message.primaryArtifactId = object.primaryArtifactId ?? undefined;
-    message.releaseNotes = (object.releaseNotes !== undefined && object.releaseNotes !== null)
-      ? ExtensionStoreReleaseNotes.fromPartial(object.releaseNotes)
-      : undefined;
+    message.releaseNotes =
+      object.releaseNotes !== undefined && object.releaseNotes !== null
+        ? ExtensionStoreReleaseNotes.fromPartial(object.releaseNotes)
+        : undefined;
     message.publishedBy = object.publishedBy ?? undefined;
     return message;
   },
@@ -2093,27 +2119,31 @@ export const ExtensionStorePackage: MessageFns<ExtensionStorePackage> = {
       categories: globalThis.Array.isArray(object?.categories)
         ? object.categories.map((e: any) => globalThis.String(e))
         : [],
-      tags: globalThis.Array.isArray(object?.tags) ? object.tags.map((e: any) => globalThis.String(e)) : [],
+      tags: globalThis.Array.isArray(object?.tags)
+        ? object.tags.map((e: any) => globalThis.String(e))
+        : [],
       source: isSet(object.source) ? ExtensionStoreSource.fromJSON(object.source) : undefined,
-      verification: isSet(object.verification) ? ExtensionStoreVerification.fromJSON(object.verification) : undefined,
+      verification: isSet(object.verification)
+        ? ExtensionStoreVerification.fromJSON(object.verification)
+        : undefined,
       compatibility: isSet(object.compatibility)
         ? ExtensionStoreCompatibility.fromJSON(object.compatibility)
         : undefined,
       latestRelease: isSet(object.latestRelease)
         ? ExtensionStoreRelease.fromJSON(object.latestRelease)
         : isSet(object.latest_release)
-        ? ExtensionStoreRelease.fromJSON(object.latest_release)
-        : undefined,
+          ? ExtensionStoreRelease.fromJSON(object.latest_release)
+          : undefined,
       readmeUrl: isSet(object.readmeUrl)
         ? globalThis.String(object.readmeUrl)
         : isSet(object.readme_url)
-        ? globalThis.String(object.readme_url)
-        : undefined,
+          ? globalThis.String(object.readme_url)
+          : undefined,
       sourceUrl: isSet(object.sourceUrl)
         ? globalThis.String(object.sourceUrl)
         : isSet(object.source_url)
-        ? globalThis.String(object.source_url)
-        : undefined,
+          ? globalThis.String(object.source_url)
+          : undefined,
       screenshots: globalThis.Array.isArray(object?.screenshots)
         ? object.screenshots.map((e: any) => globalThis.String(e))
         : [],
@@ -2121,21 +2151,21 @@ export const ExtensionStorePackage: MessageFns<ExtensionStorePackage> = {
       downloadCount: isSet(object.downloadCount)
         ? globalThis.Number(object.downloadCount)
         : isSet(object.download_count)
-        ? globalThis.Number(object.download_count)
-        : undefined,
+          ? globalThis.Number(object.download_count)
+          : undefined,
       releases: globalThis.Array.isArray(object?.releases)
         ? object.releases.map((e: any) => ExtensionStoreRelease.fromJSON(e))
         : [],
       defaultChannel: isSet(object.defaultChannel)
         ? extensionReleaseChannelFromJSON(object.defaultChannel)
         : isSet(object.default_channel)
-        ? extensionReleaseChannelFromJSON(object.default_channel)
-        : 0,
+          ? extensionReleaseChannelFromJSON(object.default_channel)
+          : 0,
       packageFormatVersion: isSet(object.packageFormatVersion)
         ? globalThis.String(object.packageFormatVersion)
         : isSet(object.package_format_version)
-        ? globalThis.String(object.package_format_version)
-        : undefined,
+          ? globalThis.String(object.package_format_version)
+          : undefined,
     };
   },
 
@@ -2217,32 +2247,39 @@ export const ExtensionStorePackage: MessageFns<ExtensionStorePackage> = {
     message.title = object.title ?? "";
     message.summary = object.summary ?? undefined;
     message.description = object.description ?? undefined;
-    message.author = (object.author !== undefined && object.author !== null)
-      ? ExtensionStoreAuthor.fromPartial(object.author)
-      : undefined;
-    message.icons = (object.icons !== undefined && object.icons !== null)
-      ? ExtensionStoreIcons.fromPartial(object.icons)
-      : undefined;
+    message.author =
+      object.author !== undefined && object.author !== null
+        ? ExtensionStoreAuthor.fromPartial(object.author)
+        : undefined;
+    message.icons =
+      object.icons !== undefined && object.icons !== null
+        ? ExtensionStoreIcons.fromPartial(object.icons)
+        : undefined;
     message.categories = object.categories?.map((e) => e) || [];
     message.tags = object.tags?.map((e) => e) || [];
-    message.source = (object.source !== undefined && object.source !== null)
-      ? ExtensionStoreSource.fromPartial(object.source)
-      : undefined;
-    message.verification = (object.verification !== undefined && object.verification !== null)
-      ? ExtensionStoreVerification.fromPartial(object.verification)
-      : undefined;
-    message.compatibility = (object.compatibility !== undefined && object.compatibility !== null)
-      ? ExtensionStoreCompatibility.fromPartial(object.compatibility)
-      : undefined;
-    message.latestRelease = (object.latestRelease !== undefined && object.latestRelease !== null)
-      ? ExtensionStoreRelease.fromPartial(object.latestRelease)
-      : undefined;
+    message.source =
+      object.source !== undefined && object.source !== null
+        ? ExtensionStoreSource.fromPartial(object.source)
+        : undefined;
+    message.verification =
+      object.verification !== undefined && object.verification !== null
+        ? ExtensionStoreVerification.fromPartial(object.verification)
+        : undefined;
+    message.compatibility =
+      object.compatibility !== undefined && object.compatibility !== null
+        ? ExtensionStoreCompatibility.fromPartial(object.compatibility)
+        : undefined;
+    message.latestRelease =
+      object.latestRelease !== undefined && object.latestRelease !== null
+        ? ExtensionStoreRelease.fromPartial(object.latestRelease)
+        : undefined;
     message.readmeUrl = object.readmeUrl ?? undefined;
     message.sourceUrl = object.sourceUrl ?? undefined;
     message.screenshots = object.screenshots?.map((e) => e) || [];
-    message.manifest = (object.manifest !== undefined && object.manifest !== null)
-      ? ExtensionManifest.fromPartial(object.manifest)
-      : undefined;
+    message.manifest =
+      object.manifest !== undefined && object.manifest !== null
+        ? ExtensionManifest.fromPartial(object.manifest)
+        : undefined;
     message.downloadCount = object.downloadCount ?? undefined;
     message.releases = object.releases?.map((e) => ExtensionStoreRelease.fromPartial(e)) || [];
     message.defaultChannel = object.defaultChannel ?? 0;
@@ -2329,13 +2366,13 @@ export const ExtensionStoreCatalog: MessageFns<ExtensionStoreCatalog> = {
       generatedAt: isSet(object.generatedAt)
         ? globalThis.String(object.generatedAt)
         : isSet(object.generated_at)
-        ? globalThis.String(object.generated_at)
-        : undefined,
+          ? globalThis.String(object.generated_at)
+          : undefined,
       formatVersion: isSet(object.formatVersion)
         ? globalThis.String(object.formatVersion)
         : isSet(object.format_version)
-        ? globalThis.String(object.format_version)
-        : undefined,
+          ? globalThis.String(object.format_version)
+          : undefined,
     };
   },
 
@@ -2361,9 +2398,10 @@ export const ExtensionStoreCatalog: MessageFns<ExtensionStoreCatalog> = {
   },
   fromPartial(object: DeepPartial<ExtensionStoreCatalog>): ExtensionStoreCatalog {
     const message = createBaseExtensionStoreCatalog();
-    message.source = (object.source !== undefined && object.source !== null)
-      ? ExtensionStoreSource.fromPartial(object.source)
-      : undefined;
+    message.source =
+      object.source !== undefined && object.source !== null
+        ? ExtensionStoreSource.fromPartial(object.source)
+        : undefined;
     message.packages = object.packages?.map((e) => ExtensionStorePackage.fromPartial(e)) || [];
     message.generatedAt = object.generatedAt ?? undefined;
     message.formatVersion = object.formatVersion ?? undefined;
@@ -2376,7 +2414,10 @@ function createBaseExtensionStoreSearchResult(): ExtensionStoreSearchResult {
 }
 
 export const ExtensionStoreSearchResult: MessageFns<ExtensionStoreSearchResult> = {
-  encode(message: ExtensionStoreSearchResult, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: ExtensionStoreSearchResult,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     for (const v of message.packages) {
       ExtensionStorePackage.encode(v!, writer.uint32(10).fork()).join();
     }
@@ -2587,19 +2628,21 @@ export const ExtensionStoreUpdate: MessageFns<ExtensionStoreUpdate> = {
       installedVersion: isSet(object.installedVersion)
         ? globalThis.String(object.installedVersion)
         : isSet(object.installed_version)
-        ? globalThis.String(object.installed_version)
-        : "",
+          ? globalThis.String(object.installed_version)
+          : "",
       latestVersion: isSet(object.latestVersion)
         ? globalThis.String(object.latestVersion)
         : isSet(object.latest_version)
-        ? globalThis.String(object.latest_version)
-        : "",
+          ? globalThis.String(object.latest_version)
+          : "",
       latestRelease: isSet(object.latestRelease)
         ? ExtensionStoreRelease.fromJSON(object.latestRelease)
         : isSet(object.latest_release)
-        ? ExtensionStoreRelease.fromJSON(object.latest_release)
+          ? ExtensionStoreRelease.fromJSON(object.latest_release)
+          : undefined,
+      verification: isSet(object.verification)
+        ? ExtensionStoreVerification.fromJSON(object.verification)
         : undefined,
-      verification: isSet(object.verification) ? ExtensionStoreVerification.fromJSON(object.verification) : undefined,
       compatibility: isSet(object.compatibility)
         ? ExtensionStoreCompatibility.fromJSON(object.compatibility)
         : undefined,
@@ -2653,21 +2696,26 @@ export const ExtensionStoreUpdate: MessageFns<ExtensionStoreUpdate> = {
     message.title = object.title ?? "";
     message.installedVersion = object.installedVersion ?? "";
     message.latestVersion = object.latestVersion ?? "";
-    message.latestRelease = (object.latestRelease !== undefined && object.latestRelease !== null)
-      ? ExtensionStoreRelease.fromPartial(object.latestRelease)
-      : undefined;
-    message.verification = (object.verification !== undefined && object.verification !== null)
-      ? ExtensionStoreVerification.fromPartial(object.verification)
-      : undefined;
-    message.compatibility = (object.compatibility !== undefined && object.compatibility !== null)
-      ? ExtensionStoreCompatibility.fromPartial(object.compatibility)
-      : undefined;
-    message.author = (object.author !== undefined && object.author !== null)
-      ? ExtensionStoreAuthor.fromPartial(object.author)
-      : undefined;
-    message.source = (object.source !== undefined && object.source !== null)
-      ? ExtensionStoreSource.fromPartial(object.source)
-      : undefined;
+    message.latestRelease =
+      object.latestRelease !== undefined && object.latestRelease !== null
+        ? ExtensionStoreRelease.fromPartial(object.latestRelease)
+        : undefined;
+    message.verification =
+      object.verification !== undefined && object.verification !== null
+        ? ExtensionStoreVerification.fromPartial(object.verification)
+        : undefined;
+    message.compatibility =
+      object.compatibility !== undefined && object.compatibility !== null
+        ? ExtensionStoreCompatibility.fromPartial(object.compatibility)
+        : undefined;
+    message.author =
+      object.author !== undefined && object.author !== null
+        ? ExtensionStoreAuthor.fromPartial(object.author)
+        : undefined;
+    message.source =
+      object.source !== undefined && object.source !== null
+        ? ExtensionStoreSource.fromPartial(object.source)
+        : undefined;
     return message;
   },
 };
@@ -2677,7 +2725,10 @@ function createBaseExtensionStoreUpdateResult(): ExtensionStoreUpdateResult {
 }
 
 export const ExtensionStoreUpdateResult: MessageFns<ExtensionStoreUpdateResult> = {
-  encode(message: ExtensionStoreUpdateResult, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+  encode(
+    message: ExtensionStoreUpdateResult,
+    writer: BinaryWriter = new BinaryWriter(),
+  ): BinaryWriter {
     for (const v of message.updates) {
       ExtensionStoreUpdate.encode(v!, writer.uint32(10).fork()).join();
     }
@@ -2736,11 +2787,15 @@ export const ExtensionStoreUpdateResult: MessageFns<ExtensionStoreUpdateResult> 
 
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
 
-type DeepPartial<T> = T extends Builtin ? T
-  : T extends globalThis.Array<infer U> ? globalThis.Array<DeepPartial<U>>
-  : T extends ReadonlyArray<infer U> ? ReadonlyArray<DeepPartial<U>>
-  : T extends {} ? { [K in keyof T]?: DeepPartial<T[K]> }
-  : Partial<T>;
+type DeepPartial<T> = T extends Builtin
+  ? T
+  : T extends globalThis.Array<infer U>
+    ? globalThis.Array<DeepPartial<U>>
+    : T extends ReadonlyArray<infer U>
+      ? ReadonlyArray<DeepPartial<U>>
+      : T extends {}
+        ? { [K in keyof T]?: DeepPartial<T[K]> }
+        : Partial<T>;
 
 function longToNumber(int64: { toString(): string }): number {
   const num = globalThis.Number(int64.toString());

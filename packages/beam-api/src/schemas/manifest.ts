@@ -513,7 +513,10 @@ export default z.object({
     .optional(),
   dependencies: z
     .object({
-      "@beam-launcher/api": z.string().describe("The Beam API version used by this extension.").optional(),
+      "@beam-launcher/api": z
+        .string()
+        .describe("The Beam API version used by this extension.")
+        .optional(),
     })
     .describe("Source dependencies following the npm package.json dependency format."),
   external: z

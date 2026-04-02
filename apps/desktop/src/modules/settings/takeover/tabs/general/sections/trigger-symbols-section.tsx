@@ -212,7 +212,9 @@ function BuiltInTriggerSymbolsSection({
               </IconChip>
 
               <div className="min-w-0 flex-1">
-                <p className="text-launcher-sm font-medium tracking-[-0.01em] text-foreground">{row.title}</p>
+                <p className="text-launcher-sm font-medium tracking-[-0.01em] text-foreground">
+                  {row.title}
+                </p>
                 <p className="text-launcher-xs text-muted-foreground">{row.description}</p>
               </div>
 
@@ -292,7 +294,9 @@ function CustomTriggerMappingsSection({
               <Plus className="size-4.5 text-muted-foreground" />
             </div>
             <p className="text-launcher-sm text-muted-foreground">No custom mappings yet</p>
-            <p className="mt-0.5 text-launcher-xs text-muted-foreground">Add one below to get started</p>
+            <p className="mt-0.5 text-launcher-xs text-muted-foreground">
+              Add one below to get started
+            </p>
           </div>
         ) : (
           draft.customBindings.map((binding, index) => {
@@ -325,7 +329,10 @@ function CustomTriggerMappingsSection({
                   aria-label={`Custom symbol ${index + 1}`}
                 />
 
-                <CommandSelector value={binding.commandId} onChange={(value) => onUpdateBindingCommand(index, value)} />
+                <CommandSelector
+                  value={binding.commandId}
+                  onChange={(value) => onUpdateBindingCommand(index, value)}
+                />
 
                 <div className="flex items-center gap-1.5">
                   <Button

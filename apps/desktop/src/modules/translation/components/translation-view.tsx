@@ -45,7 +45,10 @@ function TranslationLanguageBar({
   return (
     <div className="translate-langbar-enter flex items-center justify-center px-4 pb-3">
       <div className="flex w-full items-center gap-2 rounded-xl bg-[var(--launcher-card-hover-bg)] p-1.5 ring-1 ring-[var(--launcher-card-border)]">
-        <Select value={resolvedSourceLanguage} onValueChange={(value) => value && onSourceLanguageChange(value)}>
+        <Select
+          value={resolvedSourceLanguage}
+          onValueChange={(value) => value && onSourceLanguageChange(value)}
+        >
           <SelectTrigger className="h-9 flex-1 border-none bg-transparent text-launcher-md font-medium tracking-[-0.01em] text-foreground shadow-none ring-0 transition-colors hover:bg-[var(--launcher-card-hover-bg)] focus:ring-0">
             <span className="truncate px-1">{getLanguageLabel(resolvedSourceLanguage)}</span>
           </SelectTrigger>
@@ -70,7 +73,10 @@ function TranslationLanguageBar({
           <ArrowRightLeft className="size-4" />
         </Button>
 
-        <Select value={resolvedTargetLanguage} onValueChange={(value) => value && onTargetLanguageChange(value)}>
+        <Select
+          value={resolvedTargetLanguage}
+          onValueChange={(value) => value && onTargetLanguageChange(value)}
+        >
           <SelectTrigger className="h-9 flex-1 border-none bg-transparent text-launcher-md font-medium tracking-[-0.01em] text-foreground shadow-none ring-0 transition-colors hover:bg-[var(--launcher-card-hover-bg)] focus:ring-0">
             <span className="truncate px-1">
               {resolvedTargetLanguage ? getLanguageLabel(resolvedTargetLanguage) : "Select target"}
@@ -546,11 +552,21 @@ function TranslationViewContent({ initialQuery, onBack }: TranslationViewProps) 
             detectedLanguage: null,
             localError: state.localError,
           });
-          scheduleAutoTranslate(state.sourceText, value, resolvedTargetLanguage, state.autoTranslate);
+          scheduleAutoTranslate(
+            state.sourceText,
+            value,
+            resolvedTargetLanguage,
+            state.autoTranslate,
+          );
         }}
         onTargetLanguageChange={(value) => {
           dispatch({ type: "set-target-language", value });
-          scheduleAutoTranslate(state.sourceText, resolvedSourceLanguage, value, state.autoTranslate);
+          scheduleAutoTranslate(
+            state.sourceText,
+            resolvedSourceLanguage,
+            value,
+            state.autoTranslate,
+          );
         }}
         onSwapLanguages={handleSwapLanguages}
       />

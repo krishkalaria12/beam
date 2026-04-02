@@ -82,7 +82,12 @@ function parseCommand(command: string, args?: string[]) {
 
 type ExecCachedPromiseOptions<T, U> = Omit<
   CachedPromiseOptions<
-    (_command: string, _args: string[], _options?: ExecOptions, input?: string | Buffer) => Promise<T>,
+    (
+      _command: string,
+      _args: string[],
+      _options?: ExecOptions,
+      input?: string | Buffer,
+    ) => Promise<T>,
     U
   >,
   "abortable"
@@ -162,11 +167,15 @@ export function useExec<T, U = undefined>(
   optionsOrArgs?:
     | string[]
     | ({
-        parseOutput?: ParseExecOutputHandler<T, Buffer, ExecOptions> | ParseExecOutputHandler<T, string, ExecOptions>;
+        parseOutput?:
+          | ParseExecOutputHandler<T, Buffer, ExecOptions>
+          | ParseExecOutputHandler<T, string, ExecOptions>;
       } & ExecOptions &
         ExecCachedPromiseOptions<T, U>),
   options?: {
-    parseOutput?: ParseExecOutputHandler<T, Buffer, ExecOptions> | ParseExecOutputHandler<T, string, ExecOptions>;
+    parseOutput?:
+      | ParseExecOutputHandler<T, Buffer, ExecOptions>
+      | ParseExecOutputHandler<T, string, ExecOptions>;
   } & ExecOptions &
     ExecCachedPromiseOptions<T, U>,
 ): UseCachedPromiseReturnType<T, U> {
@@ -207,7 +216,11 @@ export function useExec<T, U = undefined>(
         timeout: _options?.timeout || 10000,
         signal: abortable.current?.signal,
         encoding: _options?.encoding === null ? "buffer" : _options?.encoding || "utf8",
-        env: { PATH: "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin", ...process.env, ..._options?.env },
+        env: {
+          PATH: "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+          ...process.env,
+          ..._options?.env,
+        },
       };
 
       const spawned = childProcess.spawn(file, args, options);
@@ -217,11 +230,8 @@ export function useExec<T, U = undefined>(
         spawned.stdin.end(input);
       }
 
-      const [{ error, exitCode, signal, timedOut }, stdoutResult, stderrResult] = await getSpawnedResult(
-        spawned,
-        options,
-        spawnedPromise,
-      );
+      const [{ error, exitCode, signal, timedOut }, stdoutResult, stderrResult] =
+        await getSpawnedResult(spawned, options, spawnedPromise);
       const stdout = handleOutput(options, stdoutResult);
       const stderr = handleOutput(options, stderrResult);
 
@@ -243,8 +253,12 @@ export function useExec<T, U = undefined>(
   );
 
   // @ts-expect-error T can't be a Promise so it's actually the same
-  return useCachedPromise(fn, [command, Array.isArray(optionsOrArgs) ? optionsOrArgs : [], execOptions, input], {
-    ...useCachedPromiseOptions,
-    abortable,
-  });
+  return useCachedPromise(
+    fn,
+    [command, Array.isArray(optionsOrArgs) ? optionsOrArgs : [], execOptions, input],
+    {
+      ...useCachedPromiseOptions,
+      abortable,
+    },
+  );
 }

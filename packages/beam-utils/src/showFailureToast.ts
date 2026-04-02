@@ -44,9 +44,15 @@ export function showFailureToast(
 const handleErrorToastAction = (error: unknown): Toast.ActionOptions => {
   let reportUrl: string | undefined;
   try {
-    const packageJSON = JSON.parse(fs.readFileSync(path.join(environment.assetsPath, "..", "package.json"), "utf8"));
+    const packageJSON = JSON.parse(
+      fs.readFileSync(path.join(environment.assetsPath, "..", "package.json"), "utf8"),
+    );
 
-    if (packageJSON.bugs && typeof packageJSON.bugs === "object" && typeof packageJSON.bugs.url === "string") {
+    if (
+      packageJSON.bugs &&
+      typeof packageJSON.bugs === "object" &&
+      typeof packageJSON.bugs.url === "string"
+    ) {
       reportUrl = packageJSON.bugs.url;
     } else if (typeof packageJSON.homepage === "string") {
       reportUrl = packageJSON.homepage;

@@ -75,12 +75,16 @@ export type CreateInterExtensionDeeplinkOptions = CreateExtensionDeeplinkBaseOpt
 /**
  * Options for creating a deeplink to an extension.
  */
-export type CreateExtensionDeeplinkOptions = CreateInterExtensionDeeplinkOptions | CreateExtensionDeeplinkBaseOptions;
+export type CreateExtensionDeeplinkOptions =
+  | CreateInterExtensionDeeplinkOptions
+  | CreateExtensionDeeplinkBaseOptions;
 
 /**
  * Options for creating a deeplink.
  */
-export type CreateDeeplinkOptions = CreateScriptCommandDeeplinkOptions | CreateExtensionDeeplinkOptions;
+export type CreateDeeplinkOptions =
+  | CreateScriptCommandDeeplinkOptions
+  | CreateExtensionDeeplinkOptions;
 
 function getProtocol() {
   if (environment.isRaycast) {
@@ -91,7 +95,9 @@ function getProtocol() {
 }
 
 function getOwnerOrAuthorName() {
-  const packageJSON = JSON.parse(fs.readFileSync(path.join(environment.assetsPath, "..", "package.json"), "utf8"));
+  const packageJSON = JSON.parse(
+    fs.readFileSync(path.join(environment.assetsPath, "..", "package.json"), "utf8"),
+  );
   return packageJSON.owner || packageJSON.author;
 }
 

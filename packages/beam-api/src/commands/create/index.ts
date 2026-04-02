@@ -74,7 +74,9 @@ function ensureTargetDir(targetDir: string, force: boolean): void {
   }
 
   if (!force) {
-    throw new Error(`Target directory ${targetDir} already exists and is not empty. Use --force to overwrite it.`);
+    throw new Error(
+      `Target directory ${targetDir} already exists and is not empty. Use --force to overwrite it.`,
+    );
   }
 
   rmSync(targetDir, { recursive: true, force: true });
@@ -124,7 +126,7 @@ export default class Create extends Command {
   static description = "Scaffold a new Beam extension from the bundled boilerplate";
   static examples = [
     "<%= config.bin %> <%= command.id %> --directory my-extension",
-    "<%= config.bin %> <%= command.id %> --directory my-extension --title \"My Extension\" --owner beam-launcher",
+    '<%= config.bin %> <%= command.id %> --directory my-extension --title "My Extension" --owner beam-launcher',
   ];
 
   static flags = {
@@ -185,7 +187,9 @@ export default class Create extends Command {
     cpSync(templateDir, targetDir, {
       recursive: true,
       force: true,
-      filter: (entry) => !entry.includes(`${path.sep}node_modules${path.sep}`) && !entry.endsWith(`${path.sep}node_modules`),
+      filter: (entry) =>
+        !entry.includes(`${path.sep}node_modules${path.sep}`) &&
+        !entry.endsWith(`${path.sep}node_modules`),
     });
 
     updateManifest(path.join(targetDir, "package.json"), {

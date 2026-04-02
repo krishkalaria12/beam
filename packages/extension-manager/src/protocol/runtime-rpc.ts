@@ -10,10 +10,7 @@ import { writeOutput } from "../io";
 
 export function writeRuntimeRpc(message: RuntimeRpcMessage): void {
   writeOutput(
-    createBridgeMessageEnvelope(
-      BridgeMessageKind.RuntimeRpc,
-      RuntimeRpc.toJSON(message),
-    ),
+    createBridgeMessageEnvelope(BridgeMessageKind.RuntimeRpc, RuntimeRpc.toJSON(message)),
   );
 }
 
