@@ -32,6 +32,13 @@ function walk(directory) {
   });
 }
 
+if (!fs.existsSync(upstreamDir)) {
+  console.warn(
+    `Skipping upstream sync: ${upstreamDir} does not exist. Using the checked-in Beam utils snapshot.`,
+  );
+  process.exit(0);
+}
+
 for (const sourcePath of walk(upstreamDir)) {
   const relativePath = path.relative(upstreamDir, sourcePath);
   if (beamForkedFiles.has(relativePath)) {

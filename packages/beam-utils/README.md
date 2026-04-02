@@ -4,7 +4,7 @@ Beam-native utilities for extension development.
 
 This package mirrors most of the public surface of `@raycast/utils`, but is wired for Beam's runtime and SDK.
 
-The upstream Raycast utils source lives in `utils-main/`.
+The upstream Raycast utils source lives in `utils-main/` when you have that checkout available locally. Beam also keeps a checked-in snapshot under `packages/beam-utils/src`, so regular builds do not require the upstream clone.
 
 Beam-specific forks currently live in:
 

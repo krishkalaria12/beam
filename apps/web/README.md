@@ -1,6 +1,6 @@
-# Beam
+# Beam Web
 
-Landing page and concept explorations for Beam, a high-performance command layer with a native-system, amber-CRT visual direction.
+Landing page for Beam, the Linux-first command launcher.
 
 ## Stack
 
@@ -12,17 +12,17 @@ Landing page and concept explorations for Beam, a high-performance command layer
 ## Development
 
 ```sh
-npm install
-npm run dev
+bun install
+bun run dev
 ```
 
 ## Build
 
 ```sh
-npm run build
+bun run build
 ```
 
 ## Notes
 
 - The live route is [`src/pages/index.astro`](src/pages/index.astro).
-- Iteration studies are preserved in [`src/pages/1.astro`](src/pages/1.astro) through [`src/pages/5.astro`](src/pages/5.astro).
+- Shared page metadata lives in [`src/layouts/Layout.astro`](src/layouts/Layout.astro).

@@ -2,13 +2,15 @@
   "manifest_version": 2,
   "name": "Beam Browser Bridge (Firefox)",
   "description": "Sync browser tabs/content with Beam launcher",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "permissions": [
     "tabs",
     "activeTab",
     "storage",
     "alarms",
-    "<all_urls>",
+    "http://*/*",
+    "https://*/*",
+    "file:///*",
     "http://127.0.0.1/*",
     "http://localhost/*"
   ],

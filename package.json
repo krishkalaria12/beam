@@ -2,7 +2,16 @@
   "name": "beam",
   "version": "1.0.0",
   "private": true,
-  "packageManager": "bun@1.2.19",
+  "homepage": "https://github.com/krishkalaria12/beam",
+  "bugs": {
+    "url": "https://github.com/krishkalaria12/beam/issues"
+  },
+  "license": "MIT",
+  "author": "Krish Kalaria",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/krishkalaria12/beam.git"
+  },
   "workspaces": [
     "apps/*",
     "packages/*"
@@ -43,5 +52,6 @@
     "turbo": "^2.8.12",
     "typescript": "^5.9.3",
     "vite": "^8.0.0"
-  }
+  },
+  "packageManager": "bun@1.2.19"
 }

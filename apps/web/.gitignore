@@ -22,4 +22,3 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
-\n# Second Brain Iterations\nsrc/pages/1.astro\nsrc/pages/2.astro\nsrc/pages/3.astro\nsrc/pages/4.astro\nsrc/pages/5.astro\nsrc/components/Switcher.astro

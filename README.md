@@ -36,7 +36,9 @@ Bringing the beloved **Raycast-like experience to Linux**, it combines a command
 ## 🔥 Key Features
 
 ### 🎯 Smart Command Palette
+
 The core of Beam is a lightning-fast, registry-first command system.
+
 - 🔍 **Fuzzy Search:** Instantly find apps, files, commands, and custom entries.
 - 🧠 **Smart Ranking:** Learns from your usage—factors in frequency, recency, and pinned items.
 - ⚡ **Trigger Modes:** Quickly route to specific tools using configurable prefixes:
@@ -46,7 +48,9 @@ The core of Beam is a lightning-fast, registry-first command system.
 - ⌨️ **Per-Command Hotkeys:** Bind any action directly to a keyboard shortcut.
 
 ### 🛠️ Built-in Productivity Suite
+
 Forget opening multiple apps. Beam comes with powerful, native panels:
+
 - 📦 **App Launcher:** Discovers and launches `.desktop` entries effortlessly.
 - 🧮 **Smart Calculator:** Natural language math, conversions, dates, and live rates.
 - 📋 **Clipboard Manager:** Persistent, searchable, AES-GCM encrypted clipboard history (Text & Images).
@@ -58,17 +62,22 @@ Forget opening multiple apps. Beam comes with powerful, native panels:
 - 🔮 **And more:** Emoji Picker, Dictionary, Translation, Wi-Fi Speed Test, Window Switcher, System Actions.
 
 ### 🧩 Raycast-Compatible Extensions
+
 Beam isn't just a basic launcher—it's a platform. It ships with a **Node.js extension runtime** offering a custom React reconciler.
+
 - 🛍️ **Extension Store:** Browse, install, and manage extensions directly inside Beam.
 - 🔄 **Raycast Compatibility:** Run existing Raycast script-commands natively!
 - 🌉 **Browser Bridge:** Connects with Chrome/Firefox to push tab data locally.
 
 ### 🔌 Deep Integrations
+
 - 🎵 **Spotify:** OAuth authentication, playback controls, and library search.
 - 🐙 **GitHub:** Manage PRs, assignments, and search repositories deeply.
 
 ### 🎨 Fully Customizable
+
 Make Beam yours with powerful theming support:
+
 - **Default, Glassy, or Solid** visual styles.
 - **Custom CSS Themes:** Build your own look (`theme.json` + `theme.css`).
 - Automatically syncs with your system's Light/Dark mode.
@@ -77,16 +86,23 @@ Make Beam yours with powerful theming support:
 
 ## 🚀 Getting Started
 
+### Distribution Status
+
+Beam is being prepared for its first public package release. AUR packaging is planned; until then, the source workflow below is the supported install path.
+
 ### Prerequisites
+
 Beam is built **Linux-first** and deeply integrates with freedesktop standards and Wayland APIs.
+
 1. [Bun](https://bun.sh/) (Latest stable)
 2. [Rust Toolchain](https://rustup.rs/)
 3. [Tauri System Dependencies](https://tauri.app/start/prerequisites/)
 4. `patchelf` (Required for Linux build linking)
 
-### Installation & Development
+### Source Installation & Development
 
 Clone the repository and install dependencies:
+
 ```bash
 git clone https://github.com/krishkalaria12/beam.git
 cd beam
@@ -94,11 +110,13 @@ bun install
 ```
 
 Start the development server (runs Vite + Tauri concurrently):
+
 ```bash
 bun run desktop:dev
 ```
 
 ### Production Build
+
 ```bash
 bun run desktop:build
 ```
@@ -111,9 +129,9 @@ bun run desktop:build
 
 Beam is highly configurable through its internal settings panel (`Super + Space` -> Type "Settings").
 
-* **Global Hotkey:** Customize the main activation key (Default: `Super + Space`).
-* **Trigger Symbols:** Overwrite prefixes (e.g., change `!` for Quicklinks to something else).
-* **Window Style:** Toggle between Default, Glassy (Frosted Glass), or Solid.
+- **Global Hotkey:** Customize the main activation key (Default: `Super + Space`).
+- **Trigger Symbols:** Overwrite prefixes (e.g., change `!` for Quicklinks to something else).
+- **Window Style:** Toggle between Default, Glassy (Frosted Glass), or Solid.
 
 ---
 
@@ -126,6 +144,7 @@ We welcome contributions! Beam is rapidly evolving, and we'd love your help.
 3. Ensure you follow existing patterns (especially regarding the Command Registry).
 4. Run validation checks:
    ```bash
+   bun run lint
    bun run check-types
    bun run fmt:check
    bun run rust:fmt:check
@@ -133,15 +152,17 @@ We welcome contributions! Beam is rapidly evolving, and we'd love your help.
 5. Submit a pull request detailing your changes.
 
 **Current Priorities:**
-* Expanding cross-platform support (macOS/Windows).
-* Improving test coverage.
-* Enhancing the Raycast Extension compatibility layer.
+
+- Expanding cross-platform support (macOS/Windows).
+- Improving test coverage.
+- Enhancing the Raycast Extension compatibility layer.
 
 ---
 
 ## 🔒 Privacy & Persistence
 
 Beam keeps your data secure and local:
+
 - **Encrypted Local Storage:** Clipboard entries are AES-GCM encrypted.
 - **Keyring Integration:** AI API keys and OAuth tokens are stored in the secure OS system keyring.
 - **SQLite DBs:** Persistent storage for Todos, Chat, and Snippets is managed locally. No tracking. No telemetry.

@@ -142,7 +142,6 @@
   "ignorePatterns": [
     "apps/desktop/src-tauri/target/**",
     "resources/monorepo/**",
-    "packages/browser-extension/**",
     "packages/beam-api/dist/**",
     "infra/store/artifacts/**"
   ]

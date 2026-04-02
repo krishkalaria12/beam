@@ -1,0 +1,57 @@
+name: ci
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: setup bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.2.19
+
+      - name: setup rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: install linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libgtk-3-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf
+
+      - name: install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: lint
+        run: bun run lint
+
+      - name: check rust formatting
+        run: bun run rust:fmt:check
+
+      - name: check types
+        run: bun run check-types
+
+      - name: build extension runtime
+        run: bun run extension-manager:build
+
+      - name: build web
+        run: bun run web:build
+
+      - name: build desktop frontend
+        run: bun run desktop:frontend:build
+
+      - name: cargo check
+        run: cargo check --manifest-path apps/desktop/src-tauri/Cargo.toml --locked

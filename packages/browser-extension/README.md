@@ -24,3 +24,4 @@ This extension publishes browser tab snapshots and active-tab content to Beam's 
 - Beam must be running for sync to succeed.
 - The extension syncs on tab changes and every ~5 seconds.
 - Content capture is best-effort and only for URLs where script injection is allowed.
+- Host permissions are limited to `http`, `https`, and `file` URLs because Beam only indexes pages it can open locally.

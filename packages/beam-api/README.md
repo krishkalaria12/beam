@@ -106,7 +106,7 @@ NPM_CONFIG_TOKEN=... bun run publish:beam-api -- --publish
 
 ## Docs
 
-For the Beam repo’s full local workflow, see [../../resources/docs/extensions/developer-workflow.md](../../resources/docs/extensions/developer-workflow.md).
+For the Beam repo's full local workflow, see the root [`README.md`](../../README.md) and the bundled extension template [`README.md`](./templates/extension-boilerplate/README.md).
 
 ## Versioning
 

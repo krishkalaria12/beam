@@ -1,27 +1,28 @@
 {
   "name": "@beam-launcher/utils",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Utilities for building Beam extensions",
-  "type": "module",
   "keywords": [
     "beam",
     "extensions",
     "raycast",
     "utils"
   ],
+  "homepage": "https://github.com/krishkalaria12/beam/tree/main/packages/beam-utils",
+  "bugs": {
+    "url": "https://github.com/krishkalaria12/beam/issues"
+  },
   "license": "MIT",
-  "author": "",
+  "author": "Krish Kalaria",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/krishkalaria12/beam.git"
-  },
-  "engines": {
-    "node": ">=18"
   },
   "files": [
     "dist",
     "README.md"
   ],
+  "type": "module",
   "main": "dist/index.cjs",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -58,5 +59,8 @@
   "peerDependencies": {
     "@beam-launcher/api": "^1.0.0",
     "react": "^19.0.0"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }

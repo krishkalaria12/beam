@@ -2,10 +2,19 @@
   "name": "@beam-launcher/api",
   "version": "1.0.0",
   "description": "TypeScript SDK to build Beam extensions",
-  "type": "commonjs",
-  "keywords": [],
-  "license": "ISC",
-  "author": "",
+  "keywords": [
+    "beam",
+    "extensions",
+    "launcher",
+    "raycast",
+    "sdk"
+  ],
+  "homepage": "https://github.com/krishkalaria12/beam/tree/main/packages/beam-api",
+  "bugs": {
+    "url": "https://github.com/krishkalaria12/beam/issues"
+  },
+  "license": "MIT",
+  "author": "Krish Kalaria",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/krishkalaria12/beam.git"
@@ -14,12 +23,13 @@
     "beam-api": "bin/run.js"
   },
   "files": [
-    "dist",
     "bin",
+    "dist",
+    "README.md",
     "templates",
-    "types",
-    "README.md"
+    "types"
   ],
+  "type": "commonjs",
   "main": "dist/src/index.js",
   "types": "./types/index.d.ts",
   "exports": {
@@ -35,7 +45,6 @@
     "access": "public"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsdown --config-loader unrun --config tsdown.config.ts",
     "check-types": "bunx tsc --noEmit",
     "pack": "bun run build && bun pm pack",
@@ -61,9 +70,9 @@
     "chai": "^4",
     "mocha": "^10",
     "oclif": "^4",
-    "tsdown": "^0.21.3",
     "ts-node": "^10",
     "ts-proto": "^2.7.5",
+    "tsdown": "^0.21.3",
     "typedoc": "^0.28.13",
     "typedoc-github-theme": "^0.3.1",
     "typedoc-plugin-markdown": "^4.8.1",

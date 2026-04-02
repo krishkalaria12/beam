@@ -1,13 +1,12 @@
 {
   "name": "@beam/extension-manager",
   "version": "1.0.0",
-  "description": "",
+  "description": "Beam's extension runtime and packaging bridge",
   "keywords": [],
-  "license": "ISC",
-  "author": "",
+  "license": "MIT",
+  "author": "Krish Kalaria",
   "main": "index.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "sync:beam-utils-vendor": "node scripts/sync-beam-utils-vendor.mjs",
     "build": "bun run --cwd ../beam-utils build && bun run sync:beam-utils-vendor && tsdown --config-loader unrun --config tsdown.config.ts && bun run sync:desktop-runtime",
     "sync:desktop-runtime": "mkdir -p ../../apps/desktop/src-tauri/binaries && cp dist/index.cjs ../../apps/desktop/src-tauri/binaries/extension-manager.cjs",
