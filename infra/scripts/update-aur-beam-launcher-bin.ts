@@ -252,7 +252,7 @@ function renderSrcinfo(args: {
     `\tsha256sums = ${args.desktopSha256}`,
     `\tsha256sums = ${args.iconSha256}`,
     `\tsha256sums = ${args.licenseSha256}`,
-    `\npackage = ${packageName}`,
+    `\npkgname = ${packageName}`,
     `\tpkgdesc = ${packageDescription}`,
     `\tarch = ${arch}`,
   ];
