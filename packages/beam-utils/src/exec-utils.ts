@@ -4,7 +4,7 @@ import Stream from "node:stream";
 import { promisify } from "node:util";
 import { onExit } from "./vendors/signal-exit";
 
-export type SpawnedPromise = Promise<{
+type SpawnedPromise = Promise<{
   exitCode: number | null;
   error?: Error;
   signal: NodeJS.Signals | null;

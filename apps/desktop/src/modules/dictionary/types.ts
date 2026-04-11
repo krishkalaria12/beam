@@ -15,6 +15,6 @@ export interface DictionaryResponse {
   entries: Entry[];
 }
 
-export interface DictionaryError {
+interface DictionaryError {
   message: string;
 }

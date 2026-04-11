@@ -12,7 +12,7 @@ import {
 
 import { writeOutput } from "../io";
 
-export function writeRuntimeRender(message: RuntimeRenderMessage): void {
+function writeRuntimeRender(message: RuntimeRenderMessage): void {
   writeOutput(
     createBridgeMessageEnvelope(BridgeMessageKind.RuntimeRender, RuntimeRender.toJSON(message)),
   );
@@ -26,7 +26,7 @@ export function writeRuntimeRenderCommandMessage(command: RuntimeCommand): void 
   writeRuntimeRender(createRuntimeRenderCommand(command));
 }
 
-export function writeRuntimeRenderLogMessage(payload: unknown): void {
+function writeRuntimeRenderLogMessage(payload: unknown): void {
   writeRuntimeRender(createRuntimeRenderLog(payload));
 }
 

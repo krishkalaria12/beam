@@ -15,7 +15,7 @@ import {
   saveSelectedProvider,
 } from "@/modules/ai/utils/ai-chat-utils";
 
-export interface ActiveRequest {
+interface ActiveRequest {
   requestId: string;
   assistantMessageId: string;
 }

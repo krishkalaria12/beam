@@ -67,8 +67,7 @@ function ClipboardListItem({ entry, isSelected, onSelect }: ClipboardListItemPro
       role="button"
       tabIndex={0}
       className={cn(
-        "group relative flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 transition-colors",
-        "[content-visibility:auto] [contain-intrinsic-size:56px]",
+        "group relative flex h-[62px] cursor-pointer items-center gap-3 rounded-xl px-3 transition-colors",
         isSelected
           ? "bg-[var(--launcher-card-hover-bg)] ring-1 ring-[var(--launcher-card-border)]"
           : "hover:bg-[var(--launcher-card-hover-bg)]",
@@ -190,12 +189,44 @@ export function ClipboardList({ entries, selectedIndex, onSelect, isLoading }: C
 
     return nextRows;
   }, [groupedEntries]);
+
+  useLayoutEffect(() => {
+    if (!import.meta.env.DEV) {
+      return;
+    }
+
+    console.debug(
+      "[ClipboardList] entries",
+      entries.map((entry, index) => ({
+        index,
+        copiedAt: entry.copied_at,
+        type: entry.content_type,
+        characters: entry.character_count,
+        preview:
+          entry.content_type === ClipboardContentType.Image
+            ? "Image"
+            : entry.value.replace(/\s+/g, " ").trim().slice(0, 80),
+      })),
+    );
+    console.debug(
+      "[ClipboardList] rows",
+      rows.map((row, index) => ({
+        index,
+        key: row.key,
+        type: row.type,
+        title: row.type === "header" ? row.title : undefined,
+        originalIndex: row.type === "item" ? row.originalIndex : undefined,
+      })),
+    );
+  }, [entries, rows]);
+
   const rowVirtualizer = useVirtualizer({
     count: rows.length,
     getScrollElement: () => scrollContainerRef.current,
+    getItemKey: (index) => rows[index]?.key ?? index,
     estimateSize: (index) =>
       rows[index]?.type === "header" ? CLIPBOARD_HEADER_HEIGHT : CLIPBOARD_ITEM_HEIGHT,
-    measureElement: (element) => element.getBoundingClientRect().height,
+    debug: import.meta.env.DEV,
     overscan: 8,
   });
   const virtualRows = rowVirtualizer.getVirtualItems();
@@ -246,12 +277,11 @@ export function ClipboardList({ entries, selectedIndex, onSelect, isLoading }: C
                 <div
                   key={row.key}
                   data-index={virtualRow.index}
-                  ref={rowVirtualizer.measureElement}
                   className="absolute left-0 top-0 w-full"
                   style={{ transform: `translateY(${virtualRow.start}px)` }}
                 >
                   {row.type === "header" ? (
-                    <div className="flex items-center gap-3 px-3 py-1">
+                    <div className="flex h-8 items-center gap-3 px-3">
                       <h3 className="text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
                         {row.title}
                       </h3>

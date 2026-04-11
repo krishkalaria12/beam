@@ -351,17 +351,13 @@ fn read_clipboard_entry(clipboard: &mut Clipboard) -> Option<String> {
     if let Ok(text) = clipboard.get_text() {
         let text = text.trim();
 
-        if !text.is_empty() && text.len() <= CLIPBOARD_CONFIG.max_entry_bytes {
+        if !text.is_empty() {
             return Some(text.to_string());
         }
     }
 
     if let Ok(image_data) = clipboard.get_image() {
-        let image = get_image_as_base64(image_data)?;
-
-        if image.len() <= CLIPBOARD_CONFIG.max_entry_bytes {
-            return Some(image);
-        }
+        return get_image_as_base64(image_data);
     }
 
     None
@@ -371,9 +367,14 @@ fn read_clipboard_entry(clipboard: &mut Clipboard) -> Option<String> {
 fn read_linux_clipboard_entry() -> Option<String> {
     let read_result = linux_desktop::clipboard::clipboard_read().ok()?;
     let text = read_result.text?;
+    if text.starts_with("data:image/") {
+        return Some(text);
+    }
+
     let text = text.trim();
-    if text.is_empty() || text.len() > CLIPBOARD_CONFIG.max_entry_bytes {
+    if text.is_empty() {
         return None;
     }
+
     Some(text.to_string())
 }

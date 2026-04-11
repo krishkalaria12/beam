@@ -5,12 +5,12 @@ import type { AttachedFile } from "@/modules/ai/types";
 
 import { assertAiDesktopRuntime, getInvokeErrorMessage } from "./runtime";
 
-export interface AiSettings {
+interface AiSettings {
   enabled: boolean;
   modelAssociations: Record<string, string>;
 }
 
-export interface AskAiStreamOptions {
+interface AskAiStreamOptions {
   model?: string;
   provider?: string;
   conversationId?: string;
@@ -19,17 +19,17 @@ export interface AskAiStreamOptions {
   attachments?: AttachedFile[];
 }
 
-export interface AiStreamChunkPayload {
+interface AiStreamChunkPayload {
   requestId: string;
   text: string;
 }
 
-export interface AiStreamEndPayload {
+interface AiStreamEndPayload {
   requestId: string;
   fullText: string;
 }
 
-export interface AiStreamErrorPayload {
+interface AiStreamErrorPayload {
   requestId: string;
   error: string;
 }
@@ -53,7 +53,7 @@ export interface AiPersistedMessage {
   createdAt: number;
 }
 
-export interface AiTokenUsageSummary {
+interface AiTokenUsageSummary {
   requestCount: number;
   inputTokens: number;
   outputTokens: number;
@@ -90,7 +90,7 @@ export async function getAiSettings(): Promise<AiSettings> {
   }
 }
 
-export async function setAiSettings(settings: AiSettings): Promise<void> {
+async function setAiSettings(settings: AiSettings): Promise<void> {
   assertAiDesktopRuntime();
 
   try {
@@ -136,7 +136,7 @@ export async function clearAiChatHistory(conversationId?: string): Promise<void>
   }
 }
 
-export async function getAiTokenUsageSummary(
+async function getAiTokenUsageSummary(
   conversationId?: string,
 ): Promise<AiTokenUsageSummary> {
   assertAiDesktopRuntime();

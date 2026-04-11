@@ -28,7 +28,7 @@ function getParentDirectory(filePath: string) {
 
 const useApplicationActionsStore = create<ApplicationActionsState>(() => initialState);
 
-export function syncApplicationActionsState(nextState: ApplicationActionsState) {
+function syncApplicationActionsState(nextState: ApplicationActionsState) {
   const currentState = useApplicationActionsStore.getState();
   if (
     currentState.selectedApplication === nextState.selectedApplication &&
@@ -40,7 +40,7 @@ export function syncApplicationActionsState(nextState: ApplicationActionsState) 
   useApplicationActionsStore.setState(nextState);
 }
 
-export function clearApplicationActionsState() {
+function clearApplicationActionsState() {
   useApplicationActionsStore.setState(initialState);
 }
 
@@ -48,7 +48,7 @@ async function copyText(value: string) {
   await navigator.clipboard.writeText(value);
 }
 
-export function toManagedApplicationItem(application: Application): LauncherManagedItem {
+function toManagedApplicationItem(application: Application): LauncherManagedItem {
   const commandTitle = buildApplicationTitle(application.name, application.exec_path);
 
   return {

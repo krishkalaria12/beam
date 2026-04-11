@@ -7,7 +7,7 @@ import type {
   ExtensionStoreUpdateRecord,
 } from "@beam/extension-protocol";
 
-export type { Author, Preference, PluginInfo };
+export type {  Preference, PluginInfo };
 
 export const heuristicViolationSchema = z.object({
   commandName: z.string(),

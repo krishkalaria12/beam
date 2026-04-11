@@ -1,6 +1,6 @@
 import type { KeyboardShortcutDefinition } from "@/modules/extensions/components/runner/types";
 
-export function isMacPlatform(): boolean {
+function isMacPlatform(): boolean {
   if (typeof navigator === "undefined") {
     return false;
   }
@@ -31,7 +31,7 @@ export function keyMatchesShortcut(
   );
 }
 
-export function parseShortcutTokens(shortcut?: string): string[] {
+function parseShortcutTokens(shortcut?: string): string[] {
   if (!shortcut) {
     return [];
   }

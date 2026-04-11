@@ -57,7 +57,7 @@ export interface DesktopContext {
   };
 }
 
-export const BrowserExtension = { name: "BrowserExtension" };
+const BrowserExtension = { name: "BrowserExtension" };
 export const AI = { name: "AI" };
 
 export const environment = {
@@ -221,7 +221,7 @@ async function loadDesktopContext(): Promise<DesktopContext> {
   };
 }
 
-export async function getEnvironmentProtocolSnapshot(): Promise<GetEnvironmentResponse> {
+async function getEnvironmentProtocolSnapshot(): Promise<GetEnvironmentResponse> {
   const context = await loadDesktopContext();
   return createEnvironmentResponse(environment, context, {
     aiAccess: aiContext.hasAccess,

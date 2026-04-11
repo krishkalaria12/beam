@@ -74,7 +74,7 @@ function getBestMatchTier(
   return { tier, score: 0 };
 }
 
-export interface CommandMatchInput {
+interface CommandMatchInput {
   command: CommandDescriptor;
   query: string;
   aliases?: readonly string[];

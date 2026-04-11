@@ -11,7 +11,7 @@ type SpeedTestChartConfig = Record<
   }
 >;
 
-export type Metrics = {
+type Metrics = {
   downloadMbps: number | null;
   uploadMbps: number | null;
   unloadedLatencyMs: number | null;
@@ -36,7 +36,7 @@ export const EMPTY_METRICS: Metrics = {
 
 export const MAX_THROUGHPUT_HISTORY_POINTS = 80;
 
-export const speedTestChartConfig = {
+const speedTestChartConfig = {
   download: {
     label: "Download",
     theme: {

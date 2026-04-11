@@ -2,9 +2,9 @@ import type { QueryClient } from "@tanstack/react-query";
 
 import { getDefinition } from "@/modules/dictionary/api/get-definition";
 
-export const DICTIONARY_QUERY_KEY = ["dictionary"] as const;
-export const DICTIONARY_STALE_TIME_MS = 1000 * 60 * 60 * 12;
-export const DICTIONARY_GC_TIME_MS = 1000 * 60 * 60 * 24;
+const DICTIONARY_QUERY_KEY = ["dictionary"] as const;
+const DICTIONARY_STALE_TIME_MS = 1000 * 60 * 60 * 12;
+const DICTIONARY_GC_TIME_MS = 1000 * 60 * 60 * 24;
 
 export function getDictionaryQueryOptions(word: string, language?: string) {
   const normalizedWord = word.trim();

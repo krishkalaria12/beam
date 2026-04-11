@@ -3,8 +3,8 @@ import type { QueryClient } from "@tanstack/react-query";
 import { getNotes } from "@/modules/notes/api/notes";
 
 export const NOTES_QUERY_KEY = ["notes", "items"] as const;
-export const NOTES_STALE_TIME_MS = 30_000;
-export const NOTES_GC_TIME_MS = 1000 * 60 * 10;
+const NOTES_STALE_TIME_MS = 30_000;
+const NOTES_GC_TIME_MS = 1000 * 60 * 10;
 
 export function getNotesQueryOptions() {
   return {

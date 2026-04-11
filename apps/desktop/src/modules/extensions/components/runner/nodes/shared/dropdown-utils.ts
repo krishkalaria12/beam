@@ -1,14 +1,14 @@
 import type { ExtensionUiNode } from "@/modules/extensions/runtime/store";
 import { asString } from "@/modules/extensions/components/runner/utils";
 
-export interface DropdownItemDescriptor {
+interface DropdownItemDescriptor {
   nodeId: number;
   value: string;
   title: string;
   icon?: unknown;
 }
 
-export interface DropdownSectionDescriptor {
+interface DropdownSectionDescriptor {
   title?: string;
   items: DropdownItemDescriptor[];
 }

@@ -58,7 +58,7 @@ export async function getSnippets(): Promise<Snippet[]> {
   return parsed.data;
 }
 
-export async function getSnippetById(id: string): Promise<Snippet | null> {
+async function getSnippetById(id: string): Promise<Snippet | null> {
   assertDesktopRuntime();
 
   const snippetId = normalizeRequiredText(id, "snippet id");

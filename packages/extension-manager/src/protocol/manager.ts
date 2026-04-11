@@ -8,8 +8,8 @@ import {
   type RuntimeEvent,
 } from "@beam/extension-protocol";
 
-export type LaunchMode = "view" | "no-view" | "menu-bar";
-export type RuntimeLaunchType = "background" | "userInitiated";
+type LaunchMode = "view" | "no-view" | "menu-bar";
+type RuntimeLaunchType = "background" | "userInitiated";
 
 type ProtobufBridgePayload = {
   requestId?: string;

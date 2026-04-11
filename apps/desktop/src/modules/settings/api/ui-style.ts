@@ -29,7 +29,7 @@ export function normalizeBaseColor(value: string | null | undefined): string {
   return DEFAULT_BASE_COLOR;
 }
 
-export async function getUiStyle(): Promise<UiStylePreference> {
+async function getUiStyle(): Promise<UiStylePreference> {
   const result = await invoke<unknown>("get_ui_style");
   return normalizeUiStyle(typeof result === "string" ? result : null);
 }
@@ -40,7 +40,7 @@ export async function setUiStylePreference(style: UiStylePreference): Promise<Ui
   return normalizeUiStyle(typeof result === "string" ? result : normalized);
 }
 
-export async function getBaseColor(): Promise<string> {
+async function getBaseColor(): Promise<string> {
   const result = await invoke<unknown>("get_base_color");
   return normalizeBaseColor(typeof result === "string" ? result : null);
 }

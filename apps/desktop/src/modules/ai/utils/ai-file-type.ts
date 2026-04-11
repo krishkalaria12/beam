@@ -100,7 +100,7 @@ export function isImageFile(file: AttachedFile): boolean {
   return isImageMimeType(file.type);
 }
 
-export function isSupportedAttachmentMimeType(mimeType: string): boolean {
+function isSupportedAttachmentMimeType(mimeType: string): boolean {
   const normalized = normalizeMimeType(mimeType);
   if (isImageMimeType(normalized)) {
     return true;
@@ -138,7 +138,7 @@ async function isLikelyTextFile(file: File): Promise<boolean> {
   return suspiciousControlBytes / bytes.length < 0.05;
 }
 
-export async function detectFileMimeType(file: File): Promise<string | null> {
+async function detectFileMimeType(file: File): Promise<string | null> {
   const detected = await fileTypeFromBlob(file).catch(() => undefined);
 
   const browserMimeType =

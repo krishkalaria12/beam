@@ -1,7 +1,7 @@
 import { getBeamApi, preferences } from "./api";
 import { environment } from "./api/environment";
 
-export type Global = typeof globalThis & {
+type Global = typeof globalThis & {
   beam: {
     api: ReturnType<typeof getBeamApi>;
     environ: typeof environment;

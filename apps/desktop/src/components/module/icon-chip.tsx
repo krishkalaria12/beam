@@ -11,7 +11,7 @@ export type IconChipVariant =
   | "red"
   | "green";
 
-export type IconChipSize = "xs" | "sm" | "md" | "lg";
+type IconChipSize = "xs" | "sm" | "md" | "lg";
 
 interface IconChipProps {
   variant?: IconChipVariant;

@@ -83,4 +83,4 @@ function Input({
 }
 
 export { Input };
-export type { InputProps };
+;

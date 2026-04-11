@@ -1,3 +1,4 @@
+use base64::{engine::general_purpose, Engine as _};
 use once_cell::sync::Lazy;
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
@@ -85,6 +86,7 @@ enum HelperMessageKind {
 pub struct HelperSelectionResponse {
     pub mime_types: Vec<String>,
     pub text: Option<String>,
+    pub image_data_url: Option<String>,
     pub file_uris: Vec<String>,
     pub backend: Option<String>,
     pub error: Option<String>,
@@ -106,6 +108,8 @@ struct HelperMessage {
     mime_types: Vec<String>,
     #[serde(default)]
     text: Option<String>,
+    #[serde(default)]
+    image_data_url: Option<String>,
     #[serde(default)]
     file_uris: Vec<String>,
     #[serde(default)]
@@ -239,6 +243,7 @@ impl HelperProcess {
             return Ok(HelperSelectionResponse {
                 mime_types: message.mime_types,
                 text: message.text,
+                image_data_url: message.image_data_url,
                 file_uris: message.file_uris,
                 backend: message.backend,
                 error: message.error,
@@ -519,11 +524,13 @@ fn read_selection(clipboard: ClipboardType) -> Result<HelperSelectionResponse, S
         .map_err(|error| format!("failed to read offered MIME types: {error}"))?;
     let backend = detect_backend()?.as_str().to_string();
     let text = read_text_content(clipboard, &mime_types);
+    let image_data_url = read_image_content(clipboard, &mime_types);
     let file_uris = read_file_content(clipboard, &mime_types);
 
     Ok(HelperSelectionResponse {
         mime_types,
         text,
+        image_data_url,
         file_uris,
         backend: Some(backend),
         error: None,
@@ -591,6 +598,36 @@ fn read_file_content(clipboard: ClipboardType, mime_types: &[String]) -> Vec<Str
     Vec::new()
 }
 
+#[cfg(target_os = "linux")]
+fn read_image_content(clipboard: ClipboardType, mime_types: &[String]) -> Option<String> {
+    for mime in mime_types {
+        let Some(normalized_mime) = normalize_image_mime(mime) else {
+            continue;
+        };
+        let Ok((mut pipe, _)) =
+            paste::get_contents(clipboard, Seat::Unspecified, MimeType::Specific(mime))
+        else {
+            continue;
+        };
+
+        let mut bytes = Vec::new();
+        if pipe.read_to_end(&mut bytes).is_err() || bytes.is_empty() {
+            continue;
+        }
+
+        let encoded = general_purpose::STANDARD.encode(bytes);
+        return Some(format!("data:{normalized_mime};base64,{encoded}"));
+    }
+
+    None
+}
+
+#[cfg(target_os = "linux")]
+fn normalize_image_mime(mime: &str) -> Option<&str> {
+    let normalized = mime.split(';').next()?.trim();
+    normalized.starts_with("image/").then_some(normalized)
+}
+
 fn parse_file_uris(mime: &str, contents: &str) -> Vec<String> {
     match mime {
         "text/uri-list" => contents
@@ -620,6 +657,7 @@ pub fn run_helper_main() -> Result<(), String> {
         helper_path: locate_helper_launch_spec().map(|spec| spec.helper_path),
         mime_types: Vec::new(),
         text: None,
+        image_data_url: None,
         file_uris: Vec::new(),
         error: (!available).then(|| {
             "no supported Wayland data-control protocol was found on this session".to_string()
@@ -669,6 +707,7 @@ fn respond_to_request(id: u64, response: Result<HelperSelectionResponse, String>
             helper_path: None,
             mime_types: response.mime_types,
             text: response.text,
+            image_data_url: response.image_data_url,
             file_uris: response.file_uris,
             error: response.error,
         },
@@ -680,6 +719,7 @@ fn respond_to_request(id: u64, response: Result<HelperSelectionResponse, String>
             helper_path: None,
             mime_types: Vec::new(),
             text: None,
+            image_data_url: None,
             file_uris: Vec::new(),
             error: Some(error),
         },

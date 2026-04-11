@@ -7,7 +7,7 @@ import {
 } from "@/modules/calculator-history/api/history-actions";
 
 export const calculatorHistoryQueryKey = ["calculator", "history"] as const;
-export const CALCULATOR_HISTORY_STALE_TIME_MS = 15_000;
+const CALCULATOR_HISTORY_STALE_TIME_MS = 15_000;
 
 export function getCalculatorHistoryQueryOptions() {
   return {

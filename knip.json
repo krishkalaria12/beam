@@ -1,0 +1,17 @@
+{
+  "$schema": "https://unpkg.com/knip@latest/schema.json",
+  "workspaces": {
+    ".": {
+      "entry": ["infra/scripts/*.ts"],
+      "project": ["infra/scripts/**/*.ts"]
+    },
+    "apps/*": {},
+    "apps/desktop": {
+      "project": ["src/**/*.{ts,tsx}"]
+    },
+    "packages/*": {},
+    "packages/beam-api": {
+      "project": ["src/**/*.ts"]
+    }
+  }
+}

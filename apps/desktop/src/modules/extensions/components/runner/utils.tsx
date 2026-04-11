@@ -15,7 +15,7 @@ export function asStringArray(value: unknown): string[] {
   return value.filter((entry): entry is string => typeof entry === "string");
 }
 
-export function findNode(
+function findNode(
   tree: Map<number, ExtensionUiNode>,
   nodeId?: number,
 ): ExtensionUiNode | undefined {
@@ -25,7 +25,7 @@ export function findNode(
   return tree.get(nodeId);
 }
 
-export function extractText(tree: Map<number, ExtensionUiNode>, nodeId?: number): string {
+function extractText(tree: Map<number, ExtensionUiNode>, nodeId?: number): string {
   const node = findNode(tree, nodeId);
   if (!node) {
     return "";

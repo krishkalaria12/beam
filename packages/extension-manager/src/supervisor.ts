@@ -36,7 +36,7 @@ type ManagedWorker = {
   terminationTimer: ReturnType<typeof setTimeout> | null;
 };
 
-export class ExtensionManagerSupervisor {
+class ExtensionManagerSupervisor {
   private activeWorker: ManagedWorker | null = null;
   private prewarmedWorker: ManagedWorker | null = null;
   private pendingManagerRequests = new Map<string, string>();

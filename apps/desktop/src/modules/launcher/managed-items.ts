@@ -10,7 +10,7 @@ export type LauncherManagedItemKind =
   | "quicklink"
   | "script";
 
-export interface ManagedItemUsageEntry {
+interface ManagedItemUsageEntry {
   count: number;
   lastUsedAt: string | null;
 }
@@ -36,7 +36,7 @@ export interface LauncherManagedItem {
 
 type ManagedItemIdentity = Pick<LauncherManagedItem, "kind" | "id">;
 
-export interface ManagedItemPreferencesState {
+interface ManagedItemPreferencesState {
   version: 1;
   usageById: Record<string, ManagedItemUsageEntry>;
   favoriteIds: string[];

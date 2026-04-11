@@ -3,6 +3,7 @@ use std::{collections::HashSet, process::Command, thread, time::Duration};
 use arboard::Clipboard;
 use url::Url;
 
+use crate::clipboard::convert_image::get_image_as_base64;
 use crate::clipboard::{ClipboardContent, CopyOptions, ReadResult, SelectedFinderItem};
 
 use super::capabilities::{ClipboardBackendCapabilities, DesktopBackendKind};
@@ -65,6 +66,10 @@ fn create_read_result(text: Option<String>) -> ReadResult {
     }
 }
 
+fn merge_helper_read_result(text: Option<String>, image_data_url: Option<String>) -> ReadResult {
+    create_read_result(text.or(image_data_url))
+}
+
 fn normalize_text_content(content: &ClipboardContent) -> Option<String> {
     if let Some(file) = &content.file {
         return Some(file.clone());
@@ -94,7 +99,18 @@ impl GenericClipboardProvider {
     fn clipboard_read_impl(&self) -> Result<ReadResult> {
         let mut clipboard = Clipboard::new()
             .map_err(|error| LinuxDesktopError::ClipboardError(error.to_string()))?;
-        Ok(create_read_result(clipboard.get_text().ok()))
+        if let Ok(text) = clipboard.get_text() {
+            let trimmed = text.trim();
+            if !trimmed.is_empty() {
+                return Ok(create_read_result(Some(trimmed.to_string())));
+            }
+        }
+
+        if let Ok(image_data) = clipboard.get_image() {
+            return Ok(create_read_result(get_image_as_base64(image_data)));
+        }
+
+        Ok(create_read_result(None))
     }
 
     fn clipboard_copy_impl(&self, content: ClipboardContent) -> Result<()> {
@@ -223,8 +239,24 @@ impl ClipboardProvider for GnomeClipboardProvider {
         }
     }
 
-    fn clipboard_read(&self, _env: &LinuxDesktopEnvironment) -> Result<ReadResult> {
-        Self::read_payload()
+    fn clipboard_read(&self, env: &LinuxDesktopEnvironment) -> Result<ReadResult> {
+        let payload = Self::read_payload()?;
+
+        if env.session_type == "wayland" && wayland_helper::helper_status(env).available {
+            let helper_response = wayland_helper::read_clipboard_selection(env)
+                .map_err(LinuxDesktopError::ClipboardError)?;
+            let payload_text = payload.text.filter(|value| !value.trim().is_empty());
+            let helper_text = helper_response
+                .text
+                .filter(|value| !value.trim().is_empty());
+
+            return Ok(merge_helper_read_result(
+                payload_text.or(helper_text),
+                helper_response.image_data_url,
+            ));
+        }
+
+        Ok(payload)
     }
 
     fn clipboard_read_text(&self, _env: &LinuxDesktopEnvironment) -> Result<ReadResult> {
@@ -310,7 +342,10 @@ impl ClipboardProvider for WaylandDataControlProvider {
     fn clipboard_read(&self, env: &LinuxDesktopEnvironment) -> Result<ReadResult> {
         let response = wayland_helper::read_clipboard_selection(env)
             .map_err(LinuxDesktopError::ClipboardError)?;
-        Ok(create_read_result(response.text))
+        Ok(merge_helper_read_result(
+            response.text,
+            response.image_data_url,
+        ))
     }
 
     fn clipboard_read_text(&self, env: &LinuxDesktopEnvironment) -> Result<ReadResult> {

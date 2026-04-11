@@ -13,7 +13,7 @@ type PersistentExtensionsHostComponent = ComponentType<{
   openExtensions?: () => void;
 }>;
 
-export interface LoadedExtensionInfrastructure {
+interface LoadedExtensionInfrastructure {
   ExtensionToastBridge: ExtensionToastBridgeComponent;
   PersistentExtensionsHost: PersistentExtensionsHostComponent;
 }

@@ -53,7 +53,7 @@ export type DispatchResult =
   | { ok: true; payload?: Record<string, unknown> }
   | { ok: false; code: DispatchErrorCode; message: string; backend?: DispatchBackendError };
 
-export interface DispatchRuntime {
+interface DispatchRuntime {
   setActivePanel: (panel: CommandPanel) => void | Promise<void>;
   setCommandSearch: (value: string) => void;
   setQuicklinksView: (view: "create" | "manage") => void;
@@ -65,7 +65,7 @@ export interface DispatchRuntime {
   customActionHandler?: (request: CustomActionRequest) => Promise<DispatchResult>;
 }
 
-export interface DispatchContext {
+interface DispatchContext {
   query: string;
   mode: CommandMode;
   isDesktopRuntime: boolean;
@@ -151,7 +151,7 @@ function getModeListField(payload: Record<string, unknown>, key: string): Comman
   return value.filter((entry): entry is CommandMode => isCommandMode(entry));
 }
 
-export function mapDispatchBackendError(err: unknown, fallback: string): DispatchBackendError {
+function mapDispatchBackendError(err: unknown, fallback: string): DispatchBackendError {
   const technicalMessage =
     err instanceof Error && err.message.trim().length > 0 ? err.message : fallback;
   const normalized = technicalMessage.toLowerCase();

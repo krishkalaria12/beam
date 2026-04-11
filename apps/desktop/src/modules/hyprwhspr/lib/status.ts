@@ -1,4 +1,4 @@
-export type HyprWhsprRecordState = "idle" | "recording" | "unknown";
+type HyprWhsprRecordState = "idle" | "recording" | "unknown";
 
 function normalizeStatusToken(value: string): string {
   return value.trim().toLowerCase();

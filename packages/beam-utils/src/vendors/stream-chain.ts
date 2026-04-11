@@ -120,7 +120,7 @@ const groupFunctions = (output: any, fn: any, index: any, fns: any) => {
 
 class Stop extends Error {}
 
-export const asStream = (fn: any) => {
+const asStream = (fn: any) => {
   if (typeof fn != "function") throw TypeError("Only a function is accepted as the first argument");
 
   // pump variables

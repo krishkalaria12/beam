@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 import { ListAccessory } from "./list-accessory";
 
-export interface ListAccessoryItem {
+interface ListAccessoryItem {
   key: string;
   text: ReactNode;
   accentColor?: string;

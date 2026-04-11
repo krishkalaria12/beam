@@ -44,7 +44,7 @@ export interface ExtensionActionPanelPage {
   sections: ExtensionActionSection[];
 }
 
-export type FlattenedAction = ExtensionAction;
+type FlattenedAction = ExtensionAction;
 
 export function emptyExtensionActionPanelPage(key = "panel:empty"): ExtensionActionPanelPage {
   return {
@@ -53,7 +53,7 @@ export function emptyExtensionActionPanelPage(key = "panel:empty"): ExtensionAct
   };
 }
 
-export function getExtensionActionPageItems(page: ExtensionActionPanelPage): ExtensionActionNode[] {
+function getExtensionActionPageItems(page: ExtensionActionPanelPage): ExtensionActionNode[] {
   return page.sections.flatMap((section) => section.items);
 }
 
@@ -77,7 +77,7 @@ export function getExtensionActionPageItemCount(page: ExtensionActionPanelPage):
   return getExtensionActionPageItems(page).length;
 }
 
-export function getExtensionActionPageDefaultItemIndex(page: ExtensionActionPanelPage): number {
+function getExtensionActionPageDefaultItemIndex(page: ExtensionActionPanelPage): number {
   const items = getExtensionActionPageItems(page);
   if (items.length === 0) {
     return -1;

@@ -35,6 +35,7 @@ import { useLauncherPanelActions } from "@/modules/launcher/hooks/use-launcher-p
 import { useLauncherPanelPrefetch } from "@/modules/launcher/hooks/use-launcher-panel-prefetch";
 import {
   getLauncherWindowSizeForPanel,
+  hideLauncherWindowForResizeTransition,
   syncLauncherWindowToPanel,
   useLauncherWindowSizeSync,
 } from "@/modules/launcher/hooks/use-launcher-window-size-sync";
@@ -125,9 +126,6 @@ export default function LauncherCommand() {
     setFallbackCommandIds,
   } = useCommandPreferences();
 
-  const [shellSizeOverride, setShellSizeOverride] = useState<ReturnType<
-    typeof getLauncherWindowSizeForPanel
-  > | null>(null);
   const [isPanelTransitioning, setIsPanelTransitioning] = useState(false);
   const [hideShellDuringTransition, setHideShellDuringTransition] = useState(false);
   const panelTransitionQueueRef = useRef<Promise<void>>(Promise.resolve());
@@ -139,6 +137,12 @@ export default function LauncherCommand() {
           resolve();
         });
       });
+    });
+  }, []);
+
+  const waitForHiddenCommit = useCallback(() => {
+    return new Promise<void>((resolve) => {
+      window.setTimeout(() => resolve(), 0);
     });
   }, []);
 
@@ -172,37 +176,23 @@ export default function LauncherCommand() {
           return;
         }
 
-        const expands =
-          nextShellSize.width > currentShellSize.width ||
-          nextShellSize.height > currentShellSize.height;
-
         setIsPanelTransitioning(true);
 
         try {
-          if (expands) {
-            setHideShellDuringTransition(true);
-            setShellSizeOverride(currentShellSize);
-            await syncLauncherWindowToPanel(nextPanel, nextShouldCollapse);
-            await waitForWindowSettle();
-            setShellSizeOverride(nextShellSize);
-            commit();
-            setHideShellDuringTransition(false);
-            await waitForWindowSettle();
-          } else {
-            setShellSizeOverride(nextShellSize);
-            commit();
-            await waitForWindowSettle();
-            await syncLauncherWindowToPanel(nextPanel, nextShouldCollapse);
-            await waitForWindowSettle();
-          }
+          setHideShellDuringTransition(true);
+          await hideLauncherWindowForResizeTransition();
+          commit();
+          await waitForHiddenCommit();
+          setHideShellDuringTransition(false);
+          await syncLauncherWindowToPanel(nextPanel, nextShouldCollapse, "transition");
+          await waitForWindowSettle();
         } finally {
-          setShellSizeOverride(null);
           setHideShellDuringTransition(false);
           setIsPanelTransitioning(false);
         }
       });
     },
-    [enqueuePanelTransition, isCompressed, waitForWindowSettle],
+    [enqueuePanelTransition, isCompressed, waitForHiddenCommit, waitForWindowSettle],
   );
 
   const openPanel = useCallback(
@@ -771,9 +761,8 @@ export default function LauncherCommand() {
   const hasTakeoverPanel = isLauncherTakeoverPanel(activePanel);
   const isCommandListExpandedPanel = isLauncherCommandListExpandedPanel(activePanel);
   const launcherShellSize = useMemo(
-    () =>
-      shellSizeOverride ?? getLauncherWindowSizeForPanel(activePanel, shouldCollapseToInputOnly),
-    [activePanel, shellSizeOverride, shouldCollapseToInputOnly],
+    () => getLauncherWindowSizeForPanel(activePanel, shouldCollapseToInputOnly),
+    [activePanel, shouldCollapseToInputOnly],
   );
 
   const shouldShowFooter =
@@ -807,9 +796,6 @@ export default function LauncherCommand() {
         />
       ) : null}
       <div className="relative h-full w-full overflow-hidden">
-        {shellSizeOverride ? (
-          <div className="beam-window-overlay absolute inset-0 backdrop-blur-sm" />
-        ) : null}
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden">
           <div
             className={cn(

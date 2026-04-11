@@ -28,7 +28,7 @@ function getRecentEmojiCache(): string[] {
   return recentEmojiCache;
 }
 
-export function flushRecentlyUsed() {
+function flushRecentlyUsed() {
   if (typeof window === "undefined") {
     return;
   }
@@ -93,7 +93,7 @@ export function useRecentEmojis(isOpen: boolean) {
   return { recentEmojis, saveEmoji };
 }
 
-export function useFilteredEmojis(
+function useFilteredEmojis(
   emojis: EmojiData[],
   searchValue: string,
   selectedCategory: string,
@@ -124,11 +124,11 @@ export function useFilteredEmojis(
   }, [emojis, searchValue, selectedCategory]);
 }
 
-export function getRecentlyUsed(): string[] {
+function getRecentlyUsed(): string[] {
   return [...getRecentEmojiCache()];
 }
 
-export function saveRecentlyUsed(emoji: string) {
+function saveRecentlyUsed(emoji: string) {
   const recent = getRecentEmojiCache();
   recentEmojiCache = [emoji, ...recent.filter((entry) => entry !== emoji)].slice(
     0,

@@ -81,7 +81,7 @@ function toProtocolApplication(value: Application | undefined) {
   };
 }
 
-export function createEnvironmentSnapshot(
+function createEnvironmentSnapshot(
   environment: RuntimeEnvironmentSnapshot,
   options: {
     aiAccess: boolean;
@@ -113,7 +113,7 @@ export function createEnvironmentSnapshot(
   };
 }
 
-export function createDesktopContextSnapshot(context: DesktopContext): DesktopContextSnapshot {
+function createDesktopContextSnapshot(context: DesktopContext): DesktopContextSnapshot {
   return {
     selectedText: {
       state: toProtocolDesktopContextState(context.selectedText.state),

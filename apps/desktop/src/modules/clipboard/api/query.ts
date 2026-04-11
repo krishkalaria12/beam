@@ -3,8 +3,8 @@ import type { QueryClient } from "@tanstack/react-query";
 import { getClipboardHistory } from "@/modules/clipboard/api/get-clipboard-history";
 
 export const CLIPBOARD_HISTORY_QUERY_KEY = ["clipboard", "history"] as const;
-export const CLIPBOARD_HISTORY_STALE_TIME_MS = 15_000;
-export const CLIPBOARD_HISTORY_GC_TIME_MS = 10 * 60_000;
+const CLIPBOARD_HISTORY_STALE_TIME_MS = 15_000;
+const CLIPBOARD_HISTORY_GC_TIME_MS = 10 * 60_000;
 
 export function getClipboardHistoryQueryOptions() {
   return {

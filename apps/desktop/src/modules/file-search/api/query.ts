@@ -3,8 +3,8 @@ import type { QueryClient } from "@tanstack/react-query";
 import { searchFiles } from "@/modules/file-search/api/search-files";
 import type { SearchRequest } from "@/modules/file-search/types";
 
-export const FILE_SEARCH_QUERY_KEY = ["file-search"] as const;
-export const FILE_SEARCH_STALE_TIME_MS = 1000 * 60 * 5;
+const FILE_SEARCH_QUERY_KEY = ["file-search"] as const;
+const FILE_SEARCH_STALE_TIME_MS = 1000 * 60 * 5;
 
 export function getFileSearchQueryOptions(query: string, page = 1, perPage = 50) {
   const normalizedQuery = query.trim();

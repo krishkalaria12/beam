@@ -1,7 +1,7 @@
 import * as path from "path";
 import { isMainThread, workerData } from "node:worker_threads";
 
-export interface ExtensionManagerConfig {
+interface ExtensionManagerConfig {
   dataDir: string;
   cacheDir: string;
   supportDir: string;
@@ -50,7 +50,7 @@ function getWorkerConfig(): ExtensionManagerConfig | null {
   return isConfigShape(config) ? config : null;
 }
 
-export function createConfig(): ExtensionManagerConfig {
+function createConfig(): ExtensionManagerConfig {
   const inheritedConfig = getWorkerConfig();
   if (inheritedConfig) {
     return inheritedConfig;

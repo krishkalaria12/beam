@@ -5,7 +5,7 @@ export interface FontFamilySummary {
   name: string;
 }
 
-export interface LauncherFontSizePreset {
+interface LauncherFontSizePreset {
   id: "small" | "default" | "large";
   label: string;
   size: number;
@@ -13,11 +13,11 @@ export interface LauncherFontSizePreset {
 
 export const DEFAULT_LAUNCHER_FONT_FAMILY = "default";
 export const SYSTEM_LAUNCHER_FONT_FAMILY = "system";
-export const SMALL_LAUNCHER_FONT_SIZE = 12;
+const SMALL_LAUNCHER_FONT_SIZE = 12;
 export const DEFAULT_LAUNCHER_FONT_SIZE = 13;
-export const LARGE_LAUNCHER_FONT_SIZE = 14;
-export const MIN_LAUNCHER_FONT_SIZE = 10;
-export const MAX_LAUNCHER_FONT_SIZE = 18;
+const LARGE_LAUNCHER_FONT_SIZE = 14;
+const MIN_LAUNCHER_FONT_SIZE = 10;
+const MAX_LAUNCHER_FONT_SIZE = 18;
 export const LAUNCHER_FONT_FAMILIES_QUERY_KEY = ["settings", "launcher-font-families"] as const;
 export const LAUNCHER_FONT_FAMILY_QUERY_KEY = ["settings", "launcher-font-family"] as const;
 export const LAUNCHER_FONT_SIZE_QUERY_KEY = ["settings", "launcher-font-size"] as const;

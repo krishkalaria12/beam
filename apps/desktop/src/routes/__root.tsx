@@ -2,7 +2,7 @@ import { HeadContent, Outlet, createRootRouteWithContext } from "@tanstack/react
 
 import "../index.css";
 
-export interface RouterAppContext {}
+interface RouterAppContext {}
 
 export const Route = createRootRouteWithContext<RouterAppContext>()({
   component: RootComponent,

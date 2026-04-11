@@ -39,7 +39,7 @@ const INPUT_HIDDEN_PANELS = new Set<CommandPanel>([...TAKEOVER_PANELS, "emoji"])
 
 const FOOTER_HIDDEN_PANELS = new Set<CommandPanel>([...TAKEOVER_PANELS, "emoji"]);
 
-export interface LauncherUiState {
+interface LauncherUiState {
   commandSearch: string;
   commandSearchSessionSeed: number;
   activePanel: CommandPanel;

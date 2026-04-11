@@ -1,9 +1,9 @@
 import { COMMAND_PANELS } from "@/command-registry/panels";
 import type { CommandPanel } from "@/command-registry/types";
 
-export type PanelQuicklinksView = "create" | "manage";
+type PanelQuicklinksView = "create" | "manage";
 
-export interface PanelCommandRegistration {
+interface PanelCommandRegistration {
   id: string;
   title: string;
 }

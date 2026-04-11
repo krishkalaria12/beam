@@ -2,7 +2,7 @@ import { create } from "zustand";
 
 export type SettingsPageTab = "general" | "extensions" | "keybinds" | "about";
 
-export interface SettingsExtensionTarget {
+interface SettingsExtensionTarget {
   pluginName: string | null;
   commandName: string | null;
   requestKey: number;

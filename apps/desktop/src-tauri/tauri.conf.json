@@ -6,6 +6,7 @@
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:3001",
+    "removeUnusedCommands": true,
     "beforeDevCommand": "bun run desktop:prepare && bun run desktop:frontend:dev",
     "beforeBuildCommand": "bun run desktop:prepare && bun run desktop:frontend:build"
   },

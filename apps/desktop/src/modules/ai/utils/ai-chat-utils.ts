@@ -165,6 +165,6 @@ export function formatConversationTimestamp(value: number): string {
   return date.toLocaleDateString([], { month: "short", day: "numeric" });
 }
 
-export function defaultModelForProvider(providerId: AiProviderId): string {
+function defaultModelForProvider(providerId: AiProviderId): string {
   return getProviderDefinition(providerId).models[0]?.id ?? "";
 }

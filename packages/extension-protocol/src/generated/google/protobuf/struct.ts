@@ -19,7 +19,7 @@ export enum NullValue {
   UNRECOGNIZED = -1,
 }
 
-export function nullValueFromJSON(object: any): NullValue {
+function nullValueFromJSON(object: any): NullValue {
   switch (object) {
     case 0:
     case "NULL_VALUE":
@@ -31,7 +31,7 @@ export function nullValueFromJSON(object: any): NullValue {
   }
 }
 
-export function nullValueToJSON(object: NullValue): string {
+function nullValueToJSON(object: NullValue): string {
   switch (object) {
     case NullValue.NULL_VALUE:
       return "NULL_VALUE";
@@ -56,7 +56,7 @@ export interface Struct {
   fields: { [key: string]: any | undefined };
 }
 
-export interface Struct_FieldsEntry {
+interface Struct_FieldsEntry {
   key: string;
   value: any | undefined;
 }
@@ -89,7 +89,7 @@ export interface Value {
  *
  * The JSON representation for `ListValue` is JSON array.
  */
-export interface ListValue {
+interface ListValue {
   /** Repeated field of dynamically typed values. */
   values: any[];
 }
@@ -205,7 +205,7 @@ function createBaseStruct_FieldsEntry(): Struct_FieldsEntry {
   return { key: "", value: undefined };
 }
 
-export const Struct_FieldsEntry: MessageFns<Struct_FieldsEntry> = {
+const Struct_FieldsEntry: MessageFns<Struct_FieldsEntry> = {
   encode(message: Struct_FieldsEntry, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
     if (message.key !== "") {
       writer.uint32(10).string(message.key);
@@ -489,7 +489,7 @@ function createBaseListValue(): ListValue {
   return { values: [] };
 }
 
-export const ListValue: MessageFns<ListValue> & ListValueWrapperFns = {
+const ListValue: MessageFns<ListValue> & ListValueWrapperFns = {
   encode(message: ListValue, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
     for (const v of message.values) {
       Value.encode(Value.wrap(v!), writer.uint32(10).fork()).join();

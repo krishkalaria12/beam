@@ -26,7 +26,7 @@ export function isFallbackMode(mode: CommandMode): boolean {
   return FALLBACK_MODE_SET.has(mode);
 }
 
-export function isAvailableFallbackCommandId(value: string): value is FallbackCommandId {
+function isAvailableFallbackCommandId(value: string): value is FallbackCommandId {
   return AVAILABLE_FALLBACK_COMMAND_ID_SET.has(value);
 }
 

@@ -3,7 +3,7 @@ import { invoke, isTauri } from "@tauri-apps/api/core";
 const HOTKEYS_LOCAL_STORAGE_KEY = "beam-hotkey-settings-v1";
 
 export const HOTKEY_COMMAND_EVENT = "hotkey-command";
-export const HOTKEY_SETTINGS_UPDATED_EVENT = "hotkey-settings-updated";
+const HOTKEY_SETTINGS_UPDATED_EVENT = "hotkey-settings-updated";
 export const HOTKEY_BACKEND_STATUS_EVENT = "hotkey-backend-status";
 
 export interface HotkeySettings {
@@ -21,12 +21,12 @@ export interface HotkeyCapabilities {
   notes: string[];
 }
 
-export interface HotkeyUpdateResult {
+interface HotkeyUpdateResult {
   success: boolean;
   error?: string;
 }
 
-export interface CommandHotkeyUpdateResult extends HotkeyUpdateResult {
+interface CommandHotkeyUpdateResult extends HotkeyUpdateResult {
   conflictCommandId?: string;
 }
 

@@ -12,7 +12,7 @@ export enum DeeplinkType {
 /**
  * Options for creating a deeplink to a script command.
  */
-export type CreateScriptCommandDeeplinkOptions = {
+type CreateScriptCommandDeeplinkOptions = {
   /**
    * The type of deeplink, which should be "script-command".
    */
@@ -30,7 +30,7 @@ export type CreateScriptCommandDeeplinkOptions = {
 /**
  * Base options for creating a deeplink to an extension.
  */
-export type CreateExtensionDeeplinkBaseOptions = {
+type CreateExtensionDeeplinkBaseOptions = {
   /**
    * The type of deeplink, which should be "extension".
    */
@@ -61,7 +61,7 @@ export type CreateExtensionDeeplinkBaseOptions = {
  * Options for creating a deeplink to an extension from another extension.
  * Requires both the ownerOrAuthorName and extensionName.
  */
-export type CreateInterExtensionDeeplinkOptions = CreateExtensionDeeplinkBaseOptions & {
+type CreateInterExtensionDeeplinkOptions = CreateExtensionDeeplinkBaseOptions & {
   /**
    * The name of the owner or author of the extension.
    */
@@ -75,14 +75,14 @@ export type CreateInterExtensionDeeplinkOptions = CreateExtensionDeeplinkBaseOpt
 /**
  * Options for creating a deeplink to an extension.
  */
-export type CreateExtensionDeeplinkOptions =
+type CreateExtensionDeeplinkOptions =
   | CreateInterExtensionDeeplinkOptions
   | CreateExtensionDeeplinkBaseOptions;
 
 /**
  * Options for creating a deeplink.
  */
-export type CreateDeeplinkOptions =
+type CreateDeeplinkOptions =
   | CreateScriptCommandDeeplinkOptions
   | CreateExtensionDeeplinkOptions;
 

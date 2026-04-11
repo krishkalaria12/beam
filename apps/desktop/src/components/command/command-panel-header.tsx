@@ -149,7 +149,7 @@ export function CommandPanelTitleBlock({
 }
 
 /** Close button component for headers */
-export function CommandPanelCloseButton({
+function CommandPanelCloseButton({
   className,
   iconClassName,
   type = "button",

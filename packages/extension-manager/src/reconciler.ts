@@ -24,7 +24,7 @@ const onCaughtError = (error: Error) => {
   writeLog(`Stack: ${error.stack}`);
 };
 
-export const container = reconciler.createContainer(
+const container = reconciler.createContainer(
   root,
   0, // LegacyRoot
   null,

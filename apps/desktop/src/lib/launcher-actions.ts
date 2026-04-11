@@ -1,4 +1,4 @@
-export const LAUNCHER_ACTIONS_TOGGLE_EVENT = "beam:launcher-actions-toggle";
+const LAUNCHER_ACTIONS_TOGGLE_EVENT = "beam:launcher-actions-toggle";
 
 interface LauncherActionsHotkeyEvent {
   key: string;

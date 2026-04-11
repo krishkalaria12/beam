@@ -99,7 +99,7 @@ export function buildApplicationTitle(name: string, execPath: string): string {
   return pathParts[pathParts.length - 1] ?? "Open Application";
 }
 
-export function createApplicationsCommandProvider(): CommandProvider {
+function createApplicationsCommandProvider(): CommandProvider {
   return {
     id: "applications-provider",
     scope: PROVIDER_SCOPE,
@@ -145,7 +145,7 @@ export function createApplicationsCommandProvider(): CommandProvider {
   };
 }
 
-export function createCalculatorCommandProvider(): CommandProvider {
+function createCalculatorCommandProvider(): CommandProvider {
   return {
     id: "calculator-provider",
     scope: PROVIDER_SCOPE,
@@ -201,7 +201,7 @@ export function createCalculatorCommandProvider(): CommandProvider {
   };
 }
 
-export function createQuicklinkCommandProvider(): CommandProvider {
+function createQuicklinkCommandProvider(): CommandProvider {
   return {
     id: "quicklinks-provider",
     scope: QUICKLINK_SCOPE,

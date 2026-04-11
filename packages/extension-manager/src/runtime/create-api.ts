@@ -8,7 +8,7 @@ type LocalStorageApi = {
   clear: () => Promise<void>;
 };
 
-export type BeamRuntimeApiDependencies = {
+type BeamRuntimeApiDependencies = {
   LocalStorage: LocalStorageApi;
   randomId: () => string;
   Alert: Record<string, unknown>;
@@ -76,7 +76,7 @@ export type BeamRuntimeApiDependencies = {
   Keyboard: unknown;
 };
 
-export const createRaycastRuntimeApi = (deps: BeamRuntimeApiDependencies) => {
+const createRaycastRuntimeApi = (deps: BeamRuntimeApiDependencies) => {
   const menuBarExtra = Object.assign(deps.MenuBarExtra, {
     isSupported: true,
     open: deps.menuBarExtraOpen,

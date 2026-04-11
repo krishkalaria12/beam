@@ -14,11 +14,8 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "@beam-launcher/api": "workspace:*",
     "@beam/extension-protocol": "workspace:*",
-    "@beam/raycast-api-compat": "workspace:*",
     "dequal": "^2.0.3",
-    "msgpackr": "^1.11.4",
     "pako": "^2.1.0",
     "react": "19.2.3",
     "react-reconciler": "^0.32.0"

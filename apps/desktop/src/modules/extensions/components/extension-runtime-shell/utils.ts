@@ -61,7 +61,7 @@ export function stopFieldKeyPropagation(event: KeyboardEvent<HTMLElement>): void
   event.stopPropagation();
 }
 
-export function formatRuntimeRelativeDate(value: Date): string {
+function formatRuntimeRelativeDate(value: Date): string {
   const distance = formatDistanceToNowStrict(value, { roundingMethod: "round" });
 
   return distance

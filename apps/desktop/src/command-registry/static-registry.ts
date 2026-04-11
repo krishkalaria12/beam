@@ -23,7 +23,7 @@ function freezeDescriptor(descriptor: CommandDescriptor): CommandDescriptor {
   });
 }
 
-export interface CommandRegistryValidationError extends Error {
+interface CommandRegistryValidationError extends Error {
   readonly name: "CommandRegistryValidationError";
   readonly errors: CommandValidationError[];
 }

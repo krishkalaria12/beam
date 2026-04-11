@@ -8,7 +8,7 @@ import {
   EXTENSIONS_STORE_SEARCH_STALE_TIME_MS,
 } from "@/modules/extensions/constants";
 
-export const EXTENSIONS_INSTALLED_STALE_TIME_MS = 30_000;
+const EXTENSIONS_INSTALLED_STALE_TIME_MS = 30_000;
 
 export function getInstalledExtensionsQueryOptions() {
   return {

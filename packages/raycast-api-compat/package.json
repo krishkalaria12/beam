@@ -11,9 +11,7 @@
     "check": "bunx tsc --noEmit",
     "check-types": "bunx tsc --noEmit"
   },
-  "dependencies": {
-    "@beam-launcher/api": "workspace:*"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@beam/config": "workspace:*",
     "typescript": "^5.9.3"

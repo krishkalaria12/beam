@@ -1,9 +1,9 @@
 import * as crypto from "crypto";
 import { sendRuntimeRpcRequest } from "./rpc";
 
-export type Creativity = "none" | "low" | "medium" | "high" | "maximum" | number;
+type Creativity = "none" | "low" | "medium" | "high" | "maximum" | number;
 
-export enum Model {
+enum Model {
   "OpenAI_GPT4.1" = "OpenAI_GPT4.1",
   "OpenAI_GPT4.1-mini" = "OpenAI_GPT4.1-mini",
   "OpenAI_GPT4.1-nano" = "OpenAI_GPT4.1-nano",
@@ -45,7 +45,7 @@ export enum Model {
   xAI_Grok_2 = "xAI_Grok_2",
 }
 
-export interface AskOptions {
+interface AskOptions {
   creativity?: Creativity;
   model?: string;
   provider?: "openrouter" | "openai" | "anthropic" | "gemini";
@@ -169,7 +169,7 @@ export function handleAskStreamError(streamRequestId: string, message: string): 
   emitError(streamRequestId, new Error(message));
 }
 
-export function ask(prompt: string, options: AskOptions = {}): AskResult {
+function ask(prompt: string, options: AskOptions = {}): AskResult {
   const streamRequestId = crypto.randomUUID();
   const pending: PendingAsk = {
     dataListeners: new Set<AskDataListener>(),

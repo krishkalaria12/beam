@@ -5,11 +5,11 @@ import {
 
 export type ExtensionMode = "view" | "no-view" | "menu-bar";
 
-export interface DiscoveredPluginRecord extends Omit<ProtocolDiscoveredPluginRecord, "mode"> {
+interface DiscoveredPluginRecord extends Omit<ProtocolDiscoveredPluginRecord, "mode"> {
   mode: ExtensionMode;
 }
 
-export function normalizeDiscoveredPluginRecord(value: unknown): DiscoveredPluginRecord | null {
+function normalizeDiscoveredPluginRecord(value: unknown): DiscoveredPluginRecord | null {
   const plugin = parseDiscoveredPlugin(value);
   if (!plugin) {
     return null;

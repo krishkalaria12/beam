@@ -71,6 +71,6 @@ export function getProviderDefinition(providerId: AiProviderId): AiProviderDefin
   return AI_PROVIDERS.find((provider) => provider.id === providerId) ?? AI_PROVIDERS[0];
 }
 
-export function getDefaultModelId(providerId: AiProviderId): string {
+function getDefaultModelId(providerId: AiProviderId): string {
   return getProviderDefinition(providerId).models[0]?.id ?? "";
 }

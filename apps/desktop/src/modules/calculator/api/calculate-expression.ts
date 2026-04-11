@@ -16,8 +16,8 @@ const calculatorResponseSchema = z.object({
   pending_requests: z.boolean().default(false),
 });
 
-export type CalculatorOutput = z.infer<typeof calculatorOutputSchema>;
-export type CalculatorResponse = z.infer<typeof calculatorResponseSchema>;
+type CalculatorOutput = z.infer<typeof calculatorOutputSchema>;
+type CalculatorResponse = z.infer<typeof calculatorResponseSchema>;
 
 export async function calculateExpression(query: string): Promise<CalculatorResponse | null> {
   const normalizedQuery = query.trim();

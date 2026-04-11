@@ -1,7 +1,7 @@
 import type { ElementType } from "react";
 import React, { jsx } from "../shared-react";
 
-export const createLocalStorage = () => {
+const createLocalStorage = () => {
   const storage = new Map<string, string>();
   return {
     getItem: async (key: string) => storage.get(key),
@@ -54,4 +54,4 @@ export const createSlottedComponent = (baseName: string, accessoryPropNames: str
   return SlottedComponentFactory;
 };
 
-export const createAccessorySlot = () => createWrapperComponent("_AccessorySlot");
+const createAccessorySlot = () => createWrapperComponent("_AccessorySlot");

@@ -48,7 +48,7 @@ interface CommandSkeletonRowProps {
 }
 
 /** Single skeleton row for inline use */
-export function CommandSkeletonRow({
+function CommandSkeletonRow({
   showIcon = true,
   showSubtitle = false,
   animate = true,
@@ -83,7 +83,7 @@ export function CommandSkeletonRow({
 }
 
 /** Grid skeleton for card layouts */
-export function CommandSkeletonGrid({
+function CommandSkeletonGrid({
   items = 6,
   columns = 3,
   animate = true,

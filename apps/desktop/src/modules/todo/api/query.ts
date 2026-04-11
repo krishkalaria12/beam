@@ -3,9 +3,9 @@ import type { QueryClient } from "@tanstack/react-query";
 import { getTodo, getTodos } from "@/modules/todo/api/todo";
 
 export const TODO_QUERY_KEY = ["todo", "items"] as const;
-export const TODO_ITEM_QUERY_KEY = ["todo", "item"] as const;
-export const TODO_STALE_TIME_MS = 30_000;
-export const TODO_GC_TIME_MS = 1000 * 60 * 10;
+const TODO_ITEM_QUERY_KEY = ["todo", "item"] as const;
+const TODO_STALE_TIME_MS = 30_000;
+const TODO_GC_TIME_MS = 1000 * 60 * 10;
 
 export function getTodosQueryOptions() {
   return {

@@ -5,13 +5,13 @@ import type {
   CommandProviderResolution,
 } from "@/command-registry/types";
 
-export interface ProviderTelemetryLogContext {
+interface ProviderTelemetryLogContext {
   mode: CommandMode;
   activePanel: CommandPanel;
   query: string;
 }
 
-export interface DispatchFailureLogContext {
+interface DispatchFailureLogContext {
   mode: CommandMode;
   activePanel: CommandPanel;
   query: string;

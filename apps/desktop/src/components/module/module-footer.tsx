@@ -3,7 +3,7 @@ import type { CSSProperties, ReactNode } from "react";
 import { Kbd } from "@/components/module/kbd";
 import { cn } from "@/lib/utils";
 
-export interface FooterShortcut {
+interface FooterShortcut {
   /** Key(s) to display, e.g. ["Ctrl", "N"] or ["↵"] */
   keys: string[];
   /** Action label shown after the key(s) */

@@ -16,7 +16,7 @@ import { executeQuicklink } from "@/modules/quicklinks/api/quicklinks";
 import { runScriptCommand } from "@/modules/script-commands/api/run-script-command";
 import { SCRIPT_COMMANDS_RUN_EXTENSION_COMMAND_ID } from "@/modules/script-commands/constants";
 
-export interface CreateCustomActionHandlerInput {
+interface CreateCustomActionHandlerInput {
   calculatorSessionId: string;
   setCommandSearch: (value: string) => void;
   onCalculatorHistoryChanged: () => void;

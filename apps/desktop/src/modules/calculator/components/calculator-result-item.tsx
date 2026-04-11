@@ -32,7 +32,7 @@ function getCalculationKind(query: string) {
   return "Result";
 }
 
-export type CalculatorResultItemProps = {
+type CalculatorResultItemProps = {
   commandValue: string;
   calculatorQuery: string;
   calculatorResult: string;

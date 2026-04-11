@@ -4,9 +4,9 @@ import { listWindows } from "@/modules/window-switcher/api/list-windows";
 import type { WindowEntry } from "@/modules/window-switcher/types";
 
 export const WINDOW_ENTRIES_QUERY_KEY = ["window-switcher", "entries"] as const;
-export const WINDOW_ENTRIES_STALE_TIME_MS = 1000;
-export const WINDOW_ENTRIES_GC_TIME_MS = 30_000;
-export const WINDOW_ENTRIES_REFRESH_INTERVAL_MS = 1500;
+const WINDOW_ENTRIES_STALE_TIME_MS = 1000;
+const WINDOW_ENTRIES_GC_TIME_MS = 30_000;
+const WINDOW_ENTRIES_REFRESH_INTERVAL_MS = 1500;
 
 export function getWindowEntriesQueryOptions(
   enabled = true,

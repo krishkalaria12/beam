@@ -5,7 +5,7 @@ import type { RuntimeCommand } from "@beam/extension-protocol";
 
 const OMIT_SERIALIZED_VALUE = Symbol("omit-serialized-value");
 
-export const getComponentDisplayName = (type: ComponentType): string => {
+const getComponentDisplayName = (type: ComponentType): string => {
   if (typeof type === "string") {
     return type;
   }

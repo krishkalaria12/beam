@@ -19,12 +19,12 @@ import { ListItem } from "./list-item";
 import { SearchInput } from "./search-input";
 import { SectionHeader } from "./section-header";
 
-export interface ActionListPanelShortcutDefinition {
+interface ActionListPanelShortcutDefinition {
   key: string;
   modifiers: Array<"cmd" | "ctrl" | "opt" | "shift">;
 }
 
-export interface ActionListPanelItem {
+interface ActionListPanelItem {
   key: string;
   title: string;
   description?: string;
@@ -39,13 +39,13 @@ export interface ActionListPanelItem {
   onOpen?: () => void;
 }
 
-export interface ActionListPanelSection {
+interface ActionListPanelSection {
   key: string;
   title?: string;
   items: ActionListPanelItem[];
 }
 
-export interface ActionListPanelPage {
+interface ActionListPanelPage {
   key: string;
   title?: string;
   sections: ActionListPanelSection[];
@@ -144,7 +144,7 @@ function resolveCurrentPage(panel: ActionListPanelPage, path: string[]) {
   return { page: currentPage, breadcrumbs };
 }
 
-export function ActionListPanel({
+function ActionListPanel({
   panel,
   className,
   style,

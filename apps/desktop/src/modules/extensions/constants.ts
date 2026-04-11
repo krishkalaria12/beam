@@ -16,23 +16,23 @@ export const EXTENSIONS_STORE_VIEW_SEARCH_LIMIT = 12;
 export const EXTENSIONS_STORE_PROVIDER_QUERY_PREFIX = "ext ";
 export const EXTENSIONS_STORE_PROVIDER_SEARCH_LIMIT = 8;
 
-export const EXTENSIONS_PREFERENCE_REQUEST_TIMEOUT_MS = 7_500;
+const EXTENSIONS_PREFERENCE_REQUEST_TIMEOUT_MS = 7_500;
 
 export const EXTENSIONS_QUERY_KEY_INSTALLED = ["extensions", "installed"] as const;
 export const EXTENSIONS_QUERY_KEY_STORE = ["extensions", "store"] as const;
 export const EXTENSIONS_QUERY_KEY_STORE_UPDATES = ["extensions", "store-updates"] as const;
-export const EXTENSIONS_QUERY_KEY_PREFERENCES = ["extensions", "preferences"] as const;
+const EXTENSIONS_QUERY_KEY_PREFERENCES = ["extensions", "preferences"] as const;
 
-export const EXTENSIONS_RUNNER_ACTION_CONTAINER_TYPES = [
+const EXTENSIONS_RUNNER_ACTION_CONTAINER_TYPES = [
   "ActionPanel",
   "ActionPanel.Section",
   "ActionPanel.Submenu",
 ] as const;
-export const EXTENSIONS_RUNNER_ACTION_CONTAINER_TYPE_SET = new Set<string>(
+const EXTENSIONS_RUNNER_ACTION_CONTAINER_TYPE_SET = new Set<string>(
   EXTENSIONS_RUNNER_ACTION_CONTAINER_TYPES,
 );
 
-export const EXTENSIONS_RUNNER_FORM_FIELD_TYPES = [
+const EXTENSIONS_RUNNER_FORM_FIELD_TYPES = [
   "Form.TextField",
   "Form.PasswordField",
   "Form.TextArea",

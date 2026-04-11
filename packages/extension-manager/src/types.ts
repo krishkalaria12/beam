@@ -29,9 +29,9 @@ export interface Container {
 
 export type AnyInstance = FlareInstance | TextInstance;
 export type ParentInstance = FlareInstance | Container;
-export type UpdatePayload = Record<string, unknown>;
+type UpdatePayload = Record<string, unknown>;
 
-export interface SerializedReactElement {
+interface SerializedReactElement {
   $$typeof: "react.element.serialized";
   type: string;
   props: Record<string, unknown>;

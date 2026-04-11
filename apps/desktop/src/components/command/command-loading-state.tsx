@@ -52,7 +52,7 @@ interface CommandInlineLoadingProps extends HTMLAttributes<HTMLSpanElement> {
   iconClassName?: string;
 }
 
-export function CommandInlineLoading({
+function CommandInlineLoading({
   label = "Loading",
   className,
   iconClassName,
@@ -73,7 +73,7 @@ export function CommandInlineLoading({
 }
 
 /** Pulsing dot loading indicator - minimal style */
-export function CommandPulsingLoader({ className }: { className?: string }) {
+function CommandPulsingLoader({ className }: { className?: string }) {
   return (
     <div className={cn("flex items-center gap-1", className)}>
       <span className="size-1.5 rounded-full bg-muted-foreground/50 animate-pulse" />

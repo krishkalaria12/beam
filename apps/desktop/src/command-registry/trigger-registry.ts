@@ -6,7 +6,7 @@ export const SYSTEM_TRIGGER_MODE = "system-trigger" as const;
 export const SCRIPT_TRIGGER_MODE = "script-trigger" as const;
 export const SHELL_TRIGGER_MODE = "shell-trigger" as const;
 
-export type TriggerMode =
+type TriggerMode =
   | typeof QUICKLINK_TRIGGER_MODE
   | typeof SYSTEM_TRIGGER_MODE
   | typeof SCRIPT_TRIGGER_MODE

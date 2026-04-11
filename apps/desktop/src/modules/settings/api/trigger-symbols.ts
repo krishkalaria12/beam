@@ -17,7 +17,7 @@ export interface TriggerSymbols {
 
 export const TRIGGER_SYMBOLS_CHANGE_EVENT = "beam-trigger-symbols-change";
 
-export const DEFAULT_TRIGGER_SYMBOLS: TriggerSymbols = Object.freeze({
+const DEFAULT_TRIGGER_SYMBOLS: TriggerSymbols = Object.freeze({
   quicklink: "!",
   system: "$",
   script: ">",

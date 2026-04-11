@@ -185,9 +185,7 @@ fn get_decrypted_history_with_undecryptable(
             }
         };
 
-        if decrypted_value.trim().is_empty()
-            || decrypted_value.len() > CLIPBOARD_CONFIG.max_entry_bytes
-        {
+        if decrypted_value.trim().is_empty() {
             continue;
         }
 

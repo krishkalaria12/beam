@@ -1,6 +1,6 @@
 import { invoke, isTauri } from "@tauri-apps/api/core";
 
-export const NON_HIDEABLE_COMMAND_IDS = new Set<string>(["settings.panel.open"]);
+const NON_HIDEABLE_COMMAND_IDS = new Set<string>(["settings.panel.open"]);
 
 export function isNonHideableCommandId(commandId: string): boolean {
   return NON_HIDEABLE_COMMAND_IDS.has(commandId.trim());

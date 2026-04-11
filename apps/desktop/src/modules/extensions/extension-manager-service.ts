@@ -53,7 +53,7 @@ interface RunPluginPayload {
   commandName?: string;
 }
 
-export type ExtensionManagerMessageEvent =
+type ExtensionManagerMessageEvent =
   | { type: "go-back-to-plugin-list" }
   | { type: "open"; target: string; application?: string }
   | { type: "focus-element"; elementId: number }

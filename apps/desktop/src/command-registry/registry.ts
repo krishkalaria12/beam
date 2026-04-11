@@ -4,7 +4,7 @@ import {
   type StaticCommandRegistry,
 } from "@/command-registry/static-registry";
 
-export function createStaticCommandRegistry(): StaticCommandRegistry {
+function createStaticCommandRegistry(): StaticCommandRegistry {
   return createStaticCommandRegistryStore(STATIC_COMMANDS);
 }
 

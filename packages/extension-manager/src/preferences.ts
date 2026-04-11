@@ -4,7 +4,7 @@ import type { ExtensionPreference as Preference } from "@beam/extension-protocol
 import { writeLog } from "./io";
 import { config } from "./config";
 
-export class PreferencesStore {
+class PreferencesStore {
   private preferencesPath: string;
   private preferences: Record<string, Record<string, unknown>> = {};
 

@@ -5,7 +5,7 @@ import {
   type FallbackCommandId,
 } from "@/command-registry/fallback-commands";
 
-export const COMMAND_PREFERENCES_STORAGE_KEY = "beam-command-preferences";
+const COMMAND_PREFERENCES_STORAGE_KEY = "beam-command-preferences";
 export const COMMAND_PREFERENCES_SCHEMA_VERSION = 3 as const;
 
 export interface CommandUsageEntry {
@@ -152,7 +152,7 @@ export function createDefaultCommandPreferencesState(): CommandPreferencesState 
   };
 }
 
-export function migrateCommandPreferences(raw: unknown): CommandPreferencesState {
+function migrateCommandPreferences(raw: unknown): CommandPreferencesState {
   const defaults = createDefaultCommandPreferencesState();
   if (!raw || typeof raw !== "object") {
     return defaults;

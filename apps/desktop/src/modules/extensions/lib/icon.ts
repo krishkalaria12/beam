@@ -129,7 +129,7 @@ export function resolveExtensionDirectory(pluginPath: string | null | undefined)
   return dirname(normalizedPluginPath);
 }
 
-export function resolveExtensionIconSource(
+function resolveExtensionIconSource(
   iconReference: string | null | undefined,
   options?: { baseDirectory?: string | null },
 ): string | null {

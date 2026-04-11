@@ -54,9 +54,9 @@ import type { LucideIcon } from "lucide-react";
 
 import fileQuicklinkIcon from "@/assets/icons/file-icon-quicklink.png";
 
-export type IconTone = "neutral" | "primary" | "orange" | "cyan" | "purple" | "red";
+type IconTone = "neutral" | "primary" | "orange" | "cyan" | "purple" | "red";
 
-export interface CommandToneSpec {
+interface CommandToneSpec {
   icon: LucideIcon;
   tone: IconTone;
 }

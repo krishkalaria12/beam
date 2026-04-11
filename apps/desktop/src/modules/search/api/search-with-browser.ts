@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 
-export type SearchSite = "google" | "duckduckgo";
+type SearchSite = "google" | "duckduckgo";
 
 type SearchPayload = {
   site: SearchSite;

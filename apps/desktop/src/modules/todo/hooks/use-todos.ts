@@ -26,7 +26,7 @@ export function useTodos() {
   });
 }
 
-export function useTodo(todoId: string | null) {
+function useTodo(todoId: string | null) {
   return useQuery({
     ...(todoId ? getTodoQueryOptions(todoId) : getTodoQueryOptions("")),
     enabled: Boolean(todoId),

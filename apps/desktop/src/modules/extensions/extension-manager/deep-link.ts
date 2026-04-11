@@ -1,34 +1,34 @@
-export interface OauthDeepLinkSuccessResult {
+interface OauthDeepLinkSuccessResult {
   handled: true;
   kind: "success";
   state: string;
   code: string;
 }
 
-export interface OauthDeepLinkErrorResult {
+interface OauthDeepLinkErrorResult {
   handled: true;
   kind: "error";
   state?: string;
   error: string;
 }
 
-export interface OauthDeepLinkIgnoredResult {
+interface OauthDeepLinkIgnoredResult {
   handled: false;
 }
 
-export type ParsedOauthDeepLinkResult =
+type ParsedOauthDeepLinkResult =
   | OauthDeepLinkSuccessResult
   | OauthDeepLinkErrorResult
   | OauthDeepLinkIgnoredResult;
 
-export interface ExtensionsStoreDeepLinkResult {
+interface ExtensionsStoreDeepLinkResult {
   handled: true;
   kind: "extensions-store";
   author?: string;
   extensionSlug?: string;
 }
 
-export interface ExtensionsCommandDeepLinkResult {
+interface ExtensionsCommandDeepLinkResult {
   handled: true;
   kind: "extensions-command";
   ownerOrAuthor: string;
@@ -36,7 +36,7 @@ export interface ExtensionsCommandDeepLinkResult {
   commandName: string;
 }
 
-export type ParsedRaycastDeepLinkResult =
+type ParsedRaycastDeepLinkResult =
   | OauthDeepLinkSuccessResult
   | OauthDeepLinkErrorResult
   | ExtensionsStoreDeepLinkResult

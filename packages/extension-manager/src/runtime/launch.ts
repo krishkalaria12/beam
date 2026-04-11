@@ -18,14 +18,14 @@ export interface LaunchProps {
   launchType: typeof environment.launchType;
 }
 
-export interface PluginMetadata {
+interface PluginMetadata {
   extensionId: string;
   extensionPath: string;
   entrypointPath: string;
   preferences: Preference[];
 }
 
-export interface CreateRuntimeLaunchPayloadOptions {
+interface CreateRuntimeLaunchPayloadOptions {
   aiAccessStatus?: boolean;
   commandName?: string;
   fallbackText?: string;
@@ -36,7 +36,7 @@ export interface CreateRuntimeLaunchPayloadOptions {
   pluginPath: string;
 }
 
-export interface RuntimeLaunchPlan {
+interface RuntimeLaunchPlan {
   launchProps: LaunchProps;
   metadata: PluginMetadata;
   scriptText: string;

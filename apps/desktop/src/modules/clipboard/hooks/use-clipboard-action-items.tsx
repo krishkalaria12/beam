@@ -18,7 +18,7 @@ import { useManagedItemActionItems } from "@/modules/launcher/managed-item-actio
 import type { LauncherManagedItem } from "@/modules/launcher/managed-items";
 import type { LauncherActionItem } from "@/modules/launcher/types";
 
-export interface ClipboardActionsState {
+interface ClipboardActionsState {
   selectedEntry: ClipboardHistoryEntry | null;
   selectedIndex: number;
   onCopy?: () => Promise<void> | void;

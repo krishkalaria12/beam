@@ -2,7 +2,7 @@ import { COMMAND_PANEL_VALUES, type CommandPanelValue } from "@/command-registry
 import type { CommandDescriptor, CommandPanel } from "@/command-registry/types";
 import { isCommandPanel } from "@/command-registry/panels";
 
-export type LauncherPanelWarmupTier = "boot" | "idle" | "intent" | "rare";
+type LauncherPanelWarmupTier = "boot" | "idle" | "intent" | "rare";
 
 const PANEL_WARMUP_TIERS: Partial<Record<CommandPanel, LauncherPanelWarmupTier>> = {
   "calculator-history": "boot",
@@ -26,7 +26,7 @@ const PANEL_WARMUP_TIERS: Partial<Record<CommandPanel, LauncherPanelWarmupTier>>
   dmenu: "rare",
 };
 
-export function getLauncherPanelWarmupTier(panel: CommandPanel): LauncherPanelWarmupTier {
+function getLauncherPanelWarmupTier(panel: CommandPanel): LauncherPanelWarmupTier {
   return PANEL_WARMUP_TIERS[panel] ?? "rare";
 }
 

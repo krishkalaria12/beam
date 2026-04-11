@@ -12,7 +12,7 @@ export function emitStorageChanged(): void {
   }
 }
 
-export function subscribeToStorageChanges(listener: StorageChangeListener): () => void {
+function subscribeToStorageChanges(listener: StorageChangeListener): () => void {
   storageChangeListeners.add(listener);
   return () => {
     storageChangeListeners.delete(listener);

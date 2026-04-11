@@ -29,7 +29,7 @@ export function useSnippetsQuery() {
   });
 }
 
-export function useSnippetRuntimeSettingsQuery() {
+function useSnippetRuntimeSettingsQuery() {
   return useQuery({
     queryKey: SNIPPETS_RUNTIME_QUERY_KEY,
     queryFn: getSnippetRuntimeSettings,
@@ -83,7 +83,7 @@ export function useSetSnippetEnabledMutation() {
   });
 }
 
-export function useIncrementSnippetCopiedCountMutation() {
+function useIncrementSnippetCopiedCountMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -105,7 +105,7 @@ export function usePasteSnippetMutation() {
   });
 }
 
-export function useUpdateSnippetRuntimeSettingsMutation() {
+function useUpdateSnippetRuntimeSettingsMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({

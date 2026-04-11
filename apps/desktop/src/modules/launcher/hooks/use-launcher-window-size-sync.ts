@@ -26,7 +26,12 @@ type LauncherWindowRequest =
       height: number;
     };
 
-let queuedRequest: LauncherWindowRequest | null = null;
+type LauncherWindowSyncMode = "default" | "transition";
+
+let queuedRequest: {
+  request: LauncherWindowRequest;
+  mode: LauncherWindowSyncMode;
+} | null = null;
 let activeWindowSync: Promise<void> | null = null;
 let lastAppliedRequestKey = "";
 
@@ -64,25 +69,44 @@ export function getLauncherWindowSizeForPanel(
   return getFixedPanelSize(activePanel);
 }
 
-async function applyLauncherWindowRequest(request: LauncherWindowRequest): Promise<void> {
+async function applyLauncherWindowRequest(
+  request: LauncherWindowRequest,
+  mode: LauncherWindowSyncMode,
+): Promise<void> {
   if (request.key === lastAppliedRequestKey) {
     return;
   }
 
   if (request.kind === "commands") {
-    await setLauncherCompactMode(request.compact, request.compactHeight);
+    if (mode === "transition") {
+      await invoke("set_launcher_compact_mode_for_resize_transition", {
+        compact: request.compact,
+        compactHeight: request.compactHeight,
+        compact_height: request.compactHeight,
+      });
+    } else {
+      await setLauncherCompactMode(request.compact, request.compactHeight);
+    }
   } else {
-    await invoke("set_launcher_window_size", {
-      width: request.width,
-      height: request.height,
-    });
+    await invoke(
+      mode === "transition"
+        ? "set_launcher_window_size_for_resize_transition"
+        : "set_launcher_window_size",
+      {
+        width: request.width,
+        height: request.height,
+      },
+    );
   }
 
   lastAppliedRequestKey = request.key;
 }
 
-function queueLauncherWindowRequest(request: LauncherWindowRequest): Promise<void> {
-  queuedRequest = request;
+function queueLauncherWindowRequest(
+  request: LauncherWindowRequest,
+  mode: LauncherWindowSyncMode = "default",
+): Promise<void> {
+  queuedRequest = { request, mode };
 
   if (activeWindowSync) {
     return activeWindowSync;
@@ -92,7 +116,7 @@ function queueLauncherWindowRequest(request: LauncherWindowRequest): Promise<voi
     while (queuedRequest) {
       const nextRequest = queuedRequest;
       queuedRequest = null;
-      await applyLauncherWindowRequest(nextRequest);
+      await applyLauncherWindowRequest(nextRequest.request, nextRequest.mode);
     }
   })()
     .catch((error) => {
@@ -101,7 +125,7 @@ function queueLauncherWindowRequest(request: LauncherWindowRequest): Promise<voi
     .finally(() => {
       activeWindowSync = null;
       if (queuedRequest) {
-        void queueLauncherWindowRequest(queuedRequest);
+        void queueLauncherWindowRequest(queuedRequest.request, queuedRequest.mode);
       }
     });
 
@@ -140,6 +164,7 @@ function buildLauncherWindowRequest(
 export async function syncLauncherWindowToPanel(
   activePanel: CommandPanel,
   shouldCollapseToInputOnly: boolean,
+  mode: LauncherWindowSyncMode = "default",
 ) {
   if (!isTauri()) {
     return;
@@ -147,7 +172,24 @@ export async function syncLauncherWindowToPanel(
 
   await queueLauncherWindowRequest(
     buildLauncherWindowRequest(activePanel, shouldCollapseToInputOnly),
+    mode,
   );
+}
+
+export async function hideLauncherWindowForResizeTransition() {
+  if (!isTauri()) {
+    return;
+  }
+
+  await invoke("hide_launcher_window_for_resize_transition");
+}
+
+async function revealLauncherWindowAfterResizeTransition() {
+  if (!isTauri()) {
+    return;
+  }
+
+  await invoke("reveal_launcher_window_after_resize_transition");
 }
 
 export function useLauncherWindowSizeSync(

@@ -2,7 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 
 export const ICON_THEME_QUERY_KEY = ["settings", "icon-theme"] as const;
 export const ICON_THEMES_QUERY_KEY = ["settings", "icon-themes"] as const;
-export interface IconThemeSummary {
+interface IconThemeSummary {
   id: string;
   name: string;
 }

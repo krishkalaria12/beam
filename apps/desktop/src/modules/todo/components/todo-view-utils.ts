@@ -1,6 +1,6 @@
 import type { SubTodo, TodoWithSubTodos } from "@/modules/todo/types";
 
-export interface ReorderUpdate {
+interface ReorderUpdate {
   id: string;
   orderIndex: number;
 }

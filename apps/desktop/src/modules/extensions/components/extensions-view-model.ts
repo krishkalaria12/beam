@@ -222,7 +222,7 @@ export function toInstalledExtensionSummary(plugins: PluginInfo[]): InstalledExt
     .sort((a, b) => a.title.localeCompare(b.title));
 }
 
-export function toSlugLabel(slug: string): string {
+function toSlugLabel(slug: string): string {
   return slug
     .split(/[-_]/)
     .map((part) => part.slice(0, 1).toUpperCase() + part.slice(1))

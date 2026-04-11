@@ -12,7 +12,7 @@ import {
 import { cn } from "@/lib/utils";
 import { resolveExtensionIconSources } from "@/modules/extensions/lib/icon";
 
-export interface ThemeableValue {
+interface ThemeableValue {
   light: string;
   dark: string;
 }

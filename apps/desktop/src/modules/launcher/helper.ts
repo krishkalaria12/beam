@@ -4,7 +4,7 @@ import type { LauncherActionItem, LauncherActionSection } from "./types";
 
 export const HOTKEY_EXAMPLE = "CTRL+SUPER+A";
 
-export function filterActionItems(
+function filterActionItems(
   items: LauncherActionItem[],
   query: string,
 ): LauncherActionItem[] {
@@ -60,7 +60,7 @@ export function formatCommandName(
   return commandId;
 }
 
-export function normalizeAlias(value: string): string {
+function normalizeAlias(value: string): string {
   return value.trim().toLowerCase();
 }
 

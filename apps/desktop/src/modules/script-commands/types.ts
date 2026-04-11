@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const scriptCommandArgumentOptionSchema = z.object({
+const scriptCommandArgumentOptionSchema = z.object({
   title: z.string().nullish(),
   value: z.string().nullish(),
 });

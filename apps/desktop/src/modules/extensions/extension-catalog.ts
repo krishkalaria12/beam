@@ -77,11 +77,11 @@ export function getPluginAuthorPrefix(plugin: PluginInfo): string {
   return "extension";
 }
 
-export function toExtensionRuntimeId(plugin: PluginInfo): string {
+function toExtensionRuntimeId(plugin: PluginInfo): string {
   return `${getPluginAuthorPrefix(plugin)}.${plugin.pluginName}`;
 }
 
-export function isExecutableExtensionPlugin(plugin: PluginInfo): boolean {
+function isExecutableExtensionPlugin(plugin: PluginInfo): boolean {
   const normalizedMode = plugin.mode?.trim().toLowerCase();
   return normalizedMode === "no-view" || normalizedMode === "view" || normalizedMode === "menu-bar";
 }
@@ -93,7 +93,7 @@ export function isPersistentExtensionPlugin(plugin: PluginInfo): boolean {
   );
 }
 
-export function matchExtensionPlugin(plugin: PluginInfo, query: string): boolean {
+function matchExtensionPlugin(plugin: PluginInfo, query: string): boolean {
   if (!query) {
     return false;
   }

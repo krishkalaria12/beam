@@ -7,8 +7,8 @@ import {
   SCRIPT_COMMANDS_QUERY_KEY,
 } from "@/modules/script-commands/constants";
 
-export const SCRIPT_COMMANDS_STALE_TIME_MS = 8_000;
-export const SCRIPT_COMMANDS_DIRECTORY_STALE_TIME_MS = 5 * 60 * 1000;
+const SCRIPT_COMMANDS_STALE_TIME_MS = 8_000;
+const SCRIPT_COMMANDS_DIRECTORY_STALE_TIME_MS = 5 * 60 * 1000;
 
 export function getScriptCommandsQueryOptions() {
   return {

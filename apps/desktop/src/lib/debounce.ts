@@ -1,8 +1,8 @@
-export type Options = {
+type Options = {
   readonly immediate?: boolean;
 };
 
-export type DebouncedFunction<Args extends readonly unknown[], ReturnValue> = {
+type DebouncedFunction<Args extends readonly unknown[], ReturnValue> = {
   (...arguments_: Args): ReturnValue | undefined;
   readonly isPending: boolean;
   clear(): void;

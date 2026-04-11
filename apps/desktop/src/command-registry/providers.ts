@@ -9,7 +9,7 @@ import type {
 import debounce from "@/lib/debounce";
 import { validateCommandDescriptors } from "@/command-registry/validation";
 
-export interface CommandProviderOrchestrator {
+interface CommandProviderOrchestrator {
   resolve(context: CommandContext): Promise<CommandProviderResolution>;
   resolveIncremental(
     context: CommandContext,
@@ -19,7 +19,7 @@ export interface CommandProviderOrchestrator {
   setProviders(providers: readonly CommandProvider[]): void;
 }
 
-export interface CommandProviderOrchestratorOptions {
+interface CommandProviderOrchestratorOptions {
   providers?: readonly CommandProvider[];
   debounceMs?: number;
 }

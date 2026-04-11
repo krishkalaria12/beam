@@ -33,7 +33,7 @@ function removePanelBackHandler(panel: CommandPanel, handler: LauncherBackHandle
   }
 }
 
-export function registerLauncherPanelBackHandler(
+function registerLauncherPanelBackHandler(
   panel: CommandPanel,
   handler: LauncherBackHandler,
 ): () => void {
