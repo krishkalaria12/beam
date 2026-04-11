@@ -4,9 +4,9 @@ use std::sync::{
 };
 use std::time::Duration;
 
-use tauri::{AppHandle, LogicalSize, Manager, PhysicalPosition, Position, Size, WebviewWindow};
 #[cfg(target_os = "linux")]
 use std::{env, process::Command};
+use tauri::{AppHandle, LogicalSize, Manager, PhysicalPosition, Position, Size, WebviewWindow};
 
 const LAUNCHER_WIDTH: f64 = 960.0;
 const LAUNCHER_EXPANDED_HEIGHT: f64 = 520.0;
@@ -93,10 +93,7 @@ fn center_launcher_window_with_niri() -> Result<bool, String> {
         .map_err(|err| format!("failed to center niri window: {err}"))?;
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
-        return Err(format!(
-            "failed to center niri window: {}",
-            stderr.trim()
-        ));
+        return Err(format!("failed to center niri window: {}", stderr.trim()));
     }
 
     Ok(true)
@@ -205,9 +202,10 @@ fn resolve_target_monitor(window: &WebviewWindow) -> Result<tauri::Monitor, Stri
             return Ok(monitor.clone());
         }
 
-        if let Some(monitor) = available_monitors.iter().min_by_key(|monitor| {
-            squared_distance_to_work_area(monitor, center_x, center_y)
-        }) {
+        if let Some(monitor) = available_monitors
+            .iter()
+            .min_by_key(|monitor| squared_distance_to_work_area(monitor, center_x, center_y))
+        {
             return Ok(monitor.clone());
         }
     }
