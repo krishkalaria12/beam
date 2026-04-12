@@ -157,7 +157,20 @@ fn read_selected_theme_id(app: &AppHandle) -> Result<Option<String>> {
         .and_then(|raw| normalize_theme_id(raw))
         .filter(|raw| !raw.is_empty());
 
-    Ok(selected)
+    let Some(selected_id) = selected else {
+        return Ok(None);
+    };
+
+    let theme_exists = discover_themes_with_paths(app)?
+        .into_iter()
+        .any(|(summary, _)| summary.id == selected_id);
+
+    if theme_exists {
+        Ok(Some(selected_id))
+    } else {
+        log::warn!("ignoring unavailable launcher theme '{selected_id}'");
+        Ok(None)
+    }
 }
 
 #[tauri::command]

@@ -268,7 +268,7 @@ export function KeybindsTab({ isActive }: KeybindsTabProps) {
       dispatch({
         type: "set-settings",
         value: {
-          globalShortcut: state.settings?.globalShortcut ?? "SUPER+Space",
+          globalShortcut: state.settings?.globalShortcut ?? "SUPER+R",
           commandHotkeys: {
             ...state.settings?.commandHotkeys,
             [selectedRow.id]: normalized,

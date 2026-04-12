@@ -93,7 +93,7 @@ function normalizeHotkeysMap(value: unknown): Record<string, string> {
 
 function defaultHotkeySettings(): HotkeySettings {
   return {
-    globalShortcut: "SUPER+Space",
+    globalShortcut: "SUPER+R",
     commandHotkeys: {},
   };
 }

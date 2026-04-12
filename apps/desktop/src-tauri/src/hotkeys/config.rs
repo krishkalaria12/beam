@@ -1,7 +1,7 @@
 pub(crate) const CONFIG: HotkeysConfig = HotkeysConfig {
     global_shortcut_key: "hotkey_global_shortcut",
     command_hotkeys_key: "hotkey_command_hotkeys",
-    default_global_shortcut: "SUPER+Space",
+    default_global_shortcut: "SUPER+R",
     command_event: "hotkey-command",
     settings_updated_event: "hotkey-settings-updated",
     backend_status_event: "hotkey-backend-status",

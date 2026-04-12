@@ -95,10 +95,10 @@ fn emit_deep_link(app: &tauri::AppHandle, deep_link: String) {
     let _ = launcher_window::reveal_launcher_window(app);
 }
 
-fn handle_activation_args(app: &tauri::AppHandle, args: &[String], startup: bool) {
+fn handle_activation_args(app: &tauri::AppHandle, args: &[String], startup: bool) -> bool {
     if let Some(deep_link) = extract_deep_link_arg(args) {
         emit_deep_link(app, deep_link);
-        return;
+        return true;
     }
 
     if let Some(command_id) = extract_run_command_arg(args) {
@@ -107,12 +107,15 @@ fn handle_activation_args(app: &tauri::AppHandle, args: &[String], startup: bool
         } else {
             hotkeys::dispatch_hotkey_command(app, command_id, "cli");
         }
-        return;
+        return true;
     }
 
     if args.iter().any(|arg| arg == "--toggle") {
         toggle_launcher(app);
+        return true;
     }
+
+    false
 }
 
 #[cfg(target_os = "linux")]
@@ -228,7 +231,9 @@ pub fn run(startup_args: Vec<String>) {
     #[cfg(desktop)]
     {
         builder = builder.plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
-            handle_activation_args(app, &args, false);
+            if !handle_activation_args(app, &args, false) {
+                let _ = launcher_window::reveal_launcher_window(app);
+            }
         }));
     }
 
@@ -271,7 +276,7 @@ pub fn run(startup_args: Vec<String>) {
 
             #[cfg(desktop)]
             {
-                handle_activation_args(&app.handle(), &startup_args, true);
+                let _ = handle_activation_args(&app.handle(), &startup_args, true);
             }
 
             // Initialize File Search Backend via State
