@@ -1,11 +1,6 @@
-use std::sync::{
-    atomic::{AtomicBool, Ordering},
-    Arc,
-};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
-#[cfg(target_os = "linux")]
-use std::{env, process::Command};
 use tauri::{AppHandle, LogicalSize, Manager, PhysicalPosition, Position, Size, WebviewWindow};
 
 const LAUNCHER_WIDTH: f64 = 960.0;
@@ -48,60 +43,6 @@ fn show_after_resize_transition(window: &WebviewWindow) -> Result<(), String> {
         .map_err(|err| format!("failed to focus launcher after resize transition: {err}"))?;
 
     center_launcher_window(window)
-}
-
-#[cfg(target_os = "linux")]
-fn is_niri_session() -> bool {
-    env::var("XDG_CURRENT_DESKTOP")
-        .ok()
-        .map(|value| value.trim().to_lowercase().contains("niri"))
-        .unwrap_or(false)
-        || env::var_os("NIRI_SOCKET").is_some()
-}
-
-#[cfg(target_os = "linux")]
-fn move_launcher_window_with_niri(delta_x: i64, delta_y: i64) -> Result<(), String> {
-    let output = Command::new("niri")
-        .args([
-            "msg",
-            "action",
-            "move-floating-window",
-            "--x",
-            &format!("{delta_x:+}"),
-            "--y",
-            &format!("{delta_y:+}"),
-        ])
-        .output()
-        .map_err(|err| format!("failed to move niri window: {err}"))?;
-    if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        return Err(format!("failed to move niri window: {}", stderr.trim()));
-    }
-
-    Ok(())
-}
-
-#[cfg(target_os = "linux")]
-fn center_launcher_window_with_niri() -> Result<bool, String> {
-    if !is_niri_session() {
-        return Ok(false);
-    }
-
-    let output = Command::new("niri")
-        .args(["msg", "action", "center-window"])
-        .output()
-        .map_err(|err| format!("failed to center niri window: {err}"))?;
-    if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        return Err(format!("failed to center niri window: {}", stderr.trim()));
-    }
-
-    Ok(true)
-}
-
-#[cfg(not(target_os = "linux"))]
-fn center_launcher_window_with_niri() -> Result<bool, String> {
-    Ok(false)
 }
 
 fn work_area_contains_point(monitor: &tauri::Monitor, x: i64, y: i64) -> bool {
@@ -221,69 +162,7 @@ fn resolve_target_monitor(window: &WebviewWindow) -> Result<tauri::Monitor, Stri
         .ok_or_else(|| "launcher monitor not found".to_string())
 }
 
-#[cfg(target_os = "linux")]
-fn schedule_delayed_niri_resize_offset(
-    window: &WebviewWindow,
-    previous_outer_size: tauri::PhysicalSize<u32>,
-    delays_ms: &[u64],
-) {
-    if !is_niri_session() {
-        return;
-    }
-
-    let applied = Arc::new(AtomicBool::new(false));
-    for delay_ms in delays_ms {
-        let delayed_window = window.clone();
-        let applied = Arc::clone(&applied);
-        let delay = *delay_ms;
-        tauri::async_runtime::spawn(async move {
-            tokio::time::sleep(Duration::from_millis(delay)).await;
-
-            if applied.load(Ordering::SeqCst) {
-                return;
-            }
-
-            let Ok(current_outer_size) = delayed_window.outer_size() else {
-                return;
-            };
-
-            let delta_x =
-                i64::from(current_outer_size.width) - i64::from(previous_outer_size.width);
-            let delta_y =
-                i64::from(current_outer_size.height) - i64::from(previous_outer_size.height);
-
-            if delta_x == 0 && delta_y == 0 {
-                return;
-            }
-
-            let move_x = -(delta_x / 2);
-            let move_y = -(delta_y / 2);
-
-            if move_x == 0 && move_y == 0 {
-                applied.store(true, Ordering::SeqCst);
-                return;
-            }
-
-            if move_launcher_window_with_niri(move_x, move_y).is_ok() {
-                applied.store(true, Ordering::SeqCst);
-            }
-        });
-    }
-}
-
-#[cfg(not(target_os = "linux"))]
-fn schedule_delayed_niri_resize_offset(
-    _window: &WebviewWindow,
-    _previous_outer_size: tauri::PhysicalSize<u32>,
-    _delays_ms: &[u64],
-) {
-}
-
 pub fn center_launcher_window(window: &WebviewWindow) -> Result<(), String> {
-    if center_launcher_window_with_niri()? {
-        return Ok(());
-    }
-
     let monitor = resolve_target_monitor(window)?;
 
     let work_area = monitor.work_area();
@@ -343,11 +222,6 @@ fn apply_fixed_size(
     recenter_after_resize: bool,
 ) -> Result<(), String> {
     let target = Size::Logical(LogicalSize::new(width, height));
-    let previous_outer_size = if recenter_after_resize {
-        window.outer_size().ok()
-    } else {
-        None
-    };
 
     window
         .set_min_size(Some(target.clone()))
@@ -360,10 +234,6 @@ fn apply_fixed_size(
     window
         .set_size(target)
         .map_err(|err| format!("failed to resize launcher: {err}"))?;
-
-    if let Some(previous_outer_size) = previous_outer_size {
-        schedule_delayed_niri_resize_offset(window, previous_outer_size, &[24, 72, 140, 220]);
-    }
 
     if recenter_after_resize {
         center_launcher_window(window)?;

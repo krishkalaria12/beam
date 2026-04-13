@@ -5,10 +5,15 @@ import "katex/dist/katex.min.css";
 import "streamdown/styles.css";
 
 import { CommandLoadingState } from "./components/command/command-loading-state";
+import { AppErrorBoundary } from "./components/app-error-boundary";
 import { Toaster } from "./components/ui/sonner";
 import { TooltipProvider } from "./components/ui/tooltip";
 import { initializeTriggerSymbols } from "./modules/settings/api/trigger-symbols";
-import { loadInitialUiStyleSettings } from "./modules/settings/api/ui-style";
+import {
+  DEFAULT_BASE_COLOR,
+  type UiStylePreference,
+  loadInitialUiStyleSettings,
+} from "./modules/settings/api/ui-style";
 import { LauncherFontProvider } from "./providers/launcher-font-provider";
 import { LauncherThemeProvider } from "./providers/launcher-theme-provider";
 import { LauncherOpacityProvider } from "./providers/launcher-opacity-provider";
@@ -39,8 +44,25 @@ if (!rootElement) {
 const appRootElement = rootElement;
 
 async function bootstrapAndRender() {
-  const uiStyleSettings = await loadInitialUiStyleSettings();
-  await initializeTriggerSymbols();
+  let uiStyleSettings: {
+    uiStyle: UiStylePreference;
+    baseColor: string;
+  } = {
+    uiStyle: "solid",
+    baseColor: DEFAULT_BASE_COLOR,
+  };
+
+  try {
+    uiStyleSettings = await loadInitialUiStyleSettings();
+  } catch (error) {
+    console.error("[beam] failed to load ui style settings, using defaults", error);
+  }
+
+  try {
+    await initializeTriggerSymbols();
+  } catch (error) {
+    console.error("[beam] failed to initialize trigger symbols, using defaults", error);
+  }
 
   if (appRootElement.innerHTML) {
     return;
@@ -48,25 +70,27 @@ async function bootstrapAndRender() {
 
   const root = ReactDOM.createRoot(appRootElement);
   root.render(
-    <QueryProvider>
-      <ThemeProvider>
-        <UiStyleProvider
-          defaultUiStyle={uiStyleSettings.uiStyle}
-          defaultBaseColor={uiStyleSettings.baseColor}
-        >
-          <LauncherThemeProvider>
-            <LauncherFontProvider>
-              <LauncherOpacityProvider>
-                <TooltipProvider>
-                  <RouterProvider router={router} />
-                  <Toaster position="top-right" richColors />
-                </TooltipProvider>
-              </LauncherOpacityProvider>
-            </LauncherFontProvider>
-          </LauncherThemeProvider>
-        </UiStyleProvider>
-      </ThemeProvider>
-    </QueryProvider>,
+    <AppErrorBoundary>
+      <QueryProvider>
+        <ThemeProvider>
+          <UiStyleProvider
+            defaultUiStyle={uiStyleSettings.uiStyle}
+            defaultBaseColor={uiStyleSettings.baseColor}
+          >
+            <LauncherThemeProvider>
+              <LauncherFontProvider>
+                <LauncherOpacityProvider>
+                  <TooltipProvider>
+                    <RouterProvider router={router} />
+                    <Toaster position="top-right" richColors />
+                  </TooltipProvider>
+                </LauncherOpacityProvider>
+              </LauncherFontProvider>
+            </LauncherThemeProvider>
+          </UiStyleProvider>
+        </ThemeProvider>
+      </QueryProvider>
+    </AppErrorBoundary>,
   );
 }
 

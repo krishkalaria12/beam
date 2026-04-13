@@ -10,7 +10,7 @@ export function normalizeUiStyle(value: string | null | undefined): UiStylePrefe
     .toLowerCase();
   if (normalized === "glassy") return "glassy";
   if (normalized === "solid") return "solid";
-  return "default";
+  return "solid";
 }
 
 export function normalizeBaseColor(value: string | null | undefined): string {

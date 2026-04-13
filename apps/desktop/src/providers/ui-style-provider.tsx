@@ -32,7 +32,7 @@ const USER_THEME_CLASS_PREFIX = "theme-user-";
 const CUSTOM_THEME_ACTIVE_CLASS = "theme-custom-active";
 
 const initialState: UiStyleProviderState = {
-  uiStyle: "glassy",
+  uiStyle: "solid",
   baseColor: DEFAULT_BASE_COLOR_HEX,
   setUiStyle: async () => {},
   setBaseColor: async () => {},
@@ -122,7 +122,7 @@ function applyBaseColor(baseColor: string): void {
 
 export function UiStyleProvider({
   children,
-  defaultUiStyle = "glassy",
+  defaultUiStyle = "solid",
   defaultBaseColor = DEFAULT_BASE_COLOR_HEX,
 }: UiStyleProviderProps) {
   const [uiStyle, setUiStyleState] = useState<UiStylePreference>(() =>

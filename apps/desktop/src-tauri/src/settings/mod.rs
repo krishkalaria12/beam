@@ -25,8 +25,8 @@ const MAX_LAUNCHER_FONT_SIZE: f64 = 18.0;
 #[serde(rename_all = "snake_case")]
 pub enum UiStylePreference {
     Default,
-    #[default]
     Glassy,
+    #[default]
     Solid,
 }
 
