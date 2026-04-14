@@ -1,37 +1,48 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
 
+import { AppCrashScreen } from "@/components/app-crash-screen";
+
 type AppErrorBoundaryProps = {
   children: ReactNode;
 };
 
 type AppErrorBoundaryState = {
   hasError: boolean;
+  error: Error | null;
 };
 
 export class AppErrorBoundary extends Component<AppErrorBoundaryProps, AppErrorBoundaryState> {
   public state: AppErrorBoundaryState = {
     hasError: false,
+    error: null,
   };
 
-  public static getDerivedStateFromError(): AppErrorBoundaryState {
-    return { hasError: true };
+  public static getDerivedStateFromError(error: Error): AppErrorBoundaryState {
+    return { hasError: true, error };
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     console.error("[beam] ui render error", error, errorInfo);
   }
 
+  private readonly handleTryAgain = (): void => {
+    this.setState({ hasError: false, error: null });
+  };
+
+  private readonly handleGoHome = (): void => {
+    window.location.assign("/");
+  };
+
   public render(): ReactNode {
     if (this.state.hasError) {
       return (
-        <div className="h-screen w-screen bg-[#111] text-[#f2f2f2] flex items-center justify-center">
-          <div className="max-w-md rounded-xl border border-white/20 bg-black/30 px-5 py-4 text-center">
-            <p className="text-sm font-semibold">beam failed to render this view</p>
-            <p className="mt-1 text-xs text-white/70">
-              try relaunching beam. if the issue persists, rebuild the appimage.
-            </p>
-          </div>
-        </div>
+        <AppCrashScreen
+          title="Beam Could Not Render This Screen"
+          description="Go to the main screen to reload the app with a clean state."
+          error={this.state.error}
+          onGoHome={this.handleGoHome}
+          onTryAgain={this.handleTryAgain}
+        />
       );
     }
 

@@ -6,6 +6,7 @@ import "streamdown/styles.css";
 
 import { CommandLoadingState } from "./components/command/command-loading-state";
 import { AppErrorBoundary } from "./components/app-error-boundary";
+import { RouterErrorFallback } from "./components/router-error-fallback";
 import { Toaster } from "./components/ui/sonner";
 import { TooltipProvider } from "./components/ui/tooltip";
 import { initializeTriggerSymbols } from "./modules/settings/api/trigger-symbols";
@@ -26,6 +27,7 @@ const router = createRouter({
   routeTree,
   defaultPreload: "intent",
   defaultPendingComponent: () => <CommandLoadingState withSpinner className="py-4" />,
+  defaultErrorComponent: RouterErrorFallback,
   context: {},
 });
 
