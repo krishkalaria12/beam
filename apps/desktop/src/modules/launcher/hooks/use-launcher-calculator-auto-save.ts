@@ -24,6 +24,7 @@ export function useLauncherCalculatorAutoSave({
 }: UseLauncherCalculatorAutoSaveInput) {
   const calculatorSaveTimerRef = useRef<number | null>(null);
   const calculatorSaveKeyRef = useRef("");
+  const pendingCalculatorSaveRef = useRef<CalculatorPreview | null>(null);
   const calculatorPreviewKey = calculatorPreview
     ? `${calculatorPreview.query}\u0000${calculatorPreview.result}\u0000${calculatorSessionId}`
     : "";
@@ -31,17 +32,20 @@ export function useLauncherCalculatorAutoSave({
   const syncCalculatorAutoSave = useEffectEvent(() => {
     if (calculatorPreviewKey && calculatorSaveKeyRef.current !== calculatorPreviewKey) {
       calculatorSaveKeyRef.current = calculatorPreviewKey;
+      pendingCalculatorSaveRef.current = calculatorPreview;
       if (calculatorSaveTimerRef.current !== null) {
         window.clearTimeout(calculatorSaveTimerRef.current);
       }
       calculatorSaveTimerRef.current = window.setTimeout(() => {
         calculatorSaveTimerRef.current = null;
-        if (!calculatorPreview) {
+        const pendingPreview = pendingCalculatorSaveRef.current;
+        pendingCalculatorSaveRef.current = null;
+        if (!pendingPreview) {
           return;
         }
         void saveCalculatorHistory(
-          calculatorPreview.query,
-          calculatorPreview.result,
+          pendingPreview.query,
+          pendingPreview.result,
           calculatorSessionId,
         ).then(() => {
           queryClient.invalidateQueries({ queryKey: calculatorHistoryQueryKey });
@@ -53,6 +57,17 @@ export function useLauncherCalculatorAutoSave({
     if (!calculatorPreviewKey && calculatorSaveTimerRef.current !== null) {
       window.clearTimeout(calculatorSaveTimerRef.current);
       calculatorSaveTimerRef.current = null;
+      const pendingPreview = pendingCalculatorSaveRef.current;
+      pendingCalculatorSaveRef.current = null;
+      if (pendingPreview) {
+        void saveCalculatorHistory(
+          pendingPreview.query,
+          pendingPreview.result,
+          calculatorSessionId,
+        ).then(() => {
+          queryClient.invalidateQueries({ queryKey: calculatorHistoryQueryKey });
+        });
+      }
       calculatorSaveKeyRef.current = "";
     }
   });

@@ -1,7 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { isTauri } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
-import { useCallback, useEffectEvent, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { buildCommandContext } from "@/command-registry/context";
@@ -129,6 +129,7 @@ export default function LauncherCommand() {
   const [isPanelTransitioning, setIsPanelTransitioning] = useState(false);
   const [hideShellDuringTransition, setHideShellDuringTransition] = useState(false);
   const panelTransitionQueueRef = useRef<Promise<void>>(Promise.resolve());
+  const commandListRef = useRef<HTMLDivElement | null>(null);
 
   const waitForWindowSettle = useCallback(() => {
     return new Promise<void>((resolve) => {
@@ -783,6 +784,14 @@ export default function LauncherCommand() {
   useLauncherWindowSizeSync(activePanel, shouldCollapseToInputOnly, !isPanelTransitioning);
   useLauncherFocusManagement({ activePanel, isInputHidden });
 
+  useEffect(() => {
+    if (activePanel !== "commands") {
+      return;
+    }
+
+    commandListRef.current?.scrollTo({ top: 0, behavior: "auto" });
+  }, [commandSearchSessionSeed, activePanel]);
+
   const ExtensionToastBridge = extensionInfrastructure?.ExtensionToastBridge ?? null;
   const PersistentExtensionsHost = extensionInfrastructure?.PersistentExtensionsHost ?? null;
 
@@ -869,6 +878,7 @@ export default function LauncherCommand() {
                 </div>
               ) : (
                 <CommandList
+                  ref={commandListRef}
                   className={cn(
                     "list-area flex-1 scroll-pt-0",
                     "custom-scrollbar px-1.5",

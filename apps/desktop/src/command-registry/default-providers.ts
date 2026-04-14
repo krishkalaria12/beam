@@ -2,7 +2,6 @@ import type { CommandDescriptor, CommandProvider } from "@/command-registry/type
 import { getTriggerSymbol, QUICKLINK_TRIGGER_MODE } from "@/command-registry/trigger-registry";
 import { searchApplications } from "@/modules/applications/api/search-applications";
 import { calculateExpression } from "@/modules/calculator/api/calculate-expression";
-import { looksLikeCalculationQuery } from "@/modules/calculator/lib/query-match";
 import { findQuicklinkByKeyword, getQuicklinks } from "@/modules/quicklinks/api/quicklinks";
 import { createExtensionCommandProvider } from "@/modules/extensions/extension-command-provider";
 import { createExtensionStoreProvider } from "@/modules/extensions/extension-store-provider";
@@ -151,7 +150,7 @@ function createCalculatorCommandProvider(): CommandProvider {
     scope: PROVIDER_SCOPE,
     async provide({ context, signal }) {
       const normalizedQuery = context.query.replace(/\s+/g, " ").trim();
-      if (!looksLikeCalculationQuery(normalizedQuery) || signal.aborted) {
+      if (!normalizedQuery || signal.aborted) {
         return [];
       }
 

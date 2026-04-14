@@ -210,9 +210,13 @@ function CommandInput({
   );
 }
 
-function CommandList({ className, ...props }: React.ComponentProps<typeof CommandPrimitive.List>) {
+const CommandList = React.forwardRef<
+  HTMLDivElement,
+  React.ComponentPropsWithoutRef<typeof CommandPrimitive.List>
+>(({ className, ...props }, ref) => {
   return (
     <CommandPrimitive.List
+      ref={ref}
       data-slot="command-list"
       className={cn(
         "max-h-none scroll-py-2 outline-none overflow-x-hidden overflow-y-auto",
@@ -221,7 +225,9 @@ function CommandList({ className, ...props }: React.ComponentProps<typeof Comman
       {...props}
     />
   );
-}
+});
+
+CommandList.displayName = CommandPrimitive.List.displayName;
 
 function CommandEmpty({
   className,

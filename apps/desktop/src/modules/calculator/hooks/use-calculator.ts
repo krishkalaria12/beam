@@ -2,13 +2,12 @@ import { useQuery } from "@tanstack/react-query";
 import { useDeferredValue } from "react";
 
 import { calculateExpression } from "../api/calculate-expression";
-import { looksLikeCalculationQuery } from "../lib/query-match";
 
 export function useCalculator(query: string) {
   const debouncedQuery = useDeferredValue(query.trim());
 
   const normalizedQuery = debouncedQuery.trim().replace(/\s+/g, " ");
-  const shouldRunCalculator = looksLikeCalculationQuery(normalizedQuery);
+  const shouldRunCalculator = normalizedQuery.length > 0;
 
   return useQuery({
     queryKey: ["calculator", normalizedQuery],
