@@ -6766,9 +6766,9 @@ dependencies = [
 
 [[package]]
 name = "smart-calculator"
-version = "1.0.2"
+version = "1.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c3936af0b3920ad408df0f7cfe0cd4ec66aa05cbc90cdccbfe9351d7838986a1"
+checksum = "4a1f1fc3a54a48d4feccc95c785185e21cee302b84ebf9d241b6f39ca41ac7b7"
 dependencies = [
  "async-trait",
  "chrono",

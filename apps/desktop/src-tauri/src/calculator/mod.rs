@@ -46,15 +46,17 @@ fn classify_query(query: &str) -> CalculatorStatus {
         return CalculatorStatus::Empty;
     }
 
-    if normalized.parse::<f64>().is_ok() {
-        return CalculatorStatus::Irrelevant;
-    }
-
     if is_incomplete_query(normalized) {
         return CalculatorStatus::Incomplete;
     }
 
-    match detect_intent(normalized) {
+    let intent = detect_intent(normalized);
+
+    if normalized.parse::<f64>().is_ok() && !matches!(intent, Intent::Date { .. }) {
+        return CalculatorStatus::Irrelevant;
+    }
+
+    match intent {
         Intent::Math { .. } => {
             if looks_like_math_query(normalized) {
                 CalculatorStatus::Valid
