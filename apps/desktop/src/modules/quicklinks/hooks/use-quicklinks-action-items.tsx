@@ -13,6 +13,9 @@ import type { LauncherActionItem } from "@/modules/launcher/types";
 interface QuicklinksActionsState {
   selectedQuicklink: Quicklink | null;
   quicklinks: Quicklink[];
+}
+
+interface QuicklinksActionHandlers {
   onEdit?: (quicklink: Quicklink) => void;
   onDelete?: (keyword: string) => Promise<void> | void;
   onDuplicate?: (quicklink: Quicklink, quicklinks: Quicklink[]) => Promise<void> | void;
@@ -24,23 +27,68 @@ const initialState: QuicklinksActionsState = {
 };
 
 const useQuicklinksActionsStore = create<QuicklinksActionsState>(() => initialState);
+let quicklinksActionHandlers: QuicklinksActionHandlers = {};
 
-export function syncQuicklinksActionsState(nextState: QuicklinksActionsState) {
+function areQuicklinksEqual(left: Quicklink | null, right: Quicklink | null) {
+  if (left === right) {
+    return true;
+  }
+
+  if (!left || !right) {
+    return false;
+  }
+
+  return (
+    left.keyword === right.keyword &&
+    left.name === right.name &&
+    left.url === right.url &&
+    left.icon === right.icon
+  );
+}
+
+function areQuicklinkListsEqual(left: Quicklink[], right: Quicklink[]) {
+  if (left === right) {
+    return true;
+  }
+
+  if (left.length !== right.length) {
+    return false;
+  }
+
+  for (let index = 0; index < left.length; index += 1) {
+    if (!areQuicklinksEqual(left[index] ?? null, right[index] ?? null)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+export function syncQuicklinksActionsState(
+  nextState: QuicklinksActionsState & QuicklinksActionHandlers,
+) {
+  quicklinksActionHandlers = {
+    onEdit: nextState.onEdit,
+    onDelete: nextState.onDelete,
+    onDuplicate: nextState.onDuplicate,
+  };
+
   const currentState = useQuicklinksActionsStore.getState();
   if (
-    currentState.selectedQuicklink === nextState.selectedQuicklink &&
-    currentState.quicklinks === nextState.quicklinks &&
-    currentState.onEdit === nextState.onEdit &&
-    currentState.onDelete === nextState.onDelete &&
-    currentState.onDuplicate === nextState.onDuplicate
+    areQuicklinksEqual(currentState.selectedQuicklink, nextState.selectedQuicklink) &&
+    areQuicklinkListsEqual(currentState.quicklinks, nextState.quicklinks)
   ) {
     return;
   }
 
-  useQuicklinksActionsStore.setState(nextState);
+  useQuicklinksActionsStore.setState({
+    selectedQuicklink: nextState.selectedQuicklink,
+    quicklinks: nextState.quicklinks,
+  });
 }
 
 export function clearQuicklinksActionsState() {
+  quicklinksActionHandlers = {};
   useQuicklinksActionsStore.setState(initialState);
 }
 
@@ -136,7 +184,7 @@ export function useQuicklinksActionItems(): LauncherActionItem[] {
         disabled: !hasSelection,
         onSelect: () => {
           if (!quicklink) return;
-          state.onEdit?.(quicklink);
+          quicklinksActionHandlers.onEdit?.(quicklink);
         },
       },
       {
@@ -147,7 +195,7 @@ export function useQuicklinksActionItems(): LauncherActionItem[] {
         disabled: !hasSelection,
         onSelect: () => {
           if (!quicklink) return;
-          void state.onDuplicate?.(quicklink, state.quicklinks);
+          void quicklinksActionHandlers.onDuplicate?.(quicklink, state.quicklinks);
         },
       },
       {
@@ -158,7 +206,7 @@ export function useQuicklinksActionItems(): LauncherActionItem[] {
         disabled: !hasSelection,
         onSelect: () => {
           if (!quicklink) return;
-          void state.onDelete?.(quicklink.keyword);
+          void quicklinksActionHandlers.onDelete?.(quicklink.keyword);
         },
       },
       ...managedActionItems,

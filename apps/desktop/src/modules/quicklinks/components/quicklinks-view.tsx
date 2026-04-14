@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react";
 import { useForm } from "@tanstack/react-form";
 import { File, Folder, FolderOpen, Link2, Loader2, Pencil, Plus, Trash2, Zap } from "lucide-react";
 import { z } from "zod";
@@ -168,6 +168,21 @@ export function QuicklinksView({ view, setView, onBack }: QuicklinksViewProps) {
 
   useLauncherPanelBackHandler("quicklinks", handleBack);
 
+  const handleCreate = useCallback(() => {
+    setEditingQuicklink(null);
+    setReturnToManage(true);
+    setView("create");
+  }, [setView]);
+
+  const handleEdit = useCallback(
+    (quicklink: Quicklink) => {
+      setEditingQuicklink(quicklink);
+      setReturnToManage(true);
+      setView("create");
+    },
+    [setView],
+  );
+
   if (view === "create") {
     return (
       <QuicklinkCreateForm
@@ -182,16 +197,8 @@ export function QuicklinksView({ view, setView, onBack }: QuicklinksViewProps) {
   return (
     <QuicklinksManageView
       onBack={handleBack}
-      onCreate={() => {
-        setEditingQuicklink(null);
-        setReturnToManage(true);
-        setView("create");
-      }}
-      onEdit={(quicklink) => {
-        setEditingQuicklink(quicklink);
-        setReturnToManage(true);
-        setView("create");
-      }}
+      onCreate={handleCreate}
+      onEdit={handleEdit}
     />
   );
 }
@@ -511,28 +518,29 @@ function QuicklinksManageView({ onBack, onCreate, onEdit }: QuicklinksManageView
   const deleteMutation = useDeleteQuicklink();
   const [deletingKeyword, setDeletingKeyword] = useState<string | null>(null);
   const [selectedKeyword, setSelectedKeyword] = useState<string | null>(null);
+  const getSearchableText = useCallback(
+    (quicklink: Quicklink) => `${quicklink.keyword} ${quicklink.url}`,
+    [],
+  );
 
   useMountEffect(() => clearQuicklinksActionsState);
 
-  const handleDelete = useCallback(
-    async (keyword: string) => {
-      setDeletingKeyword(keyword);
-      try {
-        await deleteMutation.mutateAsync(keyword);
-      } catch {
-        // Error is handled by the mutation
-      }
+  const handleDelete = useEffectEvent(async (keyword: string) => {
+    setDeletingKeyword(keyword);
+    try {
+      await deleteMutation.mutateAsync(keyword);
+    } catch {
+      // Error is handled by the mutation
+    }
 
-      setDeletingKeyword(null);
-    },
-    [deleteMutation],
-  );
+    setDeletingKeyword(null);
+  });
 
   const rankedQuicklinks = useManagedItemRankedList({
     items: quicklinks ?? [],
     query: "",
     getManagedItem: toManagedQuicklinkItem,
-    getSearchableText: (quicklink) => `${quicklink.keyword} ${quicklink.url}`,
+    getSearchableText,
   });
   const resolvedSelectedKeyword = rankedQuicklinks.some(
     (quicklink) => quicklink.keyword === selectedKeyword,
@@ -545,17 +553,14 @@ function QuicklinksManageView({ onBack, onCreate, onEdit }: QuicklinksManageView
     rankedQuicklinks[0] ??
     null;
 
-  const handleDuplicate = useCallback(
-    async (quicklink: Quicklink, allQuicklinks: Quicklink[]) => {
-      await createMutation.mutateAsync({
-        name: buildDuplicateName(quicklink.name, allQuicklinks),
-        keyword: buildDuplicateKeyword(quicklink.keyword, allQuicklinks),
-        url: quicklink.url,
-        icon: quicklink.icon,
-      });
-    },
-    [createMutation],
-  );
+  const handleDuplicate = useEffectEvent(async (quicklink: Quicklink, allQuicklinks: Quicklink[]) => {
+    await createMutation.mutateAsync({
+      name: buildDuplicateName(quicklink.name, allQuicklinks),
+      keyword: buildDuplicateKeyword(quicklink.keyword, allQuicklinks),
+      url: quicklink.url,
+      icon: quicklink.icon,
+    });
+  });
 
   useEffect(() => {
     syncQuicklinksActionsState({
@@ -565,7 +570,7 @@ function QuicklinksManageView({ onBack, onCreate, onEdit }: QuicklinksManageView
       onDelete: handleDelete,
       onDuplicate: handleDuplicate,
     });
-  }, [handleDelete, handleDuplicate, onEdit, rankedQuicklinks, selectedQuicklink]);
+  }, [onEdit, rankedQuicklinks, selectedQuicklink]);
 
   return (
     <div className="quicklinks-view flex h-full flex-col">

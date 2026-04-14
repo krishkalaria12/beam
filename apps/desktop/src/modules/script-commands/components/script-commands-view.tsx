@@ -250,6 +250,10 @@ export function ScriptCommandsView({ onBack }: ScriptCommandsViewProps) {
 
   const scripts = scriptsQuery.data ?? [];
   const normalizedSearch = state.search.trim().toLowerCase();
+  const getSearchableText = useCallback(
+    (script: ScriptCommandSummary) => `${script.scriptName} ${script.scriptPath} ${script.subtitle}`,
+    [],
+  );
 
   useMountEffect(() => clearScriptCommandActionsState);
 
@@ -257,7 +261,7 @@ export function ScriptCommandsView({ onBack }: ScriptCommandsViewProps) {
     items: scripts,
     query: normalizedSearch,
     getManagedItem: toManagedScriptCommandItem,
-    getSearchableText: (script) => `${script.scriptName} ${script.scriptPath} ${script.subtitle}`,
+    getSearchableText,
   });
 
   const resolvedSelectedScriptId = filteredScripts.some(
@@ -386,12 +390,20 @@ export function ScriptCommandsView({ onBack }: ScriptCommandsViewProps) {
     openRunFlow(selectedScript);
   }, [openRunFlow, selectedScript]);
 
+  const handleRunSelectedAction = useEffectEvent(() => {
+    if (!selectedScript) {
+      return;
+    }
+
+    openRunFlow(selectedScript);
+  });
+
   useEffect(() => {
     syncScriptCommandActionsState({
       selectedScript: resolvedViewMode === "manage" ? selectedScript : null,
-      onRunSelected: resolvedViewMode === "manage" ? handleRunSelected : undefined,
+      onRunSelected: resolvedViewMode === "manage" ? handleRunSelectedAction : undefined,
     });
-  }, [handleRunSelected, resolvedViewMode, selectedScript]);
+  }, [resolvedViewMode, selectedScript]);
 
   const handleRunWithArguments = useCallback(
     async (argumentValues: Record<string, string>) => {

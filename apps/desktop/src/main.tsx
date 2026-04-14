@@ -1,12 +1,10 @@
-import { RouterProvider, createRouter } from "@tanstack/react-router";
+import { RouterProvider } from "@tanstack/react-router";
 import ReactDOM from "react-dom/client";
 
 import "katex/dist/katex.min.css";
 import "streamdown/styles.css";
 
-import { CommandLoadingState } from "./components/command/command-loading-state";
 import { AppErrorBoundary } from "./components/app-error-boundary";
-import { RouterErrorFallback } from "./components/router-error-fallback";
 import { Toaster } from "./components/ui/sonner";
 import { TooltipProvider } from "./components/ui/tooltip";
 import { initializeTriggerSymbols } from "./modules/settings/api/trigger-symbols";
@@ -19,23 +17,9 @@ import { LauncherFontProvider } from "./providers/launcher-font-provider";
 import { LauncherThemeProvider } from "./providers/launcher-theme-provider";
 import { LauncherOpacityProvider } from "./providers/launcher-opacity-provider";
 import { QueryProvider } from "./providers/query-provider";
+import { router } from "./router";
 import { ThemeProvider } from "./providers/theme-provider";
 import { UiStyleProvider } from "./providers/ui-style-provider";
-import { routeTree } from "./routeTree.gen";
-
-const router = createRouter({
-  routeTree,
-  defaultPreload: "intent",
-  defaultPendingComponent: () => <CommandLoadingState withSpinner className="py-4" />,
-  defaultErrorComponent: RouterErrorFallback,
-  context: {},
-});
-
-declare module "@tanstack/react-router" {
-  interface Register {
-    router: typeof router;
-  }
-}
 
 const rootElement = document.getElementById("app");
 

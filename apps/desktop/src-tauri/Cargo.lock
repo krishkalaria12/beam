@@ -571,6 +571,7 @@ dependencies = [
  "freedesktop-file-parser",
  "freedesktop-icons",
  "futures-util",
+ "gtk",
  "hyprland",
  "ignore",
  "image",

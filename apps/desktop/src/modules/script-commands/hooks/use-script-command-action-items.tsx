@@ -11,6 +11,9 @@ import type { ScriptCommandSummary } from "@/modules/script-commands/types";
 
 interface ScriptCommandActionsState {
   selectedScript: ScriptCommandSummary | null;
+}
+
+interface ScriptCommandActionHandlers {
   onRunSelected?: () => Promise<void> | void;
 }
 
@@ -24,20 +27,42 @@ const initialState: ScriptCommandActionsState = {
 };
 
 const useScriptCommandActionsStore = create<ScriptCommandActionsState>(() => initialState);
+let scriptCommandActionHandlers: ScriptCommandActionHandlers = {};
 
-export function syncScriptCommandActionsState(nextState: ScriptCommandActionsState) {
+function areScriptsEqual(left: ScriptCommandSummary | null, right: ScriptCommandSummary | null) {
+  if (left === right) {
+    return true;
+  }
+
+  if (!left || !right) {
+    return false;
+  }
+
+  return (
+    left.id === right.id &&
+    left.title === right.title &&
+    left.subtitle === right.subtitle &&
+    left.scriptPath === right.scriptPath
+  );
+}
+
+export function syncScriptCommandActionsState(
+  nextState: ScriptCommandActionsState & ScriptCommandActionHandlers,
+) {
+  scriptCommandActionHandlers = {
+    onRunSelected: nextState.onRunSelected,
+  };
+
   const currentState = useScriptCommandActionsStore.getState();
-  if (
-    currentState.selectedScript === nextState.selectedScript &&
-    currentState.onRunSelected === nextState.onRunSelected
-  ) {
+  if (areScriptsEqual(currentState.selectedScript, nextState.selectedScript)) {
     return;
   }
 
-  useScriptCommandActionsStore.setState(nextState);
+  useScriptCommandActionsStore.setState({ selectedScript: nextState.selectedScript });
 }
 
 export function clearScriptCommandActionsState() {
+  scriptCommandActionHandlers = {};
   useScriptCommandActionsStore.setState(initialState);
 }
 
@@ -84,7 +109,7 @@ export function useScriptCommandActionItems(): LauncherActionItem[] {
         shortcut: "↩",
         disabled: !hasSelection,
         onSelect: () => {
-          void state.onRunSelected?.();
+          void scriptCommandActionHandlers.onRunSelected?.();
         },
       },
       {

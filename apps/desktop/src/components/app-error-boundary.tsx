@@ -1,6 +1,8 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
 
 import { AppCrashScreen } from "@/components/app-crash-screen";
+import { router } from "@/router";
+import { useLauncherUiStore } from "@/store/use-launcher-ui-store";
 
 type AppErrorBoundaryProps = {
   children: ReactNode;
@@ -30,7 +32,10 @@ export class AppErrorBoundary extends Component<AppErrorBoundaryProps, AppErrorB
   };
 
   private readonly handleGoHome = (): void => {
-    window.location.assign("/");
+    useLauncherUiStore.getState().backToCommands();
+    this.setState({ hasError: false, error: null }, () => {
+      void router.navigate({ to: "/", replace: true });
+    });
   };
 
   public render(): ReactNode {
@@ -38,7 +43,7 @@ export class AppErrorBoundary extends Component<AppErrorBoundaryProps, AppErrorB
       return (
         <AppCrashScreen
           title="Beam Could Not Render This Screen"
-          description="Go to the main screen to reload the app with a clean state."
+          description="Go to the main screen to recover and continue using Beam."
           error={this.state.error}
           onGoHome={this.handleGoHome}
           onTryAgain={this.handleTryAgain}
