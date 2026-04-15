@@ -3,11 +3,6 @@ use std::time::Duration;
 
 use tauri::{AppHandle, LogicalSize, Manager, PhysicalPosition, Position, Size, WebviewWindow};
 
-#[cfg(target_os = "linux")]
-use gtk::gdk::WindowTypeHint;
-#[cfg(target_os = "linux")]
-use gtk::prelude::*;
-
 const LAUNCHER_WIDTH: f64 = 960.0;
 const LAUNCHER_EXPANDED_HEIGHT: f64 = 520.0;
 const LAUNCHER_COMPACT_HEIGHT: f64 = 60.0;
@@ -28,22 +23,6 @@ fn schedule_delayed_recenter(window: &WebviewWindow, delays_ms: &[u64]) {
     }
 }
 
-#[cfg(target_os = "linux")]
-fn apply_linux_launcher_hints(window: &WebviewWindow) -> Result<(), String> {
-    let gtk_window = window
-        .gtk_window()
-        .map_err(|err| format!("failed to access gtk window for launcher hints: {err}"))?;
-
-    gtk_window.set_skip_taskbar_hint(true);
-    gtk_window.set_skip_pager_hint(true);
-    gtk_window.set_type_hint(WindowTypeHint::Dock);
-    gtk_window.set_keep_above(true);
-    gtk_window.stick();
-
-    Ok(())
-}
-
-#[cfg(not(target_os = "linux"))]
 fn apply_linux_launcher_hints(_window: &WebviewWindow) -> Result<(), String> {
     Ok(())
 }
