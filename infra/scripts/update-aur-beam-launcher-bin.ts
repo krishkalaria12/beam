@@ -39,7 +39,7 @@ const appName = "beam";
 const githubProjectUrl = "https://github.com/krishkalaria12/beam";
 const packageDescription = "A blazing-fast, open-source command launcher for Linux";
 const arch = "x86_64";
-const localAssetFileName = `${appName}-${arch}.AppImage`;
+const localAssetFileName = `${appName}-${arch}.deb`;
 const depends = [
   "gtk3",
   "hicolor-icon-theme",
@@ -183,29 +183,29 @@ async function fetchReleaseAsset(options: Options): Promise<AssetInfo> {
     assets?: Array<{ name?: string; browser_download_url?: string }>;
   };
 
-  const appImageAsset = release.assets?.find((asset) => {
+  const debAsset = release.assets?.find((asset) => {
     if (typeof asset.name !== "string" || typeof asset.browser_download_url !== "string") {
       return false;
     }
 
-    return asset.name.endsWith(".AppImage") && /(amd64|x86_64)/i.test(asset.name);
+    return asset.name.endsWith(".deb") && /(amd64|x86_64)/i.test(asset.name);
   });
 
-  if (!appImageAsset?.browser_download_url) {
-    throw new Error(`Could not find an x86_64 AppImage asset on release ${options.tag}`);
+  if (!debAsset?.browser_download_url) {
+    throw new Error(`Could not find an x86_64 deb asset on release ${options.tag}`);
   }
 
-  const assetResponse = await fetch(appImageAsset.browser_download_url);
+  const assetResponse = await fetch(debAsset.browser_download_url);
   if (!assetResponse.ok) {
     throw new Error(
-      `Failed to download ${appImageAsset.browser_download_url}: ${assetResponse.status} ${assetResponse.statusText}`,
+      `Failed to download ${debAsset.browser_download_url}: ${assetResponse.status} ${assetResponse.statusText}`,
     );
   }
 
   const assetBuffer = Buffer.from(await assetResponse.arrayBuffer());
 
   return {
-    url: appImageAsset.browser_download_url,
+    url: debAsset.browser_download_url,
     sha256: sha256ForBuffer(assetBuffer),
   };
 }
@@ -214,19 +214,19 @@ function renderPkgbuild(args: {
   version: string;
   pkgrel: string;
   assetUrl: string;
-  appImageSha256: string;
+  assetSha256: string;
   desktopSha256: string;
   iconSha256: string;
   licenseSha256: string;
 }): string {
-  return `# Maintained automatically by Beam release automation\npkgname=${packageName}\npkgver=${args.version}\npkgrel=${args.pkgrel}\npkgdesc=${JSON.stringify(packageDescription)}\narch=('${arch}')\nurl=${JSON.stringify(githubProjectUrl)}\nlicense=('MIT')\ndepends=(${depends.map((entry) => `'${entry}'`).join(" ")})\nprovides=(${provides.map((entry) => `'${entry}'`).join(" ")})\nconflicts=(${conflicts.map((entry) => `'${entry}'`).join(" ")})\noptions=('!strip')\nsource=(\n  '${localAssetFileName}::${args.assetUrl}'\n  'beam.desktop'\n  'beam.png'\n  'LICENSE'\n)\nnoextract=('${localAssetFileName}')\nsha256sums=(\n  '${args.appImageSha256}'\n  '${args.desktopSha256}'\n  '${args.iconSha256}'\n  '${args.licenseSha256}'\n)\n\npackage() {\n  install -Dm755 "${"${srcdir}"}/${localAssetFileName}" "${"${pkgdir}"}/opt/${appName}/${appName}.AppImage"\n  install -Dm644 "${"${srcdir}"}/beam.desktop" "${"${pkgdir}"}/usr/share/applications/${appName}.desktop"\n  install -Dm644 "${"${srcdir}"}/beam.png" "${"${pkgdir}"}/usr/share/icons/hicolor/128x128/apps/${appName}.png"\n  install -Dm644 "${"${srcdir}"}/LICENSE" "${"${pkgdir}"}/usr/share/licenses/${packageName}/LICENSE"\n\n  install -dm755 "${"${pkgdir}"}/usr/bin"\n  cat > "${"${pkgdir}"}/usr/bin/${appName}" <<'EOF'\n#!/usr/bin/env bash\nif command -v fusermount >/dev/null 2>&1 || command -v fusermount3 >/dev/null 2>&1; then\n  exec /opt/${appName}/${appName}.AppImage "$@"\nfi\n\nAPPIMAGE_EXTRACT_AND_RUN=1 exec /opt/${appName}/${appName}.AppImage "$@"\nEOF\n  chmod 755 "${"${pkgdir}"}/usr/bin/${appName}"\n}\n`;
+  return `# Maintained automatically by Beam release automation\npkgname=${packageName}\npkgver=${args.version}\npkgrel=${args.pkgrel}\npkgdesc=${JSON.stringify(packageDescription)}\narch=('${arch}')\nurl=${JSON.stringify(githubProjectUrl)}\nlicense=('MIT')\ndepends=(${depends.map((entry) => `'${entry}'`).join(" ")})\nprovides=(${provides.map((entry) => `'${entry}'`).join(" ")})\nconflicts=(${conflicts.map((entry) => `'${entry}'`).join(" ")})\noptions=('!strip')\nsource=(\n  '${localAssetFileName}::${args.assetUrl}'\n  'beam.desktop'\n  'beam.png'\n  'LICENSE'\n)\nnoextract=('${localAssetFileName}')\nsha256sums=(\n  '${args.assetSha256}'\n  '${args.desktopSha256}'\n  '${args.iconSha256}'\n  '${args.licenseSha256}'\n)\n\npackage() {\n  local extract_dir="${"${srcdir}"}/deb-extract"\n  local data_archive=\n\n  rm -rf "$extract_dir"\n  mkdir -p "$extract_dir"\n  bsdtar -xf "${"${srcdir}"}/${localAssetFileName}" -C "$extract_dir"\n\n  for candidate in "$extract_dir"/data.tar.*; do\n    if [[ -f "$candidate" ]]; then\n      data_archive="$candidate"\n      break\n    fi\n  done\n\n  if [[ -z "$data_archive" ]]; then\n    echo "missing data archive in ${localAssetFileName}" >&2\n    return 1\n  fi\n\n  bsdtar -xf "$data_archive" -C "${"${pkgdir}"}"\n\n  install -Dm644 "${"${srcdir}"}/beam.desktop" "${"${pkgdir}"}/usr/share/applications/${appName}.desktop"\n  install -Dm644 "${"${srcdir}"}/beam.png" "${"${pkgdir}"}/usr/share/icons/hicolor/128x128/apps/${appName}.png"\n  install -Dm644 "${"${srcdir}"}/LICENSE" "${"${pkgdir}"}/usr/share/licenses/${packageName}/LICENSE"\n}\n`;
 }
 
 function renderSrcinfo(args: {
   version: string;
   pkgrel: string;
   assetUrl: string;
-  appImageSha256: string;
+  assetSha256: string;
   desktopSha256: string;
   iconSha256: string;
   licenseSha256: string;
@@ -248,7 +248,7 @@ function renderSrcinfo(args: {
     "\tsource = beam.png",
     "\tsource = LICENSE",
     `\tnoextract = ${localAssetFileName}`,
-    `\tsha256sums = ${args.appImageSha256}`,
+    `\tsha256sums = ${args.assetSha256}`,
     `\tsha256sums = ${args.desktopSha256}`,
     `\tsha256sums = ${args.iconSha256}`,
     `\tsha256sums = ${args.licenseSha256}`,
@@ -303,7 +303,7 @@ async function main() {
     version,
     pkgrel: options.pkgrel,
     assetUrl: asset.url,
-    appImageSha256: asset.sha256,
+    assetSha256: asset.sha256,
     desktopSha256,
     iconSha256,
     licenseSha256,
