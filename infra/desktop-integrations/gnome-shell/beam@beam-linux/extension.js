@@ -51,6 +51,9 @@ const IFACE_XML = `
     <method name="GetStatus">
       <arg type="s" direction="out" name="payload"/>
     </method>
+    <method name="ConfigureLauncherWindows">
+      <arg type="b" direction="out" name="configured"/>
+    </method>
     <signal name="WindowsChanged"/>
     <signal name="FocusedWindowChanged">
       <arg type="u" name="windowId"/>
@@ -88,6 +91,11 @@ class BeamBridge {
       this._dbus.emit_signal("WorkspaceChanged", stringVariant(this.GetActiveWorkspace()));
       this._dbus.emit_signal("WindowsChanged", null);
     });
+    this._windowCreatedSignalId = global.display.connect("window-created", (_display, window) => {
+      this._queueLauncherWindowSync(window);
+    });
+
+    this._queueLauncherWindowSync();
   }
 
   export() {
@@ -103,7 +111,55 @@ class BeamBridge {
       global.workspace_manager.disconnect(this._workspaceSignalId);
       this._workspaceSignalId = 0;
     }
+    if (this._windowCreatedSignalId) {
+      global.display.disconnect(this._windowCreatedSignalId);
+      this._windowCreatedSignalId = 0;
+    }
     this._dbus.unexport();
+  }
+
+  _queueLauncherWindowSync(window = null) {
+    GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
+      this._syncLauncherWindows(window);
+      return GLib.SOURCE_REMOVE;
+    });
+  }
+
+  _beamWindows() {
+    return global
+      .get_window_actors()
+      .map((actor) => actor.metaWindow)
+      .filter((window) => window && this._isBeamWindow(window));
+  }
+
+  _applyLauncherWindowBehavior(window) {
+    if (!window || !this._isBeamWindow(window)) {
+      return false;
+    }
+
+    window.hide_from_window_list?.();
+
+    if (!window.is_on_all_workspaces?.()) {
+      window.stick?.();
+    }
+
+    if (!window.is_above?.()) {
+      window.make_above?.();
+    }
+
+    return true;
+  }
+
+  _syncLauncherWindows(window = null) {
+    if (window) {
+      return this._applyLauncherWindowBehavior(window);
+    }
+
+    let configured = false;
+    for (const beamWindow of this._beamWindows()) {
+      configured = this._applyLauncherWindowBehavior(beamWindow) || configured;
+    }
+    return configured;
   }
 
   _windowActors() {
@@ -250,6 +306,10 @@ class BeamBridge {
       supportsClipboardWrite: true,
       supportsClipboardPaste: true,
     });
+  }
+
+  ConfigureLauncherWindows() {
+    return this._syncLauncherWindows();
   }
 }
 

@@ -120,3 +120,15 @@ pub fn read_status() -> Result<Value> {
         })
     })
 }
+
+pub fn configure_launcher_windows() -> Result<bool> {
+    with_proxy(|proxy| {
+        proxy
+            .call("ConfigureLauncherWindows", &())
+            .map_err(|error| {
+                GnomeExtensionError::DbusCallError(format!(
+                    "GNOME Shell ConfigureLauncherWindows failed: {error}"
+                ))
+            })
+    })
+}

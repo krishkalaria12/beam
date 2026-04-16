@@ -7,6 +7,124 @@ const LAUNCHER_WIDTH: f64 = 960.0;
 const LAUNCHER_EXPANDED_HEIGHT: f64 = 520.0;
 const LAUNCHER_COMPACT_HEIGHT: f64 = 60.0;
 static LAUNCHER_HAS_BEEN_SHOWN: AtomicBool = AtomicBool::new(false);
+static LAUNCHER_LAYER_SHELL_ACTIVE: AtomicBool = AtomicBool::new(false);
+
+fn launcher_uses_layer_shell() -> bool {
+    LAUNCHER_LAYER_SHELL_ACTIVE.load(Ordering::SeqCst)
+}
+
+#[cfg(target_os = "linux")]
+fn configure_linux_layer_shell_window(window: &WebviewWindow) -> bool {
+    use gtk::prelude::*;
+    use gtk_layer_shell::{Edge, KeyboardMode, Layer, LayerShell};
+
+    let Ok(gtk_window) = window.gtk_window() else {
+        return false;
+    };
+
+    if gtk_window.is_layer_window() {
+        return true;
+    }
+
+    if gtk_window.is_realized() || !gtk_layer_shell::is_supported() {
+        return false;
+    }
+
+    gtk_window.init_layer_shell();
+    gtk_window.set_layer(Layer::Overlay);
+    gtk_window.set_keyboard_mode(KeyboardMode::Exclusive);
+    gtk_window.set_namespace("beam");
+    gtk_window.set_anchor(Edge::Top, true);
+    gtk_window.set_anchor(Edge::Left, true);
+    gtk_window.set_anchor(Edge::Right, false);
+    gtk_window.set_anchor(Edge::Bottom, false);
+    gtk_window.set_size_request(LAUNCHER_WIDTH as i32, LAUNCHER_EXPANDED_HEIGHT as i32);
+    gtk_window.resize(1, 1);
+
+    true
+}
+
+#[cfg(target_os = "linux")]
+fn queue_layer_shell_layout_update(
+    window: &WebviewWindow,
+    width: i32,
+    height: i32,
+    left_margin: Option<i32>,
+    top_margin: Option<i32>,
+) {
+    use gtk::prelude::*;
+    use gtk_layer_shell::{Edge, LayerShell};
+
+    let window_handle = window.clone();
+    let _ = window.run_on_main_thread(move || {
+        let Ok(gtk_window) = window_handle.gtk_window() else {
+            return;
+        };
+        if !gtk_window.is_layer_window() {
+            return;
+        }
+
+        gtk_window.set_anchor(Edge::Top, true);
+        gtk_window.set_anchor(Edge::Left, true);
+        gtk_window.set_anchor(Edge::Right, false);
+        gtk_window.set_anchor(Edge::Bottom, false);
+        gtk_window.set_size_request(width, height);
+        gtk_window.set_default_size(width, height);
+
+        if let Ok(default_vbox) = window_handle.default_vbox() {
+            default_vbox.set_size_request(width, height);
+        }
+
+        if let Some(margin) = left_margin {
+            gtk_window.set_layer_shell_margin(Edge::Left, margin.max(0));
+        }
+
+        if let Some(margin) = top_margin {
+            gtk_window.set_layer_shell_margin(Edge::Top, margin.max(0));
+        }
+
+        gtk_window.resize(1, 1);
+    });
+}
+
+#[cfg(not(target_os = "linux"))]
+fn queue_layer_shell_layout_update(
+    _window: &WebviewWindow,
+    _width: i32,
+    _height: i32,
+    _left_margin: Option<i32>,
+    _top_margin: Option<i32>,
+) {
+}
+
+#[cfg(target_os = "linux")]
+pub fn configure_linux_launcher_surface(app: &AppHandle) {
+    use gtk::glib::MainContext;
+
+    let environment = crate::linux_desktop::environment::detect_environment();
+    if environment.session_type != "wayland" {
+        return;
+    }
+
+    let Some(window) = app.get_webview_window("main") else {
+        return;
+    };
+
+    let configure = move || {
+        let configured = configure_linux_layer_shell_window(&window);
+        LAUNCHER_LAYER_SHELL_ACTIVE.store(configured, Ordering::SeqCst);
+    };
+
+    if MainContext::default().is_owner() {
+        configure();
+        return;
+    }
+
+    let _ = app.run_on_main_thread(configure);
+}
+
+#[cfg(not(target_os = "linux"))]
+pub fn configure_linux_launcher_surface(_app: &AppHandle) {}
 
 fn clamp_i64_to_i32(value: i64) -> i32 {
     value.clamp(i64::from(i32::MIN), i64::from(i32::MAX)) as i32
@@ -26,6 +144,19 @@ fn schedule_delayed_recenter(window: &WebviewWindow, delays_ms: &[u64]) {
 fn apply_linux_launcher_hints(_window: &WebviewWindow) -> Result<(), String> {
     Ok(())
 }
+
+#[cfg(target_os = "linux")]
+fn refresh_gnome_launcher_window_state() {
+    let environment = crate::linux_desktop::environment::detect_environment();
+    if environment.desktop_environment != "gnome" {
+        return;
+    }
+
+    let _ = crate::linux_desktop::gnome_extension::dbus::configure_launcher_windows();
+}
+
+#[cfg(not(target_os = "linux"))]
+fn refresh_gnome_launcher_window_state() {}
 
 fn hide_for_resize_transition(window: &WebviewWindow) -> Result<(), String> {
     window
@@ -167,6 +298,32 @@ fn resolve_target_monitor(window: &WebviewWindow) -> Result<tauri::Monitor, Stri
 }
 
 pub fn center_launcher_window(window: &WebviewWindow) -> Result<(), String> {
+    if launcher_uses_layer_shell() {
+        let monitor = resolve_target_monitor(window)?;
+        let outer_size = window
+            .outer_size()
+            .map_err(|err| format!("failed to read launcher outer size: {err}"))?;
+
+        let work_area = monitor.work_area();
+        let monitor_position = monitor.position();
+        let left_offset = i64::from(work_area.position.x) - i64::from(monitor_position.x);
+        let top_offset = i64::from(work_area.position.y) - i64::from(monitor_position.y);
+        let left_margin =
+            left_offset + (i64::from(work_area.size.width) - i64::from(outer_size.width)) / 2;
+        let top_margin =
+            top_offset + (i64::from(work_area.size.height) - i64::from(outer_size.height)) / 2;
+
+        queue_layer_shell_layout_update(
+            window,
+            outer_size.width as i32,
+            outer_size.height as i32,
+            Some(clamp_i64_to_i32(left_margin)),
+            Some(clamp_i64_to_i32(top_margin)),
+        );
+
+        return Ok(());
+    }
+
     let monitor = resolve_target_monitor(window)?;
 
     let work_area = monitor.work_area();
@@ -194,17 +351,19 @@ pub fn reveal_launcher_window(app: &AppHandle) -> Result<(), String> {
 
     let first_show = !LAUNCHER_HAS_BEEN_SHOWN.swap(true, Ordering::SeqCst);
 
-    window
-        .set_skip_taskbar(true)
-        .map_err(|err| format!("failed to mark launcher as skip-taskbar: {err}"))?;
+    if !launcher_uses_layer_shell() {
+        window
+            .set_skip_taskbar(true)
+            .map_err(|err| format!("failed to mark launcher as skip-taskbar: {err}"))?;
 
-    window
-        .set_always_on_top(true)
-        .map_err(|err| format!("failed to keep launcher always on top: {err}"))?;
+        window
+            .set_always_on_top(true)
+            .map_err(|err| format!("failed to keep launcher always on top: {err}"))?;
 
-    window
-        .set_visible_on_all_workspaces(true)
-        .map_err(|err| format!("failed to mark launcher visible on all workspaces: {err}"))?;
+        window
+            .set_visible_on_all_workspaces(true)
+            .map_err(|err| format!("failed to mark launcher visible on all workspaces: {err}"))?;
+    }
 
     apply_linux_launcher_hints(&window)?;
 
@@ -213,10 +372,18 @@ pub fn reveal_launcher_window(app: &AppHandle) -> Result<(), String> {
         .map_err(|err| format!("failed to unminimize launcher: {err}"))?;
 
     if first_show {
+        if launcher_uses_layer_shell() {
+            center_launcher_window(&window)?;
+        }
+
         window
             .show()
             .map_err(|err| format!("failed to show launcher: {err}"))?;
-        center_launcher_window(&window)?;
+
+        if !launcher_uses_layer_shell() {
+            center_launcher_window(&window)?;
+        }
+
         schedule_delayed_recenter(&window, &[16, 48, 96, 160]);
     } else {
         center_launcher_window(&window)?;
@@ -229,6 +396,8 @@ pub fn reveal_launcher_window(app: &AppHandle) -> Result<(), String> {
     window
         .set_focus()
         .map_err(|err| format!("failed to focus launcher: {err}"))?;
+
+    refresh_gnome_launcher_window_state();
 
     Ok(())
 }
@@ -252,6 +421,10 @@ fn apply_fixed_size(
     window
         .set_size(target)
         .map_err(|err| format!("failed to resize launcher: {err}"))?;
+
+    if launcher_uses_layer_shell() {
+        queue_layer_shell_layout_update(window, width as i32, height as i32, None, None);
+    }
 
     if recenter_after_resize {
         center_launcher_window(window)?;

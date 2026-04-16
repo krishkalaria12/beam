@@ -56,6 +56,57 @@ fn gnome_extensions_available() -> bool {
         .unwrap_or(false)
 }
 
+fn extension_enabled() -> bool {
+    let config = GNOME_EXTENSION_CONFIG;
+    let output = Command::new("gnome-extensions")
+        .args(["info", config.extension_id])
+        .output();
+    let Ok(output) = output else {
+        return false;
+    };
+    if !output.status.success() {
+        return false;
+    }
+    let stdout = String::from_utf8_lossy(&output.stdout).to_lowercase();
+    stdout.contains("state: enabled") || stdout.contains("enabled: yes")
+}
+
+fn extension_files_outdated(install_dir: &Path) -> bool {
+    let config = GNOME_EXTENSION_CONFIG;
+
+    let expected_files = [
+        ("metadata.json", config.extension_metadata_json),
+        ("extension.js", config.extension_js),
+        ("stylesheet.css", config.extension_stylesheet_css),
+    ];
+
+    expected_files.into_iter().any(|(name, expected)| {
+        fs::read_to_string(install_dir.join(name))
+            .map(|contents| contents != expected)
+            .unwrap_or(true)
+    })
+}
+
+pub fn refresh_installed_extension_if_needed() -> Result<bool> {
+    let Some(install_dir) = extension_install_dir() else {
+        return Ok(false);
+    };
+    if !install_dir.exists() || !extension_files_outdated(&install_dir) {
+        return Ok(false);
+    }
+
+    let was_enabled = gnome_extensions_available() && extension_enabled();
+    install_extension_files()?;
+
+    if was_enabled {
+        let config = GNOME_EXTENSION_CONFIG;
+        let _ = run_gnome_extensions(&["disable", config.extension_id]);
+        let _ = run_gnome_extensions(&["enable", config.extension_id]);
+    }
+
+    Ok(true)
+}
+
 #[tauri::command]
 pub fn install_gnome_shell_extension() -> Result<String> {
     let config = GNOME_EXTENSION_CONFIG;

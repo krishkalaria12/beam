@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { RouterProvider } from "@tanstack/react-router";
 import ReactDOM from "react-dom/client";
 
@@ -20,6 +21,7 @@ import { QueryProvider } from "./providers/query-provider";
 import { router } from "./router";
 import { ThemeProvider } from "./providers/theme-provider";
 import { UiStyleProvider } from "./providers/ui-style-provider";
+import { useMountEffect } from "./hooks/use-mount-effect";
 
 const rootElement = document.getElementById("app");
 
@@ -29,37 +31,43 @@ if (!rootElement) {
 
 const appRootElement = rootElement;
 
-async function bootstrapAndRender() {
-  let uiStyleSettings: {
+function BeamApp() {
+  const [uiStyleSettings, setUiStyleSettings] = useState<{
     uiStyle: UiStylePreference;
     baseColor: string;
-  } = {
+  }>({
     uiStyle: "solid",
     baseColor: DEFAULT_BASE_COLOR,
-  };
+  });
 
-  try {
-    uiStyleSettings = await loadInitialUiStyleSettings();
-  } catch (error) {
-    console.error("[beam] failed to load ui style settings, using defaults", error);
-  }
+  useMountEffect(() => {
+    let mounted = true;
 
-  try {
-    await initializeTriggerSymbols();
-  } catch (error) {
-    console.error("[beam] failed to initialize trigger symbols, using defaults", error);
-  }
+    void loadInitialUiStyleSettings()
+      .then((settings) => {
+        if (mounted) {
+          setUiStyleSettings(settings);
+        }
+      })
+      .catch((error) => {
+        console.error("[beam] failed to load ui style settings, using defaults", error);
+      });
 
-  if (appRootElement.innerHTML) {
-    return;
-  }
+    void initializeTriggerSymbols().catch((error) => {
+      console.error("[beam] failed to initialize trigger symbols, using defaults", error);
+    });
 
-  const root = ReactDOM.createRoot(appRootElement);
-  root.render(
+    return () => {
+      mounted = false;
+    };
+  });
+
+  return (
     <AppErrorBoundary>
       <QueryProvider>
         <ThemeProvider>
           <UiStyleProvider
+            key={`${uiStyleSettings.uiStyle}:${uiStyleSettings.baseColor}`}
             defaultUiStyle={uiStyleSettings.uiStyle}
             defaultBaseColor={uiStyleSettings.baseColor}
           >
@@ -76,8 +84,11 @@ async function bootstrapAndRender() {
           </UiStyleProvider>
         </ThemeProvider>
       </QueryProvider>
-    </AppErrorBoundary>,
+    </AppErrorBoundary>
   );
 }
 
-void bootstrapAndRender();
+if (!appRootElement.innerHTML) {
+  const root = ReactDOM.createRoot(appRootElement);
+  root.render(<BeamApp />);
+}

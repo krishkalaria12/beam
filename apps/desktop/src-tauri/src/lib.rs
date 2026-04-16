@@ -256,6 +256,16 @@ pub fn run(startup_args: Vec<String>) {
             #[cfg(target_os = "linux")]
             maybe_register_dev_scheme_handlers();
 
+            #[cfg(target_os = "linux")]
+            launcher_window::configure_linux_launcher_surface(&app.handle());
+
+            #[cfg(target_os = "linux")]
+            if linux_desktop::environment::detect_environment().desktop_environment == "gnome" {
+                let _ =
+                    linux_desktop::gnome_extension::install::refresh_installed_extension_if_needed(
+                    );
+            }
+
             calculator::db::init(&app.handle());
             clipboard::db::init(&app.handle());
             clipboard::start_clipboard_listener(app.handle().clone());

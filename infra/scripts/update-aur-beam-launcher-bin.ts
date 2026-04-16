@@ -42,6 +42,7 @@ const arch = "x86_64";
 const localAssetFileName = `${appName}-${arch}.deb`;
 const depends = [
   "gtk3",
+  "gtk-layer-shell",
   "hicolor-icon-theme",
   "libayatana-appindicator",
   "librsvg",
