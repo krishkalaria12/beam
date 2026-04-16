@@ -790,7 +790,7 @@ export default function LauncherCommand() {
     }
 
     commandListRef.current?.scrollTo({ top: 0, behavior: "auto" });
-  }, [commandSearchSessionSeed, activePanel]);
+  }, [commandSearch, activePanel]);
 
   const ExtensionToastBridge = extensionInfrastructure?.ExtensionToastBridge ?? null;
   const PersistentExtensionsHost = extensionInfrastructure?.PersistentExtensionsHost ?? null;
