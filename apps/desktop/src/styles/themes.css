@@ -293,8 +293,10 @@
   .command-item:hover:not([data-selected="true"]),
 [data-command-smart-pointer-selection="true"][data-command-interaction-mode="selection"]
   .command-item[data-disabled="true"]:hover:not([data-selected="true"]) {
-  background: transparent;
-  border-color: transparent;
+  /* Keyboard navigation must suppress stale pointer hover across all themes,
+     including solid-theme hover rules that use !important. */
+  background: transparent !important;
+  border-color: transparent !important;
 }
 
 /* Inside the actions panel, rely on cmdk's data-selected for highlighting
