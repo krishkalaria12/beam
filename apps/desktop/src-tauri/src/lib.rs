@@ -292,6 +292,7 @@ pub fn run(startup_args: Vec<String>) {
             // Initialize File Search Backend via State
             state::init(&app.handle())
                 .map_err(|error| -> Box<dyn std::error::Error> { Box::new(error) })?;
+            applications::cache::initialize_backend(app.handle().clone());
 
             hotkeys::initialize_hotkey_backend(&app.handle());
             ai::db::init(&app.handle());

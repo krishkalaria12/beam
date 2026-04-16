@@ -8,11 +8,12 @@ use std::path::{Path, PathBuf};
 use fontdb::Database;
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
-use tauri::{AppHandle, Emitter};
+use tauri::AppHandle;
 use tauri_plugin_store::StoreExt;
 
 use self::config::CONFIG as SETTINGS_CONFIG;
 use self::error::{Result, SettingsError};
+use crate::applications::cache::invalidate_applications_cache as clear_applications_cache;
 use crate::applications::config::CONFIG as APPLICATIONS_CONFIG;
 use crate::config::CONFIG as APP_CONFIG;
 
@@ -517,12 +518,7 @@ fn is_available_icon_theme(theme_id: &str) -> bool {
 }
 
 fn invalidate_applications_cache(app: &AppHandle) -> Result<()> {
-    let store = open_store(app)?;
-    store.delete(APPLICATIONS_CONFIG.cache_key);
-    store.delete(APPLICATIONS_CONFIG.last_updated_timestamp_key);
-    save_store(&store)?;
-    let _ = app.emit(APPLICATIONS_CONFIG.cache_updated_event, ());
-    Ok(())
+    clear_applications_cache(app).map_err(|e| SettingsError::StoreOpen(e.to_string()))
 }
 
 fn parse_ui_layout_mode(value: Option<serde_json::Value>) -> UiLayoutMode {

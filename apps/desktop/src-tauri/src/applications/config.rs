@@ -3,7 +3,13 @@ pub(crate) const CONFIG: ApplicationsConfig = ApplicationsConfig {
     timestamp_diff_days: 1,
     cache_key: "applications_cache",
     cache_updated_event: "applications-cache-updated",
-    application_directories: &["~/.local/share/applications/", "/usr/share/applications/"],
+    application_directories: &[
+        "~/.local/share/applications/",
+        "~/.local/share/flatpak/exports/share/applications/",
+        "/usr/share/applications/",
+        "/var/lib/flatpak/exports/share/applications/",
+        "/var/lib/snapd/desktop/applications/",
+    ],
     icon_directories: &[
         "~/.local/share/icons",
         "~/.icons",
