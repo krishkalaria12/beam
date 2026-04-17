@@ -13,6 +13,30 @@ fn launcher_uses_layer_shell() -> bool {
     LAUNCHER_LAYER_SHELL_ACTIVE.load(Ordering::SeqCst)
 }
 
+fn focus_launcher_window(window: &WebviewWindow) -> Result<(), String> {
+    window
+        .set_focus()
+        .map_err(|err| format!("failed to focus launcher: {err}"))?;
+
+    #[cfg(target_os = "linux")]
+    if launcher_uses_layer_shell() {
+        request_linux_layer_shell_focus(window);
+    }
+
+    Ok(())
+}
+
+fn schedule_delayed_focus(window: &WebviewWindow, delays_ms: &[u64]) {
+    for delay_ms in delays_ms {
+        let delayed_window = window.clone();
+        let delay = *delay_ms;
+        tauri::async_runtime::spawn(async move {
+            tokio::time::sleep(Duration::from_millis(delay)).await;
+            let _ = focus_launcher_window(&delayed_window);
+        });
+    }
+}
+
 #[cfg(target_os = "linux")]
 fn configure_linux_layer_shell_window(window: &WebviewWindow) -> bool {
     use gtk::prelude::*;
@@ -33,6 +57,8 @@ fn configure_linux_layer_shell_window(window: &WebviewWindow) -> bool {
     gtk_window.init_layer_shell();
     gtk_window.set_layer(Layer::Overlay);
     gtk_window.set_keyboard_mode(KeyboardMode::Exclusive);
+    gtk_window.set_accept_focus(true);
+    gtk_window.set_focus_on_map(true);
     gtk_window.set_namespace("beam");
     gtk_window.set_anchor(Edge::Top, true);
     gtk_window.set_anchor(Edge::Left, true);
@@ -96,6 +122,33 @@ fn queue_layer_shell_layout_update(
     _top_margin: Option<i32>,
 ) {
 }
+
+#[cfg(target_os = "linux")]
+fn request_linux_layer_shell_focus(window: &WebviewWindow) {
+    use gtk::prelude::*;
+    use gtk_layer_shell::{KeyboardMode, LayerShell};
+
+    let window_handle = window.clone();
+    let _ = window.run_on_main_thread(move || {
+        let Ok(gtk_window) = window_handle.gtk_window() else {
+            return;
+        };
+        if !gtk_window.is_layer_window() {
+            return;
+        }
+
+        gtk_window.set_accept_focus(true);
+        gtk_window.set_focus_on_map(true);
+        gtk_window.set_focus_visible(true);
+        gtk_window.set_keyboard_mode(KeyboardMode::Exclusive);
+        gtk_window.present();
+        gtk_window.grab_focus();
+        let _ = gtk_window.activate_focus();
+    });
+}
+
+#[cfg(not(target_os = "linux"))]
+fn request_linux_layer_shell_focus(_window: &WebviewWindow) {}
 
 #[cfg(target_os = "linux")]
 pub fn configure_linux_launcher_surface(app: &AppHandle) {
@@ -173,9 +226,8 @@ fn show_after_resize_transition(window: &WebviewWindow) -> Result<(), String> {
         .show()
         .map_err(|err| format!("failed to show launcher after resize transition: {err}"))?;
 
-    window
-        .set_focus()
-        .map_err(|err| format!("failed to focus launcher after resize transition: {err}"))?;
+    focus_launcher_window(window)?;
+    schedule_delayed_focus(window, &[16, 48, 120]);
 
     center_launcher_window(window)
 }
@@ -385,17 +437,17 @@ pub fn reveal_launcher_window(app: &AppHandle) -> Result<(), String> {
         }
 
         schedule_delayed_recenter(&window, &[16, 48, 96, 160]);
+        schedule_delayed_focus(&window, &[16, 48, 120]);
     } else {
         center_launcher_window(&window)?;
         window
             .show()
             .map_err(|err| format!("failed to show launcher: {err}"))?;
         schedule_delayed_recenter(&window, &[16, 48, 120]);
+        schedule_delayed_focus(&window, &[16, 48, 120]);
     }
 
-    window
-        .set_focus()
-        .map_err(|err| format!("failed to focus launcher: {err}"))?;
+    focus_launcher_window(&window)?;
 
     refresh_gnome_launcher_window_state();
 

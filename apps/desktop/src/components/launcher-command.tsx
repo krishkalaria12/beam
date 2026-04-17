@@ -1,6 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { isTauri } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -82,6 +83,21 @@ interface HotkeyBackendStatusEventPayload {
   message?: string;
   hint?: string;
   source?: string;
+}
+
+function isLauncherCloseHotkey(event: {
+  key: string;
+  metaKey: boolean;
+  ctrlKey: boolean;
+  altKey: boolean;
+  shiftKey: boolean;
+}) {
+  return (
+    (event.metaKey || event.ctrlKey) &&
+    !event.shiftKey &&
+    !event.altKey &&
+    event.key.toLowerCase() === "q"
+  );
 }
 
 export default function LauncherCommand() {
@@ -232,6 +248,14 @@ export default function LauncherCommand() {
   const backToCommands = useCallback(async () => {
     await transitionToPanel("commands", () => rawBackToCommands(), "");
   }, [rawBackToCommands, transitionToPanel]);
+
+  const hideLauncher = useCallback(async () => {
+    if (!isTauri()) {
+      return;
+    }
+
+    await getCurrentWindow().hide();
+  }, []);
 
   const transitionSetActivePanel = useCallback(
     async (panel: CommandPanel) => {
@@ -694,6 +718,13 @@ export default function LauncherCommand() {
       return;
     }
 
+    if (isLauncherCloseHotkey(e)) {
+      e.preventDefault();
+      e.stopPropagation();
+      await hideLauncher();
+      return;
+    }
+
     if (isLauncherActionsHotkey(e)) {
       e.preventDefault();
       e.stopPropagation();
@@ -727,12 +758,19 @@ export default function LauncherCommand() {
     }
   };
 
-  const handleWindowBackHotkey = useEffectEvent((event: KeyboardEvent) => {
-    if (activePanel === "commands") {
+  const handleWindowLauncherHotkeys = useEffectEvent((event: KeyboardEvent) => {
+    if (event.defaultPrevented) {
       return;
     }
 
-    if (event.defaultPrevented || !isLauncherBackHotkey(event)) {
+    if (isLauncherCloseHotkey(event)) {
+      event.preventDefault();
+      event.stopPropagation();
+      void hideLauncher();
+      return;
+    }
+
+    if (activePanel === "commands" || !isLauncherBackHotkey(event)) {
       return;
     }
 
@@ -746,13 +784,13 @@ export default function LauncherCommand() {
   });
 
   useMountEffect(() => {
-    const onWindowBackHotkey = (event: KeyboardEvent) => {
-      handleWindowBackHotkey(event);
+    const onWindowLauncherHotkey = (event: KeyboardEvent) => {
+      handleWindowLauncherHotkeys(event);
     };
 
-    window.addEventListener("keydown", onWindowBackHotkey);
+    window.addEventListener("keydown", onWindowLauncherHotkey, true);
     return () => {
-      window.removeEventListener("keydown", onWindowBackHotkey);
+      window.removeEventListener("keydown", onWindowLauncherHotkey, true);
     };
   });
 
