@@ -1,4 +1,4 @@
-import { Search, ArrowLeft, FolderSearch } from "lucide-react";
+import { Search, ArrowLeft, FolderSearch, Zap, ArrowUpRight } from "lucide-react";
 import { useState, useRef, useMemo, useCallback, useEffect } from "react";
 import debounce from "@/lib/debounce";
 
@@ -6,6 +6,7 @@ import { CommandFooterBar } from "@/components/command/command-footer-bar";
 import { DetailPanel, SearchInput } from "@/components/module";
 import { Button } from "@/components/ui/button";
 import { useMountEffect } from "@/hooks/use-mount-effect";
+import { openExternalUrl } from "@/lib/open-external-url";
 import {
   getManagedItemPreferenceId,
   useManagedItemPreferencesStore,
@@ -16,6 +17,7 @@ import {
   toManagedFileItem,
 } from "@/modules/file-search/hooks/use-file-search-action-items";
 import { useFileSearch } from "../hooks/use-file-search";
+import { useFileSearchBackendStatus } from "../hooks/use-file-search-backend-status";
 import { useOpenFile } from "../hooks/use-open-file";
 import { FileList } from "./file-list";
 import { FileDetails } from "./file-details";
@@ -36,6 +38,7 @@ export function FileSearchView({ initialQuery, onBack }: FileSearchViewProps) {
   const recordUsage = useManagedItemPreferencesStore((state) => state.recordUsage);
 
   const { data, isLoading } = useFileSearch(debouncedQuery);
+  const { data: backendStatus } = useFileSearchBackendStatus();
   const { mutate: openFile } = useOpenFile();
 
   useMountEffect(() => clearFileSearchActionsState);
@@ -157,6 +160,11 @@ export function FileSearchView({ initialQuery, onBack }: FileSearchViewProps) {
     updateDebouncedQuery(value);
   };
 
+  const showUpgradeHint =
+    query.trim().length > 0 &&
+    backendStatus?.backend === "native" &&
+    Boolean(backendStatus.install_url);
+
   return (
     <div
       ref={containerRef}
@@ -199,15 +207,36 @@ export function FileSearchView({ initialQuery, onBack }: FileSearchViewProps) {
           />
         </div>
 
-        {/* Scope indicator - minimal pill */}
-        <div
-          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md 
-          bg-[var(--command-item-hover-bg)] border border-[var(--ui-divider)]"
-        >
-          <FolderSearch className="size-3.5 text-muted-foreground/60" />
-          <span className="text-launcher-xs font-medium text-muted-foreground/80 tracking-wide">
-            Local
-          </span>
+        <div className="flex items-center gap-2">
+          {showUpgradeHint ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                if (!backendStatus?.install_url) {
+                  return;
+                }
+
+                void openExternalUrl(backendStatus.install_url);
+              }}
+              className="file-search-upgrade-hint h-8 rounded-md border border-[var(--ui-divider)] px-2.5 text-muted-foreground/82 hover:text-foreground"
+            >
+              <Zap className="size-3.5 text-[var(--ring)]" />
+              <span className="tracking-[-0.01em]">Faster with dsearch</span>
+              <ArrowUpRight className="size-3.5 text-muted-foreground/55" />
+            </Button>
+          ) : null}
+
+          <div
+            className="flex items-center gap-1.5 rounded-md border border-[var(--ui-divider)] 
+            bg-[var(--command-item-hover-bg)] px-2.5 py-1.5"
+          >
+            <FolderSearch className="size-3.5 text-muted-foreground/60" />
+            <span className="text-launcher-xs font-medium tracking-wide text-muted-foreground/80">
+              Local
+            </span>
+          </div>
         </div>
       </header>
 

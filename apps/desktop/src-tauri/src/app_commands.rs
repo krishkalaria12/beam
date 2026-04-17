@@ -46,6 +46,7 @@ pub fn get_handler() -> impl Fn(Invoke) -> bool {
         linux_desktop::gnome_extension::install::enable_gnome_shell_extension,
         linux_desktop::gnome_extension::install::open_gnome_shell_extension_directory,
         file_search::search_files,
+        file_search::get_file_search_backend_status,
         file_search::open_file,
         file_search::get_file_info,
         dictionary::get_definition,

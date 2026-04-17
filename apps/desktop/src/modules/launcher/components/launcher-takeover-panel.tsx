@@ -53,7 +53,9 @@ function LauncherTakeoverPanelContent({
   const clipboardActionItems = useClipboardActionItems();
   const extensionActionItems = useExtensionActionItems();
   const extensionRunnerActionSections = useExtensionRunnerActionSections();
-  const fileSearchActionItems = useFileSearchActionItems();
+  const fileSearchActionItems = useFileSearchActionItems({
+    includeDisabledPlaceholderItems: true,
+  });
   const quicklinksActionItems = useQuicklinksActionItems();
   const scriptCommandActionItems = useScriptCommandActionItems();
 

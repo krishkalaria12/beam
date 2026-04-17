@@ -75,6 +75,25 @@
   letter-spacing: -0.01em;
 }
 
+.file-search-upgrade-hint {
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--command-item-hover-bg) 94%, transparent),
+      color-mix(in srgb, var(--command-item-hover-bg) 84%, var(--ring) 16%)
+    );
+  box-shadow: inset 0 1px 0 color-mix(in srgb, white 5%, transparent);
+}
+
+.file-search-upgrade-hint:hover {
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--command-item-hover-bg) 88%, var(--ring) 12%),
+      color-mix(in srgb, var(--command-item-hover-bg) 74%, var(--ring) 22%)
+    );
+}
+
 .beam-opacity-slider::-webkit-slider-runnable-track {
   height: 8px;
   border-radius: 999px;

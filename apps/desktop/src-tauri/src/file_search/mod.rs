@@ -7,6 +7,7 @@ use papaya::HashMap as ConcurrentMap;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
+use tauri::AppHandle;
 use tokio::sync::mpsc::UnboundedSender;
 
 use self::indexer::{builder, cache, watcher};
@@ -196,6 +197,7 @@ pub async fn initialize_backend(index: Arc<ConcurrentMap<String, FileEntry>>) {
     }
 }
 
+use serde::Serialize;
 use std::path::PathBuf;
 use tauri::State;
 
@@ -209,19 +211,37 @@ use self::{
 use crate::file_search::config::CONFIG as FILE_SEARCH_CONFIG;
 use crate::state::AppState;
 
+#[derive(Debug, Clone, Serialize)]
+pub struct FileSearchBackendStatus {
+    pub backend: String,
+    pub dsearch_available: bool,
+    pub install_url: Option<String>,
+}
+
 // Searches for files in the index with pagination support
 #[tauri::command]
-pub fn search_files(
+pub async fn search_files(
+    app: AppHandle,
     request: SearchRequest,
-    state: State<AppState>,
+    state: State<'_, AppState>,
 ) -> Result<PaginatedSearchResponse> {
-    // Validate query
+    let normalized_query = validate_search_request(&request)?;
+    let index = Arc::clone(&state.index);
+
+    #[cfg(target_os = "linux")]
+    if let Some(response) = crate::danksearch::search_files(&app, &request).await {
+        return Ok(response);
+    }
+
+    search_files_native(&index, &request, &normalized_query)
+}
+
+fn validate_search_request(request: &SearchRequest) -> Result<String> {
     let normalized_query = request.query.trim();
     if normalized_query.is_empty() {
         return Err(FileSearchError::EmptyQuery);
     }
 
-    // Validate pagination parameters
     if request.page == 0 {
         return Err(FileSearchError::InvalidPageNumber {
             provided: request.page,
@@ -229,29 +249,27 @@ pub fn search_files(
         });
     }
 
-    if request.per_page == 0 {
+    if request.per_page == 0 || request.per_page > FILE_SEARCH_CONFIG.max_results_per_page {
         return Err(FileSearchError::InvalidPerPage {
             provided: request.per_page,
             max: FILE_SEARCH_CONFIG.max_results_per_page,
         });
     }
 
-    if request.per_page > FILE_SEARCH_CONFIG.max_results_per_page {
-        return Err(FileSearchError::InvalidPerPage {
-            provided: request.per_page,
-            max: FILE_SEARCH_CONFIG.max_results_per_page,
-        });
-    }
+    Ok(normalized_query.to_string())
+}
 
-    let index = &state.index;
+fn search_files_native(
+    index: &Arc<ConcurrentMap<String, FileEntry>>,
+    request: &SearchRequest,
+    normalized_query: &str,
+) -> Result<PaginatedSearchResponse> {
     let pinned = index.pin();
 
-    // Check if index is initialized
     if pinned.is_empty() {
         return Err(FileSearchError::IndexNotInitialized);
     }
 
-    // Build file index from ConcurrentMap
     let file_index = FileIndex {
         entries: pinned
             .iter()
@@ -260,16 +278,12 @@ pub fn search_files(
         built_at: 0,
     };
 
-    // Prepare search options
     let search_options = SearchOptions {
         page: request.page,
         per_page: request.per_page,
     };
 
-    // Perform search
     let search_response = search(normalized_query, &file_index, search_options)?;
-
-    // Convert internal response to API response
     let metadata = PaginatedSearchMetadata {
         total_results: search_response.metadata.total_results,
         page: search_response.metadata.page,
@@ -283,6 +297,33 @@ pub fn search_files(
         results: search_response.results,
         metadata,
     })
+}
+
+#[tauri::command]
+pub fn get_file_search_backend_status() -> FileSearchBackendStatus {
+    #[cfg(target_os = "linux")]
+    {
+        let dsearch_available = crate::danksearch::is_available();
+        return FileSearchBackendStatus {
+            backend: if dsearch_available {
+                "dsearch".to_string()
+            } else {
+                "native".to_string()
+            },
+            dsearch_available,
+            install_url: (!dsearch_available)
+                .then_some(crate::danksearch::DSEARCH_INSTALL_URL.to_string()),
+        };
+    }
+
+    #[cfg(not(target_os = "linux"))]
+    {
+        FileSearchBackendStatus {
+            backend: "native".to_string(),
+            dsearch_available: false,
+            install_url: None,
+        }
+    }
 }
 
 // Opens a file with the system's default application

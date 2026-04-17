@@ -8,6 +8,10 @@ import type { LauncherManagedItem } from "@/modules/launcher/managed-items";
 import type { FileEntry } from "@/modules/file-search/types";
 import type { LauncherActionItem } from "@/modules/launcher/types";
 
+interface UseFileSearchActionItemsOptions {
+  includeDisabledPlaceholderItems?: boolean;
+}
+
 interface FileSearchActionsState {
   selectedFile: FileEntry | null;
   onOpenSelected?: () => Promise<void> | void;
@@ -68,7 +72,10 @@ export function toManagedFileItem(file: FileEntry): LauncherManagedItem {
   };
 }
 
-export function useFileSearchActionItems(): LauncherActionItem[] {
+export function useFileSearchActionItems(
+  options?: UseFileSearchActionItemsOptions,
+): LauncherActionItem[] {
+  const includeDisabledPlaceholderItems = options?.includeDisabledPlaceholderItems ?? true;
   const state = useFileSearchActionsStore();
   const managedItem = state.selectedFile ? toManagedFileItem(state.selectedFile) : null;
   const managedActionItems = useManagedItemActionItems(managedItem);
@@ -76,6 +83,10 @@ export function useFileSearchActionItems(): LauncherActionItem[] {
   return useMemo(() => {
     const file = state.selectedFile;
     const hasSelection = !!file;
+
+    if (!hasSelection && !includeDisabledPlaceholderItems) {
+      return [];
+    }
 
     return [
       {
@@ -135,5 +146,5 @@ export function useFileSearchActionItems(): LauncherActionItem[] {
       },
       ...managedActionItems,
     ];
-  }, [managedActionItems, state]);
+  }, [includeDisabledPlaceholderItems, managedActionItems, state]);
 }

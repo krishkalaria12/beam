@@ -24,6 +24,7 @@ import { useMountEffect } from "@/hooks/use-mount-effect";
 import { isLauncherActionsHotkey, requestLauncherActionsToggle } from "@/lib/launcher-actions";
 import { cn } from "@/lib/utils";
 
+import { useApplicationActionItems } from "@/modules/applications/hooks/use-application-action-items";
 import { calculatorHistoryQueryKey } from "@/modules/calculator-history/api/query";
 import { LauncherCommandModeContent } from "@/modules/launcher/components/launcher-command-mode-content";
 import { LauncherFooter } from "@/modules/launcher/components/launcher-footer";
@@ -60,6 +61,10 @@ import { extensionManagerService } from "@/modules/extensions/extension-manager-
 import { useExtensionInfrastructure } from "@/modules/extensions/hooks/use-extension-infrastructure";
 import { findQuicklinkByKeywordOrAlias } from "@/modules/quicklinks/api/quicklinks";
 import { useQuicklinks } from "@/modules/quicklinks/hooks/use-quicklinks";
+import {
+  clearFileSearchActionsState,
+  useFileSearchActionItems,
+} from "@/modules/file-search/hooks/use-file-search-action-items";
 import { useManagedItemPreferencesStore } from "@/modules/launcher/managed-items";
 import { HOTKEY_BACKEND_STATUS_EVENT, HOTKEY_COMMAND_EVENT } from "@/modules/settings/api/hotkeys";
 import { useTriggerSymbols } from "@/modules/settings/hooks/use-trigger-symbols";
@@ -129,6 +134,10 @@ export default function LauncherCommand() {
   const { symbols: triggerSymbols } = useTriggerSymbols();
   const runShellCommandMutation = useRunShellCommandMutation();
   const [shellHistory, setShellHistory] = useState<ShellExecutionEntry[]>([]);
+  const applicationActionItems = useApplicationActionItems();
+  const fileActionItems = useFileSearchActionItems({
+    includeDisabledPlaceholderItems: false,
+  });
   const {
     state: commandPreferences,
     rankingSignals,
@@ -806,6 +815,10 @@ export default function LauncherCommand() {
 
   const shouldShowFooter =
     !isShellTrigger && !shouldCollapseToInputOnly && !isLauncherFooterHidden(activePanel);
+  const footerRootActionItems = useMemo(
+    () => [...fileActionItems, ...applicationActionItems],
+    [applicationActionItems, fileActionItems],
+  );
   const footerPrimaryAction = useMemo(
     () =>
       isShellTrigger
@@ -945,6 +958,7 @@ export default function LauncherCommand() {
                         void handleRegistryCommandSelect(commandId);
                       }}
                       onRegistryCommandIntent={prefetchRegistryCommand}
+                      onNonFileIntent={clearFileSearchActionsState}
                       onSetPinned={setPinned}
                     />
                   ) : null}
@@ -976,6 +990,7 @@ export default function LauncherCommand() {
                   leftSlot={isShellTrigger ? <span>Beam Shell</span> : undefined}
                   primaryAction={footerPrimaryAction}
                   actionsEnabled={activePanel === "commands"}
+                  rootActionItems={footerRootActionItems}
                 />
               )}
             </Command>

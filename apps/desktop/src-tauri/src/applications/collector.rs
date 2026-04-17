@@ -1,10 +1,11 @@
-use freedesktop_file_parser::{parse, DesktopEntry, EntryType};
+use freedesktop_file_parser::{parse, DesktopEntry, DesktopFile, EntryType};
+use std::collections::HashSet;
 use std::fs;
 use std::path::PathBuf;
 use walkdir::{DirEntry, WalkDir};
 
 use super::{
-    app_entry::AppEntry,
+    app_entry::{AppEntry, SearchableAppEntry},
     error::{ApplicationsError, Result},
     icon_resolver::IconResolver,
 };
@@ -83,10 +84,90 @@ fn iterate_through_application_directories() -> Result<Vec<PathBuf>> {
 }
 
 pub fn collect_applications(selected_icon_theme: Option<String>) -> Result<Vec<AppEntry>> {
+    Ok(collect_searchable_applications(selected_icon_theme)?
+        .into_iter()
+        .map(|entry| entry.into_public_entry())
+        .collect())
+}
+
+fn to_searchable_app_entry(
+    path: &PathBuf,
+    desktop_file: DesktopFile,
+    icon_resolver: &mut IconResolver,
+) -> Option<SearchableAppEntry> {
+    let entry = desktop_file.entry;
+    if entry.hidden.unwrap_or(false) || entry.no_display.unwrap_or(false) {
+        return None;
+    }
+
+    let EntryType::Application(application_entry) = &entry.entry_type else {
+        return None;
+    };
+
+    let icon = icon_resolver.resolve(entry.icon.as_ref(), path);
+    if icon.is_empty() {
+        return None;
+    }
+
+    let name = entry.name.default.trim().to_string();
+    if name.is_empty() {
+        return None;
+    }
+
+    let app_id = path
+        .file_stem()
+        .and_then(|stem| stem.to_str())
+        .unwrap_or_default()
+        .trim()
+        .to_string();
+    if app_id.is_empty() {
+        return None;
+    }
+
+    let description = get_application_description(&entry);
+    let generic_name = entry
+        .generic_name
+        .as_ref()
+        .map(|value| value.default.trim().to_string())
+        .unwrap_or_default();
+    let comment = entry
+        .comment
+        .as_ref()
+        .map(|value| value.default.trim().to_string())
+        .unwrap_or_default();
+    let keywords = application_entry
+        .keywords
+        .as_ref()
+        .map(|values| values.default.clone())
+        .unwrap_or_default()
+        .into_iter()
+        .map(|value| value.trim().to_string())
+        .filter(|value| !value.is_empty())
+        .collect();
+
+    Some(SearchableAppEntry {
+        app: AppEntry {
+            app_id,
+            name,
+            description,
+            exec_path: clean_exec_path(application_entry.exec.as_deref()),
+            icon,
+            desktop_file_path: path.to_string_lossy().to_string(),
+        },
+        generic_name,
+        keywords,
+        comment,
+    })
+}
+
+pub fn collect_searchable_applications(
+    selected_icon_theme: Option<String>,
+) -> Result<Vec<SearchableAppEntry>> {
     let files = iterate_through_application_directories()
         .map_err(|e| ApplicationsError::CollectingDesktopFilesError(e.to_string()))?;
     let mut icon_resolver = IconResolver::new(selected_icon_theme);
     let mut applications = Vec::new();
+    let mut seen_app_ids = HashSet::new();
 
     for path in files {
         let content = match fs::read_to_string(&path) {
@@ -99,36 +180,16 @@ pub fn collect_applications(selected_icon_theme: Option<String>) -> Result<Vec<A
             Err(_) => continue,
         };
 
-        let entry = desktop_file.entry;
-        if entry.hidden.unwrap_or(false) || entry.no_display.unwrap_or(false) {
+        let Some(application) = to_searchable_app_entry(&path, desktop_file, &mut icon_resolver)
+        else {
+            continue;
+        };
+
+        if !seen_app_ids.insert(application.app.app_id.clone()) {
             continue;
         }
 
-        if let EntryType::Application(application_entry) = &entry.entry_type {
-            let icon = icon_resolver.resolve(entry.icon.as_ref(), &path);
-            if icon.is_empty() {
-                continue;
-            }
-
-            let name = entry.name.default.trim().to_string();
-            if name.is_empty() {
-                continue;
-            }
-
-            applications.push(AppEntry {
-                app_id: path
-                    .file_stem()
-                    .and_then(|stem| stem.to_str())
-                    .unwrap_or_default()
-                    .trim()
-                    .to_string(),
-                name,
-                description: get_application_description(&entry),
-                exec_path: clean_exec_path(application_entry.exec.as_deref()),
-                icon,
-                desktop_file_path: path.to_string_lossy().to_string(),
-            });
-        }
+        applications.push(application);
     }
 
     Ok(applications)

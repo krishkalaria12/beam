@@ -6,6 +6,7 @@ pub mod cli;
 pub mod clipboard;
 pub mod config;
 pub mod custom_config;
+pub mod danksearch;
 pub mod dictionary;
 pub mod emoji;
 pub mod error;
@@ -292,6 +293,7 @@ pub fn run(startup_args: Vec<String>) {
             // Initialize File Search Backend via State
             state::init(&app.handle())
                 .map_err(|error| -> Box<dyn std::error::Error> { Box::new(error) })?;
+            danksearch::initialize(app.handle().clone());
             applications::cache::initialize_backend(app.handle().clone());
 
             hotkeys::initialize_hotkey_backend(&app.handle());

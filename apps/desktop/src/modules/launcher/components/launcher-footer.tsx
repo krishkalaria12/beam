@@ -2,23 +2,24 @@ import { useEffectEvent, useState, type ReactNode } from "react";
 
 import { CommandFooterBar, type FooterAction } from "@/components/command/command-footer-bar";
 import { useMountEffect } from "@/hooks/use-mount-effect";
-import { useApplicationActionItems } from "@/modules/applications/hooks/use-application-action-items";
 import { LauncherActionsPanel } from "@/modules/launcher/components/launcher-actions-panel";
 import { isLauncherActionsHotkey } from "@/lib/launcher-actions";
+import type { LauncherActionItem } from "@/modules/launcher/types";
 
 interface LauncherFooterProps {
   leftSlot?: ReactNode;
   primaryAction?: FooterAction;
   actionsEnabled?: boolean;
+  rootActionItems?: LauncherActionItem[];
 }
 
 export function LauncherFooter({
   leftSlot,
   primaryAction,
   actionsEnabled = true,
+  rootActionItems = [],
 }: LauncherFooterProps) {
   const [actionsOpen, setActionsOpen] = useState(false);
-  const applicationActionItems = useApplicationActionItems();
   const toggleActions = useEffectEvent(() => {
     if (!actionsEnabled) {
       return;
@@ -68,7 +69,7 @@ export function LauncherFooter({
           <LauncherActionsPanel
             open={actionsOpen}
             onOpenChange={setActionsOpen}
-            rootItems={applicationActionItems}
+            rootItems={rootActionItems}
           />
         ) : undefined
       }

@@ -1,6 +1,5 @@
 pub(crate) const CONFIG: ApplicationsConfig = ApplicationsConfig {
     last_updated_timestamp_key: "last_updated_application_timestamp",
-    timestamp_diff_days: 1,
     cache_key: "applications_cache",
     cache_updated_event: "applications-cache-updated",
     application_directories: &[
@@ -23,7 +22,6 @@ pub(crate) const CONFIG: ApplicationsConfig = ApplicationsConfig {
 
 pub(crate) struct ApplicationsConfig {
     pub last_updated_timestamp_key: &'static str,
-    pub timestamp_diff_days: usize,
     pub cache_key: &'static str,
     pub cache_updated_event: &'static str,
     pub application_directories: &'static [&'static str],

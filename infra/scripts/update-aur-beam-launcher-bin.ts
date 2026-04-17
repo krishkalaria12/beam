@@ -48,6 +48,7 @@ const depends = [
   "librsvg",
   "webkit2gtk-4.1",
 ];
+const optdepends = ["dsearch-bin: faster file search backend"];
 const provides = ["beam"];
 const conflicts = ["beam"];
 
@@ -220,7 +221,7 @@ function renderPkgbuild(args: {
   iconSha256: string;
   licenseSha256: string;
 }): string {
-  return `# Maintained automatically by Beam release automation\npkgname=${packageName}\npkgver=${args.version}\npkgrel=${args.pkgrel}\npkgdesc=${JSON.stringify(packageDescription)}\narch=('${arch}')\nurl=${JSON.stringify(githubProjectUrl)}\nlicense=('MIT')\ndepends=(${depends.map((entry) => `'${entry}'`).join(" ")})\nprovides=(${provides.map((entry) => `'${entry}'`).join(" ")})\nconflicts=(${conflicts.map((entry) => `'${entry}'`).join(" ")})\noptions=('!strip')\nsource=(\n  '${localAssetFileName}::${args.assetUrl}'\n  'beam.desktop'\n  'beam.png'\n  'LICENSE'\n)\nnoextract=('${localAssetFileName}')\nsha256sums=(\n  '${args.assetSha256}'\n  '${args.desktopSha256}'\n  '${args.iconSha256}'\n  '${args.licenseSha256}'\n)\n\npackage() {\n  local extract_dir="${"${srcdir}"}/deb-extract"\n  local data_archive=\n\n  rm -rf "$extract_dir"\n  mkdir -p "$extract_dir"\n  bsdtar -xf "${"${srcdir}"}/${localAssetFileName}" -C "$extract_dir"\n\n  for candidate in "$extract_dir"/data.tar.*; do\n    if [[ -f "$candidate" ]]; then\n      data_archive="$candidate"\n      break\n    fi\n  done\n\n  if [[ -z "$data_archive" ]]; then\n    echo "missing data archive in ${localAssetFileName}" >&2\n    return 1\n  fi\n\n  bsdtar -xf "$data_archive" -C "${"${pkgdir}"}"\n\n  install -Dm644 "${"${srcdir}"}/beam.desktop" "${"${pkgdir}"}/usr/share/applications/${appName}.desktop"\n  install -Dm644 "${"${srcdir}"}/beam.png" "${"${pkgdir}"}/usr/share/icons/hicolor/128x128/apps/${appName}.png"\n  install -Dm644 "${"${srcdir}"}/LICENSE" "${"${pkgdir}"}/usr/share/licenses/${packageName}/LICENSE"\n}\n`;
+  return `# Maintained automatically by Beam release automation\npkgname=${packageName}\npkgver=${args.version}\npkgrel=${args.pkgrel}\npkgdesc=${JSON.stringify(packageDescription)}\narch=('${arch}')\nurl=${JSON.stringify(githubProjectUrl)}\nlicense=('MIT')\ndepends=(${depends.map((entry) => `'${entry}'`).join(" ")})\noptdepends=(${optdepends.map((entry) => `'${entry}'`).join(" ")})\nprovides=(${provides.map((entry) => `'${entry}'`).join(" ")})\nconflicts=(${conflicts.map((entry) => `'${entry}'`).join(" ")})\noptions=('!strip')\nsource=(\n  '${localAssetFileName}::${args.assetUrl}'\n  'beam.desktop'\n  'beam.png'\n  'LICENSE'\n)\nnoextract=('${localAssetFileName}')\nsha256sums=(\n  '${args.assetSha256}'\n  '${args.desktopSha256}'\n  '${args.iconSha256}'\n  '${args.licenseSha256}'\n)\n\npackage() {\n  local extract_dir="${"${srcdir}"}/deb-extract"\n  local data_archive=\n\n  rm -rf "$extract_dir"\n  mkdir -p "$extract_dir"\n  bsdtar -xf "${"${srcdir}"}/${localAssetFileName}" -C "$extract_dir"\n\n  for candidate in "$extract_dir"/data.tar.*; do\n    if [[ -f "$candidate" ]]; then\n      data_archive="$candidate"\n      break\n    fi\n  done\n\n  if [[ -z "$data_archive" ]]; then\n    echo "missing data archive in ${localAssetFileName}" >&2\n    return 1\n  fi\n\n  bsdtar -xf "$data_archive" -C "${"${pkgdir}"}"\n\n  install -Dm644 "${"${srcdir}"}/beam.desktop" "${"${pkgdir}"}/usr/share/applications/${appName}.desktop"\n  install -Dm644 "${"${srcdir}"}/beam.png" "${"${pkgdir}"}/usr/share/icons/hicolor/128x128/apps/${appName}.png"\n  install -Dm644 "${"${srcdir}"}/LICENSE" "${"${pkgdir}"}/usr/share/licenses/${packageName}/LICENSE"\n}\n`;
 }
 
 function renderSrcinfo(args: {
@@ -241,6 +242,7 @@ function renderSrcinfo(args: {
     `\tarch = ${arch}`,
     "\tlicense = MIT",
     ...depends.map((dependency) => `\tdepends = ${dependency}`),
+    ...optdepends.map((dependency) => `\toptdepends = ${dependency}`),
     ...provides.map((entry) => `\tprovides = ${entry}`),
     ...conflicts.map((entry) => `\tconflicts = ${entry}`),
     "\toptions = !strip",
