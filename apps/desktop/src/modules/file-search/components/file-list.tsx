@@ -9,6 +9,7 @@ interface FileListProps {
   selectedIndex: number;
   onSelect: (index: number) => void;
   isLoading: boolean;
+  isRefreshing?: boolean;
   query?: string;
   onOpen: (path: string) => void;
 }
@@ -247,6 +248,7 @@ export function FileList({
   selectedIndex,
   onSelect,
   isLoading,
+  isRefreshing = false,
   query = "",
   onOpen,
 }: FileListProps) {
@@ -351,6 +353,7 @@ export function FileList({
           <span className="text-launcher-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
             Results
           </span>
+          {isRefreshing ? <Loader2 className="size-3 animate-spin text-muted-foreground/45" /> : null}
         </div>
         <span className="text-launcher-2xs font-bold text-muted-foreground/40 tabular-nums">
           {results.length}

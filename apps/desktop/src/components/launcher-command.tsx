@@ -153,6 +153,7 @@ export default function LauncherCommand() {
 
   const [isPanelTransitioning, setIsPanelTransitioning] = useState(false);
   const [hideShellDuringTransition, setHideShellDuringTransition] = useState(false);
+  const [selectedCommandValue, setSelectedCommandValue] = useState("");
   const panelTransitionQueueRef = useRef<Promise<void>>(Promise.resolve());
   const commandListRef = useRef<HTMLDivElement | null>(null);
 
@@ -873,6 +874,8 @@ export default function LauncherCommand() {
             <Command
               shouldFilter={false}
               smartPointerSelection
+              value={activePanel === "commands" ? selectedCommandValue : undefined}
+              onValueChange={activePanel === "commands" ? setSelectedCommandValue : undefined}
               onKeyDown={handleKeyDown}
               className="glass-effect beam-main-shell h-full w-full overflow-hidden text-foreground"
             >
@@ -960,6 +963,7 @@ export default function LauncherCommand() {
                       onRegistryCommandIntent={prefetchRegistryCommand}
                       onNonFileIntent={clearFileSearchActionsState}
                       onSetPinned={setPinned}
+                      onPrimaryCommandValueChange={setSelectedCommandValue}
                     />
                   ) : null}
 

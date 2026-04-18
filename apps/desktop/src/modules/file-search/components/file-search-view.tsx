@@ -37,7 +37,7 @@ export function FileSearchView({ initialQuery, onBack }: FileSearchViewProps) {
   const usageById = useManagedItemPreferencesStore((state) => state.usageById);
   const recordUsage = useManagedItemPreferencesStore((state) => state.recordUsage);
 
-  const { data, isLoading } = useFileSearch(debouncedQuery);
+  const { data, isLoading, isFetching } = useFileSearch(debouncedQuery);
   const { data: backendStatus } = useFileSearchBackendStatus();
   const { mutate: openFile } = useOpenFile();
 
@@ -249,6 +249,7 @@ export function FileSearchView({ initialQuery, onBack }: FileSearchViewProps) {
             selectedIndex={selectedIndex}
             onSelect={setSelectedIndex}
             isLoading={isLoading}
+            isRefreshing={isFetching && results.length > 0}
             query={query}
             onOpen={(path) => {
               const entry = results.find((result) => result.entry.path === path)?.entry;

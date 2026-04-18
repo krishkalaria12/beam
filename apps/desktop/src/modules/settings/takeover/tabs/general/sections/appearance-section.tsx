@@ -55,18 +55,12 @@ interface StyleOption {
 }
 
 const STYLE_OPTIONS: StyleOption[] = [
-  {
-    id: "default",
-    icon: PaintBucket,
-    title: "Default",
-    description: "System appearance",
-  },
-  {
-    id: "glassy",
-    icon: Sparkles,
-    title: "Glassy",
-    description: "Blur & transparency",
-  },
+  // {
+  //   id: "glassy",
+  //   icon: Sparkles,
+  //   title: "Glassy",
+  //   description: "Blur & transparency",
+  // },
   { id: "solid", icon: Layers, title: "Solid", description: "Opaque surfaces" },
 ];
 
@@ -93,7 +87,7 @@ function AppearanceStyleSection({
       iconVariant="cyan"
     >
       <div className="p-5">
-        <div className="grid grid-cols-3 gap-2.5">
+        <div className="grid grid-cols-1 gap-2.5">
           {STYLE_OPTIONS.map((option) => {
             const isSelected = uiStyle === option.id;
             const Icon = option.icon;
@@ -266,7 +260,7 @@ export function GeneralAppearanceSection() {
       >
         {/* Style picker grid */}
         <div className="p-5">
-          <div className="grid grid-cols-3 gap-2.5">
+          <div className="grid grid-cols-1 gap-2.5">
             {STYLE_OPTIONS.map((option) => {
               const isSelected = uiStyle === option.id;
               const Icon = option.icon;

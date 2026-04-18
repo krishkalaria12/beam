@@ -21,6 +21,7 @@ import { useManagedItemPreferencesStore } from "@/modules/launcher/managed-items
 
 interface InlineFileResultsGroupProps {
   query: string;
+  onPrimaryCommandValueChange?: (value: string) => void;
 }
 
 function getInlineFileRowValue(file: FileEntry): string {
@@ -57,20 +58,44 @@ function InlineFileSelectionSync({
   return null;
 }
 
-export function InlineFileResultsGroup({ query }: InlineFileResultsGroupProps) {
+function InlineFilePrimarySelectionSync({
+  value,
+  onPrimaryCommandValueChange,
+}: {
+  value: string;
+  onPrimaryCommandValueChange: (value: string) => void;
+}) {
+  useMountEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      onPrimaryCommandValueChange(value);
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+    };
+  });
+
+  return null;
+}
+
+export function InlineFileResultsGroup({
+  query,
+  onPrimaryCommandValueChange,
+}: InlineFileResultsGroupProps) {
   const selectedCommandValue = useCommandState((state) => state.value);
   const favoriteIds = useManagedItemPreferencesStore((state) => state.favoriteIds);
   const usageById = useManagedItemPreferencesStore((state) => state.usageById);
   const recordUsage = useManagedItemPreferencesStore((state) => state.recordUsage);
-  const { data } = useFileSearch(query, 1, 20);
+  const { data, isFetching } = useFileSearch(query, 1, 20);
 
   const sortedResults = useMemo(
     () =>
       sortInlineFileResults(data?.results ?? [], {
+        query,
         favoriteIds,
         usageById,
       }),
-    [data?.results, favoriteIds, usageById],
+    [data?.results, favoriteIds, query, usageById],
   );
 
   const visibleResults = useMemo(() => selectInlineFileBestBand(sortedResults), [sortedResults]);
@@ -98,6 +123,13 @@ export function InlineFileResultsGroup({ query }: InlineFileResultsGroupProps) {
   return (
     <>
       <InlineFileResultsLifecycle key={visibleResultsKey} />
+      {onPrimaryCommandValueChange && visibleResults.length > 0 ? (
+        <InlineFilePrimarySelectionSync
+          key={`inline-primary\u0000${visibleResultsKey}`}
+          value={getInlineFileRowValue(visibleResults[0].entry)}
+          onPrimaryCommandValueChange={onPrimaryCommandValueChange}
+        />
+      ) : null}
       {selectedFile ? (
         <InlineFileSelectionSync
           key={`${visibleResultsKey}\u0000${selectedFile.path}`}
@@ -108,7 +140,10 @@ export function InlineFileResultsGroup({ query }: InlineFileResultsGroupProps) {
         />
       ) : null}
 
-      <CommandGroup heading="Files">
+      <CommandGroup
+        heading="Files"
+        className={isFetching ? "transition-opacity duration-150 opacity-85" : "transition-opacity duration-150"}
+      >
         {visibleResults.map((result) => (
           <BaseCommandRow
             key={result.entry.path}

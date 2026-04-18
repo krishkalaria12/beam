@@ -26,7 +26,6 @@ const MAX_LAUNCHER_FONT_SIZE: f64 = 18.0;
 #[serde(rename_all = "snake_case")]
 pub enum UiStylePreference {
     Default,
-    Glassy,
     #[default]
     Solid,
 }
@@ -103,7 +102,6 @@ fn normalize_icon_theme_id(value: &str) -> Option<String> {
 fn normalize_ui_style(value: &str) -> Option<UiStylePreference> {
     match value.trim().to_ascii_lowercase().as_str() {
         "default" => Some(UiStylePreference::Default),
-        "glassy" => Some(UiStylePreference::Glassy),
         "solid" => Some(UiStylePreference::Solid),
         _ => None,
     }
@@ -112,7 +110,6 @@ fn normalize_ui_style(value: &str) -> Option<UiStylePreference> {
 fn serialize_ui_style(style: UiStylePreference) -> &'static str {
     match style {
         UiStylePreference::Default => "default",
-        UiStylePreference::Glassy => "glassy",
         UiStylePreference::Solid => "solid",
     }
 }

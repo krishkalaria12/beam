@@ -5,10 +5,7 @@ export type UiStylePreference = "default" | "glassy" | "solid";
 export const DEFAULT_BASE_COLOR = "#101113";
 
 export function normalizeUiStyle(value: string | null | undefined): UiStylePreference {
-  const normalized = String(value || "")
-    .trim()
-    .toLowerCase();
-  if (normalized === "glassy") return "glassy";
+  const normalized = String(value || "").trim().toLowerCase();
   if (normalized === "solid") return "solid";
   return "solid";
 }
