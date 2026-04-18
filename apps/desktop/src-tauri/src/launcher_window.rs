@@ -1,4 +1,4 @@
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicI32, Ordering};
 use std::time::Duration;
 
 use tauri::{AppHandle, LogicalSize, Manager, PhysicalPosition, Position, Size, WebviewWindow};
@@ -8,9 +8,44 @@ const LAUNCHER_EXPANDED_HEIGHT: f64 = 520.0;
 const LAUNCHER_COMPACT_HEIGHT: f64 = 60.0;
 static LAUNCHER_HAS_BEEN_SHOWN: AtomicBool = AtomicBool::new(false);
 static LAUNCHER_LAYER_SHELL_ACTIVE: AtomicBool = AtomicBool::new(false);
+static LAUNCHER_LAYER_SHELL_WIDTH: AtomicI32 = AtomicI32::new(LAUNCHER_WIDTH as i32);
+static LAUNCHER_LAYER_SHELL_HEIGHT: AtomicI32 = AtomicI32::new(LAUNCHER_EXPANDED_HEIGHT as i32);
 
 fn launcher_uses_layer_shell() -> bool {
     LAUNCHER_LAYER_SHELL_ACTIVE.load(Ordering::SeqCst)
+}
+
+fn remember_layer_shell_size(width: i32, height: i32) {
+    LAUNCHER_LAYER_SHELL_WIDTH.store(width.max(1), Ordering::SeqCst);
+    LAUNCHER_LAYER_SHELL_HEIGHT.store(height.max(1), Ordering::SeqCst);
+}
+
+fn layer_shell_size() -> (i32, i32) {
+    (
+        LAUNCHER_LAYER_SHELL_WIDTH.load(Ordering::SeqCst).max(1),
+        LAUNCHER_LAYER_SHELL_HEIGHT.load(Ordering::SeqCst).max(1),
+    )
+}
+
+fn layer_shell_physical_size(window: &WebviewWindow) -> Result<(i64, i64), String> {
+    let scale_factor = window
+        .scale_factor()
+        .map_err(|err| format!("failed to read launcher scale factor: {err}"))?;
+    let normalized_scale_factor = if scale_factor.is_finite() && scale_factor > 0.0 {
+        scale_factor
+    } else {
+        1.0
+    };
+    let (logical_width, logical_height) = layer_shell_size();
+
+    Ok((
+        (f64::from(logical_width) * normalized_scale_factor)
+            .round()
+            .max(1.0) as i64,
+        (f64::from(logical_height) * normalized_scale_factor)
+            .round()
+            .max(1.0) as i64,
+    ))
 }
 
 fn focus_launcher_window(window: &WebviewWindow) -> Result<(), String> {
@@ -66,6 +101,7 @@ fn configure_linux_layer_shell_window(window: &WebviewWindow) -> bool {
     gtk_window.set_anchor(Edge::Bottom, false);
     gtk_window.set_size_request(LAUNCHER_WIDTH as i32, LAUNCHER_EXPANDED_HEIGHT as i32);
     gtk_window.resize(1, 1);
+    remember_layer_shell_size(LAUNCHER_WIDTH as i32, LAUNCHER_EXPANDED_HEIGHT as i32);
 
     true
 }
@@ -80,6 +116,8 @@ fn queue_layer_shell_layout_update(
 ) {
     use gtk::prelude::*;
     use gtk_layer_shell::{Edge, LayerShell};
+
+    remember_layer_shell_size(width, height);
 
     let window_handle = window.clone();
     let _ = window.run_on_main_thread(move || {
@@ -352,23 +390,20 @@ fn resolve_target_monitor(window: &WebviewWindow) -> Result<tauri::Monitor, Stri
 pub fn center_launcher_window(window: &WebviewWindow) -> Result<(), String> {
     if launcher_uses_layer_shell() {
         let monitor = resolve_target_monitor(window)?;
-        let outer_size = window
-            .outer_size()
-            .map_err(|err| format!("failed to read launcher outer size: {err}"))?;
+        let (logical_width, logical_height) = layer_shell_size();
+        let (physical_width, physical_height) = layer_shell_physical_size(window)?;
 
         let work_area = monitor.work_area();
         let monitor_position = monitor.position();
         let left_offset = i64::from(work_area.position.x) - i64::from(monitor_position.x);
         let top_offset = i64::from(work_area.position.y) - i64::from(monitor_position.y);
-        let left_margin =
-            left_offset + (i64::from(work_area.size.width) - i64::from(outer_size.width)) / 2;
-        let top_margin =
-            top_offset + (i64::from(work_area.size.height) - i64::from(outer_size.height)) / 2;
+        let left_margin = left_offset + (i64::from(work_area.size.width) - physical_width) / 2;
+        let top_margin = top_offset + (i64::from(work_area.size.height) - physical_height) / 2;
 
         queue_layer_shell_layout_update(
             window,
-            outer_size.width as i32,
-            outer_size.height as i32,
+            logical_width,
+            logical_height,
             Some(clamp_i64_to_i32(left_margin)),
             Some(clamp_i64_to_i32(top_margin)),
         );
