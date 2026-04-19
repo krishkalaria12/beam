@@ -1,8 +1,7 @@
-import { Calculator, Copy, Equal } from "lucide-react";
+import { ArrowRight, Copy } from "lucide-react";
 
 import { CommandItem } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
-import numWords from "@/lib/num-to-words";
 
 function getCalculationKind(query: string) {
   const normalized = query.toLowerCase();
@@ -32,6 +31,25 @@ function getCalculationKind(query: string) {
   return "Result";
 }
 
+function getCalculationLabels(query: string) {
+  const normalized = query.toLowerCase();
+
+  if (
+    normalized.includes(" to ") ||
+    normalized.includes(" in ") ||
+    normalized.includes(" into ") ||
+    normalized.includes(" as ")
+  ) {
+    return { input: "From", result: "To" };
+  }
+
+  if (normalized.includes("time")) {
+    return { input: "From", result: "To" };
+  }
+
+  return { input: "Expression", result: "Result" };
+}
+
 type CalculatorResultItemProps = {
   commandValue: string;
   calculatorQuery: string;
@@ -45,22 +63,12 @@ export function CalculatorResultItem({
   commandValue,
   calculatorQuery,
   calculatorResult,
-  shortcutText,
+  shortcutText: _shortcutText,
   isDisabled,
   onActivate,
 }: CalculatorResultItemProps) {
   const calculationKind = getCalculationKind(calculatorQuery);
-
-  let textRepresentation: string | null = null;
-  try {
-    const cleanValue = calculatorResult.replace(/,/g, "");
-    if (!Number.isNaN(Number(cleanValue))) {
-      const words = numWords(cleanValue);
-      textRepresentation = words.charAt(0).toUpperCase() + words.slice(1);
-    }
-  } catch {
-    // no-op: keep compact card when text conversion fails
-  }
+  const labels = getCalculationLabels(calculatorQuery);
 
   return (
     <CommandItem
@@ -76,70 +84,73 @@ export function CalculatorResultItem({
     >
       <div
         className={cn(
-          "relative w-full overflow-hidden rounded-xl p-5 transition-all duration-200",
-          "bg-[var(--launcher-card-hover-bg)] ring-1 ring-[var(--launcher-card-border)]",
-          "group-data-[selected=true]:bg-[var(--launcher-card-hover-bg)] group-data-[selected=true]:ring-[var(--launcher-card-border)]",
+          "relative w-full overflow-hidden rounded-[22px] border px-5 py-3.5 transition-colors duration-200",
+          "bg-transparent border-[color-mix(in_srgb,var(--launcher-card-border)_70%,transparent)]",
+          "hover:border-[color-mix(in_srgb,var(--launcher-card-selected-border)_52%,transparent)]",
+          "group-data-[selected=true]:border-[color-mix(in_srgb,var(--launcher-card-selected-border)_75%,transparent)]",
         )}
       >
-        {/* Header */}
-        <div className="flex items-center justify-center gap-3 mb-5">
-          <div className="size-6 rounded-lg bg-[var(--launcher-card-bg)] p-1">
-            <Calculator className="size-full text-[var(--icon-orange-fg)]" />
-          </div>
-          <span className="text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-            Calculator
-          </span>
-          <span className="text-launcher-2xs font-medium uppercase tracking-[0.06em] text-muted-foreground">
-            {shortcutText}
-          </span>
-        </div>
+        <div className="relative">
+          <div className="mb-3 flex items-start justify-between gap-4">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <div className="inline-flex h-6 items-center rounded-md border border-[var(--launcher-chip-border)] bg-[var(--launcher-chip-bg)] px-2 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-[var(--icon-orange-fg)] leading-none">
+                {calculationKind}
+              </div>
+            </div>
 
-        {/* Expression and Result */}
-        <div className="flex items-center justify-center gap-4 mb-5">
-          {/* Expression */}
-          <div className="min-w-0 max-w-[40%]">
-            <p className="truncate text-center font-mono text-launcher-3xl font-medium tracking-[-0.01em] text-muted-foreground">
-              {calculatorQuery || "Expression"}
-            </p>
+            <div className="hidden shrink-0 items-center gap-2 text-[0.78rem] font-medium tracking-[-0.01em] text-muted-foreground sm:flex">
+              <Copy className="size-3.5" />
+              <span>Copy result</span>
+            </div>
           </div>
 
-          {/* Equals sign */}
-          <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-[var(--launcher-card-hover-bg)]">
-            <Equal className="size-4 text-muted-foreground" />
+          <div className="pointer-events-none absolute left-1/2 top-1/2 z-10 flex size-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--launcher-chip-border)_80%,transparent)] bg-[color-mix(in_srgb,var(--launcher-chip-bg)_42%,transparent)]">
+            <ArrowRight className="size-[14px] text-muted-foreground/90" />
           </div>
 
-          {/* Result */}
-          <div className="min-w-0 max-w-[40%]">
-            <p className="truncate text-center font-mono text-[calc(var(--beam-font-size-base)*2.4615)] font-bold tracking-[-0.02em] text-foreground">
-              {calculatorResult}
-            </p>
+          <div className="grid min-h-[74px] grid-cols-[minmax(0,1fr)_44px_minmax(0,1fr)] items-start gap-x-2">
+            <div className="min-w-0 text-center">
+              <div className="truncate text-[0.68rem] font-medium uppercase tracking-[0.18em] text-muted-foreground/80">
+                {labels.input}
+              </div>
+              <div
+                className="mx-auto mt-1.5 max-w-[18rem] pt-0.5 pb-1 text-[1.16rem] leading-[1.24] font-medium tracking-[-0.022em] text-[color-mix(in_srgb,var(--foreground)_84%,var(--muted-foreground)_16%)]"
+                style={{
+                  display: "-webkit-box",
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: "vertical",
+                  overflow: "hidden",
+                  textAlign: "center",
+                  whiteSpace: "normal",
+                  overflowWrap: "anywhere",
+                }}
+              >
+                {calculatorQuery || "Expression"}
+              </div>
+            </div>
+
+            <div />
+
+            <div className="min-w-0 text-center">
+              <div className="truncate text-[0.68rem] font-medium uppercase tracking-[0.18em] text-muted-foreground/80">
+                {labels.result}
+              </div>
+              <div
+                className="mx-auto mt-1.5 max-w-[18rem] pt-0.5 pb-1 text-[1.66rem] leading-[1.14] font-semibold tracking-[-0.03em] text-foreground"
+                style={{
+                  display: "-webkit-box",
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: "vertical",
+                  overflow: "hidden",
+                  textAlign: "center",
+                  whiteSpace: "normal",
+                  overflowWrap: "anywhere",
+                }}
+              >
+                {calculatorResult}
+              </div>
+            </div>
           </div>
-        </div>
-
-        {/* Tags */}
-        <div className="flex items-center justify-center gap-2">
-          {/* Calculation kind tag */}
-          <span className="inline-flex items-center rounded-full bg-[var(--icon-orange-bg)] px-2.5 py-1 text-launcher-2xs font-medium text-[var(--icon-orange-fg)]">
-            {calculationKind}
-          </span>
-
-          {/* Text representation tag */}
-          {textRepresentation && (
-            <span className="inline-flex max-w-[200px] items-center truncate rounded-full bg-[var(--launcher-card-hover-bg)] px-2.5 py-1 text-launcher-2xs font-medium text-muted-foreground">
-              {textRepresentation}
-            </span>
-          )}
-
-          {/* Copy hint on selection */}
-          <span
-            className={cn(
-              "inline-flex items-center gap-1 rounded-full bg-[var(--ring)]/15 px-2.5 py-1 text-launcher-2xs font-medium text-[var(--ring)] transition-all duration-200",
-              "opacity-0 scale-95 group-data-[selected=true]:opacity-100 group-data-[selected=true]:scale-100",
-            )}
-          >
-            <Copy className="size-3" />
-            Copy
-          </span>
         </div>
       </div>
     </CommandItem>

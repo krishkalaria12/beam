@@ -4,10 +4,7 @@ import type { LauncherActionItem, LauncherActionSection } from "./types";
 
 export const HOTKEY_EXAMPLE = "CTRL+SUPER+A";
 
-function filterActionItems(
-  items: LauncherActionItem[],
-  query: string,
-): LauncherActionItem[] {
+function filterActionItems(items: LauncherActionItem[], query: string): LauncherActionItem[] {
   const normalized = query.trim().toLowerCase();
   if (normalized.length === 0) {
     return items;

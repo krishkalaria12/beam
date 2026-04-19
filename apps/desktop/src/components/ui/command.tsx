@@ -328,14 +328,4 @@ function CommandShortcut({ className, ...props }: React.ComponentProps<"span">) 
   );
 }
 
-export {
-  Command,
-  
-  CommandInput,
-  CommandList,
-  
-  CommandGroup,
-  CommandItem,
-  CommandShortcut,
-  
-};
+export { Command, CommandInput, CommandList, CommandGroup, CommandItem, CommandShortcut };

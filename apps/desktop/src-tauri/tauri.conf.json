@@ -54,6 +54,9 @@
     "externalBin": ["binaries/beam-data-control-server"],
     "resources": [
       "binaries/extension-manager.cjs",
+      "SoulverWrapper/Vendor/SoulverCore-linux/*",
+      "SoulverWrapper/Vendor/SoulverCore-linux/SoulverCore_SoulverCore.resources",
+      "SoulverWrapper/.build/release/libSoulverWrapper.so",
       "../../../infra/desktop-integrations/gnome-shell/beam@beam-linux",
       "../../../infra/desktop-integrations/udev/70-beam-snippets.rules"
     ],

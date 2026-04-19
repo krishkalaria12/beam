@@ -57,9 +57,7 @@ export function AppCrashScreen({
           <h1 className="text-launcher-xl mb-2 font-semibold tracking-tight text-foreground">
             {title}
           </h1>
-          <p className="text-launcher-sm leading-relaxed text-muted-foreground">
-            {description}
-          </p>
+          <p className="text-launcher-sm leading-relaxed text-muted-foreground">{description}</p>
         </div>
 
         {/* Debug info (dev only) */}

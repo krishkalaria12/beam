@@ -8,7 +8,6 @@ import type { CommandDescriptor, CommandMode } from "@/command-registry/types";
 import type { CommandUsageEntry } from "@/command-registry/command-preferences";
 import { CalculatorResultItem } from "@/modules/calculator/components/calculator-result-item";
 import { useCalculator } from "@/modules/calculator/hooks/use-calculator";
-import { looksLikeCalculationQuery } from "@/modules/calculator/lib/query-match";
 
 type RegistryCommandGroupProps = {
   commands: readonly RankedCommand[];
@@ -58,7 +57,7 @@ export default function RegistryCommandGroup({
   const fallbackPrimaryResult = fallbackCalculatorResult[0] ?? numericFallbackResult;
   const hasFallbackCalculator =
     !providerCalculatorCommand &&
-    looksLikeCalculationQuery(query) &&
+    fallbackCalculatorResponse?.status === "valid" &&
     fallbackPrimaryResult.length > 0;
 
   const hasCalculatorCard =

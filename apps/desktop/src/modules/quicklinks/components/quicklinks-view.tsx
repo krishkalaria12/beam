@@ -194,13 +194,7 @@ export function QuicklinksView({ view, setView, onBack }: QuicklinksViewProps) {
     );
   }
 
-  return (
-    <QuicklinksManageView
-      onBack={handleBack}
-      onCreate={handleCreate}
-      onEdit={handleEdit}
-    />
-  );
+  return <QuicklinksManageView onBack={handleBack} onCreate={handleCreate} onEdit={handleEdit} />;
 }
 
 type QuicklinkCreateFormProps = {
@@ -553,14 +547,16 @@ function QuicklinksManageView({ onBack, onCreate, onEdit }: QuicklinksManageView
     rankedQuicklinks[0] ??
     null;
 
-  const handleDuplicate = useEffectEvent(async (quicklink: Quicklink, allQuicklinks: Quicklink[]) => {
-    await createMutation.mutateAsync({
-      name: buildDuplicateName(quicklink.name, allQuicklinks),
-      keyword: buildDuplicateKeyword(quicklink.keyword, allQuicklinks),
-      url: quicklink.url,
-      icon: quicklink.icon,
-    });
-  });
+  const handleDuplicate = useEffectEvent(
+    async (quicklink: Quicklink, allQuicklinks: Quicklink[]) => {
+      await createMutation.mutateAsync({
+        name: buildDuplicateName(quicklink.name, allQuicklinks),
+        keyword: buildDuplicateKeyword(quicklink.keyword, allQuicklinks),
+        url: quicklink.url,
+        icon: quicklink.icon,
+      });
+    },
+  );
 
   useEffect(() => {
     syncQuicklinksActionsState({

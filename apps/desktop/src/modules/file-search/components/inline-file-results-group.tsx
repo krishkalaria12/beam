@@ -142,7 +142,11 @@ export function InlineFileResultsGroup({
 
       <CommandGroup
         heading="Files"
-        className={isFetching ? "transition-opacity duration-150 opacity-85" : "transition-opacity duration-150"}
+        className={
+          isFetching
+            ? "transition-opacity duration-150 opacity-85"
+            : "transition-opacity duration-150"
+        }
       >
         {visibleResults.map((result) => (
           <BaseCommandRow

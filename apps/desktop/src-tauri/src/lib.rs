@@ -267,6 +267,9 @@ pub fn run(startup_args: Vec<String>) {
                     );
             }
 
+            if let Err(error) = calculator::initialize(&app.handle()) {
+                log::warn!("failed to initialize soulver calculator: {error}");
+            }
             calculator::db::init(&app.handle());
             clipboard::db::init(&app.handle());
             clipboard::start_clipboard_listener(app.handle().clone());

@@ -1,8 +1,7 @@
 const MATH_OR_TIME_PATTERN = /[\d()+\-*/%=]|(^|\s)(to|time|at)(\s|$)/i;
 const DATE_RELATIVE_PATTERN =
   /\b(today|tomorrow|yesterday|tmr|tmrw|yday|date|unix|timestamp|epoch|weekend)\b/i;
-const DATE_WEEKDAY_PATTERN =
-  /\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/i;
+const DATE_WEEKDAY_PATTERN = /\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/i;
 const DATE_PHRASE_PATTERN =
   /\b(next|last|this|coming|upcoming)\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday|week|month|year|weekend)\b/i;
 const DATE_DURATION_PATTERN =

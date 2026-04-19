@@ -251,7 +251,8 @@ export function ScriptCommandsView({ onBack }: ScriptCommandsViewProps) {
   const scripts = scriptsQuery.data ?? [];
   const normalizedSearch = state.search.trim().toLowerCase();
   const getSearchableText = useCallback(
-    (script: ScriptCommandSummary) => `${script.scriptName} ${script.scriptPath} ${script.subtitle}`,
+    (script: ScriptCommandSummary) =>
+      `${script.scriptName} ${script.scriptPath} ${script.subtitle}`,
     [],
   );
 

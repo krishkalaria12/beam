@@ -93,11 +93,7 @@ export function useRecentEmojis(isOpen: boolean) {
   return { recentEmojis, saveEmoji };
 }
 
-function useFilteredEmojis(
-  emojis: EmojiData[],
-  searchValue: string,
-  selectedCategory: string,
-) {
+function useFilteredEmojis(emojis: EmojiData[], searchValue: string, selectedCategory: string) {
   return useMemo(() => {
     let filtered = emojis;
 

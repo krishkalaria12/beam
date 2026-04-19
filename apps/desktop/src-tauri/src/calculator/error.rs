@@ -5,6 +5,9 @@ pub type Result<T> = std::result::Result<T, CalculatorError>;
 
 #[derive(Debug, Clone, Error)]
 pub enum CalculatorError {
+    #[error("calculator configuration error: {0}")]
+    Configuration(String),
+
     #[error("calculator app local data directory unavailable")]
     AppDataDirUnavailable,
 
@@ -20,8 +23,11 @@ pub enum CalculatorError {
     #[error("calculator database error: {0}")]
     Database(String),
 
-    #[error("Calculator evaluation failed: {0}")]
-    EvaluationFailed(String),
+    #[error("soulver evaluation failed: {0}")]
+    Soulver(String),
+
+    #[error("smart calculator evaluation failed: {0}")]
+    SmartCalculator(String),
 }
 
 impl Serialize for CalculatorError {

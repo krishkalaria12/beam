@@ -118,10 +118,7 @@ function getInlineMatchScore(entry: FileEntry, rawQuery: string): number {
     return buildPublicScore(11, 999);
   }
 
-  if (
-    tokenExactMatch(normalizedName, queryParts) ||
-    tokenExactMatch(normalizedStem, queryParts)
-  ) {
+  if (tokenExactMatch(normalizedName, queryParts) || tokenExactMatch(normalizedStem, queryParts)) {
     return buildPublicScore(10, closenessBonus([...normalizedStem].length, queryLength));
   }
 

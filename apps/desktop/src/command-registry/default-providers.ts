@@ -1,11 +1,12 @@
 import type { CommandDescriptor, CommandProvider } from "@/command-registry/types";
 import { getTriggerSymbol, QUICKLINK_TRIGGER_MODE } from "@/command-registry/trigger-registry";
 import { searchApplications } from "@/modules/applications/api/search-applications";
-import { calculateExpression } from "@/modules/calculator/api/calculate-expression";
+import { warmCalculatorData } from "@/modules/calculator/api/query";
 import { findQuicklinkByKeyword, getQuicklinks } from "@/modules/quicklinks/api/quicklinks";
 import { createExtensionCommandProvider } from "@/modules/extensions/extension-command-provider";
 import { createExtensionStoreProvider } from "@/modules/extensions/extension-store-provider";
 import { createScriptCommandsProvider } from "@/modules/script-commands/script-commands-provider";
+import { queryClient } from "@/providers/query-provider";
 
 const PROVIDER_SCOPE: ReadonlyArray<"normal" | "compressed"> = ["normal", "compressed"];
 const QUICKLINK_SCOPE: ReadonlyArray<typeof QUICKLINK_TRIGGER_MODE> = [QUICKLINK_TRIGGER_MODE];
@@ -154,7 +155,7 @@ function createCalculatorCommandProvider(): CommandProvider {
         return [];
       }
 
-      const result = await calculateExpression(normalizedQuery);
+      const result = await warmCalculatorData(queryClient, normalizedQuery);
       if (!result || signal.aborted || result.status !== "valid") {
         return [];
       }

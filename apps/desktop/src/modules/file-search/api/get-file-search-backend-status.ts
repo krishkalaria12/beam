@@ -4,13 +4,18 @@ import { z } from "zod";
 const fileSearchBackendStatusSchema = z.object({
   backend: z.string().default("native"),
   dsearch_available: z.boolean().default(false),
-  install_url: z.string().trim().nullable().optional().transform((value) => {
-    if (!value) {
-      return null;
-    }
+  install_url: z
+    .string()
+    .trim()
+    .nullable()
+    .optional()
+    .transform((value) => {
+      if (!value) {
+        return null;
+      }
 
-    return value.length > 0 ? value : null;
-  }),
+      return value.length > 0 ? value : null;
+    }),
 });
 
 export type FileSearchBackendStatus = z.infer<typeof fileSearchBackendStatusSchema>;

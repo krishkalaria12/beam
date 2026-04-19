@@ -75,4 +75,4 @@ function ButtonGroupSeparator({
   );
 }
 
-export { ButtonGroup,  ButtonGroupText,  };
+export { ButtonGroup, ButtonGroupText };

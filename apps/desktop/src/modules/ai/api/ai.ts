@@ -136,9 +136,7 @@ export async function clearAiChatHistory(conversationId?: string): Promise<void>
   }
 }
 
-async function getAiTokenUsageSummary(
-  conversationId?: string,
-): Promise<AiTokenUsageSummary> {
+async function getAiTokenUsageSummary(conversationId?: string): Promise<AiTokenUsageSummary> {
   assertAiDesktopRuntime();
 
   try {

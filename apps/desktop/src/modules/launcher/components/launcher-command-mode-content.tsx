@@ -1,5 +1,6 @@
 import { useMemo, useRef, type RefObject } from "react";
 
+import { CALCULATOR_RESULT_COMMAND_ID } from "@/command-registry/default-providers";
 import RegistryCommandGroup from "@/command-registry/components/registry-command-group";
 import type { CommandUsageEntry } from "@/command-registry/command-preferences";
 import type { CommandContext, CommandDescriptor } from "@/command-registry/types";
@@ -71,6 +72,9 @@ export function LauncherCommandModeContent({
     commandContext.activePanel === "commands" &&
     (commandContext.mode === "normal" || commandContext.mode === "compressed") &&
     commandContext.query.trim().length > 0;
+  const shouldShowCalculatorFirst = rankedRegistryCommands.some(
+    (entry) => entry.command.id === CALCULATOR_RESULT_COMMAND_ID,
+  );
   const selectionSyncKey = useMemo(
     () =>
       [
@@ -90,6 +94,12 @@ export function LauncherCommandModeContent({
       rankedRegistryCommands,
     ],
   );
+  const inlineFileResults = shouldShowInlineFiles ? (
+    <InlineFileResultsGroup
+      query={commandContext.query}
+      onPrimaryCommandValueChange={onPrimaryCommandValueChange}
+    />
+  ) : null;
 
   return (
     <div ref={contentRef} className="pb-1">
@@ -109,12 +119,7 @@ export function LauncherCommandModeContent({
         />
       ) : null}
 
-      {shouldShowInlineFiles ? (
-        <InlineFileResultsGroup
-          query={commandContext.query}
-          onPrimaryCommandValueChange={onPrimaryCommandValueChange}
-        />
-      ) : null}
+      {!shouldShowCalculatorFirst ? inlineFileResults : null}
 
       <RegistryCommandGroup
         commands={rankedRegistryCommands}
@@ -130,6 +135,7 @@ export function LauncherCommandModeContent({
         usageById={usageById}
         onSetPinned={onSetPinned}
       />
+      {shouldShowCalculatorFirst ? inlineFileResults : null}
     </div>
   );
 }

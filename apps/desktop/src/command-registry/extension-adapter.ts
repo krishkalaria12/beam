@@ -67,9 +67,7 @@ function normalizeKeywords(title: string, keywords?: readonly string[]): readonl
   return [...all];
 }
 
-function toExtensionCommandDescriptor(
-  metadata: ExtensionCommandMetadata,
-): CommandDescriptor {
+function toExtensionCommandDescriptor(metadata: ExtensionCommandMetadata): CommandDescriptor {
   const extensionSegment = normalizeSegment(metadata.extensionId);
   const commandSegment = normalizeSegment(metadata.commandId);
 
