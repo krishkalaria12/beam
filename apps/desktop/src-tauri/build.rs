@@ -87,6 +87,7 @@ fn patch_wrapper_rpath(path: &Path) {
         .collect();
 
     for required in [
+        "$ORIGIN/swift-linux",
         "$ORIGIN/../../Vendor/SoulverCore-linux",
         "$ORIGIN/../../../Vendor/SoulverCore-linux",
     ] {
@@ -116,6 +117,62 @@ fn patch_wrapper_rpath(path: &Path) {
             );
         }
     }
+}
+
+fn swift_runtime_dir_from_bin(swift_bin: &Path) -> Option<PathBuf> {
+    let usr_dir = swift_bin.parent()?.parent()?;
+    let runtime_dir = usr_dir.join("lib").join("swift").join("linux");
+    runtime_dir.is_dir().then_some(runtime_dir)
+}
+
+fn resolve_swift_runtime_dir(swift_bin: &str) -> Result<PathBuf, Box<dyn Error>> {
+    let swift_bin_path = PathBuf::from(swift_bin);
+    if swift_bin_path.components().count() > 1 {
+        if let Some(runtime_dir) = swift_runtime_dir_from_bin(&swift_bin_path) {
+            return Ok(runtime_dir);
+        }
+    }
+
+    if let Ok(output) = Command::new("which").arg(swift_bin).output() {
+        if output.status.success() {
+            let resolved = String::from_utf8_lossy(&output.stdout).trim().to_string();
+            if !resolved.is_empty() {
+                if let Some(runtime_dir) = swift_runtime_dir_from_bin(Path::new(&resolved)) {
+                    return Ok(runtime_dir);
+                }
+            }
+        }
+    }
+
+    let bundled_runtime_dir = Path::new("/opt/swift-6.1.2/usr/lib/swift/linux");
+    if bundled_runtime_dir.is_dir() {
+        return Ok(bundled_runtime_dir.to_path_buf());
+    }
+
+    Err(format!("failed to locate Swift runtime libraries for {swift_bin}").into())
+}
+
+fn copy_swift_runtime(
+    swift_runtime_dir: &Path,
+    destination_dir: &Path,
+) -> Result<(), Box<dyn Error>> {
+    fs::create_dir_all(destination_dir)?;
+
+    for entry in fs::read_dir(swift_runtime_dir)? {
+        let entry = entry?;
+        let path = entry.path();
+        let Some(file_name) = path.file_name() else {
+            continue;
+        };
+        let file_name = file_name.to_string_lossy();
+        if !file_name.starts_with("lib") || !file_name.contains(".so") {
+            continue;
+        }
+
+        fs::copy(&path, destination_dir.join(file_name.as_ref()))?;
+    }
+
+    Ok(())
 }
 
 fn resolve_swift_bin() -> String {
@@ -155,6 +212,7 @@ fn configure_soulver_wrapper() -> Result<(), Box<dyn Error>> {
         return Ok(());
     }
 
+    let swift_runtime_dir = resolve_swift_runtime_dir(&swift_bin)?;
     let status = Command::new(&swift_bin)
         .arg("build")
         .arg("-c")
@@ -193,6 +251,14 @@ fn configure_soulver_wrapper() -> Result<(), Box<dyn Error>> {
 
     let wrapper_release_dir = wrapper_dir.join(".build").join("release");
     let wrapper_target_release_dir = wrapper_dir.join(".build").join(&target).join("release");
+    let bundled_runtime_dir = wrapper_release_dir.join("swift-linux");
+    let bundled_target_runtime_dir = wrapper_target_release_dir.join("swift-linux");
+
+    copy_swift_runtime(&swift_runtime_dir, &bundled_runtime_dir)?;
+    if bundled_target_runtime_dir != bundled_runtime_dir {
+        copy_swift_runtime(&swift_runtime_dir, &bundled_target_runtime_dir)?;
+    }
+
     let wrapper_release_lib = wrapper_release_dir.join("libSoulverWrapper.so");
     let wrapper_target_lib = wrapper_target_release_dir.join("libSoulverWrapper.so");
 

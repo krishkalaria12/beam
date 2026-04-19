@@ -57,6 +57,7 @@
       "SoulverWrapper/Vendor/SoulverCore-linux/*",
       "SoulverWrapper/Vendor/SoulverCore-linux/SoulverCore_SoulverCore.resources",
       "SoulverWrapper/.build/release/libSoulverWrapper.so",
+      "SoulverWrapper/.build/release/swift-linux/*",
       "../../../infra/desktop-integrations/gnome-shell/beam@beam-linux",
       "../../../infra/desktop-integrations/udev/70-beam-snippets.rules"
     ],
