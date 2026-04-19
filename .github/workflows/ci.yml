@@ -8,7 +8,7 @@ on:
 
 jobs:
   checks:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: checkout
@@ -65,5 +65,5 @@ jobs:
       - name: build desktop frontend
         run: bun run desktop:frontend:build
 
-      - name: cargo check
-        run: cargo check --manifest-path apps/desktop/src-tauri/Cargo.toml --locked
+      - name: cargo build
+        run: cargo build --manifest-path apps/desktop/src-tauri/Cargo.toml --locked
