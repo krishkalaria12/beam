@@ -12,7 +12,7 @@ type Options = {
   version?: string;
   assetUrl?: string;
   assetSha256?: string;
-  pkgrel: string;
+  pkgrel?: string;
 };
 
 type AssetInfo = {
@@ -56,7 +56,6 @@ function parseArgs(argv: string[]): Options {
   const options: Options = {
     repoDir: "",
     githubRepo: "krishkalaria12/beam",
-    pkgrel: "1",
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -133,6 +132,54 @@ function sha256ForFile(filePath: string): string {
 
 function normalizeVersion(input: string): string {
   return input.startsWith("v") ? input.slice(1) : input;
+}
+
+function parseExistingPkgbuildMetadata(repoDir: string): {
+  version: string | null;
+  pkgrel: number | null;
+  assetSha256: string | null;
+} {
+  const pkgbuildPath = path.join(repoDir, "PKGBUILD");
+  if (!existsSync(pkgbuildPath)) {
+    return {
+      version: null,
+      pkgrel: null,
+      assetSha256: null,
+    };
+  }
+
+  const contents = readFileSync(pkgbuildPath, "utf8");
+  const versionMatch = contents.match(/^pkgver=(.+)$/m);
+  const pkgrelMatch = contents.match(/^pkgrel=(\d+)$/m);
+  const assetShaMatch = contents.match(/sha256sums=\(\s*\n\s*'([0-9a-f]{64})'/m);
+
+  return {
+    version: versionMatch?.[1]?.trim() ?? null,
+    pkgrel: pkgrelMatch ? Number.parseInt(pkgrelMatch[1], 10) : null,
+    assetSha256: assetShaMatch?.[1] ?? null,
+  };
+}
+
+function resolvePkgrel(options: Options, repoDir: string, version: string, assetSha256: string): string {
+  if (typeof options.pkgrel === "string" && options.pkgrel.length > 0) {
+    return options.pkgrel;
+  }
+
+  const existing = parseExistingPkgbuildMetadata(repoDir);
+  if (
+    existing.version === version &&
+    typeof existing.pkgrel === "number" &&
+    existing.pkgrel > 0 &&
+    existing.assetSha256 !== null
+  ) {
+    if (existing.assetSha256 === assetSha256) {
+      return String(existing.pkgrel);
+    }
+
+    return String(existing.pkgrel + 1);
+  }
+
+  return "1";
 }
 
 async function fetchReleaseAsset(options: Options): Promise<AssetInfo> {
@@ -301,10 +348,11 @@ async function main() {
   const desktopSha256 = sha256ForFile(outputDesktopPath);
   const iconSha256 = sha256ForFile(outputIconPath);
   const licenseSha256 = sha256ForFile(outputLicensePath);
+  const pkgrel = resolvePkgrel(options, repoDir, version, asset.sha256);
 
   const templateArgs = {
     version,
-    pkgrel: options.pkgrel,
+    pkgrel,
     assetUrl: asset.url,
     assetSha256: asset.sha256,
     desktopSha256,
