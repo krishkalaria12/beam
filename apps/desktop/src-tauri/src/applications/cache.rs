@@ -1,3 +1,5 @@
+use chrono::Utc;
+use chrono_tz::UTC;
 use futures_util::future;
 use log::warn;
 use notify_debouncer_mini::{
@@ -73,7 +75,7 @@ fn write_backup_applications(
 ) -> Result<()> {
     let app_json = serde_json::to_value(applications)
         .map_err(|e| ApplicationsError::SerializationError(e.to_string()))?;
-    let current_time = serde_json::to_value(jiff::Timestamp::now().as_second())
+    let current_time = serde_json::to_value(Utc::now().with_timezone(&UTC).timestamp())
         .map_err(|e| ApplicationsError::SerializationError(e.to_string()))?;
 
     store.set(APPLICATIONS_CONFIG.cache_key, app_json);

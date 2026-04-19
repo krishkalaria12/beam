@@ -1,6 +1,7 @@
+use chrono::{DateTime, Utc};
+use chrono_tz::UTC;
 use std::{path::Path, time::SystemTime};
 
-use jiff::Timestamp;
 use walkdir::DirEntry;
 
 use super::super::types::FileEntry;
@@ -17,9 +18,10 @@ fn is_ignored_name(value: &str) -> bool {
 }
 
 pub fn get_file_time(std_time: SystemTime) -> u64 {
-    Timestamp::try_from(std_time)
-        .map(|t| t.as_second() as u64)
-        .unwrap_or(0)
+    DateTime::<Utc>::from(std_time)
+        .with_timezone(&UTC)
+        .timestamp()
+        .max(0) as u64
 }
 
 pub fn is_ignored(entry: &DirEntry) -> bool {

@@ -1,4 +1,5 @@
-use jiff::Timestamp;
+use chrono::Utc;
+use chrono_tz::UTC;
 use rkyv::Deserialize;
 use std::{
     collections::HashMap,
@@ -14,7 +15,7 @@ pub fn save_files_to_cache(file_entries: HashMap<String, FileEntry>) -> Result<(
     let filename = get_cache_dir()?.join("output.bin");
 
     let file_index = FileIndex {
-        built_at: Timestamp::now().as_second() as u64,
+        built_at: Utc::now().with_timezone(&UTC).timestamp() as u64,
         entries: file_entries,
     };
 
@@ -70,7 +71,7 @@ pub fn is_cache_older_than_24_hours() -> Result<bool> {
     let archived = rkyv::check_archived_root::<FileIndex>(&buffer)
         .map_err(|e| IndexerError::ErrorValidatingCache(e.to_string()))?;
 
-    let now = Timestamp::now().as_second() as u64;
+    let now = Utc::now().with_timezone(&UTC).timestamp() as u64;
     let built_at = archived.built_at;
     let one_day_seconds = 86400;
 
