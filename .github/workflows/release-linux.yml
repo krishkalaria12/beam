@@ -51,13 +51,12 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: build linux bundles
-        run: bun run --cwd apps/desktop desktop:build -- --bundles appimage,deb,rpm
+        run: bun run --cwd apps/desktop desktop:build -- --bundles deb,rpm
 
       - name: collect release artifacts
         run: |
           bundle_dir="target/rust/release/bundle"
           mkdir -p release-assets
-          cp "$bundle_dir"/appimage/*.AppImage release-assets/
           cp "$bundle_dir"/deb/*.deb release-assets/
           cp "$bundle_dir"/rpm/*.rpm release-assets/
           cd release-assets
