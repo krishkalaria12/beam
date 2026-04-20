@@ -224,7 +224,7 @@ pub fn run(startup_args: Vec<String>) {
 
             if let WindowEvent::CloseRequested { api, .. } = event {
                 api.prevent_close();
-                let _ = window.hide();
+                let _ = launcher_window::hide_main_launcher_window(&window.app_handle());
             }
         })
         .invoke_handler(app_commands::get_handler());

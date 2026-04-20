@@ -88,6 +88,7 @@ pub fn get_handler() -> impl Fn(Invoke) -> bool {
         launcher_window::set_launcher_compact_mode_for_resize_transition,
         launcher_window::set_launcher_window_size_for_resize_transition,
         launcher_window::hide_launcher_window_for_resize_transition,
+        launcher_window::hide_launcher_window,
         launcher_window::reveal_launcher_window_after_resize_transition,
         launcher_shell::execute_shell_command,
         menu_bar::menu_bar_upsert_tray,

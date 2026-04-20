@@ -103,9 +103,8 @@ pub fn hyprwhspr_record(
         hide_window.unwrap_or(true) && !matches!(action, HyprWhsprRecordAction::Status);
 
     if should_hide_window {
-        window
-            .hide()
-            .map_err(|error| HyprWhsprError::HideWindowFailed(error.to_string()))?;
+        crate::launcher_window::hide_launcher_window_with_reset(&window)
+            .map_err(HyprWhsprError::HideWindowFailed)?;
     }
 
     Ok(output)

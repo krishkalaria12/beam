@@ -1,7 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { isTauri } from "@tauri-apps/api/core";
+import { invoke, isTauri } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
-import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -90,6 +89,8 @@ interface HotkeyBackendStatusEventPayload {
   source?: string;
 }
 
+const LAUNCHER_RESET_TO_MAIN_EVENT = "launcher-reset-to-main";
+
 function isLauncherCloseHotkey(event: {
   key: string;
   metaKey: boolean;
@@ -127,6 +128,7 @@ export default function LauncherCommand() {
   const rawOpenDictionary = useLauncherUiStore((state) => state.openDictionary);
   const rawOpenTranslation = useLauncherUiStore((state) => state.openTranslation);
   const rawBackToCommands = useLauncherUiStore((state) => state.backToCommands);
+  const resetToMainScreen = useLauncherUiStore((state) => state.resetToMainScreen);
 
   const { data: quicklinks = [] } = useQuicklinks();
   const quicklinkAliasesById = useManagedItemPreferencesStore((state) => state.aliasesById);
@@ -264,7 +266,7 @@ export default function LauncherCommand() {
       return;
     }
 
-    await getCurrentWindow().hide();
+    await invoke("hide_launcher_window");
   }, []);
 
   const transitionSetActivePanel = useCallback(
@@ -664,6 +666,36 @@ export default function LauncherCommand() {
 
     void listen<HotkeyCommandEventPayload>(HOTKEY_COMMAND_EVENT, (event) => {
       handleHotkeyCommand(event);
+    })
+      .then((cleanup) => {
+        if (disposed) {
+          cleanup();
+          return;
+        }
+        unlistenFn = cleanup;
+      })
+      .catch(() => {
+        unlistenFn = null;
+      });
+
+    return () => {
+      disposed = true;
+      unlistenFn?.();
+    };
+  });
+
+  useMountEffect(() => {
+    if (!isTauri()) {
+      return;
+    }
+
+    let disposed = false;
+    let unlistenFn: UnlistenFn | null = null;
+
+    void listen(LAUNCHER_RESET_TO_MAIN_EVENT, () => {
+      resetToMainScreen();
+      setSelectedCommandValue("");
+      clearFileSearchActionsState();
     })
       .then((cleanup) => {
         if (disposed) {

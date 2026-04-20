@@ -1,4 +1,4 @@
-import { getCurrentWindow } from "@tauri-apps/api/window";
+import { invoke, isTauri } from "@tauri-apps/api/core";
 import { useDeferredValue, useMemo, useRef, useState, startTransition, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 
@@ -105,9 +105,9 @@ export default function DmenuCommandGroup() {
     await completeCliDmenuRequest(payload);
     const shouldHideWindow = dmenuSession?.restoreWindowHidden === true;
     closeDmenuSession();
-    if (shouldHideWindow) {
+    if (shouldHideWindow && isTauri()) {
       try {
-        await getCurrentWindow().hide();
+        await invoke("hide_launcher_window");
       } catch {
         // Ignore desktop runtime failures during teardown.
       }

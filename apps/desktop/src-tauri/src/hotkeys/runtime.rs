@@ -117,7 +117,7 @@ pub fn toggle_launcher(app: &AppHandle) {
     let is_focused = main_window.is_focused().unwrap_or(false);
 
     if is_visible && is_focused {
-        let _ = main_window.hide();
+        let _ = crate::launcher_window::hide_main_launcher_window(app);
         return;
     }
 

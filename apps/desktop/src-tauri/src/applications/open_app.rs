@@ -32,10 +32,8 @@ pub fn open_application(window: Window, exec_path: String) -> Result<()> {
         .spawn()
         .map_err(|e| ApplicationsError::LaunchingApplicationError(e.to_string()))?;
 
-    // Hide the window
-    window
-        .hide()
-        .map_err(|e| ApplicationsError::HidingWindowApplicationError(e.to_string()))?;
+    crate::launcher_window::hide_launcher_window_with_reset(&window)
+        .map_err(ApplicationsError::HidingWindowApplicationError)?;
 
     Ok(())
 }

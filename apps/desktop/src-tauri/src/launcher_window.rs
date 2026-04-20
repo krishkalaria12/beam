@@ -1,7 +1,12 @@
 use std::sync::atomic::{AtomicBool, AtomicI32, Ordering};
 use std::time::Duration;
 
-use tauri::{AppHandle, LogicalSize, Manager, PhysicalPosition, Position, Size, WebviewWindow};
+use tauri::{
+    AppHandle, Emitter, LogicalSize, Manager, PhysicalPosition, Position, Size, WebviewWindow,
+    Window,
+};
+
+pub const LAUNCHER_RESET_TO_MAIN_EVENT: &str = "launcher-reset-to-main";
 
 const LAUNCHER_WIDTH: f64 = 960.0;
 const LAUNCHER_EXPANDED_HEIGHT: f64 = 520.0;
@@ -253,6 +258,33 @@ fn hide_for_resize_transition(window: &WebviewWindow) -> Result<(), String> {
     window
         .hide()
         .map_err(|err| format!("failed to hide launcher for resize transition: {err}"))
+}
+
+fn emit_launcher_reset_to_main_window(window: &WebviewWindow) {
+    let _ = window.emit(LAUNCHER_RESET_TO_MAIN_EVENT, ());
+}
+
+pub fn hide_launcher_window_with_reset(window: &Window) -> Result<(), String> {
+    let _ = window.emit(LAUNCHER_RESET_TO_MAIN_EVENT, ());
+    window
+        .hide()
+        .map_err(|err| format!("failed to hide launcher: {err}"))
+}
+
+pub fn hide_main_launcher_window(app: &AppHandle) -> Result<(), String> {
+    let Some(window) = app.get_webview_window("main") else {
+        return Err("main window not found".to_string());
+    };
+
+    emit_launcher_reset_to_main_window(&window);
+    window
+        .hide()
+        .map_err(|err| format!("failed to hide launcher: {err}"))
+}
+
+#[tauri::command]
+pub fn hide_launcher_window(window: Window) -> Result<(), String> {
+    hide_launcher_window_with_reset(&window)
 }
 
 fn show_after_resize_transition(window: &WebviewWindow) -> Result<(), String> {

@@ -284,9 +284,8 @@ pub fn execute_quicklink(
         open::that(path).map_err(|e| QuicklinkError::OpenTargetError(e.to_string()))?;
     }
 
-    window
-        .hide()
-        .map_err(|e| QuicklinkError::HideWindowError(e.to_string()))?;
+    crate::launcher_window::hide_launcher_window_with_reset(&window)
+        .map_err(QuicklinkError::HideWindowError)?;
 
     Ok(())
 }

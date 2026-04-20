@@ -18,9 +18,8 @@ pub fn search_with_browser(window: Window, site: String, query: String) -> Resul
         ));
     }
 
-    window
-        .hide()
-        .map_err(|e| SearchError::HidingWindowApplicationError(e.to_string()))?;
+    crate::launcher_window::hide_launcher_window_with_reset(&window)
+        .map_err(SearchError::HidingWindowApplicationError)?;
 
     Ok(())
 }

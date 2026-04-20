@@ -64,6 +64,7 @@ interface LauncherUiState {
   openDmenuSession(session: DmenuSession): void;
   closeDmenuSession(): void;
   backToCommands(): void;
+  resetToMainScreen(): void;
 }
 
 function createSnapshot(state: {
@@ -94,6 +95,23 @@ function nextCommandSearchSessionSeed(
   return nextSearch.trim().length === 0 && previousSearch.trim().length > 0
     ? previousSeed + 1
     : previousSeed;
+}
+
+function createCommandsResetState(
+  state: Pick<LauncherUiState, "commandSearch" | "commandSearchSessionSeed">,
+) {
+  return {
+    activePanel: "commands" as const,
+    commandSearch: "",
+    commandSearchSessionSeed: nextCommandSearchSessionSeed(
+      state.commandSearch,
+      "",
+      state.commandSearchSessionSeed,
+    ),
+    dmenuSession: null,
+    dmenuQuery: "",
+    dmenuSnapshot: null,
+  };
 }
 
 export const useLauncherUiStore = create<LauncherUiState>((set) => ({
@@ -156,18 +174,7 @@ export const useLauncherUiStore = create<LauncherUiState>((set) => ({
     set((state) => {
       const snapshot = state.dmenuSnapshot;
       if (!snapshot) {
-        return {
-          activePanel: "commands" as CommandPanel,
-          commandSearch: "",
-          commandSearchSessionSeed: nextCommandSearchSessionSeed(
-            state.commandSearch,
-            "",
-            state.commandSearchSessionSeed,
-          ),
-          dmenuSession: null,
-          dmenuQuery: "",
-          dmenuSnapshot: null,
-        };
+        return createCommandsResetState(state);
       }
 
       return {
@@ -183,18 +190,14 @@ export const useLauncherUiStore = create<LauncherUiState>((set) => ({
         dmenuSnapshot: null,
       };
     }),
-  backToCommands: () =>
+  backToCommands: () => set((state) => createCommandsResetState(state)),
+  resetToMainScreen: () =>
     set((state) => ({
-      activePanel: "commands",
-      commandSearch: "",
-      commandSearchSessionSeed: nextCommandSearchSessionSeed(
-        state.commandSearch,
-        "",
-        state.commandSearchSessionSeed,
-      ),
-      dmenuSession: null,
-      dmenuQuery: "",
-      dmenuSnapshot: null,
+      ...createCommandsResetState(state),
+      fileSearchQuery: "",
+      dictionaryQuery: "",
+      translationQuery: "",
+      quicklinksView: "manage",
     })),
 }));
 
