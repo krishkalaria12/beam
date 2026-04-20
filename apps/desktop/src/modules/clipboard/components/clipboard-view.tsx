@@ -1,10 +1,7 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef } from "react";
 
 import debounce from "@/lib/debounce";
-import {
-  useManagedItemPreferencesStore,
-  useManagedItemRankedGroups,
-} from "@/modules/launcher/managed-items";
+import { useManagedItemPreferencesStore } from "@/modules/launcher/managed-items";
 import {
   clearClipboardActionsState,
   syncClipboardActionsState,
@@ -56,6 +53,44 @@ const INITIAL_CLIPBOARD_VIEW_STATE: ClipboardViewState = {
   copyError: null,
 };
 
+function compareClipboardEntriesByCopiedAtDesc(
+  left: Pick<ClipboardHistoryEntry, "copied_at" | "value">,
+  right: Pick<ClipboardHistoryEntry, "copied_at" | "value">,
+): number {
+  const leftTimestamp = Date.parse(left.copied_at);
+  const rightTimestamp = Date.parse(right.copied_at);
+
+  if (Number.isFinite(leftTimestamp) && Number.isFinite(rightTimestamp)) {
+    const timestampDifference = rightTimestamp - leftTimestamp;
+    if (timestampDifference !== 0) {
+      return timestampDifference;
+    }
+  }
+
+  const copiedAtFallback = right.copied_at.localeCompare(left.copied_at);
+  if (copiedAtFallback !== 0) {
+    return copiedAtFallback;
+  }
+
+  return right.value.localeCompare(left.value);
+}
+
+function getClipboardSearchText(entry: ClipboardHistoryEntry): string {
+  if (entry.content_type === ClipboardContentType.Image) {
+    return "image screenshot clipboard";
+  }
+
+  return `${entry.value}\n${entry.content_type}`;
+}
+
+function matchesClipboardQuery(entry: ClipboardHistoryEntry, normalizedQuery: string): boolean {
+  if (!normalizedQuery) {
+    return true;
+  }
+
+  return getClipboardSearchText(entry).toLowerCase().includes(normalizedQuery);
+}
+
 function clipboardViewReducer(
   state: ClipboardViewState,
   action: ClipboardViewAction,
@@ -104,35 +139,36 @@ export function ClipboardView({ isActive, onBack, onToggleActions }: ClipboardVi
         : history.filter((entry) => entry.content_type === state.typeFilter),
     [history, state.typeFilter],
   );
+  const chronologicallySortedHistory = useMemo(
+    () => [...filteredByType].sort(compareClipboardEntriesByCopiedAtDesc),
+    [filteredByType],
+  );
   const pinnedEntries = useMemo(
     () =>
-      filteredByType.filter((entry) =>
+      chronologicallySortedHistory.filter((entry) =>
         pinnedEntryIdSet.has(
           buildClipboardPinnedEntryId({ copiedAt: entry.copied_at, value: entry.value }),
         ),
       ),
-    [filteredByType, pinnedEntryIdSet],
+    [chronologicallySortedHistory, pinnedEntryIdSet],
   );
   const unpinnedEntries = useMemo(
     () =>
-      filteredByType.filter(
+      chronologicallySortedHistory.filter(
         (entry) =>
           !pinnedEntryIdSet.has(
             buildClipboardPinnedEntryId({ copiedAt: entry.copied_at, value: entry.value }),
           ),
       ),
-    [filteredByType, pinnedEntryIdSet],
+    [chronologicallySortedHistory, pinnedEntryIdSet],
   );
-  const filteredHistory = useManagedItemRankedGroups({
-    groups: [pinnedEntries, unpinnedEntries],
-    query: state.debouncedQuery,
-    getManagedItem: toManagedClipboardItem,
-    getSearchableText: (entry) =>
-      entry.content_type === ClipboardContentType.Image
-        ? "image screenshot clipboard"
-        : entry.value.slice(0, 4096),
-    compareFallback: (left, right) => right.copied_at.localeCompare(left.copied_at),
-  });
+  const filteredHistory = useMemo(() => {
+    const normalizedQuery = state.debouncedQuery.trim().toLowerCase();
+
+    return [...pinnedEntries, ...unpinnedEntries].filter((entry) =>
+      matchesClipboardQuery(entry, normalizedQuery),
+    );
+  }, [pinnedEntries, state.debouncedQuery, unpinnedEntries]);
   const getEntryId = useCallback(
     (entry: ClipboardHistoryEntry) =>
       buildClipboardPinnedEntryId({ copiedAt: entry.copied_at, value: entry.value }),
