@@ -21,7 +21,6 @@ import { useManagedItemPreferencesStore } from "@/modules/launcher/managed-items
 
 interface InlineFileResultsGroupProps {
   query: string;
-  onPrimaryCommandValueChange?: (value: string) => void;
 }
 
 function getInlineFileRowValue(file: FileEntry): string {
@@ -58,30 +57,7 @@ function InlineFileSelectionSync({
   return null;
 }
 
-function InlineFilePrimarySelectionSync({
-  value,
-  onPrimaryCommandValueChange,
-}: {
-  value: string;
-  onPrimaryCommandValueChange: (value: string) => void;
-}) {
-  useMountEffect(() => {
-    const frame = window.requestAnimationFrame(() => {
-      onPrimaryCommandValueChange(value);
-    });
-
-    return () => {
-      window.cancelAnimationFrame(frame);
-    };
-  });
-
-  return null;
-}
-
-export function InlineFileResultsGroup({
-  query,
-  onPrimaryCommandValueChange,
-}: InlineFileResultsGroupProps) {
+export function InlineFileResultsGroup({ query }: InlineFileResultsGroupProps) {
   const selectedCommandValue = useCommandState((state) => state.value);
   const favoriteIds = useManagedItemPreferencesStore((state) => state.favoriteIds);
   const usageById = useManagedItemPreferencesStore((state) => state.usageById);
@@ -123,13 +99,6 @@ export function InlineFileResultsGroup({
   return (
     <>
       <InlineFileResultsLifecycle key={visibleResultsKey} />
-      {onPrimaryCommandValueChange && visibleResults.length > 0 ? (
-        <InlineFilePrimarySelectionSync
-          key={`inline-primary\u0000${visibleResultsKey}`}
-          value={getInlineFileRowValue(visibleResults[0].entry)}
-          onPrimaryCommandValueChange={onPrimaryCommandValueChange}
-        />
-      ) : null}
       {selectedFile ? (
         <InlineFileSelectionSync
           key={`${visibleResultsKey}\u0000${selectedFile.path}`}

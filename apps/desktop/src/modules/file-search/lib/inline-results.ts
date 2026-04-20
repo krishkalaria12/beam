@@ -18,7 +18,7 @@ export interface InlineFileResult extends SearchResult {
 
 const INLINE_FILE_MIN_PUBLIC_SCORE = 5_000;
 const INLINE_FILE_SCORE_DROP_LIMIT = 250;
-const INLINE_FILE_RESULT_LIMIT = 6;
+const INLINE_FILE_RESULT_LIMIT = 5;
 
 function normalize(value: string): string {
   return value.trim().toLowerCase();
