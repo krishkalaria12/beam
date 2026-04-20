@@ -214,5 +214,5 @@ export function isLauncherTakeoverPanel(panel: CommandPanel): boolean {
 }
 
 export function isLauncherCommandListExpandedPanel(panel: CommandPanel): boolean {
-  return panel === "emoji";
+  return panel === "emoji" || panel === "calculator-history";
 }
