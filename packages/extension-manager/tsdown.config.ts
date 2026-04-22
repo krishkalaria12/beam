@@ -2,8 +2,25 @@ import { createRequire } from "node:module";
 import { defineConfig } from "tsdown";
 
 const require = createRequire(import.meta.url);
-const sharedReactEntry = require.resolve("react-reconciler/node_modules/react");
-const sharedReactJsxRuntimeEntry = require.resolve("react-reconciler/node_modules/react/jsx-runtime");
+
+function resolveSharedReactEntry(specifiers: string[]): string {
+  for (const specifier of specifiers) {
+    try {
+      return require.resolve(specifier);
+    } catch {}
+  }
+
+  throw new Error(`Unable to resolve a shared React entry from: ${specifiers.join(", ")}`);
+}
+
+const sharedReactEntry = resolveSharedReactEntry([
+  "react-reconciler/node_modules/react",
+  "react",
+]);
+const sharedReactJsxRuntimeEntry = resolveSharedReactEntry([
+  "react-reconciler/node_modules/react/jsx-runtime",
+  "react/jsx-runtime",
+]);
 
 export default defineConfig({
   entry: {
@@ -20,6 +37,8 @@ export default defineConfig({
     onlyBundle: false,
   },
   alias: {
+    react: sharedReactEntry,
+    "react/jsx-runtime": sharedReactJsxRuntimeEntry,
     "react-reconciler/node_modules/react": sharedReactEntry,
     "react-reconciler/node_modules/react/jsx-runtime": sharedReactJsxRuntimeEntry,
   },
