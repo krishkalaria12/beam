@@ -59,14 +59,13 @@ jobs:
           mkdir -p release-assets
           cp "$bundle_dir"/deb/*.deb release-assets/
           cp "$bundle_dir"/rpm/*.rpm release-assets/
-          cd release-assets
-          sha256sum * > SHA256SUMS.txt
 
       - name: publish github release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            release-assets/*
+            release-assets/*.deb
+            release-assets/*.rpm
           generate_release_notes: true
           prerelease: ${{ contains(github.ref_name, '-') }}
 
