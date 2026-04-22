@@ -1,5 +1,10 @@
 use std::collections::HashMap;
+use std::env;
+use std::ffi::OsString;
+use std::fs;
 use std::io::{BufRead, BufReader, BufWriter, Read, Write};
+#[cfg(target_family = "unix")]
+use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::process::{Child, ChildStderr, ChildStdin, ChildStdout, Command, Stdio};
 use std::sync::{mpsc, Arc};
@@ -10,6 +15,7 @@ use flate2::read::ZlibDecoder;
 use nanoid::nanoid;
 use parking_lot::Mutex;
 use prost::Message;
+use semver::Version;
 use serde_json::{json, Value};
 use tauri::{AppHandle, Emitter, Manager, State};
 
@@ -22,6 +28,8 @@ const BRIDGE_MANAGER_REQUEST_KIND: &str = "manager-request";
 const BRIDGE_MANAGER_RESPONSE_KIND: &str = "manager-response";
 const DEFAULT_RUNTIME_ID: &str = "foreground";
 const MANAGER_REQUEST_TIMEOUT: Duration = Duration::from_secs(5);
+const NODE_RUNTIME_HINT: &str =
+    "Beam could not locate a usable Node.js runtime for extensions. Install Node.js or set BEAM_NODE_BINARY to an absolute path.";
 
 type PendingSender = mpsc::SyncSender<Result<Vec<u8>, String>>;
 
@@ -41,6 +49,7 @@ struct ManagedRuntime {
 struct ExtensionRuntimeLauncher {
     program: PathBuf,
     args: Vec<String>,
+    path_env: Option<OsString>,
 }
 
 #[derive(Default)]
@@ -117,6 +126,217 @@ fn find_extension_manager_entry_in_dir(directory: &Path) -> Option<PathBuf> {
     None
 }
 
+fn is_executable(path: &Path) -> bool {
+    if !path.is_file() {
+        return false;
+    }
+
+    #[cfg(target_family = "unix")]
+    {
+        let Ok(metadata) = path.metadata() else {
+            return false;
+        };
+        return metadata.permissions().mode() & 0o111 != 0;
+    }
+
+    #[allow(unreachable_code)]
+    true
+}
+
+fn find_on_path(path_env: Option<OsString>, binaries: &[&str]) -> Option<PathBuf> {
+    let path_env = path_env?;
+
+    for directory in env::split_paths(&path_env) {
+        for binary in binaries {
+            let candidate = directory.join(binary);
+            if is_executable(&candidate) {
+                return Some(candidate);
+            }
+        }
+    }
+
+    None
+}
+
+fn parse_node_version(name: &str) -> Option<Version> {
+    Version::parse(name.trim_start_matches('v')).ok()
+}
+
+fn find_latest_versioned_binary(root: &Path, suffix: &Path) -> Option<PathBuf> {
+    let mut latest: Option<(Version, PathBuf)> = None;
+
+    for entry in fs::read_dir(root).ok()?.flatten() {
+        let path = entry.path();
+        if !path.is_dir() {
+            continue;
+        }
+
+        let Some(name) = path.file_name().and_then(|value| value.to_str()) else {
+            continue;
+        };
+        let Some(version) = parse_node_version(name) else {
+            continue;
+        };
+
+        let candidate = path.join(suffix);
+        if !is_executable(&candidate) {
+            continue;
+        }
+
+        match latest.as_ref() {
+            Some((current_version, _)) if current_version >= &version => {}
+            _ => latest = Some((version, candidate)),
+        }
+    }
+
+    latest.map(|(_, candidate)| candidate)
+}
+
+fn append_unique_path(paths: &mut Vec<PathBuf>, candidate: Option<PathBuf>) {
+    let Some(candidate) = candidate else {
+        return;
+    };
+    if candidate.as_os_str().is_empty() {
+        return;
+    }
+    if !paths.iter().any(|existing| existing == &candidate) {
+        paths.push(candidate);
+    }
+}
+
+fn collect_node_candidate_paths(home_dir: Option<&Path>) -> Vec<PathBuf> {
+    let mut candidates = Vec::new();
+
+    if let Some(nvm_bin) = env::var_os("NVM_BIN").map(PathBuf::from) {
+        candidates.push(nvm_bin.join("node"));
+    }
+
+    if let Some(volta_home) = env::var_os("VOLTA_HOME").map(PathBuf::from) {
+        candidates.push(volta_home.join("bin").join("node"));
+    }
+
+    if let Some(asdf_data_dir) = env::var_os("ASDF_DATA_DIR").map(PathBuf::from) {
+        candidates.push(asdf_data_dir.join("shims").join("node"));
+    }
+
+    if let Some(asdf_dir) = env::var_os("ASDF_DIR").map(PathBuf::from) {
+        candidates.push(asdf_dir.join("shims").join("node"));
+    }
+
+    if let Some(fnm_multishell) = env::var_os("FNM_MULTISHELL_PATH").map(PathBuf::from) {
+        candidates.push(fnm_multishell.join("bin").join("node"));
+    }
+
+    if let Some(home_dir) = home_dir {
+        candidates.push(home_dir.join(".local").join("bin").join("node"));
+        candidates.push(home_dir.join(".volta").join("bin").join("node"));
+        candidates.push(home_dir.join(".asdf").join("shims").join("node"));
+        candidates.push(
+            home_dir
+                .join(".local")
+                .join("share")
+                .join("mise")
+                .join("shims")
+                .join("node"),
+        );
+        candidates.push(
+            home_dir
+                .join(".nvm")
+                .join("current")
+                .join("bin")
+                .join("node"),
+        );
+
+        if let Some(candidate) = find_latest_versioned_binary(
+            &home_dir.join(".nvm").join("versions").join("node"),
+            Path::new("bin").join("node").as_path(),
+        ) {
+            candidates.push(candidate);
+        }
+
+        if let Some(candidate) = find_latest_versioned_binary(
+            &home_dir
+                .join(".local")
+                .join("share")
+                .join("fnm")
+                .join("node-versions"),
+            Path::new("installation").join("bin").join("node").as_path(),
+        ) {
+            candidates.push(candidate);
+        }
+    }
+
+    candidates.extend(
+        [
+            "/usr/bin/node",
+            "/usr/local/bin/node",
+            "/bin/node",
+            "/usr/bin/nodejs",
+            "/usr/local/bin/nodejs",
+            "/bin/nodejs",
+            "/snap/bin/node",
+        ]
+        .into_iter()
+        .map(PathBuf::from),
+    );
+
+    candidates
+}
+
+fn resolve_node_runtime_program() -> Result<PathBuf, String> {
+    if let Some(override_path) = env::var_os("BEAM_NODE_BINARY").map(PathBuf::from) {
+        if is_executable(&override_path) {
+            return Ok(override_path);
+        }
+    }
+
+    if let Some(path) = find_on_path(env::var_os("PATH"), &["node", "nodejs"]) {
+        return Ok(path);
+    }
+
+    let home_dir = dirs::home_dir();
+    let candidates = collect_node_candidate_paths(home_dir.as_deref());
+    if let Some(candidate) = candidates.into_iter().find(|path| is_executable(path)) {
+        return Ok(candidate);
+    }
+
+    Err(NODE_RUNTIME_HINT.to_string())
+}
+
+fn build_extension_runtime_path_env(program: &Path) -> Option<OsString> {
+    let mut paths = Vec::new();
+
+    append_unique_path(&mut paths, program.parent().map(Path::to_path_buf));
+
+    if let Some(home_dir) = dirs::home_dir() {
+        append_unique_path(&mut paths, Some(home_dir.join(".local").join("bin")));
+        append_unique_path(&mut paths, Some(home_dir.join(".volta").join("bin")));
+        append_unique_path(&mut paths, Some(home_dir.join(".asdf").join("shims")));
+        append_unique_path(
+            &mut paths,
+            Some(
+                home_dir
+                    .join(".local")
+                    .join("share")
+                    .join("mise")
+                    .join("shims"),
+            ),
+        );
+    }
+
+    if let Some(current_path) = env::var_os("PATH") {
+        for directory in env::split_paths(&current_path) {
+            append_unique_path(&mut paths, Some(directory));
+        }
+    }
+
+    append_unique_path(&mut paths, Some(PathBuf::from("/usr/local/bin")));
+    append_unique_path(&mut paths, Some(PathBuf::from("/usr/bin")));
+    append_unique_path(&mut paths, Some(PathBuf::from("/bin")));
+
+    env::join_paths(paths).ok()
+}
+
 fn build_extension_manager_args(app: &AppHandle) -> Result<Vec<String>, String> {
     let data_dir = app
         .path()
@@ -136,12 +356,14 @@ fn build_extension_manager_args(app: &AppHandle) -> Result<Vec<String>, String> 
 fn resolve_extension_runtime_launcher(app: &AppHandle) -> Result<ExtensionRuntimeLauncher, String> {
     let args = build_extension_manager_args(app)?;
     let entry = resolve_extension_manager_entry(app)?;
+    let program = resolve_node_runtime_program()?;
     let mut node_args = Vec::with_capacity(args.len() + 1);
     node_args.push(entry.display().to_string());
     node_args.extend(args);
 
     Ok(ExtensionRuntimeLauncher {
-        program: PathBuf::from("node"),
+        path_env: build_extension_runtime_path_env(&program),
+        program,
         args: node_args,
     })
 }
@@ -387,13 +609,23 @@ impl ExtensionRuntimeBridgeState {
         }
 
         let launcher = resolve_extension_runtime_launcher(app)?;
-        let mut child = Command::new(&launcher.program)
+        let mut command = Command::new(&launcher.program);
+        command
             .args(&launcher.args)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
-            .spawn()
-            .map_err(|error| error.to_string())?;
+            .stderr(Stdio::piped());
+
+        if let Some(path_env) = launcher.path_env.as_ref() {
+            command.env("PATH", path_env);
+        }
+
+        let mut child = command.spawn().map_err(|error| {
+            format!(
+                "failed to start the extension runtime with {}: {error}. {NODE_RUNTIME_HINT}",
+                launcher.program.display()
+            )
+        })?;
 
         let stdin = child
             .stdin
@@ -453,6 +685,56 @@ impl ExtensionRuntimeBridgeState {
             .clone();
         drop(runtimes);
         write_json_line(&stdin, value)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::find_latest_versioned_binary;
+    use std::fs;
+    #[cfg(target_family = "unix")]
+    use std::os::unix::fs::PermissionsExt;
+    use std::path::Path;
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    #[test]
+    fn picks_latest_versioned_node_runtime() {
+        let unique = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("system time should be after unix epoch")
+            .as_nanos();
+        let root = std::env::temp_dir().join(format!("beam-node-runtime-{unique}"));
+        let old_node = root.join("v18.20.4").join("bin").join("node");
+        let new_node = root.join("v20.12.2").join("bin").join("node");
+
+        fs::create_dir_all(old_node.parent().expect("old node parent should exist"))
+            .expect("should create old node dir");
+        fs::create_dir_all(new_node.parent().expect("new node parent should exist"))
+            .expect("should create new node dir");
+        fs::write(&old_node, b"#!/bin/sh\n").expect("should write old node stub");
+        fs::write(&new_node, b"#!/bin/sh\n").expect("should write new node stub");
+
+        #[cfg(target_family = "unix")]
+        {
+            let mut old_permissions = fs::metadata(&old_node)
+                .expect("old node metadata should exist")
+                .permissions();
+            old_permissions.set_mode(0o755);
+            fs::set_permissions(&old_node, old_permissions).expect("should chmod old node");
+
+            let mut new_permissions = fs::metadata(&new_node)
+                .expect("new node metadata should exist")
+                .permissions();
+            new_permissions.set_mode(0o755);
+            fs::set_permissions(&new_node, new_permissions).expect("should chmod new node");
+        }
+
+        let resolved = find_latest_versioned_binary(&root, Path::new("bin").join("node").as_path())
+            .expect("should resolve the latest node version");
+
+        assert_eq!(resolved, new_node);
+
+        let _ = fs::remove_dir_all(root);
     }
 }
 
