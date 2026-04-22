@@ -8,7 +8,7 @@
   "main": "index.ts",
   "scripts": {
     "sync:beam-utils-vendor": "node scripts/sync-beam-utils-vendor.mjs",
-    "build": "bun run --cwd ../beam-utils build && bun run sync:beam-utils-vendor && tsdown --config-loader unrun --config tsdown.config.ts && bun run sync:desktop-runtime",
+    "build": "bun run --cwd ../beam-utils build && bun run sync:beam-utils-vendor && tsdown --config-loader unrun --config tsdown.config.ts && node scripts/verify-standalone-bundle.mjs && bun run sync:desktop-runtime",
     "sync:desktop-runtime": "mkdir -p ../../apps/desktop/src-tauri/binaries && cp dist/index.cjs ../../apps/desktop/src-tauri/binaries/extension-manager.cjs",
     "check": "tsc --noEmit",
     "check-types": "tsc --noEmit"

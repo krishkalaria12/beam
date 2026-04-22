@@ -27,6 +27,40 @@ import type { SupervisorToWorkerMessage, WorkerToSupervisorMessage } from "./wor
 
 const WORKER_GRACE_PERIOD_MS = 3_000;
 const WORKER_MAX_HEAP_SIZE_MB = 512;
+let supervisorProcessHandlersInstalled = false;
+
+function writeSupervisorFatalError(error: unknown): void {
+  const message = error instanceof Error ? error.message : String(error);
+  const stack = error instanceof Error ? error.stack : undefined;
+
+  writeLog(`Extension manager supervisor fatal error: ${message}`);
+  writeOutput(
+    createBridgeMessageEnvelope(
+      BridgeMessageKind.RuntimeRender,
+      RuntimeRender.toJSON(createRuntimeRenderError({ message, stack })),
+    ),
+  );
+}
+
+function ensureSupervisorProcessHandlers(): void {
+  if (supervisorProcessHandlersInstalled) {
+    return;
+  }
+
+  supervisorProcessHandlersInstalled = true;
+
+  process.on("unhandledRejection", (reason) => {
+    writeSupervisorFatalError(reason);
+  });
+
+  process.on("uncaughtException", (error) => {
+    writeSupervisorFatalError(error);
+    process.exitCode = 1;
+    setImmediate(() => {
+      process.exit(1);
+    });
+  });
+}
 
 type ManagedWorker = {
   id: string;
@@ -158,7 +192,16 @@ class ExtensionManagerSupervisor {
   private acquireWorker(): ManagedWorker {
     const worker = this.prewarmedWorker ?? this.createWorker();
     this.prewarmedWorker = null;
-    this.ensurePrewarmedWorker();
+
+    // Prewarming the next worker is an optimization and must never block launches.
+    try {
+      this.ensurePrewarmedWorker();
+    } catch (error) {
+      writeLog(
+        `Failed to prewarm the next extension worker: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+
     return worker;
   }
 
@@ -491,10 +534,31 @@ class ExtensionManagerSupervisor {
     }
 
     if (request.launchPlugin) {
-      const nextWorker = this.acquireWorker();
-      this.replaceActiveWorker(nextWorker);
-      this.pendingManagerRequests.set(request.requestId, nextWorker.id);
-      this.forwardToWorker(nextWorker, raw);
+      let nextWorker: ManagedWorker | null = null;
+
+      try {
+        nextWorker = this.acquireWorker();
+        this.replaceActiveWorker(nextWorker);
+        this.pendingManagerRequests.set(request.requestId, nextWorker.id);
+        this.forwardToWorker(nextWorker, raw);
+      } catch (error) {
+        this.pendingManagerRequests.delete(request.requestId);
+
+        if (nextWorker) {
+          if (this.activeWorker?.id === nextWorker.id) {
+            this.activeWorker = null;
+          }
+          this.disposeWorker(nextWorker);
+        }
+
+        const message = error instanceof Error ? error.message : String(error);
+        writeLog(`Failed to start extension worker: ${message}`);
+        this.writeManagerResponseError(
+          request.requestId,
+          `Failed to start extension worker: ${message}`,
+        );
+      }
+
       return;
     }
 
@@ -553,6 +617,7 @@ class ExtensionManagerSupervisor {
 }
 
 export function startSupervisor(): void {
+  ensureSupervisorProcessHandlers();
   const supervisor = new ExtensionManagerSupervisor();
   supervisor.start();
 }

@@ -1190,11 +1190,29 @@ class ExtensionManagerService {
       void this.refreshBrowserExtensionConnectionStatus();
       this.startBrowserExtensionStatusPolling();
     } catch (error) {
+      const existingCrash =
+        (() => {
+          const runningSession = useExtensionRuntimeStore.getState().runningSession;
+          if (
+            runningSession?.runtimeId === sessionId &&
+            runningSession.status === "crashed" &&
+            runningSession.error
+          ) {
+            return runningSession.error;
+          }
+
+          return null;
+        })();
+
       this.clearActiveSession();
-      useExtensionRuntimeStore.getState().markForegroundSessionCrashed(sessionId, {
-        message: this.toErrorMessage(error),
-        stack: error instanceof Error ? error.stack : undefined,
-      });
+
+      if (!existingCrash) {
+        useExtensionRuntimeStore.getState().markForegroundSessionCrashed(sessionId, {
+          message: this.toErrorMessage(error),
+          stack: error instanceof Error ? error.stack : undefined,
+        });
+      }
+
       throw error;
     }
   }
