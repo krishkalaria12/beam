@@ -21,59 +21,68 @@ export function CalculatorHistoryItem({
   return (
     <CommandItem
       value={`calculator-history-${entry.timestamp}`}
-      className="calc-history-item group relative overflow-hidden rounded-xl p-0 data-[selected=true]:bg-[var(--launcher-card-hover-bg)]"
+      className="calc-history-item group relative overflow-hidden rounded-xl border border-transparent p-0 transition-colors data-[selected=true]:border-[color-mix(in_srgb,var(--launcher-card-selected-border)_60%,transparent)] data-[selected=true]:bg-[color-mix(in_srgb,var(--launcher-card-selected-bg)_60%,transparent)]"
       onSelect={onSelect}
       onPointerEnter={onActivate}
       onFocus={onActivate}
       style={{ animationDelay: `${index * 30}ms` }}
     >
-      {/* Left accent bar */}
-      <div
-        className={cn(
-          "absolute left-0 top-1/2 h-6 w-[3px] -translate-y-1/2 rounded-full transition-all duration-200",
-          "bg-[var(--launcher-card-hover-bg)] opacity-0 group-data-[selected=true]:opacity-100",
-        )}
-      />
+      <div className="w-full px-4 py-3.5">
+        <div className="relative">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-2">
+              <div className="truncate text-[0.6875rem] leading-none text-[var(--text-muted)]">
+                {isCopied ? "Copied to clipboard" : "Press Enter to copy"}
+              </div>
+            </div>
 
-      <div className="w-full px-4 py-3">
-        <div className="flex items-center gap-4">
-          {/* Expression */}
-          <div className="min-w-0 flex-1">
-            <p className="truncate font-mono text-launcher-md font-medium tracking-[-0.01em] text-muted-foreground">
-              {entry.query}
-            </p>
-          </div>
-
-          {/* Arrow */}
-          <ArrowRight className="size-3.5 shrink-0 text-muted-foreground group-data-[selected=true]:text-muted-foreground" />
-
-          {/* Result */}
-          <div className="min-w-0 flex items-center gap-3">
-            {/* Copy hint - shows on selection */}
-            <span
+            <div
               className={cn(
-                "hidden sm:flex items-center gap-1.5 text-launcher-2xs font-medium uppercase tracking-[0.06em] transition-all duration-200",
-                "translate-x-2 opacity-0 group-data-[selected=true]:translate-x-0 group-data-[selected=true]:opacity-100",
-                isCopied ? "text-[var(--icon-green-fg)]" : "text-muted-foreground",
+                "hidden shrink-0 items-center gap-1 text-[0.6875rem] leading-none sm:flex",
+                isCopied ? "text-[var(--icon-green-fg)]" : "text-[var(--text-subtle)]",
               )}
             >
-              {isCopied ? (
-                <>
-                  <Check className="size-3" />
-                  Copied
-                </>
-              ) : (
-                <>
-                  <Copy className="size-3" />
-                  Copy
-                </>
-              )}
-            </span>
+              {isCopied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+              <span>{isCopied ? "Copied" : "Copy"}</span>
+            </div>
+          </div>
 
-            {/* Result value */}
-            <p className="truncate font-mono text-launcher-3xl font-bold tracking-[-0.02em] text-foreground">
-              {entry.result}
-            </p>
+          <div className="absolute left-1/2 top-[calc(50%+10px)] flex size-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-[var(--launcher-chip-border)] bg-[var(--launcher-chip-bg)] text-[var(--text-muted)] pointer-events-none">
+            <ArrowRight className="size-4" />
+          </div>
+
+          <div className="flex justify-center">
+            <div className="inline-grid w-full grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-x-7">
+              <div className="min-w-0 text-center">
+                <div
+                  className="text-[1rem] font-medium leading-6 text-[var(--text-secondary)]"
+                  style={{
+                    display: "-webkit-box",
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: "vertical",
+                    overflow: "hidden",
+                  }}
+                >
+                  {entry.query}
+                </div>
+              </div>
+
+              <div />
+
+              <div className="min-w-0 text-center">
+                <div
+                  className="text-[1rem] font-semibold leading-6 text-foreground"
+                  style={{
+                    display: "-webkit-box",
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: "vertical",
+                    overflow: "hidden",
+                  }}
+                >
+                  {entry.result}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

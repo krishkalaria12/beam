@@ -326,18 +326,8 @@ export function ClipboardView({ isActive, onBack, onToggleActions }: ClipboardVi
         />
         <ClipboardDetails
           entry={selectedEntry}
-          isCopied={
-            selectedEntry
-              ? state.copiedEntryId === getEntryId(selectedEntry) && !state.copyError
-              : false
-          }
           copyError={state.copyError}
           isLoading={isInitialLoading}
-          onCopy={() => {
-            if (selectedEntry) {
-              void handleCopy(selectedEntry);
-            }
-          }}
         />
       </div>
 

@@ -14,7 +14,7 @@ interface ClipboardListItemProps {
 }
 
 const CLIPBOARD_HEADER_HEIGHT = 32;
-const CLIPBOARD_ITEM_HEIGHT = 62;
+const CLIPBOARD_ITEM_HEIGHT = 58;
 
 type ClipboardVirtualRow =
   | {
@@ -35,19 +35,16 @@ const getEntryIconConfig = (type: ClipboardContentType) => {
       return {
         icon: <ImageIcon className="size-4" />,
         gradient: "bg-[var(--icon-orange-bg)]",
-        accentColor: "bg-[var(--icon-orange-bg)]",
       };
     case ClipboardContentType.Link:
       return {
         icon: <Link className="size-4" />,
         gradient: "bg-[var(--icon-green-bg)]",
-        accentColor: "bg-[var(--icon-green-bg)]",
       };
     default:
       return {
         icon: <FileText className="size-4" />,
         gradient: "bg-[var(--icon-primary-bg)]",
-        accentColor: "bg-[var(--icon-primary-bg)]",
       };
   }
 };
@@ -67,42 +64,27 @@ function ClipboardListItem({ entry, isSelected, onSelect }: ClipboardListItemPro
       role="button"
       tabIndex={0}
       className={cn(
-        "group relative flex h-[62px] cursor-pointer items-center gap-3 rounded-xl px-3 transition-colors",
+        "group relative flex h-[58px] cursor-pointer items-center gap-3 rounded-md border px-3 transition-colors",
         isSelected
-          ? "bg-[var(--launcher-card-hover-bg)] ring-1 ring-[var(--launcher-card-border)]"
-          : "hover:bg-[var(--launcher-card-hover-bg)]",
+          ? "border-transparent bg-[var(--launcher-card-selected-bg)]"
+          : "border-transparent hover:border-[var(--launcher-card-border)] hover:bg-[var(--launcher-card-hover-bg)]",
       )}
     >
-      {/* Left accent bar on hover/selected */}
       <div
         className={cn(
-          "absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full transition-all",
-          iconConfig.accentColor,
-          isSelected
-            ? "opacity-100 scale-y-100"
-            : "opacity-0 scale-y-50 group-hover:opacity-60 group-hover:scale-y-75",
-        )}
-      />
-
-      {/* Icon with gradient background */}
-      <div
-        className={cn(
-          "flex size-9 shrink-0 items-center justify-center rounded-xl bg-[var(--launcher-card-bg)] transition-colors",
+          "flex size-8 shrink-0 items-center justify-center rounded-md bg-[var(--launcher-card-bg)] transition-colors",
           iconConfig.gradient,
-          isSelected
-            ? "text-foreground"
-            : "text-muted-foreground group-hover:text-muted-foreground",
+          isSelected ? "text-foreground" : "text-muted-foreground",
         )}
       >
         {iconConfig.icon}
       </div>
 
-      {/* Content */}
-      <div className="flex-1 min-w-0">
+      <div className="min-w-0 flex-1">
         <p
           className={cn(
-            "truncate text-launcher-md font-medium leading-tight tracking-[-0.01em]",
-            isSelected ? "text-foreground" : "text-muted-foreground group-hover:text-foreground",
+            "truncate text-launcher-sm font-medium leading-tight text-foreground",
+            !isSelected && "group-hover:text-foreground",
           )}
         >
           {entry.content_type === ClipboardContentType.Image
@@ -110,7 +92,7 @@ function ClipboardListItem({ entry, isSelected, onSelect }: ClipboardListItemPro
             : entry.value.replace(/\s+/g, " ").trim()}
         </p>
         {entry.content_type !== ClipboardContentType.Image && (
-          <p className="mt-0.5 text-launcher-xs text-muted-foreground truncate">
+          <p className="mt-0.5 truncate text-launcher-xs text-muted-foreground">
             {entry.character_count} characters
           </p>
         )}
@@ -247,7 +229,7 @@ export function ClipboardList({ entries, selectedIndex, onSelect, isLoading }: C
   }, [entries.length, rowVirtualizer, rows, selectedIndex]);
 
   return (
-    <div className="clipboard-list-panel flex w-[42%] flex-col border-r border-[var(--launcher-card-border)]">
+    <div className="clipboard-list-panel flex w-[40%] flex-col border-r border-[var(--ui-divider)]">
       <div ref={scrollContainerRef} className="custom-scrollbar flex-1 overflow-y-auto p-3">
         {isLoading ? (
           <div className="flex h-full items-center justify-center">
@@ -282,10 +264,10 @@ export function ClipboardList({ entries, selectedIndex, onSelect, isLoading }: C
                 >
                   {row.type === "header" ? (
                     <div className="flex h-8 items-center gap-3 px-3">
-                      <h3 className="text-launcher-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                      <h3 className="text-launcher-xs font-medium text-muted-foreground">
                         {row.title}
                       </h3>
-                      <div className="h-px flex-1 bg-[var(--launcher-card-hover-bg)]" />
+                      <div className="h-px flex-1 bg-[var(--ui-divider)]" />
                     </div>
                   ) : (
                     <ClipboardListItem

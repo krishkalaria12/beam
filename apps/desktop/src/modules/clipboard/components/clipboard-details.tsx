@@ -1,13 +1,9 @@
 import { CommandLoadingState } from "@/components/command/command-loading-state";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import {
   ArrowUpRight,
   Loader2,
-  Check,
-  Clock,
-  Copy,
   FileText,
   ImageIcon,
   Link,
@@ -20,9 +16,7 @@ import { isPreviewableImageValue } from "../lib/preview";
 
 interface ClipboardDetailsProps {
   entry: ClipboardHistoryEntry | null;
-  isCopied: boolean;
   copyError: string | null;
-  onCopy: () => void;
   isLoading?: boolean;
 }
 
@@ -48,9 +42,7 @@ const getEntryIconConfig = (type: ClipboardContentType) => {
 
 export function ClipboardDetails({
   entry,
-  isCopied,
   copyError,
-  onCopy,
   isLoading = false,
 }: ClipboardDetailsProps) {
   const previewUrl = entry && isPreviewableImageValue(entry.value) ? entry.value : null;
@@ -87,126 +79,74 @@ export function ClipboardDetails({
   const iconConfig = getEntryIconConfig(entry.content_type);
 
   return (
-    <div className="clipboard-details-panel flex flex-1 flex-col min-w-0 h-full">
-      {/* Content Preview - Scrollable */}
-      <div className="flex-1 overflow-y-auto p-6 [content-visibility:auto]">
+    <div className="clipboard-details-panel flex min-w-0 flex-1 flex-col">
+      <div className="flex-1 overflow-y-auto p-4 [content-visibility:auto]">
         {showsImagePreview ? (
-          <div className="flex w-full justify-center">
+          <div className="flex h-full w-full items-center justify-center">
             <ClipboardImagePreview key={previewUrl} previewUrl={previewUrl} />
           </div>
         ) : (
-          <div className="w-full text-launcher-lg font-normal leading-relaxed tracking-[-0.01em] text-muted-foreground whitespace-pre-wrap break-words">
+          <pre className="w-full self-start whitespace-pre-wrap break-words font-mono text-launcher-sm leading-6 text-foreground">
             {entry.value}
-          </div>
+          </pre>
         )}
       </div>
 
-      {/* Info Section - Fixed at bottom */}
-      <div className="shrink-0 border-t border-[var(--launcher-card-border)] bg-[var(--launcher-card-hover-bg)] p-5">
-        {/* Copy Button & Status */}
-        <div className="flex items-center justify-between mb-5">
-          <div className="flex items-center gap-2">
-            <div
-              className={cn(
-                "flex size-8 items-center justify-center rounded-lg bg-[var(--launcher-card-bg)] text-muted-foreground",
-                iconConfig.gradient,
-              )}
-            >
-              {iconConfig.icon}
-            </div>
-            <div>
-              <p className="text-launcher-sm font-semibold text-muted-foreground capitalize">
-                {entry.content_type}
-              </p>
-              <p className="text-launcher-xs text-muted-foreground">{copiedAtLabel}</p>
-            </div>
-          </div>
-
-          <Button
-            onClick={onCopy}
-            variant="ghost"
-            size="sm"
-            className={cn(
-              "flex items-center gap-2 px-4 py-2 rounded-lg text-launcher-sm font-medium transition-all duration-200",
-              isCopied
-                ? "bg-[var(--icon-green-bg)] text-[var(--icon-green-fg)] ring-1 ring-[var(--icon-green-bg)]"
-                : "bg-[var(--ring)]/15 text-[var(--ring)] ring-1 ring-[var(--ring)]/20 hover:bg-[var(--ring)]/25",
-            )}
-          >
-            {isCopied ? (
-              <>
-                <Check className="size-3.5" />
-                <span>Copied</span>
-              </>
-            ) : (
-              <>
-                <Copy className="size-3.5" />
-                <span>Copy</span>
-              </>
-            )}
-          </Button>
-        </div>
-
-        {/* Status Messages */}
+      <div className="shrink-0 border-t border-[var(--ui-divider)] px-5 pt-3 pb-4">
         {copyError && (
-          <div className="mb-4 rounded-lg bg-[var(--icon-red-bg)] px-3 py-2 text-launcher-xs font-medium text-[var(--icon-red-fg)] ring-1 ring-[var(--icon-red-bg)]">
+          <div className="mb-3 text-launcher-sm font-medium text-[var(--icon-red-fg)]">
             {copyError}
           </div>
         )}
 
-        {/* Metadata Grid */}
-        <div className="space-y-3">
-          {/* Divider with label */}
-          <div className="flex items-center gap-3">
-            <span className="text-launcher-2xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-              Details
+        <div className="grid grid-cols-[104px_minmax(0,1fr)] items-center gap-3 text-launcher-sm">
+          <span className="text-muted-foreground">Type</span>
+          <span className="flex items-center justify-end gap-2 text-foreground">
+            <span
+              className={cn(
+                "flex size-6 items-center justify-center rounded-md bg-[var(--launcher-card-bg)] text-muted-foreground",
+                iconConfig.gradient,
+              )}
+            >
+              {iconConfig.icon}
             </span>
-            <div className="h-px flex-1 bg-[var(--launcher-card-hover-bg)]" />
-          </div>
-
-          {/* Metadata rows */}
-          <div className="grid gap-2">
-            <div className="flex items-center justify-between">
-              <span className="text-launcher-sm text-muted-foreground">Copied</span>
-              <span className="flex items-center gap-1.5 text-launcher-sm font-medium text-muted-foreground">
-                <Clock className="size-3 text-muted-foreground" />
-                {copiedAtLabel}
+            <span className="capitalize">{entry.content_type}</span>
+          </span>
+        </div>
+        <div className="mt-2 grid grid-cols-[104px_minmax(0,1fr)] items-center gap-3 text-launcher-sm">
+          <span className="text-muted-foreground">Copied</span>
+          <span className="truncate text-right text-foreground">{copiedAtLabel}</span>
+        </div>
+        {entry.content_type !== ClipboardContentType.Image ? (
+          <>
+            <div className="mt-2 grid grid-cols-[104px_minmax(0,1fr)] items-center gap-3 text-launcher-sm">
+              <span className="text-muted-foreground">Characters</span>
+              <span className="truncate text-right text-foreground">
+                {entry.character_count.toLocaleString()}
               </span>
             </div>
-
-            {entry.content_type !== ClipboardContentType.Image && (
-              <>
-                <div className="flex items-center justify-between">
-                  <span className="text-launcher-sm text-muted-foreground">Characters</span>
-                  <span className="text-launcher-sm font-mono font-medium text-muted-foreground">
-                    {entry.character_count.toLocaleString()}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-launcher-sm text-muted-foreground">Words</span>
-                  <span className="text-launcher-sm font-mono font-medium text-muted-foreground">
-                    {entry.word_count.toLocaleString()}
-                  </span>
-                </div>
-              </>
-            )}
-
-            {entry.content_type === ClipboardContentType.Link && (
-              <div className="flex items-center justify-between pt-2 border-t border-[var(--launcher-card-border)]">
-                <span className="text-launcher-sm text-muted-foreground">Action</span>
-                <a
-                  href={entry.value}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 text-launcher-sm font-medium text-[var(--ring)] hover:underline transition-colors"
-                >
-                  Open Link
-                  <ArrowUpRight className="size-3" />
-                </a>
-              </div>
-            )}
+            <div className="mt-2 grid grid-cols-[104px_minmax(0,1fr)] items-center gap-3 text-launcher-sm">
+              <span className="text-muted-foreground">Words</span>
+              <span className="truncate text-right text-foreground">
+                {entry.word_count.toLocaleString()}
+              </span>
+            </div>
+          </>
+        ) : null}
+        {entry.content_type === ClipboardContentType.Link ? (
+          <div className="mt-2 grid grid-cols-[104px_minmax(0,1fr)] items-center gap-3 text-launcher-sm">
+            <span className="text-muted-foreground">Action</span>
+            <a
+              href={entry.value}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-end gap-1.5 text-[var(--ring)] transition-colors hover:underline"
+            >
+              Open Link
+              <ArrowUpRight className="size-3" />
+            </a>
           </div>
-        </div>
+        ) : null}
       </div>
     </div>
   );
