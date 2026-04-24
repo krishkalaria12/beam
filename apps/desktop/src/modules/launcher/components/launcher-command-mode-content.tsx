@@ -124,8 +124,8 @@ export function LauncherCommandModeContent({
         orderedPinnedCommandIds={pinnedCommandIds}
         usageById={usageById}
         onSetPinned={onSetPinned}
+        beforeFallbackCommands={inlineFileResults}
       />
-      {inlineFileResults}
     </div>
   );
 }

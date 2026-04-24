@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import { CALCULATOR_RESULT_COMMAND_ID } from "@/command-registry/default-providers";
 import { resolveRecentCommands } from "@/command-registry/recent-commands";
 import { SYSTEM_TRIGGER_MODE } from "@/command-registry/trigger-registry";
@@ -19,6 +21,7 @@ type RegistryCommandGroupProps = {
   orderedPinnedCommandIds: readonly string[];
   usageById: Readonly<Record<string, CommandUsageEntry>>;
   onSetPinned: (commandId: string, pinned: boolean) => void;
+  beforeFallbackCommands?: ReactNode;
 };
 
 export default function RegistryCommandGroup({
@@ -31,6 +34,7 @@ export default function RegistryCommandGroup({
   orderedPinnedCommandIds,
   usageById,
   onSetPinned,
+  beforeFallbackCommands,
 }: RegistryCommandGroupProps) {
   const pinnedCommandIdSet = new Set(orderedPinnedCommandIds);
   const shouldShowRecentGroup = query.trim().length === 0;
@@ -182,11 +186,16 @@ export default function RegistryCommandGroup({
   }
 
   if (commands.length === 0) {
-    return fallbackCommands.length > 0 ? (
-      <CommandGroup heading="Other actions">
-        {fallbackCommands.map((command) => renderCommandRow(command))}
-      </CommandGroup>
-    ) : null;
+    return (
+      <>
+        {beforeFallbackCommands}
+        {fallbackCommands.length > 0 ? (
+          <CommandGroup heading="Other actions">
+            {fallbackCommands.map((command) => renderCommandRow(command))}
+          </CommandGroup>
+        ) : null}
+      </>
+    );
   }
 
   return (
@@ -206,6 +215,7 @@ export default function RegistryCommandGroup({
           {other.map((command) => renderCommandRow(command))}
         </CommandGroup>
       ) : null}
+      {beforeFallbackCommands}
       {fallbackCommands.length > 0 ? (
         <CommandGroup heading="Other actions">
           {fallbackCommands.map((command) => renderCommandRow(command))}
