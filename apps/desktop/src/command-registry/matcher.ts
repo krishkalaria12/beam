@@ -1,7 +1,6 @@
 import type { CommandDescriptor } from "@/command-registry/types";
 import type { CommandRankingConfig } from "@/command-registry/ranking-config";
 import { DEFAULT_COMMAND_RANKING_CONFIG } from "@/command-registry/ranking-config";
-import { looksLikeCalculationQuery } from "@/modules/calculator/lib/query-match";
 
 const CALCULATOR_CONTEXT_FALLBACK_COMMAND_IDS = new Set([
   "file_search.panel.open",
@@ -79,6 +78,7 @@ interface CommandMatchInput {
   query: string;
   aliases?: readonly string[];
   config?: CommandRankingConfig;
+  forceMatchCalculatorFallbacks?: boolean;
 }
 
 export interface CommandMatchResult {
@@ -140,9 +140,9 @@ export function matchCommand(input: CommandMatchInput): CommandMatchResult {
   const shouldForceCalculatorFallbackMatch =
     !matched &&
     query.length > 0 &&
+    input.forceMatchCalculatorFallbacks === true &&
     Boolean(input.command.requiresQuery) &&
-    CALCULATOR_CONTEXT_FALLBACK_COMMAND_IDS.has(input.command.id) &&
-    looksLikeCalculationQuery(query);
+    CALCULATOR_CONTEXT_FALLBACK_COMMAND_IDS.has(input.command.id);
 
   if (!matched && !shouldForceCalculatorFallbackMatch) {
     return {

@@ -93,6 +93,7 @@ export function rankCommands(options: {
   context: CommandContext;
   signals?: CommandRankingSignals;
   config?: CommandRankingConfig;
+  forceMatchCalculatorFallbacks?: boolean;
 }): RankedCommand[] {
   const config = options.config ?? DEFAULT_COMMAND_RANKING_CONFIG;
   const signals = options.signals;
@@ -107,6 +108,7 @@ export function rankCommands(options: {
       query: options.context.query,
       aliases,
       config,
+      forceMatchCalculatorFallbacks: options.forceMatchCalculatorFallbacks,
     });
 
     if (!match.matched && !isTriggeredCommand) {

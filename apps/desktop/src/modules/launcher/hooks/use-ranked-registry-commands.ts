@@ -1,7 +1,10 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
-import { createDefaultCommandProviders } from "@/command-registry/default-providers";
+import {
+  CALCULATOR_RESULT_COMMAND_ID,
+  createDefaultCommandProviders,
+} from "@/command-registry/default-providers";
 import { hasStrongRegistryMatch, isFallbackMode } from "@/command-registry/fallback-commands";
 import { createCommandProviderOrchestrator } from "@/command-registry/providers";
 import { rankCommands, type CommandRankingSignals } from "@/command-registry/ranker";
@@ -13,7 +16,7 @@ import type {
   CommandDescriptor,
   CommandProviderResolution,
 } from "@/command-registry/types";
-import { looksLikeCalculationQuery } from "@/modules/calculator/lib/query-match";
+import { useCalculator } from "@/modules/calculator/hooks/use-calculator";
 
 const MANDATORY_TEXT_FALLBACK_COMMAND_IDS = [
   "search.web.google",
@@ -76,11 +79,21 @@ export function useRankedRegistryCommands({
   });
 
   const resolution = dynamicResolutionQuery.data ?? EMPTY_RESOLUTION;
+  const normalizedQuery = commandContext.query.trim();
+  const { data: calculatorResponse } = useCalculator(normalizedQuery);
+
   const derivedValues = useMemo(() => {
     const staticCandidates = resolveStaticCommandCandidates(staticCommandRegistry, commandContext);
     const dynamicCommands = resolution.commands.filter(
       (command) => command.scope.includes("all") || command.scope.includes(commandContext.mode),
     );
+    const hasProviderCalculatorCommand = dynamicCommands.some(
+      (command) => command.id === CALCULATOR_RESULT_COMMAND_ID,
+    );
+    const hasCalculatorResult =
+      hasProviderCalculatorCommand ||
+      (calculatorResponse?.status === "valid" &&
+        calculatorResponse.outputs.some((entry) => !entry.is_error && entry.value.trim().length > 0));
     const candidateCommands = [...staticCandidates, ...dynamicCommands];
     const scopedCandidates = commandContext.triggeredCommandId
       ? candidateCommands.filter((command) => command.id === commandContext.triggeredCommandId)
@@ -90,9 +103,9 @@ export function useRankedRegistryCommands({
       commands: visibleCommands,
       context: commandContext,
       signals: rankingSignals,
+      forceMatchCalculatorFallbacks: hasCalculatorResult,
     });
 
-    const normalizedQuery = commandContext.query.trim();
     const shouldShowFallback =
       fallbackEnabled &&
       normalizedQuery.length > 0 &&
@@ -111,7 +124,7 @@ export function useRankedRegistryCommands({
       commandContext.triggeredCommandId === null &&
       isFallbackMode(commandContext.mode) &&
       isTextQuery(normalizedQuery) &&
-      !looksLikeCalculationQuery(normalizedQuery);
+      !hasCalculatorResult;
 
     if (shouldShowMandatoryTextFallbacks) {
       for (const commandId of MANDATORY_TEXT_FALLBACK_COMMAND_IDS) {
@@ -142,10 +155,12 @@ export function useRankedRegistryCommands({
       fallback: [...fallbackCommandsById.values()],
     };
   }, [
+    calculatorResponse,
     commandContext,
     fallbackCommandIds,
     fallbackEnabled,
     hiddenCommandIds,
+    normalizedQuery,
     rankingSignals,
     resolution,
   ]);

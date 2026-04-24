@@ -16,8 +16,7 @@ use smart_calculator::{
         },
         units::{lookup_unit, UNIT_INDEX},
     },
-    parser::detect_intent,
-    types::Intent,
+    error::Error as SmartCalculatorEngineError,
 };
 use tauri::{command, AppHandle, Manager};
 
@@ -28,35 +27,6 @@ use self::history::{
 };
 use self::types::{CalculationOutput, CalculatorCommandResponse, CalculatorStatus};
 
-static DATE_RELATIVE_PATTERN: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(
-        r"(?i)\b(today|tomorrow|yesterday|tmr|tmrw|yday|date|unix|timestamp|epoch|weekend)\b",
-    )
-    .unwrap()
-});
-static DATE_WEEKDAY_PATTERN: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"(?i)\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b").unwrap()
-});
-static DATE_PHRASE_PATTERN: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(
-        r"(?i)\b(next|last|this|coming|upcoming)\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday|week|month|year|weekend)\b",
-    )
-    .unwrap()
-});
-static DATE_DURATION_PATTERN: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(
-        r"(?i)\b\d+\s+(day|days|week|weeks|month|months|year|years|hour|hours|minute|minutes|second|seconds)\s+(from now|ago|from today|from tomorrow|from yesterday|later)\b|\bin\s+\d+\s+(day|days|week|weeks|month|months|year|years|hour|hours|minute|minutes|second|seconds)\b",
-    )
-    .unwrap()
-});
-static DATE_NATURAL_PATTERN: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(
-        r"(?i)^(what\s+(day|date)\s+is|when\s+is|date\s+for|day\s+of|days?\s+between|from\s+.+\s+(to|and|until)\s+.+|(?:the\s+)?(start|beginning|end)\s+of\s+(?:the\s+)?(week|month|year)|(?:the\s+)?(week|month|year)\s+(after\s+next|before\s+last))\b",
-    )
-    .unwrap()
-});
-static ISO_DATE_PATTERN: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"(?i)^\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2})?$").unwrap());
 static QUALIFIED_RUPEE_PATTERN: Lazy<Regex> = Lazy::new(|| {
     Regex::new(
         r"(?i)\b(indian|pakistan|pakistani|mauritius|mauritian|nepal|nepalese|seychelles|seychellois|sri lanka|sri lankan)\s+rupees?\b",
@@ -64,29 +34,12 @@ static QUALIFIED_RUPEE_PATTERN: Lazy<Regex> = Lazy::new(|| {
     .unwrap()
 });
 static GENERIC_RUPEE_PATTERN: Lazy<Regex> = Lazy::new(|| Regex::new(r"(?i)\brupees?\b").unwrap());
-static PLAIN_DECIMAL_PATTERN: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"^[+-]?\d+(?:\.\d+)?$").unwrap());
-static SINGLE_ALPHA_WORD_PATTERN: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[a-zA-Z]+$").unwrap());
-static MATH_EXPRESSION_PATTERN: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(
-        r"(?i)([+\-*/%^=()]|\b(?:plus|minus|times|multiplied by|divided by|sqrt|square root|cube root|log|sin|cos|tan|percent|percentage|factorial|mod|modulo|power)\b)",
-    )
-    .unwrap()
-});
-static COMPACT_QUANTITY_PATTERN: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r#"(?i)^-?[\d.,]+[a-z°/µμ'"²³]+$"#).unwrap());
 static CONVERSION_QUERY_PATTERN: Lazy<Regex> = Lazy::new(|| {
     Regex::new(r#"(?i)^(?P<left>.+?)\s+(?:to|in|into|as|=)\s*(?P<right>.*)$"#).unwrap()
 });
 static LEADING_VALUE_TOKEN_PATTERN: Lazy<Regex> = Lazy::new(|| {
     Regex::new(r#"(?i)^-?[\d.,]+\s*([a-z$€£¥₹₩₽₺₦₵₪฿°/µμ'"²³]+(?:\s+[a-z]+(?:\s+[a-z]+)?)?)"#)
         .unwrap()
-});
-static SUBSTANCE_CONVERSION_PATTERN: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(
-        r#"(?i)^-?[\d.,]+\s*[a-z°/µμ'"²³]+(?:\s+[a-z]+)?\s+of\s+.+\s+(?:to|in|into|as|=)\s+[a-z°/µμ'"²³]+(?:\s+[a-z]+)?$"#,
-    )
-    .unwrap()
 });
 static SUBSTANCE_SOURCE_PATTERN: Lazy<Regex> = Lazy::new(|| {
     Regex::new(r#"(?i)^-?[\d.,]+\s*(?P<source>[a-z°/µμ'"²³]+(?:\s+[a-z]+)?)\s+of\s+.+$"#).unwrap()
@@ -99,18 +52,6 @@ static INCOMPLETE_TIME_QUERY_PATTERN: Lazy<Regex> = Lazy::new(|| {
     )
     .unwrap()
 });
-static CALCULATOR_KEYWORDS: &[&str] = &[
-    "today",
-    "tomorrow",
-    "yesterday",
-    "now",
-    "pi",
-    "e",
-    "tau",
-    "phi",
-];
-static CODE_IDENTIFIER_PATTERN: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"^[A-Za-z_][A-Za-z0-9_]{7,}$").unwrap());
 
 fn normalize_query(query: &str) -> String {
     let lowered = query.to_lowercase();
@@ -124,31 +65,6 @@ fn normalize_query(query: &str) -> String {
     GENERIC_RUPEE_PATTERN
         .replace_all(&normalized, "inr")
         .into_owned()
-}
-
-fn is_known_calculator_keyword(query: &str) -> bool {
-    CALCULATOR_KEYWORDS
-        .iter()
-        .any(|keyword| keyword.eq_ignore_ascii_case(query))
-}
-
-fn has_resolved_measure_token(query: &str) -> bool {
-    let Some(captures) = LEADING_VALUE_TOKEN_PATTERN.captures(query) else {
-        return false;
-    };
-
-    let Some(token_match) = captures.get(1) else {
-        return false;
-    };
-
-    let token = token_match.as_str().trim().to_lowercase();
-    lookup_unit(&token).is_some()
-        || resolve_fiat(&token).is_some()
-        || resolve_crypto(&token).is_some()
-}
-
-fn is_substance_conversion_query(query: &str) -> bool {
-    SUBSTANCE_CONVERSION_PATTERN.is_match(query)
 }
 
 fn resolve_measure_token(token: &str) -> bool {
@@ -213,11 +129,7 @@ fn extract_conversion_source_token(left: &str) -> Option<String> {
         .map(|value| value.as_str().trim().to_lowercase())
 }
 
-fn is_partial_conversion_query(query: &str, intent: &Intent) -> bool {
-    if !matches!(intent, Intent::Math { .. }) {
-        return false;
-    }
-
+fn is_partial_conversion_query(query: &str) -> bool {
     if TRAILING_CONVERSION_OPERATOR_PATTERN.is_match(query) {
         return true;
     }
@@ -235,43 +147,6 @@ fn is_partial_conversion_query(query: &str, intent: &Intent) -> bool {
     right.is_empty() || has_measure_token_prefix(&right)
 }
 
-fn has_calculator_signal(query: &str, intent: &Intent) -> bool {
-    if !matches!(intent, Intent::Math { .. }) {
-        return true;
-    }
-
-    query.chars().any(|character| character.is_ascii_digit())
-        || MATH_EXPRESSION_PATTERN.is_match(query)
-        || COMPACT_QUANTITY_PATTERN.is_match(query)
-        || has_resolved_measure_token(query)
-        || is_substance_conversion_query(query)
-        || DATE_RELATIVE_PATTERN.is_match(query)
-        || DATE_WEEKDAY_PATTERN.is_match(query)
-        || DATE_PHRASE_PATTERN.is_match(query)
-        || DATE_DURATION_PATTERN.is_match(query)
-        || DATE_NATURAL_PATTERN.is_match(query)
-        || ISO_DATE_PATTERN.is_match(query)
-        || is_known_calculator_keyword(query)
-}
-
-fn is_obviously_irrelevant_query(query: &str, intent: &Intent) -> bool {
-    if PLAIN_DECIMAL_PATTERN.is_match(query) {
-        return true;
-    }
-
-    if SINGLE_ALPHA_WORD_PATTERN.is_match(query) && !is_known_calculator_keyword(query) {
-        return true;
-    }
-
-    if CODE_IDENTIFIER_PATTERN.is_match(query)
-        && query.chars().any(|character| character.is_ascii_digit())
-    {
-        return true;
-    }
-
-    !has_calculator_signal(query, intent)
-}
-
 fn is_incomplete_query(query: &str) -> bool {
     matches!(
         query.trim(),
@@ -282,20 +157,12 @@ fn is_incomplete_query(query: &str) -> bool {
         || INCOMPLETE_TIME_QUERY_PATTERN.is_match(query.trim())
 }
 
-fn classify_query(query: &str, intent: &Intent) -> CalculatorStatus {
-    if query.trim().is_empty() {
-        return CalculatorStatus::Empty;
-    }
-
-    if is_incomplete_query(query) || is_partial_conversion_query(query, intent) {
+fn fallback_status(query: &str) -> CalculatorStatus {
+    if is_incomplete_query(query) || is_partial_conversion_query(query) {
         return CalculatorStatus::Incomplete;
     }
 
-    if is_obviously_irrelevant_query(query, intent) {
-        return CalculatorStatus::Irrelevant;
-    }
-
-    CalculatorStatus::Valid
+    CalculatorStatus::Irrelevant
 }
 
 fn normalize_result_text(value: &str) -> String {
@@ -366,9 +233,16 @@ async fn evaluate_with_soulver(query: String) -> Result<Option<CalculationOutput
 }
 
 async fn evaluate_with_smart_calculator(query: &str) -> Result<Option<CalculationOutput>> {
-    let response = calculate_with_smart_calculator(query, None)
-        .await
-        .map_err(|error| CalculatorError::SmartCalculator(error.to_string()))?;
+    let response = match calculate_with_smart_calculator(query, None).await {
+        Ok(response) => response,
+        Err(SmartCalculatorEngineError::Evaluation(_))
+        | Err(SmartCalculatorEngineError::UnsupportedIntent(_)) => {
+            return Ok(None);
+        }
+        Err(error) => {
+            return Err(CalculatorError::SmartCalculator(error.to_string()));
+        }
+    };
 
     let value = response.formatted.trim().to_string();
     if value.is_empty() {
@@ -406,12 +280,10 @@ pub fn initialize(app: &AppHandle) -> Result<()> {
 #[command]
 pub async fn calculate_expression(query: String) -> Result<CalculatorCommandResponse> {
     let normalized_query = normalize_query(query.trim());
-    let intent = detect_intent(&normalized_query);
-    let classification = classify_query(&normalized_query, &intent);
-    if classification != CalculatorStatus::Valid {
+    if normalized_query.is_empty() {
         return Ok(CalculatorCommandResponse::empty(
             normalized_query,
-            classification,
+            CalculatorStatus::Empty,
         ));
     }
 
@@ -460,16 +332,17 @@ pub async fn calculate_expression(query: String) -> Result<CalculatorCommandResp
         });
     }
 
-    if matches!(intent, Intent::Math { .. }) && is_incomplete_query(&normalized_query) {
+    let fallback_status = fallback_status(&normalized_query);
+    if fallback_status == CalculatorStatus::Incomplete {
         return Ok(CalculatorCommandResponse::empty(
             normalized_query,
-            CalculatorStatus::Incomplete,
+            fallback_status,
         ));
     }
 
     Ok(CalculatorCommandResponse::empty(
         normalized_query,
-        CalculatorStatus::Irrelevant,
+        fallback_status,
     ))
 }
 
@@ -514,10 +387,8 @@ pub async fn set_calculator_history_entry_pinned(
 
 #[cfg(test)]
 mod tests {
-    use smart_calculator::parser::detect_intent;
-
     use super::{
-        classify_query, is_error_like_result_type, is_error_like_value, normalize_query,
+        fallback_status, is_error_like_result_type, is_error_like_value, normalize_query,
         normalize_result_text, CalculatorStatus,
     };
 
@@ -528,52 +399,42 @@ mod tests {
     }
 
     #[test]
-    fn classifies_edge_case_queries() {
-        assert_eq!(
-            classify_query("1kg in", &detect_intent("1kg in")),
-            CalculatorStatus::Incomplete
-        );
-        assert_eq!(
-            classify_query("1kg in g", &detect_intent("1kg in g")),
-            CalculatorStatus::Valid
-        );
-        assert_eq!(
-            classify_query("1 dollar in", &detect_intent("1 dollar in")),
-            CalculatorStatus::Incomplete
-        );
-        assert_eq!(
-            classify_query("1 dollar in eu", &detect_intent("1 dollar in eu")),
-            CalculatorStatus::Incomplete
-        );
-        assert_eq!(
-            classify_query("1 dollar in eur", &detect_intent("1 dollar in eur")),
-            CalculatorStatus::Valid
-        );
-        assert_eq!(
-            classify_query(
-                "1 tbsp of honey in gram",
-                &detect_intent("1 tbsp of honey in gram")
-            ),
-            CalculatorStatus::Valid
-        );
-        assert_eq!(
-            classify_query(
-                "1 tbsp of honey in gra",
-                &detect_intent("1 tbsp of honey in gra")
-            ),
-            CalculatorStatus::Incomplete
-        );
-        assert_eq!(
-            classify_query("hello world", &detect_intent("hello world")),
-            CalculatorStatus::Irrelevant
-        );
-        assert_eq!(
-            classify_query(
-                "Tables1kGCMExponentiator",
-                &detect_intent("Tables1kGCMExponentiator")
-            ),
-            CalculatorStatus::Irrelevant
-        );
+    fn falls_back_for_incomplete_queries() {
+        for query in [
+            "time",
+            "time at",
+            "time in",
+            "what is",
+            "what's",
+            "1kg in",
+            "1 dollar in",
+            "1 dollar in eu",
+            "1 tbsp of honey in gra",
+            "1kg to",
+            "1kg as",
+            "now in",
+        ] {
+            assert_eq!(
+                fallback_status(query),
+                CalculatorStatus::Incomplete,
+                "{query}"
+            );
+        }
+    }
+
+    #[test]
+    fn falls_back_for_irrelevant_queries_without_results() {
+        for query in [
+            "hello world",
+            "Tables1kGCMExponentiator",
+            "random note to self",
+        ] {
+            assert_eq!(
+                fallback_status(query),
+                CalculatorStatus::Irrelevant,
+                "{query}"
+            );
+        }
     }
 
     #[test]
@@ -598,5 +459,14 @@ mod tests {
             .expect("smart calculator should not error");
 
         assert!(result.is_some());
+    }
+
+    #[tokio::test]
+    async fn smart_calculator_treats_plain_text_as_no_result() {
+        let result = super::evaluate_with_smart_calculator("hello world")
+            .await
+            .expect("plain text misses should not error");
+
+        assert!(result.is_none());
     }
 }
