@@ -120,7 +120,7 @@ export function useClipboardActionItems(): LauncherActionItem[] {
 
   return useMemo(() => {
     const entry = state.selectedEntry;
-    const canPaste = !!entry && entry.content_type !== "image";
+    const canPaste = !!entry;
     const hasSelection = !!entry;
     const isPinned =
       !!entry && pinnedEntryIds.includes(`${entry.copied_at.trim()}::${entry.value}`);
@@ -141,7 +141,7 @@ export function useClipboardActionItems(): LauncherActionItem[] {
         id: "clipboard-paste",
         label: "Paste",
         description: canPaste
-          ? "Paste selected clipboard text into the active app"
+          ? "Paste selected clipboard item into the active app"
           : "Paste is unavailable for this item",
         icon: <Clipboard className="size-4" />,
         shortcut: "Ctrl+Shift+V",

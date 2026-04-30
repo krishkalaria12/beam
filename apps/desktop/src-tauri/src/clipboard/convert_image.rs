@@ -19,3 +19,25 @@ pub fn get_image_as_base64(image_data: ImageData) -> Option<String> {
 
     Some(format!("data:image/png;base64,{}", base64_string))
 }
+
+pub fn image_data_url_to_arboard_image(value: &str) -> Result<ImageData<'static>, String> {
+    let base64_payload = value
+        .split_once(',')
+        .map(|(_, payload)| payload)
+        .unwrap_or(value)
+        .trim();
+
+    let image_bytes = general_purpose::STANDARD
+        .decode(base64_payload)
+        .map_err(|error| format!("invalid image base64 payload: {error}"))?;
+    let rgba_image = image::load_from_memory(&image_bytes)
+        .map_err(|error| format!("invalid image clipboard payload: {error}"))?
+        .into_rgba8();
+    let (width, height) = rgba_image.dimensions();
+
+    Ok(ImageData {
+        width: width as usize,
+        height: height as usize,
+        bytes: rgba_image.into_raw().into(),
+    })
+}

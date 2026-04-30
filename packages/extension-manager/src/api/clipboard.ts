@@ -4,6 +4,7 @@ type ClipboardContent = {
   text?: string;
   html?: string;
   file?: string;
+  image?: string;
 };
 
 type ReadResult = {

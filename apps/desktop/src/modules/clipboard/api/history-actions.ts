@@ -68,11 +68,14 @@ export async function clearClipboardHistory() {
 }
 
 export async function pasteClipboardHistoryEntry(entry: ClipboardHistoryEntry) {
+  const isImage = entry.content_type === "image";
+
   await invoke("clipboard_paste", {
     content: {
-      text: entry.content_type === "image" ? undefined : entry.value,
+      text: isImage ? undefined : entry.value,
       html: undefined,
       file: undefined,
+      image: isImage ? entry.value : undefined,
     },
   });
 }

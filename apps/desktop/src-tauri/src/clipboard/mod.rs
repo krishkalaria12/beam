@@ -9,7 +9,7 @@ use arboard::Clipboard;
 use tauri::{command, AppHandle, State};
 
 #[cfg(not(target_os = "linux"))]
-use self::convert_image::get_image_as_base64;
+use self::convert_image::{get_image_as_base64, image_data_url_to_arboard_image};
 use self::error::Result;
 use self::history::{
     clear_history, get_history, get_history_values, get_pinned_entry_ids, remove_history_entry,
@@ -47,6 +47,24 @@ pub struct ClipboardContent {
     pub text: Option<String>,
     pub html: Option<String>,
     pub file: Option<String>,
+    pub image: Option<String>,
+}
+
+impl ClipboardContent {
+    pub fn from_read_result(result: ReadResult) -> Self {
+        let image = result
+            .text
+            .as_ref()
+            .filter(|value| value.starts_with("data:image/"))
+            .cloned();
+
+        Self {
+            text: if image.is_some() { None } else { result.text },
+            html: result.html,
+            file: result.file,
+            image,
+        }
+    }
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Default, Clone)]
@@ -221,6 +239,10 @@ pub async fn clipboard_copy(
             clipboard
                 .set_text(html.clone())
                 .map_err(|e| e.to_string())?;
+        } else if let Some(image) = &content.image {
+            clipboard
+                .set_image(image_data_url_to_arboard_image(image)?)
+                .map_err(|e| e.to_string())?;
         }
 
         Ok(())
@@ -269,15 +291,19 @@ pub async fn clipboard_paste(content: ClipboardContent) -> std::result::Result<(
     #[cfg(not(target_os = "linux"))]
     {
         let mut clipboard = Clipboard::new().map_err(|e| e.to_string())?;
-        let original_text = clipboard.get_text().ok();
+        let original_clipboard = read_clipboard_entry(&mut clipboard).map(|text| ReadResult {
+            text: Some(text),
+            html: None,
+            file: None,
+        });
 
         clipboard_copy(content, None).await?;
         thread::sleep(Duration::from_millis(60));
         trigger_paste_shortcut();
         thread::sleep(Duration::from_millis(60));
 
-        if let Some(text) = original_text {
-            let _ = clipboard.set_text(text);
+        if let Some(snapshot) = original_clipboard {
+            let _ = clipboard_copy(ClipboardContent::from_read_result(snapshot), None).await;
         } else {
             let _ = clipboard.clear();
         }

@@ -3,7 +3,7 @@ use std::{collections::HashSet, process::Command, thread, time::Duration};
 use arboard::Clipboard;
 use url::Url;
 
-use crate::clipboard::convert_image::get_image_as_base64;
+use crate::clipboard::convert_image::{get_image_as_base64, image_data_url_to_arboard_image};
 use crate::clipboard::{ClipboardContent, CopyOptions, ReadResult, SelectedFinderItem};
 
 use super::capabilities::{ClipboardBackendCapabilities, DesktopBackendKind};
@@ -80,6 +80,29 @@ fn normalize_text_content(content: &ClipboardContent) -> Option<String> {
     content.html.clone()
 }
 
+fn write_content_with_arboard(content: &ClipboardContent) -> Result<()> {
+    let mut clipboard =
+        Clipboard::new().map_err(|error| LinuxDesktopError::ClipboardError(error.to_string()))?;
+
+    if let Some(image) = &content.image {
+        clipboard
+            .set_image(
+                image_data_url_to_arboard_image(image)
+                    .map_err(LinuxDesktopError::ClipboardError)?,
+            )
+            .map_err(|error| LinuxDesktopError::ClipboardError(error.to_string()))?;
+        return Ok(());
+    }
+
+    if let Some(text) = normalize_text_content(content) {
+        clipboard
+            .set_text(text)
+            .map_err(|error| LinuxDesktopError::ClipboardError(error.to_string()))?;
+    }
+
+    Ok(())
+}
+
 fn trigger_linux_paste_shortcut() {
     let _ = Command::new("xdotool").args(["key", "ctrl+v"]).status();
 }
@@ -114,14 +137,7 @@ impl GenericClipboardProvider {
     }
 
     fn clipboard_copy_impl(&self, content: ClipboardContent) -> Result<()> {
-        let mut clipboard = Clipboard::new()
-            .map_err(|error| LinuxDesktopError::ClipboardError(error.to_string()))?;
-        if let Some(text) = normalize_text_content(&content) {
-            clipboard
-                .set_text(text)
-                .map_err(|error| LinuxDesktopError::ClipboardError(error.to_string()))?;
-        }
-        Ok(())
+        write_content_with_arboard(&content)
     }
 }
 
@@ -166,17 +182,17 @@ impl ClipboardProvider for GenericClipboardProvider {
         content: ClipboardContent,
     ) -> Result<()> {
         let _ = env;
-        let mut clipboard = Clipboard::new()
-            .map_err(|error| LinuxDesktopError::ClipboardError(error.to_string()))?;
-        let previous = clipboard.get_text().ok();
+        let previous = self.clipboard_read_impl().ok();
         self.clipboard_copy_impl(content)?;
         thread::sleep(Duration::from_millis(60));
         trigger_linux_paste_shortcut();
         thread::sleep(Duration::from_millis(60));
 
-        if let Some(text) = previous {
-            let _ = clipboard.set_text(text);
+        if let Some(snapshot) = previous {
+            let _ = write_content_with_arboard(&ClipboardContent::from_read_result(snapshot));
         } else {
+            let mut clipboard = Clipboard::new()
+                .map_err(|error| LinuxDesktopError::ClipboardError(error.to_string()))?;
             let _ = clipboard.clear();
         }
 
@@ -241,11 +257,11 @@ impl ClipboardProvider for GnomeClipboardProvider {
 
     fn clipboard_read(&self, env: &LinuxDesktopEnvironment) -> Result<ReadResult> {
         let payload = Self::read_payload()?;
+        let payload_text = payload.text.filter(|value| !value.trim().is_empty());
 
         if env.session_type == "wayland" && wayland_helper::helper_status(env).available {
             let helper_response = wayland_helper::read_clipboard_selection(env)
                 .map_err(LinuxDesktopError::ClipboardError)?;
-            let payload_text = payload.text.filter(|value| !value.trim().is_empty());
             let helper_text = helper_response
                 .text
                 .filter(|value| !value.trim().is_empty());
@@ -256,7 +272,13 @@ impl ClipboardProvider for GnomeClipboardProvider {
             ));
         }
 
-        Ok(payload)
+        if payload_text.is_some() {
+            return Ok(create_read_result(payload_text));
+        }
+
+        GenericClipboardProvider
+            .clipboard_read(env)
+            .or_else(|_| Ok(create_read_result(None)))
     }
 
     fn clipboard_read_text(&self, _env: &LinuxDesktopEnvironment) -> Result<ReadResult> {
@@ -269,6 +291,10 @@ impl ClipboardProvider for GnomeClipboardProvider {
         content: ClipboardContent,
         _options: Option<CopyOptions>,
     ) -> Result<()> {
+        if content.image.is_some() {
+            return write_content_with_arboard(&content);
+        }
+
         let payload = Self::serialize_content(&content)?;
         let ok = gnome_extension::dbus::write_clipboard(&payload)?;
         if ok {
@@ -282,9 +308,13 @@ impl ClipboardProvider for GnomeClipboardProvider {
 
     fn clipboard_paste(
         &self,
-        _env: &LinuxDesktopEnvironment,
+        env: &LinuxDesktopEnvironment,
         content: ClipboardContent,
     ) -> Result<()> {
+        if content.image.is_some() {
+            return GenericClipboardProvider.clipboard_paste(env, content);
+        }
+
         let payload = Self::serialize_content(&content)?;
         let ok = gnome_extension::dbus::paste_clipboard(&payload)?;
         if ok {
@@ -303,6 +333,7 @@ impl ClipboardProvider for GnomeClipboardProvider {
                 text: Some(String::new()),
                 html: None,
                 file: None,
+                image: None,
             },
             None,
         )

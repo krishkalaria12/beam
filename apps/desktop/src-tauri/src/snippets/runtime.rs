@@ -208,6 +208,7 @@ pub async fn paste_snippet(app: &AppHandle, snippet_id: &str) -> Result<()> {
         text: Some(rendered),
         html: None,
         file: None,
+        image: None,
     })
     .await
     .map_err(SnippetError::ValidationError)?;
@@ -551,6 +552,7 @@ impl LinuxSnippetRuntime {
                 text: Some(rendered),
                 html: None,
                 file: None,
+                image: None,
             },
             None,
         ))
@@ -654,11 +656,7 @@ fn restore_clipboard_snapshot(snapshot: Option<ReadResult>) {
     match snapshot {
         Some(snapshot) => {
             let _ = tauri::async_runtime::block_on(clipboard::clipboard_copy(
-                ClipboardContent {
-                    text: snapshot.text,
-                    html: snapshot.html,
-                    file: snapshot.file,
-                },
+                ClipboardContent::from_read_result(snapshot),
                 None,
             ));
         }
