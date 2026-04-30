@@ -24,7 +24,80 @@ Beam is a keyboard-first command launcher built with **Tauri v2** and **React**.
 - **Snippets** — Text expansion with configurable triggers
 - **Custom Themes** — Full CSS theming support with light/dark mode sync
 
-## Quick Start
+## Install
+
+### Arch Linux
+
+Install Beam from the AUR package:
+
+- [beam-launcher-bin](https://aur.archlinux.org/packages/beam-launcher-bin)
+
+```bash
+yay -S beam-launcher-bin
+```
+
+### Other Linux Distributions
+
+Download the latest Linux release from GitHub:
+
+- [Beam releases](https://github.com/krishkalaria12/beam/releases)
+
+Install the latest `.deb` build with `curl`:
+
+```bash
+curl -s https://api.github.com/repos/krishkalaria12/beam/releases/latest \
+  | grep browser_download_url \
+  | grep '\.deb"' \
+  | cut -d '"' -f 4 \
+  | xargs curl -L -o beam.deb
+
+sudo apt install ./beam.deb
+```
+
+Install the latest `.rpm` build with `curl`:
+
+```bash
+curl -s https://api.github.com/repos/krishkalaria12/beam/releases/latest \
+  | grep browser_download_url \
+  | grep '\.rpm"' \
+  | cut -d '"' -f 4 \
+  | xargs curl -L -o beam.rpm
+
+sudo rpm -i beam.rpm
+```
+
+## Keybinding
+
+Beam can be opened from your desktop environment or launched from a terminal:
+
+```bash
+beam
+```
+
+To toggle the launcher from your window manager, bind a shortcut to:
+
+```bash
+beam --toggle
+```
+
+Examples:
+
+```ini
+# Hyprland: ~/.config/hypr/hyprland.conf
+bind = SUPER, Space, exec, beam --toggle
+
+# Sway/i3: ~/.config/sway/config or ~/.config/i3/config
+bindsym Mod4+space exec beam --toggle
+```
+
+```kdl
+// niri: ~/.config/niri/config.kdl
+binds {
+    Mod+Space { spawn "beam" "--toggle"; }
+}
+```
+
+## Development Setup
 
 ```bash
 git clone https://github.com/krishkalaria12/beam.git
