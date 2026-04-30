@@ -3,6 +3,12 @@ import { openFile } from "@/modules/file-search/api/open-file";
 import { searchWithBrowser } from "@/modules/search/api/search-with-browser";
 import { executeSystemAction } from "@/modules/system-actions/api/execute-system-action";
 import { getAwakeStatus, toggleAwake } from "@/modules/system-actions/api/toggle-awake";
+import {
+  completeFocusSession,
+  pauseFocusSession,
+  resumeFocusSession,
+  toggleFocusSession,
+} from "@/modules/focus/api/focus";
 import type { SystemAction } from "@/modules/system-actions/types";
 import { openExternalUrl } from "@/lib/open-external-url";
 
@@ -16,6 +22,10 @@ const TAURI_INVOKE_ALLOWLIST = new Set([
   "search_with_browser",
   "toggle_awake",
   "get_awake_status",
+  "toggle_focus_session",
+  "pause_focus_session",
+  "resume_focus_session",
+  "complete_focus_session",
 ]);
 
 const SYSTEM_ACTION_ALLOWLIST: ReadonlySet<SystemAction> = new Set([
@@ -316,6 +326,30 @@ async function dispatchInvokeAction(
     if (commandName === "get_awake_status") {
       const isAwake = await getAwakeStatus();
       return ok({ commandName, isAwake });
+    }
+
+    if (commandName === "toggle_focus_session") {
+      const session = await toggleFocusSession();
+      context.runtime.setCommandSearch("");
+      return ok({ commandName, session });
+    }
+
+    if (commandName === "pause_focus_session") {
+      const session = await pauseFocusSession();
+      context.runtime.setCommandSearch("");
+      return ok({ commandName, session });
+    }
+
+    if (commandName === "resume_focus_session") {
+      const session = await resumeFocusSession();
+      context.runtime.setCommandSearch("");
+      return ok({ commandName, session });
+    }
+
+    if (commandName === "complete_focus_session") {
+      const session = await completeFocusSession();
+      context.runtime.setCommandSearch("");
+      return ok({ commandName, session });
     }
 
     return error(

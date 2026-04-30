@@ -157,6 +157,8 @@ pub(crate) fn build_window_entry(
         id: id.trim().to_string(),
         title: title.trim().to_string(),
         app_name,
+        class_name: class_name.trim().to_string(),
+        app_id: app_id.map(|value| value.trim().to_string()),
         app_icon,
         workspace: workspace.trim().to_string(),
         is_focused,

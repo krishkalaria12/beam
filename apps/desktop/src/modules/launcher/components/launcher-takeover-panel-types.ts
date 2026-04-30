@@ -14,6 +14,7 @@ export interface TakeoverPanelRendererInput {
   openTranslation: (query: string) => void;
   openQuicklinks: () => void;
   openSpeedTest: () => void;
+  openFocus: () => void;
   openClipboard: () => void;
   openAi: () => void;
   openTodo: () => void;

@@ -11,5 +11,11 @@
   },
   "action": {
     "default_title": "Beam Bridge"
-  }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["block.html", "block.js"],
+      "matches": ["http://*/*", "https://*/*"]
+    }
+  ]
 }

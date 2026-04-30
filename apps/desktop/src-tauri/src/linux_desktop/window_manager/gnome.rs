@@ -61,6 +61,8 @@ impl WindowProvider for GnomeWindowProvider {
                 id: entry.id,
                 title: entry.title,
                 app_name: entry.app_name,
+                class_name: entry.class_name,
+                app_id: entry.app_id,
                 app_icon: String::new(),
                 workspace: entry.workspace,
                 is_focused: entry.is_focused,

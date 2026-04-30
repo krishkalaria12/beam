@@ -157,6 +157,14 @@ function renderTakeoverPanel(input: RenderTakeoverPanelsInput): ReactNode {
         <SpeedTestCommandGroup isOpen onOpen={input.openSpeedTest} onBack={input.backToCommands} />
       ) : null;
     }
+    case COMMAND_PANELS.FOCUS: {
+      const FocusCommandGroup = getLoadedTakeoverPanel(
+        input.panel,
+      ) as ComponentType<CommandGroupProps> | null;
+      return FocusCommandGroup ? (
+        <FocusCommandGroup isOpen onOpen={input.openFocus} onBack={input.backToCommands} />
+      ) : null;
+    }
     case COMMAND_PANELS.CLIPBOARD: {
       const ClipboardCommandGroup = getLoadedTakeoverPanel(
         input.panel,

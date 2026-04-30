@@ -66,6 +66,11 @@ fn metadata_to_window_entry(
         id: window.id.clone(),
         title: window.title.clone(),
         app_name,
+        class_name: class_name.to_string(),
+        app_id: window
+            .desktop_file
+            .clone()
+            .or_else(|| (!class_name.is_empty()).then_some(class_name.to_string())),
         app_icon,
         workspace: window.workspace.trim().to_string(),
         is_focused: window.is_active,

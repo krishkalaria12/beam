@@ -11,6 +11,7 @@ import { useClipboardActionItems } from "@/modules/clipboard/hooks/use-clipboard
 import { useExtensionActionItems } from "@/modules/extensions/hooks/use-extension-action-items";
 import { useExtensionRunnerActionSections } from "@/modules/extensions/hooks/use-extension-runner-action-items";
 import { useFileSearchActionItems } from "@/modules/file-search/hooks/use-file-search-action-items";
+import { useFocusActionItems } from "@/modules/focus/hooks/use-focus-action-items";
 import { LauncherActionsPanel } from "@/modules/launcher/components/launcher-actions-panel";
 import { buildSharedTakeoverActionItems } from "@/modules/launcher/components/launcher-takeover-panel-actions";
 import { renderTakeoverPanels } from "@/modules/launcher/components/launcher-takeover-panel-renderer";
@@ -56,6 +57,7 @@ function LauncherTakeoverPanelContent({
   const fileSearchActionItems = useFileSearchActionItems({
     includeDisabledPlaceholderItems: true,
   });
+  const focusActionItems = useFocusActionItems(activePanel === COMMAND_PANELS.FOCUS);
   const quicklinksActionItems = useQuicklinksActionItems();
   const scriptCommandActionItems = useScriptCommandActionItems();
 
@@ -161,6 +163,7 @@ function LauncherTakeoverPanelContent({
         extensionActionItems,
         extensionRunnerActionSections,
         fileSearchActionItems,
+        focusActionItems,
         quicklinksActionItems,
         scriptCommandActionItems,
       })

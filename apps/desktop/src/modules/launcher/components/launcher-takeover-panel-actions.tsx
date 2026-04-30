@@ -36,6 +36,7 @@ interface BuildSharedTakeoverActionItemsInput {
   extensionActionItems: readonly LauncherActionItem[];
   extensionRunnerActionSections: readonly LauncherActionSection[];
   fileSearchActionItems: readonly LauncherActionItem[];
+  focusActionItems: readonly LauncherActionItem[];
   quicklinksActionItems: readonly LauncherActionItem[];
   scriptCommandActionItems: readonly LauncherActionItem[];
 }
@@ -65,6 +66,7 @@ export function buildSharedTakeoverActionItems({
   extensionActionItems,
   extensionRunnerActionSections,
   fileSearchActionItems,
+  focusActionItems,
   quicklinksActionItems,
   scriptCommandActionItems,
 }: BuildSharedTakeoverActionItemsInput): LauncherActionSection[] {
@@ -180,6 +182,10 @@ export function buildSharedTakeoverActionItems({
 
   if (activePanel === COMMAND_PANELS.FILE_SEARCH) {
     panelSpecificRootItems.unshift(...fileSearchActionItems);
+  }
+
+  if (activePanel === COMMAND_PANELS.FOCUS) {
+    panelSpecificRootItems.unshift(...focusActionItems);
   }
 
   if (activePanel === COMMAND_PANELS.EXTENSIONS) {

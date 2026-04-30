@@ -4,7 +4,7 @@ use std::io::Read;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
 
-use once_cell::sync::Lazy;
+use once_cell::sync::{Lazy, OnceCell};
 use parking_lot::RwLock;
 use scraper::{Html, Selector};
 use serde::de::DeserializeOwned;
@@ -14,8 +14,11 @@ use tiny_http::{Header, Method, Request, Response, Server, StatusCode};
 
 use super::error::{ExtensionsError, Result};
 use crate::extensions::config::CONFIG as EXTENSIONS_CONFIG;
+use crate::focus;
+use crate::focus::types::{FocusSnoozeInput, FocusSnoozeTargetType};
 
 static BRIDGE_SERVER_RUNNING: AtomicBool = AtomicBool::new(false);
+static BRIDGE_APP_HANDLE: OnceCell<tauri::AppHandle> = OnceCell::new();
 static BRIDGE_STATE: Lazy<RwLock<BrowserBridgeState>> =
     Lazy::new(|| RwLock::new(BrowserBridgeState::default()));
 
@@ -83,6 +86,13 @@ struct TabByIdParams {
 #[serde(rename_all = "camelCase")]
 struct SearchTabsParams {
     query: Option<String>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct BridgeFocusSnoozePayload {
+    target: String,
+    duration_seconds: Option<u64>,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -289,6 +299,10 @@ fn has_bridge_connection() -> bool {
     !state.clients.is_empty()
 }
 
+pub fn has_connected_client() -> bool {
+    has_bridge_connection()
+}
+
 fn get_tabs_snapshot() -> Vec<BridgeTabOutput> {
     let mut state = BRIDGE_STATE.write();
     let now = Instant::now();
@@ -488,6 +502,54 @@ fn handle_bridge_http_request(mut request: Request) {
                 }
             }
         }
+        (Method::Get, "/bridge/focus/state") => {
+            send_json_response(
+                request,
+                200,
+                json!({ "ok": true, "policy": focus::browser_policy() }),
+            );
+        }
+        (Method::Post, "/bridge/focus/snooze") => {
+            match parse_json_body::<BridgeFocusSnoozePayload>(&mut request) {
+                Ok(payload) => {
+                    let Some(app) = BRIDGE_APP_HANDLE.get() else {
+                        send_json_response(
+                            request,
+                            503,
+                            json!({ "ok": false, "error": "Beam app handle is not ready" }),
+                        );
+                        return;
+                    };
+                    let result = focus::snooze_focus_target(
+                        app.clone(),
+                        FocusSnoozeInput {
+                            target_type: FocusSnoozeTargetType::Website,
+                            target: payload.target,
+                            duration_seconds: payload.duration_seconds.unwrap_or(5 * 60),
+                        },
+                    );
+                    match result {
+                        Ok(session) => {
+                            send_json_response(
+                                request,
+                                200,
+                                json!({ "ok": true, "session": session }),
+                            );
+                        }
+                        Err(error) => {
+                            send_json_response(
+                                request,
+                                400,
+                                json!({ "ok": false, "error": error.to_string() }),
+                            );
+                        }
+                    }
+                }
+                Err(error) => {
+                    send_json_response(request, 400, json!({ "ok": false, "error": error }));
+                }
+            }
+        }
         _ => {
             send_json_response(
                 request,
@@ -512,7 +574,8 @@ fn run_bridge_server() -> std::result::Result<(), String> {
     Ok(())
 }
 
-pub fn start_bridge_server(_app: &tauri::AppHandle) {
+pub fn start_bridge_server(app: &tauri::AppHandle) {
+    let _ = BRIDGE_APP_HANDLE.set(app.clone());
     if BRIDGE_SERVER_RUNNING
         .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
         .is_err()

@@ -66,6 +66,9 @@ export function useLauncherPanelActions({ openPanel }: UseLauncherPanelActionsIn
       openSpeedTest: () => {
         void openPreparedPanel("speed-test", true);
       },
+      openFocus: () => {
+        void openPreparedPanel("focus", true);
+      },
       openClipboard: () => {
         void openPreparedPanel("clipboard", true);
       },

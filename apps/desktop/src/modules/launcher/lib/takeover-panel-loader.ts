@@ -34,6 +34,10 @@ const takeoverPanelLoaders: Record<TakeoverCommandPanel, () => Promise<TakeoverP
     import("@/modules/file-search/components/file-search-command-group").then(
       (mod) => mod.default as TakeoverPanelComponent,
     ),
+  focus: () =>
+    import("@/modules/focus/components/focus-command-group").then(
+      (mod) => mod.default as TakeoverPanelComponent,
+    ),
   hyprwhspr: () =>
     import("@/modules/hyprwhspr/components/hyprwhspr-view").then(
       (mod) => mod.HyprWhsprView as TakeoverPanelComponent,

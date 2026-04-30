@@ -22,6 +22,7 @@ const TAKEOVER_PANELS = new Set<CommandPanel>([
   "ai",
   "snippets",
   "file-search",
+  "focus",
   "dictionary",
   "translation",
   "quicklinks",

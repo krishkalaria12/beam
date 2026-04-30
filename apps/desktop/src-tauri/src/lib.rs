@@ -12,6 +12,7 @@ pub mod emoji;
 pub mod error;
 pub mod extensions;
 pub mod file_search;
+pub mod focus;
 pub mod fuzzy_search;
 pub mod hotkeys;
 pub mod http;
@@ -305,6 +306,7 @@ pub fn run(startup_args: Vec<String>) {
             todo::db::init(&app.handle());
             snippets::db::init(&app.handle());
             snippets::runtime::initialize_runtime(app.handle().clone());
+            focus::initialize(app.handle().clone());
             extensions::browser_extension::start_bridge_server(&app.handle());
             cli::bridge::start_cli_bridge_server(&app.handle());
 

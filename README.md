@@ -20,6 +20,7 @@ Beam is a keyboard-first command launcher built with **Tauri v2** and **React**.
 - **File Search** — Real-time indexed file search
 - **AI Chat** — Multi-provider support (OpenAI, Anthropic, Gemini, OpenRouter)
 - **Extensions** — Raycast-compatible extension runtime with a built-in store
+- **Focus Mode** — Timed app and website blocking for deep work sessions
 - **Snippets** — Text expansion with configurable triggers
 - **Custom Themes** — Full CSS theming support with light/dark mode sync
 
@@ -37,6 +38,15 @@ bun run desktop:dev
 - [Bun](https://bun.sh/)
 - [Rust](https://rustup.rs/)
 - [Tauri v2 Dependencies](https://tauri.app/start/prerequisites/)
+
+## Focus Mode Browser Extension
+
+Focus Mode blocks desktop apps natively, but website blocking requires the Beam browser extension to be installed and connected to the local Beam bridge.
+
+- **Firefox / Zen Browser:** load `packages/browser-extension/firefox/manifest.json` from `about:debugging#/runtime/this-firefox`
+- **Chrome / Chromium:** load `packages/browser-extension/chrome` from `chrome://extensions` with Developer Mode enabled
+
+Keep Beam running while using website blocking. The Focus Mode footer shows whether the browser bridge is connected.
 
 ## Contributing
 

@@ -935,6 +935,7 @@ export default function LauncherCommand() {
                   openTranslation={openTranslation}
                   openQuicklinks={takeoverPanelOpeners.openQuicklinks}
                   openSpeedTest={takeoverPanelOpeners.openSpeedTest}
+                  openFocus={takeoverPanelOpeners.openFocus}
                   openClipboard={takeoverPanelOpeners.openClipboard}
                   openAi={takeoverPanelOpeners.openAi}
                   openTodo={takeoverPanelOpeners.openTodo}

@@ -11,6 +11,8 @@ pub struct WindowEntry {
     pub id: String,
     pub title: String,
     pub app_name: String,
+    pub class_name: String,
+    pub app_id: Option<String>,
     pub app_icon: String,
     pub workspace: String,
     pub is_focused: bool,

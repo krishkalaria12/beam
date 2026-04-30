@@ -15,6 +15,7 @@ const PANEL_WARMUP_TIERS: Partial<Record<CommandPanel, LauncherPanelWarmupTier>>
   ai: "intent",
   snippets: "intent",
   "speed-test": "intent",
+  focus: "intent",
   "file-search": "intent",
   dictionary: "intent",
   "window-switcher": "intent",

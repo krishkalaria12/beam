@@ -20,6 +20,7 @@
   "browser_action": {
     "default_title": "Beam Bridge"
   },
+  "web_accessible_resources": ["block.html", "block.js"],
   "applications": {
     "gecko": {
       "id": "beam-bridge@beam.launcher"

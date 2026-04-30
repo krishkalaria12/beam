@@ -10,6 +10,7 @@ interface PanelCommandRegistration {
 
 const PANEL_COMMAND_REGISTRY: Partial<Record<CommandPanel, PanelCommandRegistration>> = {
   [COMMAND_PANELS.SETTINGS]: { id: "settings.panel.open", title: "settings" },
+  [COMMAND_PANELS.FOCUS]: { id: "focus.panel.open", title: "focus mode" },
   [COMMAND_PANELS.CALCULATOR_HISTORY]: {
     id: "calculator.history.panel.open",
     title: "calculator history",
@@ -54,6 +55,7 @@ export function getPanelCommandRegistration(
 
 const PANEL_PRIMARY_ACTION_LABELS: Partial<Record<CommandPanel, string>> = {
   [COMMAND_PANELS.SETTINGS]: "Open",
+  [COMMAND_PANELS.FOCUS]: "Save",
   [COMMAND_PANELS.CALCULATOR_HISTORY]: "Copy",
   [COMMAND_PANELS.EMOJI]: "Copy",
   [COMMAND_PANELS.TODO]: "Create",

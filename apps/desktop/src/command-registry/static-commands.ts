@@ -155,6 +155,80 @@ export const STATIC_COMMANDS: CommandDescriptor[] = [
     },
   },
   {
+    id: "focus.panel.open",
+    title: "focus mode",
+    subtitle: "Start and manage distraction blocking",
+    keywords: ["focus", "focus mode", "deep work", "pomodoro", "block apps", "block websites"],
+    endText: "open",
+    icon: "focus",
+    kind: "panel",
+    scope: SCOPE_NORMAL_COMPRESSED,
+    action: {
+      type: "OPEN_PANEL",
+      payload: { panel: "focus" },
+    },
+  },
+  {
+    id: "focus.toggle",
+    title: "toggle focus session",
+    keywords: ["focus", "toggle focus", "start focus", "pause focus", "resume focus"],
+    endText: "toggle",
+    icon: "focus",
+    kind: "backend-action",
+    scope: SCOPE_NORMAL_COMPRESSED,
+    action: {
+      type: "INVOKE_TAURI",
+      payload: {
+        command: "toggle_focus_session",
+      },
+    },
+  },
+  {
+    id: "focus.pause",
+    title: "pause focus session",
+    keywords: ["focus", "pause focus", "pause session"],
+    endText: "pause",
+    icon: "pause",
+    kind: "backend-action",
+    scope: SCOPE_NORMAL_COMPRESSED,
+    action: {
+      type: "INVOKE_TAURI",
+      payload: {
+        command: "pause_focus_session",
+      },
+    },
+  },
+  {
+    id: "focus.resume",
+    title: "resume focus session",
+    keywords: ["focus", "resume focus", "resume session"],
+    endText: "resume",
+    icon: "play",
+    kind: "backend-action",
+    scope: SCOPE_NORMAL_COMPRESSED,
+    action: {
+      type: "INVOKE_TAURI",
+      payload: {
+        command: "resume_focus_session",
+      },
+    },
+  },
+  {
+    id: "focus.complete",
+    title: "complete focus session",
+    keywords: ["focus", "complete focus", "end focus", "stop focus"],
+    endText: "complete",
+    icon: "check",
+    kind: "backend-action",
+    scope: SCOPE_NORMAL_COMPRESSED,
+    action: {
+      type: "INVOKE_TAURI",
+      payload: {
+        command: "complete_focus_session",
+      },
+    },
+  },
+  {
     id: "todo.panel.open",
     title: "todo list",
     subtitle: "Tasks and subtasks",

@@ -14,6 +14,7 @@ import {
   EyeOff,
   FileSearch,
   FileText,
+  Focus,
   Folder,
   Gauge,
   Globe,
@@ -103,6 +104,7 @@ const LUCIDE_ICON_BY_TOKEN: Record<string, LucideIcon> = {
   eye: Eye,
   eyedisabled: EyeOff,
   file: FileText,
+  focus: Focus,
   files: Folder,
   folder: Folder,
   gauge: Gauge,
@@ -158,6 +160,7 @@ const COMMAND_TONE_SPEC_BY_TOKEN: Record<string, CommandToneSpec> = {
   back: { icon: History, tone: "neutral" },
   calculator: { icon: Calculator, tone: "orange" },
   clipboard: { icon: Clipboard, tone: "cyan" },
+  focus: { icon: Focus, tone: "primary" },
   dictionary: { icon: Book, tone: "primary" },
   duckduckgo: { icon: Compass, tone: "orange" },
   emoji: { icon: Smile, tone: "orange" },
@@ -182,6 +185,7 @@ const COMMAND_TONE_SPEC_BY_COMMAND_ID: Record<string, CommandToneSpec> = {
 };
 
 const COMMAND_TONE_SPEC_BY_COMMAND_ID_PREFIXES: ReadonlyArray<CommandIdTonePrefixSpec> = [
+  { prefix: "focus.", spec: { icon: Focus, tone: "primary" } },
   { prefix: "system.", spec: { icon: Power, tone: "red" } },
   { prefix: "quicklinks.", spec: { icon: Link2, tone: "neutral" } },
   { prefix: "search.web", spec: { icon: Search, tone: "neutral" } },
