@@ -70,6 +70,33 @@ Run the website:
 bun run web:dev
 ```
 
+## macOS Development
+
+The Rust backend supports macOS alongside Linux. Platform backends live in
+`apps/desktop/src-tauri/src/macos` (Accessibility window management,
+NSPasteboard clipboard, `.app` bundle scanning, global shortcuts) and mirror
+the `linux_desktop` module's public surface; shared dispatch code lives in
+`apps/desktop/src-tauri/src/desktop`.
+
+Requirements on macOS:
+
+- Rust (aarch64-apple-darwin or x86_64-apple-darwin)
+- `brew install protobuf` (build script compiles protos)
+- Xcode Command Line Tools
+
+Window switching, selected text, and Finder selection require granting Beam
+the **Accessibility** permission (System Settings → Privacy & Security).
+Global hotkeys use the Carbon-backed `tauri-plugin-global-shortcut`.
+
+To bundle a macOS app, override the Linux-only bundle resources with:
+
+```bash
+cargo tauri build --config apps/desktop/src-tauri/tauri.macos.conf.json
+```
+
+Note: the Soulver natural-language calculator currently links its Swift FFI
+on Linux only; macOS falls back to the pure-Rust smart-calculator engine.
+
 ## Project Structure
 
 - `apps/desktop` - Tauri desktop app, React launcher UI, and Rust backend in `src-tauri`

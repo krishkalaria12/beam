@@ -2,7 +2,7 @@
 
 # Beam
 
-**An open-source command launcher for Linux.**
+**An open-source command launcher for Linux and macOS.**
 
 ![Beam](./apps/web/public/image.png)
 
@@ -10,7 +10,7 @@
 
 ## About
 
-Beam is a keyboard-first command launcher built with **Tauri v2** and **React**. It brings a Raycast-like experience to Linux — fast, extensible, and always a hotkey away.
+Beam is a keyboard-first command launcher built with **Tauri v2** and **React**. It brings a Raycast-like experience to Linux and macOS — fast, extensible, and always a hotkey away.
 
 ## Features
 
