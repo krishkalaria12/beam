@@ -79,7 +79,19 @@ pub async fn refresh_runtime_state(app: &AppHandle) -> Result<()> {
     *state.index.write().await = index;
 
     let status = if settings.enabled {
-        RuntimeStatus::Running
+        // The keystroke engine only exists on Linux (evdev/uinput). Off-Linux
+        // builds keep the snippet database usable but surface the runtime as
+        // unavailable instead of pretending to run.
+        #[cfg(target_os = "linux")]
+        {
+            RuntimeStatus::Running
+        }
+        #[cfg(not(target_os = "linux"))]
+        {
+            RuntimeStatus::Error(
+                "Text expansion runs on Linux only; snippets are stored and copyable.".to_string(),
+            )
+        }
     } else {
         RuntimeStatus::Paused
     };

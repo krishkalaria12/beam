@@ -20,13 +20,18 @@ use tauri_plugin_store::{Store, StoreExt};
 
 use super::{
     app_entry::{AppEntry, SearchableAppEntry},
-    collector::collect_searchable_applications,
     error::{ApplicationsError, Result},
 };
+
+#[cfg(target_os = "linux")]
+use super::collector::collect_searchable_applications;
 
 use crate::applications::config::CONFIG as APPLICATIONS_CONFIG;
 use crate::config::CONFIG as APP_CONFIG;
 use crate::settings;
+
+#[cfg(target_os = "windows")]
+use crate::windows_desktop::applications as windows_applications;
 
 static APPLICATIONS_REFRESH_IN_PROGRESS: AtomicBool = AtomicBool::new(false);
 static LIVE_APPLICATIONS: Lazy<RwLock<Vec<SearchableAppEntry>>> =
@@ -107,7 +112,7 @@ pub fn invalidate_applications_cache(app: &AppHandle<Wry>) -> Result<()> {
 fn refresh_live_applications(app: &AppHandle<Wry>) -> Result<Vec<SearchableAppEntry>> {
     let selected_icon_theme = settings::get_selected_icon_theme(app)
         .map_err(|e| ApplicationsError::StoreOpeningError(e.to_string()))?;
-    let applications = collect_searchable_applications(selected_icon_theme)?;
+    let applications = collect_platform_applications(selected_icon_theme)?;
     replace_live_applications(&applications);
 
     match app.store(&APP_CONFIG.store_file_name) {
@@ -149,20 +154,54 @@ fn refresh_live_applications_in_background(app: AppHandle<Wry>) {
 
 fn expand_home(path: &str) -> PathBuf {
     if let Some(rest) = path.strip_prefix("~/") {
-        if let Ok(home) = std::env::var("HOME") {
-            return PathBuf::from(home).join(rest);
+        if let Some(home) = dirs::home_dir() {
+            return home.join(rest);
         }
     }
 
     PathBuf::from(path)
 }
 
+#[cfg(target_os = "linux")]
+fn collect_platform_applications(
+    selected_icon_theme: Option<String>,
+) -> Result<Vec<SearchableAppEntry>> {
+    collect_searchable_applications(selected_icon_theme)
+}
+
+#[cfg(target_os = "windows")]
+fn collect_platform_applications(
+    _selected_icon_theme: Option<String>,
+) -> Result<Vec<SearchableAppEntry>> {
+    Ok(windows_applications::collect_searchable_applications(None))
+}
+
+#[cfg(not(any(target_os = "linux", target_os = "windows")))]
+fn collect_platform_applications(
+    _selected_icon_theme: Option<String>,
+) -> Result<Vec<SearchableAppEntry>> {
+    Err(ApplicationsError::CollectingDesktopFilesError(
+        "application discovery is not supported on this platform".to_string(),
+    ))
+}
+
+#[cfg(target_os = "linux")]
 fn resolve_application_directories() -> Vec<PathBuf> {
     APPLICATIONS_CONFIG
         .application_directories
         .iter()
         .map(|path| expand_home(path))
         .collect()
+}
+
+#[cfg(target_os = "windows")]
+fn resolve_application_directories() -> Vec<PathBuf> {
+    windows_applications::start_menu_directories()
+}
+
+#[cfg(not(any(target_os = "linux", target_os = "windows")))]
+fn resolve_application_directories() -> Vec<PathBuf> {
+    Vec::new()
 }
 
 fn watch_path(
