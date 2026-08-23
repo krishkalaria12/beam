@@ -1,12 +1,10 @@
 pub mod applications;
 pub mod capabilities;
 pub mod clipboard;
-pub mod context;
 pub mod environment;
 pub mod error;
 pub mod gnome_extension;
 pub mod kde_bridge;
 pub mod selection;
-pub mod status;
 pub mod wayland_helper;
 pub mod window_manager;

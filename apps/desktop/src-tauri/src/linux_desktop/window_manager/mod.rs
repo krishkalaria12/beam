@@ -27,18 +27,7 @@ use self::x11::X11WindowProvider;
 use super::capabilities::{DesktopBackendKind, WindowBackendCapabilities};
 use super::environment::{detect_environment, LinuxDesktopEnvironment};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct FocusedWindowInfo {
-    pub id: String,
-    pub title: String,
-    pub app_name: String,
-    pub class_name: String,
-    pub app_id: Option<String>,
-    pub pid: Option<u32>,
-    pub workspace: String,
-    pub is_focused: bool,
-}
+pub use crate::desktop::types::FocusedWindowInfo;
 
 pub trait WindowProvider {
     fn backend_kind(&self) -> DesktopBackendKind;

@@ -1,11 +1,46 @@
 use crate::{
-    ai, applications, calculator, cli, clipboard, custom_config, dictionary, emoji, extensions,
-    file_search, focus, hotkeys, hyprwhspr, launcher_shell, launcher_theme, launcher_window,
-    linux_desktop, menu_bar, notes, pinned, quicklinks, script_commands, search, settings,
+    ai, applications, calculator, cli, clipboard, custom_config, desktop, dictionary, emoji,
+    extensions, file_search, focus, hotkeys, hyprwhspr, launcher_shell, launcher_theme,
+    launcher_window, macos, menu_bar, notes, pinned, quicklinks, script_commands, search, settings,
     snippets, system_actions, todo, translation, window_switcher,
 };
 
 use tauri::ipc::Invoke;
+
+/// GNOME Shell extension management is Linux-only; keep the command surface
+/// stable across platforms by re-exporting on Linux and stubbing elsewhere.
+/// The hidden `__cmd__*` modules are re-exported too so `generate_handler!`
+/// resolves the command macros through these paths.
+#[cfg(target_os = "linux")]
+pub use crate::linux_desktop::gnome_extension::install::{
+    enable_gnome_shell_extension, install_gnome_shell_extension,
+    open_gnome_shell_extension_directory,
+};
+
+#[cfg(target_os = "linux")]
+pub use crate::linux_desktop::gnome_extension::install::{
+    __cmd__enable_gnome_shell_extension as __cmd__enable_gnome_shell_extension,
+    __cmd__install_gnome_shell_extension as __cmd__install_gnome_shell_extension,
+    __cmd__open_gnome_shell_extension_directory as __cmd__open_gnome_shell_extension_directory,
+};
+
+#[cfg(not(target_os = "linux"))]
+#[tauri::command]
+pub fn install_gnome_shell_extension() -> std::result::Result<(), String> {
+    Err("GNOME Shell extension management is only available on Linux".to_string())
+}
+
+#[cfg(not(target_os = "linux"))]
+#[tauri::command]
+pub fn enable_gnome_shell_extension() -> std::result::Result<(), String> {
+    Err("GNOME Shell extension management is only available on Linux".to_string())
+}
+
+#[cfg(not(target_os = "linux"))]
+#[tauri::command]
+pub fn open_gnome_shell_extension_directory() -> std::result::Result<(), String> {
+    Err("GNOME Shell extension management is only available on Linux".to_string())
+}
 
 pub fn get_handler() -> impl Fn(Invoke) -> bool {
     tauri::generate_handler![
@@ -40,11 +75,13 @@ pub fn get_handler() -> impl Fn(Invoke) -> bool {
         clipboard::clipboard_clear,
         emoji::get_pinned_emoji_hexcodes,
         emoji::set_emoji_pinned,
-        linux_desktop::context::get_desktop_context,
-        linux_desktop::status::get_desktop_integration_status,
-        linux_desktop::gnome_extension::install::install_gnome_shell_extension,
-        linux_desktop::gnome_extension::install::enable_gnome_shell_extension,
-        linux_desktop::gnome_extension::install::open_gnome_shell_extension_directory,
+        desktop::context::get_desktop_context,
+        desktop::status::get_desktop_integration_status,
+        macos::permissions::get_macos_permission_status,
+        macos::permissions::request_macos_permission,
+        install_gnome_shell_extension,
+        enable_gnome_shell_extension,
+        open_gnome_shell_extension_directory,
         file_search::search_files,
         file_search::get_file_search_backend_status,
         file_search::open_file,
