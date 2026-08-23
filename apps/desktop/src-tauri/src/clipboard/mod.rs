@@ -4,11 +4,11 @@ use std::{
     time::Duration,
 };
 
-#[cfg(not(target_os = "linux"))]
+#[cfg(not(any(target_os = "linux", target_os = "macos")))]
 use arboard::Clipboard;
 use tauri::{command, AppHandle, State};
 
-#[cfg(not(target_os = "linux"))]
+#[cfg(not(any(target_os = "linux", target_os = "macos")))]
 use self::convert_image::{get_image_as_base64, image_data_url_to_arboard_image};
 use self::error::Result;
 use self::history::{
@@ -20,7 +20,9 @@ use self::search::search_history;
 use crate::clipboard::config::CONFIG as CLIPBOARD_CONFIG;
 #[cfg(target_os = "linux")]
 use crate::linux_desktop;
-#[cfg(target_os = "linux")]
+#[cfg(target_os = "macos")]
+use crate::macos;
+#[cfg(any(target_os = "linux", target_os = "macos"))]
 use crate::state::AppState;
 
 pub(crate) mod config;
@@ -128,13 +130,19 @@ pub async fn set_clipboard_entry_pinned(
 
 #[command]
 pub async fn get_selected_text(state: State<'_, AppState>) -> std::result::Result<String, String> {
+    #[cfg(target_os = "macos")]
+    {
+        let _ = &state;
+        return macos::clipboard::selected_text();
+    }
+
     #[cfg(target_os = "linux")]
     {
-        let snapshot = linux_desktop::context::get_desktop_context_snapshot(&state);
+        let snapshot = crate::desktop::context::get_desktop_context_snapshot(&state);
         return Ok(snapshot.selected_text.value.unwrap_or_default());
     }
 
-    #[cfg(not(target_os = "linux"))]
+    #[cfg(not(any(target_os = "linux", target_os = "macos")))]
     {
         let _ = state;
         let mut clipboard = Clipboard::new().map_err(|e| e.to_string())?;
@@ -146,13 +154,19 @@ pub async fn get_selected_text(state: State<'_, AppState>) -> std::result::Resul
 pub async fn get_selected_finder_items(
     state: State<'_, AppState>,
 ) -> std::result::Result<Vec<SelectedFinderItem>, String> {
+    #[cfg(target_os = "macos")]
+    {
+        let _ = &state;
+        return macos::clipboard::selected_files();
+    }
+
     #[cfg(target_os = "linux")]
     {
-        let snapshot = linux_desktop::context::get_desktop_context_snapshot(&state);
+        let snapshot = crate::desktop::context::get_desktop_context_snapshot(&state);
         return Ok(snapshot.selected_files.value.unwrap_or_default());
     }
 
-    #[cfg(not(target_os = "linux"))]
+    #[cfg(not(any(target_os = "linux", target_os = "macos")))]
     {
         let _ = state;
         Err("get_selected_finder_items is not supported on this platform in Beam yet".to_string())
@@ -166,7 +180,12 @@ pub async fn clipboard_read_text() -> std::result::Result<ReadResult, String> {
         return linux_desktop::clipboard::clipboard_read_text().map_err(|error| error.to_string());
     }
 
-    #[cfg(not(target_os = "linux"))]
+    #[cfg(target_os = "macos")]
+    {
+        return macos::clipboard::clipboard_read_text();
+    }
+
+    #[cfg(not(any(target_os = "linux", target_os = "macos")))]
     {
         let mut clipboard = Clipboard::new().map_err(|e| e.to_string())?;
         let text = clipboard.get_text().ok();
@@ -186,7 +205,12 @@ pub async fn clipboard_read() -> std::result::Result<ReadResult, String> {
         return linux_desktop::clipboard::clipboard_read().map_err(|error| error.to_string());
     }
 
-    #[cfg(not(target_os = "linux"))]
+    #[cfg(target_os = "macos")]
+    {
+        return macos::clipboard::clipboard_read();
+    }
+
+    #[cfg(not(any(target_os = "linux", target_os = "macos")))]
     {
         let mut clipboard = Clipboard::new().map_err(|e| e.to_string())?;
         let text = clipboard.get_text().ok();
@@ -222,7 +246,12 @@ pub async fn clipboard_copy(
             .map_err(|error| error.to_string());
     }
 
-    #[cfg(not(target_os = "linux"))]
+    #[cfg(target_os = "macos")]
+    {
+        return macos::clipboard::clipboard_copy(content, options);
+    }
+
+    #[cfg(not(any(target_os = "linux", target_os = "macos")))]
     {
         let mut clipboard = Clipboard::new().map_err(|e| e.to_string())?;
 
@@ -249,25 +278,8 @@ pub async fn clipboard_copy(
     }
 }
 
-#[cfg(not(target_os = "linux"))]
+#[cfg(not(any(target_os = "linux", target_os = "macos")))]
 fn trigger_paste_shortcut() {
-    #[cfg(target_os = "linux")]
-    {
-        let _ = std::process::Command::new("xdotool")
-            .args(["key", "ctrl+v"])
-            .status();
-    }
-
-    #[cfg(target_os = "macos")]
-    {
-        let _ = std::process::Command::new("osascript")
-            .args([
-                "-e",
-                "tell application \"System Events\" to keystroke \"v\" using command down",
-            ])
-            .status();
-    }
-
     #[cfg(target_os = "windows")]
     {
         let _ = std::process::Command::new("powershell")
@@ -288,7 +300,12 @@ pub async fn clipboard_paste(content: ClipboardContent) -> std::result::Result<(
             .map_err(|error| error.to_string());
     }
 
-    #[cfg(not(target_os = "linux"))]
+    #[cfg(target_os = "macos")]
+    {
+        return macos::clipboard::clipboard_paste(content);
+    }
+
+    #[cfg(not(any(target_os = "linux", target_os = "macos")))]
     {
         let mut clipboard = Clipboard::new().map_err(|e| e.to_string())?;
         let original_clipboard = read_clipboard_entry(&mut clipboard).map(|text| ReadResult {
@@ -319,7 +336,12 @@ pub async fn clipboard_clear() -> std::result::Result<(), String> {
         return linux_desktop::clipboard::clipboard_clear().map_err(|error| error.to_string());
     }
 
-    #[cfg(not(target_os = "linux"))]
+    #[cfg(target_os = "macos")]
+    {
+        return macos::clipboard::clipboard_clear();
+    }
+
+    #[cfg(not(any(target_os = "linux", target_os = "macos")))]
     {
         let mut clipboard = Clipboard::new().map_err(|e| e.to_string())?;
         clipboard.clear().map_err(|e| e.to_string())
@@ -342,7 +364,7 @@ pub fn start_clipboard_listener(app: AppHandle) {
 
 fn run_clipboard_listener(app: AppHandle) {
     let poll_interval = Duration::from_millis(CLIPBOARD_CONFIG.poll_interval_ms);
-    #[cfg(not(target_os = "linux"))]
+    #[cfg(not(any(target_os = "linux", target_os = "macos")))]
     let mut clipboard = match Clipboard::new() {
         Ok(clipboard) => clipboard,
         Err(err) => {
@@ -351,12 +373,27 @@ fn run_clipboard_listener(app: AppHandle) {
         }
     };
 
+    #[cfg(target_os = "macos")]
+    let mut last_change_count = macos::clipboard::current_change_count();
+
     let mut last_value = String::new();
 
     loop {
         #[cfg(target_os = "linux")]
         let next_value = read_linux_clipboard_entry();
-        #[cfg(not(target_os = "linux"))]
+
+        #[cfg(target_os = "macos")]
+        let next_value = {
+            let current = macos::clipboard::current_change_count();
+            if current == last_change_count {
+                None
+            } else {
+                last_change_count = current;
+                macos::clipboard::read_history_entry()
+            }
+        };
+
+        #[cfg(not(any(target_os = "linux", target_os = "macos")))]
         let next_value = read_clipboard_entry(&mut clipboard);
 
         if let Some(next_value) = next_value {
@@ -372,7 +409,7 @@ fn run_clipboard_listener(app: AppHandle) {
     }
 }
 
-#[cfg(not(target_os = "linux"))]
+#[cfg(not(any(target_os = "linux", target_os = "macos")))]
 fn read_clipboard_entry(clipboard: &mut Clipboard) -> Option<String> {
     if let Ok(text) = clipboard.get_text() {
         let text = text.trim();
