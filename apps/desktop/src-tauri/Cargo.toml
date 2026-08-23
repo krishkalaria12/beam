@@ -39,7 +39,7 @@ tauri-plugin-shell = "2"
 clap = { version = "4.5.60", features = ["derive"] }
 
 # Async Runtime & Concurrency
-tokio = "1.49.0"
+tokio = { version = "1.49.0", features = ["process", "time", "sync", "macros", "io-util"] }
 crossbeam-channel = "0.5.15"
 parking_lot = "0.12.3"
 num_cpus = "1.17.0"
@@ -66,16 +66,12 @@ chrono-tz = "0.10"
 
 # System & Desktop Integration
 dirs = "6.0.0"
-freedesktop-file-parser = "0.3.1"
-freedesktop-icons = "0.4.0"
 shell-words = "1.1.0"
 webbrowser = "1.1.0"
-arboard = { version = "3.6.1", features = ["wayland-data-control"] }
+arboard = "3.6.1"
 system_shutdown = "4.1.0"
 keepawake = "0.6.0"
 sysinfo = "0.29"
-hyprland = "0.4.0-beta.3"
-swayipc = "4.0.0"
 fontdb = "0.23.0"
 
 # Security & Cryptography
@@ -116,13 +112,20 @@ image = "0.25.6"
 open = "5.3.3"
 smart-calculator = "1.0.3"
 whichlang = "0.1.0"
-ashpd = "0.11.0"
 scraper = "0.25.0"
 rig-core = "0.31.0"
-zbus = "5.14.0"
-x11rb = "0.13.2"
 regex = "1.12.2"
 semver = "1.0.27"
+
+# Linux Desktop Integration
+[target.'cfg(target_os = "linux")'.dependencies]
+freedesktop-file-parser = "0.3.1"
+freedesktop-icons = "0.4.0"
+hyprland = "0.4.0-beta.3"
+swayipc = "4.0.0"
+ashpd = "0.11.0"
+zbus = "5.14.0"
+x11rb = "0.13.2"
 evdev = "0.13.0"
 xkbcommon = "0.8.0"
 wayland-client = "0.31.12"
@@ -131,6 +134,26 @@ wayland-protocols-wlr = { version = "0.3.10", features = ["client"] }
 wl-clipboard-rs = "0.9.3"
 gtk = "0.18"
 gtk-layer-shell = { version = "0.8.2", features = ["v0_5", "v0_6"] }
+arboard = { version = "3.6.1", features = ["wayland-data-control"] }
+
+# Windows Integration
+[target.'cfg(target_os = "windows")'.dependencies]
+windows = { version = "0.61", features = [
+  "Win32_Foundation",
+  "Win32_Storage_FileSystem",
+  "Win32_Graphics_Gdi",
+  "Win32_Graphics_Dwm",
+  "Win32_Security",
+  "Win32_System_Com",
+  "Win32_System_LibraryLoader",
+  "Win32_System_Registry",
+  "Win32_System_Threading",
+  "Win32_UI_Input_KeyboardAndMouse",
+  "Win32_UI_Shell",
+  "Win32_UI_Shell_Common",
+  "Win32_UI_WindowsAndMessaging",
+] }
+winreg = "0.55"
 
 # Platform-Specific Dependencies
 [target.'cfg(any(target_os = "macos", windows, target_os = "linux"))'.dependencies]
