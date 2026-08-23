@@ -67,3 +67,26 @@ jobs:
 
       - name: cargo build
         run: cargo build --manifest-path apps/desktop/src-tauri/Cargo.toml --locked
+
+  windows-checks:
+    runs-on: windows-latest
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: setup rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: install protobuf compiler
+        run: choco install protoc -y --no-progress
+
+      - name: check rust formatting
+        run: bun run rust:fmt:check
+        shell: bash
+
+      - name: cargo check (windows backend)
+        run: cargo check --manifest-path apps/desktop/src-tauri/Cargo.toml --locked --lib
+
+      - name: cargo test (windows backend)
+        run: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --locked --lib
