@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Added
+
+- Added Windows support to the desktop backend:
+  - Global shortcuts via the Win32 `RegisterHotKey` API with hot-reload on settings changes.
+  - Window management (list/focus/close/frontmost) through a Win32 provider, powering the window switcher and Focus Mode app blocking.
+  - Application discovery from Start Menu shortcuts with `.lnk` target resolution, icon extraction to a PNG cache, Recycle Bin-aware `trash`, `show_in_finder`, and default-application lookup.
+  - Clipboard paste via native `SendInput` (replaces the PowerShell SendKeys fallback) plus selected-text capture through simulated Ctrl+C with clipboard restore.
+  - Script commands run through cmd/PowerShell; extension runtime discovers Node from Windows install locations (Program Files, Volta, scoop, fnm, nvm-windows).
+  - Dev-mode `beam://`/`raycast://` deep-link registration via HKCU registry entries; calculator falls back to the pure-Rust engine without Soulver.
+- Split `tauri.conf.json` into per-platform configs (`tauri.linux.conf.json`, `tauri.windows.conf.json`) so Linux-only resources (Soulver, GNOME shell extension, udev rules, data-control helper) are only bundled on Linux.
+- Added Windows release workflow (`release-windows.yml`) producing NSIS/MSI bundles and a Windows cargo check/test job to CI.
+
 ## [v1.0.16] - 2026-04-30
 
 ### Added
