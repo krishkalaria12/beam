@@ -1,3 +1,5 @@
+#![cfg(target_os = "linux")]
+
 use freedesktop_file_parser::{parse, DesktopEntry, DesktopFile, EntryType};
 use std::collections::HashSet;
 use std::fs;

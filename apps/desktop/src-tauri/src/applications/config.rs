@@ -20,6 +20,8 @@ pub(crate) const CONFIG: ApplicationsConfig = ApplicationsConfig {
     ],
 };
 
+#[allow(dead_code)]
+#[allow(dead_code)]
 pub(crate) struct ApplicationsConfig {
     pub last_updated_timestamp_key: &'static str,
     pub cache_key: &'static str,
