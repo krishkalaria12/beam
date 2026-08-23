@@ -65,15 +65,22 @@ static HOTKEY_RUNTIME_RELOAD: OnceLock<watch::Sender<u64>> = OnceLock::new();
 static LAST_TOGGLE: OnceLock<Mutex<Option<Instant>>> = OnceLock::new();
 
 pub fn initialize_hotkey_backend(app: &AppHandle) {
+    #[cfg(target_os = "macos")]
     {
-        let mut snapshot = lock_runtime_snapshot();
-        snapshot.portal_supported = false;
-        snapshot.portal_active = false;
-        snapshot.last_error = None;
+        MACOS_APP_HANDLE.get_or_init(|| app.clone());
+        reload_macos_shortcuts(app);
+        return;
     }
 
     #[cfg(target_os = "linux")]
     {
+        {
+            let mut snapshot = lock_runtime_snapshot();
+            snapshot.portal_supported = false;
+            snapshot.portal_active = false;
+            snapshot.last_error = None;
+        }
+
         if detect_session_type() != "wayland" {
             set_runtime_fallback(
                 app,
@@ -100,7 +107,7 @@ pub fn initialize_hotkey_backend(app: &AppHandle) {
         });
     }
 
-    #[cfg(not(target_os = "linux"))]
+    #[cfg(not(any(target_os = "linux", target_os = "macos")))]
     let _ = app;
 }
 
@@ -181,13 +188,35 @@ pub fn dispatch_hotkey_command_startup(app: &AppHandle, command_id: String) {
 }
 
 pub(super) fn hotkey_capabilities() -> HotkeyCapabilities {
-    let session_type = detect_session_type();
-    let compositor = detect_compositor();
-    let is_wayland = session_type == "wayland";
+    #[cfg(any(target_os = "linux", target_os = "macos"))]
     let runtime_snapshot = read_runtime_snapshot();
 
-    if is_wayland {
-        if runtime_snapshot.portal_active {
+    #[cfg(target_os = "macos")]
+    {
+        let mut notes = Vec::new();
+        if !runtime_snapshot.portal_active {
+            if let Some(last_error) = &runtime_snapshot.last_error {
+                notes.push(format!("Global shortcut registration failed: {last_error}"));
+            }
+        }
+
+        return HotkeyCapabilities {
+            session_type: "aqua".to_string(),
+            compositor: "aqua".to_string(),
+            backend: "macos-global-shortcuts".to_string(),
+            global_launcher_supported: true,
+            global_command_hotkeys_supported: true,
+            launcher_only_supported: true,
+            notes,
+        };
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        let session_type = detect_session_type();
+        let compositor = detect_compositor();
+
+        if session_type == "wayland" && runtime_snapshot.portal_active {
             return HotkeyCapabilities {
                 session_type,
                 compositor,
@@ -202,34 +231,50 @@ pub(super) fn hotkey_capabilities() -> HotkeyCapabilities {
             };
         }
 
-        let mut notes = vec![
-            "Beam does not use X11 capture and runs Wayland-only global shortcuts.".to_string(),
-            "Configure compositor keybinds that call `beam --toggle` and `beam --run-command <id>`."
-                .to_string(),
-        ];
-        if let Some(last_error) = runtime_snapshot.last_error {
-            notes.push(format!("Portal backend unavailable: {last_error}"));
-        } else if !runtime_snapshot.portal_supported {
-            notes.push(
-                "XDG GlobalShortcuts portal was not detected for this compositor/session."
+        if session_type == "wayland" {
+            let mut notes = vec![
+                "Beam does not use X11 capture and runs Wayland-only global shortcuts.".to_string(),
+                "Configure compositor keybinds that call `beam --toggle` and `beam --run-command <id>`."
                     .to_string(),
-            );
+            ];
+            if let Some(last_error) = &runtime_snapshot.last_error {
+                notes.push(format!("Portal backend unavailable: {last_error}"));
+            } else if !runtime_snapshot.portal_supported {
+                notes.push(
+                    "XDG GlobalShortcuts portal was not detected for this compositor/session."
+                        .to_string(),
+                );
+            }
+
+            return HotkeyCapabilities {
+                session_type,
+                compositor,
+                backend: "wayland-compositor".to_string(),
+                global_launcher_supported: true,
+                global_command_hotkeys_supported: true,
+                launcher_only_supported: true,
+                notes,
+            };
         }
 
-        return HotkeyCapabilities {
+        HotkeyCapabilities {
             session_type,
             compositor,
-            backend: "wayland-compositor".to_string(),
-            global_launcher_supported: true,
-            global_command_hotkeys_supported: true,
+            backend: "launcher-only".to_string(),
+            global_launcher_supported: false,
+            global_command_hotkeys_supported: false,
             launcher_only_supported: true,
-            notes,
-        };
+            notes: vec![
+                HOTKEYS_CONFIG.wayland_disabled_message.to_string(),
+                "Launcher-only shortcuts inside the Beam window still work.".to_string(),
+            ],
+        }
     }
 
+    #[cfg(not(any(target_os = "linux", target_os = "macos")))]
     HotkeyCapabilities {
-        session_type,
-        compositor,
+        session_type: "unknown".to_string(),
+        compositor: "unknown".to_string(),
         backend: "launcher-only".to_string(),
         global_launcher_supported: false,
         global_command_hotkeys_supported: false,
@@ -260,8 +305,15 @@ pub(super) fn request_hotkey_runtime_reload() {
     let _ = reload_tx.send(next_value);
 }
 
-#[cfg(not(target_os = "linux"))]
+#[cfg(not(any(target_os = "linux", target_os = "macos")))]
 pub(super) fn request_hotkey_runtime_reload() {}
+
+#[cfg(target_os = "macos")]
+pub(super) fn request_hotkey_runtime_reload() {
+    if let Some(app) = MACOS_APP_HANDLE.get() {
+        reload_macos_shortcuts(app);
+    }
+}
 
 fn should_toggle_now() -> bool {
     let now = Instant::now();
@@ -340,6 +392,8 @@ fn show_launcher_window(app: &AppHandle) {
     let _ = crate::launcher_window::reveal_launcher_window(app);
 }
 
+#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
+#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
 fn detect_session_type() -> String {
     if let Ok(session) = env::var("XDG_SESSION_TYPE") {
         let normalized = session.trim().to_lowercase();
@@ -355,6 +409,8 @@ fn detect_session_type() -> String {
     "unknown".to_string()
 }
 
+#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
+#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
 fn detect_compositor() -> String {
     if env::var_os("HYPRLAND_INSTANCE_SIGNATURE").is_some() {
         return "hyprland".to_string();
@@ -677,4 +733,221 @@ fn build_portal_shortcuts(
     }
 
     (shortcuts, targets)
+}
+
+// ---------------------------------------------------------------------------
+// macOS global shortcuts (tauri-plugin-global-shortcut; Carbon-backed)
+// ---------------------------------------------------------------------------
+
+#[cfg(target_os = "macos")]
+static MACOS_APP_HANDLE: OnceLock<AppHandle> = OnceLock::new();
+
+#[cfg(target_os = "macos")]
+mod macos_shortcuts {
+    use std::str::FromStr;
+
+    use tauri::AppHandle;
+    use tauri_plugin_global_shortcut::{
+        Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState,
+    };
+
+    use super::{dispatch_hotkey_command, lock_runtime_snapshot, toggle_launcher, HotkeySettings};
+    use crate::custom_config;
+    use crate::hotkeys::config::CONFIG as HOTKEYS_CONFIG;
+    use crate::hotkeys::store::{open_store, read_hotkey_settings};
+
+    pub(super) fn read_settings(app: &AppHandle) -> HotkeySettings {
+        open_store(app)
+            .map(|store| read_hotkey_settings(&store))
+            .unwrap_or(HotkeySettings {
+                global_shortcut: HOTKEYS_CONFIG.default_global_shortcut.to_string(),
+                command_hotkeys: Default::default(),
+            })
+    }
+
+    fn parse_modifier_token(token: &str) -> Option<Modifiers> {
+        match token.to_lowercase().as_str() {
+            "super" | "meta" | "command" | "cmd" | "win" | "mod4" => Some(Modifiers::SUPER),
+            "ctrl" | "control" => Some(Modifiers::CONTROL),
+            "alt" | "option" | "opt" | "mod1" => Some(Modifiers::ALT),
+            "shift" => Some(Modifiers::SHIFT),
+            _ => None,
+        }
+    }
+
+    fn parse_key_token(token: &str) -> Option<Code> {
+        let normalized = token.trim().to_lowercase();
+        return match normalized.as_str() {
+            "space" | "spacebar" => Some(Code::Space),
+            "enter" | "return" => Some(Code::Enter),
+            "escape" | "esc" => Some(Code::Escape),
+            "tab" => Some(Code::Tab),
+            "backspace" => Some(Code::Backspace),
+            "delete" | "del" => Some(Code::Delete),
+            "left" | "arrowleft" => Some(Code::ArrowLeft),
+            "right" | "arrowright" => Some(Code::ArrowRight),
+            "up" | "arrowup" => Some(Code::ArrowUp),
+            "down" | "arrowdown" => Some(Code::ArrowDown),
+            "home" => Some(Code::Home),
+            "end" => Some(Code::End),
+            "pageup" => Some(Code::PageUp),
+            "pagedown" => Some(Code::PageDown),
+            "comma" => Some(Code::Comma),
+            "period" => Some(Code::Period),
+            "minus" => Some(Code::Minus),
+            "equal" | "equals" => Some(Code::Equal),
+            "slash" => Some(Code::Slash),
+            "backslash" => Some(Code::Backslash),
+            "semicolon" => Some(Code::Semicolon),
+            "quote" => Some(Code::Quote),
+            other => {
+                let mut chars = other.chars();
+                if let (Some(single), None) = (chars.next(), chars.next()) {
+                    if single.is_ascii_alphabetic() {
+                        return Code::from_str(&format!(
+                            "Key{}",
+                            single.to_ascii_uppercase()
+                        ))
+                        .ok();
+                    }
+                    if single.is_ascii_digit() {
+                        return Code::from_str(&format!("Digit{single}")).ok();
+                    }
+                }
+
+                if let Some(f_key) = other
+                    .strip_prefix('f')
+                    .and_then(|digits| digits.parse::<u8>().ok())
+                {
+                    if (1..=24).contains(&f_key) {
+                        return Code::from_str(&format!("F{f_key}")).ok();
+                    }
+                }
+
+                Code::from_str(other).ok()
+            }
+        };
+    }
+
+    /// Parses Beam's `SUPER+R`-style hotkey text into a plugin Shortcut.
+    /// On macOS SUPER maps to the Command key.
+    pub fn parse_shortcut(shortcut: &str) -> Result<Shortcut, String> {
+        let tokens: Vec<&str> = shortcut
+            .split('+')
+            .map(str::trim)
+            .filter(|token| !token.is_empty())
+            .collect();
+        if tokens.is_empty() {
+            return Err("empty shortcut".to_string());
+        }
+
+        let mut modifiers = Modifiers::empty();
+        for token in &tokens[..tokens.len() - 1] {
+            match parse_modifier_token(token) {
+                Some(modifier) => modifiers |= modifier,
+                None => return Err(format!("unknown modifier '{token}'")),
+            }
+        }
+
+        let key_token = tokens[tokens.len() - 1];
+        let key =
+            parse_key_token(key_token).ok_or_else(|| format!("unknown key '{key_token}'"))?;
+
+        Ok(Shortcut::new(
+            (!modifiers.is_empty()).then_some(modifiers),
+            key,
+        ))
+    }
+
+    pub(super) fn reload(app: &AppHandle) {
+        // Reset the runtime snapshot before re-registering everything.
+        {
+            let mut snapshot = lock_runtime_snapshot();
+            snapshot.portal_supported = true;
+            snapshot.portal_active = false;
+            snapshot.last_error = None;
+        }
+
+        let _ = app.global_shortcut().unregister_all();
+
+        let settings = read_settings(app);
+        let mut registered_any = false;
+        let mut last_error: Option<String> = None;
+
+        match parse_shortcut(&settings.global_shortcut) {
+            Ok(shortcut) => {
+                let result = app.global_shortcut().on_shortcut(shortcut, |app, _shortcut, event| {
+                    if event.state == ShortcutState::Pressed {
+                        toggle_launcher(app);
+                    }
+                });
+                match result {
+                    Ok(()) => registered_any = true,
+                    Err(error) => {
+                        last_error = Some(format!(
+                            "launcher shortcut '{}' failed: {error}",
+                            settings.global_shortcut
+                        ));
+                    }
+                }
+            }
+            Err(error) => {
+                last_error = Some(format!(
+                    "launcher shortcut '{}' is invalid: {error}",
+                    settings.global_shortcut
+                ));
+            }
+        }
+
+        for (command_id, hotkey) in &settings.command_hotkeys {
+            if custom_config::is_command_hidden(app, command_id) {
+                continue;
+            }
+
+            match parse_shortcut(hotkey) {
+                Ok(shortcut) => {
+                    let handler_command_id = command_id.clone();
+                    let result = app.global_shortcut().on_shortcut(shortcut, move |app, _shortcut, event| {
+                        if event.state == ShortcutState::Pressed {
+                            dispatch_hotkey_command(app, handler_command_id.clone(), "global-shortcut");
+                        }
+                    });
+                    if result.is_err() {
+                        last_error = Some(format!(
+                            "command '{command_id}' shortcut '{hotkey}' could not be registered"
+                        ));
+                    } else {
+                        registered_any = true;
+                    }
+                }
+                Err(error) => {
+                    last_error = Some(format!(
+                        "command '{command_id}' shortcut '{hotkey}' is invalid: {error}"
+                    ));
+                }
+            }
+        }
+
+        {
+            let mut snapshot = lock_runtime_snapshot();
+            snapshot.portal_active = registered_any;
+            snapshot.last_error.clone_from(&last_error);
+        }
+
+        if let Some(error) = last_error {
+            super::emit_hotkey_backend_status_event(
+                app,
+                "warning",
+                format!("Some macOS shortcuts were not registered. {error}"),
+                None,
+                "hotkey-backend",
+            );
+        }
+    }
+}
+
+/// Re-registers every stored shortcut on the macOS global-shortcut backend.
+#[cfg(target_os = "macos")]
+fn reload_macos_shortcuts(app: &AppHandle) {
+    macos_shortcuts::reload(app);
 }

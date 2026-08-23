@@ -11,6 +11,7 @@ pub(crate) const CONFIG: HotkeysConfig = HotkeysConfig {
     wayland_disabled_message: "Global hotkeys are disabled because this is not a Wayland session.",
 };
 
+#[allow(dead_code)]
 pub(crate) struct HotkeysConfig {
     pub global_shortcut_key: &'static str,
     pub command_hotkeys_key: &'static str,
