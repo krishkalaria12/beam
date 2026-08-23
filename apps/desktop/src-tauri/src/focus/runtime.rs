@@ -24,7 +24,11 @@ use super::types::{
 use super::{error::FocusError, error::Result};
 use crate::extensions::browser_extension;
 use crate::launcher_window;
+#[cfg(target_os = "linux")]
 use crate::linux_desktop;
+
+#[cfg(target_os = "macos")]
+use crate::macos::window_manager as desktop_backend;
 
 pub const FOCUS_STATUS_EVENT: &str = "focus-status-updated";
 pub const FOCUS_APP_BLOCKED_EVENT: &str = "focus-app-blocked";
@@ -322,11 +326,38 @@ pub fn capability_report() -> FocusCapabilityReport {
         }
     }
 
-    #[cfg(not(target_os = "linux"))]
+    #[cfg(target_os = "macos")]
+    {
+        let capabilities = desktop_backend::active_capabilities();
+        let backend = desktop_backend::active_backend_kind().as_str().to_string();
+        let browser_connected = browser_extension::has_connected_client();
+        let mut notes = Vec::new();
+        if !capabilities.supports_frontmost_application {
+            notes.push(
+                "Grant Beam the Accessibility permission in System Settings to enable app blocking."
+                    .to_string(),
+            );
+        }
+        if !browser_connected {
+            notes.push(
+                "Website blocking requires the Beam browser extension to be installed and connected."
+                    .to_string(),
+            );
+        }
+
+        FocusCapabilityReport {
+            app_blocking_supported: capabilities.supports_frontmost_application,
+            website_blocking_supported: browser_connected,
+            backend,
+            notes,
+        }
+    }
+
+    #[cfg(not(any(target_os = "linux", target_os = "macos")))]
     {
         let browser_connected = browser_extension::has_connected_client();
         let mut notes =
-            vec!["App blocking is currently implemented for Linux desktop sessions.".to_string()];
+            vec!["App blocking is currently implemented for Linux and macOS sessions.".to_string()];
         if !browser_connected {
             notes.push(
                 "Website blocking requires the Beam browser extension to be installed and connected."
