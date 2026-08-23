@@ -221,7 +221,7 @@ pub struct FileSearchBackendStatus {
 // Searches for files in the index with pagination support
 #[tauri::command]
 pub async fn search_files(
-    app: AppHandle,
+    #[allow(unused_variables)] app: AppHandle,
     request: SearchRequest,
     state: State<'_, AppState>,
 ) -> Result<PaginatedSearchResponse> {

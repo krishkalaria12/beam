@@ -38,6 +38,7 @@
             "$HOME/.local/**/icons/**",
             "$HOME/.local/share/**/plugins/**",
             "$HOME/.local/share/plugins/**",
+            "$HOME/Library/Caches/beam/**",
             "/usr/share/icons/**",
             "/usr/local/share/icons/**",
             "/usr/share/pixmaps/**",

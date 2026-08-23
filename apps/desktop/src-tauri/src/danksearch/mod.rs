@@ -8,7 +8,9 @@ mod types;
 
 use tauri::AppHandle;
 
-use crate::file_search::types::{PaginatedSearchMetadata, PaginatedSearchResponse, SearchRequest};
+#[cfg(target_os = "linux")]
+use crate::file_search::types::PaginatedSearchMetadata;
+use crate::file_search::types::{PaginatedSearchResponse, SearchRequest};
 
 pub use bootstrap::initialize;
 

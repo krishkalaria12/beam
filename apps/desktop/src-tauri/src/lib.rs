@@ -7,6 +7,7 @@ pub mod clipboard;
 pub mod config;
 pub mod custom_config;
 pub mod danksearch;
+pub mod desktop;
 pub mod dictionary;
 pub mod emoji;
 pub mod error;
@@ -20,7 +21,10 @@ pub mod hyprwhspr;
 pub mod launcher_shell;
 pub mod launcher_theme;
 pub mod launcher_window;
+#[cfg(target_os = "linux")]
 pub mod linux_desktop;
+#[cfg(target_os = "macos")]
+pub mod macos;
 pub mod menu_bar;
 pub mod notes;
 pub mod pinned;
@@ -189,6 +193,7 @@ pub fn entry() -> i32 {
             run(startup_args);
             0
         }
+        #[cfg(target_os = "linux")]
         cli::CliInvocation::RunWaylandDataControlHelper => {
             match linux_desktop::wayland_helper::run_helper_main() {
                 Ok(()) => 0,
@@ -197,6 +202,11 @@ pub fn entry() -> i32 {
                     2
                 }
             }
+        }
+        #[cfg(not(target_os = "linux"))]
+        cli::CliInvocation::RunWaylandDataControlHelper => {
+            eprintln!("beam: wayland data-control helper is only available on Linux");
+            2
         }
         cli::CliInvocation::Dmenu { options } => match cli::execute_dmenu(options) {
             Ok(code) => code,
@@ -238,6 +248,11 @@ pub fn run(startup_args: Vec<String>) {
         }));
     }
 
+    #[cfg(target_os = "macos")]
+    {
+        builder = builder.plugin(tauri_plugin_global_shortcut::Builder::new().build());
+    }
+
     builder
         .setup(move |app| {
             if cfg!(debug_assertions) {
@@ -259,6 +274,12 @@ pub fn run(startup_args: Vec<String>) {
 
             #[cfg(target_os = "linux")]
             launcher_window::configure_linux_launcher_surface(&app.handle());
+
+            #[cfg(target_os = "macos")]
+            {
+                app.set_activation_policy(tauri::ActivationPolicy::Accessory);
+                macos::initialize(app.handle());
+            }
 
             #[cfg(target_os = "linux")]
             if linux_desktop::environment::detect_environment().desktop_environment == "gnome" {

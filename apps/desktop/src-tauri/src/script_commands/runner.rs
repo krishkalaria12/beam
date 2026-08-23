@@ -169,6 +169,8 @@ fn build_process(
         path_env.push(OsString::from(":"));
     }
     path_env.push(OsString::from("/usr/local/bin"));
+    // Homebrew prefix on Apple Silicon Macs.
+    path_env.push(OsString::from("/opt/homebrew/bin"));
     process.env("PATH", path_env);
     process.env("BEAM_SCRIPT_COMMAND_ID", &command.id);
     process.env("BEAM_SCRIPT_NAME", &command.script_name);
