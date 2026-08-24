@@ -636,6 +636,8 @@ dependencies = [
  "wayland-protocols-wlr",
  "webbrowser",
  "whichlang",
+ "windows 0.61.3",
+ "winreg",
  "wl-clipboard-rs",
  "x11rb",
  "xkbcommon",

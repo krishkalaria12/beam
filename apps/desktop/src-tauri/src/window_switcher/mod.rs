@@ -6,6 +6,15 @@ use tauri::{command, AppHandle, State};
 use self::error::{Result, WindowSwitcherError};
 use crate::state::AppState;
 
+#[cfg(target_os = "linux")]
+use crate::linux_desktop::window_manager as desktop_backend;
+
+#[cfg(target_os = "macos")]
+use crate::macos::window_manager as desktop_backend;
+
+#[cfg(target_os = "windows")]
+use crate::windows_desktop;
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct WindowEntry {
     pub id: String,
@@ -18,21 +27,15 @@ pub struct WindowEntry {
     pub is_focused: bool,
 }
 
-#[cfg(target_os = "linux")]
-use crate::linux_desktop::window_manager as desktop_backend;
-
-#[cfg(target_os = "macos")]
-use crate::macos::window_manager as desktop_backend;
-
 #[command]
 pub fn list_windows(app: AppHandle, state: State<'_, AppState>) -> Result<Vec<WindowEntry>> {
-    #[cfg(not(any(target_os = "linux", target_os = "macos")))]
+    #[cfg(target_os = "windows")]
     {
-        let _ = (&app, &state);
-        return Err(WindowSwitcherError::UnsupportedPlatform);
+        return windows_desktop::window_manager::list_windows(&app, &state)
+            .map_err(|error| WindowSwitcherError::ClientError(error.to_string()));
     }
 
-    #[cfg(any(target_os = "linux", target_os = "macos"))]
+    #[cfg(not(target_os = "windows"))]
     {
         desktop_backend::list_windows(&app, &state)
             .map_err(|error| WindowSwitcherError::ClientError(error.to_string()))
@@ -41,19 +44,19 @@ pub fn list_windows(app: AppHandle, state: State<'_, AppState>) -> Result<Vec<Wi
 
 #[command]
 pub fn focus_window(window_id: String) -> Result<()> {
-    #[cfg(not(any(target_os = "linux", target_os = "macos")))]
-    {
-        let _ = window_id;
-        return Err(WindowSwitcherError::UnsupportedPlatform);
+    let normalized = window_id.trim();
+    if normalized.is_empty() {
+        return Err(WindowSwitcherError::InvalidWindowId);
     }
 
-    #[cfg(any(target_os = "linux", target_os = "macos"))]
+    #[cfg(target_os = "windows")]
     {
-        let normalized = window_id.trim();
-        if normalized.is_empty() {
-            return Err(WindowSwitcherError::InvalidWindowId);
-        }
+        return windows_desktop::window_manager::focus_window(normalized)
+            .map_err(|error| WindowSwitcherError::FocusingWindowError(error.to_string()));
+    }
 
+    #[cfg(not(target_os = "windows"))]
+    {
         desktop_backend::focus_window(normalized)
             .map_err(|error| WindowSwitcherError::FocusingWindowError(error.to_string()))
     }
@@ -61,19 +64,19 @@ pub fn focus_window(window_id: String) -> Result<()> {
 
 #[command]
 pub fn close_window(window_id: String) -> Result<()> {
-    #[cfg(not(any(target_os = "linux", target_os = "macos")))]
-    {
-        let _ = window_id;
-        return Err(WindowSwitcherError::UnsupportedPlatform);
+    let normalized = window_id.trim();
+    if normalized.is_empty() {
+        return Err(WindowSwitcherError::InvalidWindowId);
     }
 
-    #[cfg(any(target_os = "linux", target_os = "macos"))]
+    #[cfg(target_os = "windows")]
     {
-        let normalized = window_id.trim();
-        if normalized.is_empty() {
-            return Err(WindowSwitcherError::InvalidWindowId);
-        }
+        return windows_desktop::window_manager::close_window(normalized)
+            .map_err(|error| WindowSwitcherError::ClosingWindowError(error.to_string()));
+    }
 
+    #[cfg(not(target_os = "windows"))]
+    {
         desktop_backend::close_window(normalized)
             .map_err(|error| WindowSwitcherError::ClosingWindowError(error.to_string()))
     }

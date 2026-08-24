@@ -1,7 +1,7 @@
 [package]
 name = "beam"
 version = "1.0.0"
-description = "A blazing-fast, open-source command launcher for Linux and macOS"
+description = "A blazing-fast, open-source command launcher for Linux, macOS, and Windows"
 authors = ["Krish Kalaria"]
 license = "MIT"
 repository = "https://github.com/krishkalaria12/beam"
@@ -125,13 +125,13 @@ rig-core = "0.31.0"
 regex = "1.12.2"
 semver = "1.0.27"
 
+# Linux Desktop Integration
 [target.'cfg(target_os = "linux")'.dependencies]
 arboard = { version = "3.6.1", features = ["wayland-data-control"] }
 freedesktop-file-parser = "0.3.1"
 freedesktop-icons = "0.4.0"
 hyprland = "0.4.0-beta.3"
 swayipc = "4.0.0"
-
 ashpd = "0.11.0"
 evdev = "0.13.0"
 xkbcommon = "0.8.0"
@@ -177,6 +177,25 @@ core-foundation = "0.10"
 core-foundation-sys = "0.8"
 dispatch2 = "0.3"
 tauri-plugin-global-shortcut = "2"
+
+# Windows Integration
+[target.'cfg(target_os = "windows")'.dependencies]
+windows = { version = "0.61", features = [
+  "Win32_Foundation",
+  "Win32_Storage_FileSystem",
+  "Win32_Graphics_Gdi",
+  "Win32_Graphics_Dwm",
+  "Win32_Security",
+  "Win32_System_Com",
+  "Win32_System_LibraryLoader",
+  "Win32_System_Registry",
+  "Win32_System_Threading",
+  "Win32_UI_Input_KeyboardAndMouse",
+  "Win32_UI_Shell",
+  "Win32_UI_Shell_Common",
+  "Win32_UI_WindowsAndMessaging",
+] }
+winreg = "0.55"
 
 # Platform-Specific Dependencies
 [target.'cfg(any(target_os = "macos", windows, target_os = "linux"))'.dependencies]

@@ -1,0 +1,65 @@
+name: release-windows
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-release:
+    runs-on: windows-latest
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v7
+
+      - name: setup node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: setup bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.2.19
+
+      - name: setup rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: install protobuf compiler
+        run: choco install protoc -y --no-progress
+
+      - name: install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: build windows bundles
+        run: bun run --cwd apps/desktop desktop:build -- --bundles nsis,msi
+        env:
+          # aws-lc-sys needs NASM for some assembly paths; the prebuilt
+          # bindings path avoids requiring it on CI runners.
+          AWS_LC_SYS_PREBUILT_NASM: 1
+
+      - name: collect release artifacts
+        shell: bash
+        run: |
+          bundle_dir="target/rust/release/bundle"
+          mkdir -p release-assets
+          cp "$bundle_dir"/nsis/*.exe release-assets/ 2>/dev/null || true
+          cp "$bundle_dir"/msi/*.msi release-assets/ 2>/dev/null || true
+          ls -la release-assets
+
+      - name: upload artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: beam-windows-bundles
+          path: release-assets/*
+
+      - name: attach to github release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: release-assets/*
+          draft: true

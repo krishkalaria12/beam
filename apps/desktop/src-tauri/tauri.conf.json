@@ -52,16 +52,7 @@
   "bundle": {
     "active": true,
     "targets": "all",
-    "externalBin": ["binaries/beam-data-control-server"],
-    "resources": [
-      "binaries/extension-manager.cjs",
-      "SoulverWrapper/Vendor/SoulverCore-linux/*",
-      "SoulverWrapper/Vendor/SoulverCore-linux/SoulverCore_SoulverCore.resources",
-      "SoulverWrapper/.build/release/libSoulverWrapper.so",
-      "SoulverWrapper/.build/release/swift-linux/*",
-      "../../../infra/desktop-integrations/gnome-shell/beam@beam-linux",
-      "../../../infra/desktop-integrations/udev/70-beam-snippets.rules"
-    ],
+    "resources": ["binaries/extension-manager.cjs"],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",

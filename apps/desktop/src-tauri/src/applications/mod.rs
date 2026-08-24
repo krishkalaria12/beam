@@ -1,5 +1,6 @@
 pub mod app_entry;
 pub mod cache;
+#[cfg(target_os = "linux")]
 pub mod collector;
 pub(crate) mod config;
 pub mod error;

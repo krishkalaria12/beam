@@ -6,11 +6,13 @@ use super::types::{FocusSession, FocusSessionMode, FocusSnoozeTargetType};
 use super::FOCUS_APP_BLOCKED_EVENT;
 use crate::state::AppState;
 
-#[cfg(target_os = "linux")]
 use crate::linux_desktop::window_manager as desktop_backend;
 
 #[cfg(target_os = "macos")]
 use crate::macos::window_manager as desktop_backend;
+
+#[cfg(target_os = "windows")]
+use crate::windows_desktop::window_manager as desktop_backend;
 
 fn lower_contains_rule(values: &[&str], rules: &[String]) -> Option<String> {
     for value in values {
@@ -79,16 +81,16 @@ fn emit_blocked_app(app: &AppHandle, rule: &str, window_title: &str, app_name: &
 }
 
 pub fn enforce_app_rules(app: &AppHandle, session: &FocusSession) {
-    #[cfg(not(any(target_os = "linux", target_os = "macos")))]
+    #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
     {
         let _ = (app, session);
     }
 
-    #[cfg(any(target_os = "linux", target_os = "macos"))]
+    #[cfg(any(target_os = "linux", target_os = "macos", target_os = "windows"))]
     enforce_app_rules_supported(app, session);
 }
 
-#[cfg(any(target_os = "linux", target_os = "macos"))]
+#[cfg(any(target_os = "linux", target_os = "macos", target_os = "windows"))]
 fn enforce_app_rules_supported(app: &AppHandle, session: &FocusSession) {
     if session.resolved_apps.is_empty() {
         return;

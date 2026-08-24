@@ -210,7 +210,6 @@ async fn evaluate_with_soulver(query: String) -> Result<Option<CalculationOutput
                 CalculatorError::Soulver(format!("calculator task join failed: {error}"))
             })?
             .map_err(CalculatorError::Soulver)?;
-
     if let Some(error) = response.error {
         return Err(CalculatorError::Soulver(error));
     }
@@ -239,12 +238,10 @@ async fn evaluate_with_soulver(query: String) -> Result<Option<CalculationOutput
 }
 
 /// Soulver runs through a Swift FFI that is only built for Linux targets;
-/// other platforms use the pure-Rust smart calculator engine.
+/// other platforms fall through to the pure-Rust smart calculator engine.
 #[cfg(not(target_os = "linux"))]
 async fn evaluate_with_soulver(_query: String) -> Result<Option<CalculationOutput>> {
-    Err(CalculatorError::Soulver(
-        "soulver engine is unavailable on this platform".to_string(),
-    ))
+    Ok(None)
 }
 
 async fn evaluate_with_smart_calculator(query: &str) -> Result<Option<CalculationOutput>> {
@@ -293,7 +290,8 @@ pub fn initialize(app: &AppHandle) -> Result<()> {
     Ok(())
 }
 
-/// Nothing to initialize outside Linux; the fallback engine is stateless.
+/// Soulver ships as a native Linux library; other platforms rely on the pure
+/// Rust smart-calculator fallback.
 #[cfg(not(target_os = "linux"))]
 pub fn initialize(_app: &AppHandle) -> Result<()> {
     Ok(())

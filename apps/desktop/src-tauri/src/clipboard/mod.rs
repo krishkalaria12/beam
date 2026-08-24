@@ -22,8 +22,9 @@ use crate::clipboard::config::CONFIG as CLIPBOARD_CONFIG;
 use crate::linux_desktop;
 #[cfg(target_os = "macos")]
 use crate::macos;
-#[cfg(any(target_os = "linux", target_os = "macos"))]
 use crate::state::AppState;
+#[cfg(target_os = "windows")]
+use crate::windows_desktop;
 
 pub(crate) mod config;
 pub mod convert_image;
@@ -142,7 +143,12 @@ pub async fn get_selected_text(state: State<'_, AppState>) -> std::result::Resul
         return Ok(snapshot.selected_text.value.unwrap_or_default());
     }
 
-    #[cfg(not(any(target_os = "linux", target_os = "macos")))]
+    #[cfg(target_os = "windows")]
+    {
+        return Ok(windows_desktop::selection::capture_selected_text(&state));
+    }
+
+    #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
     {
         let _ = state;
         let mut clipboard = Clipboard::new().map_err(|e| e.to_string())?;
@@ -282,13 +288,7 @@ pub async fn clipboard_copy(
 fn trigger_paste_shortcut() {
     #[cfg(target_os = "windows")]
     {
-        let _ = std::process::Command::new("powershell")
-            .args([
-                "-NoProfile",
-                "-Command",
-                "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.SendKeys]::SendWait('^v')",
-            ])
-            .status();
+        crate::windows_desktop::input::send_paste_shortcut();
     }
 }
 

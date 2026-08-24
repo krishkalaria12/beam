@@ -39,6 +39,8 @@ pub mod todo;
 pub mod translation;
 pub mod utils;
 pub mod window_switcher;
+#[cfg(target_os = "windows")]
+pub mod windows_desktop;
 
 #[cfg(target_os = "linux")]
 use std::fs;
@@ -134,6 +136,40 @@ fn desktop_exec_value(path: &Path) -> String {
     format!("\"{escaped}\"")
 }
 
+#[cfg(target_os = "windows")]
+fn maybe_register_dev_scheme_handlers() {
+    use winreg::enums::{HKEY_CURRENT_USER, KEY_SET_VALUE};
+    use winreg::RegKey;
+
+    if !cfg!(debug_assertions) {
+        return;
+    }
+
+    let Ok(executable_path) = std::env::current_exe() else {
+        return;
+    };
+    let Some(executable_str) = executable_path.to_str() else {
+        return;
+    };
+
+    let classes = RegKey::predef(HKEY_CURRENT_USER).open_subkey_with_flags(
+        r"Software\Classes",
+        KEY_SET_VALUE | winreg::enums::KEY_QUERY_VALUE,
+    );
+    let Ok(classes) = classes else {
+        return;
+    };
+
+    let command_value = format!("\"{executable_str}\" \"%1\"");
+    for scheme in ["beam", "raycast"] {
+        let Ok(scheme_key) = classes.create_subkey(&format!(r"{scheme}\shell\open\command")) else {
+            continue;
+        };
+        let _ = scheme_key.0.set_value("", &command_value);
+        let _ = scheme_key.0.set_value("URL Protocol", &String::new());
+    }
+}
+
 #[cfg(target_os = "linux")]
 fn maybe_register_dev_scheme_handlers() {
     if !cfg!(debug_assertions) {
@@ -195,12 +231,19 @@ pub fn entry() -> i32 {
         }
         #[cfg(target_os = "linux")]
         cli::CliInvocation::RunWaylandDataControlHelper => {
+            #[cfg(target_os = "linux")]
             match linux_desktop::wayland_helper::run_helper_main() {
-                Ok(()) => 0,
+                Ok(()) => return 0,
                 Err(error) => {
                     eprintln!("beam: {error}");
-                    2
+                    return 2;
                 }
+            }
+
+            #[cfg(not(target_os = "linux"))]
+            {
+                eprintln!("beam: wayland data control helper is not supported on this platform");
+                2
             }
         }
         #[cfg(not(target_os = "linux"))]
@@ -269,7 +312,7 @@ pub fn run(startup_args: Vec<String>) {
                 )?;
             }
 
-            #[cfg(target_os = "linux")]
+            #[cfg(any(target_os = "linux", target_os = "windows"))]
             maybe_register_dev_scheme_handlers();
 
             #[cfg(target_os = "linux")]
