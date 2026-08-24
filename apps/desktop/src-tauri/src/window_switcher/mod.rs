@@ -19,7 +19,7 @@ pub struct WindowEntry {
 }
 
 #[cfg(target_os = "linux")]
-use crate::linux_desktop as desktop_backend;
+use crate::linux_desktop::window_manager as desktop_backend;
 
 #[cfg(target_os = "macos")]
 use crate::macos::window_manager as desktop_backend;
