@@ -1,0 +1,30 @@
+pub(crate) const CONFIG: ApplicationsConfig = ApplicationsConfig {
+    last_updated_timestamp_key: "last_updated_application_timestamp",
+    cache_key: "applications_cache",
+    cache_updated_event: "applications-cache-updated",
+    application_directories: &[
+        "~/.local/share/applications/",
+        "~/.local/share/flatpak/exports/share/applications/",
+        "/usr/share/applications/",
+        "/var/lib/flatpak/exports/share/applications/",
+        "/var/lib/snapd/desktop/applications/",
+    ],
+    icon_directories: &[
+        "~/.local/share/icons",
+        "~/.icons",
+        "/usr/share/icons",
+        "/usr/local/share/icons",
+        "/usr/share/pixmaps",
+        "/var/lib/flatpak/exports/share/icons",
+        "/var/lib/snapd/desktop/icons",
+    ],
+};
+
+#[allow(dead_code)]
+pub(crate) struct ApplicationsConfig {
+    pub last_updated_timestamp_key: &'static str,
+    pub cache_key: &'static str,
+    pub cache_updated_event: &'static str,
+    pub application_directories: &'static [&'static str],
+    pub icon_directories: &'static [&'static str],
+}

@@ -7,7 +7,7 @@ note in docs/parity/adr/. The launcher-window resize commands are
 absorbed by the beam window module (SD-1) rather than ported as
 standalone functions; they are listed for completeness.
 
-Total: 162 commands; 30 ported so far.
+Total: 162 commands; 71 ported so far.
 
 | # | Command | Former IPC path | Status |
 | - | --------- | --------------- | ------ |
@@ -26,20 +26,20 @@ Total: 162 commands; 30 ported so far.
 | 13 | `clear_calculator_history` | `calculator::clear_calculator_history` | ported |
 | 14 | `get_pinned_calculator_history_timestamps` | `calculator::get_pinned_calculator_history_timestamps` | ported |
 | 15 | `set_calculator_history_entry_pinned` | `calculator::set_calculator_history_entry_pinned` | ported |
-| 16 | `get_clipboard_history` | `clipboard::get_clipboard_history` | pending |
-| 17 | `get_clipboard_history_entries` | `clipboard::get_clipboard_history_entries` | pending |
-| 18 | `search_clipboard_history` | `clipboard::search_clipboard_history` | pending |
-| 19 | `delete_clipboard_history_entry` | `clipboard::delete_clipboard_history_entry` | pending |
-| 20 | `clear_clipboard_history` | `clipboard::clear_clipboard_history` | pending |
-| 21 | `get_pinned_clipboard_entry_ids` | `clipboard::get_pinned_clipboard_entry_ids` | pending |
-| 22 | `set_clipboard_entry_pinned` | `clipboard::set_clipboard_entry_pinned` | pending |
-| 23 | `get_selected_text` | `clipboard::get_selected_text` | pending |
-| 24 | `get_selected_finder_items` | `clipboard::get_selected_finder_items` | pending |
-| 25 | `clipboard_read_text` | `clipboard::clipboard_read_text` | pending |
-| 26 | `clipboard_read` | `clipboard::clipboard_read` | pending |
-| 27 | `clipboard_copy` | `clipboard::clipboard_copy` | pending |
-| 28 | `clipboard_paste` | `clipboard::clipboard_paste` | pending |
-| 29 | `clipboard_clear` | `clipboard::clipboard_clear` | pending |
+| 16 | `get_clipboard_history` | `clipboard::get_clipboard_history` | ported |
+| 17 | `get_clipboard_history_entries` | `clipboard::get_clipboard_history_entries` | ported |
+| 18 | `search_clipboard_history` | `clipboard::search_clipboard_history` | ported |
+| 19 | `delete_clipboard_history_entry` | `clipboard::delete_clipboard_history_entry` | ported |
+| 20 | `clear_clipboard_history` | `clipboard::clear_clipboard_history` | ported |
+| 21 | `get_pinned_clipboard_entry_ids` | `clipboard::get_pinned_clipboard_entry_ids` | ported |
+| 22 | `set_clipboard_entry_pinned` | `clipboard::set_clipboard_entry_pinned` | ported |
+| 23 | `get_selected_text` | `clipboard::get_selected_text` | ported |
+| 24 | `get_selected_finder_items` | `clipboard::get_selected_finder_items` | ported |
+| 25 | `clipboard_read_text` | `clipboard::clipboard_read_text` | ported |
+| 26 | `clipboard_read` | `clipboard::clipboard_read` | ported |
+| 27 | `clipboard_copy` | `clipboard::clipboard_copy` | ported |
+| 28 | `clipboard_paste` | `clipboard::clipboard_paste` | ported |
+| 29 | `clipboard_clear` | `clipboard::clipboard_clear` | ported |
 | 30 | `get_pinned_emoji_hexcodes` | `emoji::get_pinned_emoji_hexcodes` | ported |
 | 31 | `set_emoji_pinned` | `emoji::set_emoji_pinned` | ported |
 | 32 | `search_files` | `file_search::search_files` | ported |
@@ -61,12 +61,12 @@ Total: 162 commands; 30 ported so far.
 | 48 | `get_definition` | `dictionary::get_definition` | ported |
 | 49 | `get_translation_languages` | `translation::get_translation_languages` | ported |
 | 50 | `translate_text` | `translation::translate_text` | ported |
-| 51 | `create_quicklink` | `quicklinks::create_quicklink` | pending |
-| 52 | `delete_quicklink` | `quicklinks::delete_quicklink` | pending |
-| 53 | `execute_quicklink` | `quicklinks::execute_quicklink` | pending |
-| 54 | `get_quicklinks` | `quicklinks::get_quicklinks` | pending |
-| 55 | `update_quicklink` | `quicklinks::update_quicklink` | pending |
-| 56 | `get_favicon_for_url` | `quicklinks::favicon::get_favicon_for_url` | pending |
+| 51 | `create_quicklink` | `quicklinks::create_quicklink` | ported |
+| 52 | `delete_quicklink` | `quicklinks::delete_quicklink` | ported |
+| 53 | `execute_quicklink` | `quicklinks::execute_quicklink` | ported |
+| 54 | `get_quicklinks` | `quicklinks::get_quicklinks` | ported |
+| 55 | `update_quicklink` | `quicklinks::update_quicklink` | ported |
+| 56 | `get_favicon_for_url` | `quicklinks::favicon::get_favicon_for_url` | ported |
 | 57 | `execute_system_action` | `system_actions::execute_system_action` | ported |
 | 58 | `get_awake_status` | `system_actions::get_awake_status` | ported |
 | 59 | `toggle_awake` | `system_actions::toggle_awake` | ported |
@@ -82,15 +82,15 @@ Total: 162 commands; 30 ported so far.
 | 69 | `paste_snippet` | `snippets::paste_snippet` | pending |
 | 70 | `get_snippet_runtime_settings` | `snippets::get_snippet_runtime_settings` | pending |
 | 71 | `update_snippet_runtime_settings` | `snippets::update_snippet_runtime_settings` | pending |
-| 72 | `get_notes` | `notes::get_notes` | pending |
-| 73 | `create_note` | `notes::create_note` | pending |
-| 74 | `update_note` | `notes::update_note` | pending |
-| 75 | `delete_note` | `notes::delete_note` | pending |
-| 76 | `get_script_commands_directory` | `script_commands::get_script_commands_directory` | pending |
-| 77 | `get_script_commands` | `script_commands::get_script_commands` | pending |
-| 78 | `create_script_command` | `script_commands::create_script_command` | pending |
-| 79 | `open_script_commands_directory` | `script_commands::open_script_commands_directory` | pending |
-| 80 | `run_script_command` | `script_commands::run_script_command` | pending |
+| 72 | `get_notes` | `notes::get_notes` | ported |
+| 73 | `create_note` | `notes::create_note` | ported |
+| 74 | `update_note` | `notes::update_note` | ported |
+| 75 | `delete_note` | `notes::delete_note` | ported |
+| 76 | `get_script_commands_directory` | `script_commands::get_script_commands_directory` | ported |
+| 77 | `get_script_commands` | `script_commands::get_script_commands` | ported |
+| 78 | `create_script_command` | `script_commands::create_script_command` | ported |
+| 79 | `open_script_commands_directory` | `script_commands::open_script_commands_directory` | ported |
+| 80 | `run_script_command` | `script_commands::run_script_command` | ported |
 | 81 | `set_launcher_compact_mode` | `launcher_window::set_launcher_compact_mode` | ported |
 | 82 | `set_launcher_window_size` | `launcher_window::set_launcher_window_size` | ported |
 | 83 | `set_launcher_compact_mode_for_resize_transition` | `launcher_window::set_launcher_compact_mode_for_resize_transition` | ported |
@@ -101,8 +101,8 @@ Total: 162 commands; 30 ported so far.
 | 88 | `execute_shell_command` | `launcher_shell::execute_shell_command` | pending |
 | 89 | `menu_bar_upsert_tray` | `menu_bar::menu_bar_upsert_tray` | pending |
 | 90 | `menu_bar_remove_tray` | `menu_bar::menu_bar_remove_tray` | pending |
-| 91 | `get_pinned_command_ids` | `pinned::get_pinned_command_ids` | pending |
-| 92 | `set_command_pinned` | `pinned::set_command_pinned` | pending |
+| 91 | `get_pinned_command_ids` | `pinned::get_pinned_command_ids` | ported |
+| 92 | `set_command_pinned` | `pinned::set_command_pinned` | ported |
 | 93 | `get_ui_layout_mode` | `settings::get_ui_layout_mode` | pending |
 | 94 | `set_ui_layout_mode` | `settings::set_ui_layout_mode` | pending |
 | 95 | `get_ui_style` | `settings::get_ui_style` | pending |
@@ -157,19 +157,19 @@ Total: 162 commands; 30 ported so far.
 | 144 | `get_ai_token_usage_summary` | `ai::get_ai_token_usage_summary` | pending |
 | 145 | `ai_can_access` | `ai::ai_can_access` | pending |
 | 146 | `ai_ask_stream` | `ai::ai_ask_stream` | pending |
-| 147 | `create_todo` | `todo::todo::create_todo` | pending |
-| 148 | `get_todo` | `todo::get_todo` | pending |
-| 149 | `get_todos` | `todo::get_todos` | pending |
-| 150 | `update_todo` | `todo::todo::update_todo` | pending |
-| 151 | `delete_todo` | `todo::todo::delete_todo` | pending |
-| 152 | `create_sub_todo` | `todo::sub_todo::create_sub_todo` | pending |
-| 153 | `update_sub_todo` | `todo::sub_todo::update_sub_todo` | pending |
-| 154 | `delete_sub_todo` | `todo::sub_todo::delete_sub_todo` | pending |
+| 147 | `create_todo` | `todo::todo::create_todo` | ported |
+| 148 | `get_todo` | `todo::get_todo` | ported |
+| 149 | `get_todos` | `todo::get_todos` | ported |
+| 150 | `update_todo` | `todo::todo::update_todo` | ported |
+| 151 | `delete_todo` | `todo::todo::delete_todo` | ported |
+| 152 | `create_sub_todo` | `todo::sub_todo::create_sub_todo` | ported |
+| 153 | `update_sub_todo` | `todo::sub_todo::update_sub_todo` | ported |
+| 154 | `delete_sub_todo` | `todo::sub_todo::delete_sub_todo` | ported |
 | 155 | `list_windows` | `window_switcher::list_windows` | pending |
 | 156 | `focus_window` | `window_switcher::focus_window` | pending |
 | 157 | `close_window` | `window_switcher::close_window` | pending |
-| 158 | `get_hidden_command_ids` | `custom_config::commands_items::get_hidden_command_ids` | pending |
-| 159 | `set_command_hidden` | `custom_config::commands_items::set_command_hidden` | pending |
+| 158 | `get_hidden_command_ids` | `custom_config::commands_items::get_hidden_command_ids` | ported |
+| 159 | `set_command_hidden` | `custom_config::commands_items::set_command_hidden` | ported |
 | 160 | `cli_bridge_mark_ui_ready` | `cli::bridge::cli_bridge_mark_ui_ready` | ported |
 | 161 | `cli_bridge_complete_request` | `cli::bridge::cli_bridge_complete_request` | ported |
 | 162 | `cli_bridge_search_request` | `cli::bridge::cli_bridge_search_request` | ported |

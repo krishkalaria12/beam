@@ -53,6 +53,14 @@ pub struct HotkeyBackendStatus {
     pub source: String,
 }
 
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FocusAppBlocked {
+    pub target: String,
+    pub window_title: String,
+    pub app_name: String,
+}
+
 /// One typed event on the beam bus. Serialises as its payload alone
 /// (`#[serde(untagged)]`) so what lands on the bus is byte-compatible with
 /// the JSON the Tauri build emitted under the same name; `as_str` returns
@@ -78,8 +86,8 @@ pub enum BeamEvent {
     ExtensionRuntimeStderr(Value),
     /// `extension-runtime-exit` — TODO(PORT: extensions)
     ExtensionRuntimeExit(Value),
-    /// `focus-app-blocked` — TODO(PORT: focus)
-    FocusAppBlocked(Value),
+    /// `focus-app-blocked`
+    FocusAppBlocked(FocusAppBlocked),
     /// `focus-status-updated` — TODO(PORT: focus)
     FocusStatusUpdated(Value),
     /// `hotkey-command`

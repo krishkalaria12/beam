@@ -29,6 +29,24 @@ ported = {
     "set_launcher_window_size_for_resize_transition",
     "hide_launcher_window_for_resize_transition", "hide_launcher_window",
     "reveal_launcher_window_after_resize_transition",
+    # batch 2
+    "get_hidden_command_ids", "set_command_hidden",
+    "get_pinned_command_ids", "set_command_pinned",
+    "get_notes", "create_note", "update_note", "delete_note",
+    "create_todo", "get_todo", "get_todos", "update_todo", "delete_todo",
+    "create_sub_todo", "update_sub_todo", "delete_sub_todo",
+    # batch 3
+    "get_clipboard_history", "get_clipboard_history_entries",
+    "search_clipboard_history", "delete_clipboard_history_entry",
+    "clear_clipboard_history", "get_pinned_clipboard_entry_ids",
+    "set_clipboard_entry_pinned", "get_selected_text",
+    "get_selected_finder_items", "clipboard_read_text", "clipboard_read",
+    "clipboard_copy", "clipboard_paste", "clipboard_clear",
+    "create_quicklink", "delete_quicklink", "execute_quicklink",
+    "get_quicklinks", "update_quicklink", "get_favicon_for_url",
+    "get_script_commands_directory", "get_script_commands",
+    "create_script_command", "open_script_commands_directory",
+    "run_script_command",
 }
 
 names = [n for n, _ in unique]
