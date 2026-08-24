@@ -1,3 +1,5 @@
+// PORT: apps/desktop/src-tauri/src/pinned/error.rs
+// Copied verbatim; no Tauri APIs in this file.
 use serde::Serialize;
 use thiserror::Error;
 

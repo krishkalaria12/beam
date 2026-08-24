@@ -21,6 +21,7 @@
 
 pub mod calculator;
 pub mod cli;
+pub mod clipboard;
 pub mod config;
 pub mod custom_config;
 pub mod dictionary;
@@ -30,6 +31,8 @@ pub mod file_search;
 pub mod http;
 pub mod notes;
 pub mod pinned;
+pub mod quicklinks;
+pub mod script_commands;
 pub mod search;
 pub mod settings;
 pub mod snippets;

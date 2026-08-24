@@ -1,3 +1,5 @@
+// PORT: apps/desktop/src-tauri/src/settings/config.rs
+// Copied verbatim; no Tauri APIs in this file.
 pub(crate) const CONFIG: SettingsConfig = SettingsConfig {
     ui_layout_mode_key: "ui_layout_mode",
     ui_style_key: "ui_style",
@@ -13,6 +15,10 @@ pub(crate) const CONFIG: SettingsConfig = SettingsConfig {
     default_launcher_font_size: 13.0,
 };
 
+/// `ui_style_key`, `base_color_key` and `default_base_color` stay in the
+/// table for store compatibility; their commands were deleted by D5 and the
+/// keys are simply ignored from now on.
+#[allow(dead_code)]
 pub(crate) struct SettingsConfig {
     pub ui_layout_mode_key: &'static str,
     pub ui_style_key: &'static str,

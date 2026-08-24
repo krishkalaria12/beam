@@ -1,3 +1,5 @@
+// PORT: apps/desktop/src-tauri/src/todo/helpers.rs
+// Copied verbatim; no Tauri APIs in this file.
 use chrono::Utc;
 use std::collections::HashMap;
 
