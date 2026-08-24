@@ -13,6 +13,7 @@ mod app;
 mod command_registry;
 mod glass;
 mod hotkey;
+mod launcher_state;
 mod root_view;
 mod theme;
 mod window;
