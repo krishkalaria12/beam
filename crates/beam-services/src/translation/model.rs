@@ -1,3 +1,5 @@
+// PORT: apps/desktop/src-tauri/src/translation/model.rs
+// Copied verbatim; no Tauri APIs in this file.
 use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};

@@ -1,3 +1,5 @@
+// PORT: apps/desktop/src-tauri/src/file_search/indexer/builder.rs
+// Copied verbatim; no Tauri APIs in this file.
 use ignore::{WalkBuilder, WalkState};
 use std::cmp::max;
 use tokio::sync::mpsc;

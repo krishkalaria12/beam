@@ -1,3 +1,5 @@
+// PORT: apps/desktop/src-tauri/src/file_search/config.rs
+// Copied verbatim; no Tauri APIs in this file.
 pub(crate) const CONFIG: FileSearchConfig = FileSearchConfig {
     ignored_folders: &[
         "node_modules",

@@ -1,3 +1,5 @@
+// PORT: apps/desktop/src-tauri/src/file_search/indexer/cache.rs
+// Copied verbatim; no Tauri APIs in this file.
 use chrono::Utc;
 use chrono_tz::UTC;
 use rkyv::Deserialize;

@@ -1,3 +1,5 @@
+// PORT: apps/desktop/src-tauri/src/lib.rs
+// Copied verbatim; no Tauri APIs in this file.
 //! `beam-services` — the `apps/desktop/src-tauri/src` module tree, preserved
 //! 1:1 (plan §05), with the Tauri attachment removed per the de-Tauri
 //! contract:

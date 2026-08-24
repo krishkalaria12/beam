@@ -1,3 +1,5 @@
+// PORT: apps/desktop/src-tauri/src/file_search/indexer/helper.rs
+// Copied verbatim; no Tauri APIs in this file.
 use chrono::{DateTime, Utc};
 use chrono_tz::UTC;
 use std::{path::Path, time::SystemTime};

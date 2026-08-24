@@ -1,3 +1,5 @@
+// PORT: apps/desktop/src-tauri/src/translation/helper.rs
+// Copied verbatim; no Tauri APIs in this file.
 use serde_json::Value;
 use url::Url;
 

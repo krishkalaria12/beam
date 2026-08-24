@@ -1,3 +1,5 @@
+// PORT: apps/desktop/src-tauri/src/file_search/indexer/watcher.rs
+// Copied verbatim; no Tauri APIs in this file.
 use log::{error, warn};
 use notify_debouncer_mini::{
     new_debouncer, notify::RecommendedWatcher, notify::RecursiveMode, DebounceEventResult,

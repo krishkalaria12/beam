@@ -1,3 +1,5 @@
+// PORT: apps/desktop/src-tauri/src/dictionary/language.rs
+// Copied verbatim; no Tauri APIs in this file.
 use whichlang::{detect_language, Lang};
 
 pub fn detect_language_code(text: &str) -> Option<&'static str> {

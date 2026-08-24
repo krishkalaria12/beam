@@ -1,3 +1,5 @@
+// PORT: apps/desktop/src-tauri/src/calculator/types.rs
+// Copied verbatim; no Tauri APIs in this file.
 use serde::Serialize;
 
 #[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]

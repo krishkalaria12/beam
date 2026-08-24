@@ -1,3 +1,5 @@
+// PORT: apps/desktop/src-tauri/src/utils/from_error_macro.rs
+// Copied verbatim; no Tauri APIs in this file.
 #[macro_export]
 macro_rules! impl_froms {
     () => {};

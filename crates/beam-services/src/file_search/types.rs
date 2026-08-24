@@ -1,3 +1,5 @@
+// PORT: apps/desktop/src-tauri/src/file_search/types.rs
+// Copied verbatim; no Tauri APIs in this file.
 use bytecheck::CheckBytes;
 use rkyv::{Archive, Deserialize as RkyvDeserialize, Serialize as RkyvSerialize};
 use serde::{Deserialize, Serialize};

@@ -1,3 +1,5 @@
+// PORT: apps/desktop/src-tauri/src/utils/mod.rs
+// Copied verbatim; no Tauri APIs in this file.
 //! Utility modules for Beam
 //!
 //! This module provides utility functions and helpers used across the application.

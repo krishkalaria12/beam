@@ -1,3 +1,5 @@
+// PORT: apps/desktop/src-tauri/src/cli/dmenu.rs
+// Copied verbatim; no Tauri APIs in this file.
 use std::fs;
 use std::io::{self, Read};
 

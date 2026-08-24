@@ -1,3 +1,5 @@
+// PORT: apps/desktop/src-tauri/src/cli/parser.rs
+// Copied verbatim; no Tauri APIs in this file.
 use std::path::Path;
 
 use clap::Parser;

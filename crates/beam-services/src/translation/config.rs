@@ -1,3 +1,5 @@
+// PORT: apps/desktop/src-tauri/src/translation/config.rs
+// Copied verbatim; no Tauri APIs in this file.
 pub(crate) const CONFIG: TranslationConfig = TranslationConfig {
     api_base_url: "https://translate.googleapis.com",
     languages_endpoint: "/translate_a/l",

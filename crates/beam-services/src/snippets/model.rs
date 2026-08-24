@@ -1,3 +1,5 @@
+// PORT: apps/desktop/src-tauri/src/snippets/model.rs
+// Copied verbatim; no Tauri APIs in this file.
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use std::collections::{HashMap, HashSet};

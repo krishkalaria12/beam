@@ -1,3 +1,5 @@
+// PORT: apps/desktop/src-tauri/src/http/mod.rs
+// Copied verbatim; no Tauri APIs in this file.
 pub mod error;
 
 use std::time::Duration;

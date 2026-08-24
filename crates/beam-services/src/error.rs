@@ -1,3 +1,5 @@
+// PORT: apps/desktop/src-tauri/src/error.rs
+// Copied verbatim; no Tauri APIs in this file.
 //! Unified error handling for Beam
 //!
 //! This module provides:

@@ -1,3 +1,5 @@
+// PORT: apps/desktop/src-tauri/src/calculator/soulver.rs
+// Copied verbatim; no Tauri APIs in this file.
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
 use std::sync::Once;
