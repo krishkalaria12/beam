@@ -72,6 +72,9 @@ fn run_first_instance(args: &[String]) -> i32 {
 
         let app = app::init(cx, context);
 
+        // Design-system key maps (TextInput actions, scoped to its context).
+        beam_ui::input::init(cx);
+
         // Activation surface: serve the socket and drain it into the app.
         let (sender, receiver) = unbounded::<activation::ActivationRequest>();
         if let Err(error) = activation::serve(sender.clone()) {

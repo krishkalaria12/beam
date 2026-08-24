@@ -666,6 +666,7 @@ dependencies = [
  "anyhow",
  "async-channel",
  "beam-core",
+ "beam-ui",
  "env_logger",
  "global-hotkey",
  "gpui",
@@ -731,6 +732,15 @@ dependencies = [
  "walkdir",
  "webbrowser",
  "whichlang",
+]
+
+[[package]]
+name = "beam-ui"
+version = "1.0.0"
+dependencies = [
+ "gpui",
+ "log",
+ "unicode-segmentation",
 ]
 
 [[package]]

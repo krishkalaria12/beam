@@ -175,7 +175,7 @@ pub fn open_launcher_window<V: Render>(
     config: LauncherShellConfig,
     surface: PanelSurface,
     build_root: impl FnOnce(&mut Window, &mut App) -> Entity<V>,
-) -> gpui::Result<gpui::AnyWindowHandle> {
+) -> gpui::Result<gpui::WindowHandle<V>> {
     let Some(display) = cx.displays().first().cloned() else {
         return Err(anyhow::anyhow!(
             "no display available for the launcher window"
@@ -183,7 +183,6 @@ pub fn open_launcher_window<V: Render>(
     };
     let options = config.window_options(surface.size(), display.bounds());
     cx.open_window(options, build_root)
-        .map(|handle| handle.into())
 }
 
 #[cfg(test)]

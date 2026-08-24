@@ -1,72 +1,110 @@
-//! The G0 root view: the fixed glass plate itself.
+//! The G1 launcher shell skeleton: glass plate + the live search input.
 //!
-//! This is the one surface from §04 — a rounded translucent plate over the
-//! window background, ink on top, no shadows on the fill, a 1px inset edge
-//! for elevation. It reads `launcher_opacity` out of the user's existing
-//! store file, which is the G0 gate check for data continuity. The real
-//! launcher shell replaces this at G1 (lane B).
+//! This is the first vertical slice of lane B: the TextInput from beam-ui
+//! running inside the launcher window, emitting Change events that update
+//! the shell. The command list, footer, ⌘K panel and panel router replace
+//! the placeholder rows in the next batches.
 
-use gpui::{div, prelude::*, px, rgba, Context, Window};
+use gpui::{div, prelude::*, px, Context, Window};
 
-use crate::glass::GlassMode;
+use beam_ui::{TextInput, TextInputEvent};
 
 pub struct RootView {
-    glass_mode: GlassMode,
-    plate_alpha: f32,
+    input: gpui::Entity<TextInput>,
+    query: String,
+    /// Echo of the last submitted query, proving the submit path.
+    last_submitted: Option<String>,
+    glass_label: String,
 }
 
 impl RootView {
-    pub fn new(glass_mode: GlassMode, glass_strength: f32) -> Self {
+    pub fn new(glass_label: String, cx: &mut Context<Self>) -> Self {
+        let input = cx.new(|cx| {
+            TextInput::new(cx)
+                .placeholder("Search commands…")
+                .on_change(|text, cx| {
+                    // The command registry subscribes here at the next
+                    // batch; the shell echoes the query for now.
+                    cx.notify();
+                    let _ = text;
+                })
+        });
+        cx.subscribe(&input, |this, _, event: &TextInputEvent, cx| match event {
+            TextInputEvent::Change(text) => {
+                this.query = text.to_string();
+                cx.notify();
+            }
+            TextInputEvent::Submit(text) => {
+                this.last_submitted = Some(text.to_string());
+                cx.notify();
+            }
+        })
+        .detach();
+
+        cx.notify();
+
         Self {
-            glass_mode,
-            plate_alpha: glass_mode.plate_alpha(glass_strength),
+            input,
+            query: String::new(),
+            last_submitted: None,
+            glass_label,
         }
     }
 }
 
-/// Ink colours from the design (§04): white text, dimmed secondary.
-const INK: u32 = 0xe8ebf2;
-const INK_DIM: u32 = 0x8a90a0;
-const EDGE_ALPHA: f32 = 0.14;
-
-fn with_alpha(rgb_hex: u32, alpha: f32) -> u32 {
-    let clamped = (alpha.clamp(0.0, 1.0) * 255.0).round() as u32;
-    (rgb_hex << 8) | clamped
+impl RootView {
+    /// Focuses the search input — the launcher's first responder on reveal.
+    pub fn focus_input(&self, window: &mut Window, cx: &mut Context<Self>) {
+        self.input.update(cx, |input, cx| input.focus(window, cx));
+        cx.notify();
+    }
 }
 
 impl Render for RootView {
-    fn render(&mut self, _window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
-        let mode_label = match self.glass_mode {
-            GlassMode::Frosted => "frosted",
-            GlassMode::Solid => "solid",
-        };
+    fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+        let focused = self.input.read(cx).is_focused(window);
 
         div()
             .size_full()
             .flex()
             .flex_col()
-            .items_center()
-            .justify_center()
-            .bg(rgba(with_alpha(0x0a0b0e, self.plate_alpha)))
-            .rounded(px(16.))
-            .border_1()
-            .border_color(rgba(with_alpha(0xffffff, EDGE_ALPHA)))
             .child(
+                // SearchBar skeleton — 56px tall per the §04 spec.
                 div()
-                    .text_size(px(20.))
-                    .text_color(rgba(with_alpha(INK, 1.0)))
-                    .font_weight(gpui::FontWeight::MEDIUM)
-                    .child("Beam"),
+                    .h(px(beam_ui::SEARCH_BAR_HEIGHT))
+                    .px_4()
+                    .flex()
+                    .items_center()
+                    .border_b_1()
+                    .border_color(beam_ui::divider())
+                    .child(self.input.clone()),
             )
             .child(
                 div()
-                    .mt_2()
-                    .text_size(px(12.))
-                    .text_color(rgba(with_alpha(INK_DIM, 1.0)))
-                    .child(format!(
-                        "GPUI port · G0 · glass {mode_label} · plate α {:.2}",
-                        self.plate_alpha
-                    )),
+                    .flex_1()
+                    .px_5()
+                    .pt_4()
+                    .flex()
+                    .flex_col()
+                    .text_size(px(beam_ui::TEXT_MD))
+                    .text_color(beam_ui::ink_dim())
+                    .child(format!("query: {:?}", self.query))
+                    .children(
+                        self.last_submitted.clone().map(|submitted| {
+                            div().mt_2().child(format!("submitted: {submitted:?}"))
+                        }),
+                    )
+                    .child(
+                        div()
+                            .mt_2()
+                            .text_size(px(beam_ui::TEXT_XS))
+                            .text_color(beam_ui::ink_faint())
+                            .child(format!(
+                                "beam-ui live · glass {} · input {}",
+                                self.glass_label,
+                                if focused { "focused" } else { "unfocused" }
+                            )),
+                    ),
             )
     }
 }

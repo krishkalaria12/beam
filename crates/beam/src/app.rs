@@ -48,7 +48,7 @@ pub struct BeamApp {
     pub context: BeamContext,
     pub glass_mode: GlassMode,
     pub glass_strength: f32,
-    window: Option<gpui::AnyWindowHandle>,
+    window: Option<gpui::WindowHandle<crate::root_view::RootView>>,
     visible: bool,
 }
 
@@ -65,8 +65,10 @@ impl BeamApp {
         }
 
         let config = self.shell_config();
-        let strength = self.glass_strength;
-        let mode = self.glass_mode;
+        let glass_label = match self.glass_mode {
+            crate::glass::GlassMode::Frosted => "frosted",
+            crate::glass::GlassMode::Solid => "solid",
+        };
 
         match open_launcher_window(
             cx,
@@ -74,7 +76,9 @@ impl BeamApp {
             PanelSurface::Commands {
                 compact_height: None,
             },
-            move |_window, cx| cx.new(|_| crate::root_view::RootView::new(mode, strength)),
+            move |_window, cx| {
+                cx.new(|cx| crate::root_view::RootView::new(glass_label.to_string(), cx))
+            },
         ) {
             Ok(handle) => {
                 self.window = Some(handle);
@@ -99,8 +103,9 @@ impl BeamApp {
         #[cfg(target_os = "macos")]
         {
             cx.activate(true);
-            let _ = handle.update(cx, |_, window, _| {
+            let _ = handle.update(cx, |root, window, cx| {
                 window.activate_window();
+                root.focus_input(window, cx);
             });
             self.visible = true;
         }
@@ -112,8 +117,9 @@ impl BeamApp {
             // protocol shim). Windows: Platform::hide() is also a no-op
             // upstream; the ShowWindow shim lands with A5b. Until then the
             // window simply stays on screen on these platforms.
-            let _ = handle.update(cx, |_, window, _| {
+            let _ = handle.update(cx, |root, window, cx| {
                 window.activate_window();
+                root.focus_input(window, cx);
             });
             self.visible = true;
             log::info!("show: full show/hide parity pending lane A5 on this platform");
