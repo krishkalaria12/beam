@@ -31,12 +31,8 @@ pub struct DesktopIntegrationStatus {
     pub gnome_extension: Option<GnomeExtensionStatus>,
 }
 
-#[allow(clippy::too_many_arguments)]
-fn build_status(
-    platform: &str,
-    session_type: &str,
-    desktop_environment: &str,
-    compositor: &str,
+/// Backend-derived values assembled into a [`DesktopIntegrationStatus`].
+struct StatusParts {
     window_backend: DesktopBackendKind,
     clipboard_backend: DesktopBackendKind,
     selected_text_backend: String,
@@ -46,9 +42,18 @@ fn build_status(
     supports_default_application: bool,
     wayland_helper: Option<WaylandHelperStatus>,
     gnome_extension: Option<GnomeExtensionStatus>,
-    mut notes: Vec<String>,
+    notes: Vec<String>,
+}
+
+fn build_status(
+    platform: &str,
+    session_type: &str,
+    desktop_environment: &str,
+    compositor: &str,
+    parts: StatusParts,
 ) -> DesktopIntegrationStatus {
-    if !window_capabilities.supports_window_listing && notes.is_empty() {
+    let mut notes = parts.notes;
+    if !parts.window_capabilities.supports_window_listing && notes.is_empty() {
         if platform == "macos" {
             notes.push(
                 "Grant Beam the Accessibility permission in System Settings to enable window \
@@ -68,23 +73,25 @@ fn build_status(
         session_type: session_type.to_string(),
         desktop_environment: desktop_environment.to_string(),
         compositor: compositor.to_string(),
-        window_backend: window_backend.as_str().to_string(),
-        clipboard_backend: clipboard_backend.as_str().to_string(),
-        selected_text_backend,
-        selected_files_backend,
-        wayland_helper: wayland_helper.unwrap_or_else(WaylandHelperStatus::unavailable),
-        supports_window_listing: window_capabilities.supports_window_listing,
-        supports_window_focus: window_capabilities.supports_window_focus,
-        supports_window_close: window_capabilities.supports_window_close,
-        supports_frontmost_application: window_capabilities.supports_frontmost_application,
-        supports_default_application,
-        supports_clipboard_read: clipboard_capabilities.supports_clipboard_read,
-        supports_clipboard_write: clipboard_capabilities.supports_clipboard_write,
-        supports_clipboard_paste: clipboard_capabilities.supports_clipboard_paste,
-        supports_selected_text: clipboard_capabilities.supports_selected_text,
-        supports_selected_file_items: clipboard_capabilities.supports_selected_file_items,
+        window_backend: parts.window_backend.as_str().to_string(),
+        clipboard_backend: parts.clipboard_backend.as_str().to_string(),
+        selected_text_backend: parts.selected_text_backend,
+        selected_files_backend: parts.selected_files_backend,
+        wayland_helper: parts
+            .wayland_helper
+            .unwrap_or_else(WaylandHelperStatus::unavailable),
+        supports_window_listing: parts.window_capabilities.supports_window_listing,
+        supports_window_focus: parts.window_capabilities.supports_window_focus,
+        supports_window_close: parts.window_capabilities.supports_window_close,
+        supports_frontmost_application: parts.window_capabilities.supports_frontmost_application,
+        supports_default_application: parts.supports_default_application,
+        supports_clipboard_read: parts.clipboard_capabilities.supports_clipboard_read,
+        supports_clipboard_write: parts.clipboard_capabilities.supports_clipboard_write,
+        supports_clipboard_paste: parts.clipboard_capabilities.supports_clipboard_paste,
+        supports_selected_text: parts.clipboard_capabilities.supports_selected_text,
+        supports_selected_file_items: parts.clipboard_capabilities.supports_selected_file_items,
         notes,
-        gnome_extension,
+        gnome_extension: parts.gnome_extension,
     }
 }
 
@@ -104,16 +111,18 @@ pub fn get_status() -> DesktopIntegrationStatus {
         "aqua",
         "macos",
         "aqua",
-        window_kind,
-        crate::macos::clipboard::active_backend_kind(),
-        crate::macos::clipboard::selected_text_backend_name(),
-        crate::macos::clipboard::selected_files_backend_name(),
-        crate::macos::window_manager::active_capabilities(),
-        crate::macos::clipboard::active_capabilities(),
-        true,
-        None,
-        None,
-        Vec::new(),
+        StatusParts {
+            window_backend: window_kind,
+            clipboard_backend: crate::macos::clipboard::active_backend_kind(),
+            selected_text_backend: crate::macos::clipboard::selected_text_backend_name(),
+            selected_files_backend: crate::macos::clipboard::selected_files_backend_name(),
+            window_capabilities: crate::macos::window_manager::active_capabilities(),
+            clipboard_capabilities: crate::macos::clipboard::active_capabilities(),
+            supports_default_application: true,
+            wayland_helper: None,
+            gnome_extension: None,
+            notes: Vec::new(),
+        },
     )
 }
 
@@ -182,16 +191,18 @@ pub fn get_status() -> DesktopIntegrationStatus {
         &environment.session_type,
         &environment.desktop_environment,
         &environment.compositor,
-        window_backend,
-        clipboard_backend,
-        linux_desktop::clipboard::selected_text_backend_name(),
-        linux_desktop::clipboard::selected_files_backend_name(),
-        window_capabilities,
-        clipboard_capabilities,
-        true,
-        Some(helper_status),
-        gnome_extension,
-        notes,
+        StatusParts {
+            window_backend,
+            clipboard_backend,
+            selected_text_backend: linux_desktop::clipboard::selected_text_backend_name(),
+            selected_files_backend: linux_desktop::clipboard::selected_files_backend_name(),
+            window_capabilities,
+            clipboard_capabilities,
+            supports_default_application: true,
+            wayland_helper: Some(helper_status),
+            gnome_extension,
+            notes,
+        },
     )
 }
 
@@ -202,16 +213,18 @@ pub fn get_status() -> DesktopIntegrationStatus {
         "unknown",
         "unknown",
         "unknown",
-        DesktopBackendKind::Unsupported,
-        DesktopBackendKind::Unsupported,
-        "unsupported".to_string(),
-        "unsupported".to_string(),
-        WindowBackendCapabilities::unsupported(),
-        ClipboardBackendCapabilities::unsupported(),
-        false,
-        None,
-        None,
-        Vec::new(),
+        StatusParts {
+            window_backend: DesktopBackendKind::Unsupported,
+            clipboard_backend: DesktopBackendKind::Unsupported,
+            selected_text_backend: "unsupported".to_string(),
+            selected_files_backend: "unsupported".to_string(),
+            window_capabilities: WindowBackendCapabilities::unsupported(),
+            clipboard_capabilities: ClipboardBackendCapabilities::unsupported(),
+            supports_default_application: false,
+            wayland_helper: None,
+            gnome_extension: None,
+            notes: Vec::new(),
+        },
     )
 }
 

@@ -77,18 +77,37 @@ pub struct DesktopContextSnapshot {
     pub capabilities: DesktopContextCapabilities,
 }
 
-#[allow(clippy::too_many_arguments)]
+/// One selection-aware input to the desktop context (selected text or files).
+struct SelectionSource<T> {
+    result: Result<T, String>,
+    supported: bool,
+    backend_name: String,
+}
+
+/// Window-manager-derived input to the desktop context.
+struct WindowSource {
+    backend_kind: crate::desktop::types::DesktopBackendKind,
+    capabilities: crate::desktop::types::WindowBackendCapabilities,
+    frontmost_result: Result<Option<FocusedWindowInfo>, String>,
+}
+
 fn build_snapshot(
-    selected_text_result: Result<String, String>,
-    selected_text_supported: bool,
-    selected_text_backend: String,
-    selected_files_result: Result<Vec<SelectedFinderItem>, String>,
-    selected_files_supported: bool,
-    selected_files_backend: String,
-    window_backend_kind: crate::desktop::types::DesktopBackendKind,
-    window_capabilities: crate::desktop::types::WindowBackendCapabilities,
-    focused_window_result: Result<Option<FocusedWindowInfo>, String>,
+    selected_text: SelectionSource<String>,
+    selected_files: SelectionSource<Vec<SelectedFinderItem>>,
+    windows: WindowSource,
 ) -> DesktopContextSnapshot {
+    let SelectionSource {
+        result: selected_text_result,
+        supported: selected_text_supported,
+        backend_name: selected_text_backend,
+    } = selected_text;
+    let SelectionSource {
+        result: selected_files_result,
+        supported: selected_files_supported,
+        backend_name: selected_files_backend,
+    } = selected_files;
+    let window_capabilities = windows.capabilities;
+
     let selected_text = match selected_text_result {
         Ok(value) if !value.trim().is_empty() => ContextValue::supported(value),
         Ok(_) if selected_text_supported => {
@@ -109,7 +128,7 @@ fn build_snapshot(
         Err(error) => ContextValue::unsupported(error),
     };
 
-    let focused_window = match &focused_window_result {
+    let focused_window = match &windows.frontmost_result {
         Ok(Some(info)) => ContextValue::supported(info.clone()),
         Ok(None) if window_capabilities.supports_frontmost_application => {
             ContextValue::unavailable("could not determine the focused window")
@@ -121,7 +140,7 @@ fn build_snapshot(
         Err(error) => ContextValue::unsupported(error),
     };
 
-    let frontmost_application = match focused_window_result {
+    let frontmost_application = match windows.frontmost_result {
         Ok(Some(info)) => resolve_frontmost_application(&info).map_or_else(
             |error| ContextValue::unavailable(error.to_string()),
             ContextValue::supported,
@@ -138,7 +157,7 @@ fn build_snapshot(
         Err(error) => ContextValue::unsupported(error),
     };
 
-    let window_backend = window_backend_kind.as_str().to_string();
+    let window_backend = windows.backend_kind.as_str().to_string();
 
     DesktopContextSnapshot {
         selected_text,
@@ -202,52 +221,72 @@ fn resolve_frontmost_application(
 #[cfg(target_os = "macos")]
 pub fn get_desktop_context_snapshot(state: &AppState) -> DesktopContextSnapshot {
     let clipboard_capabilities = crate::macos::clipboard::active_capabilities();
-    let window_capabilities = crate::macos::window_manager::active_capabilities();
 
     build_snapshot(
-        crate::macos::clipboard::selected_text(),
-        clipboard_capabilities.supports_selected_text,
-        crate::macos::clipboard::selected_text_backend_name(),
-        crate::macos::clipboard::selected_files(),
-        clipboard_capabilities.supports_selected_file_items,
-        crate::macos::clipboard::selected_files_backend_name(),
-        crate::macos::window_manager::active_backend_kind(),
-        window_capabilities,
-        crate::macos::window_manager::frontmost_window(state),
+        SelectionSource {
+            result: crate::macos::clipboard::selected_text(),
+            supported: clipboard_capabilities.supports_selected_text,
+            backend_name: crate::macos::clipboard::selected_text_backend_name(),
+        },
+        SelectionSource {
+            result: crate::macos::clipboard::selected_files(),
+            supported: clipboard_capabilities.supports_selected_file_items,
+            backend_name: crate::macos::clipboard::selected_files_backend_name(),
+        },
+        WindowSource {
+            backend_kind: crate::macos::window_manager::active_backend_kind(),
+            capabilities: crate::macos::window_manager::active_capabilities(),
+            frontmost_result: crate::macos::window_manager::frontmost_window(state),
+        },
     )
 }
 
 #[cfg(not(any(target_os = "linux", target_os = "macos")))]
 pub fn get_desktop_context_snapshot(_state: &AppState) -> DesktopContextSnapshot {
+    const UNAVAILABLE: &str = "desktop context is unavailable on this platform";
+
     build_snapshot(
-        Err("desktop context is unavailable on this platform".to_string()),
-        false,
-        "unsupported".to_string(),
-        Err("desktop context is unavailable on this platform".to_string()),
-        false,
-        "unsupported".to_string(),
-        crate::desktop::types::DesktopBackendKind::Unsupported,
-        crate::desktop::types::WindowBackendCapabilities::unsupported(),
-        Err("desktop context is unavailable on this platform".to_string()),
+        SelectionSource {
+            result: Err(UNAVAILABLE.to_string()),
+            supported: false,
+            backend_name: "unsupported".to_string(),
+        },
+        SelectionSource {
+            result: Err(UNAVAILABLE.to_string()),
+            supported: false,
+            backend_name: "unsupported".to_string(),
+        },
+        WindowSource {
+            backend_kind: crate::desktop::types::DesktopBackendKind::Unsupported,
+            capabilities: crate::desktop::types::WindowBackendCapabilities::unsupported(),
+            frontmost_result: Err(UNAVAILABLE.to_string()),
+        },
     )
 }
 
 #[cfg(target_os = "linux")]
 pub fn get_desktop_context_snapshot(state: &AppState) -> DesktopContextSnapshot {
     let clipboard_capabilities = crate::linux_desktop::clipboard::active_capabilities();
-    let window_capabilities = crate::linux_desktop::window_manager::active_capabilities();
 
     build_snapshot(
-        crate::linux_desktop::clipboard::selected_text().map_err(|error| error.to_string()),
-        clipboard_capabilities.supports_selected_text,
-        crate::linux_desktop::clipboard::selected_text_backend_name(),
-        crate::linux_desktop::clipboard::selected_files().map_err(|error| error.to_string()),
-        clipboard_capabilities.supports_selected_file_items,
-        crate::linux_desktop::clipboard::selected_files_backend_name(),
-        crate::linux_desktop::window_manager::active_backend_kind(),
-        window_capabilities,
-        crate::linux_desktop::window_manager::frontmost_window(state)
-            .map_err(|error| error.to_string()),
+        SelectionSource {
+            result: crate::linux_desktop::clipboard::selected_text()
+                .map_err(|error| error.to_string()),
+            supported: clipboard_capabilities.supports_selected_text,
+            backend_name: crate::linux_desktop::clipboard::selected_text_backend_name(),
+        },
+        SelectionSource {
+            result: crate::linux_desktop::clipboard::selected_files()
+                .map_err(|error| error.to_string()),
+            supported: clipboard_capabilities.supports_selected_file_items,
+            backend_name: crate::linux_desktop::clipboard::selected_files_backend_name(),
+        },
+        WindowSource {
+            backend_kind: crate::linux_desktop::window_manager::active_backend_kind(),
+            capabilities: crate::linux_desktop::window_manager::active_capabilities(),
+            frontmost_result: crate::linux_desktop::window_manager::frontmost_window(state)
+                .map_err(|error| error.to_string()),
+        },
     )
 }
 
