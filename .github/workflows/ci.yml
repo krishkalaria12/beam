@@ -75,11 +75,24 @@ jobs:
       - name: checkout
         uses: actions/checkout@v4
 
+      - name: setup bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.2.19
+
       - name: setup rust
         uses: dtolnay/rust-toolchain@stable
 
       - name: install protobuf compiler
         run: choco install protoc -y --no-progress
+
+      # The tauri build script bundles binaries/extension-manager.cjs, so the
+      # runtime must exist before any cargo invocation in this job.
+      - name: install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: build extension runtime
+        run: bun run extension-manager:build
 
       - name: check rust formatting
         run: cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
