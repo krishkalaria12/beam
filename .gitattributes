@@ -1,0 +1,5 @@
+* text=auto
+
+# rustfmt enforces unix newlines (newline_style = "Unix"); keep working-tree
+# copies identical on every platform so `cargo fmt --check` passes on Windows.
+*.rs text eol=lf
