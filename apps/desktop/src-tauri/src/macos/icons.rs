@@ -62,11 +62,10 @@ pub fn icon_path_for_app(bundle_id: &str, app_name: &str, bundle_path: &Path) ->
         return String::new();
     };
 
+    // Cache-first: rasterizing every bundle icon through AppKit is expensive.
     if !bundle_id.trim().is_empty() {
-        let cached =
-            icon_cache_dir(&app_cache_root).join(format!("{}.png", hash_identifier(bundle_id)));
-        if cached.exists() {
-            return cached.to_string_lossy().into_owned();
+        if let Some(cached) = cached_icon_path(&app_cache_root, bundle_id) {
+            return cached;
         }
     }
 

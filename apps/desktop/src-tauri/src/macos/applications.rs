@@ -22,6 +22,8 @@ struct BundleMetadata {
     bundle_id: String,
     executable_name: String,
     version: String,
+    /// LSUIElement: background helper or menu-bar-only agent.
+    is_background_agent: bool,
 }
 
 fn application_directories() -> Vec<PathBuf> {
@@ -70,26 +72,33 @@ fn scan_bundle_paths() -> Vec<PathBuf> {
 }
 
 fn read_bundle_metadata(bundle_path: &Path) -> Option<BundleMetadata> {
-    {
-        let path_str = bundle_path.to_string_lossy().into_owned();
-        let bundle = NSBundle::bundleWithPath(&objc2_foundation::NSString::from_str(&path_str))?;
-        let info = bundle.infoDictionary()?;
-        let value = |key: &str| -> Option<String> {
-            info.objectForKey(&objc2_foundation::NSString::from_str(key))
-                .and_then(|v| {
-                    let string: &objc2_foundation::NSString = v.downcast_ref()?;
-                    Some(string.to_string())
-                })
-        };
+    let path_str = bundle_path.to_string_lossy().into_owned();
+    let bundle = NSBundle::bundleWithPath(&objc2_foundation::NSString::from_str(&path_str))?;
+    let info = bundle.infoDictionary()?;
+    let value = |key: &str| -> Option<String> {
+        info.objectForKey(&objc2_foundation::NSString::from_str(key))
+            .and_then(|v| {
+                let string: &objc2_foundation::NSString = v.downcast_ref()?;
+                Some(string.to_string())
+            })
+    };
 
-        Some(BundleMetadata {
-            name: value("CFBundleName").unwrap_or_default(),
-            display_name: value("CFBundleDisplayName").unwrap_or_default(),
-            bundle_id: value("CFBundleIdentifier").unwrap_or_default(),
-            executable_name: value("CFBundleExecutable").unwrap_or_default(),
-            version: value("CFBundleShortVersionString").unwrap_or_default(),
+    let is_background_agent = info
+        .objectForKey(&objc2_foundation::NSString::from_str("LSUIElement"))
+        .and_then(|v| {
+            let number: &objc2_foundation::NSNumber = v.downcast_ref()?;
+            Some(number.boolValue())
         })
-    }
+        .unwrap_or(false);
+
+    Some(BundleMetadata {
+        name: value("CFBundleName").unwrap_or_default(),
+        display_name: value("CFBundleDisplayName").unwrap_or_default(),
+        bundle_id: value("CFBundleIdentifier").unwrap_or_default(),
+        executable_name: value("CFBundleExecutable").unwrap_or_default(),
+        version: value("CFBundleShortVersionString").unwrap_or_default(),
+        is_background_agent,
+    })
 }
 
 fn resolve_icon(app_cache_root: &Path, key: &str, bundle_path: &Path) -> String {
@@ -118,7 +127,6 @@ pub fn collect_searchable_applications(
 
     let mut applications = Vec::new();
     let mut seen_keys: HashSet<String> = HashSet::new();
-
     for bundle_path in scan_bundle_paths() {
         let Some(metadata) = read_bundle_metadata(&bundle_path) else {
             continue;
@@ -126,23 +134,8 @@ pub fn collect_searchable_applications(
 
         // Skip background helpers and menu-bar-only agents; launchers should
         // not offer them as regular applications.
-        {
-            if let Some(info) = NSBundle::bundleWithPath(&objc2_foundation::NSString::from_str(
-                &bundle_path.to_string_lossy(),
-            ))
-            .and_then(|bundle| bundle.infoDictionary())
-            {
-                if info
-                    .objectForKey(&objc2_foundation::NSString::from_str("LSUIElement"))
-                    .and_then(|v| {
-                        let number: &objc2_foundation::NSNumber = v.downcast_ref()?;
-                        Some(number.boolValue())
-                    })
-                    .unwrap_or(false)
-                {
-                    continue;
-                }
-            }
+        if metadata.is_background_agent {
+            continue;
         }
 
         let name = metadata
@@ -177,6 +170,7 @@ pub fn collect_searchable_applications(
         }
 
         let bundle_path_text = bundle_path.to_string_lossy().into_owned();
+        let executable_keyword = metadata.executable_name.trim().to_lowercase();
 
         applications.push(SearchableAppEntry {
             app: AppEntry {
@@ -188,14 +182,10 @@ pub fn collect_searchable_applications(
                 desktop_file_path: bundle_path_text,
             },
             generic_name: "application".to_string(),
-            keywords: {
-                let mut keywords = Vec::new();
-                if !metadata.executable_name.trim().is_empty()
-                    && !keywords.contains(&metadata.executable_name.trim().to_lowercase())
-                {
-                    keywords.push(metadata.executable_name.trim().to_lowercase());
-                }
-                keywords
+            keywords: if executable_keyword.is_empty() {
+                Vec::new()
+            } else {
+                vec![executable_keyword]
             },
             comment: metadata.version,
         });
