@@ -414,20 +414,21 @@ pub fn get_default_application(
         .unwrap_or_default();
 
     let resolved = extract_command_executable(&command);
-    let friendly_name: String = hkcr
+    let raw_friendly_name: String = hkcr
         .open_subkey(&prog_id)
         .and_then(|key| {
             key.get_value::<String, _>("FriendlyTypeName")
                 .or_else(|_| key.get_value::<String, _>(""))
         })
         .unwrap_or_else(|_| prog_id.clone());
+    let friendly_name = load_indirect_string(&raw_friendly_name).unwrap_or(raw_friendly_name);
 
     Ok(
         crate::applications::raycast_compat::RaycastCompatApplication {
-            name: expand_env_strings(&friendly_name),
+            name: friendly_name.clone(),
             path: resolved.clone(),
             bundle_id: prog_id.clone(),
-            localized_name: expand_env_strings(&friendly_name),
+            localized_name: friendly_name,
             windows_app_id: prog_id,
         },
     )
@@ -448,9 +449,23 @@ fn extract_command_executable(command: &str) -> String {
         .to_string()
 }
 
-fn expand_env_strings(value: &str) -> String {
-    if !value.starts_with('@') {
-        return value.to_string();
+/// Resolves shell indirect strings such as
+/// `@%SystemRoot%\system32\shell32.dll,-21769` to their display text via
+/// `SHLoadIndirectString`. Returns `None` for plain registry strings.
+fn load_indirect_string(value: &str) -> Option<String> {
+    use windows::core::PCWSTR;
+    use windows::Win32::UI::Shell::SHLoadIndirectString;
+
+    let trimmed = value.trim();
+    if !trimmed.starts_with('@') {
+        return None;
     }
-    value.trim_start_matches('@').to_string()
+
+    let wide: Vec<u16> = trimmed.encode_utf16().chain(std::iter::once(0)).collect();
+    let mut buffer = [0u16; 1024];
+    unsafe { SHLoadIndirectString(PCWSTR(wide.as_ptr()), &mut buffer, None) }.ok()?;
+
+    let end = buffer.iter().position(|c| *c == 0).unwrap_or(buffer.len());
+    let resolved = String::from_utf16_lossy(&buffer[..end]);
+    (!resolved.is_empty()).then_some(resolved)
 }
