@@ -11,7 +11,7 @@ use windows::Win32::System::Threading::{
 };
 use windows::Win32::UI::WindowsAndMessaging::{
     BringWindowToTop, EnumWindows, GetClassNameW, GetForegroundWindow, GetWindowTextLengthW,
-    GetWindowTextW, GetWindowThreadProcessId, IsIconic, IsWindowVisible, PostMessageW,
+    GetWindowTextW, GetWindowThreadProcessId, IsIconic, IsWindow, IsWindowVisible, PostMessageW,
     SetForegroundWindow, ShowWindowAsync, SW_RESTORE, WM_CLOSE,
 };
 
@@ -245,10 +245,20 @@ pub fn list_windows(_app: &AppHandle, state: &AppState) -> Result<Vec<WindowEntr
     Ok(entries)
 }
 
-pub fn focus_window(window_id: &str) -> Result<()> {
+/// Resolves a window id to a live HWND. Window handles can be recycled by the
+/// OS, so ids captured during enumeration are revalidated before use.
+fn live_hwnd(window_id: &str) -> Result<HWND> {
     let Some(hwnd) = id_to_hwnd(window_id) else {
         return Err(WindowManagerError::WindowNotFound(window_id.to_string()));
     };
+    if !unsafe { IsWindow(Some(hwnd)) }.as_bool() {
+        return Err(WindowManagerError::WindowNotFound(window_id.to_string()));
+    }
+    Ok(hwnd)
+}
+
+pub fn focus_window(window_id: &str) -> Result<()> {
+    let hwnd = live_hwnd(window_id)?;
 
     if unsafe { IsIconic(hwnd) }.as_bool() {
         let _ = unsafe { ShowWindowAsync(hwnd, SW_RESTORE) };
@@ -279,9 +289,7 @@ pub fn focus_window(window_id: &str) -> Result<()> {
 }
 
 pub fn close_window(window_id: &str) -> Result<()> {
-    let Some(hwnd) = id_to_hwnd(window_id) else {
-        return Err(WindowManagerError::WindowNotFound(window_id.to_string()));
-    };
+    let hwnd = live_hwnd(window_id)?;
 
     let posted = unsafe { PostMessageW(Some(hwnd), WM_CLOSE, WPARAM(0), LPARAM(0)) };
     posted.map_err(|_| last_os_error("PostMessageW(WM_CLOSE)"))
