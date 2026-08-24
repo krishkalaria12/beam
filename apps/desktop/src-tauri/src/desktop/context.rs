@@ -129,7 +129,9 @@ fn build_snapshot(
         Ok(None) if window_capabilities.supports_frontmost_application => {
             ContextValue::unavailable("could not determine the frontmost application")
         }
-        Ok(None) => ContextValue::unsupported("frontmost application is not supported on this session"),
+        Ok(None) => {
+            ContextValue::unsupported("frontmost application is not supported on this session")
+        }
         Err(error) if window_capabilities.supports_frontmost_application => {
             ContextValue::unavailable(error)
         }
@@ -209,7 +211,7 @@ pub fn get_desktop_context_snapshot(state: &AppState) -> DesktopContextSnapshot 
         crate::macos::clipboard::selected_files(),
         clipboard_capabilities.supports_selected_file_items,
         crate::macos::clipboard::selected_files_backend_name(),
-        crate::desktop::types::DesktopBackendKind::MacosPasteboard,
+        crate::macos::window_manager::active_backend_kind(),
         window_capabilities,
         crate::macos::window_manager::frontmost_window(state),
     )
