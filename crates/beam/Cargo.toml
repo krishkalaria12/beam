@@ -1,0 +1,33 @@
+[package]
+name = "beam"
+description = "The beam launcher binary: glass window, activation socket, global hotkey"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "beam"
+path = "src/main.rs"
+
+[dependencies]
+beam-core = { path = "../beam-core" }
+gpui = { workspace = true }
+gpui_platform = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+log = { workspace = true }
+
+# Runtime-agnostic channels: bridge the global-hotkey thread and the
+# activation-socket thread into gpui's executor without pulling a tokio
+# runtime into the UI process.
+async-channel = "2"
+env_logger = "0.11"
+anyhow = { workspace = true }
+
+# Standalone replacement for tauri-plugin-global-shortcut. macOS only for now:
+# Linux uses portal+evdev and Windows uses RegisterHotKey, both of which come
+# over with their existing native implementations in the services migration
+# (plan lane A5).
+[target.'cfg(target_os = "macos")'.dependencies]
+global-hotkey = { workspace = true }

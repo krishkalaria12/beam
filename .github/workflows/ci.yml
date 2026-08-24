@@ -126,3 +126,36 @@ jobs:
 
       - name: build extension runtime
         run: bun run extension-manager:build
+
+  gpui-workspace:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-14, windows-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v7
+
+      - name: setup rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: install linux dependencies (gpui)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwayland-dev \
+            libxkbcommon-dev \
+            libxkbcommon-x11-dev \
+            libfontconfig1-dev \
+            libfreetype6-dev \
+            libudev-dev \
+            protobuf-compiler
+
+      - name: cargo check (gpui workspace)
+        run: cargo check --workspace --all-targets --locked
+
+      - name: cargo test (beam-core)
+        run: cargo test -p beam-core --locked

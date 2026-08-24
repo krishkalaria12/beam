@@ -1,0 +1,63 @@
+[workspace]
+resolver = "3"
+members = [
+    "crates/beam-core",
+    "crates/beam",
+]
+exclude = ["apps/desktop"]
+
+[workspace.package]
+version = "1.0.0"
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/krishkalaria12/beam"
+
+# GPUI is pre-1.0 and breaks between revisions: every gpui-family crate is
+# pinned to ONE upstream rev here and must be bumped as its own task with its
+# own smoke pass (docs/gpui-migration-plan.html §03 "Pin discipline").
+# The rev and the reason it was chosen are recorded in docs/parity/gpui-pin.md.
+[workspace.dependencies]
+gpui = { git = "https://github.com/zed-industries/zed", rev = "6e2fae619c45ffc90e5bcf5cfbfcef8bb693fbe1" }
+gpui_platform = { git = "https://github.com/zed-industries/zed", rev = "6e2fae619c45ffc90e5bcf5cfbfcef8bb693fbe1", features = [
+    "wayland",
+    "x11",
+    "font-kit",
+    # Compile Metal shaders at runtime instead of requiring the `metal`
+    # CLI at build time, so machines with only Command Line Tools can build.
+    # CI macOS runners have full Xcode and may drop this feature later if
+    # startup latency from runtime compilation is ever measurable.
+    "runtime_shaders",
+] }
+gpui_tokio = { git = "https://github.com/zed-industries/zed", rev = "6e2fae619c45ffc90e5bcf5cfbfcef8bb693fbe1" }
+
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "2.0"
+anyhow = "1.0"
+log = "0.4"
+parking_lot = "0.12"
+tokio = { version = "1.49", features = [
+    "rt-multi-thread",
+    "macros",
+    "sync",
+    "time",
+    "process",
+    "io-util",
+] }
+futures-util = "0.3"
+crossbeam-channel = "0.5"
+
+# Standalone replacement for tauri-plugin-global-shortcut (macOS only; the
+# Linux and Windows hotkey backends are already native and come over with the
+# services migration).
+global-hotkey = "0.8"
+
+[profile.dev]
+incremental = true
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = 3
+panic = "abort"
+strip = true
