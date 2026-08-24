@@ -4,8 +4,6 @@ pub mod error;
 pub mod history;
 #[cfg(target_os = "linux")]
 mod soulver;
-#[cfg(not(target_os = "linux"))]
-mod soulver_stub;
 pub mod types;
 
 use once_cell::sync::Lazy;
