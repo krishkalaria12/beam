@@ -69,6 +69,7 @@ impl BeamApp {
             crate::glass::GlassMode::Frosted => "frosted",
             crate::glass::GlassMode::Solid => "solid",
         };
+        let context = self.context.clone();
 
         match open_launcher_window(
             cx,
@@ -77,7 +78,7 @@ impl BeamApp {
                 compact_height: None,
             },
             move |_window, cx| {
-                cx.new(|cx| crate::root_view::RootView::new(glass_label.to_string(), cx))
+                cx.new(|cx| crate::root_view::RootView::new(glass_label.to_string(), context, cx))
             },
         ) {
             Ok(handle) => {

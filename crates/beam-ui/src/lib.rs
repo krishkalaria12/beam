@@ -19,5 +19,5 @@ pub mod kbd;
 pub mod tokens;
 
 pub use input::{TextInput, TextInputEvent};
-pub use kbd::Kbd;
+pub use kbd::{keystroke_chips, modifier_glyphs, Kbd};
 pub use tokens::*;

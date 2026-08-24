@@ -12,6 +12,7 @@ path = "src/main.rs"
 
 [dependencies]
 beam-core = { path = "../beam-core" }
+beam-services = { path = "../beam-services" }
 beam-ui = { path = "../beam-ui" }
 gpui = { workspace = true }
 gpui_platform = { workspace = true }

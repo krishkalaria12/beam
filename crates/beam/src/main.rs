@@ -10,6 +10,7 @@
 
 mod activation;
 mod app;
+mod command_registry;
 mod glass;
 mod hotkey;
 mod root_view;
@@ -72,8 +73,10 @@ fn run_first_instance(args: &[String]) -> i32 {
 
         let app = app::init(cx, context);
 
-        // Design-system key maps (TextInput actions, scoped to its context).
+        // Design-system key maps (TextInput actions, scoped to its context)
+        // and the shell's list navigation.
         beam_ui::input::init(cx);
+        root_view::init(cx);
 
         // Activation surface: serve the socket and drain it into the app.
         let (sender, receiver) = unbounded::<activation::ActivationRequest>();

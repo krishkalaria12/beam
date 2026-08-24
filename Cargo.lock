@@ -666,6 +666,7 @@ dependencies = [
  "anyhow",
  "async-channel",
  "beam-core",
+ "beam-services",
  "beam-ui",
  "env_logger",
  "global-hotkey",

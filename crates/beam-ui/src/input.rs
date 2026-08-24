@@ -16,10 +16,10 @@ use std::ops::Range;
 
 use gpui::{
     actions, div, fill, point, prelude::*, px, relative, size, App, Bounds, ClipboardItem, Context,
-    CursorStyle, ElementInputHandler, Entity, EntityInputHandler, FocusHandle, GlobalElementId,
-    KeyBinding, LayoutId, MouseButton, MouseDownEvent, MouseMoveEvent, MouseUpEvent, PaintQuad,
-    Pixels, Point, Render, ShapedLine, SharedString, Style, TextRun, UTF16Selection,
-    UnderlineStyle, Window,
+    CursorStyle, ElementInputHandler, Entity, EntityInputHandler, FocusHandle, Focusable,
+    GlobalElementId, KeyBinding, LayoutId, MouseButton, MouseDownEvent, MouseMoveEvent,
+    MouseUpEvent, PaintQuad, Pixels, Point, Render, ShapedLine, SharedString, Style, TextRun,
+    UTF16Selection, UnderlineStyle, Window,
 };
 use unicode_segmentation::*;
 
@@ -77,6 +77,12 @@ pub enum TextInputEvent {
 }
 
 impl gpui::EventEmitter<TextInputEvent> for TextInput {}
+
+impl Focusable for TextInput {
+    fn focus_handle(&self, _: &App) -> FocusHandle {
+        self.focus_handle.clone()
+    }
+}
 
 pub struct TextInput {
     focus_handle: FocusHandle,
