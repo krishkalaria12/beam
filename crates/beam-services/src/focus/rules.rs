@@ -1,3 +1,5 @@
+// PORT: apps/desktop/src-tauri/src/focus/rules.rs
+// Copied verbatim; no Tauri APIs in this file.
 use std::collections::HashSet;
 
 use super::error::{FocusError, Result};

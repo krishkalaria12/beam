@@ -1,3 +1,5 @@
+// PORT: apps/desktop/src-tauri/src/ai/attachments.rs
+// Copied verbatim; no Tauri APIs in this file.
 use base64::{engine::general_purpose::STANDARD, Engine as _};
 use rig::message::{
     Document, DocumentMediaType, DocumentSourceKind, Image, ImageDetail, ImageMediaType, Message,

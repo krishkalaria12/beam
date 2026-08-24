@@ -1,3 +1,5 @@
+// PORT: apps/desktop/src-tauri/src/launcher_shell/config.rs
+// Copied verbatim; no Tauri APIs in this file.
 pub(crate) const CONFIG: LauncherShellConfig = LauncherShellConfig {
     default_timeout_ms: 15_000,
     max_timeout_ms: 120_000,

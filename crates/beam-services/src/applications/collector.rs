@@ -1,3 +1,5 @@
+// PORT: apps/desktop/src-tauri/src/applications/collector.rs
+// Copied verbatim; no Tauri APIs in this file.
 #![cfg(target_os = "linux")]
 
 use freedesktop_file_parser::{parse, DesktopEntry, DesktopFile, EntryType};

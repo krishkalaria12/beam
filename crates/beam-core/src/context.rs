@@ -82,6 +82,7 @@ mod tests {
             None,
             None,
             None,
+            None,
         )
         .unwrap();
         let context = BeamContext::with_paths(paths.clone()).unwrap();

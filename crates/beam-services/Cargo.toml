@@ -43,15 +43,10 @@ sysinfo = "0.29"
 reqwest = { version = "0.13", default-features = false, features = ["rustls", "json"] }
 tiny_http = "0.12"
 url = "2.5"
+favicon-picker = "1.1"
 
 # DB
 sqlx = { version = "0.8", features = ["sqlite", "runtime-tokio"] }
-
-# Clipboard (interim macOS backend + windows fallback; the linux backend
-# uses wl-clipboard/x11 through linux_desktop, landing with lane A5)
-[target.'cfg(not(target_os = "linux"))'.dependencies]
-arboard = "3.6"
-image = "0.25"
 nanoid = "0.4"
 
 # Serialization (file index cache)
@@ -74,7 +69,10 @@ keyring = { version = "3.6", features = [
     "linux-native-sync-persistent",
 ] }
 rand = "0.9"
-favicon-picker = "1.1"
+
+# Tray + menus (menu_bar; the standalone crates from the plan §03 decision)
+tray-icon = "0.24"
+muda = "0.19"
 
 # AI provider layer (rig-core drives the OpenAI/Anthropic/Gemini/OpenRouter
 # streaming clients)
@@ -90,11 +88,36 @@ smart-calculator = "1.0.3"
 whichlang = "0.1"
 scraper = "0.25"
 
-# macOS: legacy NSFilenamesPboardType pasteboard payloads are plists
-plist = "1"
+# Clipboard interim (macOS + windows fallback; the linux backend uses
+# wl-clipboard/x11 through linux_desktop)
+[target.'cfg(not(target_os = "linux"))'.dependencies]
+arboard = "3.6"
+image = "0.25"
 
-# macOS Desktop Integration
+# Linux desktop integration (hotkeys portal, window managers, clipboard,
+# wayland helper, udev snippet injection)
+[target.'cfg(target_os = "linux")'.dependencies]
+arboard = { version = "3.6", features = ["wayland-data-control"] }
+ashpd = "0.11"
+evdev = "0.13"
+xkbcommon = "0.8"
+wayland-client = "0.31"
+wayland-protocols = { version = "0.32", features = ["client", "staging"] }
+wayland-protocols-wlr = { version = "0.3", features = ["client"] }
+wl-clipboard-rs = "0.9"
+hyprland = "0.4.0-beta.3"
+swayipc = "4.0"
+zbus = "5.14"
+x11rb = "0.13"
+gtk = "0.18"
+gtk-layer-shell = { version = "0.8", features = ["v0_5", "v0_6"] }
+freedesktop-file-parser = "0.3"
+freedesktop-icons = "0.4"
+
+# macOS desktop integration (NSPasteboard, AX, NSWorkspace, icons)
 [target.'cfg(target_os = "macos")'.dependencies]
+# Legacy NSFilenamesPboardType pasteboard payloads are plists
+plist = "1"
 objc2 = "0.6"
 objc2-foundation = { version = "0.3", features = [
     "NSArray",
@@ -121,8 +144,9 @@ objc2-app-kit = { version = "0.3", features = [
 core-foundation = "0.10"
 core-foundation-sys = "0.8"
 dispatch2 = "0.3"
+global-hotkey = "0.8"
 
-# Windows Integration
+# Windows desktop integration (SendInput, registry, foreground tracking)
 [target.'cfg(target_os = "windows")'.dependencies]
 windows = { version = "0.61", features = [
     "Win32_Foundation",

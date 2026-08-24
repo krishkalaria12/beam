@@ -1,3 +1,5 @@
+// PORT: apps/desktop/src-tauri/src/window_switcher/backends/mod.rs
+// Copied verbatim; no Tauri APIs in this file.
 #[cfg(target_os = "linux")]
 mod hyprland;
 #[cfg(target_os = "linux")]

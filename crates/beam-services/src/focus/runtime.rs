@@ -1,3 +1,5 @@
+// PORT: apps/desktop/src-tauri/src/focus/runtime.rs
+// Copied verbatim; no Tauri APIs in this file.
 use std::collections::HashSet;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;

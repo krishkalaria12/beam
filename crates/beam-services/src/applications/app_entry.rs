@@ -1,3 +1,5 @@
+// PORT: apps/desktop/src-tauri/src/applications/app_entry.rs
+// Copied verbatim; no Tauri APIs in this file.
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

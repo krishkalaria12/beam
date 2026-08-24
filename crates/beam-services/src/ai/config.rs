@@ -1,3 +1,5 @@
+// PORT: apps/desktop/src-tauri/src/ai/config.rs
+// Copied verbatim; no Tauri APIs in this file.
 pub(crate) const CONFIG: AiConfig = AiConfig {
     directory: "ai",
     attachments_directory: "attachments",

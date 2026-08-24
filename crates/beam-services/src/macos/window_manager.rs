@@ -1,3 +1,5 @@
+// PORT: apps/desktop/src-tauri/src/macos/window_manager.rs
+// Copied verbatim; no Tauri APIs in this file.
 //! macOS window management via the Accessibility API.
 //!
 //! Follows the same approach as native window switchers (vicinae, AltTab):

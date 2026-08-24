@@ -25,11 +25,14 @@ pub mod calculator;
 pub mod cli;
 pub mod clipboard;
 pub mod config;
+pub mod danksearch;
 pub mod desktop;
 pub mod focus;
 pub mod fuzzy_search;
+pub mod hotkeys;
 pub mod hyprwhspr;
 pub mod launcher_shell;
+pub mod menu_bar;
 
 pub mod custom_config;
 pub mod dictionary;
@@ -37,6 +40,8 @@ pub mod emoji;
 pub mod error;
 pub mod file_search;
 pub mod http;
+#[cfg(target_os = "linux")]
+pub mod linux_desktop;
 #[cfg(target_os = "macos")]
 pub mod macos;
 pub mod notes;
@@ -52,3 +57,5 @@ pub mod todo;
 pub mod translation;
 pub mod utils;
 pub mod window_switcher;
+#[cfg(target_os = "windows")]
+pub mod windows_desktop;

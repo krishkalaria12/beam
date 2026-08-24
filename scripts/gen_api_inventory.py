@@ -64,6 +64,15 @@ ported = {
     "get_ai_settings", "set_ai_settings", "get_ai_chat_history",
     "get_ai_conversations", "clear_ai_chat_history",
     "get_ai_token_usage_summary", "ai_can_access", "ai_ask_stream",
+    # settings (batch 2 of services) — D5 deletes ui_style/base_color
+    "get_ui_layout_mode", "set_ui_layout_mode", "get_launcher_opacity",
+    "set_launcher_opacity", "list_font_families", "get_launcher_font_family",
+    "set_launcher_font_family", "get_launcher_font_size",
+    "set_launcher_font_size", "get_trigger_symbols", "set_trigger_symbols",
+    "list_icon_themes", "get_icon_theme", "set_icon_theme",
+    # deleted by decision D5 (theming removal): get/set_ui_style,
+    # get/set_base_color — never ported; the store keys are ignored.
+    # launcher_theme — deleted by D5 (4 commands below stay listed).
 }
 
 names = [n for n, _ in unique]
@@ -81,8 +90,29 @@ lines.append("Total: %d commands; %d ported so far." % (len(unique), len(ported 
 lines.append("")
 lines.append("| # | Command | Former IPC path | Status |")
 lines.append("| - | --------- | --------------- | ------ |")
+deleted_d5 = {
+    "get_ui_style", "set_ui_style", "get_base_color", "set_base_color",
+    "list_launcher_themes", "get_selected_launcher_theme",
+    "set_selected_launcher_theme", "get_launcher_theme_css",
+}
+absorbed = {
+    # launcher_window resize dance — the beam window module owns sizing
+    # directly (SD-1); these IPC shims have no ported equivalent by design.
+    "set_launcher_compact_mode_for_resize_transition",
+    "set_launcher_window_size_for_resize_transition",
+    "hide_launcher_window_for_resize_transition",
+    "reveal_launcher_window_after_resize_transition",
+}
+
 for i, (name, path) in enumerate(unique, 1):
-    status = "ported" if name in ported else "pending"
+    if name in ported:
+        status = "ported"
+    elif name in deleted_d5:
+        status = "deleted (D5)"
+    elif name in absorbed:
+        status = "absorbed (SD-1)"
+    else:
+        status = "pending"
     lines.append("| %d | `%s` | `%s` | %s |" % (i, name, path, status))
 
 open("docs/parity/api.md", "w").write("\n".join(lines) + "\n")

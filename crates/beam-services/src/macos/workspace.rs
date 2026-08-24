@@ -1,3 +1,5 @@
+// PORT: apps/desktop/src-tauri/src/macos/workspace.rs
+// Copied verbatim; no Tauri APIs in this file.
 //! NSWorkspace / NSRunningApplication helpers.
 //!
 //! AppKit calls are grouped here so every entry point can wrap itself in an

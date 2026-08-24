@@ -1,3 +1,5 @@
+// PORT: apps/desktop/src-tauri/src/ai/key_store.rs
+// Copied verbatim; no Tauri APIs in this file.
 use super::config::CONFIG as AI_CONFIG;
 
 use super::error::{AiError, Result};

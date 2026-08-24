@@ -1,3 +1,5 @@
+// PORT: apps/desktop/src-tauri/src/macos/launch_services.rs
+// Copied verbatim; no Tauri APIs in this file.
 //! LaunchServices FFI for default-application resolution.
 
 use std::os::raw::c_void;

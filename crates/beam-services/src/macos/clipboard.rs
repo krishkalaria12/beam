@@ -1,3 +1,5 @@
+// PORT: apps/desktop/src-tauri/src/macos/clipboard.rs
+// Copied verbatim; no Tauri APIs in this file.
 //! NSPasteboard-backed clipboard provider for macOS.
 //!
 //! Mirrors the `linux_desktop::clipboard` public surface so the shared

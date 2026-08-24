@@ -1,3 +1,5 @@
+// PORT: apps/desktop/src-tauri/src/macos/mod.rs
+// Copied verbatim; no Tauri APIs in this file.
 //! macOS backend implementation.
 //!
 //! Mirrors the public surface of `linux_desktop` so shared command layers can

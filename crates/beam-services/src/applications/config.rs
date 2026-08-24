@@ -1,3 +1,5 @@
+// PORT: apps/desktop/src-tauri/src/applications/config.rs
+// Copied verbatim; no Tauri APIs in this file.
 pub(crate) const CONFIG: ApplicationsConfig = ApplicationsConfig {
     last_updated_timestamp_key: "last_updated_application_timestamp",
     cache_key: "applications_cache",

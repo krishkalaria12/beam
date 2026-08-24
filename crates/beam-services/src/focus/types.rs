@@ -1,3 +1,5 @@
+// PORT: apps/desktop/src-tauri/src/focus/types.rs
+// Copied verbatim; no Tauri APIs in this file.
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Deserialize, Serialize, Eq, PartialEq)]

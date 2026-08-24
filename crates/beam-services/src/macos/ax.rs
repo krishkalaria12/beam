@@ -1,3 +1,5 @@
+// PORT: apps/desktop/src-tauri/src/macos/ax.rs
+// Copied verbatim; no Tauri APIs in this file.
 //! Minimal Accessibility (HIServices) FFI.
 //!
 //! Only the handful of AXUIElement entry points Beam needs are declared here,

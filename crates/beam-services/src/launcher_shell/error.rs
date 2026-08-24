@@ -1,3 +1,5 @@
+// PORT: apps/desktop/src-tauri/src/launcher_shell/error.rs
+// Copied verbatim; no Tauri APIs in this file.
 use serde::Serialize;
 use thiserror::Error;
 

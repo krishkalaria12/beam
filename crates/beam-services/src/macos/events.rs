@@ -1,3 +1,5 @@
+// PORT: apps/desktop/src-tauri/src/macos/events.rs
+// Copied verbatim; no Tauri APIs in this file.
 //! Keystroke synthesis helpers for macOS.
 //!
 //! Uses `osascript` against System Events, matching the behavior of the

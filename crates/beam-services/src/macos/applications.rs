@@ -1,3 +1,5 @@
+// PORT: apps/desktop/src-tauri/src/macos/applications.rs
+// Copied verbatim; no Tauri APIs in this file.
 //! macOS application discovery.
 //!
 //! Mirrors the Linux collector contract: scan well-known application

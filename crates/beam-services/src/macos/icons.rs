@@ -1,3 +1,5 @@
+// PORT: apps/desktop/src-tauri/src/macos/icons.rs
+// Copied verbatim; no Tauri APIs in this file.
 //! NSImage rasterization helpers for application icons.
 
 use std::path::{Path, PathBuf};

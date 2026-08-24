@@ -1,3 +1,5 @@
+// PORT: apps/desktop/src-tauri/src/fuzzy_search/mod.rs
+// Copied verbatim; no Tauri APIs in this file.
 use nucleo::pattern::{CaseMatching, Normalization, Pattern};
 use nucleo::{Config, Matcher, Utf32Str};
 use rayon::prelude::*;

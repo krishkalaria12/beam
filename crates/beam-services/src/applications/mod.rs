@@ -1,3 +1,5 @@
+// PORT: apps/desktop/src-tauri/src/applications/mod.rs
+// Copied verbatim; no Tauri APIs in this file.
 pub mod app_entry;
 pub mod cache;
 #[cfg(target_os = "linux")]

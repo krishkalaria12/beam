@@ -5,9 +5,9 @@ pub mod types;
 
 // PORT: apps/desktop/src-tauri/src/file_search/mod.rs
 // Command attributes and the AppHandle/State parameters are gone; names and
-// argument order preserved. The danksearch augmentation is Linux-only and
-// lands with its own module (lane A1).
+// argument order preserved. danksearch augments results on Linux only.
 
+use beam_core::BeamContext;
 use papaya::HashMap as ConcurrentMap;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -222,16 +222,19 @@ pub struct FileSearchBackendStatus {
 
 // Searches for files in the index with pagination support
 pub async fn search_files(
+    cx: &BeamContext,
     request: SearchRequest,
     state: &crate::state::AppState,
 ) -> Result<PaginatedSearchResponse> {
+    let _ = cx;
     let normalized_query = validate_search_request(&request)?;
     let index = Arc::clone(&state.index);
 
-    // TODO(PORT: apps/desktop/src-tauri/src/danksearch): Linux-only
-    // augmentation lands with the danksearch module (lane A1). The native
-    // index search below is the behaviour on every platform today when
-    // dsearch is unavailable.
+    #[cfg(target_os = "linux")]
+    if let Some(response) = crate::danksearch::search_files(cx, &request).await {
+        return Ok(response);
+    }
+
     search_files_native(&index, &request, &normalized_query)
 }
 
@@ -299,12 +302,28 @@ fn search_files_native(
 }
 
 pub fn get_file_search_backend_status() -> FileSearchBackendStatus {
-    // TODO(PORT: apps/desktop/src-tauri/src/danksearch): the dsearch backend
-    // status lands with the danksearch module (lane A1).
-    FileSearchBackendStatus {
-        backend: "native".to_string(),
-        dsearch_available: false,
-        install_url: None,
+    #[cfg(target_os = "linux")]
+    {
+        let dsearch_available = crate::danksearch::is_available();
+        return FileSearchBackendStatus {
+            backend: if dsearch_available {
+                "dsearch".to_string()
+            } else {
+                "native".to_string()
+            },
+            dsearch_available,
+            install_url: (!dsearch_available)
+                .then_some(crate::danksearch::DSEARCH_INSTALL_URL.to_string()),
+        };
+    }
+
+    #[cfg(not(target_os = "linux"))]
+    {
+        FileSearchBackendStatus {
+            backend: "native".to_string(),
+            dsearch_available: false,
+            install_url: None,
+        }
     }
 }
 

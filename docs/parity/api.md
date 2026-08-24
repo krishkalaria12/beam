@@ -7,7 +7,7 @@ note in docs/parity/adr/. The launcher-window resize commands are
 absorbed by the beam window module (SD-1) rather than ported as
 standalone functions; they are listed for completeness.
 
-Total: 162 commands; 107 ported so far.
+Total: 162 commands; 121 ported so far.
 
 | # | Command | Former IPC path | Status |
 | - | --------- | --------------- | ------ |
@@ -103,28 +103,28 @@ Total: 162 commands; 107 ported so far.
 | 90 | `menu_bar_remove_tray` | `menu_bar::menu_bar_remove_tray` | pending |
 | 91 | `get_pinned_command_ids` | `pinned::get_pinned_command_ids` | ported |
 | 92 | `set_command_pinned` | `pinned::set_command_pinned` | ported |
-| 93 | `get_ui_layout_mode` | `settings::get_ui_layout_mode` | pending |
-| 94 | `set_ui_layout_mode` | `settings::set_ui_layout_mode` | pending |
-| 95 | `get_ui_style` | `settings::get_ui_style` | pending |
-| 96 | `set_ui_style` | `settings::set_ui_style` | pending |
-| 97 | `get_base_color` | `settings::get_base_color` | pending |
-| 98 | `set_base_color` | `settings::set_base_color` | pending |
-| 99 | `get_launcher_opacity` | `settings::get_launcher_opacity` | pending |
-| 100 | `set_launcher_opacity` | `settings::set_launcher_opacity` | pending |
-| 101 | `list_font_families` | `settings::list_font_families` | pending |
-| 102 | `get_launcher_font_family` | `settings::get_launcher_font_family` | pending |
-| 103 | `set_launcher_font_family` | `settings::set_launcher_font_family` | pending |
-| 104 | `get_launcher_font_size` | `settings::get_launcher_font_size` | pending |
-| 105 | `set_launcher_font_size` | `settings::set_launcher_font_size` | pending |
-| 106 | `get_trigger_symbols` | `settings::get_trigger_symbols` | pending |
-| 107 | `set_trigger_symbols` | `settings::set_trigger_symbols` | pending |
-| 108 | `list_icon_themes` | `settings::list_icon_themes` | pending |
-| 109 | `get_icon_theme` | `settings::get_icon_theme` | pending |
-| 110 | `set_icon_theme` | `settings::set_icon_theme` | pending |
-| 111 | `list_launcher_themes` | `launcher_theme::list_launcher_themes` | pending |
-| 112 | `get_selected_launcher_theme` | `launcher_theme::get_selected_launcher_theme` | pending |
-| 113 | `set_selected_launcher_theme` | `launcher_theme::set_selected_launcher_theme` | pending |
-| 114 | `get_launcher_theme_css` | `launcher_theme::get_launcher_theme_css` | pending |
+| 93 | `get_ui_layout_mode` | `settings::get_ui_layout_mode` | ported |
+| 94 | `set_ui_layout_mode` | `settings::set_ui_layout_mode` | ported |
+| 95 | `get_ui_style` | `settings::get_ui_style` | deleted (D5) |
+| 96 | `set_ui_style` | `settings::set_ui_style` | deleted (D5) |
+| 97 | `get_base_color` | `settings::get_base_color` | deleted (D5) |
+| 98 | `set_base_color` | `settings::set_base_color` | deleted (D5) |
+| 99 | `get_launcher_opacity` | `settings::get_launcher_opacity` | ported |
+| 100 | `set_launcher_opacity` | `settings::set_launcher_opacity` | ported |
+| 101 | `list_font_families` | `settings::list_font_families` | ported |
+| 102 | `get_launcher_font_family` | `settings::get_launcher_font_family` | ported |
+| 103 | `set_launcher_font_family` | `settings::set_launcher_font_family` | ported |
+| 104 | `get_launcher_font_size` | `settings::get_launcher_font_size` | ported |
+| 105 | `set_launcher_font_size` | `settings::set_launcher_font_size` | ported |
+| 106 | `get_trigger_symbols` | `settings::get_trigger_symbols` | ported |
+| 107 | `set_trigger_symbols` | `settings::set_trigger_symbols` | ported |
+| 108 | `list_icon_themes` | `settings::list_icon_themes` | ported |
+| 109 | `get_icon_theme` | `settings::get_icon_theme` | ported |
+| 110 | `set_icon_theme` | `settings::set_icon_theme` | ported |
+| 111 | `list_launcher_themes` | `launcher_theme::list_launcher_themes` | deleted (D5) |
+| 112 | `get_selected_launcher_theme` | `launcher_theme::get_selected_launcher_theme` | deleted (D5) |
+| 113 | `set_selected_launcher_theme` | `launcher_theme::set_selected_launcher_theme` | deleted (D5) |
+| 114 | `get_launcher_theme_css` | `launcher_theme::get_launcher_theme_css` | deleted (D5) |
 | 115 | `get_hotkey_settings` | `hotkeys::get_hotkey_settings` | pending |
 | 116 | `get_hotkey_capabilities` | `hotkeys::get_hotkey_capabilities` | pending |
 | 117 | `get_hotkey_compositor_bindings` | `hotkeys::get_hotkey_compositor_bindings` | pending |
