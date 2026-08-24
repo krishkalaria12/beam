@@ -23,6 +23,9 @@ pub const APP_IDENTIFIER: &str = "io.beam.launcher";
 /// existing keyring entries are keyed by service + user.
 pub const KEYRING_SERVICE_NAME: &str = "beam";
 
+/// The short directory name under the config dir (dirs::config_dir()/beam).
+pub const SERVICE_DIR_NAME: &str = "beam";
+
 /// The platforms beam ships on. Path resolution is a pure function of this
 /// plus the environment, which is what makes the rules testable anywhere.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -60,6 +63,9 @@ pub struct BeamPaths {
     data_dir: PathBuf,
     /// What Tauri called `app_local_data_dir`. SQLite databases live here.
     local_data_dir: PathBuf,
+    /// What `dirs::config_dir()/beam` resolved to — the second settings
+    /// file the Tauri build kept (custom_config's hidden commands).
+    config_dir: PathBuf,
 }
 
 impl BeamPaths {
@@ -78,25 +84,27 @@ impl BeamPaths {
             std::env::var_os("XDG_DATA_HOME"),
             std::env::var_os("APPDATA"),
             std::env::var_os("LOCALAPPDATA"),
+            std::env::var_os("XDG_CONFIG_HOME"),
         )
         .map_err(|message| BeamError::DataDir(message))
     }
-
     /// Platform-parameterised resolution over an injected environment.
     ///
-    /// | platform | data dir                               | local data dir   |
-    /// |----------|----------------------------------------|------------------|
-    /// | Linux    | `$XDG_DATA_HOME` or `$HOME/.local/share` | same as data dir |
-    /// | Windows  | `%APPDATA%`                            | `%LOCALAPPDATA%` |
-    /// | macOS    | `$HOME/Library/Application Support`    | same as data dir |
+    /// | platform | data dir                               | local data dir   | config dir |
+    /// |----------|----------------------------------------|------------------|------------|
+    /// | Linux    | `$XDG_DATA_HOME` or `$HOME/.local/share` | same as data dir | `$XDG_CONFIG_HOME` or `$HOME/.config` |
+    /// | Windows  | `%APPDATA%`                            | `%LOCALAPPDATA%` | `%APPDATA%` |
+    /// | macOS    | `$HOME/Library/Application Support`    | same as data dir | same as data dir |
     ///
-    /// The identifier is appended to both.
+    /// The identifier is appended to data/local; the config dir gets the
+    /// short service name `beam` (that is what the old build resolved).
     pub fn from_platform(
         platform: HostPlatform,
         home: Option<OsString>,
         xdg_data_home: Option<OsString>,
         appdata: Option<OsString>,
         local_appdata: Option<OsString>,
+        xdg_config_home: Option<OsString>,
     ) -> std::result::Result<Self, String> {
         let non_empty = |value: Option<OsString>| value.filter(|value| !value.is_empty());
 
@@ -105,34 +113,44 @@ impl BeamPaths {
                 let base = match non_empty(xdg_data_home) {
                     Some(dir) => PathBuf::from(dir),
                     None => {
-                        let home = home.ok_or_else(|| "HOME is not set".to_string())?;
+                        let home = home.clone().ok_or_else(|| "HOME is not set".to_string())?;
                         PathBuf::from(home).join(".local").join("share")
                     }
                 };
                 let base = base.join(APP_IDENTIFIER);
+                let config_base = match non_empty(xdg_config_home) {
+                    Some(dir) => PathBuf::from(dir),
+                    None => {
+                        let home = home.ok_or_else(|| "HOME is not set".to_string())?;
+                        PathBuf::from(home).join(".config")
+                    }
+                };
                 Ok(Self {
                     data_dir: base.clone(),
                     local_data_dir: base,
+                    config_dir: config_base.join(SERVICE_DIR_NAME),
                 })
             }
             HostPlatform::Windows => {
                 let appdata = non_empty(appdata).ok_or_else(|| "APPDATA is not set".to_string())?;
                 let local_appdata = non_empty(local_appdata)
                     .ok_or_else(|| "LOCALAPPDATA is not set".to_string())?;
+                let appdata = PathBuf::from(appdata);
                 Ok(Self {
-                    data_dir: PathBuf::from(appdata).join(APP_IDENTIFIER),
+                    data_dir: appdata.join(APP_IDENTIFIER),
                     local_data_dir: PathBuf::from(local_appdata).join(APP_IDENTIFIER),
+                    config_dir: appdata.join(SERVICE_DIR_NAME),
                 })
             }
             HostPlatform::Macos => {
                 let home = home.ok_or_else(|| "HOME is not set".to_string())?;
                 let base = PathBuf::from(home)
                     .join("Library")
-                    .join("Application Support")
-                    .join(APP_IDENTIFIER);
+                    .join("Application Support");
                 Ok(Self {
-                    data_dir: base.clone(),
-                    local_data_dir: base,
+                    data_dir: base.join(APP_IDENTIFIER),
+                    local_data_dir: base.join(APP_IDENTIFIER),
+                    config_dir: base.join(SERVICE_DIR_NAME),
                 })
             }
         }
@@ -146,6 +164,16 @@ impl BeamPaths {
     /// The directory SQLite databases live in (Tauri's `app_local_data_dir`).
     pub fn local_data_dir(&self) -> &PathBuf {
         &self.local_data_dir
+    }
+
+    /// The config dir (`dirs::config_dir()` + the short service name) —
+    /// where the old build kept its second settings file.
+    pub fn config_dir(&self) -> &PathBuf {
+        &self.config_dir
+    }
+
+    pub fn config_store_path(&self, file_name: &str) -> PathBuf {
+        self.config_dir.join(file_name)
     }
 
     pub fn store_path(&self, file_name: &str) -> PathBuf {
@@ -176,6 +204,7 @@ impl BeamPaths {
     pub fn ensure_directories(&self) -> Result<()> {
         std::fs::create_dir_all(&self.data_dir)?;
         std::fs::create_dir_all(&self.local_data_dir)?;
+        std::fs::create_dir_all(&self.config_dir)?;
         Ok(())
     }
 }
@@ -197,6 +226,7 @@ mod tests {
             Some(XDG.into()),
             None,
             None,
+            None,
         )
         .unwrap();
         assert_eq!(
@@ -208,9 +238,15 @@ mod tests {
 
     #[test]
     fn linux_falls_back_to_home_local_share() {
-        let paths =
-            BeamPaths::from_platform(HostPlatform::Linux, Some(HOME.into()), None, None, None)
-                .unwrap();
+        let paths = BeamPaths::from_platform(
+            HostPlatform::Linux,
+            Some(HOME.into()),
+            None,
+            None,
+            None,
+            None,
+        )
+        .unwrap();
         assert_eq!(
             paths.data_dir(),
             &PathBuf::from(format!("{HOME}/.local/share/io.beam.launcher"))
@@ -226,6 +262,7 @@ mod tests {
             Some(empty),
             None,
             None,
+            None,
         )
         .unwrap();
         assert_eq!(
@@ -236,8 +273,8 @@ mod tests {
 
     #[test]
     fn linux_requires_home_without_xdg() {
-        let error =
-            BeamPaths::from_platform(HostPlatform::Linux, None, None, None, None).unwrap_err();
+        let error = BeamPaths::from_platform(HostPlatform::Linux, None, None, None, None, None)
+            .unwrap_err();
         assert!(error.contains("HOME"));
     }
 
@@ -249,6 +286,7 @@ mod tests {
             None,
             Some(APPDATA.into()),
             Some(LOCALAPPDATA.into()),
+            None,
         )
         .unwrap();
         // Compare structurally: separators are host-dependent because these
@@ -270,7 +308,8 @@ mod tests {
             None,
             None,
             Some(APPDATA.into()),
-            None
+            None,
+            None,
         )
         .is_err());
         assert!(BeamPaths::from_platform(
@@ -278,16 +317,23 @@ mod tests {
             None,
             None,
             None,
-            Some(LOCALAPPDATA.into())
+            Some(LOCALAPPDATA.into()),
+            None,
         )
         .is_err());
     }
 
     #[test]
     fn macos_uses_library_application_support() {
-        let paths =
-            BeamPaths::from_platform(HostPlatform::Macos, Some(HOME.into()), None, None, None)
-                .unwrap();
+        let paths = BeamPaths::from_platform(
+            HostPlatform::Macos,
+            Some(HOME.into()),
+            None,
+            None,
+            None,
+            None,
+        )
+        .unwrap();
         assert_eq!(
             paths.data_dir(),
             &PathBuf::from(format!(
@@ -299,7 +345,38 @@ mod tests {
 
     #[test]
     fn macos_requires_home() {
-        assert!(BeamPaths::from_platform(HostPlatform::Macos, None, None, None, None).is_err());
+        assert!(
+            BeamPaths::from_platform(HostPlatform::Macos, None, None, None, None, None).is_err()
+        );
+    }
+
+    #[test]
+    fn config_dir_uses_the_short_service_name() {
+        let paths = BeamPaths::from_platform(
+            HostPlatform::Linux,
+            Some(HOME.into()),
+            None,
+            None,
+            None,
+            Some("/xdg/config".into()),
+        )
+        .unwrap();
+        assert_eq!(paths.config_dir(), &PathBuf::from("/xdg/config/beam"));
+
+        // Falls back to ~/.config like dirs::config_dir does.
+        let paths = BeamPaths::from_platform(
+            HostPlatform::Linux,
+            Some(HOME.into()),
+            None,
+            None,
+            None,
+            None,
+        )
+        .unwrap();
+        assert_eq!(
+            paths.config_dir(),
+            &PathBuf::from(format!("{HOME}/.config/beam"))
+        );
     }
 
     #[test]

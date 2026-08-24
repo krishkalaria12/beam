@@ -75,9 +75,15 @@ mod tests {
         std::fs::create_dir_all(&dir).unwrap();
         let home = dir.join(name);
         let _ = std::fs::remove_dir_all(&home);
-        let paths =
-            BeamPaths::from_platform(HostPlatform::Linux, Some(home.into()), None, None, None)
-                .unwrap();
+        let paths = BeamPaths::from_platform(
+            HostPlatform::Linux,
+            Some(home.into()),
+            None,
+            None,
+            None,
+            None,
+        )
+        .unwrap();
         let context = BeamContext::with_paths(paths.clone()).unwrap();
         (context, paths)
     }

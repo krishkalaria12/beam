@@ -7,13 +7,6 @@ note in docs/parity/adr/. The launcher-window resize commands are
 absorbed by the beam window module (SD-1) rather than ported as
 standalone functions; they are listed for completeness.
 
-Note on the plan's figure: the plan says "87 IPC commands"; the tree at
-main @ 9d830ba actually registers **162** unique commands in the shared
-`generate_handler!` list. The measured list below is normative (rule R9:
-the code says what is current); the plan's number is treated as stale.
-Regenerate with `python3 scripts/gen_api_inventory.py` after any change
-to the old tree.
-
 Total: 162 commands; 30 ported so far.
 
 | # | Command | Former IPC path | Status |

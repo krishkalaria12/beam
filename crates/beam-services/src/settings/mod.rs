@@ -621,6 +621,7 @@ mod tests {
             None,
             None,
             None,
+            None,
         )
         .unwrap();
         BeamContext::with_paths(paths).unwrap()
