@@ -64,6 +64,17 @@ ported = {
     "get_ai_settings", "set_ai_settings", "get_ai_chat_history",
     "get_ai_conversations", "clear_ai_chat_history",
     "get_ai_token_usage_summary", "ai_can_access", "ai_ask_stream",
+    # snippets (batch 6)
+    "get_snippets", "get_snippet_by_id", "create_snippet", "update_snippet",
+    "delete_snippet", "set_snippet_enabled", "increment_snippet_copied_count",
+    "paste_snippet", "get_snippet_runtime_settings",
+    "update_snippet_runtime_settings",
+    # menu_bar (batch 6)
+    "menu_bar_upsert_tray", "menu_bar_remove_tray",
+    # hotkeys (batch 6)
+    "get_hotkey_settings", "get_hotkey_capabilities",
+    "get_hotkey_compositor_bindings", "update_global_shortcut",
+    "update_command_hotkey", "remove_command_hotkey",
     # settings (batch 2 of services) — D5 deletes ui_style/base_color
     "get_ui_layout_mode", "set_ui_layout_mode", "get_launcher_opacity",
     "set_launcher_opacity", "list_font_families", "get_launcher_font_family",

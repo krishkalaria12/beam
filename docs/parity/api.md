@@ -7,7 +7,7 @@ note in docs/parity/adr/. The launcher-window resize commands are
 absorbed by the beam window module (SD-1) rather than ported as
 standalone functions; they are listed for completeness.
 
-Total: 162 commands; 121 ported so far.
+Total: 162 commands; 139 ported so far.
 
 | # | Command | Former IPC path | Status |
 | - | --------- | --------------- | ------ |
@@ -72,16 +72,16 @@ Total: 162 commands; 121 ported so far.
 | 59 | `toggle_awake` | `system_actions::toggle_awake` | ported |
 | 60 | `hyprwhspr_record` | `hyprwhspr::hyprwhspr_record` | ported |
 | 61 | `hyprwhspr_record_status` | `hyprwhspr::hyprwhspr_record_status` | ported |
-| 62 | `get_snippets` | `snippets::get_snippets` | pending |
-| 63 | `get_snippet_by_id` | `snippets::get_snippet_by_id` | pending |
-| 64 | `create_snippet` | `snippets::create_snippet` | pending |
-| 65 | `update_snippet` | `snippets::update_snippet` | pending |
-| 66 | `delete_snippet` | `snippets::delete_snippet` | pending |
-| 67 | `set_snippet_enabled` | `snippets::set_snippet_enabled` | pending |
-| 68 | `increment_snippet_copied_count` | `snippets::increment_snippet_copied_count` | pending |
-| 69 | `paste_snippet` | `snippets::paste_snippet` | pending |
-| 70 | `get_snippet_runtime_settings` | `snippets::get_snippet_runtime_settings` | pending |
-| 71 | `update_snippet_runtime_settings` | `snippets::update_snippet_runtime_settings` | pending |
+| 62 | `get_snippets` | `snippets::get_snippets` | ported |
+| 63 | `get_snippet_by_id` | `snippets::get_snippet_by_id` | ported |
+| 64 | `create_snippet` | `snippets::create_snippet` | ported |
+| 65 | `update_snippet` | `snippets::update_snippet` | ported |
+| 66 | `delete_snippet` | `snippets::delete_snippet` | ported |
+| 67 | `set_snippet_enabled` | `snippets::set_snippet_enabled` | ported |
+| 68 | `increment_snippet_copied_count` | `snippets::increment_snippet_copied_count` | ported |
+| 69 | `paste_snippet` | `snippets::paste_snippet` | ported |
+| 70 | `get_snippet_runtime_settings` | `snippets::get_snippet_runtime_settings` | ported |
+| 71 | `update_snippet_runtime_settings` | `snippets::update_snippet_runtime_settings` | ported |
 | 72 | `get_notes` | `notes::get_notes` | ported |
 | 73 | `create_note` | `notes::create_note` | ported |
 | 74 | `update_note` | `notes::update_note` | ported |
@@ -99,8 +99,8 @@ Total: 162 commands; 121 ported so far.
 | 86 | `hide_launcher_window` | `launcher_window::hide_launcher_window` | ported |
 | 87 | `reveal_launcher_window_after_resize_transition` | `launcher_window::reveal_launcher_window_after_resize_transition` | ported |
 | 88 | `execute_shell_command` | `launcher_shell::execute_shell_command` | ported |
-| 89 | `menu_bar_upsert_tray` | `menu_bar::menu_bar_upsert_tray` | pending |
-| 90 | `menu_bar_remove_tray` | `menu_bar::menu_bar_remove_tray` | pending |
+| 89 | `menu_bar_upsert_tray` | `menu_bar::menu_bar_upsert_tray` | ported |
+| 90 | `menu_bar_remove_tray` | `menu_bar::menu_bar_remove_tray` | ported |
 | 91 | `get_pinned_command_ids` | `pinned::get_pinned_command_ids` | ported |
 | 92 | `set_command_pinned` | `pinned::set_command_pinned` | ported |
 | 93 | `get_ui_layout_mode` | `settings::get_ui_layout_mode` | ported |
@@ -125,12 +125,12 @@ Total: 162 commands; 121 ported so far.
 | 112 | `get_selected_launcher_theme` | `launcher_theme::get_selected_launcher_theme` | deleted (D5) |
 | 113 | `set_selected_launcher_theme` | `launcher_theme::set_selected_launcher_theme` | deleted (D5) |
 | 114 | `get_launcher_theme_css` | `launcher_theme::get_launcher_theme_css` | deleted (D5) |
-| 115 | `get_hotkey_settings` | `hotkeys::get_hotkey_settings` | pending |
-| 116 | `get_hotkey_capabilities` | `hotkeys::get_hotkey_capabilities` | pending |
-| 117 | `get_hotkey_compositor_bindings` | `hotkeys::get_hotkey_compositor_bindings` | pending |
-| 118 | `update_global_shortcut` | `hotkeys::update_global_shortcut` | pending |
-| 119 | `update_command_hotkey` | `hotkeys::update_command_hotkey` | pending |
-| 120 | `remove_command_hotkey` | `hotkeys::remove_command_hotkey` | pending |
+| 115 | `get_hotkey_settings` | `hotkeys::get_hotkey_settings` | ported |
+| 116 | `get_hotkey_capabilities` | `hotkeys::get_hotkey_capabilities` | ported |
+| 117 | `get_hotkey_compositor_bindings` | `hotkeys::get_hotkey_compositor_bindings` | ported |
+| 118 | `update_global_shortcut` | `hotkeys::update_global_shortcut` | ported |
+| 119 | `update_command_hotkey` | `hotkeys::update_command_hotkey` | ported |
+| 120 | `remove_command_hotkey` | `hotkeys::remove_command_hotkey` | ported |
 | 121 | `get_discovered_plugins` | `extensions::get_discovered_plugins` | pending |
 | 122 | `search_extension_store` | `extensions::store::search_extension_store` | pending |
 | 123 | `get_extension_store_package` | `extensions::store::get_extension_store_package` | pending |
