@@ -19,6 +19,7 @@
 //! file_search, snippets (model), state, settings (D5: theming surface
 //! deleted, not ported).
 
+pub mod ai;
 pub mod applications;
 pub mod calculator;
 pub mod cli;

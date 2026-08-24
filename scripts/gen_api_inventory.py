@@ -59,6 +59,11 @@ ported = {
     "execute_shell_command",
     "get_desktop_context", "get_desktop_integration_status",
     "get_macos_permission_status", "request_macos_permission",
+    # batch 5
+    "set_ai_api_key", "is_ai_api_key_set", "clear_ai_api_key",
+    "get_ai_settings", "set_ai_settings", "get_ai_chat_history",
+    "get_ai_conversations", "clear_ai_chat_history",
+    "get_ai_token_usage_summary", "ai_can_access", "ai_ask_stream",
 }
 
 names = [n for n, _ in unique]

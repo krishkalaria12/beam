@@ -7,7 +7,7 @@ note in docs/parity/adr/. The launcher-window resize commands are
 absorbed by the beam window module (SD-1) rather than ported as
 standalone functions; they are listed for completeness.
 
-Total: 162 commands; 96 ported so far.
+Total: 162 commands; 107 ported so far.
 
 | # | Command | Former IPC path | Status |
 | - | --------- | --------------- | ------ |
@@ -146,17 +146,17 @@ Total: 162 commands; 96 ported so far.
 | 133 | `oauth_set_tokens` | `extensions::oauth::oauth_set_tokens` | pending |
 | 134 | `oauth_get_tokens` | `extensions::oauth::oauth_get_tokens` | pending |
 | 135 | `oauth_remove_tokens` | `extensions::oauth::oauth_remove_tokens` | pending |
-| 136 | `set_ai_api_key` | `ai::set_ai_api_key` | pending |
-| 137 | `is_ai_api_key_set` | `ai::is_ai_api_key_set` | pending |
-| 138 | `clear_ai_api_key` | `ai::clear_ai_api_key` | pending |
-| 139 | `get_ai_settings` | `ai::get_ai_settings` | pending |
-| 140 | `set_ai_settings` | `ai::set_ai_settings` | pending |
-| 141 | `get_ai_chat_history` | `ai::get_ai_chat_history` | pending |
-| 142 | `get_ai_conversations` | `ai::get_ai_conversations` | pending |
-| 143 | `clear_ai_chat_history` | `ai::clear_ai_chat_history` | pending |
-| 144 | `get_ai_token_usage_summary` | `ai::get_ai_token_usage_summary` | pending |
-| 145 | `ai_can_access` | `ai::ai_can_access` | pending |
-| 146 | `ai_ask_stream` | `ai::ai_ask_stream` | pending |
+| 136 | `set_ai_api_key` | `ai::set_ai_api_key` | ported |
+| 137 | `is_ai_api_key_set` | `ai::is_ai_api_key_set` | ported |
+| 138 | `clear_ai_api_key` | `ai::clear_ai_api_key` | ported |
+| 139 | `get_ai_settings` | `ai::get_ai_settings` | ported |
+| 140 | `set_ai_settings` | `ai::set_ai_settings` | ported |
+| 141 | `get_ai_chat_history` | `ai::get_ai_chat_history` | ported |
+| 142 | `get_ai_conversations` | `ai::get_ai_conversations` | ported |
+| 143 | `clear_ai_chat_history` | `ai::clear_ai_chat_history` | ported |
+| 144 | `get_ai_token_usage_summary` | `ai::get_ai_token_usage_summary` | ported |
+| 145 | `ai_can_access` | `ai::ai_can_access` | ported |
+| 146 | `ai_ask_stream` | `ai::ai_ask_stream` | ported |
 | 147 | `create_todo` | `todo::todo::create_todo` | ported |
 | 148 | `get_todo` | `todo::get_todo` | ported |
 | 149 | `get_todos` | `todo::get_todos` | ported |
