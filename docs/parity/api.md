@@ -7,7 +7,7 @@ note in docs/parity/adr/. The launcher-window resize commands are
 absorbed by the beam window module (SD-1) rather than ported as
 standalone functions; they are listed for completeness.
 
-Total: 162 commands; 154 ported so far.
+Total: 166 commands; 158 ported so far.
 
 | # | Command | Former IPC path | Status |
 | - | --------- | --------------- | ------ |
@@ -173,3 +173,7 @@ Total: 162 commands; 154 ported so far.
 | 160 | `cli_bridge_mark_ui_ready` | `cli::bridge::cli_bridge_mark_ui_ready` | ported |
 | 161 | `cli_bridge_complete_request` | `cli::bridge::cli_bridge_complete_request` | ported |
 | 162 | `cli_bridge_search_request` | `cli::bridge::cli_bridge_search_request` | ported |
+| 163 | `get_desktop_context` | `desktop::context::get_desktop_context` | ported |
+| 164 | `get_desktop_integration_status` | `desktop::status::get_desktop_integration_status` | ported |
+| 165 | `get_macos_permission_status` | `macos::permissions::get_macos_permission_status` | ported |
+| 166 | `request_macos_permission` | `macos::permissions::request_macos_permission` | ported |

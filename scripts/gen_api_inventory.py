@@ -8,7 +8,16 @@ body = src[start:end]
 entries = re.findall(r"([a-z_][a-z0-9_]*(?:::[a-z_][a-z0-9_]*)+),", body)
 bare = re.findall(r"^\s+(get_macos_permission_status|request_macos_permission),$", body, re.M)
 
-all_cmds = [(e.split("::")[-1], e) for e in entries] + [(b, b) for b in bare]
+# The $extra mechanism appends platform-only commands to the shared list:
+# the desktop facade pair plus the macOS permission pair (stubbed on
+# non-macOS in the old build).
+extra = [
+    ("get_desktop_context", "desktop::context::get_desktop_context"),
+    ("get_desktop_integration_status", "desktop::status::get_desktop_integration_status"),
+    ("get_macos_permission_status", "macos::permissions::get_macos_permission_status"),
+    ("request_macos_permission", "macos::permissions::request_macos_permission"),
+]
+all_cmds = [(e.split("::")[-1], e) for e in entries] + [(b, b) for b in bare] + extra
 seen, unique = set(), []
 for name, path in all_cmds:
     if name not in seen:
