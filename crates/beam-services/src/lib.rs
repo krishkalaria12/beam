@@ -27,6 +27,7 @@ pub mod clipboard;
 pub mod config;
 pub mod danksearch;
 pub mod desktop;
+pub mod extensions;
 pub mod focus;
 pub mod fuzzy_search;
 pub mod hotkeys;
