@@ -284,12 +284,11 @@ pub(super) fn request_hotkey_runtime_reload() {
     let Some(reload_tx) = HOTKEY_RUNTIME_RELOAD.get() else {
         return;
     };
-    let next_value = {
-        let mut current = reload_tx.borrow_mut();
+    // send_modify bumps the counter and marks the channel as changed so the
+    // waiting runtime wakes up immediately.
+    reload_tx.send_modify(|current| {
         *current = current.wrapping_add(1);
-        *current
-    };
-    let _ = reload_tx.send(next_value);
+    });
 }
 
 #[cfg(target_os = "windows")]
