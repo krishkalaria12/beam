@@ -177,7 +177,9 @@ pub fn open_launcher_window<V: Render>(
     build_root: impl FnOnce(&mut Window, &mut App) -> Entity<V>,
 ) -> gpui::Result<gpui::AnyWindowHandle> {
     let Some(display) = cx.displays().first().cloned() else {
-        return Err(anyhow::anyhow!("no display available for the launcher window"));
+        return Err(anyhow::anyhow!(
+            "no display available for the launcher window"
+        ));
     };
     let options = config.window_options(surface.size(), display.bounds());
     cx.open_window(options, build_root)
@@ -200,7 +202,10 @@ mod tests {
 
     #[test]
     fn panel_sizes_match_the_source_table() {
-        let commands = PanelSurface::Commands { compact_height: None }.size();
+        let commands = PanelSurface::Commands {
+            compact_height: None,
+        }
+        .size();
         assert_eq!(commands.width, px(LAUNCHER_WIDTH));
         assert_eq!(commands.height, px(LAUNCHER_EXPANDED_HEIGHT));
 
@@ -213,7 +218,10 @@ mod tests {
         assert_eq!(compact.height, px(44.0));
 
         let ai = PanelSurface::Ai.size();
-        assert_eq!((ai.width, ai.height), (px(AI_PANEL_WIDTH), px(AI_PANEL_HEIGHT)));
+        assert_eq!(
+            (ai.width, ai.height),
+            (px(AI_PANEL_WIDTH), px(AI_PANEL_HEIGHT))
+        );
 
         let settings = PanelSurface::Settings.size();
         assert_eq!(

@@ -2,6 +2,7 @@
 resolver = "3"
 members = [
     "crates/beam-core",
+    "crates/beam-services",
     "crates/beam",
 ]
 exclude = ["apps/desktop"]

@@ -43,16 +43,10 @@ impl JsonStore {
             Ok(contents) => serde_json::from_str::<Value>(&contents)
                 .map(|value| match value {
                     Value::Object(map) => map,
-                    other => serde_json::Map::from_iter([(
-                        String::new(),
-                        other,
-                    )]),
+                    other => serde_json::Map::from_iter([(String::new(), other)]),
                 })
                 .map_err(|error| {
-                    BeamError::store(format!(
-                        "store file {} is corrupt: {error}",
-                        path.display()
-                    ))
+                    BeamError::store(format!("store file {} is corrupt: {error}", path.display()))
                 }),
             Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
                 Ok(serde_json::Map::new())
@@ -72,9 +66,9 @@ impl JsonStore {
     /// Deserialises a stored value into `T`.
     pub fn get_as<T: for<'de> Deserialize<'de>>(&self, key: &str) -> Result<Option<T>> {
         match self.get(key) {
-            Some(value) => serde_json::from_value(value)
-                .map(Some)
-                .map_err(|error| BeamError::store(format!("key '{key}' has the wrong shape: {error}"))),
+            Some(value) => serde_json::from_value(value).map(Some).map_err(|error| {
+                BeamError::store(format!("key '{key}' has the wrong shape: {error}"))
+            }),
             None => Ok(None),
         }
     }
@@ -100,10 +94,7 @@ impl JsonStore {
     }
 
     /// Applies a batch of changes and persists once.
-    pub fn update(
-        &self,
-        changes: impl IntoIterator<Item = (String, Value)>,
-    ) -> Result<()> {
+    pub fn update(&self, changes: impl IntoIterator<Item = (String, Value)>) -> Result<()> {
         let mut state = self.state.lock();
         for (key, value) in changes {
             state.insert(key, value);
@@ -177,8 +168,11 @@ mod tests {
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("legacy.json");
         // Exactly what tauri-plugin-store v2 saves: one flat object.
-        std::fs::write(&path, r#"{"launcher_opacity":1.0,"hotkey_global_shortcut":"SUPER+R"}"#)
-            .unwrap();
+        std::fs::write(
+            &path,
+            r#"{"launcher_opacity":1.0,"hotkey_global_shortcut":"SUPER+R"}"#,
+        )
+        .unwrap();
 
         let store = JsonStore::open(&path).unwrap();
         assert_eq!(store.get("launcher_opacity"), Some(json!(1.0)));

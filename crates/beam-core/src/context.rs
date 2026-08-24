@@ -97,7 +97,10 @@ mod tests {
         let mut receiver = context.events().subscribe();
 
         context.settings().set("launcher_opacity", &0.5).unwrap();
-        assert_eq!(context.settings().get("launcher_opacity"), Some(serde_json::json!(0.5)));
+        assert_eq!(
+            context.settings().get("launcher_opacity"),
+            Some(serde_json::json!(0.5))
+        );
 
         context.emit(BeamEvent::LauncherResetToMain);
         assert!(receiver.try_recv().is_ok());

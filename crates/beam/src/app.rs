@@ -14,11 +14,14 @@ pub fn init(cx: &mut App, context: BeamContext) -> Entity<BeamApp> {
     // `launcher_opacity` out of the user's existing settings.json is the G0
     // gate check for data continuity.
     let glass_mode = GlassMode::detect();
-    let stored_strength = context.settings().get("launcher_opacity").and_then(|value| {
-        value
-            .as_f64()
-            .or_else(|| value.as_str().and_then(|s| s.parse().ok()))
-    });
+    let stored_strength = context
+        .settings()
+        .get("launcher_opacity")
+        .and_then(|value| {
+            value
+                .as_f64()
+                .or_else(|| value.as_str().and_then(|s| s.parse().ok()))
+        });
     let glass_strength = crate::glass::glass_strength_from_store(stored_strength);
 
     let app = cx.new(|_| BeamApp {
@@ -68,7 +71,9 @@ impl BeamApp {
         match open_launcher_window(
             cx,
             config,
-            PanelSurface::Commands { compact_height: None },
+            PanelSurface::Commands {
+                compact_height: None,
+            },
             move |_window, cx| cx.new(|_| crate::root_view::RootView::new(mode, strength)),
         ) {
             Ok(handle) => {
@@ -167,7 +172,8 @@ impl BeamApp {
                 return;
             }
             if arg.starts_with("beam://") || arg.starts_with("raycast://") {
-                self.context.emit(beam_core::BeamEvent::DeepLink(arg.clone()));
+                self.context
+                    .emit(beam_core::BeamEvent::DeepLink(arg.clone()));
                 self.show(cx);
                 return;
             }

@@ -12,7 +12,7 @@
 //! host environment.
 
 use std::ffi::OsString;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use crate::error::{BeamError, Result};
 
@@ -116,8 +116,7 @@ impl BeamPaths {
                 })
             }
             HostPlatform::Windows => {
-                let appdata =
-                    non_empty(appdata).ok_or_else(|| "APPDATA is not set".to_string())?;
+                let appdata = non_empty(appdata).ok_or_else(|| "APPDATA is not set".to_string())?;
                 let local_appdata = non_empty(local_appdata)
                     .ok_or_else(|| "LOCALAPPDATA is not set".to_string())?;
                 Ok(Self {
@@ -157,6 +156,22 @@ impl BeamPaths {
         self.local_data_dir.join(sub_directory).join(file_name)
     }
 
+    /// The bundled-resources directory (Tauri's `resource_dir`): where
+    /// SoulverWrapper, the extension-manager bundle and similar shipped
+    /// assets live. Resolution differs per packaging format, so the
+    /// `BEAM_RESOURCE_DIR` environment variable wins when set (installers
+    /// and dev wrappers set it); the fallback is the executable's directory.
+    pub fn resource_dir(&self) -> PathBuf {
+        if let Some(dir) = std::env::var_os("BEAM_RESOURCE_DIR").filter(|value| !value.is_empty()) {
+            return PathBuf::from(dir);
+        }
+
+        std::env::current_exe()
+            .ok()
+            .and_then(|exe| exe.parent().map(Path::to_path_buf))
+            .unwrap_or_else(|| PathBuf::from("."))
+    }
+
     /// Creates the directories this process will write to.
     pub fn ensure_directories(&self) -> Result<()> {
         std::fs::create_dir_all(&self.data_dir)?;
@@ -176,10 +191,18 @@ mod tests {
 
     #[test]
     fn linux_uses_xdg_data_home_when_set() {
-        let paths =
-            BeamPaths::from_platform(HostPlatform::Linux, Some(HOME.into()), Some(XDG.into()), None, None)
-                .unwrap();
-        assert_eq!(paths.data_dir(), &PathBuf::from("/xdg/data/io.beam.launcher"));
+        let paths = BeamPaths::from_platform(
+            HostPlatform::Linux,
+            Some(HOME.into()),
+            Some(XDG.into()),
+            None,
+            None,
+        )
+        .unwrap();
+        assert_eq!(
+            paths.data_dir(),
+            &PathBuf::from("/xdg/data/io.beam.launcher")
+        );
         assert_eq!(paths.local_data_dir(), paths.data_dir());
     }
 
@@ -242,14 +265,22 @@ mod tests {
 
     #[test]
     fn windows_requires_both_variables() {
-        assert!(
-            BeamPaths::from_platform(HostPlatform::Windows, None, None, Some(APPDATA.into()), None)
-                .is_err()
-        );
-        assert!(
-            BeamPaths::from_platform(HostPlatform::Windows, None, None, None, Some(LOCALAPPDATA.into()))
-                .is_err()
-        );
+        assert!(BeamPaths::from_platform(
+            HostPlatform::Windows,
+            None,
+            None,
+            Some(APPDATA.into()),
+            None
+        )
+        .is_err());
+        assert!(BeamPaths::from_platform(
+            HostPlatform::Windows,
+            None,
+            None,
+            None,
+            Some(LOCALAPPDATA.into())
+        )
+        .is_err());
     }
 
     #[test]
@@ -259,7 +290,9 @@ mod tests {
                 .unwrap();
         assert_eq!(
             paths.data_dir(),
-            &PathBuf::from(format!("{HOME}/Library/Application Support/io.beam.launcher"))
+            &PathBuf::from(format!(
+                "{HOME}/Library/Application Support/io.beam.launcher"
+            ))
         );
         assert_eq!(paths.local_data_dir(), paths.data_dir());
     }

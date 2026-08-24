@@ -20,5 +20,5 @@ pub mod store;
 pub use context::BeamContext;
 pub use error::{BeamError, Result};
 pub use events::{BeamEvent, EventBus};
-pub use paths::{APP_IDENTIFIER, KEYRING_SERVICE_NAME, BeamPaths};
+pub use paths::{current_platform, BeamPaths, HostPlatform, APP_IDENTIFIER, KEYRING_SERVICE_NAME};
 pub use store::{JsonStore, STORE_FILE_NAME};

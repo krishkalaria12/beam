@@ -114,9 +114,9 @@ pub mod macos {
         let hotkey = parse_hotkey(shortcut_text)?;
         let manager = GlobalHotKeyManager::new()
             .map_err(|error| format!("global hotkey manager failed: {error}"))?;
-        manager
-            .register(hotkey)
-            .map_err(|error| format!("hotkey '{shortcut_text}' could not be registered: {error}"))?;
+        manager.register(hotkey).map_err(|error| {
+            format!("hotkey '{shortcut_text}' could not be registered: {error}")
+        })?;
 
         std::thread::Builder::new()
             .name("beam-hotkey-events".into())
@@ -151,8 +151,14 @@ pub mod macos {
 
         #[test]
         fn parses_every_modifier_alias_from_the_source_grammar() {
-            for modifier in ["SUPER", "META", "COMMAND", "CMD", "WIN", "MOD4", "CTRL", "CONTROL", "ALT", "OPTION", "OPT", "MOD1", "SHIFT"] {
-                assert!(parse_hotkey(&format!("{modifier}+R")).is_ok(), "{modifier} should parse");
+            for modifier in [
+                "SUPER", "META", "COMMAND", "CMD", "WIN", "MOD4", "CTRL", "CONTROL", "ALT",
+                "OPTION", "OPT", "MOD1", "SHIFT",
+            ] {
+                assert!(
+                    parse_hotkey(&format!("{modifier}+R")).is_ok(),
+                    "{modifier} should parse"
+                );
             }
         }
 

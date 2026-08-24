@@ -186,7 +186,10 @@ mod tests {
         });
         assert_eq!(event.as_str(), "hotkey-command");
 
-        assert_eq!(BeamEvent::LauncherResetToMain.as_str(), "launcher-reset-to-main");
+        assert_eq!(
+            BeamEvent::LauncherResetToMain.as_str(),
+            "launcher-reset-to-main"
+        );
         assert_eq!(
             BeamEvent::AiStreamChunk(AiStreamChunk {
                 request_id: "r1".into(),

@@ -155,14 +155,20 @@ mod tests {
         let request = ActivationRequest::from_args(&["--toggle".into(), "--run-command=x".into()]);
         let json = serde_json::to_string(&request).unwrap();
         let parsed: ActivationRequest = serde_json::from_str(&json).unwrap();
-        assert_eq!(parsed.args, vec!["--toggle".to_string(), "--run-command=x".to_string()]);
+        assert_eq!(
+            parsed.args,
+            vec!["--toggle".to_string(), "--run-command=x".to_string()]
+        );
     }
 
     #[test]
     fn forwarding_to_a_dead_socket_reports_no_instance() {
         // A path that cannot exist as a live socket.
         std::env::set_var("XDG_RUNTIME_DIR", "/nonexistent-beam-test");
-        assert_eq!(try_forward(&ActivationRequest::from_args(&["--toggle".into()])).unwrap(), false);
+        assert_eq!(
+            try_forward(&ActivationRequest::from_args(&["--toggle".into()])).unwrap(),
+            false
+        );
         std::env::remove_var("XDG_RUNTIME_DIR");
     }
 }
