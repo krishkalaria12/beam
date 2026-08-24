@@ -1,6 +1,6 @@
 pub(crate) mod config;
 mod models;
-mod runtime;
+pub mod runtime;
 mod shortcuts;
 mod store;
 
@@ -10,7 +10,7 @@ pub use models::{
 };
 pub use runtime::{
     dispatch_hotkey_command, dispatch_hotkey_command_startup, initialize_hotkey_backend,
-    toggle_launcher,
+    install_ui_hooks, toggle_launcher, HotkeyUiHooks,
 };
 
 // PORT: apps/desktop/src-tauri/src/hotkeys/mod.rs

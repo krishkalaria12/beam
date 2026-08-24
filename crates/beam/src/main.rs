@@ -55,6 +55,72 @@ fn extract_activation_args(args: &[String]) -> Option<activation::ActivationRequ
     (!relevant.is_empty()).then(|| activation::ActivationRequest { args: relevant })
 }
 
+/// Starts every background service the old Tauri setup hook started.
+/// The UI hooks (hotkey toggle/reveal, CLI bridge reveal) are installed
+/// here because they own the window.
+fn services_bootstrap(cx: &mut App, context: beam_core::BeamContext) {
+    use beam_services::state::AppState;
+
+    let state = std::sync::Arc::new(AppState::new());
+    let snippets_state = state.snippets.clone();
+
+    // UI hooks first: the hotkey runtime and the CLI bridge need them.
+    let (hotkey_tx, hotkey_rx) = async_channel::unbounded::<crate::activation::ActivationRequest>();
+    let toggle_tx = hotkey_tx.clone();
+    beam_services::hotkeys::install_ui_hooks(beam_services::hotkeys::HotkeyUiHooks {
+        toggle_launcher: std::sync::Arc::new(move || {
+            let _ = toggle_tx.send_blocking(crate::activation::ActivationRequest::from_args(&[
+                "--toggle".into(),
+            ]));
+        }),
+        show_launcher: std::sync::Arc::new(move || {
+            let _ = hotkey_tx.send_blocking(crate::activation::ActivationRequest::from_args(&[
+                "--toggle".into(),
+            ]));
+        }),
+    });
+
+    // Soulver calculator (Linux FFI; no-op elsewhere), then its db.
+    if let Err(error) = beam_services::calculator::initialize(&context) {
+        log::warn!("failed to initialize soulver calculator: {error}");
+    }
+    beam_services::calculator::db::init(&context);
+    beam_services::clipboard::db::init(&context);
+
+    // Clipboard history listener (polls the pasteboard).
+    beam_services::clipboard::start_clipboard_listener(&context);
+
+    // File search backend + applications cache + dsearch bootstrap.
+    beam_services::state::init(&state);
+    beam_services::danksearch::initialize(&context);
+    beam_services::applications::cache::initialize_backend(&context);
+
+    // Hotkeys: the launcher toggle is the critical path.
+    beam_services::hotkeys::initialize_hotkey_backend(&context);
+
+    beam_services::ai::db::init(&context);
+    beam_services::notes::db::init(&context);
+    beam_services::todo::db::init(&context);
+    beam_services::snippets::db::init(&context);
+    beam_services::snippets::runtime::initialize_runtime(&context, snippets_state);
+    beam_services::focus::initialize(&context, state.clone());
+    beam_services::extensions::browser_extension::start_bridge_server(&context);
+    beam_services::cli::bridge::start_cli_bridge_server(&context, state.cli_bridge.clone());
+
+    // Drain the UI-hook activation requests into the app (same channel the
+    // activation socket and the global hotkey feed).
+    let app_handle = app::global(cx);
+    cx.spawn(async move |cx| {
+        while let Ok(request) = hotkey_rx.recv().await {
+            let _ = cx.update(|cx| {
+                app::global(cx).update(cx, |app, cx| app.handle_activation(request.clone(), cx))
+            });
+        }
+        let _ = app_handle;
+    })
+    .detach();
+}
+
 fn run_first_instance(args: &[String]) -> i32 {
     // The gpui run closure is 'static; own the startup arguments.
     let args: Vec<String> = args.to_vec();
