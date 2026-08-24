@@ -82,60 +82,6 @@ keepawake = "0.6.0"
 sysinfo = "0.29"
 fontdb = "0.23.0"
 
-[target.'cfg(target_os = "linux")'.dependencies]
-arboard = { version = "3.6.1", features = ["wayland-data-control"] }
-freedesktop-file-parser = "0.3.1"
-freedesktop-icons = "0.4.0"
-hyprland = "0.4.0-beta.3"
-swayipc = "4.0.0"
-
-ashpd = "0.11.0"
-evdev = "0.13.0"
-xkbcommon = "0.8.0"
-wayland-client = "0.31.12"
-wayland-protocols = { version = "0.32.10", features = ["client", "staging"] }
-wayland-protocols-wlr = { version = "0.3.10", features = ["client"] }
-wl-clipboard-rs = "0.9.3"
-gtk = "0.18"
-gtk-layer-shell = { version = "0.8.2", features = ["v0_5", "v0_6"] }
-zbus = "5.14.0"
-x11rb = "0.13.2"
-
-# Platform-Specific Dependencies
-# Generic clipboard for non-Linux platforms
-[target.'cfg(not(target_os = "linux"))'.dependencies]
-arboard = "3.6.1"
-
-# macOS Desktop Integration
-[target.'cfg(target_os = "macos")'.dependencies]
-objc2 = "0.6"
-objc2-foundation = { version = "0.3", features = [
-  "NSArray",
-  "NSBundle",
-  "NSData",
-  "NSDictionary",
-  "NSEnumerator",
-  "NSError",
-  "NSFileManager",
-  "NSProcessInfo",
-  "NSString",
-  "NSURL",
-] }
-objc2-app-kit = { version = "0.3", features = [
-  "NSApplication",
-  "NSBitmapImageRep",
-  "NSImage",
-  "NSImageRep",
-  "NSPasteboard",
-  "NSRunningApplication",
-  "NSScreen",
-  "NSWorkspace",
-] }
-core-foundation = "0.10"
-core-foundation-sys = "0.8"
-dispatch2 = "0.3"
-tauri-plugin-global-shortcut = "2"
-
 # Security & Cryptography
 keyring = { version = "3.6.3", features = [
   "apple-native",
@@ -178,6 +124,59 @@ scraper = "0.25.0"
 rig-core = "0.31.0"
 regex = "1.12.2"
 semver = "1.0.27"
+
+[target.'cfg(target_os = "linux")'.dependencies]
+arboard = { version = "3.6.1", features = ["wayland-data-control"] }
+freedesktop-file-parser = "0.3.1"
+freedesktop-icons = "0.4.0"
+hyprland = "0.4.0-beta.3"
+swayipc = "4.0.0"
+
+ashpd = "0.11.0"
+evdev = "0.13.0"
+xkbcommon = "0.8.0"
+wayland-client = "0.31.12"
+wayland-protocols = { version = "0.32.10", features = ["client", "staging"] }
+wayland-protocols-wlr = { version = "0.3.10", features = ["client"] }
+wl-clipboard-rs = "0.9.3"
+gtk = "0.18"
+gtk-layer-shell = { version = "0.8.2", features = ["v0_5", "v0_6"] }
+zbus = "5.14.0"
+x11rb = "0.13.2"
+
+# Generic clipboard backend for non-Linux platforms
+[target.'cfg(not(target_os = "linux"))'.dependencies]
+arboard = "3.6.1"
+
+# macOS Desktop Integration
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = "0.6"
+objc2-foundation = { version = "0.3", features = [
+  "NSArray",
+  "NSBundle",
+  "NSData",
+  "NSDictionary",
+  "NSEnumerator",
+  "NSError",
+  "NSFileManager",
+  "NSProcessInfo",
+  "NSString",
+  "NSURL",
+] }
+objc2-app-kit = { version = "0.3", features = [
+  "NSApplication",
+  "NSBitmapImageRep",
+  "NSImage",
+  "NSImageRep",
+  "NSPasteboard",
+  "NSRunningApplication",
+  "NSScreen",
+  "NSWorkspace",
+] }
+core-foundation = "0.10"
+core-foundation-sys = "0.8"
+dispatch2 = "0.3"
+tauri-plugin-global-shortcut = "2"
 
 # Platform-Specific Dependencies
 [target.'cfg(any(target_os = "macos", windows, target_os = "linux"))'.dependencies]
