@@ -2,6 +2,7 @@ pub(crate) mod config;
 pub mod db;
 pub mod error;
 pub mod history;
+#[cfg(target_os = "linux")]
 mod soulver;
 pub mod types;
 
@@ -18,7 +19,9 @@ use smart_calculator::{
     },
     error::Error as SmartCalculatorEngineError,
 };
-use tauri::{command, AppHandle, Manager};
+#[cfg(target_os = "linux")]
+use tauri::Manager;
+use tauri::{command, AppHandle};
 
 use self::error::{CalculatorError, Result};
 use self::history::{
@@ -195,6 +198,7 @@ fn is_error_like_value(value: &str) -> bool {
         || normalized.starts_with("failed ")
 }
 
+#[cfg(target_os = "linux")]
 async fn evaluate_with_soulver(query: String) -> Result<Option<CalculationOutput>> {
     let evaluation_query = query.clone();
     let response =
@@ -204,7 +208,6 @@ async fn evaluate_with_soulver(query: String) -> Result<Option<CalculationOutput
                 CalculatorError::Soulver(format!("calculator task join failed: {error}"))
             })?
             .map_err(CalculatorError::Soulver)?;
-
     if let Some(error) = response.error {
         return Err(CalculatorError::Soulver(error));
     }
@@ -230,6 +233,11 @@ async fn evaluate_with_soulver(query: String) -> Result<Option<CalculationOutput
     }
 
     Ok(Some(build_output(value)))
+}
+
+#[cfg(not(target_os = "linux"))]
+async fn evaluate_with_soulver(_query: String) -> Result<Option<CalculationOutput>> {
+    Ok(None)
 }
 
 async fn evaluate_with_smart_calculator(query: &str) -> Result<Option<CalculationOutput>> {
@@ -260,6 +268,7 @@ async fn evaluate_with_smart_calculator(query: &str) -> Result<Option<Calculatio
     Ok(Some(build_output(value)))
 }
 
+#[cfg(target_os = "linux")]
 pub fn initialize(app: &AppHandle) -> Result<()> {
     let resource_dir = app.path().resource_dir().map_err(|error| {
         CalculatorError::Configuration(format!("failed to resolve app resource directory: {error}"))
@@ -274,6 +283,13 @@ pub fn initialize(app: &AppHandle) -> Result<()> {
     })?;
 
     soulver::initialize(soulver_core_path);
+    Ok(())
+}
+
+/// Soulver ships as a native Linux library; other platforms rely on the pure
+/// Rust smart-calculator fallback.
+#[cfg(not(target_os = "linux"))]
+pub fn initialize(_app: &AppHandle) -> Result<()> {
     Ok(())
 }
 

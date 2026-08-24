@@ -1,3 +1,4 @@
+#[cfg(target_os = "linux")]
 use freedesktop_file_parser::ParseError;
 use serde::Serialize;
 use thiserror::Error;
@@ -9,6 +10,7 @@ pub enum ApplicationsError {
     #[error("{0}")]
     CollectingDesktopFilesError(String),
 
+    #[cfg(target_os = "linux")]
     #[error("{0}")]
     ParsingDesktopFileError(#[from] ParseError),
 

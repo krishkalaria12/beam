@@ -2,7 +2,7 @@
 
 # Beam
 
-**An open-source command launcher for Linux.**
+**An open-source command launcher for Linux and Windows.**
 
 ![Beam](./apps/web/public/image.png)
 
@@ -10,7 +10,7 @@
 
 ## About
 
-Beam is a keyboard-first command launcher built with **Tauri v2** and **React**. It brings a Raycast-like experience to Linux — fast, extensible, and always a hotkey away.
+Beam is a keyboard-first command launcher built with **Tauri v2** and **React**. It brings a Raycast-like experience to Linux and Windows — fast, extensible, and always a hotkey away.
 
 ## Features
 
@@ -52,6 +52,23 @@ curl -s https://api.github.com/repos/krishkalaria12/beam/releases/latest \
   | xargs curl -L -o beam.deb
 
 sudo apt install ./beam.deb
+```
+
+### Windows
+
+Download the latest Windows installer from GitHub:
+
+- [Beam releases](https://github.com/krishkalaria12/beam/releases)
+
+Grab the `.exe` (NSIS) or `.msi` installer and run it. Both register the `beam://` deep-link scheme automatically.
+
+Install the latest `.exe` build with `curl` (PowerShell):
+
+```powershell
+curl.exe -s https://api.github.com/repos/krishkalaria12/beam/releases/latest `
+  | Select-String -Pattern '.*?(https://[^"]+\.exe)"' `
+  | ForEach-Object { $_.Matches[0].Groups[1].Value } `
+  | ForEach-Object { curl.exe -L -o beam-setup.exe $_ }
 ```
 
 Install the latest `.rpm` build with `curl`:

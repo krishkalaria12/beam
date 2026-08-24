@@ -24,6 +24,7 @@ use super::types::{
 use super::{error::FocusError, error::Result};
 use crate::extensions::browser_extension;
 use crate::launcher_window;
+#[cfg(target_os = "linux")]
 use crate::linux_desktop;
 
 pub const FOCUS_STATUS_EVENT: &str = "focus-status-updated";
@@ -322,7 +323,27 @@ pub fn capability_report() -> FocusCapabilityReport {
         }
     }
 
-    #[cfg(not(target_os = "linux"))]
+    #[cfg(target_os = "windows")]
+    {
+        let browser_connected = browser_extension::has_connected_client();
+        let mut notes = Vec::new();
+        notes.push("App blocking uses the Windows foreground window tracker.".to_string());
+        if !browser_connected {
+            notes.push(
+                "Website blocking requires the Beam browser extension to be installed and connected."
+                    .to_string(),
+            );
+        }
+
+        FocusCapabilityReport {
+            app_blocking_supported: true,
+            website_blocking_supported: browser_connected,
+            backend: "win32-window-manager".to_string(),
+            notes,
+        }
+    }
+
+    #[cfg(not(any(target_os = "linux", target_os = "windows")))]
     {
         let browser_connected = browser_extension::has_connected_client();
         let mut notes =

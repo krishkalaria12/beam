@@ -139,20 +139,8 @@ fn build_process(
     let script_path_string = script_path.to_string_lossy().to_string();
     let shebang_args = read_shebang_args(script_path);
 
-    let mut process = if let Some(parts) = shebang_args {
-        let mut process = Command::new(&parts[0]);
-        if parts.len() > 1 {
-            process.args(&parts[1..]);
-        }
-        process.arg(&script_path_string);
-        process.args(script_args);
-        process
-    } else {
-        let mut process = Command::new("/bin/bash");
-        process.arg(&script_path_string);
-        process.args(script_args);
-        process
-    };
+    let mut process =
+        build_platform_process(&script_path_string, script_path, script_args, shebang_args);
 
     process
         .kill_on_drop(true)
@@ -164,15 +152,102 @@ fn build_process(
         process.current_dir(parent);
     }
 
-    let mut path_env = std::env::var_os("PATH").unwrap_or_default();
-    if !path_env.is_empty() {
-        path_env.push(OsString::from(":"));
+    #[cfg(unix)]
+    {
+        let mut path_env = std::env::var_os("PATH").unwrap_or_default();
+        if !path_env.is_empty() {
+            path_env.push(OsString::from(":"));
+        }
+        path_env.push(OsString::from("/usr/local/bin"));
+        process.env("PATH", path_env);
     }
-    path_env.push(OsString::from("/usr/local/bin"));
-    process.env("PATH", path_env);
     process.env("BEAM_SCRIPT_COMMAND_ID", &command.id);
     process.env("BEAM_SCRIPT_NAME", &command.script_name);
 
+    process
+}
+
+#[cfg(not(target_os = "windows"))]
+fn build_platform_process(
+    script_path_string: &str,
+    _script_path: &Path,
+    script_args: &[String],
+    shebang_args: Option<Vec<String>>,
+) -> Command {
+    let process = match shebang_args {
+        Some(parts) => {
+            let mut process = Command::new(&parts[0]);
+            if parts.len() > 1 {
+                process.args(&parts[1..]);
+            }
+            process.arg(script_path_string);
+            process.args(script_args);
+            process
+        }
+        None => {
+            let mut process = Command::new("/bin/bash");
+            process.arg(script_path_string);
+            process.args(script_args);
+            process
+        }
+    };
+
+    process
+}
+
+#[cfg(target_os = "windows")]
+fn build_platform_process(
+    script_path_string: &str,
+    script_path: &Path,
+    script_args: &[String],
+    shebang_args: Option<Vec<String>>,
+) -> Command {
+    const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+
+    use std::os::windows::process::CommandExt;
+
+    if let Some(parts) = shebang_args {
+        // Scripts with a shebang (python, node, ...) run through their interpreter.
+        let mut process = Command::new(&parts[0]);
+        if parts.len() > 1 {
+            process.args(&parts[1..]);
+        }
+        process.arg(script_path_string);
+        process.args(script_args);
+        process.creation_flags(CREATE_NO_WINDOW);
+        return process;
+    }
+
+    let extension = script_path
+        .extension()
+        .and_then(|value| value.to_str())
+        .unwrap_or("")
+        .to_ascii_lowercase();
+
+    let mut process = match extension.as_str() {
+        "bat" | "cmd" => {
+            let mut process = Command::new("cmd.exe");
+            process.arg("/C");
+            process.arg(script_path_string);
+            process
+        }
+        "ps1" => {
+            let mut process = Command::new("powershell.exe");
+            process.arg("-NoProfile");
+            process.arg("-ExecutionPolicy").arg("Bypass");
+            process.arg("-File");
+            process.arg(script_path_string);
+            process
+        }
+        _ => {
+            // Plain executables or unknown extensions run directly; users can
+            // add a shebang line for interpreter-based scripts.
+            let mut process = Command::new(script_path_string);
+            process
+        }
+    };
+    process.args(script_args);
+    process.creation_flags(CREATE_NO_WINDOW);
     process
 }
 

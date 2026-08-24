@@ -1,9 +1,11 @@
 pub mod app_entry;
 pub mod cache;
+#[cfg(target_os = "linux")]
 pub mod collector;
 pub(crate) mod config;
 pub mod error;
 pub mod find_app;
+#[cfg(target_os = "linux")]
 pub mod icon_resolver;
 pub mod open_app;
 pub mod raycast_compat;

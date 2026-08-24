@@ -49,7 +49,22 @@ pub(super) fn is_executable(path: &Path) -> bool {
         .unwrap_or(false)
 }
 
-#[cfg(not(unix))]
+#[cfg(target_os = "windows")]
+pub(super) fn is_executable(path: &Path) -> bool {
+    // Windows has no executable bit; treat known script/executable extensions
+    // as runnable and let the runner decide how to spawn them.
+    path.extension()
+        .and_then(|value| value.to_str())
+        .map(|extension| {
+            matches!(
+                extension.to_ascii_lowercase().as_str(),
+                "exe" | "bat" | "cmd" | "ps1" | "py" | "js" | "sh"
+            )
+        })
+        .unwrap_or(false)
+}
+
+#[cfg(not(any(unix, target_os = "windows")))]
 pub(super) fn is_executable(_path: &Path) -> bool {
     false
 }

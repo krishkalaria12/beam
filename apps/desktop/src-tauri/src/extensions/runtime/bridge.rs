@@ -146,6 +146,25 @@ fn is_executable(path: &Path) -> bool {
 fn find_on_path(path_env: Option<OsString>, binaries: &[&str]) -> Option<PathBuf> {
     let path_env = path_env?;
 
+    #[cfg(target_os = "windows")]
+    {
+        // Windows executables carry an .exe suffix; probe the common variants.
+        const WINDOWS_BINARY_SUFFIXES: [&str; 3] = ["", ".exe", ".cmd"];
+        for directory in env::split_paths(&path_env) {
+            for binary in binaries {
+                for suffix in WINDOWS_BINARY_SUFFIXES {
+                    let candidate = directory.join(format!("{binary}{suffix}"));
+                    if is_executable(&candidate) {
+                        return Some(candidate);
+                    }
+                }
+            }
+        }
+
+        return None;
+    }
+
+    #[cfg(not(target_os = "windows"))]
     for directory in env::split_paths(&path_env) {
         for binary in binaries {
             let candidate = directory.join(binary);
@@ -204,6 +223,7 @@ fn append_unique_path(paths: &mut Vec<PathBuf>, candidate: Option<PathBuf>) {
     }
 }
 
+#[cfg(not(target_os = "windows"))]
 fn collect_node_candidate_paths(home_dir: Option<&Path>) -> Vec<PathBuf> {
     let mut candidates = Vec::new();
 
@@ -283,6 +303,59 @@ fn collect_node_candidate_paths(home_dir: Option<&Path>) -> Vec<PathBuf> {
     candidates
 }
 
+#[cfg(target_os = "windows")]
+fn collect_node_candidate_paths(home_dir: Option<&Path>) -> Vec<PathBuf> {
+    let mut candidates = Vec::new();
+
+    if let Some(volta_home) = env::var_os("VOLTA_HOME").map(PathBuf::from) {
+        candidates.push(volta_home.join("bin").join("node.exe"));
+    }
+
+    if let Some(program_files) = env::var_os("ProgramFiles").map(PathBuf::from) {
+        candidates.push(program_files.join("nodejs").join("node.exe"));
+    }
+
+    if let Some(local_app_data) = dirs::data_local_dir() {
+        candidates.push(
+            local_app_data
+                .join("Programs")
+                .join("nodejs")
+                .join("node.exe"),
+        );
+        candidates.push(local_app_data.join("Volta").join("bin").join("node.exe"));
+        candidates.push(local_app_data.join("scoop").join("shims").join("node.exe"));
+
+        if let Some(candidate) = find_latest_versioned_binary(
+            &local_app_data.join("fnm").join("node-versions"),
+            Path::new("installation")
+                .join("bin")
+                .join("node.exe")
+                .as_path(),
+        ) {
+            candidates.push(candidate);
+        }
+    }
+
+    if let Some(app_data) = dirs::data_dir() {
+        candidates.push(app_data.join("nvm").join("node.exe"));
+        if let Some(candidate) = find_latest_versioned_binary(
+            &app_data.join("fnm").join("node-versions"),
+            Path::new("installation")
+                .join("bin")
+                .join("node.exe")
+                .as_path(),
+        ) {
+            candidates.push(candidate);
+        }
+    }
+
+    if let Some(home_dir) = home_dir {
+        candidates.push(home_dir.join("scoop").join("shims").join("node.exe"));
+    }
+
+    candidates
+}
+
 fn resolve_node_runtime_program() -> Result<PathBuf, String> {
     if let Some(override_path) = env::var_os("BEAM_NODE_BINARY").map(PathBuf::from) {
         if is_executable(&override_path) {
@@ -330,9 +403,12 @@ fn build_extension_runtime_path_env(program: &Path) -> Option<OsString> {
         }
     }
 
-    append_unique_path(&mut paths, Some(PathBuf::from("/usr/local/bin")));
-    append_unique_path(&mut paths, Some(PathBuf::from("/usr/bin")));
-    append_unique_path(&mut paths, Some(PathBuf::from("/bin")));
+    #[cfg(not(target_os = "windows"))]
+    {
+        append_unique_path(&mut paths, Some(PathBuf::from("/usr/local/bin")));
+        append_unique_path(&mut paths, Some(PathBuf::from("/usr/bin")));
+        append_unique_path(&mut paths, Some(PathBuf::from("/bin")));
+    }
 
     env::join_paths(paths).ok()
 }
