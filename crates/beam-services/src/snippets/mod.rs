@@ -5,7 +5,7 @@
 
 pub(crate) mod config;
 pub mod db;
-mod error;
+pub mod error;
 pub mod helpers;
 pub mod model;
 pub mod repository;

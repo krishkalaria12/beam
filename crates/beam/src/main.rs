@@ -20,6 +20,7 @@ mod notes_panel;
 mod panel_router;
 mod root_view;
 mod settings_panel;
+mod snippets_panel;
 mod theme;
 mod window;
 
