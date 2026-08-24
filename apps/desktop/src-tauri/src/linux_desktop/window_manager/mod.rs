@@ -8,7 +8,6 @@ mod kde;
 mod sway;
 mod x11;
 
-use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 
 use self::config::CONFIG as WINDOW_MANAGER_CONFIG;
