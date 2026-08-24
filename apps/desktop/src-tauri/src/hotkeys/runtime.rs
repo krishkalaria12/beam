@@ -416,7 +416,7 @@ fn detect_session_type() -> String {
     "desktop".to_string()
 }
 
-#[cfg(not(target_os = "windows"))]
+#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
 fn detect_session_type() -> String {
     if let Ok(session) = env::var("XDG_SESSION_TYPE") {
         let normalized = session.trim().to_lowercase();
@@ -437,7 +437,7 @@ fn detect_compositor() -> String {
     "explorer".to_string()
 }
 
-#[cfg(not(target_os = "windows"))]
+#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
 fn detect_compositor() -> String {
     if env::var_os("HYPRLAND_INSTANCE_SIGNATURE").is_some() {
         return "hyprland".to_string();

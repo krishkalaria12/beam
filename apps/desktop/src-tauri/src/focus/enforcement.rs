@@ -6,6 +6,7 @@ use super::types::{FocusSession, FocusSessionMode, FocusSnoozeTargetType};
 use super::FOCUS_APP_BLOCKED_EVENT;
 use crate::state::AppState;
 
+#[cfg(target_os = "linux")]
 use crate::linux_desktop::window_manager as desktop_backend;
 
 #[cfg(target_os = "macos")]
