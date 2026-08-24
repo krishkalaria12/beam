@@ -16,6 +16,7 @@ mod command_registry;
 mod glass;
 mod hotkey;
 mod launcher_state;
+mod notes_panel;
 mod panel_router;
 mod root_view;
 mod settings_panel;

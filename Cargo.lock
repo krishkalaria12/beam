@@ -817,6 +817,7 @@ dependencies = [
  "beam-core",
  "beam-services",
  "beam-ui",
+ "chrono",
  "env_logger",
  "global-hotkey",
  "gpui",
