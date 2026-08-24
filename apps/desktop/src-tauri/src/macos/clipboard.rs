@@ -336,10 +336,15 @@ pub fn clipboard_paste(content: ClipboardContent) -> ProviderResult<()> {
 
     std::thread::sleep(std::time::Duration::from_millis(80));
     super::events::post_paste_keystroke();
-    std::thread::sleep(std::time::Duration::from_millis(120));
 
+    // Give the frontmost application time to consume the pasteboard before
+    // restoring the previous contents; a fixed short delay races with slow
+    // paste targets, so the restore runs generously late and off-thread.
     if let Some(previous) = previous {
-        let _ = clipboard_copy(ClipboardContent::from_read_result(previous), None);
+        std::thread::spawn(move || {
+            std::thread::sleep(std::time::Duration::from_millis(500));
+            let _ = clipboard_copy(ClipboardContent::from_read_result(previous), None);
+        });
     }
 
     Ok(())
