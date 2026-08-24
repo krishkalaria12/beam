@@ -53,3 +53,14 @@ the G3 macOS lane together with signing and notarization.
   runners have full Xcode and may drop it later.
 - **`rust-toolchain.toml` pins 1.95.0** alongside the GPUI rev; rustup
   fetches it on CI automatically.
+
+## Status after the services migration (G1 complete)
+
+- **beam-services is tauri-free**: all 40 modules of
+  `apps/desktop/src-tauri/src` exist in `crates/beam-services` with zero
+  `tauri` imports; 154 of 166 frozen IPC commands are service functions,
+  8 deleted by D5, 4 absorbed by SD-1.
+- The remaining port surface is the **frontend** (85,396 lines of
+  TS/TSX/CSS under `apps/desktop/src`): the launcher shell, the 21
+  panels, and the extension runtime shell — lanes B and P1–P10, rendered
+  with the vendored gpui-component set.
