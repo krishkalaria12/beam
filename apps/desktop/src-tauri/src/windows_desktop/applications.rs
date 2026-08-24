@@ -89,7 +89,9 @@ fn resolve_lnk_target(path: &Path) -> String {
 
 fn collect_shortcut_files() -> Vec<PathBuf> {
     let mut files = Vec::new();
-    for directory in start_menu_directories() {
+    // User shortcuts are collected first so identically-named entries win the
+    // name-based dedupe over machine-wide ones, matching Start Menu semantics.
+    for directory in start_menu_directories().into_iter().rev() {
         for entry in WalkDir::new(directory).into_iter().filter_map(|e| e.ok()) {
             if !entry.file_type().is_file() {
                 continue;
