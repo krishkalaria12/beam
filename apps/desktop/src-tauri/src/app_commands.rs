@@ -19,9 +19,8 @@ pub use crate::linux_desktop::gnome_extension::install::{
 
 #[cfg(target_os = "linux")]
 pub use crate::linux_desktop::gnome_extension::install::{
-    __cmd__enable_gnome_shell_extension as __cmd__enable_gnome_shell_extension,
-    __cmd__install_gnome_shell_extension as __cmd__install_gnome_shell_extension,
-    __cmd__open_gnome_shell_extension_directory as __cmd__open_gnome_shell_extension_directory,
+    __cmd__enable_gnome_shell_extension, __cmd__install_gnome_shell_extension,
+    __cmd__open_gnome_shell_extension_directory,
 };
 
 #[cfg(not(target_os = "linux"))]

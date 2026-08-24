@@ -121,9 +121,8 @@ unsafe fn collect_app_windows(
             let array = value as core_foundation_sys::array::CFArrayRef;
             let count = core_foundation_sys::array::CFArrayGetCount(array);
             for index in 0..count {
-                let element =
-                    core_foundation_sys::array::CFArrayGetValueAtIndex(array, index)
-                        as ax::AXUIElementRef;
+                let element = core_foundation_sys::array::CFArrayGetValueAtIndex(array, index)
+                    as ax::AXUIElementRef;
                 append_window(element, info, out, seen_cg_ids, seen_ids);
             }
             ax::ax_release(value);
@@ -158,7 +157,13 @@ fn scan_windows() -> Vec<AxWindow> {
 
     for info in &apps {
         unsafe {
-            collect_app_windows(info, &mut windows, &mut seen_cg_ids, &mut seen_ids, budget_end);
+            collect_app_windows(
+                info,
+                &mut windows,
+                &mut seen_cg_ids,
+                &mut seen_ids,
+                budget_end,
+            );
         }
     }
 
@@ -187,20 +192,22 @@ fn frontmost_ax_window_title(pid: i32) -> Option<String> {
             return None;
         }
 
-        let title = ax::ax_copy_value(app_element, ax::kAXFocusedWindowAttribute).and_then(
-            |focused| {
+        let title =
+            ax::ax_copy_value(app_element, ax::kAXFocusedWindowAttribute).and_then(|focused| {
                 let element = focused as ax::AXUIElementRef;
                 let title = ax::ax_copy_string(element, ax::kAXTitleAttribute);
                 ax::ax_release(focused);
                 title
-            },
-        );
+            });
         ax::ax_release(app_element as _);
         title
     }
 }
 
-pub fn list_windows(_app: &tauri::AppHandle, _state: &AppState) -> Result<Vec<WindowEntry>, String> {
+pub fn list_windows(
+    _app: &tauri::AppHandle,
+    _state: &AppState,
+) -> Result<Vec<WindowEntry>, String> {
     if !ax_trusted() {
         return Err("accessibility permission is required to list windows".to_string());
     }
@@ -236,7 +243,9 @@ fn find_window_by_id(id: &str) -> Option<AxWindow> {
         return None;
     }
 
-    scan_windows().into_iter().find(|window| window.id == normalized)
+    scan_windows()
+        .into_iter()
+        .find(|window| window.id == normalized)
 }
 
 /// Locates the live AX element for a scanned window inside its application.
@@ -252,8 +261,8 @@ unsafe fn locate_element_by_id(
     let count = core_foundation_sys::array::CFArrayGetCount(array);
     let mut found = None;
     for index in 0..count {
-        let element = core_foundation_sys::array::CFArrayGetValueAtIndex(array, index)
-            as ax::AXUIElementRef;
+        let element =
+            core_foundation_sys::array::CFArrayGetValueAtIndex(array, index) as ax::AXUIElementRef;
         if ax::ax_ui_element_get_window(element) == Some(cg_id) {
             core_foundation_sys::base::CFRetain(element as *const std::os::raw::c_void);
             found = Some(element);
@@ -331,7 +340,9 @@ pub fn focus_window(window_id: &str) -> Result<(), String> {
         return Err("window not found".to_string());
     };
 
-    unsafe { raise_window(&window) }.then_some(()).ok_or_else(|| "failed to focus window".to_string())
+    unsafe { raise_window(&window) }
+        .then_some(())
+        .ok_or_else(|| "failed to focus window".to_string())
 }
 
 pub fn close_window(window_id: &str) -> Result<(), String> {
@@ -355,7 +366,10 @@ pub fn frontmost_window(state: &AppState) -> Result<Option<FocusedWindowInfo>, S
 
     let title = frontmost_ax_window_title(frontmost.pid).unwrap_or_else(|| frontmost.name.clone());
 
-    let process_name = state.process_cache.lock().get_process_name(frontmost.pid as u32);
+    let process_name = state
+        .process_cache
+        .lock()
+        .get_process_name(frontmost.pid as u32);
     let app_name = process_name
         .filter(|name| !name.trim().is_empty())
         .unwrap_or_else(|| frontmost.name.clone());

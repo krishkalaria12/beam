@@ -58,7 +58,11 @@ fn scan_bundle_paths() -> Vec<PathBuf> {
     for directory in application_directories() {
         // Depth 3 covers nested Utilities folders without walking deep trees.
         let walker = walkdir::WalkDir::new(&directory).max_depth(4);
-        for entry in walker.into_iter().filter_map(|entry| entry.ok()).filter(is_app_bundle) {
+        for entry in walker
+            .into_iter()
+            .filter_map(|entry| entry.ok())
+            .filter(is_app_bundle)
+        {
             bundles.push(entry.path().to_path_buf());
         }
     }
@@ -88,11 +92,7 @@ fn read_bundle_metadata(bundle_path: &Path) -> Option<BundleMetadata> {
     }
 }
 
-fn resolve_icon(
-    app_cache_root: &Path,
-    key: &str,
-    bundle_path: &Path,
-) -> String {
+fn resolve_icon(app_cache_root: &Path, key: &str, bundle_path: &Path) -> String {
     // Cache-first: rasterizing every bundle icon through AppKit is expensive,
     // so only extract when no cached PNG exists yet.
     if let Some(cached) = icons::cached_icon_path(app_cache_root, key) {
@@ -127,11 +127,10 @@ pub fn collect_searchable_applications(
         // Skip background helpers and menu-bar-only agents; launchers should
         // not offer them as regular applications.
         {
-            if let Some(info) =
-                NSBundle::bundleWithPath(&objc2_foundation::NSString::from_str(
-                    &bundle_path.to_string_lossy(),
-                ))
-                .and_then(|bundle| bundle.infoDictionary())
+            if let Some(info) = NSBundle::bundleWithPath(&objc2_foundation::NSString::from_str(
+                &bundle_path.to_string_lossy(),
+            ))
+            .and_then(|bundle| bundle.infoDictionary())
             {
                 if info
                     .objectForKey(&objc2_foundation::NSString::from_str("LSUIElement"))
@@ -286,7 +285,10 @@ mod tests {
     #[test]
     fn expands_tilde_paths() {
         let home = std::env::var("HOME").unwrap();
-        assert_eq!(expand_tilde("~/Documents"), PathBuf::from(home).join("Documents"));
+        assert_eq!(
+            expand_tilde("~/Documents"),
+            PathBuf::from(home).join("Documents")
+        );
         assert_eq!(expand_tilde("/usr/bin"), PathBuf::from("/usr/bin"));
     }
 

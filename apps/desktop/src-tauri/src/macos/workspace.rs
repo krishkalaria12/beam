@@ -9,7 +9,7 @@ use std::path::{Path, PathBuf};
 
 use dispatch2::DispatchQueue;
 use objc2_app_kit::{NSRunningApplication, NSWorkspace};
-use objc2_foundation::{NSThread, NSString, NSURL};
+use objc2_foundation::{NSString, NSThread, NSURL};
 
 /// Runs `work` on the main thread and blocks until it completes.
 ///
@@ -74,13 +74,12 @@ fn running_application(app: &NSRunningApplication) -> Option<RunningAppInfo> {
 
 /// Lists regular user-facing applications. Must be called from the main thread.
 pub fn running_regular_apps() -> Vec<RunningAppInfo> {
-        let workspace = NSWorkspace::sharedWorkspace();
+    let workspace = NSWorkspace::sharedWorkspace();
     workspace
         .runningApplications()
         .iter()
         .filter_map(|app| running_application(&app))
         .collect()
-
 }
 
 pub struct FrontmostAppInfo {
@@ -92,7 +91,7 @@ pub struct FrontmostAppInfo {
 
 /// Returns the frontmost regular application, excluding Beam itself.
 pub fn frontmost_regular_app() -> Option<FrontmostAppInfo> {
-        let frontmost = NSWorkspace::sharedWorkspace().frontmostApplication()?;
+    let frontmost = NSWorkspace::sharedWorkspace().frontmostApplication()?;
     if frontmost.processIdentifier() == std::process::id() as i32 {
         return None;
     }
@@ -118,27 +117,21 @@ pub fn frontmost_regular_app() -> Option<FrontmostAppInfo> {
         name,
         bundle_path,
     })
-
 }
 
 /// Activates (focuses) an application by pid.
 pub fn activate_application(pid: i32) -> bool {
-        let Some(app) = NSRunningApplication::runningApplicationWithProcessIdentifier(pid)
-    else {
+    let Some(app) = NSRunningApplication::runningApplicationWithProcessIdentifier(pid) else {
         return false;
     };
-    app.activateWithOptions(
-        objc2_app_kit::NSApplicationActivationOptions::ActivateAllWindows,
-    )
-
+    app.activateWithOptions(objc2_app_kit::NSApplicationActivationOptions::ActivateAllWindows)
 }
 
 /// Resolves the AppKit icon for a file path and encodes it as PNG bytes.
 pub fn icon_png_bytes_for_path(path: &Path) -> Option<Vec<u8>> {
-        let icon =
+    let icon =
         NSWorkspace::sharedWorkspace().iconForFile(&NSString::from_str(&path.to_string_lossy()));
     crate::macos::icons::nsimage_to_png_bytes(&icon)
-
 }
 
 /// Resolves the AppKit icon for an application bundle identifier.
@@ -155,14 +148,12 @@ pub fn launch_bundle(path: &Path) -> Result<(), String> {
     // requires callback plumbing; the deprecated synchronous variant is kept
     // deliberately and isolated to this scoped unsafe block.
     #[allow(deprecated)]
-    let launched = on_main_thread(move || {
-        unsafe {
-            NSWorkspace::sharedWorkspace().launchApplicationAtURL_options_configuration_error(
-                &url,
-                objc2_app_kit::NSWorkspaceLaunchOptions::Default,
-                &objc2_foundation::NSDictionary::new(),
-            )
-        }
+    let launched = on_main_thread(move || unsafe {
+        NSWorkspace::sharedWorkspace().launchApplicationAtURL_options_configuration_error(
+            &url,
+            objc2_app_kit::NSWorkspaceLaunchOptions::Default,
+            &objc2_foundation::NSDictionary::new(),
+        )
     });
     match launched {
         Ok(_) => Ok(()),
@@ -181,18 +172,17 @@ pub fn bundle_path_for_bundle_id(bundle_id: &str) -> Option<String> {
 }
 
 pub fn reveal_in_finder(paths: &[PathBuf]) {
-        let urls: Vec<_> = paths
+    let urls: Vec<_> = paths
         .iter()
         .map(|path| NSURL::fileURLWithPath(&NSString::from_str(&path.to_string_lossy())))
         .collect();
     let array = objc2_foundation::NSArray::from_retained_slice(&urls);
     NSWorkspace::sharedWorkspace().activateFileViewerSelectingURLs(&array);
-
 }
 
 /// Moves paths to the Trash via NSFileManager.
 pub fn trash_paths(paths: &[PathBuf]) -> Result<(), String> {
-        let manager = objc2_foundation::NSFileManager::defaultManager();
+    let manager = objc2_foundation::NSFileManager::defaultManager();
     for path in paths {
         let url = NSURL::fileURLWithPath(&NSString::from_str(&path.to_string_lossy()));
         manager

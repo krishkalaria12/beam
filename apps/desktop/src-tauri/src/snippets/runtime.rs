@@ -18,18 +18,18 @@ use tauri::{AppHandle, Manager};
 #[cfg(target_os = "linux")]
 use xkbcommon::xkb;
 
-use crate::clipboard::{self, ClipboardContent};
 #[cfg(target_os = "linux")]
 use crate::clipboard::ReadResult;
+use crate::clipboard::{self, ClipboardContent};
 #[cfg(target_os = "linux")]
 use crate::linux_desktop;
 use crate::state::AppState;
 
 use super::error::{Result, SnippetError};
 use super::helpers::normalize_trigger_for_match;
-use super::model::{RuntimeStatus, Snippet, TriggerIndex};
 #[cfg(target_os = "linux")]
 use super::model::TriggerMode;
+use super::model::{RuntimeStatus, Snippet, TriggerIndex};
 use super::repository::SnippetsRepository;
 
 #[cfg(target_os = "linux")]

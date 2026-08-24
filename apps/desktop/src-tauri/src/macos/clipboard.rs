@@ -88,9 +88,8 @@ fn file_urls_from_pasteboard(pasteboard: &NSPasteboard) -> Vec<String> {
     // public.file-url entry regardless of the payload's plist encoding.
     unsafe {
         let nsurl_class: &objc2::runtime::AnyClass = objc2::class!(NSURL);
-        let classes: objc2::rc::Retained<objc2_foundation::NSArray<
-            objc2::runtime::AnyClass,
-        >> = objc2::msg_send![objc2::class!(NSArray), arrayWithObject:nsurl_class];
+        let classes: objc2::rc::Retained<objc2_foundation::NSArray<objc2::runtime::AnyClass>> =
+            objc2::msg_send![objc2::class!(NSArray), arrayWithObject:nsurl_class];
         if let Some(objects) = pasteboard.readObjectsForClasses_options(&classes, None) {
             for object in objects.iter() {
                 if let Some(url) = object.downcast_ref::<NSURL>() {
@@ -143,7 +142,7 @@ fn file_url_to_path(url: &str) -> Option<String> {
 // ---------------------------------------------------------------------------
 
 pub fn clipboard_read_text() -> ProviderResult<ReadResult> {
-        let pasteboard = NSPasteboard::generalPasteboard();
+    let pasteboard = NSPasteboard::generalPasteboard();
     let text = string_for_type(&pasteboard, TYPE_TEXT);
     let html = string_for_type(&pasteboard, TYPE_HTML);
 
@@ -152,11 +151,10 @@ pub fn clipboard_read_text() -> ProviderResult<ReadResult> {
         html: html.filter(|value| !value.trim().is_empty()),
         file: None,
     })
-
 }
 
 pub fn clipboard_read() -> ProviderResult<ReadResult> {
-        let pasteboard = NSPasteboard::generalPasteboard();
+    let pasteboard = NSPasteboard::generalPasteboard();
 
     let files = file_urls_from_pasteboard(&pasteboard);
     let file = files.first().cloned();
@@ -182,7 +180,6 @@ pub fn clipboard_read() -> ProviderResult<ReadResult> {
         html: html.filter(|value| !value.trim().is_empty()),
         file,
     })
-
 }
 
 fn is_image_path(path: &Path) -> bool {
@@ -275,7 +272,10 @@ unsafe fn write_file_paths(pasteboard: &NSPasteboard, paths: &[String]) -> Provi
     }
 }
 
-pub fn clipboard_copy(content: ClipboardContent, _options: Option<CopyOptions>) -> ProviderResult<()> {
+pub fn clipboard_copy(
+    content: ClipboardContent,
+    _options: Option<CopyOptions>,
+) -> ProviderResult<()> {
     unsafe {
         let pasteboard = NSPasteboard::generalPasteboard();
         pasteboard.clearContents();
@@ -323,7 +323,7 @@ unsafe fn write_image_data_url(pasteboard: &NSPasteboard, data_url: &str) -> Pro
 }
 
 pub fn clipboard_clear() -> ProviderResult<()> {
-        NSPasteboard::generalPasteboard().clearContents();
+    NSPasteboard::generalPasteboard().clearContents();
 
     Ok(())
 }
@@ -422,7 +422,10 @@ pub fn selected_files() -> ProviderResult<Vec<SelectedFinderItem>> {
 
         items.sort();
         items.dedup();
-        Ok(items.into_iter().map(|path| SelectedFinderItem { path }).collect())
+        Ok(items
+            .into_iter()
+            .map(|path| SelectedFinderItem { path })
+            .collect())
     }
 }
 

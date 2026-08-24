@@ -150,4 +150,3 @@ pub struct GnomeExtensionStatus {
     pub dbus_reachable: bool,
     pub update_required: bool,
 }
-

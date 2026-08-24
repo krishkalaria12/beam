@@ -20,8 +20,8 @@ use tauri_plugin_store::{Store, StoreExt};
 
 use super::{
     app_entry::{AppEntry, SearchableAppEntry},
-    error::{ApplicationsError, Result},
     collect_searchable_applications,
+    error::{ApplicationsError, Result},
 };
 
 use crate::applications::config::CONFIG as APPLICATIONS_CONFIG;

@@ -804,11 +804,7 @@ mod macos_shortcuts {
                 let mut chars = other.chars();
                 if let (Some(single), None) = (chars.next(), chars.next()) {
                     if single.is_ascii_alphabetic() {
-                        return Code::from_str(&format!(
-                            "Key{}",
-                            single.to_ascii_uppercase()
-                        ))
-                        .ok();
+                        return Code::from_str(&format!("Key{}", single.to_ascii_uppercase())).ok();
                     }
                     if single.is_ascii_digit() {
                         return Code::from_str(&format!("Digit{single}")).ok();
@@ -850,8 +846,7 @@ mod macos_shortcuts {
         }
 
         let key_token = tokens[tokens.len() - 1];
-        let key =
-            parse_key_token(key_token).ok_or_else(|| format!("unknown key '{key_token}'"))?;
+        let key = parse_key_token(key_token).ok_or_else(|| format!("unknown key '{key_token}'"))?;
 
         Ok(Shortcut::new(
             (!modifiers.is_empty()).then_some(modifiers),
@@ -876,11 +871,13 @@ mod macos_shortcuts {
 
         match parse_shortcut(&settings.global_shortcut) {
             Ok(shortcut) => {
-                let result = app.global_shortcut().on_shortcut(shortcut, |app, _shortcut, event| {
-                    if event.state == ShortcutState::Pressed {
-                        toggle_launcher(app);
-                    }
-                });
+                let result =
+                    app.global_shortcut()
+                        .on_shortcut(shortcut, |app, _shortcut, event| {
+                            if event.state == ShortcutState::Pressed {
+                                toggle_launcher(app);
+                            }
+                        });
                 match result {
                     Ok(()) => registered_any = true,
                     Err(error) => {
@@ -907,11 +904,18 @@ mod macos_shortcuts {
             match parse_shortcut(hotkey) {
                 Ok(shortcut) => {
                     let handler_command_id = command_id.clone();
-                    let result = app.global_shortcut().on_shortcut(shortcut, move |app, _shortcut, event| {
-                        if event.state == ShortcutState::Pressed {
-                            dispatch_hotkey_command(app, handler_command_id.clone(), "global-shortcut");
-                        }
-                    });
+                    let result = app.global_shortcut().on_shortcut(
+                        shortcut,
+                        move |app, _shortcut, event| {
+                            if event.state == ShortcutState::Pressed {
+                                dispatch_hotkey_command(
+                                    app,
+                                    handler_command_id.clone(),
+                                    "global-shortcut",
+                                );
+                            }
+                        },
+                    );
                     if result.is_err() {
                         last_error = Some(format!(
                             "command '{command_id}' shortcut '{hotkey}' could not be registered"

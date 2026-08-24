@@ -39,16 +39,13 @@ struct RetainedUrl(objc2::rc::Retained<NSURL>);
 
 fn read_bundle_summary(bundle_path: &str) -> Option<DefaultApplicationInfo> {
     {
-        let bundle =
-            objc2_foundation::NSBundle::bundleWithPath(&NSString::from_str(bundle_path))?;
+        let bundle = objc2_foundation::NSBundle::bundleWithPath(&NSString::from_str(bundle_path))?;
         let info = bundle.infoDictionary()?;
         let value = |key: &str| -> Option<String> {
-            info
-                .objectForKey(&NSString::from_str(key))
-                .and_then(|v| {
-                    let string: &NSString = v.downcast_ref()?;
-                    Some(string.to_string())
-                })
+            info.objectForKey(&NSString::from_str(key)).and_then(|v| {
+                let string: &NSString = v.downcast_ref()?;
+                Some(string.to_string())
+            })
         };
 
         let name = value("CFBundleDisplayName")
@@ -88,11 +85,7 @@ pub fn default_application_for_target(target: &str) -> Option<DefaultApplication
         let path = app_url
             .path()
             .map(|path| path.to_string())
-            .or_else(|| {
-                app_url
-                    .absoluteString()
-                    .map(|string| string.to_string())
-            })
+            .or_else(|| app_url.absoluteString().map(|string| string.to_string()))
             .unwrap_or_default();
         drop(app_url);
 
