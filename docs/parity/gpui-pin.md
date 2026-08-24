@@ -7,9 +7,9 @@ A bump is its own task with its own smoke pass, never folded into other work.
 | Field  | Value |
 | ------ | ----- |
 | Repo   | `zed-industries/zed` (upstream — decision D4, no fork) |
-| Rev    | `6e2fae619c45ffc90e5bcf5cfbfcef8bb693fbe1` |
+| Rev    | `8b1497dbd22fb06f5838a7c0b84a1e54fafa71bc` |
 | gpui version at rev | `0.2.2` |
-| Pinned | 2026-08-24, G0 of the GPUI migration (plan rev 4, `main @ 9d830ba`) |
+| Pinned | 2026-08-25 (G1) — the rev vendored longbridge/gpui-component 0.5.2 is tested against (their Cargo.lock); originally pinned 2026-08-24 at `6e2fae61` (G0) |
 | Toolchain | `1.95.0` (`rust-toolchain.toml`, pinned alongside) |
 
 ## Features enabled on `gpui_platform`
@@ -36,6 +36,14 @@ A bump is its own task with its own smoke pass, never folded into other work.
   its own Win32 call on that platform (tracked for lane A5b).
 - No text input ships with GPUI: `crates/gpui/examples/input.rs` (778 lines) is
   the canonical hand-roll reference for `beam-ui`'s `TextInput`.
+
+## gpui-component
+
+`longbridge/gpui-component` 0.5.2 is vendored under
+`third-party/gpui-component/` (see VENDORED.md there) as workspace members
+so the library and the framework compile from this one rev. Bumping
+gpui-component and bumping gpui are one task: their lockfile picks the
+rev, the workspace pin follows, the vendored manifests get re-severed.
 
 ## Bump procedure
 
