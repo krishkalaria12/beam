@@ -34,10 +34,7 @@ ported = {
     "get_definition", "get_translation_languages", "translate_text",
     "cli_bridge_mark_ui_ready", "cli_bridge_complete_request", "cli_bridge_search_request",
     "set_launcher_compact_mode", "set_launcher_window_size",
-    "set_launcher_compact_mode_for_resize_transition",
-    "set_launcher_window_size_for_resize_transition",
-    "hide_launcher_window_for_resize_transition", "hide_launcher_window",
-    "reveal_launcher_window_after_resize_transition",
+    "hide_launcher_window",
     # batch 2
     "get_hidden_command_ids", "set_command_hidden",
     "get_pinned_command_ids", "set_command_pinned",

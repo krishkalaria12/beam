@@ -7,7 +7,7 @@ note in docs/parity/adr/. The launcher-window resize commands are
 absorbed by the beam window module (SD-1) rather than ported as
 standalone functions; they are listed for completeness.
 
-Total: 166 commands; 158 ported so far.
+Total: 166 commands; 154 ported so far.
 
 | # | Command | Former IPC path | Status |
 | - | --------- | --------------- | ------ |
@@ -93,11 +93,11 @@ Total: 166 commands; 158 ported so far.
 | 80 | `run_script_command` | `script_commands::run_script_command` | ported |
 | 81 | `set_launcher_compact_mode` | `launcher_window::set_launcher_compact_mode` | ported |
 | 82 | `set_launcher_window_size` | `launcher_window::set_launcher_window_size` | ported |
-| 83 | `set_launcher_compact_mode_for_resize_transition` | `launcher_window::set_launcher_compact_mode_for_resize_transition` | ported |
-| 84 | `set_launcher_window_size_for_resize_transition` | `launcher_window::set_launcher_window_size_for_resize_transition` | ported |
-| 85 | `hide_launcher_window_for_resize_transition` | `launcher_window::hide_launcher_window_for_resize_transition` | ported |
+| 83 | `set_launcher_compact_mode_for_resize_transition` | `launcher_window::set_launcher_compact_mode_for_resize_transition` | absorbed (SD-1) |
+| 84 | `set_launcher_window_size_for_resize_transition` | `launcher_window::set_launcher_window_size_for_resize_transition` | absorbed (SD-1) |
+| 85 | `hide_launcher_window_for_resize_transition` | `launcher_window::hide_launcher_window_for_resize_transition` | absorbed (SD-1) |
 | 86 | `hide_launcher_window` | `launcher_window::hide_launcher_window` | ported |
-| 87 | `reveal_launcher_window_after_resize_transition` | `launcher_window::reveal_launcher_window_after_resize_transition` | ported |
+| 87 | `reveal_launcher_window_after_resize_transition` | `launcher_window::reveal_launcher_window_after_resize_transition` | absorbed (SD-1) |
 | 88 | `execute_shell_command` | `launcher_shell::execute_shell_command` | ported |
 | 89 | `menu_bar_upsert_tray` | `menu_bar::menu_bar_upsert_tray` | ported |
 | 90 | `menu_bar_remove_tray` | `menu_bar::menu_bar_remove_tray` | ported |
