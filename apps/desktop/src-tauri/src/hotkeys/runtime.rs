@@ -36,16 +36,16 @@ struct HotkeyBackendStatusEventPayload {
 
 #[derive(Debug, Clone)]
 struct HotkeyRuntimeSnapshot {
-    portal_supported: bool,
-    portal_active: bool,
+    backend_supported: bool,
+    backend_active: bool,
     last_error: Option<String>,
 }
 
 impl Default for HotkeyRuntimeSnapshot {
     fn default() -> Self {
         Self {
-            portal_supported: false,
-            portal_active: false,
+            backend_supported: false,
+            backend_active: false,
             last_error: None,
         }
     }
@@ -76,8 +76,8 @@ pub fn initialize_hotkey_backend(app: &AppHandle) {
     {
         {
             let mut snapshot = lock_runtime_snapshot();
-            snapshot.portal_supported = false;
-            snapshot.portal_active = false;
+            snapshot.backend_supported = false;
+            snapshot.backend_active = false;
             snapshot.last_error = None;
         }
 
@@ -194,7 +194,7 @@ pub(super) fn hotkey_capabilities() -> HotkeyCapabilities {
     #[cfg(target_os = "macos")]
     {
         let mut notes = Vec::new();
-        if !runtime_snapshot.portal_active {
+        if !runtime_snapshot.backend_active {
             if let Some(last_error) = &runtime_snapshot.last_error {
                 notes.push(format!("Global shortcut registration failed: {last_error}"));
             }
@@ -216,7 +216,7 @@ pub(super) fn hotkey_capabilities() -> HotkeyCapabilities {
         let session_type = detect_session_type();
         let compositor = detect_compositor();
 
-        if session_type == "wayland" && runtime_snapshot.portal_active {
+        if session_type == "wayland" && runtime_snapshot.backend_active {
             return HotkeyCapabilities {
                 session_type,
                 compositor,
@@ -239,7 +239,7 @@ pub(super) fn hotkey_capabilities() -> HotkeyCapabilities {
             ];
             if let Some(last_error) = &runtime_snapshot.last_error {
                 notes.push(format!("Portal backend unavailable: {last_error}"));
-            } else if !runtime_snapshot.portal_supported {
+            } else if !runtime_snapshot.backend_supported {
                 notes.push(
                     "XDG GlobalShortcuts portal was not detected for this compositor/session."
                         .to_string(),
@@ -474,8 +474,8 @@ fn set_runtime_fallback(
     should_notify_user: bool,
 ) {
     let mut snapshot = lock_runtime_snapshot();
-    snapshot.portal_supported = portal_supported;
-    snapshot.portal_active = false;
+    snapshot.backend_supported = portal_supported;
+    snapshot.backend_active = false;
     snapshot.last_error = Some(error.clone());
     drop(snapshot);
 
@@ -632,8 +632,8 @@ async fn run_linux_wayland_hotkey_runtime(app: AppHandle, mut reload_rx: watch::
 
         {
             let mut snapshot = lock_runtime_snapshot();
-            snapshot.portal_supported = true;
-            snapshot.portal_active = true;
+            snapshot.backend_supported = true;
+            snapshot.backend_active = true;
             snapshot.last_error = None;
         }
         if let Ok(mut last_status) = HOTKEY_RUNTIME_LAST_STATUS_KEY
@@ -677,7 +677,7 @@ async fn run_linux_wayland_hotkey_runtime(app: AppHandle, mut reload_rx: watch::
         let _ = session.close().await;
         {
             let mut snapshot = lock_runtime_snapshot();
-            snapshot.portal_active = false;
+            snapshot.backend_active = false;
             if portal_stream_ended {
                 snapshot.last_error = Some("portal shortcut event stream closed".to_string());
             }
@@ -856,8 +856,8 @@ mod macos_shortcuts {
         // Reset the runtime snapshot before re-registering everything.
         {
             let mut snapshot = lock_runtime_snapshot();
-            snapshot.portal_supported = true;
-            snapshot.portal_active = false;
+            snapshot.backend_supported = true;
+            snapshot.backend_active = false;
             snapshot.last_error = None;
         }
 
@@ -932,7 +932,7 @@ mod macos_shortcuts {
 
         {
             let mut snapshot = lock_runtime_snapshot();
-            snapshot.portal_active = registered_any;
+            snapshot.backend_active = registered_any;
             snapshot.last_error.clone_from(&last_error);
         }
 
