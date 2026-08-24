@@ -46,7 +46,7 @@ macro_rules! app_commands {
             clipboard::clipboard_clear,
             emoji::get_pinned_emoji_hexcodes,
             emoji::set_emoji_pinned,
-            $($extra),*
+            $($extra,)*
             file_search::search_files,
             file_search::get_file_search_backend_status,
             file_search::open_file,
