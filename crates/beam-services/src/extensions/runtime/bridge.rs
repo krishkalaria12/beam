@@ -26,8 +26,11 @@ use beam_core::{BeamContext, BeamEvent};
 
 use crate::extensions::runtime::proto::ManagerRequest;
 
+#[allow(dead_code)] // wire name for the ledger
 const EXTENSION_RUNTIME_MESSAGE_EVENT: &str = "extension-runtime-message";
+#[allow(dead_code)] // wire name for the ledger
 const EXTENSION_RUNTIME_STDERR_EVENT: &str = "extension-runtime-stderr";
+#[allow(dead_code)] // wire name for the ledger
 const EXTENSION_RUNTIME_EXIT_EVENT: &str = "extension-runtime-exit";
 const BRIDGE_MANAGER_REQUEST_KIND: &str = "manager-request";
 const BRIDGE_MANAGER_RESPONSE_KIND: &str = "manager-response";

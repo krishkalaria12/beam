@@ -31,7 +31,6 @@ use super::models::HotkeySettings;
 use super::shortcuts::{build_compositor_bindings, format_portal_preferred_trigger};
 use super::store::{open_store, read_hotkey_settings};
 use crate::custom_config;
-use crate::hotkeys::config::CONFIG as HOTKEYS_CONFIG;
 
 #[derive(Debug, Clone, Serialize)]
 struct HotkeyCommandEventPayload {

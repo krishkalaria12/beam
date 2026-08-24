@@ -219,6 +219,11 @@ impl BeamApp {
     }
 }
 
+/// The shared BeamContext, reachable from any render context.
+pub fn context_of<V>(cx: &gpui::Context<V>) -> BeamContext {
+    cx.global::<GlobalApp>().0.read(cx).context.clone()
+}
+
 /// Convenience for key bindings: run a mutation against the global app.
 pub fn with_app<R>(cx: &mut App, f: impl FnOnce(&mut BeamApp, &mut App) -> R) -> Option<R> {
     let app = global(cx);
