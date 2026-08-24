@@ -1,5 +1,5 @@
 use std::thread;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use arboard::Clipboard;
 
@@ -7,8 +7,32 @@ use crate::state::AppState;
 
 use super::{input, window_manager};
 
-const COPY_SETTLE_DELAY: Duration = Duration::from_millis(140);
+const COPY_POLL_INTERVAL: Duration = Duration::from_millis(50);
+const COPY_MAX_WAIT: Duration = Duration::from_millis(600);
 const RESTORE_SETTLE_DELAY: Duration = Duration::from_millis(60);
+
+/// Waits for the simulated Ctrl+C to land by polling until the clipboard
+/// content differs from what was there before. Slow applications get up to
+/// `COPY_MAX_WAIT` instead of a fixed guess; apps that never respond to the
+/// chord simply pay the timeout.
+fn read_copied_text(clipboard: &mut Clipboard, previous_text: Option<&str>) -> String {
+    let deadline = Instant::now() + COPY_MAX_WAIT;
+
+    while Instant::now() < deadline {
+        thread::sleep(COPY_POLL_INTERVAL);
+        if let Ok(text) = clipboard.get_text() {
+            let changed = match previous_text {
+                Some(previous) => text != previous,
+                None => !text.trim().is_empty(),
+            };
+            if changed {
+                return text;
+            }
+        }
+    }
+
+    clipboard.get_text().unwrap_or_default()
+}
 
 /// Captures the currently selected text in the foreground application by
 /// simulating Ctrl+C and reading the clipboard. The previous clipboard text
@@ -38,12 +62,10 @@ pub fn capture_selected_text(state: &AppState) -> String {
     let previous_text = clipboard.get_text().ok();
 
     input::send_copy_shortcut();
-    thread::sleep(COPY_SETTLE_DELAY);
 
-    let selected = clipboard.get_text().unwrap_or_default();
+    let selected = read_copied_text(&mut clipboard, previous_text.as_deref());
 
     if let Some(previous) = previous_text {
-        thread::sleep(Duration::from_millis(10));
         if clipboard.set_text(previous).is_ok() {
             thread::sleep(RESTORE_SETTLE_DELAY);
         }
