@@ -22,7 +22,6 @@ fn launcher_uses_layer_shell() -> bool {
 
 #[cfg(any(target_os = "linux", target_os = "macos"))]
 #[cfg_attr(target_os = "macos", allow(dead_code))]
-#[cfg_attr(target_os = "macos", allow(dead_code))]
 fn remember_layer_shell_size(width: i32, height: i32) {
     LAUNCHER_LAYER_SHELL_WIDTH.store(width.max(1), Ordering::SeqCst);
     LAUNCHER_LAYER_SHELL_HEIGHT.store(height.max(1), Ordering::SeqCst);
@@ -170,8 +169,6 @@ fn queue_layer_shell_layout_update(
 }
 
 #[cfg(target_os = "linux")]
-#[cfg_attr(target_os = "macos", allow(dead_code))]
-#[cfg_attr(target_os = "macos", allow(dead_code))]
 fn request_linux_layer_shell_focus(window: &WebviewWindow) {
     use gtk::prelude::*;
     use gtk_layer_shell::{KeyboardMode, LayerShell};
