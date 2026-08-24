@@ -75,6 +75,14 @@ ported = {
     "get_hotkey_settings", "get_hotkey_capabilities",
     "get_hotkey_compositor_bindings", "update_global_shortcut",
     "update_command_hotkey", "remove_command_hotkey",
+    # extensions (batch 7 — the final module)
+    "get_discovered_plugins", "search_extension_store",
+    "get_extension_store_package", "get_extension_store_updates",
+    "install_store_extension", "uninstall_extension",
+    "extension_runtime_start", "extension_runtime_stop",
+    "extension_runtime_send_message", "extension_runtime_send_manager_request",
+    "browser_extension_check_connection", "browser_extension_request",
+    "oauth_set_tokens", "oauth_get_tokens", "oauth_remove_tokens",
     # settings (batch 2 of services) — D5 deletes ui_style/base_color
     "get_ui_layout_mode", "set_ui_layout_mode", "get_launcher_opacity",
     "set_launcher_opacity", "list_font_families", "get_launcher_font_family",

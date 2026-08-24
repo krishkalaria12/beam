@@ -7,7 +7,7 @@ note in docs/parity/adr/. The launcher-window resize commands are
 absorbed by the beam window module (SD-1) rather than ported as
 standalone functions; they are listed for completeness.
 
-Total: 162 commands; 139 ported so far.
+Total: 162 commands; 154 ported so far.
 
 | # | Command | Former IPC path | Status |
 | - | --------- | --------------- | ------ |
@@ -131,21 +131,21 @@ Total: 162 commands; 139 ported so far.
 | 118 | `update_global_shortcut` | `hotkeys::update_global_shortcut` | ported |
 | 119 | `update_command_hotkey` | `hotkeys::update_command_hotkey` | ported |
 | 120 | `remove_command_hotkey` | `hotkeys::remove_command_hotkey` | ported |
-| 121 | `get_discovered_plugins` | `extensions::get_discovered_plugins` | pending |
-| 122 | `search_extension_store` | `extensions::store::search_extension_store` | pending |
-| 123 | `get_extension_store_package` | `extensions::store::get_extension_store_package` | pending |
-| 124 | `get_extension_store_updates` | `extensions::store::get_extension_store_updates` | pending |
-| 125 | `install_store_extension` | `extensions::install_store_extension` | pending |
-| 126 | `uninstall_extension` | `extensions::uninstall_extension` | pending |
-| 127 | `extension_runtime_start` | `extensions::runtime::bridge::extension_runtime_start` | pending |
-| 128 | `extension_runtime_stop` | `extensions::runtime::bridge::extension_runtime_stop` | pending |
-| 129 | `extension_runtime_send_message` | `extensions::runtime::bridge::extension_runtime_send_message` | pending |
-| 130 | `extension_runtime_send_manager_request` | `extensions::runtime::bridge::extension_runtime_send_manager_request` | pending |
-| 131 | `browser_extension_check_connection` | `extensions::browser_extension::browser_extension_check_connection` | pending |
-| 132 | `browser_extension_request` | `extensions::browser_extension::browser_extension_request` | pending |
-| 133 | `oauth_set_tokens` | `extensions::oauth::oauth_set_tokens` | pending |
-| 134 | `oauth_get_tokens` | `extensions::oauth::oauth_get_tokens` | pending |
-| 135 | `oauth_remove_tokens` | `extensions::oauth::oauth_remove_tokens` | pending |
+| 121 | `get_discovered_plugins` | `extensions::get_discovered_plugins` | ported |
+| 122 | `search_extension_store` | `extensions::store::search_extension_store` | ported |
+| 123 | `get_extension_store_package` | `extensions::store::get_extension_store_package` | ported |
+| 124 | `get_extension_store_updates` | `extensions::store::get_extension_store_updates` | ported |
+| 125 | `install_store_extension` | `extensions::install_store_extension` | ported |
+| 126 | `uninstall_extension` | `extensions::uninstall_extension` | ported |
+| 127 | `extension_runtime_start` | `extensions::runtime::bridge::extension_runtime_start` | ported |
+| 128 | `extension_runtime_stop` | `extensions::runtime::bridge::extension_runtime_stop` | ported |
+| 129 | `extension_runtime_send_message` | `extensions::runtime::bridge::extension_runtime_send_message` | ported |
+| 130 | `extension_runtime_send_manager_request` | `extensions::runtime::bridge::extension_runtime_send_manager_request` | ported |
+| 131 | `browser_extension_check_connection` | `extensions::browser_extension::browser_extension_check_connection` | ported |
+| 132 | `browser_extension_request` | `extensions::browser_extension::browser_extension_request` | ported |
+| 133 | `oauth_set_tokens` | `extensions::oauth::oauth_set_tokens` | ported |
+| 134 | `oauth_get_tokens` | `extensions::oauth::oauth_get_tokens` | ported |
+| 135 | `oauth_remove_tokens` | `extensions::oauth::oauth_remove_tokens` | ported |
 | 136 | `set_ai_api_key` | `ai::set_ai_api_key` | ported |
 | 137 | `is_ai_api_key_set` | `ai::is_ai_api_key_set` | ported |
 | 138 | `clear_ai_api_key` | `ai::clear_ai_api_key` | ported |
