@@ -120,7 +120,7 @@ pub struct FocusedWindowInfo {
     pub is_focused: bool,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WaylandHelperStatus {
     pub available: bool,
