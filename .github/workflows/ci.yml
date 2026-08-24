@@ -82,8 +82,7 @@ jobs:
         run: choco install protoc -y --no-progress
 
       - name: check rust formatting
-        run: bun run rust:fmt:check
-        shell: bash
+        run: cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
 
       - name: cargo check (windows backend)
         run: cargo check --manifest-path apps/desktop/src-tauri/Cargo.toml --locked --lib
