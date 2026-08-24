@@ -790,11 +790,6 @@ mod macos_shortcuts {
     /// presses back to commands.
     static BINDINGS: Mutex<Option<HashMap<String, (HotKey, BindingTarget)>>> = Mutex::new(None);
 
-    pub(super) fn with_manager<R>(f: impl FnOnce(&mut GlobalHotKeyManager) -> R) -> Option<R> {
-        let mut guard = MANAGER.lock().expect("hotkey manager lock poisoned");
-        guard.as_mut().map(f)
-    }
-
     pub(super) fn take_manager() -> Option<GlobalHotKeyManager> {
         MANAGER.lock().expect("hotkey manager lock poisoned").take()
     }
