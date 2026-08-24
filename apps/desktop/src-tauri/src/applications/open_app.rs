@@ -39,7 +39,6 @@ fn spawn_platform(exec_path: &str) -> Result<()> {
         .to_ascii_lowercase();
 
     let looks_executable = matches!(extension.as_str(), "exe" | "com" | "bat" | "cmd");
-    let is_url = exec_path.starts_with("http://") || exec_path.starts_with("https://");
 
     if path.is_file() && looks_executable {
         // Executables spawn directly so console apps do not flash a shell window.
@@ -61,7 +60,6 @@ fn spawn_platform(exec_path: &str) -> Result<()> {
         .spawn()
         .map_err(|e| ApplicationsError::LaunchingApplicationError(e.to_string()))?;
 
-    let _ = is_url;
     Ok(())
 }
 
