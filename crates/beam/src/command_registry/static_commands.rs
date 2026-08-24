@@ -459,6 +459,7 @@ mod tests {
     use crate::command_registry::ranking::{
         rank_commands, CommandRankingSignals, RankCommandsOptions, DEFAULT_COMMAND_RANKING_CONFIG,
     };
+    use crate::command_registry::types::CommandScope;
     use crate::command_registry::types::{CommandContext, CommandMode};
 
     #[test]

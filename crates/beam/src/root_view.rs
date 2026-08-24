@@ -205,7 +205,7 @@ impl RootView {
 }
 
 impl Render for RootView {
-    fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+    fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let selected = self.selected;
         let mode_label = match self.active_mode {
             CommandMode::Normal => "",

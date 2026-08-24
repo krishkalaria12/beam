@@ -286,13 +286,11 @@ mod tests {
 
     #[test]
     fn shell_mode_constrains_everything() {
-        let s = symbols();
         let any: CommandDescriptor = CommandDescriptor {
             id: "anything".into(),
             title: "anything".into(),
             ..CommandDescriptor::default()
         };
         assert!(!matches_trigger_constraints(&any, SHELL_TRIGGER_MODE));
-        let _ = s;
     }
 }
