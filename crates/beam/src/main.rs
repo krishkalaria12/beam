@@ -11,6 +11,7 @@
 mod activation;
 mod app;
 mod calculator_inline;
+mod clipboard_panel;
 mod command_registry;
 mod glass;
 mod hotkey;

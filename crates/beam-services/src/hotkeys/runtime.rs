@@ -15,7 +15,6 @@ use std::time::{Duration, Instant};
 use ashpd::desktop::global_shortcuts::{GlobalShortcuts, NewShortcut};
 #[cfg(target_os = "linux")]
 use futures_util::StreamExt;
-use serde::Serialize;
 #[cfg(target_os = "linux")]
 use tokio::sync::watch;
 
@@ -31,20 +30,6 @@ use super::models::HotkeySettings;
 use super::shortcuts::{build_compositor_bindings, format_portal_preferred_trigger};
 use super::store::{open_store, read_hotkey_settings};
 use crate::custom_config;
-
-#[derive(Debug, Clone, Serialize)]
-struct HotkeyCommandEventPayload {
-    command_id: String,
-    source: String,
-}
-
-#[derive(Debug, Clone, Serialize)]
-struct HotkeyBackendStatusEventPayload {
-    level: String,
-    message: String,
-    hint: Option<String>,
-    source: String,
-}
 
 #[derive(Debug, Clone)]
 struct HotkeyRuntimeSnapshot {
@@ -426,10 +411,6 @@ fn emit_hotkey_backend_status_event(
         hint,
         source: source.to_string(),
     }));
-}
-
-fn show_launcher_window() {
-    (ui_hooks().show_launcher)();
 }
 
 #[cfg(target_os = "windows")]
