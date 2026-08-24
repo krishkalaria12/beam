@@ -3,11 +3,17 @@
 //! activation socket and key bindings all converge on one toggle.
 
 use gpui::{App, AppContext as _, Entity};
+use gpui_component::Root;
 
 use crate::activation::ActivationRequest;
 use crate::glass::GlassMode;
 use crate::window::{open_launcher_window, LauncherShellConfig, PanelSurface};
 use beam_core::BeamContext;
+
+/// Typed handle to the shell view, stashed where show() can reach it
+/// (the window handle is Root-typed; the input focus lives in the shell).
+static BEAM_SHELL: std::sync::OnceLock<gpui::Entity<crate::root_view::RootView>> =
+    std::sync::OnceLock::new();
 
 pub fn init(cx: &mut App, context: BeamContext) -> Entity<BeamApp> {
     // Glass detection + the store read happen once at boot; reading
@@ -29,6 +35,7 @@ pub fn init(cx: &mut App, context: BeamContext) -> Entity<BeamApp> {
         glass_mode,
         glass_strength,
         window: None,
+        shell: None,
         visible: false,
     });
     cx.set_global(GlobalApp(app.clone()));
@@ -47,8 +54,13 @@ pub fn global(cx: &App) -> Entity<BeamApp> {
 pub struct BeamApp {
     pub context: BeamContext,
     pub glass_mode: GlassMode,
+    /// Glass strength from the settings store (SD-4); read by the theme
+    /// plate and the settings surface.
+    #[allow(dead_code)]
     pub glass_strength: f32,
-    window: Option<gpui::WindowHandle<crate::root_view::RootView>>,
+    window: Option<gpui::WindowHandle<Root>>,
+    /// Typed handle to the shell inside the Root, for focusing the input.
+    shell: Option<gpui::Entity<crate::root_view::RootView>>,
     visible: bool,
 }
 
@@ -77,12 +89,27 @@ impl BeamApp {
             PanelSurface::Commands {
                 compact_height: None,
             },
-            move |_window, cx| {
-                cx.new(|cx| crate::root_view::RootView::new(glass_label.to_string(), context, cx))
+            move |window, cx| {
+                // gpui-component's Root must be the top-level view: it owns
+                // the popover/tooltip/notification layers the library
+                // components render into.
+                cx.new(|cx| {
+                    let shell = cx.new(|cx| {
+                        crate::root_view::RootView::new(
+                            glass_label.to_string(),
+                            context,
+                            window,
+                            cx,
+                        )
+                    });
+                    BEAM_SHELL.set(shell.clone()).ok();
+                    Root::new(gpui::AnyView::from(shell), window, cx)
+                })
             },
         ) {
             Ok(handle) => {
                 self.window = Some(handle);
+                self.shell = BEAM_SHELL.get().cloned();
                 self.visible = false;
 
                 // Closing must never quit the process — the launcher hides.
@@ -104,9 +131,11 @@ impl BeamApp {
         #[cfg(target_os = "macos")]
         {
             cx.activate(true);
-            let _ = handle.update(cx, |root, window, cx| {
+            let _ = handle.update(cx, |_, window, cx| {
                 window.activate_window();
-                root.focus_input(window, cx);
+                if let Some(shell) = BEAM_SHELL.get() {
+                    shell.update(cx, |shell, cx| shell.focus_input(window, cx));
+                }
             });
             self.visible = true;
         }
@@ -118,9 +147,11 @@ impl BeamApp {
             // protocol shim). Windows: Platform::hide() is also a no-op
             // upstream; the ShowWindow shim lands with A5b. Until then the
             // window simply stays on screen on these platforms.
-            let _ = handle.update(cx, |root, window, cx| {
+            let _ = handle.update(cx, |_, window, cx| {
                 window.activate_window();
-                root.focus_input(window, cx);
+                if let Some(shell) = BEAM_SHELL.get() {
+                    shell.update(cx, |shell, cx| shell.focus_input(window, cx));
+                }
             });
             self.visible = true;
             log::info!("show: full show/hide parity pending lane A5 on this platform");

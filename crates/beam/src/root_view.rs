@@ -2,17 +2,21 @@
 //! dispatch. This is the spine lane B owns; panels replace the placeholder
 //! result handling as they land (P1–P10).
 //!
+//! The search input is gpui-component's `Input` (vendored under
+//! third-party/, themed by crate::theme) — IME, selection, clipboard and
+//! caret behaviour come from the library instead of a hand-rolled editor.
 //! Keyboard model (transcribed from the React launcher): Up/Down move the
-//! selection, Enter dispatches, Escape hides the launcher (bound in main),
-//! left/right and editing keys stay with the input.
+//! selection, Enter dispatches, Escape hides the launcher, left/right and
+//! editing keys stay with the input.
 
 use gpui::{actions, div, prelude::*, px, App, Context, KeyBinding, Window};
+use gpui_component::input::{Input, InputEvent, InputState};
 
-use beam_ui::{keystroke_chips, TextInput, TextInputEvent};
+use beam_ui::keystroke_chips;
 
 use crate::command_registry::{
     self, rank_commands, CommandContext, CommandMode, CommandPanel, CommandRankingSignals,
-    RankedCommand, DEFAULT_COMMAND_RANKING_CONFIG,
+    RankCommandsOptions, RankedCommand, DEFAULT_COMMAND_RANKING_CONFIG,
 };
 
 actions!(beam_launcher, [SelectNextCommand, SelectPrevCommand]);
@@ -27,7 +31,7 @@ pub fn init(cx: &mut App) {
 }
 
 pub struct RootView {
-    input: gpui::Entity<TextInput>,
+    input: gpui::Entity<InputState>,
     /// The shell keeps its own context handle — reading the app global from
     /// inside an entity update would re-enter the borrow.
     context: beam_core::BeamContext,
@@ -39,24 +43,34 @@ pub struct RootView {
     /// for the panel router).
     opened_panel: Option<CommandPanel>,
     glass_label: String,
+    _subscriptions: Vec<gpui::Subscription>,
 }
 
 impl RootView {
     pub fn new(
         glass_label: String,
         context: beam_core::BeamContext,
+        window: &mut Window,
         cx: &mut Context<Self>,
     ) -> Self {
-        let input = cx.new(|cx| TextInput::new(cx).placeholder("Search commands…"));
-        cx.subscribe(&input, |this, _, event: &TextInputEvent, cx| match event {
-            TextInputEvent::Change(raw) => {
-                this.on_query_changed(raw, cx);
-            }
-            TextInputEvent::Submit(_) => {
-                this.dispatch_selected(cx);
-            }
-        })
-        .detach();
+        let input = cx.new(|cx| {
+            gpui_component::input::InputState::new(window, cx).placeholder("Search commands…")
+        });
+
+        let _subscriptions = vec![cx.subscribe_in(
+            &input,
+            window,
+            move |this, _, event: &InputEvent, _window, cx| match event {
+                InputEvent::Change => {
+                    let raw = this.input.read(cx).value().to_string();
+                    this.on_query_changed(&raw, cx);
+                }
+                InputEvent::PressEnter { .. } => {
+                    this.dispatch_selected(cx);
+                }
+                _ => {}
+            },
+        )];
 
         let mut view = Self {
             input,
@@ -67,13 +81,15 @@ impl RootView {
             active_mode: CommandMode::Normal,
             opened_panel: None,
             glass_label,
+            _subscriptions,
         };
         view.on_query_changed("", cx);
         view
     }
 
     pub fn focus_input(&self, window: &mut Window, cx: &mut Context<Self>) {
-        self.input.update(cx, |input, cx| input.focus(window, cx));
+        let focus_handle = gpui::Focusable::focus_handle(&*self.input.read(cx), cx);
+        window.focus(&focus_handle, cx);
         cx.notify();
     }
 
@@ -106,7 +122,7 @@ impl RootView {
         };
 
         let commands = command_registry::static_commands();
-        let mut ranked = rank_commands(command_registry::RankCommandsOptions {
+        let mut ranked = rank_commands(RankCommandsOptions {
             commands: &commands,
             context: &command_context,
             signals: &CommandRankingSignals::default(),
@@ -221,7 +237,6 @@ impl Render for RootView {
             .flex()
             .flex_col()
             .key_context("Launcher")
-            .track_focus(&gpui::Focusable::focus_handle(self.input.read(cx), cx))
             .on_action(cx.listener(Self::select_next))
             .on_action(cx.listener(Self::select_prev))
             .child(
@@ -233,7 +248,7 @@ impl Render for RootView {
                     .items_center()
                     .border_b_1()
                     .border_color(beam_ui::divider())
-                    .child(self.input.clone()),
+                    .child(Input::new(&self.input).focus_bordered(false)),
             )
             .child(
                 // CommandList skeleton — uniform rows with the wash ladder.

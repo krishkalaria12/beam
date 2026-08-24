@@ -47,6 +47,18 @@ ported = {
     "get_script_commands_directory", "get_script_commands",
     "create_script_command", "open_script_commands_directory",
     "run_script_command",
+    # batch 4
+    "get_applications", "get_default_application", "get_frontmost_application",
+    "show_in_finder", "trash", "search_applications", "open_application",
+    "get_focus_status", "create_focus_category", "update_focus_category",
+    "delete_focus_category", "import_focus_categories", "start_focus_session",
+    "edit_focus_session", "pause_focus_session", "resume_focus_session",
+    "complete_focus_session", "toggle_focus_session", "snooze_focus_target",
+    "list_windows", "focus_window", "close_window",
+    "hyprwhspr_record", "hyprwhspr_record_status",
+    "execute_shell_command",
+    "get_desktop_context", "get_desktop_integration_status",
+    "get_macos_permission_status", "request_macos_permission",
 }
 
 names = [n for n, _ in unique]

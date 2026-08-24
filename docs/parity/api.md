@@ -7,17 +7,17 @@ note in docs/parity/adr/. The launcher-window resize commands are
 absorbed by the beam window module (SD-1) rather than ported as
 standalone functions; they are listed for completeness.
 
-Total: 162 commands; 71 ported so far.
+Total: 162 commands; 96 ported so far.
 
 | # | Command | Former IPC path | Status |
 | - | --------- | --------------- | ------ |
-| 1 | `get_applications` | `applications::find_app::get_applications` | pending |
-| 2 | `get_default_application` | `applications::raycast_compat::get_default_application` | pending |
-| 3 | `get_frontmost_application` | `applications::raycast_compat::get_frontmost_application` | pending |
-| 4 | `show_in_finder` | `applications::raycast_compat::show_in_finder` | pending |
-| 5 | `trash` | `applications::raycast_compat::trash` | pending |
-| 6 | `search_applications` | `applications::search::search_applications` | pending |
-| 7 | `open_application` | `applications::open_app::open_application` | pending |
+| 1 | `get_applications` | `applications::find_app::get_applications` | ported |
+| 2 | `get_default_application` | `applications::raycast_compat::get_default_application` | ported |
+| 3 | `get_frontmost_application` | `applications::raycast_compat::get_frontmost_application` | ported |
+| 4 | `show_in_finder` | `applications::raycast_compat::show_in_finder` | ported |
+| 5 | `trash` | `applications::raycast_compat::trash` | ported |
+| 6 | `search_applications` | `applications::search::search_applications` | ported |
+| 7 | `open_application` | `applications::open_app::open_application` | ported |
 | 8 | `search_with_browser` | `search::search_with_browser` | ported |
 | 9 | `calculate_expression` | `calculator::calculate_expression` | ported |
 | 10 | `get_calculator_history` | `calculator::get_calculator_history` | ported |
@@ -46,18 +46,18 @@ Total: 162 commands; 71 ported so far.
 | 33 | `get_file_search_backend_status` | `file_search::get_file_search_backend_status` | ported |
 | 34 | `open_file` | `file_search::open_file` | ported |
 | 35 | `get_file_info` | `file_search::get_file_info` | ported |
-| 36 | `get_focus_status` | `focus::get_focus_status` | pending |
-| 37 | `create_focus_category` | `focus::create_focus_category` | pending |
-| 38 | `update_focus_category` | `focus::update_focus_category` | pending |
-| 39 | `delete_focus_category` | `focus::delete_focus_category` | pending |
-| 40 | `import_focus_categories` | `focus::import_focus_categories` | pending |
-| 41 | `start_focus_session` | `focus::start_focus_session` | pending |
-| 42 | `edit_focus_session` | `focus::edit_focus_session` | pending |
-| 43 | `pause_focus_session` | `focus::pause_focus_session` | pending |
-| 44 | `resume_focus_session` | `focus::resume_focus_session` | pending |
-| 45 | `complete_focus_session` | `focus::complete_focus_session` | pending |
-| 46 | `toggle_focus_session` | `focus::toggle_focus_session` | pending |
-| 47 | `snooze_focus_target` | `focus::snooze_focus_target` | pending |
+| 36 | `get_focus_status` | `focus::get_focus_status` | ported |
+| 37 | `create_focus_category` | `focus::create_focus_category` | ported |
+| 38 | `update_focus_category` | `focus::update_focus_category` | ported |
+| 39 | `delete_focus_category` | `focus::delete_focus_category` | ported |
+| 40 | `import_focus_categories` | `focus::import_focus_categories` | ported |
+| 41 | `start_focus_session` | `focus::start_focus_session` | ported |
+| 42 | `edit_focus_session` | `focus::edit_focus_session` | ported |
+| 43 | `pause_focus_session` | `focus::pause_focus_session` | ported |
+| 44 | `resume_focus_session` | `focus::resume_focus_session` | ported |
+| 45 | `complete_focus_session` | `focus::complete_focus_session` | ported |
+| 46 | `toggle_focus_session` | `focus::toggle_focus_session` | ported |
+| 47 | `snooze_focus_target` | `focus::snooze_focus_target` | ported |
 | 48 | `get_definition` | `dictionary::get_definition` | ported |
 | 49 | `get_translation_languages` | `translation::get_translation_languages` | ported |
 | 50 | `translate_text` | `translation::translate_text` | ported |
@@ -70,8 +70,8 @@ Total: 162 commands; 71 ported so far.
 | 57 | `execute_system_action` | `system_actions::execute_system_action` | ported |
 | 58 | `get_awake_status` | `system_actions::get_awake_status` | ported |
 | 59 | `toggle_awake` | `system_actions::toggle_awake` | ported |
-| 60 | `hyprwhspr_record` | `hyprwhspr::hyprwhspr_record` | pending |
-| 61 | `hyprwhspr_record_status` | `hyprwhspr::hyprwhspr_record_status` | pending |
+| 60 | `hyprwhspr_record` | `hyprwhspr::hyprwhspr_record` | ported |
+| 61 | `hyprwhspr_record_status` | `hyprwhspr::hyprwhspr_record_status` | ported |
 | 62 | `get_snippets` | `snippets::get_snippets` | pending |
 | 63 | `get_snippet_by_id` | `snippets::get_snippet_by_id` | pending |
 | 64 | `create_snippet` | `snippets::create_snippet` | pending |
@@ -98,7 +98,7 @@ Total: 162 commands; 71 ported so far.
 | 85 | `hide_launcher_window_for_resize_transition` | `launcher_window::hide_launcher_window_for_resize_transition` | ported |
 | 86 | `hide_launcher_window` | `launcher_window::hide_launcher_window` | ported |
 | 87 | `reveal_launcher_window_after_resize_transition` | `launcher_window::reveal_launcher_window_after_resize_transition` | ported |
-| 88 | `execute_shell_command` | `launcher_shell::execute_shell_command` | pending |
+| 88 | `execute_shell_command` | `launcher_shell::execute_shell_command` | ported |
 | 89 | `menu_bar_upsert_tray` | `menu_bar::menu_bar_upsert_tray` | pending |
 | 90 | `menu_bar_remove_tray` | `menu_bar::menu_bar_remove_tray` | pending |
 | 91 | `get_pinned_command_ids` | `pinned::get_pinned_command_ids` | ported |
@@ -165,9 +165,9 @@ Total: 162 commands; 71 ported so far.
 | 152 | `create_sub_todo` | `todo::sub_todo::create_sub_todo` | ported |
 | 153 | `update_sub_todo` | `todo::sub_todo::update_sub_todo` | ported |
 | 154 | `delete_sub_todo` | `todo::sub_todo::delete_sub_todo` | ported |
-| 155 | `list_windows` | `window_switcher::list_windows` | pending |
-| 156 | `focus_window` | `window_switcher::focus_window` | pending |
-| 157 | `close_window` | `window_switcher::close_window` | pending |
+| 155 | `list_windows` | `window_switcher::list_windows` | ported |
+| 156 | `focus_window` | `window_switcher::focus_window` | ported |
+| 157 | `close_window` | `window_switcher::close_window` | ported |
 | 158 | `get_hidden_command_ids` | `custom_config::commands_items::get_hidden_command_ids` | ported |
 | 159 | `set_command_hidden` | `custom_config::commands_items::set_command_hidden` | ported |
 | 160 | `cli_bridge_mark_ui_ready` | `cli::bridge::cli_bridge_mark_ui_ready` | ported |

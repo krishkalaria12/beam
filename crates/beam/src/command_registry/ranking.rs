@@ -287,7 +287,11 @@ pub struct RankedCommand {
     pub score: f64,
     pub match_result: CommandMatchResult,
     pub is_favorite: bool,
+    /// Consumed by the recent-commands signal at the dispatcher port.
+    #[allow(dead_code)]
     pub usage_count: u64,
+    /// Shown as alternate match hints once the row component lands.
+    #[allow(dead_code)]
     pub aliases: Vec<String>,
 }
 

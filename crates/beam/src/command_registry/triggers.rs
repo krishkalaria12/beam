@@ -125,6 +125,7 @@ fn trigger_definitions(symbols: &TriggerSymbols) -> [(CommandMode, &str); 4] {
     ]
 }
 
+#[allow(dead_code)] // used by the settings trigger editor
 pub fn get_trigger_symbol(mode: CommandMode, symbols: &TriggerSymbols) -> Option<String> {
     match mode {
         QUICKLINK_TRIGGER_MODE => Some(symbols.quicklink.clone()),

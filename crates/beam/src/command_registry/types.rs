@@ -20,6 +20,7 @@ pub enum CommandMode {
     ShellTrigger,
 }
 
+#[allow(dead_code)] // consumed by the panel router and settings UI
 pub const COMMAND_MODES: [CommandMode; 6] = [
     CommandMode::Normal,
     CommandMode::Compressed,
@@ -30,6 +31,7 @@ pub const COMMAND_MODES: [CommandMode; 6] = [
 ];
 
 impl CommandMode {
+    #[allow(dead_code)] // wire names for the ledger
     pub fn as_str(self) -> &'static str {
         match self {
             Self::Normal => "normal",
@@ -50,6 +52,7 @@ pub enum CommandScope {
 }
 
 impl CommandScope {
+    #[allow(dead_code)] // used by the dispatcher's scope checks
     pub fn matches(self, mode: CommandMode) -> bool {
         match self {
             Self::All => true,
@@ -148,6 +151,7 @@ impl fmt::Display for CommandPanel {
 /// The 18 takeover panels (input hidden, footer hidden) — the two
 /// expanded-list panels (emoji, calculator-history) are NOT takeover panels,
 /// matching `TAKEOVER_COMMAND_PANELS`.
+#[allow(dead_code)] // consumed by the panel router (input/footer hiding)
 pub const TAKEOVER_PANELS: [CommandPanel; 18] = [
     CommandPanel::Settings,
     CommandPanel::Todo,
@@ -170,6 +174,7 @@ pub const TAKEOVER_PANELS: [CommandPanel; 18] = [
 ];
 
 impl CommandPanel {
+    #[allow(dead_code)] // consumed by the panel router
     pub fn is_takeover(self) -> bool {
         TAKEOVER_PANELS.contains(&self)
     }
@@ -362,6 +367,7 @@ pub const SCOPE_ALL: [CommandScope; 1] = [CommandScope::All];
 
 /// The per-search context (types.ts `CommandContext`).
 #[derive(Debug, Clone)]
+#[allow(dead_code)] // several fields feed the dispatcher port and panels
 pub struct CommandContext {
     pub raw_query: String,
     pub query: String,

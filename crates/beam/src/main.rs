@@ -14,6 +14,7 @@ mod command_registry;
 mod glass;
 mod hotkey;
 mod root_view;
+mod theme;
 mod window;
 
 use async_channel::unbounded;
@@ -57,68 +58,73 @@ fn extract_activation_args(args: &[String]) -> Option<activation::ActivationRequ
 fn run_first_instance(args: &[String]) -> i32 {
     // The gpui run closure is 'static; own the startup arguments.
     let args: Vec<String> = args.to_vec();
-    gpui_platform::application().run(move |cx: &mut App| {
-        cx.bind_keys([KeyBinding::new("escape", HideLauncher, None)]);
-        cx.on_action(|_: &HideLauncher, cx| {
-            app::with_app(cx, |app, cx| app.hide(cx));
-        });
-
-        let context = match beam_core::BeamContext::open() {
-            Ok(context) => context,
-            Err(error) => {
-                log::error!("fatal: could not open beam context: {error}");
-                return;
-            }
-        };
-
-        let app = app::init(cx, context);
-
-        // Design-system key maps (TextInput actions, scoped to its context)
-        // and the shell's list navigation.
-        beam_ui::input::init(cx);
-        root_view::init(cx);
-
-        // Activation surface: serve the socket and drain it into the app.
-        let (sender, receiver) = unbounded::<activation::ActivationRequest>();
-        if let Err(error) = activation::serve(sender.clone()) {
-            log::warn!("activation server did not start: {error}");
-        }
-
-        cx.spawn(async move |cx| {
-            while let Ok(request) = receiver.recv().await {
-                let _ = cx.update(|cx| {
-                    app::global(cx).update(cx, |app, cx| app.handle_activation(request.clone(), cx))
-                });
-            }
-        })
-        .detach();
-
-        #[cfg(target_os = "macos")]
-        {
-            let stored_shortcut: Option<String> = app.read_with(cx, |app, _| {
-                app.context
-                    .settings()
-                    .get("hotkey_global_shortcut")
-                    .and_then(|value| value.as_str().map(str::to_string))
+    gpui_platform::application()
+        .with_assets(gpui_component_assets::Assets)
+        .run(move |cx: &mut App| {
+            cx.bind_keys([KeyBinding::new("escape", HideLauncher, None)]);
+            cx.on_action(|_: &HideLauncher, cx| {
+                app::with_app(cx, |app, cx| app.hide(cx));
             });
-            let shortcut = stored_shortcut.unwrap_or_else(|| "SUPER+R".to_string());
 
-            if let Err(error) = hotkey::macos::install_launcher_toggle(&shortcut, sender) {
-                log::warn!("{error}");
+            let context = match beam_core::BeamContext::open() {
+                Ok(context) => context,
+                Err(error) => {
+                    log::error!("fatal: could not open beam context: {error}");
+                    return;
+                }
+            };
+
+            let app = app::init(cx, context);
+
+            // Component library first (registers its key maps, roots and
+            // popovers), then the beam theme mapping over it.
+            theme::init(cx);
+
+            // The shell's list navigation.
+            root_view::init(cx);
+
+            // Activation surface: serve the socket and drain it into the app.
+            let (sender, receiver) = unbounded::<activation::ActivationRequest>();
+            if let Err(error) = activation::serve(sender.clone()) {
+                log::warn!("activation server did not start: {error}");
             }
-        }
 
-        // Startup arguments behave like the Tauri build's startup activation:
-        // an explicit request runs immediately, otherwise stay hidden until
-        // summoned by hotkey or deep link.
-        if let Some(request) = extract_activation_args(&args) {
-            app.update(cx, |app, cx| app.handle_activation(request, cx));
-        } else {
-            // Pre-open the window so the first hotkey press reveals an
-            // already-built surface instead of paying cold window setup.
-            app.update(cx, |app, cx| app.ensure_window(cx));
-        }
-    });
+            cx.spawn(async move |cx| {
+                while let Ok(request) = receiver.recv().await {
+                    let _ = cx.update(|cx| {
+                        app::global(cx)
+                            .update(cx, |app, cx| app.handle_activation(request.clone(), cx))
+                    });
+                }
+            })
+            .detach();
+
+            #[cfg(target_os = "macos")]
+            {
+                let stored_shortcut: Option<String> = app.read_with(cx, |app, _| {
+                    app.context
+                        .settings()
+                        .get("hotkey_global_shortcut")
+                        .and_then(|value| value.as_str().map(str::to_string))
+                });
+                let shortcut = stored_shortcut.unwrap_or_else(|| "SUPER+R".to_string());
+
+                if let Err(error) = hotkey::macos::install_launcher_toggle(&shortcut, sender) {
+                    log::warn!("{error}");
+                }
+            }
+
+            // Startup arguments behave like the Tauri build's startup activation:
+            // an explicit request runs immediately, otherwise stay hidden until
+            // summoned by hotkey or deep link.
+            if let Some(request) = extract_activation_args(&args) {
+                app.update(cx, |app, cx| app.handle_activation(request, cx));
+            } else {
+                // Pre-open the window so the first hotkey press reveals an
+                // already-built surface instead of paying cold window setup.
+                app.update(cx, |app, cx| app.ensure_window(cx));
+            }
+        });
 
     0
 }
