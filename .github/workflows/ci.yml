@@ -68,6 +68,39 @@ jobs:
       - name: cargo build
         run: cargo build --manifest-path apps/desktop/src-tauri/Cargo.toml --locked
 
+  checks-macos:
+    runs-on: macos-14
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v7
+
+      - name: setup bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.2.19
+
+      - name: setup rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: install protobuf
+        run: brew install protobuf
+
+      - name: install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: build extension runtime
+        run: bun run extension-manager:build
+
+      - name: check rust formatting
+        run: cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
+
+      - name: cargo check (macos backend)
+        run: cargo check --manifest-path apps/desktop/src-tauri/Cargo.toml --locked --lib
+
+      - name: cargo test (macos backend)
+        run: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --locked --lib
+
   windows-checks:
     runs-on: windows-latest
 
@@ -93,12 +126,3 @@ jobs:
 
       - name: build extension runtime
         run: bun run extension-manager:build
-
-      - name: check rust formatting
-        run: cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --all -- --check
-
-      - name: cargo check (windows backend)
-        run: cargo check --manifest-path apps/desktop/src-tauri/Cargo.toml --locked --lib
-
-      - name: cargo test (windows backend)
-        run: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --locked --lib

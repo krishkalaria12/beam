@@ -8,6 +8,7 @@ pub mod types;
 
 use once_cell::sync::Lazy;
 use regex::Regex;
+
 use smart_calculator::{
     calculate as calculate_with_smart_calculator,
     data::{
@@ -183,6 +184,7 @@ fn build_output(value: String) -> CalculationOutput {
     }
 }
 
+#[cfg(any(target_os = "linux", test))]
 fn is_error_like_result_type(result_type: &str) -> bool {
     matches!(
         result_type.trim().to_ascii_lowercase().as_str(),
@@ -235,6 +237,8 @@ async fn evaluate_with_soulver(query: String) -> Result<Option<CalculationOutput
     Ok(Some(build_output(value)))
 }
 
+/// Soulver runs through a Swift FFI that is only built for Linux targets;
+/// other platforms fall through to the pure-Rust smart calculator engine.
 #[cfg(not(target_os = "linux"))]
 async fn evaluate_with_soulver(_query: String) -> Result<Option<CalculationOutput>> {
     Ok(None)

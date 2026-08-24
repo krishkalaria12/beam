@@ -2,7 +2,9 @@ pub(crate) mod config;
 pub mod error;
 
 use std::collections::HashSet;
+#[cfg(target_os = "linux")]
 use std::fs;
+#[cfg(target_os = "linux")]
 use std::path::{Path, PathBuf};
 
 use fontdb::Database;
@@ -14,6 +16,7 @@ use tauri_plugin_store::StoreExt;
 use self::config::CONFIG as SETTINGS_CONFIG;
 use self::error::{Result, SettingsError};
 use crate::applications::cache::invalidate_applications_cache as clear_applications_cache;
+#[cfg(target_os = "linux")]
 use crate::applications::config::CONFIG as APPLICATIONS_CONFIG;
 use crate::config::CONFIG as APP_CONFIG;
 
@@ -401,6 +404,7 @@ fn is_available_font_family(family_id: &str) -> bool {
         .any(|family| family.id == family_id)
 }
 
+#[cfg(target_os = "linux")]
 fn expand_home(path: &str) -> PathBuf {
     if let Some(rest) = path.strip_prefix("~/") {
         if let Ok(home) = std::env::var("HOME") {
@@ -411,6 +415,7 @@ fn expand_home(path: &str) -> PathBuf {
     PathBuf::from(path)
 }
 
+#[cfg(target_os = "linux")]
 fn resolve_icon_theme_name(index_theme_path: &Path, fallback: &str) -> Option<String> {
     let Ok(contents) = fs::read_to_string(index_theme_path) else {
         return Some(fallback.to_string());
@@ -455,6 +460,7 @@ fn resolve_icon_theme_name(index_theme_path: &Path, fallback: &str) -> Option<St
     Some(name.unwrap_or_else(|| fallback.to_string()))
 }
 
+#[cfg(target_os = "linux")]
 fn list_icon_theme_summaries_internal() -> Vec<IconThemeSummary> {
     let mut seen = HashSet::new();
     let mut themes = Vec::new();
@@ -497,6 +503,16 @@ fn list_icon_theme_summaries_internal() -> Vec<IconThemeSummary> {
 
     themes.sort_by(|left, right| left.name.to_lowercase().cmp(&right.name.to_lowercase()));
     themes
+}
+
+/// Icon theming is handled natively on macOS (per-app bundle icons), so a
+/// single synthetic entry keeps the settings surface functional.
+#[cfg(not(target_os = "linux"))]
+fn list_icon_theme_summaries_internal() -> Vec<IconThemeSummary> {
+    vec![IconThemeSummary {
+        id: "system".to_string(),
+        name: "System icons".to_string(),
+    }]
 }
 
 pub fn get_selected_icon_theme(app: &AppHandle) -> Result<Option<String>> {

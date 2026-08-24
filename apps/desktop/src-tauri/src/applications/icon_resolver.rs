@@ -1,3 +1,5 @@
+#![cfg(target_os = "linux")]
+
 use freedesktop_file_parser::IconString;
 use std::collections::HashMap;
 use std::ffi::OsStr;

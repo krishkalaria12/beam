@@ -6,88 +6,13 @@ use super::types::{FocusSession, FocusSessionMode, FocusSnoozeTargetType};
 use super::FOCUS_APP_BLOCKED_EVENT;
 use crate::state::AppState;
 
-#[cfg(target_os = "linux")]
-fn platform_list_windows(
-    app: &AppHandle,
-    app_state: &AppState,
-) -> Result<Vec<crate::window_switcher::WindowEntry>, String> {
-    crate::linux_desktop::window_manager::list_windows(app, app_state)
-        .map_err(|error| error.to_string())
-}
+use crate::linux_desktop::window_manager as desktop_backend;
+
+#[cfg(target_os = "macos")]
+use crate::macos::window_manager as desktop_backend;
 
 #[cfg(target_os = "windows")]
-fn platform_list_windows(
-    app: &AppHandle,
-    app_state: &AppState,
-) -> Result<Vec<crate::window_switcher::WindowEntry>, String> {
-    crate::windows_desktop::window_manager::list_windows(app, app_state)
-        .map_err(|error| error.to_string())
-}
-
-#[cfg(not(any(target_os = "linux", target_os = "windows")))]
-fn platform_list_windows(
-    _app: &AppHandle,
-    _app_state: &AppState,
-) -> Result<Vec<crate::window_switcher::WindowEntry>, String> {
-    Err("window management is not supported on this platform".to_string())
-}
-
-#[cfg(target_os = "linux")]
-fn platform_close_window(window_id: &str) -> Result<(), String> {
-    crate::linux_desktop::window_manager::close_window(window_id).map_err(|error| error.to_string())
-}
-
-#[cfg(target_os = "windows")]
-fn platform_close_window(window_id: &str) -> Result<(), String> {
-    crate::windows_desktop::window_manager::close_window(window_id)
-        .map_err(|error| error.to_string())
-}
-
-#[cfg(not(any(target_os = "linux", target_os = "windows")))]
-fn platform_close_window(_window_id: &str) -> Result<(), String> {
-    Err("window management is not supported on this platform".to_string())
-}
-
-struct PlatformFocusedWindow {
-    id: String,
-    title: String,
-    app_name: String,
-    class_name: String,
-    app_id: Option<String>,
-}
-
-#[cfg(target_os = "linux")]
-fn platform_frontmost_window(app_state: &AppState) -> Option<PlatformFocusedWindow> {
-    crate::linux_desktop::window_manager::frontmost_window(app_state)
-        .ok()
-        .flatten()
-        .map(|focused| PlatformFocusedWindow {
-            id: focused.id,
-            title: focused.title,
-            app_name: focused.app_name,
-            class_name: focused.class_name,
-            app_id: focused.app_id,
-        })
-}
-
-#[cfg(target_os = "windows")]
-fn platform_frontmost_window(app_state: &AppState) -> Option<PlatformFocusedWindow> {
-    crate::windows_desktop::window_manager::frontmost_window(app_state)
-        .ok()
-        .flatten()
-        .map(|focused| PlatformFocusedWindow {
-            id: focused.id,
-            title: focused.title,
-            app_name: focused.app_name,
-            class_name: focused.class_name,
-            app_id: focused.app_id,
-        })
-}
-
-#[cfg(not(any(target_os = "linux", target_os = "windows")))]
-fn platform_frontmost_window(_app_state: &AppState) -> Option<PlatformFocusedWindow> {
-    None
-}
+use crate::windows_desktop::window_manager as desktop_backend;
 
 fn lower_contains_rule(values: &[&str], rules: &[String]) -> Option<String> {
     for value in values {
@@ -156,12 +81,23 @@ fn emit_blocked_app(app: &AppHandle, rule: &str, window_title: &str, app_name: &
 }
 
 pub fn enforce_app_rules(app: &AppHandle, session: &FocusSession) {
+    #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
+    {
+        let _ = (app, session);
+    }
+
+    #[cfg(any(target_os = "linux", target_os = "macos", target_os = "windows"))]
+    enforce_app_rules_supported(app, session);
+}
+
+#[cfg(any(target_os = "linux", target_os = "macos", target_os = "windows"))]
+fn enforce_app_rules_supported(app: &AppHandle, session: &FocusSession) {
     if session.resolved_apps.is_empty() {
         return;
     }
 
     let app_state = app.state::<AppState>();
-    if let Ok(windows) = platform_list_windows(app, &app_state) {
+    if let Ok(windows) = desktop_backend::list_windows(app, &app_state) {
         for window in windows {
             let values = [
                 window.app_name.as_str(),
@@ -175,13 +111,13 @@ pub fn enforce_app_rules(app: &AppHandle, session: &FocusSession) {
                 continue;
             }
             emit_blocked_app(app, &rule, &window.title, &window.app_name);
-            if let Err(error) = platform_close_window(&window.id) {
+            if let Err(error) = desktop_backend::close_window(&window.id) {
                 log::warn!("failed to close blocked app window: {error}");
             }
         }
     }
 
-    let Some(focused) = platform_frontmost_window(&app_state) else {
+    let Ok(Some(focused)) = desktop_backend::frontmost_window(&app_state) else {
         return;
     };
 
@@ -198,7 +134,7 @@ pub fn enforce_app_rules(app: &AppHandle, session: &FocusSession) {
     }
 
     emit_blocked_app(app, &rule, &focused.title, &focused.app_name);
-    if let Err(error) = platform_close_window(&focused.id) {
+    if let Err(error) = desktop_backend::close_window(&focused.id) {
         log::warn!("failed to close blocked app window: {error}");
     }
 }

@@ -20,11 +20,9 @@ use tauri_plugin_store::{Store, StoreExt};
 
 use super::{
     app_entry::{AppEntry, SearchableAppEntry},
+    collect_searchable_applications,
     error::{ApplicationsError, Result},
 };
-
-#[cfg(target_os = "linux")]
-use super::collector::collect_searchable_applications;
 
 use crate::applications::config::CONFIG as APPLICATIONS_CONFIG;
 use crate::config::CONFIG as APP_CONFIG;
@@ -152,6 +150,7 @@ fn refresh_live_applications_in_background(app: AppHandle<Wry>) {
     });
 }
 
+#[cfg(target_os = "linux")]
 fn expand_home(path: &str) -> PathBuf {
     if let Some(rest) = path.strip_prefix("~/") {
         if let Some(home) = dirs::home_dir() {
@@ -162,13 +161,6 @@ fn expand_home(path: &str) -> PathBuf {
     PathBuf::from(path)
 }
 
-#[cfg(target_os = "linux")]
-fn collect_platform_applications(
-    selected_icon_theme: Option<String>,
-) -> Result<Vec<SearchableAppEntry>> {
-    collect_searchable_applications(selected_icon_theme)
-}
-
 #[cfg(target_os = "windows")]
 fn collect_platform_applications(
     _selected_icon_theme: Option<String>,
@@ -176,13 +168,11 @@ fn collect_platform_applications(
     Ok(windows_applications::collect_searchable_applications(None))
 }
 
-#[cfg(not(any(target_os = "linux", target_os = "windows")))]
+#[cfg(not(target_os = "windows"))]
 fn collect_platform_applications(
-    _selected_icon_theme: Option<String>,
+    selected_icon_theme: Option<String>,
 ) -> Result<Vec<SearchableAppEntry>> {
-    Err(ApplicationsError::CollectingDesktopFilesError(
-        "application discovery is not supported on this platform".to_string(),
-    ))
+    collect_searchable_applications(selected_icon_theme)
 }
 
 #[cfg(target_os = "linux")]

@@ -295,6 +295,9 @@ fn collect_node_candidate_paths(home_dir: Option<&Path>) -> Vec<PathBuf> {
             "/usr/local/bin/nodejs",
             "/bin/nodejs",
             "/snap/bin/node",
+            // Homebrew on Apple Silicon and Intel Macs.
+            "/opt/homebrew/bin/node",
+            "/usr/local/opt/node/bin/node",
         ]
         .into_iter()
         .map(PathBuf::from),

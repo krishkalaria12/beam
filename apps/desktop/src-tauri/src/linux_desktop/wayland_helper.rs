@@ -50,14 +50,7 @@ impl WaylandDataControlBackend {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
-pub struct WaylandHelperStatus {
-    pub available: bool,
-    pub backend: Option<String>,
-    pub helper_path: Option<String>,
-    pub last_error: Option<String>,
-}
+pub use crate::desktop::types::WaylandHelperStatus;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]

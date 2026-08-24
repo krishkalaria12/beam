@@ -1,23 +1,12 @@
-use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::fs;
 use std::path::PathBuf;
 
+use crate::desktop::types::GnomeExtensionStatus;
 use crate::linux_desktop::gnome_extension::config::CONFIG as GNOME_EXTENSION_CONFIG;
 
 use super::dbus;
 use super::install::extension_install_dir;
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct GnomeExtensionStatus {
-    pub installed: bool,
-    pub enabled: bool,
-    pub version: Option<String>,
-    pub path: Option<String>,
-    pub dbus_reachable: bool,
-    pub update_required: bool,
-}
 
 fn bundled_version() -> Option<String> {
     let metadata = GNOME_EXTENSION_CONFIG.extension_metadata_json;

@@ -1,6 +1,7 @@
+#[cfg(not(target_os = "macos"))]
 use std::process::{Command, Stdio};
 
-#[cfg(not(target_os = "windows"))]
+#[cfg(not(any(target_os = "macos", target_os = "windows")))]
 use shell_words::split;
 use tauri::{command, Window};
 
@@ -18,7 +19,18 @@ pub fn open_application(window: Window, exec_path: String) -> Result<()> {
         ));
     }
 
-    spawn_platform(normalized_exec_path)?;
+    #[cfg(target_os = "macos")]
+    {
+        // Application bundles are launched through NSWorkspace/open so spaces,
+        // dock state and single-instance semantics stay intact.
+        crate::macos::applications::open_application(normalized_exec_path)
+            .map_err(ApplicationsError::LaunchingApplicationError)?;
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    {
+        spawn_platform(normalized_exec_path)?;
+    }
 
     crate::launcher_window::hide_launcher_window_with_reset(&window)
         .map_err(ApplicationsError::HidingWindowApplicationError)?;
@@ -63,7 +75,7 @@ fn spawn_platform(exec_path: &str) -> Result<()> {
     Ok(())
 }
 
-#[cfg(not(target_os = "windows"))]
+#[cfg(not(any(target_os = "macos", target_os = "windows")))]
 fn spawn_platform(exec_path: &str) -> Result<()> {
     let command_parts = split(exec_path)
         .map_err(|e| ApplicationsError::LaunchingApplicationError(e.to_string()))?;

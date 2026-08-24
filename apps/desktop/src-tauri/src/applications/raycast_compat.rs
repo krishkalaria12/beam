@@ -6,6 +6,8 @@ use crate::state::AppState;
 
 #[cfg(target_os = "linux")]
 use crate::linux_desktop;
+#[cfg(target_os = "macos")]
+use crate::macos;
 #[cfg(target_os = "windows")]
 use crate::windows_desktop;
 
@@ -29,12 +31,17 @@ pub fn get_default_application(
             .map_err(|error| error.to_string());
     }
 
+    #[cfg(target_os = "macos")]
+    {
+        return macos::applications::get_default_application(&path);
+    }
+
     #[cfg(target_os = "windows")]
     {
         return windows_desktop::applications::get_default_application(&path);
     }
 
-    #[cfg(not(any(target_os = "linux", target_os = "windows")))]
+    #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
     {
         let _ = path;
         Err("get_default_application is not supported on this platform".to_string())
@@ -47,7 +54,18 @@ pub fn get_frontmost_application(
 ) -> std::result::Result<RaycastCompatApplication, String> {
     #[cfg(target_os = "linux")]
     {
-        let snapshot = linux_desktop::context::get_desktop_context_snapshot(&state);
+        let snapshot = crate::desktop::context::get_desktop_context_snapshot(&state);
+        return snapshot.frontmost_application.value.ok_or_else(|| {
+            snapshot
+                .frontmost_application
+                .reason
+                .unwrap_or_else(|| "frontmost application is unavailable".to_string())
+        });
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        let snapshot = crate::desktop::context::get_desktop_context_snapshot(&state);
         return snapshot.frontmost_application.value.ok_or_else(|| {
             snapshot
                 .frontmost_application
@@ -71,7 +89,7 @@ pub fn get_frontmost_application(
         });
     }
 
-    #[cfg(not(any(target_os = "linux", target_os = "windows")))]
+    #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
     {
         let _ = state;
         Err("get_frontmost_application is not supported on this platform".to_string())
@@ -86,12 +104,17 @@ pub fn show_in_finder(path: String) -> std::result::Result<(), String> {
             .map_err(|error| error.to_string());
     }
 
+    #[cfg(target_os = "macos")]
+    {
+        return macos::applications::show_in_file_manager(&path);
+    }
+
     #[cfg(target_os = "windows")]
     {
         return windows_desktop::applications::reveal_in_explorer(&path);
     }
 
-    #[cfg(not(any(target_os = "linux", target_os = "windows")))]
+    #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
     {
         let _ = path;
         Err("show_in_finder is not supported on this platform".to_string())
@@ -109,6 +132,24 @@ fn try_trash_command(command_name: &str, args: &[&str]) -> std::result::Result<(
         Ok(())
     } else {
         Err(format!("{command_name} exited with status code {status}"))
+    }
+}
+
+fn native_trash(path: &str) -> std::result::Result<(), String> {
+    #[cfg(target_os = "macos")]
+    {
+        macos::workspace::trash_paths(&[crate::macos::applications::expand_tilde(path)])
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        try_trash_command("gio", &["trash", path])
+    }
+
+    #[cfg(not(any(target_os = "linux", target_os = "macos")))]
+    {
+        let _ = path;
+        Err("no native trash backend on this platform".to_string())
     }
 }
 
@@ -138,8 +179,8 @@ pub fn trash(paths: Vec<String>) -> std::result::Result<(), String> {
                 continue;
             }
 
-            let gio_result = try_trash_command("gio", &["trash", trimmed]);
-            if gio_result.is_ok() {
+            let native_result = native_trash(trimmed);
+            if native_result.is_ok() {
                 continue;
             }
 
@@ -147,9 +188,9 @@ pub fn trash(paths: Vec<String>) -> std::result::Result<(), String> {
             if fallback.is_err() {
                 return Err(format!(
                     "failed to trash '{trimmed}': {}; {}",
-                    gio_result
+                    native_result
                         .err()
-                        .unwrap_or_else(|| "unknown gio error".to_string()),
+                        .unwrap_or_else(|| "unknown native trash error".to_string()),
                     fallback
                         .err()
                         .unwrap_or_else(|| "unknown trash-put error".to_string())

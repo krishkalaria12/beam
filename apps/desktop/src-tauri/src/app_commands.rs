@@ -1,14 +1,38 @@
 use crate::{
-    ai, applications, calculator, cli, clipboard, custom_config, dictionary, emoji, extensions,
-    file_search, focus, hotkeys, hyprwhspr, launcher_shell, launcher_theme, launcher_window,
-    menu_bar, notes, pinned, quicklinks, script_commands, search, settings, snippets,
-    system_actions, todo, translation, window_switcher,
+    ai, applications, calculator, cli, clipboard, custom_config, desktop, dictionary, emoji,
+    extensions, file_search, focus, hotkeys, hyprwhspr, launcher_shell, launcher_theme,
+    launcher_window, menu_bar, notes, pinned, quicklinks, script_commands, search, settings,
+    snippets, system_actions, todo, translation, window_switcher,
 };
 
 #[cfg(target_os = "linux")]
 use crate::linux_desktop;
 
 use tauri::ipc::Invoke;
+
+/// macOS Accessibility permission plumbing; keep the command surface stable
+/// across platforms by re-exporting on macOS and stubbing elsewhere.
+/// The hidden `__cmd__*` modules are re-exported too so `generate_handler!`
+/// resolves the command macros through these paths.
+#[cfg(target_os = "macos")]
+pub use crate::macos::permissions::{get_macos_permission_status, request_macos_permission};
+
+#[cfg(target_os = "macos")]
+pub use crate::macos::permissions::{
+    __cmd__get_macos_permission_status, __cmd__request_macos_permission,
+};
+
+#[cfg(not(target_os = "macos"))]
+#[tauri::command]
+pub fn get_macos_permission_status() -> serde_json::Value {
+    serde_json::json!({ "accessibility": false })
+}
+
+#[cfg(not(target_os = "macos"))]
+#[tauri::command]
+pub fn request_macos_permission() -> serde_json::Value {
+    serde_json::json!({ "accessibility": false })
+}
 
 /// Builds the Tauri command registry. `$($extra:path),*` carries the
 /// platform-only commands so the shared list is never duplicated.
@@ -185,15 +209,32 @@ macro_rules! app_commands {
 #[cfg(target_os = "linux")]
 pub fn get_handler() -> impl Fn(Invoke) -> bool {
     app_commands![
-        linux_desktop::context::get_desktop_context,
-        linux_desktop::status::get_desktop_integration_status,
+        desktop::context::get_desktop_context,
+        desktop::status::get_desktop_integration_status,
+        get_macos_permission_status,
+        request_macos_permission,
         linux_desktop::gnome_extension::install::install_gnome_shell_extension,
         linux_desktop::gnome_extension::install::enable_gnome_shell_extension,
         linux_desktop::gnome_extension::install::open_gnome_shell_extension_directory,
     ]
 }
 
-#[cfg(not(target_os = "linux"))]
+#[cfg(target_os = "macos")]
 pub fn get_handler() -> impl Fn(Invoke) -> bool {
-    app_commands![]
+    app_commands![
+        desktop::context::get_desktop_context,
+        desktop::status::get_desktop_integration_status,
+        get_macos_permission_status,
+        request_macos_permission,
+    ]
+}
+
+#[cfg(not(any(target_os = "linux", target_os = "macos")))]
+pub fn get_handler() -> impl Fn(Invoke) -> bool {
+    app_commands![
+        desktop::context::get_desktop_context,
+        desktop::status::get_desktop_integration_status,
+        get_macos_permission_status,
+        request_macos_permission,
+    ]
 }

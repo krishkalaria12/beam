@@ -7,7 +7,11 @@ use self::error::{Result, WindowSwitcherError};
 use crate::state::AppState;
 
 #[cfg(target_os = "linux")]
-use crate::linux_desktop;
+use crate::linux_desktop::window_manager as desktop_backend;
+
+#[cfg(target_os = "macos")]
+use crate::macos::window_manager as desktop_backend;
+
 #[cfg(target_os = "windows")]
 use crate::windows_desktop;
 
@@ -25,22 +29,16 @@ pub struct WindowEntry {
 
 #[command]
 pub fn list_windows(app: AppHandle, state: State<'_, AppState>) -> Result<Vec<WindowEntry>> {
-    #[cfg(target_os = "linux")]
-    {
-        return linux_desktop::window_manager::list_windows(&app, &state)
-            .map_err(|error| WindowSwitcherError::ClientError(error.to_string()));
-    }
-
     #[cfg(target_os = "windows")]
     {
         return windows_desktop::window_manager::list_windows(&app, &state)
             .map_err(|error| WindowSwitcherError::ClientError(error.to_string()));
     }
 
-    #[cfg(not(any(target_os = "linux", target_os = "windows")))]
+    #[cfg(not(target_os = "windows"))]
     {
-        let _ = (app, state);
-        Err(WindowSwitcherError::UnsupportedPlatform)
+        desktop_backend::list_windows(&app, &state)
+            .map_err(|error| WindowSwitcherError::ClientError(error.to_string()))
     }
 }
 
@@ -51,22 +49,16 @@ pub fn focus_window(window_id: String) -> Result<()> {
         return Err(WindowSwitcherError::InvalidWindowId);
     }
 
-    #[cfg(target_os = "linux")]
-    {
-        return linux_desktop::window_manager::focus_window(normalized)
-            .map_err(|error| WindowSwitcherError::FocusingWindowError(error.to_string()));
-    }
-
     #[cfg(target_os = "windows")]
     {
         return windows_desktop::window_manager::focus_window(normalized)
             .map_err(|error| WindowSwitcherError::FocusingWindowError(error.to_string()));
     }
 
-    #[cfg(not(any(target_os = "linux", target_os = "windows")))]
+    #[cfg(not(target_os = "windows"))]
     {
-        let _ = normalized;
-        Err(WindowSwitcherError::UnsupportedPlatform)
+        desktop_backend::focus_window(normalized)
+            .map_err(|error| WindowSwitcherError::FocusingWindowError(error.to_string()))
     }
 }
 
@@ -77,21 +69,15 @@ pub fn close_window(window_id: String) -> Result<()> {
         return Err(WindowSwitcherError::InvalidWindowId);
     }
 
-    #[cfg(target_os = "linux")]
-    {
-        return linux_desktop::window_manager::close_window(normalized)
-            .map_err(|error| WindowSwitcherError::ClosingWindowError(error.to_string()));
-    }
-
     #[cfg(target_os = "windows")]
     {
         return windows_desktop::window_manager::close_window(normalized)
             .map_err(|error| WindowSwitcherError::ClosingWindowError(error.to_string()));
     }
 
-    #[cfg(not(any(target_os = "linux", target_os = "windows")))]
+    #[cfg(not(target_os = "windows"))]
     {
-        let _ = normalized;
-        Err(WindowSwitcherError::UnsupportedPlatform)
+        desktop_backend::close_window(normalized)
+            .map_err(|error| WindowSwitcherError::ClosingWindowError(error.to_string()))
     }
 }

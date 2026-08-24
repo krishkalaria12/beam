@@ -60,6 +60,12 @@ pub(crate) const CONFIG: FileSearchConfig = FileSearchConfig {
         ".cache",
         ".cargo",
         ".rustup",
+        // macOS system/library trees that are noise for a launcher index.
+        "Library",
+        "Applications",
+        "Volumes",
+        "net",
+        "home",
     ],
     ignored_files: &[
         ".DS_Store",
