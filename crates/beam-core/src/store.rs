@@ -116,8 +116,11 @@ impl JsonStore {
         }
 
         let temp_path = self.path.with_extension("json.tmp");
-        std::fs::write(&temp_path, contents)?;
-        std::fs::rename(&temp_path, &self.path)?;
+        std::fs::write(&temp_path, contents)
+            .map_err(|error| BeamError::store(format!("write {}: {error}", temp_path.display())))?;
+        std::fs::rename(&temp_path, &self.path).map_err(|error| {
+            BeamError::store(format!("rename to {}: {error}", self.path.display()))
+        })?;
         Ok(())
     }
 }

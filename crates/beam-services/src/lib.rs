@@ -16,7 +16,8 @@
 //! match `apps/desktop/src-tauri/src` until cutover deletes the original.
 //! Converted so far (G1, batch 1): config, error, utils, http, calculator,
 //! emoji, search, system_actions, dictionary, translation, cli,
-//! file_search, snippets (model), state.
+//! file_search, snippets (model), state, settings (D5: theming surface
+//! deleted, not ported).
 
 pub mod calculator;
 pub mod cli;
@@ -27,6 +28,7 @@ pub mod error;
 pub mod file_search;
 pub mod http;
 pub mod search;
+pub mod settings;
 pub mod snippets;
 pub mod state;
 pub mod system_actions;

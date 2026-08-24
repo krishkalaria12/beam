@@ -701,6 +701,7 @@ dependencies = [
  "clap",
  "crossbeam-channel",
  "dirs",
+ "fontdb",
  "futures-util",
  "ignore",
  "keepawake",

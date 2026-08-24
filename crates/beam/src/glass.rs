@@ -87,12 +87,14 @@ impl GlassMode {
 
 /// Reads the glass-strength setting (SD-4). Same store key the React build
 /// used for `--beam-launcher-opacity`; missing values fall back to the
-/// design default.
+/// settings default (0.96) clamped into the slider range.
 pub fn glass_strength_from_store(value: Option<f64>) -> f32 {
+    const SETTINGS_DEFAULT_OPACITY: f64 = 0.96;
+
     value
         .filter(|strength| strength.is_finite())
-        .map(|strength| strength as f32)
-        .unwrap_or(FROSTED_PLATE_ALPHA)
+        .unwrap_or(SETTINGS_DEFAULT_OPACITY)
+        .clamp(0.25, 0.95) as f32
 }
 
 #[cfg(test)]
@@ -109,17 +111,12 @@ mod tests {
     }
 
     #[test]
-    fn strength_falls_back_without_a_store_value() {
-        assert_eq!(glass_strength_from_store(None), FROSTED_PLATE_ALPHA);
-        assert_eq!(
-            glass_strength_from_store(Some(f64::NAN)),
-            FROSTED_PLATE_ALPHA
-        );
-        assert_eq!(
-            glass_strength_from_store(Some(0.5)),
-            0.5,
-            "finite stored values pass through"
-        );
+    fn strength_falls_back_to_the_settings_default_clamped() {
+        assert!((glass_strength_from_store(None) - 0.95).abs() < 1e-6);
+        assert!((glass_strength_from_store(Some(f64::NAN)) - 0.95).abs() < 1e-6);
+        assert!((glass_strength_from_store(Some(0.5)) - 0.5).abs() < 1e-6);
+        assert!((glass_strength_from_store(Some(2.0)) - 0.95).abs() < 1e-6);
+        assert!((glass_strength_from_store(Some(0.1)) - 0.25).abs() < 1e-6);
     }
 
     #[test]
