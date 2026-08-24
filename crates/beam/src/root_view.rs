@@ -37,6 +37,11 @@ pub struct RootView {
     context: beam_core::BeamContext,
     query: String,
     ranked: Vec<RankedCommand>,
+    /// The calculator inline row (None when the query is not math).
+    calculator: Option<crate::calculator_inline::CalculatorResultRow>,
+    /// Bumps on every query change so stale calculator responses are
+    /// dropped (the React build's useDeferredValue + query-key semantics).
+    calculator_generation: u64,
     selected: usize,
     active_mode: CommandMode,
     /// The panel the dispatcher most recently opened (placeholder surface
@@ -77,6 +82,8 @@ impl RootView {
             context,
             query: String::new(),
             ranked: Vec::new(),
+            calculator: None,
+            calculator_generation: 0,
             selected: 0,
             active_mode: CommandMode::Normal,
             opened_panel: None,
@@ -137,10 +144,29 @@ impl RootView {
             });
         }
 
-        self.query = query;
+        self.query = query.clone();
         self.active_mode = mode;
         self.ranked = ranked;
         self.selected = 0;
+
+        // Calculator inline row: evaluated off-thread, generation-keyed so a
+        // slow response for an old query never lands.
+        self.calculator = None;
+        self.calculator_generation += 1;
+        let generation = self.calculator_generation;
+        let eval_context = self.context.clone();
+        let eval_query = query.clone();
+        cx.spawn(async move |this, cx| {
+            let row = crate::calculator_inline::evaluate(&eval_context, &eval_query).await;
+            let _ = this.update(cx, |this, cx| {
+                if this.calculator_generation == generation {
+                    this.calculator = row;
+                    cx.notify();
+                }
+            });
+        })
+        .detach();
+
         cx.notify();
     }
 

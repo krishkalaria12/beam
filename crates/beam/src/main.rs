@@ -10,6 +10,7 @@
 
 mod activation;
 mod app;
+mod calculator_inline;
 mod command_registry;
 mod glass;
 mod hotkey;
