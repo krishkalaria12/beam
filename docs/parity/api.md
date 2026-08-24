@@ -7,7 +7,24 @@ note in docs/parity/adr/. The launcher-window resize commands are
 absorbed by the beam window module (SD-1) rather than ported as
 standalone functions; they are listed for completeness.
 
-Total: 166 commands; 154 ported so far.
+Note on the plan's figure: the plan says '87 IPC commands'; the tree at
+main @ 9d830ba registers **162** shared-list commands plus **4**
+platform-extra commands (the macro's $extra mechanism) = **166** total.
+This list is normative (rule R9). Regenerate with
+`python3 scripts/gen_api_inventory.py`.
+
+## Status: the frozen surface is fully accounted for
+
+- **154 ported** - every command exists as a service function with the
+  same name in `crates/beam-services`.
+- **8 deleted (D5)** - the theming surface: get/set_ui_style,
+  get/set_base_color, and the four launcher_theme commands. The store
+  keys are ignored; the CHANGELOG announces the loss at cutover.
+- **4 absorbed (SD-1)** - the resize-transition IPC dance; the beam
+  window module owns sizing directly.
+- **0 pending**.
+
+Total: 166 commands; 154 ported.
 
 | # | Command | Former IPC path | Status |
 | - | --------- | --------------- | ------ |
