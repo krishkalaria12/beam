@@ -204,6 +204,7 @@ fn entry_row(entry: &ClipboardHistoryEntry, is_selected: bool) -> impl IntoEleme
 impl Render for ClipboardPanel {
     fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let selected = self.selected;
+        let entries_slice = self.entries.clone();
 
         div()
             .size_full()
@@ -241,11 +242,8 @@ impl Render for ClipboardPanel {
             .child(
                 div()
                     .flex_1()
-                    .flex()
-                    .flex_col()
                     .px_2()
                     .pt_1()
-                    .overflow_hidden()
                     .when_some(self.error.clone(), |this, error| {
                         this.child(
                             div()
@@ -266,12 +264,21 @@ impl Render for ClipboardPanel {
                                 .child("No clipboard history yet — copy something."),
                         )
                     })
-                    .children(
-                        self.entries
-                            .iter()
-                            .enumerate()
-                            .take(30)
-                            .map(|(index, entry)| entry_row(entry, index == selected)),
+                    .child(
+                        gpui::uniform_list(
+                            "clipboard-history",
+                            self.entries.len(),
+                            move |range, _window, _cx| {
+                                entries_slice
+                                    .iter()
+                                    .enumerate()
+                                    .skip(range.start)
+                                    .take(range.end - range.start)
+                                    .map(|(index, entry)| entry_row(entry, index == selected))
+                                    .collect::<Vec<_>>()
+                            },
+                        )
+                        .flex_1(),
                     ),
             )
             .child(
