@@ -22,6 +22,7 @@ mod root_view;
 mod settings_panel;
 mod snippets_panel;
 mod theme;
+mod todo_panel;
 mod window;
 
 use async_channel::unbounded;
