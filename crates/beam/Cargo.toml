@@ -1,6 +1,6 @@
 [package]
 name = "beam"
-description = "The beam launcher binary: glass window, activation socket, global hotkey"
+description = "A blazing-fast, open-source command launcher for Linux, macOS, and Windows"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -10,19 +10,37 @@ repository.workspace = true
 name = "beam"
 path = "src/main.rs"
 
+[package.metadata.deb]
+maintainer = "Krish Kalaria <beam@krishkalaria.dev>"
+copyright = "2024, Krish Kalaria"
+extended-description = """A blazing-fast, open-source command launcher.
+Native GPUI build: no webview, no node runtime."""
+depends = "$auto, libxkbcommon0, libwayland-client0, libfontconfig1, libx11-6, libxcursor1, libxrandr2, libxi6"
+section = "utils"
+priority = "optional"
+assets = [
+    ["target/rust/release/beam", "usr/bin/", "755"],
+]
+
+[package.metadata.generate-rpm]
+assets = [
+    { source = "target/rust/release/beam", dest = "/usr/bin/beam", mode = "755" },
+]
+[package.metadata.generate-rpm.requires]
+libxkbcommon = "*"
+wayland = "*"
+fontconfig = "*"
+
 [dependencies]
 beam-core = { path = "../beam-core" }
 beam-services = { path = "../beam-services" }
 beam-ui = { path = "../beam-ui" }
-gpui-component = { workspace = true }
-gpui-component-assets = { path = "../../third-party/gpui-component/assets" }
 gpui = { workspace = true }
 gpui_platform = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 log = { workspace = true }
-
-# Date formatting in the notes list
+anyhow = { workspace = true }
 chrono = "0.4"
 nanoid = "0.4"
 
@@ -31,7 +49,6 @@ nanoid = "0.4"
 # runtime into the UI process.
 async-channel = "2"
 env_logger = "0.11"
-anyhow = { workspace = true }
 
 # Standalone replacement for tauri-plugin-global-shortcut. macOS only for now:
 # Linux uses portal+evdev and Windows uses RegisterHotKey, both of which come
@@ -39,3 +56,7 @@ anyhow = { workspace = true }
 # (plan lane A5).
 [target.'cfg(target_os = "macos")'.dependencies]
 global-hotkey = { workspace = true }
+
+# gpui-component + its vendored assets (icons)
+gpui-component = { workspace = true }
+gpui-component-assets = { path = "../../third-party/gpui-component/assets" }

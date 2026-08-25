@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleExecutable</key>
+    <string>beam</string>
+    <key>CFBundleIdentifier</key>
+    <string>io.beam.launcher</string>
+    <key>CFBundleName</key>
+    <string>Beam</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+
+    <!-- G0 spike verdict: LSUIElement = no Dock icon, launcher-only app -->
+    <key>LSUIElement</key>
+    <true/>
+
+    <!-- Deep links: beam:// and raycast:// -->
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleURLName</key>
+            <string>io.beam.launcher</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>beam</string>
+                <string>raycast</string>
+            </array>
+        </dict>
+    </array>
+
+    <!-- Accessibility: window listing, focus enforcement, snippet expansion
+         (macOS backend). The panel surfaces the permission state. -->
+    <key>NSAccessibilityUsageDescription</key>
+    <string>Beam needs accessibility access to switch windows, enforce focus sessions, and expand snippets.</string>
+
+    <key>NSHighResolutionCapable</key>
+    <true/>
+
+    <key>CFBundleShortVersionString</key>
+    <string>1.1.0</string>
+    <key>CFBundleVersion</key>
+    <string>1.1.0</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>12.0</string>
+</dict>
+</plist>

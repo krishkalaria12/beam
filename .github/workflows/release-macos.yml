@@ -1,0 +1,107 @@
+name: release-macos
+
+# GPUI build: universal binary (.app + .dmg), Developer ID signed,
+# hardened runtime, notarized + stapled (plan D8 — macOS ships).
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-release:
+    runs-on: macos-14
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v7
+
+      - name: setup rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+
+      - name: install protobuf
+        run: brew install protobuf
+
+      - name: build universal binary
+        run: |
+          cargo build --release --package beam --target aarch64-apple-darwin
+          cargo build --release --package beam --target x86_64-apple-darwin
+          lipo -create \
+            target/aarch64-apple-darwin/release/beam \
+            target/x86_64-apple-darwin/release/beam \
+            -output beam-universal
+
+      - name: stage .app bundle
+        run: |
+          APP=Beam.app
+          mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
+          cp beam-universal "$APP/Contents/MacOS/beam"
+          cp infra/macos/Info.plist "$APP/Contents/Info.plist"
+          cp infra/macos/entitlements.plist "$APP/Contents/entitlements.plist"
+          # Version from the tag
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString ${GITHUB_REF_NAME#v}" "$APP/Contents/Info.plist"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${GITHUB_REF_NAME#v}" "$APP/Contents/Info.plist"
+
+      - name: codesign (Developer ID + hardened runtime)
+        env:
+          MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE_P12_BASE64 }}
+          MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          CERT_P12=/tmp/certificate.p12
+          echo "$MACOS_CERTIFICATE" | base64 --decode > "$CERT_P12"
+
+          KEYCHAIN=build.keychain
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security default-keychain -s "$KEYCHAIN"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security import "$CERT_P12" -k "$KEYCHAIN" -P "$MACOS_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+
+          IDENTITY=$(security find-identity -v -p codesigning "$KEYCHAIN" \
+            | grep "Developer ID Application" \
+            | head -1 \
+            | sed -E 's/.*"(.*)".*/\1/')
+          echo "Signing with identity: $IDENTITY"
+
+          codesign --force --deep --sign "$IDENTITY" \
+            --options runtime \
+            --entitlements Beam.app/Contents/entitlements.plist \
+            Beam.app
+
+      - name: notarize + staple
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          ditto -c -k --keepParent Beam.app Beam.zip
+          xcrun notarytool submit Beam.zip \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_PASSWORD" \
+            --team-id "$APPLE_TEAM_ID" \
+            --wait
+          xcrun stapler staple Beam.app
+
+      - name: build dmg
+        run: |
+          mkdir -p dmg-staging
+          cp -R Beam.app dmg-staging/
+          ln -s /Applications dmg-staging/Applications
+          hdiutil create -volname "Beam" \
+            -srcfolder dmg-staging \
+            -ov -format UDZO \
+            beam-${GITHUB_REF_NAME#v}-universal.dmg
+
+      - name: publish github release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            beam-*.dmg
+          generate_release_notes: true
+          prerelease: ${{ contains(github.ref_name, '-') }}
