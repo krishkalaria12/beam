@@ -22,11 +22,17 @@ trap 'rm -f "$ported_list" "$source_list" "$unported_list"' EXIT
 # 1. Collect every marker in the new tree.
 grep -rho '// PORT: [^ *]*' crates/ 2>/dev/null | sed 's|// PORT: ||' | sort -u > "$ported_list" || true
 
-# 2. Collect every source file in the old tree (both languages).
-{
-  find apps/desktop/src -name '*.ts' -o -name '*.tsx' 2>/dev/null
-  find apps/desktop/src-tauri/src -name '*.rs' 2>/dev/null
-} | sort > "$source_list"
+# 2. Collect every source file in the old tree (both languages). At
+#    cutover the tree is deleted, so this finds nothing and the audit
+#    passes — the wiring stays so future source additions are caught.
+if [[ -d apps/desktop ]]; then
+  {
+    find apps/desktop/src -name '*.ts' -o -name '*.tsx' 2>/dev/null
+    find apps/desktop/src-tauri/src -name '*.rs' 2>/dev/null
+  } | sort > "$source_list"
+else
+  : > "$source_list"
+fi
 
 # 3. Unported = sources minus ported minus waivers.
 comm -13 "$ported_list" "$source_list" > "$unported_list"

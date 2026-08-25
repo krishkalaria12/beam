@@ -119,15 +119,22 @@ binds {
 ```bash
 git clone https://github.com/krishkalaria12/beam.git
 cd beam
-bun install
-bun run desktop:dev
+cargo run --package beam
 ```
 
 ### Prerequisites
 
-- [Bun](https://bun.sh/)
-- [Rust](https://rustup.rs/)
-- [Tauri v2 Dependencies](https://tauri.app/start/prerequisites/)
+- [Rust](https://rustup.rs/) (1.95+, pinned via `rust-toolchain.toml`)
+- Linux: wayland/x11 client libs, xkbcommon, fontconfig (`sudo apt install libwayland-dev libxkbcommon-dev libxkbcommon-x11-dev libfontconfig1-dev libfreetype6-dev libudev-dev libgtk-3-dev protobuf-compiler`)
+- macOS: Xcode Command Line Tools
+- Windows: MSVC build tools, protobuf
+
+The extension-manager bundle (for extension support) is built with bun:
+
+```bash
+bun install
+bun run extension-manager:build
+```
 
 ## Focus Mode Browser Extension
 
