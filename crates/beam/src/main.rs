@@ -19,6 +19,7 @@ mod launcher_state;
 mod notes_panel;
 mod panel_router;
 mod root_view;
+mod script_commands_panel;
 mod settings_panel;
 mod snippets_panel;
 mod theme;
