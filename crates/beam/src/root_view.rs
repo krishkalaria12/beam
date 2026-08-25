@@ -64,6 +64,35 @@ impl RootView {
             gpui_component::input::InputState::new(window, cx).placeholder("Search commands…")
         });
 
+        // dmenu bus: CLI requests arrive as CliDmenuRequest events; bridge
+        // them into the shell through a channel the spawn loop drains.
+        let (dmenu_tx, dmenu_rx) =
+            async_channel::unbounded::<crate::launcher_state::DmenuSession>();
+        {
+            let mut dmenu_receiver = context.events().subscribe();
+            std::thread::spawn(move || loop {
+                let Ok(event) = dmenu_receiver.blocking_recv() else {
+                    break;
+                };
+                if let beam_core::BeamEvent::CliDmenuRequest(payload) = event {
+                    let request_id = payload
+                        .get("requestId")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("")
+                        .to_string();
+                    let initial_query = payload
+                        .get("initialQuery")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("")
+                        .to_string();
+                    let _ = dmenu_tx.send_blocking(crate::launcher_state::DmenuSession {
+                        request_id,
+                        initial_query,
+                    });
+                }
+            });
+        }
+
         let _subscriptions = vec![cx.subscribe_in(
             &input,
             window,
@@ -78,6 +107,27 @@ impl RootView {
                 _ => {}
             },
         )];
+
+        // Drain the dmenu channel: open the dmenu panel with each session.
+        cx.spawn(async move |this, cx| {
+            while let Ok(session) = dmenu_rx.recv().await {
+                let _ = this.update(cx, |this, cx| {
+                    this.ui_state.update(cx, |state, cx| {
+                        state.open_dmenu_session(session.clone());
+                        cx.notify();
+                    });
+                    // Ensure the dmenu panel surface exists and is focused.
+                    this.open_panel(crate::command_registry::CommandPanel::Dmenu, cx);
+                    if let Some(view) = this
+                        .panels
+                        .get(&crate::command_registry::CommandPanel::Dmenu)
+                    {
+                        let _ = view.clone();
+                    }
+                });
+            }
+        })
+        .detach();
 
         let ui_state = cx.new(|_| crate::launcher_state::LauncherUiState::default());
         let mut view = Self {

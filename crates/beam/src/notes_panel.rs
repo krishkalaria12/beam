@@ -10,7 +10,11 @@ use gpui::{
     actions, div, prelude::*, px, Context, IntoElement, KeyBinding, ParentElement, Render, Styled,
     Window,
 };
-use gpui_component::{h_flex, v_flex};
+use gpui_component::{
+    h_flex,
+    input::{Textarea, TextareaState},
+    v_flex,
+};
 
 use beam_core::BeamContext;
 use beam_services::notes::{self, Note};
@@ -49,6 +53,10 @@ pub struct NotesPanel {
     /// The note being edited (id + working copy). None = list mode.
     editing: Option<Note>,
     preview: bool,
+    /// Shared-editor surfaces (gpui-component Textarea).
+    title_editor: Option<gpui::Entity<TextareaState>>,
+    content_editor: Option<gpui::Entity<TextareaState>>,
+    _editor_subscription: Option<gpui::Subscription>,
 }
 
 impl NotesPanel {
@@ -59,6 +67,9 @@ impl NotesPanel {
             selected: 0,
             editing: None,
             preview: false,
+            title_editor: None,
+            content_editor: None,
+            _editor_subscription: None,
         };
         panel.refresh(cx);
         panel
@@ -106,10 +117,22 @@ impl NotesPanel {
         .detach();
     }
 
-    fn save_editing(&mut self, cx: &mut Context<Self>) {
+    fn save_editing(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         let Some(editing) = self.editing.clone() else {
             return;
         };
+
+        // Read the working copy from the editors.
+        let title = self
+            .title_editor
+            .as_ref()
+            .map(|editor| editor.read(cx).value().to_string())
+            .unwrap_or_else(|| editing.title.clone());
+        let content = self
+            .content_editor
+            .as_ref()
+            .map(|editor| editor.read(cx).value().to_string())
+            .unwrap_or_else(|| editing.content.clone());
         let context = self.context.clone();
         cx.spawn(async move |this, cx| {
             let saved = notes::update_note(
@@ -156,12 +179,53 @@ impl NotesPanel {
         .detach();
     }
 
-    fn open_selected(&mut self, cx: &mut Context<Self>) {
+    fn open_selected(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         if let Some(note) = self.notes.get(self.selected).cloned() {
             self.editing = Some(note);
             self.preview = false;
+            self.install_editors(window, cx);
             cx.notify();
         }
+    }
+
+    /// Installs the title + content editors for the note being edited.
+    /// The working copy lives in the editors; save reads them.
+    fn install_editors(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let Some(editing) = self.editing.clone() else {
+            return;
+        };
+
+        let title_editor = cx.new(|cx| {
+            let state = TextareaState::new(window, cx).placeholder("title");
+            state
+        });
+        let content_editor = cx.new(|cx| {
+            let state = TextareaState::new(window, cx);
+            state
+        });
+        // Seed the editors with the note's current text (after construction,
+        // through the entity — the states are owned by the entities now).
+        // Seed the editors with the note's current text through the
+        // entities (the states are owned by the entities now). set_value
+        // needs a window; the next frame has one.
+        let title_state = title_editor.clone();
+        let content_state = content_editor.clone();
+        let title_text = editing.title.clone();
+        let content_text = editing.content.clone();
+        cx.defer_in(window, move |this, window, cx| {
+            let _ = title_state.update(cx, |state, cx| {
+                state.set_value(title_text, window, cx);
+            });
+            let _ = content_state.update(cx, |state, cx| {
+                state.set_value(content_text, window, cx);
+            });
+            this.title_editor = Some(title_state);
+            this.content_editor = Some(content_state);
+            cx.notify();
+        });
+
+        self.title_editor = Some(title_editor);
+        self.content_editor = Some(content_editor);
     }
 
     fn select_next(&mut self, _: &SelectNextNote, _: &mut Window, cx: &mut Context<Self>) {
@@ -242,7 +306,7 @@ impl Render for NotesPanel {
             .on_action(cx.listener(Self::select_next))
             .on_action(cx.listener(Self::select_prev))
             .on_action(cx.listener(|this, _: &NewNote, _window, cx| this.new_note(cx)))
-            .on_action(cx.listener(|this, _: &SaveNote, _window, cx| this.save_editing(cx)))
+            .on_action(cx.listener(|this, _: &SaveNote, window, cx| this.save_editing(window, cx)))
             .on_action(cx.listener(|this, _: &DeleteNote, _window, cx| this.delete_selected(cx)))
             .child(match &self.editing {
                 Some(editing) => {
@@ -283,8 +347,8 @@ impl Render for NotesPanel {
                                         .id("save-note")
                                         .text_size(px(beam_ui::TEXT_XS))
                                         .text_color(beam_ui::accent())
-                                        .on_click(cx.listener(|this, _ev, _window, cx| {
-                                            this.save_editing(cx);
+                                        .on_click(cx.listener(|this, _ev, window, cx| {
+                                            this.save_editing(window, cx);
                                         }))
                                         .child("save"),
                                 ),
@@ -296,14 +360,28 @@ impl Render for NotesPanel {
                                 .text_size(px(beam_ui::TEXT_MD))
                                 .text_color(beam_ui::ink())
                                 .child(content.clone())
+                                .into_any_element()
                         } else {
-                            // Plain text surface until the shared editor slice.
-                            div()
+                            // Shared editor: the title + content Textareas.
+                            let title_editor = self.title_editor.clone();
+                            let content_editor = self.content_editor.clone();
+                            v_flex()
                                 .flex_1()
-                                .p_4()
-                                .text_size(px(beam_ui::TEXT_MD))
-                                .text_color(beam_ui::ink())
-                                .child(content.clone())
+                                .px_4()
+                                .py_2()
+                                .gap_2()
+                                .children(title_editor.map(|editor| {
+                                    div()
+                                        .text_size(px(beam_ui::TEXT_LG))
+                                        .child(Textarea::new(&editor))
+                                }))
+                                .children(content_editor.map(|editor| {
+                                    div()
+                                        .flex_1()
+                                        .text_size(px(beam_ui::TEXT_MD))
+                                        .child(Textarea::new(&editor))
+                                }))
+                                .into_any_element()
                         })
                         .into_any_element()
                 }
