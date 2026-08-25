@@ -219,6 +219,17 @@ impl BeamApp {
     }
 }
 
+/// The shared services state, reachable from any render context.
+pub fn services_state() -> std::sync::Arc<beam_services::state::AppState> {
+    SERVICES_STATE
+        .get()
+        .cloned()
+        .expect("services state installed at startup")
+}
+
+static SERVICES_STATE: std::sync::OnceLock<std::sync::Arc<beam_services::state::AppState>> =
+    std::sync::OnceLock::new();
+
 /// The shared BeamContext, reachable from any render context.
 pub fn context_of<V>(cx: &gpui::Context<V>) -> BeamContext {
     cx.global::<GlobalApp>().0.read(cx).context.clone()
