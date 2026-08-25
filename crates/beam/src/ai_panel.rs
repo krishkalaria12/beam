@@ -259,16 +259,19 @@ fn transcript_row(row: &TranscriptRow) -> impl IntoElement {
                     .bg(beam_ui::row_selected())
                     .border_1()
                     .border_color(beam_ui::border())
-                    .child(
+                    .child(if content.is_empty() && *streaming {
                         div()
                             .text_size(px(beam_ui::TEXT_MD))
-                            .text_color(beam_ui::ink())
-                            .child(if content.is_empty() && *streaming {
-                                "…".to_string()
-                            } else {
-                                content.clone()
-                            }),
-                    ),
+                            .text_color(beam_ui::ink_dim())
+                            .child("…".to_string())
+                            .into_any_element()
+                    } else {
+                        // CommonMark + code (D2/D3: no mermaid, no math).
+                        div()
+                            .text_size(px(beam_ui::TEXT_MD))
+                            .child(gpui_component::text::markdown(content.clone()))
+                            .into_any_element()
+                    }),
             )
             .into_any_element(),
     }
