@@ -11,6 +11,7 @@
 mod activation;
 mod ai_panel;
 mod app;
+mod calculator_history_panel;
 mod calculator_inline;
 mod clipboard_panel;
 mod command_registry;
