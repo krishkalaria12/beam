@@ -18,6 +18,7 @@ mod hotkey;
 mod launcher_state;
 mod notes_panel;
 mod panel_router;
+mod quicklinks_panel;
 mod root_view;
 mod script_commands_panel;
 mod settings_panel;
