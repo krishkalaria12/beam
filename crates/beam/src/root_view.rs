@@ -96,13 +96,13 @@ impl RootView {
         let _subscriptions = vec![cx.subscribe_in(
             &input,
             window,
-            move |this, _, event: &InputEvent, _window, cx| match event {
+            move |this, _, event: &InputEvent, window, cx| match event {
                 InputEvent::Change => {
                     let raw = this.input.read(cx).value().to_string();
                     this.on_query_changed(&raw, cx);
                 }
                 InputEvent::PressEnter { .. } => {
-                    this.dispatch_selected(cx);
+                    this.dispatch_selected(window, cx);
                 }
                 _ => {}
             },
@@ -116,14 +116,6 @@ impl RootView {
                         state.open_dmenu_session(session.clone());
                         cx.notify();
                     });
-                    // Ensure the dmenu panel surface exists and is focused.
-                    this.open_panel(crate::command_registry::CommandPanel::Dmenu, cx);
-                    if let Some(view) = this
-                        .panels
-                        .get(&crate::command_registry::CommandPanel::Dmenu)
-                    {
-                        let _ = view.clone();
-                    }
                 });
             }
         })
@@ -238,7 +230,7 @@ impl RootView {
 
     /// Opens a panel: routes through LauncherUiState and lazily creates
     /// the panel surface (panel retention — created once, kept mounted).
-    fn open_panel(&mut self, panel: CommandPanel, cx: &mut Context<Self>) {
+    fn open_panel(&mut self, panel: CommandPanel, window: &mut Window, cx: &mut Context<Self>) {
         self.ui_state
             .update(cx, |state, _| state.open_panel(panel, true));
 
@@ -307,7 +299,7 @@ impl RootView {
                     .new(|cx| crate::extensions_panel::ExtensionsPanel::new(context.clone(), cx))
                     .into(),
                 CommandPanel::Ai => cx
-                    .new(|cx| crate::ai_panel::AiPanel::new(context.clone(), cx))
+                    .new(|cx| crate::ai_panel::AiPanel::new(context, window, cx))
                     .into(),
                 CommandPanel::Dmenu => cx
                     .new(|cx| crate::dmenu_panel::DmenuPanel::new(context.clone(), cx))
@@ -329,7 +321,7 @@ impl RootView {
         cx.notify();
     }
 
-    fn dispatch_selected(&mut self, cx: &mut Context<Self>) {
+    fn dispatch_selected(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         let Some(entry) = self.ranked.get(self.selected) else {
             return;
         };
@@ -342,7 +334,7 @@ impl RootView {
                 if let Some(payload) = &action.payload {
                     if let Some(panel) = payload.get("panel").and_then(|v| v.as_str()) {
                         if let Some(panel) = CommandPanel::parse(panel) {
-                            self.open_panel(panel, cx);
+                            self.open_panel(panel, window, cx);
                         }
                     }
                 }

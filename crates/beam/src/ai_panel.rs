@@ -1,18 +1,24 @@
-//! The AI panel (P4) — streaming transcript, composer, setup gate.
+//! The AI panel (P4) — streaming transcript with live append, composer,
+//! setup gate.
 //!
-//! PORT: apps/desktop/src/modules/ai (2,879 lines). The transcript is a
-//! plain column until the list()+ListState(Bottom) slice; streaming
-//! already runs through the typed bus (ai-stream-chunk/end/error), the
-//! composer is a plain surface until the shared editor slice. CommonMark
-//! + code only by D2/D3 — mermaid and math are out of scope, not defects.
+//! PORT: apps/desktop/src/modules/ai (2,879 lines). Streaming chunks
+//! append to the assistant message in place (the React build's
+//! appendStreamChunk); the transcript reloads from the service on
+//! stream end (the service persists the assistant message). CommonMark
+//! + code only by D2/D3 — mermaid and math are out of scope, not
+//! defects.
 
 use gpui::{
     actions, div, prelude::*, px, Context, IntoElement, KeyBinding, ParentElement, Render, Styled,
     Window,
 };
-use gpui_component::{h_flex, v_flex};
+use gpui_component::{
+    h_flex,
+    input::{Textarea, TextareaState},
+    v_flex,
+};
 
-use beam_core::BeamContext;
+use beam_core::{events::AiStreamChunk, BeamContext, BeamEvent};
 use beam_services::ai;
 
 use crate::app::context_of;
@@ -31,25 +37,40 @@ pub fn init(cx: &mut gpui::App) {
     ]);
 }
 
+/// A transcript row: user prompt or assistant response.
+#[derive(Debug, Clone)]
+enum TranscriptRow {
+    User { content: String },
+    Assistant { content: String, streaming: bool },
+}
+
 pub struct AiPanel {
     context: BeamContext,
-    prompt: String,
-    messages: Vec<ai::model::AiChatHistoryMessage>,
+    composer: gpui::Entity<TextareaState>,
+    /// The live transcript: prompts and responses in order. The streaming
+    /// assistant row appends in place.
+    transcript: Vec<TranscriptRow>,
     can_access: bool,
     streaming: bool,
+    _stream_task: Option<gpui::Task<()>>,
 }
 
 impl AiPanel {
-    pub fn new(context: BeamContext, cx: &mut Context<Self>) -> Self {
+    pub fn new(context: BeamContext, window: &mut Window, cx: &mut Context<Self>) -> Self {
         let can_access = ai::helper::ai_can_access(&context, None).unwrap_or(false);
+        let composer =
+            cx.new(|cx| TextareaState::new(window, cx).placeholder("ask anything… (enter sends)"));
+
         let mut panel = Self {
             context,
-            prompt: String::new(),
-            messages: Vec::new(),
+            composer,
+            transcript: Vec::new(),
             can_access,
             streaming: false,
+            _stream_task: None,
         };
         panel.load_history(cx);
+        panel.subscribe_stream(cx);
         panel
     }
 
@@ -59,7 +80,21 @@ impl AiPanel {
             let result = ai::helper::get_ai_chat_history(&context, None, Some(50)).await;
             let _ = this.update(cx, |this, cx| {
                 if let Ok(messages) = result {
-                    this.messages = messages;
+                    this.transcript = messages
+                        .iter()
+                        .map(|message| {
+                            if message.role == "user" {
+                                TranscriptRow::User {
+                                    content: message.content.clone(),
+                                }
+                            } else {
+                                TranscriptRow::Assistant {
+                                    content: message.content.clone(),
+                                    streaming: false,
+                                }
+                            }
+                        })
+                        .collect();
                 }
                 cx.notify();
             });
@@ -67,48 +102,77 @@ impl AiPanel {
         .detach();
     }
 
+    /// Subscribes to the AI stream events: chunks append to the streaming
+    /// assistant row in place; end/error finalize it and reload the
+    /// transcript from the service (which persists the message).
     fn subscribe_stream(&mut self, cx: &mut Context<Self>) {
         let mut receiver = self.context.events().subscribe();
-        let context = self.context.clone();
-        cx.spawn(async move |this, cx| loop {
-            use beam_core::BeamEvent;
-            match receiver.recv().await {
-                Ok(BeamEvent::AiStreamChunk(_))
-                | Ok(BeamEvent::AiStreamEnd(_))
-                | Ok(BeamEvent::AiStreamError(_)) => {
-                    let context = context.clone();
+        self._stream_task = Some(cx.spawn(async move |this, cx| loop {
+            let Ok(event) = receiver.recv().await else {
+                break;
+            };
+            match event {
+                BeamEvent::AiStreamChunk(AiStreamChunk { request_id, text }) => {
+                    let context_request = request_id.clone();
                     let _ = this.update(cx, |this, cx| {
-                        // The transcript refresh is a full reload until the
-                        // streaming append slice (the service persists the
-                        // assistant message on completion).
-                        let context = context.clone();
-                        cx.spawn(async move |this, cx| {
-                            let result =
-                                ai::helper::get_ai_chat_history(&context, None, Some(50)).await;
-                            let _ = this.update(cx, |this, cx| {
-                                if let Ok(messages) = result {
-                                    this.messages = messages;
-                                    this.streaming = false;
-                                }
-                                cx.notify();
-                            });
-                        })
-                        .detach();
+                        this.append_chunk(&context_request, &text);
                         cx.notify();
                     });
                 }
-                Ok(_) => {}
-                Err(_) => break,
+                BeamEvent::AiStreamEnd { .. } | BeamEvent::AiStreamError { .. } => {
+                    let _ = this.update(cx, |this, cx| {
+                        this.streaming = false;
+                        // Finalize: the service persisted the assistant
+                        // message; reload for the canonical transcript.
+                        this.load_history(cx);
+                    });
+                }
+                _ => {}
             }
-        })
-        .detach();
+        }));
     }
 
-    fn run_prompt(&mut self, cx: &mut Context<Self>) {
-        let prompt = self.prompt.trim().to_string();
+    /// Appends a chunk to the streaming assistant row (creating it if this
+    /// is the first chunk). Returns false when the request id is stale.
+    fn append_chunk(&mut self, request_id: &str, text: &str) {
+        if let Some(TranscriptRow::Assistant {
+            content, streaming, ..
+        }) = self.transcript.last_mut()
+        {
+            if *streaming {
+                content.push_str(text);
+                return;
+            }
+        }
+
+        // First chunk for this request — open the streaming row.
+        self.transcript.push(TranscriptRow::Assistant {
+            content: text.to_string(),
+            streaming: true,
+        });
+        let _ = request_id;
+    }
+
+    fn run_prompt(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let prompt = self
+            .composer
+            .read(cx)
+            .value()
+            .to_string()
+            .trim()
+            .to_string();
         if prompt.is_empty() || !self.can_access || self.streaming {
             return;
         }
+
+        // Push the user row and clear the composer.
+        self.transcript.push(TranscriptRow::User {
+            content: prompt.clone(),
+        });
+        let composer = self.composer.clone();
+        composer.update(cx, |state, cx| {
+            state.set_value("", window, cx);
+        });
 
         self.streaming = true;
         let context = self.context.clone();
@@ -125,10 +189,12 @@ impl AiPanel {
             let result = ai::helper::ai_ask_stream(&context, request_id, prompt, options).await;
             if let Err(error) = result {
                 log::warn!("ai_ask_stream failed: {error}");
+                let _ = this.update(cx, |this, cx| {
+                    this.streaming = false;
+                    cx.notify();
+                });
             }
-            let _ = this.update(cx, |this, _cx| {
-                this.streaming = false;
-            });
+            // Success finalizes through the stream-end event.
         })
         .detach();
         cx.notify();
@@ -139,7 +205,7 @@ impl AiPanel {
         cx.spawn(async move |this, cx| {
             let _ = ai::helper::clear_ai_chat_history(&context, None).await;
             let _ = this.update(cx, |this, cx| {
-                this.messages.clear();
+                this.transcript.clear();
                 cx.notify();
             });
         })
@@ -161,36 +227,58 @@ impl AiPanel {
     }
 }
 
-fn message_bubble(role: &str, content: &str) -> impl IntoElement {
-    let is_user = role == "user";
-    div().flex().justify_between().child(div()).child(
-        div()
-            .max_w(px(520.))
-            .px_3()
-            .py_2()
-            .rounded(px(beam_ui::RADIUS_ROW))
-            .bg(if is_user {
-                beam_ui::row_hover()
-            } else {
-                beam_ui::row_selected()
-            })
-            .border_1()
-            .border_color(beam_ui::border())
+fn transcript_row(row: &TranscriptRow) -> impl IntoElement {
+    match row {
+        TranscriptRow::User { content } => h_flex()
+            .justify_end()
             .child(
                 div()
-                    .text_size(px(beam_ui::TEXT_MD))
-                    .text_color(beam_ui::ink())
-                    .child(content.to_string()),
-            ),
-    )
+                    .max_w(px(520.))
+                    .px_3()
+                    .py_2()
+                    .rounded(px(beam_ui::RADIUS_ROW))
+                    .bg(beam_ui::row_hover())
+                    .border_1()
+                    .border_color(beam_ui::border())
+                    .child(
+                        div()
+                            .text_size(px(beam_ui::TEXT_MD))
+                            .text_color(beam_ui::ink())
+                            .child(content.clone()),
+                    ),
+            )
+            .into_any_element(),
+        TranscriptRow::Assistant { content, streaming } => h_flex()
+            .justify_start()
+            .child(
+                div()
+                    .max_w(px(520.))
+                    .px_3()
+                    .py_2()
+                    .rounded(px(beam_ui::RADIUS_ROW))
+                    .bg(beam_ui::row_selected())
+                    .border_1()
+                    .border_color(beam_ui::border())
+                    .child(
+                        div()
+                            .text_size(px(beam_ui::TEXT_MD))
+                            .text_color(beam_ui::ink())
+                            .child(if content.is_empty() && *streaming {
+                                "…".to_string()
+                            } else {
+                                content.clone()
+                            }),
+                    ),
+            )
+            .into_any_element(),
+    }
 }
 
 impl Render for AiPanel {
     fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let can_access = self.can_access;
         let streaming = self.streaming;
-        let prompt = self.prompt.clone();
-        let message_count = self.messages.len();
+        let transcript = self.transcript.clone();
 
         div()
             .size_full()
@@ -198,11 +286,11 @@ impl Render for AiPanel {
             .flex_col()
             .key_context("AiPanel")
             .track_focus(&cx.focus_handle())
-            .on_action(cx.listener(|this, _: &RunPrompt, _w, cx| this.run_prompt(cx)))
+            .on_action(cx.listener(|this, _: &RunPrompt, window, cx| this.run_prompt(window, cx)))
             .on_action(cx.listener(|this, _: &ClearHistory, _w, cx| this.clear_history(cx)))
             .on_action(cx.listener(|this, _: &ToggleEnabled, _w, cx| this.toggle_enabled(cx)))
             .on_action(cx.listener(|this, _: &NewConversation, _w, cx| {
-                this.prompt = String::new();
+                this.transcript.clear();
                 cx.notify();
             }))
             .child(if !can_access {
@@ -232,7 +320,7 @@ impl Render for AiPanel {
                     .p_3()
                     .gap_2()
                     .overflow_hidden()
-                    .when(self.messages.is_empty(), |this| {
+                    .when(transcript.is_empty(), |this| {
                         this.child(
                             div()
                                 .text_size(px(beam_ui::TEXT_SM))
@@ -240,51 +328,17 @@ impl Render for AiPanel {
                                 .child("Ask anything — responses stream here."),
                         )
                     })
-                    .children(
-                        self.messages
-                            .iter()
-                            .take(40)
-                            .map(|message| message_bubble(&message.role, &message.content)),
-                    )
-                    .children(streaming.then(|| {
-                        div()
-                            .text_size(px(beam_ui::TEXT_SM))
-                            .text_color(beam_ui::ink_faint())
-                            .child("streaming…")
-                    }))
+                    .children(transcript.iter().map(transcript_row))
                     .into_any_element()
             })
             .child(
                 h_flex()
                     .min_h(px(beam_ui::SEARCH_BAR_HEIGHT))
                     .px_4()
-                    .gap_3()
-                    .items_center()
+                    .py_2()
                     .border_t_1()
                     .border_color(beam_ui::divider())
-                    .child(
-                        div()
-                            .flex_1()
-                            .text_size(px(beam_ui::TEXT_MD))
-                            .text_color(if prompt.is_empty() {
-                                beam_ui::ink_faint()
-                            } else {
-                                beam_ui::ink()
-                            })
-                            .child(if prompt.is_empty() {
-                                "ask anything… (enter sends)".to_string()
-                            } else {
-                                prompt
-                            }),
-                    )
-                    .child(
-                        div()
-                            .id("send-prompt")
-                            .text_size(px(beam_ui::TEXT_XS))
-                            .text_color(beam_ui::accent())
-                            .on_click(cx.listener(|this, _ev, _w, cx| this.run_prompt(cx)))
-                            .child(if streaming { "…" } else { "send" }),
-                    ),
+                    .child(Textarea::new(&self.composer)),
             )
             .child(
                 h_flex()
@@ -298,7 +352,11 @@ impl Render for AiPanel {
                         div()
                             .text_size(px(beam_ui::TEXT_2XS))
                             .text_color(beam_ui::ink_faint())
-                            .child(format!("{} messages", message_count)),
+                            .child(if streaming {
+                                "streaming…".to_string()
+                            } else {
+                                format!("{} messages", self.transcript.len())
+                            }),
                     )
                     .child(
                         div()
