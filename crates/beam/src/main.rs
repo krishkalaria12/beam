@@ -13,6 +13,7 @@ mod app;
 mod calculator_inline;
 mod clipboard_panel;
 mod command_registry;
+mod dictionary_panel;
 mod glass;
 mod hotkey;
 mod launcher_state;
