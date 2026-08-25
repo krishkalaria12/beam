@@ -108,6 +108,29 @@ pub struct DmenuRequest {
     pub restore_window_hidden: bool,
 }
 
+impl DmenuRequest {
+    /// A minimal request for the panel's session-restore path (the full
+    /// request rides the bus event from the CLI).
+    pub fn default_with(request_id: String, initial_query: String) -> Self {
+        Self {
+            request_id,
+            prompt: None,
+            message: None,
+            lines: 10,
+            password: false,
+            only_match: false,
+            no_custom: false,
+            markup_rows: false,
+            case_insensitive: true,
+            select_text: None,
+            initial_query,
+            search_mode: DmenuSearchMode::BeamFuzzy,
+            rows: Vec::new(),
+            restore_window_hidden: false,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct DmenuResponse {
