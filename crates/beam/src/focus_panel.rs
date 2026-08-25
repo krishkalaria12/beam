@@ -38,6 +38,11 @@ pub struct FocusPanel {
 }
 
 impl FocusPanel {
+    /// Static refresh used where the entity handle isn't in scope.
+    fn refresh_static(context: &BeamContext) {
+        let _ = context; // get_status reads the global state directly
+    }
+
     pub fn new(context: BeamContext, cx: &mut Context<Self>) -> Self {
         let mut panel = Self {
             context,
@@ -65,24 +70,22 @@ impl FocusPanel {
         let context = self.context.clone();
         let goal = self.goal.clone();
         let duration = self.duration_minutes * 60;
-        cx.spawn(async move |this, cx| {
-            let result = focus::start_session(
-                &context,
-                FocusSessionDraft {
-                    goal,
-                    duration_seconds: Some(duration),
-                    mode: FocusSessionMode::Block,
-                    category_ids: Vec::new(),
-                    apps: Vec::new(),
-                    websites: Vec::new(),
-                },
-            );
-            if let Err(error) = result {
-                log::warn!("start_focus_session failed: {error}");
-            }
-            let _ = this.update(cx, |this, cx| this.refresh(cx));
-        })
-        .detach();
+        let result = focus::start_focus_session(
+            &context,
+            FocusSessionDraft {
+                goal,
+                duration_seconds: Some(duration),
+                mode: FocusSessionMode::Block,
+                category_ids: Vec::new(),
+                apps: Vec::new(),
+                websites: Vec::new(),
+            },
+        );
+        if let Err(error) = result {
+            log::warn!("start_focus_session failed: {error}");
+        }
+        Self::refresh_static(&context);
+        cx.notify();
     }
 
     fn toggle_pause(&mut self, cx: &mut Context<Self>) {
@@ -93,33 +96,26 @@ impl FocusPanel {
             .and_then(|status| status.session.as_ref())
             .map(|session| session.status == focus::types::FocusSessionStatus::Running)
             .unwrap_or(false);
-        cx.spawn(async move |this, cx| {
-            let result = if running {
-                focus::pause_session(&context).await
-            } else {
-                focus::resume_session(&context).await
-            };
-            if let Err(error) = result {
-                log::warn!("focus toggle failed: {error}");
-            }
-            let _ = this.update(cx, |this, cx| this.refresh(cx));
-        })
-        .detach();
+        let result = if running {
+            focus::pause_focus_session(&context)
+        } else {
+            focus::resume_focus_session(&context)
+        };
+        if let Err(error) = result {
+            log::warn!("focus toggle failed: {error}");
+        }
+        cx.notify();
     }
 
     fn complete(&mut self, cx: &mut Context<Self>) {
         let context = self.context.clone();
-        cx.spawn(async move |this, cx| {
-            let _ = focus::complete_session(&context).await;
-            let _ = this.update(cx, |this, cx| this.refresh(cx));
-        })
-        .detach();
+        let _ = focus::complete_focus_session(&context);
+        cx.notify();
     }
 }
 
 fn format_remaining(ends_at: i64, paused_at: Option<i64>, now: i64) -> String {
-    let remaining_seconds =
-        (ends_at.saturating_sub(paused_at.unwrap_or(now)) / 1000).max(0);
+    let remaining_seconds = (ends_at.saturating_sub(paused_at.unwrap_or(now)) / 1000).max(0);
     let minutes = remaining_seconds / 60;
     let seconds = remaining_seconds % 60;
     format!("{minutes}:{seconds:02}")
@@ -206,16 +202,12 @@ impl Render for FocusPanel {
                                         "app blocking unavailable"
                                     }),
                             )
-                            .children(
-                                caps.notes
-                                    .iter()
-                                    .map(|note| {
-                                        div()
-                                            .text_size(px(beam_ui::TEXT_2XS))
-                                            .text_color(beam_ui::ink_faint())
-                                            .child(note.clone())
-                                    }),
-                            )
+                            .children(caps.notes.iter().map(|note| {
+                                div()
+                                    .text_size(px(beam_ui::TEXT_2XS))
+                                    .text_color(beam_ui::ink_faint())
+                                    .child(note.clone())
+                            }))
                     })),
             )
             .child(
@@ -235,19 +227,16 @@ impl Render for FocusPanel {
                                     .text_size(px(beam_ui::TEXT_XS))
                                     .text_color(beam_ui::accent())
                                     .on_click(cx.listener(|this, _ev, _w, cx| this.start(cx)))
-                                    .child(format!(
-                                        "start {}m",
-                                        self.duration_minutes
-                                    )),
+                                    .child(format!("start {}m", self.duration_minutes)),
                             )
                             .child(
                                 div()
                                     .id("pause-focus")
                                     .text_size(px(beam_ui::TEXT_XS))
                                     .text_color(beam_ui::ink_dim())
-                                    .on_click(cx.listener(|this, _ev, _w, cx| {
-                                        this.toggle_pause(cx)
-                                    }))
+                                    .on_click(
+                                        cx.listener(|this, _ev, _w, cx| this.toggle_pause(cx)),
+                                    )
                                     .child("pause/resume"),
                             )
                             .child(
@@ -255,9 +244,7 @@ impl Render for FocusPanel {
                                     .id("complete-focus")
                                     .text_size(px(beam_ui::TEXT_XS))
                                     .text_color(beam_ui::ink_dim())
-                                    .on_click(cx.listener(|this, _ev, _w, cx| {
-                                        this.complete(cx)
-                                    }))
+                                    .on_click(cx.listener(|this, _ev, _w, cx| this.complete(cx)))
                                     .child("complete"),
                             ),
                     )

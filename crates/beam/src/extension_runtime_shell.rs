@@ -21,6 +21,7 @@
 //! pattern against the same tree.
 
 use gpui::{div, prelude::*, px, Context, IntoElement, Render, Styled, Window};
+use gpui_component::v_flex;
 
 /// One materialized node in the runtime's UI tree.
 #[derive(Debug, Clone, PartialEq)]
@@ -99,7 +100,7 @@ impl ExtensionRuntimeRegistry {
 
 /// Renders the List surface: items with title/subtitle/accessories,
 /// sections as labeled groups, EmptyView as the placeholder.
-fn render_list(nodes: &[RuntimeNode]) -> impl IntoElement {
+fn render_list(nodes: &[RuntimeNode]) -> gpui::AnyElement {
     v_flex()
         .flex_1()
         .px_2()
@@ -146,23 +147,22 @@ fn render_list(nodes: &[RuntimeNode]) -> impl IntoElement {
                     .text_color(beam_ui::ink_faint())
                     .child("no results")
                     .into_any_element(),
-                _ => {
-                    list_item_row(
-                        child
-                            .props
-                            .get("title")
-                            .and_then(|v| v.as_str())
-                            .unwrap_or(""),
-                        child
-                            .props
-                            .get("subtitle")
-                            .and_then(|v| v.as_str())
-                            .unwrap_or(""),
-                    )
-                    .into_any_element()
-                }
+                _ => list_item_row(
+                    child
+                        .props
+                        .get("title")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or(""),
+                    child
+                        .props
+                        .get("subtitle")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or(""),
+                )
+                .into_any_element(),
             }
         }))
+        .into_any_element()
 }
 
 fn list_item_row(title: &str, subtitle: &str) -> impl IntoElement {
@@ -200,7 +200,7 @@ impl Render for ExtensionRuntimeShell {
         let _ = cx;
 
         match view_kind {
-            RuntimeViewKind::List => render_list(&[]),
+            RuntimeViewKind::List => render_list(&[]).into_any_element(),
             _ => v_flex()
                 .flex_1()
                 .items_center()
@@ -210,7 +210,8 @@ impl Render for ExtensionRuntimeShell {
                         .text_size(px(beam_ui::TEXT_SM))
                         .text_color(beam_ui::ink_faint())
                         .child("extension runtime"),
-                ),
+                )
+                .into_any_element(),
         }
     }
 }

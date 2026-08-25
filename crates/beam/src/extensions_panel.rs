@@ -19,7 +19,13 @@ use crate::app::context_of;
 
 actions!(
     extensions_panel,
-    [SelectNext, SelectPrev, InstallSelected, UninstallSelected, RefreshList]
+    [
+        SelectNext,
+        SelectPrev,
+        InstallSelected,
+        UninstallSelected,
+        RefreshList
+    ]
 );
 
 pub fn init(cx: &mut gpui::App) {
@@ -35,6 +41,7 @@ pub struct ExtensionsPanel {
     context: BeamContext,
     query: String,
     results: Option<serde_json::Value>,
+    selected: usize,
     discovered: usize,
     installing: bool,
     error: Option<String>,
@@ -46,6 +53,7 @@ impl ExtensionsPanel {
             context,
             query: String::new(),
             results: None,
+            selected: 0,
             discovered: 0,
             installing: false,
             error: None,
@@ -58,8 +66,7 @@ impl ExtensionsPanel {
         let context = self.context.clone();
         let query = self.query.clone();
         cx.spawn(async move |this, cx| {
-            let search =
-                extensions::store::search_extension_store(&context, query, Some(30)).await;
+            let search = extensions::store::search_extension_store(&context, query, Some(30)).await;
             let discovered = extensions::get_discovered_plugins(&context);
             let _ = this.update(cx, |this, cx| {
                 match search {
@@ -96,21 +103,15 @@ impl ExtensionsPanel {
         let context = self.context.clone();
         let package_id = package_id.to_string();
         cx.spawn(async move |this, cx| {
-            let result = extensions::install_store_extension(
-                &context,
-                package_id,
-                None,
-                None,
-                false,
-            )
-            .await;
+            let result =
+                extensions::install_store_extension(&context, package_id, None, None, false).await;
             let _ = this.update(cx, |this, cx| {
                 this.installing = false;
                 match result {
                     Ok(_) => this.refresh(cx),
                     Err(error) => this.error = Some(error.to_string()),
-                    cx.notify(),
                 }
+                cx.notify();
             });
         })
         .detach();
@@ -133,10 +134,12 @@ impl ExtensionsPanel {
         let slug = slug.to_string();
         cx.spawn(async move |this, cx| {
             let result = extensions::uninstall_extension(&context, slug);
-            let _ = this.update(cx, |this, cx| match result {
-                Ok(_) => this.refresh(cx),
-                Err(error) => this.error = Some(error.to_string()),
-                cx.notify(),
+            let _ = this.update(cx, |this, cx| {
+                match result {
+                    Ok(_) => this.refresh(cx),
+                    Err(error) => this.error = Some(error.to_string()),
+                }
+                cx.notify();
             });
         })
         .detach();
@@ -162,15 +165,16 @@ impl ExtensionsPanel {
     }
 }
 
-fn package_row(package: &serde_json::Value, is_selected: bool, installed: bool) -> impl IntoElement {
+fn package_row(
+    package: &serde_json::Value,
+    is_selected: bool,
+    installed: bool,
+) -> impl IntoElement {
     let name = package
         .get("name")
         .and_then(|v| v.as_str())
         .unwrap_or("unnamed");
-    let author = package
-        .get("author")
-        .and_then(|v| v.as_str())
-        .unwrap_or("");
+    let author = package.get("author").and_then(|v| v.as_str()).unwrap_or("");
     let downloads = package
         .get("installs")
         .and_then(|v| v.as_u64())
@@ -246,12 +250,10 @@ impl Render for ExtensionsPanel {
             .track_focus(&cx.focus_handle())
             .on_action(cx.listener(Self::select_next))
             .on_action(cx.listener(Self::select_prev))
-            .on_action(cx.listener(|this, _: &InstallSelected, _w, cx| {
-                this.install_selected(cx)
-            }))
-            .on_action(cx.listener(|this, _: &UninstallSelected, _w, cx| {
-                this.uninstall_selected(cx)
-            }))
+            .on_action(cx.listener(|this, _: &InstallSelected, _w, cx| this.install_selected(cx)))
+            .on_action(
+                cx.listener(|this, _: &UninstallSelected, _w, cx| this.uninstall_selected(cx)),
+            )
             .on_action(cx.listener(|this, _: &RefreshList, _w, cx| this.refresh(cx)))
             .child(
                 h_flex()
@@ -279,25 +281,33 @@ impl Render for ExtensionsPanel {
                             .child(format!("{discovered} installed")),
                     ),
             )
-            .child(v_flex()
-                .flex_1()
-                .px_2()
-                .pt_1()
-                .overflow_hidden()
-                .when_some(error, |this, error| {
-                    this.child(
-                        div()
-                            .px_3()
-                            .py_2()
-                            .text_size(px(beam_ui::TEXT_SM))
-                            .text_color(beam_ui::ink_faint())
-                            .child(error),
-                    )
-                })
-                .children(packages.iter().enumerate().take(30).map(|(index, package)| {
-                    let id = package.get("id").and_then(|v| v.as_str()).unwrap_or("");
-                    package_row(package, index == selected, id.is_empty())
-                })))
+            .child(
+                v_flex()
+                    .flex_1()
+                    .px_2()
+                    .pt_1()
+                    .overflow_hidden()
+                    .when_some(error, |this, error| {
+                        this.child(
+                            div()
+                                .px_3()
+                                .py_2()
+                                .text_size(px(beam_ui::TEXT_SM))
+                                .text_color(beam_ui::ink_faint())
+                                .child(error),
+                        )
+                    })
+                    .children(
+                        packages
+                            .iter()
+                            .enumerate()
+                            .take(30)
+                            .map(|(index, package)| {
+                                let id = package.get("id").and_then(|v| v.as_str()).unwrap_or("");
+                                package_row(package, index == selected, id.is_empty())
+                            }),
+                    ),
+            )
             .child(
                 h_flex()
                     .h(px(beam_ui::FOOTER_HEIGHT))

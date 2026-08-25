@@ -19,7 +19,13 @@ use crate::app::context_of;
 
 actions!(
     window_switcher_panel,
-    [SelectNext, SelectPrev, FocusSelected, CloseSelected, RefreshList]
+    [
+        SelectNext,
+        SelectPrev,
+        FocusSelected,
+        CloseSelected,
+        RefreshList
+    ]
 );
 
 pub fn init(cx: &mut gpui::App) {
@@ -166,45 +172,43 @@ impl Render for WindowSwitcherPanel {
             .track_focus(&cx.focus_handle())
             .on_action(cx.listener(Self::select_next))
             .on_action(cx.listener(Self::select_prev))
-            .on_action(cx.listener(|this, _: &FocusSelected, _w, cx| {
-                this.focus_selected(cx)
-            }))
-            .on_action(cx.listener(|this, _: &CloseSelected, _w, cx| {
-                this.close_selected(cx)
-            }))
+            .on_action(cx.listener(|this, _: &FocusSelected, _w, cx| this.focus_selected(cx)))
+            .on_action(cx.listener(|this, _: &CloseSelected, _w, cx| this.close_selected(cx)))
             .on_action(cx.listener(|this, _: &RefreshList, _w, cx| this.refresh(cx)))
-            .child(v_flex()
-                .flex_1()
-                .px_2()
-                .pt_1()
-                .overflow_hidden()
-                .when_some(notice, |this, notice| {
-                    this.child(
-                        div()
-                            .px_3()
-                            .py_2()
-                            .text_size(px(beam_ui::TEXT_SM))
-                            .text_color(beam_ui::ink_dim())
-                            .child(notice),
-                    )
-                })
-                .when(self.windows.is_empty() && self.notice.is_none(), |this| {
-                    this.child(
-                        div()
-                            .px_3()
-                            .py_2()
-                            .text_size(px(beam_ui::TEXT_SM))
-                            .text_color(beam_ui::ink_faint())
-                            .child("No windows found."),
-                    )
-                })
-                .children(
-                    self.windows
-                        .iter()
-                        .enumerate()
-                        .take(30)
-                        .map(|(index, window)| window_row(window, index == selected)),
-                ))
+            .child(
+                v_flex()
+                    .flex_1()
+                    .px_2()
+                    .pt_1()
+                    .overflow_hidden()
+                    .when_some(notice, |this, notice| {
+                        this.child(
+                            div()
+                                .px_3()
+                                .py_2()
+                                .text_size(px(beam_ui::TEXT_SM))
+                                .text_color(beam_ui::ink_dim())
+                                .child(notice),
+                        )
+                    })
+                    .when(self.windows.is_empty() && self.notice.is_none(), |this| {
+                        this.child(
+                            div()
+                                .px_3()
+                                .py_2()
+                                .text_size(px(beam_ui::TEXT_SM))
+                                .text_color(beam_ui::ink_faint())
+                                .child("No windows found."),
+                        )
+                    })
+                    .children(
+                        self.windows
+                            .iter()
+                            .enumerate()
+                            .take(30)
+                            .map(|(index, window)| window_row(window, index == selected)),
+                    ),
+            )
             .child(
                 h_flex()
                     .h(px(beam_ui::FOOTER_HEIGHT))

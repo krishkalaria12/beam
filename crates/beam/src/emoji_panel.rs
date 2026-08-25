@@ -10,10 +10,15 @@
 //! The grid is a uniform grid (gpui's grid_layout) — the virtualized
 //! variant lands with the uniform_list slice.
 
+use gpui::{div, prelude::*, px, Context, IntoElement, Render, Styled, Window};
+use gpui_component::{h_flex, v_flex};
+
 use serde::Deserialize;
 
 use beam_core::BeamContext;
 use beam_services::emoji;
+
+use beam_ui;
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct EmojiData {
@@ -117,15 +122,11 @@ fn emoji_cell(emoji: &EmojiData, is_selected: bool) -> impl IntoElement {
                 .border_1()
                 .border_color(beam_ui::border())
         })
-        .child(
-            div()
-                .text_size(px(24.))
-                .child(emoji.emoji.clone()),
-        )
+        .child(div().text_size(px(24.)).child(emoji.emoji.clone()))
 }
 
 impl Render for EmojiPanel {
-    fn render(&mut self, _window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
+    fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let filtered = self.filtered.clone();
         let pinned = self.pinned.clone();
         let selected = self.selected;
@@ -163,22 +164,19 @@ impl Render for EmojiPanel {
                             .child(format!("{} pinned", pinned.len())),
                     ),
             )
-            .child(v_flex()
-                .flex_1()
-                .px_2()
-                .pt_1()
-                .overflow_hidden()
-                .child(
+            .child(
+                v_flex().flex_1().px_2().pt_1().overflow_hidden().child(
                     // Grid rows: 8 per row, transcribed from the React
                     // grid's column count.
-                    div()
-                        .flex()
-                        .flex_wrap()
-                        .gap_1()
-                        .children(filtered.iter().enumerate().take(120).map(|(index, emoji)| {
-                            emoji_cell(emoji, index == selected)
-                        })),
-                ))
+                    div().flex().flex_wrap().gap_1().children(
+                        filtered
+                            .iter()
+                            .enumerate()
+                            .take(120)
+                            .map(|(index, emoji)| emoji_cell(emoji, index == selected)),
+                    ),
+                ),
+            )
             .child(
                 h_flex()
                     .h(px(beam_ui::FOOTER_HEIGHT))

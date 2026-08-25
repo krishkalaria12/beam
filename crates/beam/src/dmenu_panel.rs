@@ -68,8 +68,8 @@ impl DmenuPanel {
         // The full request (rows, options) rides the bus event; the session
         // snapshot carries the id and initial query for restore. Until the
         // bus subscription lands, the session opens with empty rows.
-        let request = DmenuRequest::default_with(session.request_id, session.initial_query);
-        self.filtered = rank_rows(&request.rows, &Default::default(), &request.initial_query);
+        let request = DmenuRequest::default_with(session.request_id, session.initial_query.clone());
+        self.filtered = rank_rows(&request.rows, &Default::default(), &session.initial_query);
         self.request = Some(request);
         self.query = session.initial_query;
         self.selected = 0;
@@ -97,18 +97,14 @@ impl DmenuPanel {
         let response = DmenuResponse {
             request_id: request.request_id.clone(),
             accepted,
-            selected_index: selected_index.map(|index| index as i64),
+            selected_index,
             selected_text,
             filter_text: self.query.clone(),
         };
 
         // Complete through the bridge runtime (the CLI is blocked on it).
         let state = crate::app::services_state();
-        let _ = beam_services::cli::bridge::cli_bridge_complete_request(
-            &context,
-            &state,
-            response,
-        );
+        let _ = beam_services::cli::bridge::cli_bridge_complete_request(&context, &state, response);
 
         // Restore the launcher state (snapshot semantics in LauncherUiState).
         cx.notify();
@@ -116,8 +112,7 @@ impl DmenuPanel {
 
     fn filter_update(&mut self, query: String, cx: &mut Context<Self>) {
         if let Some(request) = &self.request {
-            self.filtered =
-                rank_rows(&request.rows, &Default::default(), &query);
+            self.filtered = rank_rows(&request.rows, &Default::default(), &query);
         }
         self.query = query;
         self.selected = 0;
@@ -146,7 +141,10 @@ impl Render for DmenuPanel {
             .as_ref()
             .and_then(|request| request.prompt.clone())
             .unwrap_or_else(|| "select".to_string());
-        let message = self.request.as_ref().and_then(|request| request.message.clone());
+        let message = self
+            .request
+            .as_ref()
+            .and_then(|request| request.message.clone());
         let query = self.query.clone();
 
         div()
@@ -157,12 +155,8 @@ impl Render for DmenuPanel {
             .track_focus(&cx.focus_handle())
             .on_action(cx.listener(Self::select_next))
             .on_action(cx.listener(Self::select_prev))
-            .on_action(cx.listener(|this, _: &AcceptSelected, _w, cx| {
-                this.complete(true, cx)
-            }))
-            .on_action(cx.listener(|this, _: &CancelSession, _w, cx| {
-                this.complete(false, cx)
-            }))
+            .on_action(cx.listener(|this, _: &AcceptSelected, _w, cx| this.complete(true, cx)))
+            .on_action(cx.listener(|this, _: &CancelSession, _w, cx| this.complete(false, cx)))
             .child(
                 h_flex()
                     .h(px(beam_ui::SEARCH_BAR_HEIGHT))
@@ -197,35 +191,38 @@ impl Render for DmenuPanel {
                     .text_color(beam_ui::ink_faint())
                     .child(message)
             }))
-            .child(v_flex()
-                .flex_1()
-                .px_2()
-                .pt_1()
-                .overflow_hidden()
-                .when(filtered.is_empty(), |this| {
-                    this.child(
+            .child(
+                v_flex()
+                    .flex_1()
+                    .px_2()
+                    .pt_1()
+                    .overflow_hidden()
+                    .when(filtered.is_empty(), |this| {
+                        this.child(
+                            div()
+                                .px_3()
+                                .py_2()
+                                .text_size(px(beam_ui::TEXT_SM))
+                                .text_color(beam_ui::ink_faint())
+                                .child("no matches"),
+                        )
+                    })
+                    .children(filtered.iter().enumerate().take(20).map(|(index, row)| {
                         div()
                             .px_3()
                             .py_2()
-                            .text_size(px(beam_ui::TEXT_SM))
-                            .text_color(beam_ui::ink_faint())
-                            .child("no matches"),
-                    )
-                })
-                .children(filtered.iter().enumerate().take(20).map(|(index, row)| {
-                    div()
-                        .px_3()
-                        .py_2()
-                        .rounded(px(beam_ui::RADIUS_ROW))
-                        .when(index == selected, |row_el| {
-                            row_el.bg(beam_ui::row_selected())
-                                .border_1()
-                                .border_color(beam_ui::border())
-                        })
-                        .text_size(px(beam_ui::TEXT_MD))
-                        .text_color(beam_ui::ink())
-                        .child(row.clone())
-                })))
+                            .rounded(px(beam_ui::RADIUS_ROW))
+                            .when(index == selected, |row_el| {
+                                row_el
+                                    .bg(beam_ui::row_selected())
+                                    .border_1()
+                                    .border_color(beam_ui::border())
+                            })
+                            .text_size(px(beam_ui::TEXT_MD))
+                            .text_color(beam_ui::ink())
+                            .child(row.clone())
+                    })),
+            )
             .child(
                 h_flex()
                     .h(px(beam_ui::FOOTER_HEIGHT))

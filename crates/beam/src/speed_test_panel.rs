@@ -48,12 +48,16 @@ fn metric_row(label: &str, value: Option<f64>, unit: &str) -> impl IntoElement {
             div()
                 .text_size(px(beam_ui::TEXT_2XL))
                 .text_color(beam_ui::ink())
-                .child(value.map(|v| format!("{v:.1} {unit}")).unwrap_or_else(|| "—".to_string())),
+                .child(
+                    value
+                        .map(|v| format!("{v:.1} {unit}"))
+                        .unwrap_or_else(|| "—".to_string()),
+                ),
         )
 }
 
 impl Render for SpeedTestPanel {
-    fn render(&mut self, _window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
+    fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let running = self.running;
         let result = self.result.clone();
 

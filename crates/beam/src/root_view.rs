@@ -44,9 +44,11 @@ pub struct RootView {
     calculator_generation: u64,
     selected: usize,
     active_mode: CommandMode,
-    /// The panel the dispatcher most recently opened (placeholder surface
-    /// for the panel router).
-    opened_panel: Option<CommandPanel>,
+    /// The panel router state (use-launcher-ui-store port).
+    pub ui_state: gpui::Entity<crate::launcher_state::LauncherUiState>,
+    /// Lazily-created panel surfaces keyed by panel id (panel retention:
+    /// created once, kept mounted).
+    panels: std::collections::HashMap<CommandPanel, gpui::AnyView>,
     glass_label: String,
     _subscriptions: Vec<gpui::Subscription>,
 }
@@ -77,6 +79,7 @@ impl RootView {
             },
         )];
 
+        let ui_state = cx.new(|_| crate::launcher_state::LauncherUiState::default());
         let mut view = Self {
             input,
             context,
@@ -86,7 +89,8 @@ impl RootView {
             calculator_generation: 0,
             selected: 0,
             active_mode: CommandMode::Normal,
-            opened_panel: None,
+            ui_state,
+            panels: std::collections::HashMap::new(),
             glass_label,
             _subscriptions,
         };
@@ -182,6 +186,99 @@ impl RootView {
         cx.notify();
     }
 
+    /// Opens a panel: routes through LauncherUiState and lazily creates
+    /// the panel surface (panel retention — created once, kept mounted).
+    fn open_panel(&mut self, panel: CommandPanel, cx: &mut Context<Self>) {
+        self.ui_state
+            .update(cx, |state, _| state.open_panel(panel, true));
+
+        if !self.panels.contains_key(&panel) {
+            let context = self.context.clone();
+            let view: gpui::AnyView = match panel {
+                CommandPanel::Settings => cx
+                    .new(|cx| crate::settings_panel::SettingsPanel::open(cx))
+                    .into(),
+                CommandPanel::Clipboard => cx
+                    .new(|cx| crate::clipboard_panel::ClipboardPanel::new(context.clone(), cx))
+                    .into(),
+                CommandPanel::Notes => cx
+                    .new(|cx| crate::notes_panel::NotesPanel::new(context.clone(), cx))
+                    .into(),
+                CommandPanel::Snippets => cx
+                    .new(|cx| crate::snippets_panel::SnippetsPanel::new(context.clone(), cx))
+                    .into(),
+                CommandPanel::Todo => cx
+                    .new(|cx| crate::todo_panel::TodoPanel::new(context.clone(), cx))
+                    .into(),
+                CommandPanel::ScriptCommands => cx
+                    .new(|cx| {
+                        crate::script_commands_panel::ScriptCommandsPanel::new(context.clone(), cx)
+                    })
+                    .into(),
+                CommandPanel::Quicklinks => cx
+                    .new(|cx| crate::quicklinks_panel::QuicklinksPanel::new(context.clone(), cx))
+                    .into(),
+                CommandPanel::Focus => cx
+                    .new(|cx| crate::focus_panel::FocusPanel::new(context.clone(), cx))
+                    .into(),
+                CommandPanel::Dictionary => cx
+                    .new(|cx| crate::dictionary_panel::DictionaryPanel::new(context.clone(), cx))
+                    .into(),
+                CommandPanel::Translation => cx
+                    .new(|cx| crate::translation_panel::TranslationPanel::new(context.clone(), cx))
+                    .into(),
+                CommandPanel::WindowSwitcher => cx
+                    .new(|cx| {
+                        let state = crate::app::services_state();
+                        crate::window_switcher_panel::WindowSwitcherPanel::new(state, cx)
+                    })
+                    .into(),
+                CommandPanel::Hyprwhspr => cx
+                    .new(|cx| crate::hyprwhspr_panel::HyprwhsprPanel::new(cx))
+                    .into(),
+                CommandPanel::SpeedTest => cx
+                    .new(|cx| crate::speed_test_panel::SpeedTestPanel::new(cx))
+                    .into(),
+                CommandPanel::FileSearch => cx
+                    .new(|cx| crate::file_search_panel::FileSearchPanel::new(context.clone(), cx))
+                    .into(),
+                CommandPanel::Emoji => cx
+                    .new(|cx| crate::emoji_panel::EmojiPanel::new(context.clone(), cx))
+                    .into(),
+                CommandPanel::CalculatorHistory => cx
+                    .new(|cx| {
+                        crate::calculator_history_panel::CalculatorHistoryPanel::new(
+                            context.clone(),
+                            cx,
+                        )
+                    })
+                    .into(),
+                CommandPanel::Extensions => cx
+                    .new(|cx| crate::extensions_panel::ExtensionsPanel::new(context.clone(), cx))
+                    .into(),
+                CommandPanel::Ai => cx
+                    .new(|cx| crate::ai_panel::AiPanel::new(context.clone(), cx))
+                    .into(),
+                CommandPanel::Dmenu => cx
+                    .new(|cx| crate::dmenu_panel::DmenuPanel::new(context.clone(), cx))
+                    .into(),
+                CommandPanel::Commands | CommandPanel::ExtensionRunner => {
+                    // Commands is the shell itself; the extension runner
+                    // shell lands with its bus wiring slice.
+                    return;
+                }
+            };
+            self.panels.insert(panel, view);
+        }
+        cx.notify();
+    }
+
+    fn back_to_commands(&mut self, cx: &mut Context<Self>) {
+        self.ui_state
+            .update(cx, |state, _| state.back_to_commands());
+        cx.notify();
+    }
+
     fn dispatch_selected(&mut self, cx: &mut Context<Self>) {
         let Some(entry) = self.ranked.get(self.selected) else {
             return;
@@ -195,10 +292,7 @@ impl RootView {
                 if let Some(payload) = &action.payload {
                     if let Some(panel) = payload.get("panel").and_then(|v| v.as_str()) {
                         if let Some(panel) = CommandPanel::parse(panel) {
-                            self.opened_panel = Some(panel);
-                            // Panel surfaces land with the P-lanes; the
-                            // router will swap the root view here.
-                            log::info!("open panel: {panel}");
+                            self.open_panel(panel, cx);
                         }
                     }
                 }
@@ -243,6 +337,24 @@ impl RootView {
             }
             other => log::info!("action {other:?} awaits the dispatcher port"),
         }
+    }
+}
+
+impl RootView {
+    /// The panel surface for the active panel, or None for the root
+    /// commands view (the ranked list renders).
+    fn active_panel_view(&self, cx: &mut Context<Self>) -> Option<impl IntoElement> {
+        let active = self.ui_state.read(cx).active_panel;
+        if active == CommandPanel::Commands {
+            return None;
+        }
+        self.panels.get(&active).map(|view| {
+            div()
+                .absolute()
+                .size_full()
+                .bg(beam_ui::shell_plate(true, 0.95))
+                .child(view.clone())
+        })
     }
 }
 
@@ -343,18 +455,15 @@ impl Render for RootView {
                         div()
                             .text_size(px(beam_ui::TEXT_2XS))
                             .text_color(beam_ui::ink_faint())
-                            .child(match self.opened_panel {
-                                Some(panel) => format!("panel: {panel}"),
-                                None => format!(
-                                    "beam · glass {}{}",
-                                    self.glass_label,
-                                    if mode_label.is_empty() {
-                                        String::new()
-                                    } else {
-                                        format!(" · {mode_label} mode")
-                                    }
-                                ),
-                            }),
+                            .child(format!(
+                                "beam · glass {}{}",
+                                self.glass_label,
+                                if mode_label.is_empty() {
+                                    String::new()
+                                } else {
+                                    format!(" · {mode_label} mode")
+                                }
+                            )),
                     )
                     .child(
                         div()

@@ -65,9 +65,11 @@ impl FileSearchPanel {
             return;
         }
 
+        let context = self.context.clone();
         let state = crate::app::services_state();
         cx.spawn(async move |this, cx| {
             let result = file_search::search_files(
+                &context,
                 SearchRequest {
                     query,
                     page: 1,
@@ -76,14 +78,16 @@ impl FileSearchPanel {
                 &state,
             )
             .await;
-            let _ = this.update(cx, |this, cx| match result {
-                Ok(response) => {
-                    this.results = Some(response);
-                    this.selected = 0;
-                    this.error = None;
+            let _ = this.update(cx, |this, cx| {
+                match result {
+                    Ok(response) => {
+                        this.results = Some(response);
+                        this.selected = 0;
+                        this.error = None;
+                    }
+                    Err(error) => this.error = Some(error.to_string()),
                 }
-                Err(error) => this.error = Some(error.to_string()),
-                cx.notify(),
+                cx.notify();
             });
         })
         .detach();
@@ -145,9 +149,7 @@ fn result_row(path: &str, size_label: &str, is_selected: bool) -> impl IntoEleme
                         .text_size(px(beam_ui::TEXT_SM))
                         .text_color(beam_ui::ink())
                         .truncate()
-                        .child(
-                            path.rsplit('/').next().unwrap_or(path).to_string(),
-                        ),
+                        .child(path.rsplit('/').next().unwrap_or(path).to_string()),
                 )
                 .child(
                     div()
@@ -169,9 +171,9 @@ impl Render for FileSearchPanel {
     fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let selected = self.selected;
         let query = self.query.clone();
-        let results = self.results.clone();
         let backend = self.backend_status.clone();
         let error = self.error.clone();
+        let results = self.results.clone();
 
         let backend_label = backend
             .as_ref()
@@ -226,40 +228,37 @@ impl Render for FileSearchPanel {
                             .child(backend_label),
                     ),
             )
-            .child(v_flex()
-                .flex_1()
-                .px_2()
-                .pt_1()
-                .overflow_hidden()
-                .when_some(error, |this, error| {
-                    this.child(
-                        div()
-                            .px_3()
-                            .py_2()
-                            .text_size(px(beam_ui::TEXT_SM))
-                            .text_color(beam_ui::ink_faint())
-                            .child(error),
-                    )
-                })
-                .children(results.map(|response| {
-                    v_flex()
-                        .gap_0()
-                        .children(
-                            response
-                                .results
-                                .iter()
-                                .enumerate()
-                                .take(40)
-                                .map(|(index, result)| {
+            .child(
+                v_flex()
+                    .flex_1()
+                    .px_2()
+                    .pt_1()
+                    .overflow_hidden()
+                    .when_some(error, |this, error| {
+                        this.child(
+                            div()
+                                .px_3()
+                                .py_2()
+                                .text_size(px(beam_ui::TEXT_SM))
+                                .text_color(beam_ui::ink_faint())
+                                .child(error),
+                        )
+                    })
+                    .children(results.as_ref().map(|response| {
+                        v_flex()
+                            .gap_0()
+                            .children(response.results.iter().enumerate().take(40).map(
+                                |(index, result)| {
                                     result_row(
                                         &result.entry.path,
                                         &format!("{} bytes", result.entry.size),
                                         index == selected,
                                     )
-                                }),
-                        )
-                        .into_any_element()
-                })))
+                                },
+                            ))
+                            .into_any_element()
+                    })),
+            )
             .child(
                 h_flex()
                     .h(px(beam_ui::FOOTER_HEIGHT))
@@ -272,7 +271,7 @@ impl Render for FileSearchPanel {
                         div()
                             .text_size(px(beam_ui::TEXT_2XS))
                             .text_color(beam_ui::ink_faint())
-                            .child(match &results {
+                            .child(match results.as_ref() {
                                 Some(response) => format!(
                                     "{} results · page {}",
                                     response.metadata.total_results, response.metadata.page

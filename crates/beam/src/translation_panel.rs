@@ -132,68 +132,70 @@ impl Render for TranslationPanel {
                             .child("translate"),
                     ),
             )
-            .child(v_flex()
-                .flex_1()
-                .overflow_hidden()
-                .child(if loading {
-                    div()
-                        .p_4()
-                        .text_size(px(beam_ui::TEXT_SM))
-                        .text_color(beam_ui::ink_faint())
-                        .child("translating…")
-                        .into_any_element()
-                } else if let Some(response) = result {
-                    v_flex()
-                        .p_4()
-                        .gap_2()
-                        .child(
-                            div()
-                                .text_size(px(beam_ui::TEXT_DISPLAY))
-                                .text_color(beam_ui::ink())
-                                .child(response.translated_text.clone()),
-                        )
-                        .children(response.detected_language.map(|detected| {
-                            div()
-                                .text_size(px(beam_ui::TEXT_XS))
-                                .text_color(beam_ui::ink_faint())
-                                .child(format!("detected: {}", detected.language))
-                        }))
-                        .into_any_element()
-                } else if let Some(error) = error {
-                    div()
-                        .p_4()
-                        .text_size(px(beam_ui::TEXT_SM))
-                        .text_color(beam_ui::ink_faint())
-                        .child(error)
-                        .into_any_element()
-                } else {
-                    div()
-                        .p_4()
-                        .text_size(px(beam_ui::TEXT_SM))
-                        .text_color(beam_ui::ink_faint())
-                        .child("Type text and press enter.")
-                        .into_any_element()
-                })
             .child(
-                h_flex()
-                    .h(px(beam_ui::FOOTER_HEIGHT))
-                    .px_4()
-                    .justify_between()
-                    .items_center()
-                    .border_t_1()
-                    .border_color(beam_ui::divider())
-                    .child(
+                v_flex()
+                    .flex_1()
+                    .overflow_hidden()
+                    .child(if loading {
                         div()
-                            .text_size(px(beam_ui::TEXT_2XS))
+                            .p_4()
+                            .text_size(px(beam_ui::TEXT_SM))
                             .text_color(beam_ui::ink_faint())
-                            .child("translation"),
-                    )
-                    .child(
+                            .child("translating…")
+                            .into_any_element()
+                    } else if let Some(response) = result {
+                        v_flex()
+                            .p_4()
+                            .gap_2()
+                            .child(
+                                div()
+                                    .text_size(px(beam_ui::TEXT_DISPLAY))
+                                    .text_color(beam_ui::ink())
+                                    .child(response.translated_text.clone()),
+                            )
+                            .children(response.detected_language.map(|detected| {
+                                div()
+                                    .text_size(px(beam_ui::TEXT_XS))
+                                    .text_color(beam_ui::ink_faint())
+                                    .child(format!("detected: {}", detected.language))
+                            }))
+                            .into_any_element()
+                    } else if let Some(error) = error {
                         div()
-                            .text_size(px(beam_ui::TEXT_2XS))
+                            .p_4()
+                            .text_size(px(beam_ui::TEXT_SM))
                             .text_color(beam_ui::ink_faint())
-                            .child("enter translates · esc clears"),
+                            .child(error)
+                            .into_any_element()
+                    } else {
+                        div()
+                            .p_4()
+                            .text_size(px(beam_ui::TEXT_SM))
+                            .text_color(beam_ui::ink_faint())
+                            .child("Type text and press enter.")
+                            .into_any_element()
+                    })
+                    .child(
+                        h_flex()
+                            .h(px(beam_ui::FOOTER_HEIGHT))
+                            .px_4()
+                            .justify_between()
+                            .items_center()
+                            .border_t_1()
+                            .border_color(beam_ui::divider())
+                            .child(
+                                div()
+                                    .text_size(px(beam_ui::TEXT_2XS))
+                                    .text_color(beam_ui::ink_faint())
+                                    .child("translation"),
+                            )
+                            .child(
+                                div()
+                                    .text_size(px(beam_ui::TEXT_2XS))
+                                    .text_color(beam_ui::ink_faint())
+                                    .child("enter translates · esc clears"),
+                            ),
                     ),
-            ))
+            )
     }
 }
