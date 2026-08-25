@@ -1,7 +1,7 @@
 mod enforcement;
 mod error;
 mod rules;
-mod runtime;
+pub mod runtime;
 mod store;
 mod time;
 pub mod types;
@@ -11,7 +11,9 @@ pub mod types;
 
 use beam_core::BeamContext;
 
-pub use runtime::{browser_policy, initialize, FOCUS_APP_BLOCKED_EVENT, FOCUS_STATUS_EVENT};
+pub use runtime::{
+    browser_policy, get_status, initialize, FOCUS_APP_BLOCKED_EVENT, FOCUS_STATUS_EVENT,
+};
 use types::{
     FocusCategory, FocusCategoryInput, FocusSession, FocusSessionDraft, FocusSnoozeInput,
     FocusStatus,
