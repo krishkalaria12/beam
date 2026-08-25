@@ -9,6 +9,7 @@
 //! script keys off them from then on.
 
 mod activation;
+mod ai_panel;
 mod app;
 mod calculator_inline;
 mod clipboard_panel;

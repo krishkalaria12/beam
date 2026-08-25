@@ -24,6 +24,7 @@ log = { workspace = true }
 
 # Date formatting in the notes list
 chrono = "0.4"
+nanoid = "0.4"
 
 # Runtime-agnostic channels: bridge the global-hotkey thread and the
 # activation-socket thread into gpui's executor without pulling a tokio
