@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Hardened runtime (plan D8: Developer ID + notarization) -->
+    <key>com.apple.security.cs.allow-jit</key>
+    <true/>
+    <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+    <true/>
+
+    <!-- Accessibility: the AX backend connects to the AX system service -->
+    <key>com.apple.security.temporary-exception.mach-lookup.global-name</key>
+    <array>
+        <string>com.apple.axserver</string>
+        <string>com.apple.axserver.uiagent</string>
+    </array>
+
+    <!-- Apple Events for NSWorkspace app activation -->
+    <key>com.apple.security.automation.apple-events</key>
+    <true/>
+
+    <!-- Network: AI providers, translation, dictionary, store, speed test -->
+    <key>com.apple.security.network.client</key>
+    <true/>
+</dict>
+</plist>

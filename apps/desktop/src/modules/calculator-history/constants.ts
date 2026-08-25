@@ -1,1 +1,0 @@
-export const HISTORY_COPY_FEEDBACK_MS = 1200;

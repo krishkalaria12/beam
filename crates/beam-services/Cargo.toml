@@ -1,0 +1,181 @@
+[package]
+name = "beam-services"
+build = "build.rs"
+description = "The existing src-tauri module tree, preserved 1:1 with the Tauri attachment removed"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[build-dependencies]
+prost-build = "0.14"
+
+[dependencies]
+beam-core = { path = "../beam-core" }
+
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+log = { workspace = true }
+parking_lot = { workspace = true }
+tokio = { workspace = true }
+futures-util = { workspace = true }
+crossbeam-channel = { workspace = true }
+
+# File system & search
+ignore = "0.4"
+walkdir = "2.5"
+notify = { version = "6", features = ["crossbeam-channel"] }
+notify-debouncer-mini = "0.7"
+nucleo = "0.5"
+
+# Date & time
+chrono = "0.4"
+chrono-tz = "0.10"
+
+# System & desktop integration
+dirs = "6.0"
+shell-words = "1.1"
+num_cpus = "1.17"
+webbrowser = "1.1"
+system_shutdown = "4.1"
+keepawake = "0.6"
+sysinfo = "0.29"
+
+# HTTP & networking
+reqwest = { version = "0.13", default-features = false, features = ["rustls", "json"] }
+tiny_http = "0.12"
+url = "2.5"
+favicon-picker = "1.1"
+bytes = "1.10"
+zip = "4.1"
+
+# DB
+sqlx = { version = "0.8", features = ["sqlite", "runtime-tokio"] }
+nanoid = "0.4"
+
+# Serialization (file index cache)
+rkyv = { version = "0.7.46", features = ["validation"] }
+bytecheck = "0.6.12"
+
+# CLI parsing
+clap = { version = "4.5", features = ["derive"] }
+
+# Fonts (settings::list_font_families)
+fontdb = "0.23"
+
+# Security & crypto (clipboard password entries, keyring)
+aes-gcm = "0.10"
+sha2 = "0.10"
+base64 = "0.22"
+keyring = { version = "3.6", features = [
+    "apple-native",
+    "windows-native",
+    "linux-native-sync-persistent",
+] }
+rand = "0.9"
+
+# Tray + menus (menu_bar; the standalone crates from the plan §03 decision)
+tray-icon = "0.24"
+muda = "0.19"
+
+# AI provider layer (rig-core drives the OpenAI/Anthropic/Gemini/OpenRouter
+# streaming clients)
+rig-core = "0.31"
+
+# Protobuf (extension runtime wire protocol)
+prost = "0.14"
+prost-types = "0.14"
+
+# Compression (extension runtime frames)
+flate2 = "1.1"
+rmp-serde = "1.3"
+semver = "1.0"
+
+# Utilities
+once_cell = "1.21"
+papaya = "0.2"
+rayon = "1.10"
+regex = "1.12"
+open = "5.3"
+smart-calculator = "1.0.3"
+whichlang = "0.1"
+scraper = "0.25"
+
+# Clipboard interim (macOS + windows fallback; the linux backend uses
+# wl-clipboard/x11 through linux_desktop)
+[target.'cfg(not(target_os = "linux"))'.dependencies]
+arboard = "3.6"
+image = "0.25"
+
+# Linux desktop integration (hotkeys portal, window managers, clipboard,
+# wayland helper, udev snippet injection)
+[target.'cfg(target_os = "linux")'.dependencies]
+arboard = { version = "3.6", features = ["wayland-data-control"] }
+ashpd = "0.11"
+evdev = "0.13"
+xkbcommon = "0.8"
+wayland-client = "0.31"
+wayland-protocols = { version = "0.32", features = ["client", "staging"] }
+wayland-protocols-wlr = { version = "0.3", features = ["client"] }
+wl-clipboard-rs = "0.9"
+hyprland = "0.4.0-beta.3"
+swayipc = "4.0"
+zbus = "5.14"
+x11rb = "0.13"
+gtk = "0.18"
+gtk-layer-shell = { version = "0.8", features = ["v0_5", "v0_6"] }
+freedesktop-file-parser = "0.3"
+freedesktop-icons = "0.4"
+
+# macOS desktop integration (NSPasteboard, AX, NSWorkspace, icons)
+[target.'cfg(target_os = "macos")'.dependencies]
+# Legacy NSFilenamesPboardType pasteboard payloads are plists
+plist = "1"
+objc2 = "0.6"
+objc2-foundation = { version = "0.3", features = [
+    "NSArray",
+    "NSBundle",
+    "NSData",
+    "NSDictionary",
+    "NSEnumerator",
+    "NSError",
+    "NSFileManager",
+    "NSProcessInfo",
+    "NSString",
+    "NSURL",
+] }
+objc2-app-kit = { version = "0.3", features = [
+    "NSApplication",
+    "NSBitmapImageRep",
+    "NSImage",
+    "NSImageRep",
+    "NSPasteboard",
+    "NSRunningApplication",
+    "NSScreen",
+    "NSWorkspace",
+] }
+core-foundation = "0.10"
+core-foundation-sys = "0.8"
+dispatch2 = "0.3"
+global-hotkey = "0.8"
+
+# Windows desktop integration (SendInput, registry, foreground tracking)
+[target.'cfg(target_os = "windows")'.dependencies]
+windows = { version = "0.61", features = [
+    "Win32_Foundation",
+    "Win32_Storage_FileSystem",
+    "Win32_Graphics_Gdi",
+    "Win32_Graphics_Dwm",
+    "Win32_Security",
+    "Win32_System_Com",
+    "Win32_System_LibraryLoader",
+    "Win32_System_Registry",
+    "Win32_System_Threading",
+    "Win32_UI_Input_KeyboardAndMouse",
+    "Win32_UI_Shell",
+    "Win32_UI_Shell_Common",
+    "Win32_UI_WindowsAndMessaging",
+] }
+winreg = "0.55"

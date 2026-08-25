@@ -1,5 +1,9 @@
 name: release-linux
 
+# GPUI build: cargo builds the binary, cargo-deb / cargo-generate-rpm
+# produce the packages, AppImage via linuxdeploy. No webkit2gtk, no
+# node runtime, no bun (plan §done).
+
 on:
   push:
     tags:
@@ -16,49 +20,63 @@ jobs:
       - name: checkout
         uses: actions/checkout@v7
 
-      - name: setup node
-        uses: actions/setup-node@v7
-        with:
-          node-version: 22
-
-      - name: setup bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.2.19
-
       - name: setup rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: setup swift
-        uses: swift-actions/setup-swift@v2
-        with:
-          swift-version: "6.1.2"
-
-      - name: install linux dependencies
+      - name: install linux dependencies (gpui runtime + packaging)
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            libwebkit2gtk-4.1-dev \
+            libwayland-dev \
+            libxkbcommon-dev \
+            libxkbcommon-x11-dev \
+            libfontconfig1-dev \
+            libfreetype6-dev \
+            libudev-dev \
             libgtk-3-dev \
-            libgtk-layer-shell-dev \
-            libappindicator3-dev \
-            librsvg2-dev \
-            patchelf \
+            libx11-dev \
+            libxcursor-dev \
+            libxrandr-dev \
+            libxi-dev \
+            libdbus-1-dev \
             rpm \
             protobuf-compiler
 
-      - name: install dependencies
-        run: bun install --frozen-lockfile
+      - name: build release binary
+        run: cargo build --release --package beam
 
-      - name: build linux bundles
-        run: bun run --cwd apps/desktop desktop:build -- --bundles deb,rpm
+      - name: install packaging tools
+        run: cargo install cargo-deb cargo-generate-rpm
+
+      - name: build deb
+        run: cargo deb --package beam --no-build --output release-assets/
+
+      - name: build rpm
+        run: |
+          mkdir -p release-assets
+          cargo generate-rpm --package beam \
+            --output release-assets/beam-${GITHUB_REF_NAME#v}-x86_64.rpm
+
+      - name: stage appdir (appimage)
+        run: |
+          mkdir -p appdir/usr/bin appdir/usr/share/applications
+          cp target/rust/release/beam appdir/usr/bin/beam
+          cp infra/aur/beam-launcher-bin/beam.desktop appdir/usr/share/applications/beam.desktop
+          curl -fsSL https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage \
+            -o linuxdeploy.AppImage
+          chmod +x linuxdeploy.AppImage
+
+      - name: build appimage
+        run: |
+          ./linuxdeploy.AppImage --appdir appdir --output appimage
+          mv beam*.AppImage release-assets/beam-${GITHUB_REF_NAME#v}-x86_64.AppImage
+
+      - name: build tarball (for AUR)
+        run: |
+          tar -czf release-assets/beam-linux-x86_64.tar.gz -C target/rust/release beam
 
       - name: collect release artifacts
-        run: |
-          bundle_dir="target/rust/release/bundle"
-          mkdir -p release-assets
-          cp "$bundle_dir"/deb/*.deb release-assets/
-          cp "$bundle_dir"/rpm/*.rpm release-assets/
+        run: ls -la release-assets
 
       - name: publish github release
         uses: softprops/action-gh-release@v2
@@ -66,6 +84,8 @@ jobs:
           files: |
             release-assets/*.deb
             release-assets/*.rpm
+            release-assets/*.AppImage
+            release-assets/*.tar.gz
           generate_release_notes: true
           prerelease: ${{ contains(github.ref_name, '-') }}
 
@@ -90,18 +110,6 @@ jobs:
 
           echo "enabled=true" >> "$GITHUB_OUTPUT"
 
-      - name: setup node
-        if: steps.aur_secret.outputs.enabled == 'true'
-        uses: actions/setup-node@v7
-        with:
-          node-version: 22
-
-      - name: setup bun
-        if: steps.aur_secret.outputs.enabled == 'true'
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.2.19
-
       - name: load aur ssh key
         if: steps.aur_secret.outputs.enabled == 'true'
         uses: webfactory/ssh-agent@v0.9.0
@@ -118,11 +126,16 @@ jobs:
         if: steps.aur_secret.outputs.enabled == 'true'
         run: git clone ssh://aur@aur.archlinux.org/beam-launcher-bin.git aur-beam-launcher-bin
 
-      - name: render aur package files
+      - name: render aur package files (gpui PKGBUILD)
         if: steps.aur_secret.outputs.enabled == 'true'
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: bun infra/scripts/update-aur-beam-launcher-bin.ts --repo-dir aur-beam-launcher-bin --tag "${GITHUB_REF_NAME}" --github-repo "${GITHUB_REPOSITORY}"
+        run: |
+          cp infra/aur/beam-launcher-bin/PKGBUILD.gpui aur-beam-launcher-bin/PKGBUILD
+          cp infra/aur/beam-launcher-bin/beam.desktop aur-beam-launcher-bin/beam.desktop
+          # Regenerate .SRCINFO from the PKGBUILD
+          docker run --rm -v "$PWD/aur-beam-launcher-bin:/pkg" archlinux:base-devel \
+            bash -c "cd /pkg && makepkg --printsrcinfo > .SRCINFO"
 
       - name: commit and push aur update
         if: steps.aur_secret.outputs.enabled == 'true'
@@ -132,6 +145,6 @@ jobs:
             exit 0
           fi
 
-          git -C aur-beam-launcher-bin add PKGBUILD .SRCINFO beam.desktop beam.png LICENSE
-          git -C aur-beam-launcher-bin -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -m "beam-launcher-bin ${GITHUB_REF_NAME#v}"
+          git -C aur-beam-launcher-bin add PKGBUILD .SRCINFO beam.desktop
+          git -C aur-beam-launcher-bin -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -m "beam-launcher-bin ${GITHUB_REF_NAME#v} (GPUI build)"
           git -C aur-beam-launcher-bin push

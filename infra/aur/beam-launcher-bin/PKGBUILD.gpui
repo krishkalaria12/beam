@@ -1,0 +1,45 @@
+# Maintainer: Krish Kalaria <beam@krishkalaria.dev>
+# The GPUI build: no webkit2gtk, no node runtime — the binary is native.
+pkgname=beam-launcher-bin
+pkgver=1.1.0
+pkgrel=1
+pkgdesc="A blazing-fast, open-source command launcher (GPUI build)"
+arch=("x86_64")
+url="https://github.com/krishkalaria12/beam"
+license=("MIT")
+depends=(
+    # GPUI Linux runtime: wayland + x11 + font rendering + GPU
+    "libxkbcommon"
+    "wayland"
+    "libx11"
+    "libxcursor"
+    "libxrandr"
+    "libxi"
+    "fontconfig"
+    "vulkan-icd-loader"
+    # Tray (menu_bar via tray-icon/ksni)
+    "libdbus"
+    # danksearch augmentation (optional at runtime)
+)
+optdepends=(
+    "danksearch: faster file-search augmentation"
+    "hyprland: Hyprland window management + hotkeys"
+    "sway: Sway window management"
+)
+provides=("beam")
+conflicts=("beam")
+source=(
+    "beam-${pkgver}::\${url}/releases/download/v\${pkgver}/beam-linux-x86_64.tar.gz"
+    "beam.desktop"
+)
+sha256sums=("SKIP" "SKIP")
+options=("!strip")
+
+package() {
+    install -Dm755 "beam" "${pkgdir}/usr/bin/beam"
+
+    install -Dm644 "beam.desktop" "${pkgdir}/usr/share/applications/beam.desktop"
+
+    # Deep links (beam://, raycast://)
+    install -d "${pkgdir}/usr/share/applications"
+}

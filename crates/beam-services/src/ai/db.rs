@@ -1,0 +1,206 @@
+// PORT: apps/desktop/src-tauri/src/ai/db.rs
+use std::path::PathBuf;
+use std::sync::Arc;
+
+use beam_core::BeamContext;
+use sqlx::SqlitePool;
+use tokio::sync::OnceCell;
+
+use super::config::CONFIG as AI_CONFIG;
+use crate::utils::sqlite::{create_sqlite_pool, get_app_database_path};
+
+use super::error::{AiError, Result};
+
+pub type AiDbPool = Arc<SqlitePool>;
+
+static AI_POOL: OnceCell<AiDbPool> = OnceCell::const_new();
+
+pub fn init(cx: &BeamContext) {
+    let context = cx.clone();
+    tokio::spawn(async move {
+        if let Err(error) = get_ai_pool(&context).await {
+            log::error!("ai sqlite initialization failed: {error}");
+        }
+    });
+}
+
+pub async fn get_ai_pool(cx: &BeamContext) -> Result<AiDbPool> {
+    let context = cx.clone();
+
+    let pool = AI_POOL
+        .get_or_try_init(|| async move {
+            let database_path = get_ai_database_path(&context)?;
+            let pool = create_sqlite_pool(
+                &database_path,
+                |error| AiError::CreateDirectory(error.to_string()),
+                |error| AiError::DatabaseConnection(error.to_string()),
+            )
+            .await?;
+
+            ensure_ai_schema(&pool).await?;
+
+            Ok::<AiDbPool, AiError>(Arc::new(pool))
+        })
+        .await?;
+
+    Ok(Arc::clone(pool))
+}
+
+pub fn get_ai_database_path(cx: &BeamContext) -> Result<PathBuf> {
+    Ok(get_app_database_path(
+        cx.paths(),
+        AI_CONFIG.directory,
+        AI_CONFIG.database_file_name,
+    ))
+}
+
+async fn ensure_ai_schema(pool: &SqlitePool) -> Result<()> {
+    sqlx::query(
+        r#"
+        CREATE TABLE IF NOT EXISTS ai_chat_messages (
+            id TEXT PRIMARY KEY,
+            request_id TEXT NOT NULL,
+            conversation_id TEXT NOT NULL,
+            role TEXT NOT NULL CHECK (role IN ('user', 'assistant', 'system')),
+            provider TEXT NOT NULL,
+            model TEXT NOT NULL,
+            content TEXT NOT NULL,
+            attachments_json TEXT,
+            created_at INTEGER NOT NULL
+        )
+        "#,
+    )
+    .execute(pool)
+    .await
+    .map_err(|error| AiError::SchemaInitialization(error.to_string()))?;
+
+    ensure_ai_chat_message_columns(pool).await?;
+
+    sqlx::query(
+        r#"
+        CREATE INDEX IF NOT EXISTS idx_ai_chat_messages_conversation_created
+        ON ai_chat_messages(conversation_id, created_at ASC)
+        "#,
+    )
+    .execute(pool)
+    .await
+    .map_err(|error| AiError::SchemaInitialization(error.to_string()))?;
+
+    sqlx::query(
+        r#"
+        CREATE INDEX IF NOT EXISTS idx_ai_chat_messages_request_id
+        ON ai_chat_messages(request_id)
+        "#,
+    )
+    .execute(pool)
+    .await
+    .map_err(|error| AiError::SchemaInitialization(error.to_string()))?;
+
+    sqlx::query(
+        r#"
+        CREATE TABLE IF NOT EXISTS ai_message_attachments (
+            id TEXT PRIMARY KEY,
+            message_id TEXT NOT NULL,
+            conversation_id TEXT NOT NULL,
+            request_id TEXT NOT NULL,
+            name TEXT NOT NULL,
+            mime_type TEXT NOT NULL,
+            size_bytes INTEGER NOT NULL,
+            storage_path TEXT NOT NULL,
+            sha256 TEXT NOT NULL,
+            created_at INTEGER NOT NULL
+        )
+        "#,
+    )
+    .execute(pool)
+    .await
+    .map_err(|error| AiError::SchemaInitialization(error.to_string()))?;
+
+    sqlx::query(
+        r#"
+        CREATE INDEX IF NOT EXISTS idx_ai_message_attachments_message_id
+        ON ai_message_attachments(message_id)
+        "#,
+    )
+    .execute(pool)
+    .await
+    .map_err(|error| AiError::SchemaInitialization(error.to_string()))?;
+
+    sqlx::query(
+        r#"
+        CREATE INDEX IF NOT EXISTS idx_ai_message_attachments_conversation
+        ON ai_message_attachments(conversation_id, created_at ASC)
+        "#,
+    )
+    .execute(pool)
+    .await
+    .map_err(|error| AiError::SchemaInitialization(error.to_string()))?;
+
+    sqlx::query(
+        r#"
+        CREATE TABLE IF NOT EXISTS ai_token_usage (
+            request_id TEXT PRIMARY KEY,
+            conversation_id TEXT NOT NULL,
+            provider TEXT NOT NULL,
+            model TEXT NOT NULL,
+            input_tokens INTEGER NOT NULL DEFAULT 0,
+            output_tokens INTEGER NOT NULL DEFAULT 0,
+            total_tokens INTEGER NOT NULL DEFAULT 0,
+            cached_input_tokens INTEGER NOT NULL DEFAULT 0,
+            created_at INTEGER NOT NULL
+        )
+        "#,
+    )
+    .execute(pool)
+    .await
+    .map_err(|error| AiError::SchemaInitialization(error.to_string()))?;
+
+    sqlx::query(
+        r#"
+        CREATE INDEX IF NOT EXISTS idx_ai_token_usage_conversation_created
+        ON ai_token_usage(conversation_id, created_at DESC)
+        "#,
+    )
+    .execute(pool)
+    .await
+    .map_err(|error| AiError::SchemaInitialization(error.to_string()))?;
+
+    sqlx::query(
+        r#"
+        CREATE TABLE IF NOT EXISTS ai_conversation_context (
+            conversation_id TEXT PRIMARY KEY,
+            summary_text TEXT NOT NULL DEFAULT '',
+            summarized_until_created_at INTEGER NOT NULL DEFAULT 0,
+            total_tokens_at_summary INTEGER NOT NULL DEFAULT 0,
+            updated_at INTEGER NOT NULL
+        )
+        "#,
+    )
+    .execute(pool)
+    .await
+    .map_err(|error| AiError::SchemaInitialization(error.to_string()))?;
+
+    Ok(())
+}
+
+async fn ensure_ai_chat_message_columns(pool: &SqlitePool) -> Result<()> {
+    let columns = sqlx::query_as::<_, (i64, String, String, i64, Option<String>, i64)>(
+        "PRAGMA table_info(ai_chat_messages)",
+    )
+    .fetch_all(pool)
+    .await
+    .map_err(|error| AiError::SchemaInitialization(error.to_string()))?;
+
+    let has_attachments_json = columns
+        .iter()
+        .any(|(_, name, _, _, _, _)| name == "attachments_json");
+
+    if !has_attachments_json {
+        sqlx::query("ALTER TABLE ai_chat_messages ADD COLUMN attachments_json TEXT")
+            .execute(pool)
+            .await
+            .map_err(|error| AiError::SchemaInitialization(error.to_string()))?;
+    }
+
+    Ok(())
+}

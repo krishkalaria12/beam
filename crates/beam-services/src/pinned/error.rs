@@ -1,0 +1,33 @@
+// PORT: apps/desktop/src-tauri/src/pinned/error.rs
+// Copied verbatim; no Tauri APIs in this file.
+use serde::Serialize;
+use thiserror::Error;
+
+pub type Result<T> = std::result::Result<T, PinnedError>;
+
+#[derive(Debug, Clone, Error)]
+pub enum PinnedError {
+    #[error("{0}")]
+    StoreOpeningError(String),
+
+    #[error("{0}")]
+    DeserializationError(String),
+
+    #[error("{0}")]
+    SerializationError(String),
+
+    #[error("{0}")]
+    InvalidArguments(String),
+
+    #[error("{0}")]
+    StoreSaveError(String),
+}
+
+impl Serialize for PinnedError {
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_str(&self.to_string())
+    }
+}

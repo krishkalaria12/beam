@@ -1,0 +1,13 @@
+# Parity-audit waivers (rule R1) — source files intentionally without a
+# // PORT: marker. One line per path, grep-style, anchored to the old tree.
+#
+# D5 — theming removal (deleted, not ported):
+apps/desktop/src-tauri/src/launcher_theme/
+apps/desktop/src-tauri/src/settings/config.rs
+#
+# SD-1 — the window module owns sizing; the resize-transition IPC shims have
+# no ported equivalent:
+apps/desktop/src-tauri/src/launcher_window.rs
+#
+# IPC plumbing that stops existing rather than porting (plan section 01):
+apps/desktop/src-tauri/src/app_commands.rs

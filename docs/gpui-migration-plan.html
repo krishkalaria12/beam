@@ -1,0 +1,1804 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Beam → GPUI: Full-Parity Port Plan</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    color-scheme: dark;
+
+    /* ground */
+    --ink:        #08090c;
+    --slab:       #0f1116;
+    --slab-2:     #13161d;
+    --frost:      rgba(255,255,255,.045);
+    --frost-2:    rgba(255,255,255,.075);
+    --rule:       rgba(255,255,255,.09);
+    --rule-hi:    rgba(255,255,255,.16);
+
+    /* ink */
+    --text:       #e8ebf2;
+    --dim:        #8a90a0;
+    --faint:      #5d6373;
+
+    /* one accent — the launcher's selection glow */
+    --accent:     #8fb4ff;
+    --accent-dim: rgba(143,180,255,.14);
+
+    /* status lane, separate from accent */
+    --go:         #6fd3a0;
+    --warn:       #e8b865;
+    --stop:       #f2777a;
+
+    --mono: ui-monospace, "JetBrains Mono", "SFMono-Regular", Menlo, "Cascadia Mono", Consolas, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+    --spine: 74ch;
+    --wide: 1220px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; scroll-padding-top: 84px; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    * { animation: none !important; transition: none !important; }
+  }
+
+  body {
+    margin: 0;
+    background: var(--ink);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* faint field gradient — the glass ground, not decoration for its own sake */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(1100px 620px at 12% -8%, rgba(143,180,255,.055), transparent 62%),
+      radial-gradient(900px 520px at 96% 4%, rgba(111,211,160,.030), transparent 60%);
+    z-index: 0;
+  }
+
+  .page { position: relative; z-index: 1; }
+
+  /* ---------- layout ---------- */
+
+  .wrap { max-width: var(--wide); margin: 0 auto; padding: 0 24px; }
+  .spine { max-width: var(--spine); }
+
+  section { padding: 56px 0 8px; border-top: 1px solid var(--rule); }
+  section:first-of-type { border-top: none; }
+
+  /* ---------- nav ---------- */
+
+  .topbar {
+    position: sticky; top: 0; z-index: 40;
+    background: rgba(8,9,12,.82);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--rule);
+  }
+  .topbar .wrap { display: flex; align-items: center; gap: 20px; min-height: 56px; flex-wrap: wrap; }
+  .brand {
+    font-family: var(--mono); font-size: 13px; letter-spacing: .06em;
+    text-transform: uppercase; color: var(--text); white-space: nowrap;
+  }
+  .brand b { color: var(--accent); font-weight: 600; }
+  .navlinks {
+    display: flex; gap: 4px; flex-wrap: wrap;
+    margin-left: auto; list-style: none; padding: 0;
+  }
+  .navlinks a {
+    display: block; padding: 5px 9px; border-radius: 6px;
+    font-family: var(--mono); font-size: 11.5px; letter-spacing: .04em;
+    color: var(--dim); text-decoration: none;
+  }
+  .navlinks a:hover { color: var(--text); background: var(--frost); }
+  .navlinks a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ---------- type ---------- */
+
+  h1, h2, h3, h4 { font-family: var(--mono); font-weight: 600; text-wrap: balance; line-height: 1.18; }
+  h1 { font-size: clamp(30px, 5vw, 46px); letter-spacing: -.02em; margin: 0 0 14px; }
+  h2 { font-size: clamp(21px, 2.6vw, 27px); letter-spacing: -.01em; margin: 0 0 6px; }
+  h3 { font-size: 17px; margin: 34px 0 8px; letter-spacing: -.005em; }
+  h4 { font-size: 14px; margin: 22px 0 6px; color: var(--text); }
+
+  .eyebrow {
+    font-family: var(--mono); font-size: 11px; font-weight: 500;
+    letter-spacing: .16em; text-transform: uppercase; color: var(--faint);
+    margin: 0 0 10px;
+  }
+  .lede { font-size: 18px; color: var(--dim); max-width: var(--spine); }
+  p { max-width: var(--spine); }
+  section > .wrap > p, section > .wrap > ul, section > .wrap > ol { max-width: var(--spine); }
+  ul, ol { padding-left: 20px; }
+  li { margin: 5px 0; }
+  li::marker { color: var(--faint); }
+  strong { color: #fff; font-weight: 600; }
+  a { color: var(--accent); text-underline-offset: 3px; }
+  code {
+    font-family: var(--mono); font-size: .875em;
+    background: var(--frost); border: 1px solid var(--rule);
+    border-radius: 4px; padding: 1px 5px; color: #cfd6e6;
+  }
+  hr { border: none; border-top: 1px solid var(--rule); margin: 34px 0; }
+
+  /* ---------- masthead ---------- */
+
+  .masthead { padding: 66px 0 40px; }
+  .facts {
+    display: grid; gap: 1px; margin: 34px 0 0;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    background: var(--rule); border: 1px solid var(--rule); border-radius: 10px; overflow: hidden;
+  }
+  .fact { background: var(--slab); padding: 14px 16px; }
+  .fact dt {
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--faint); margin: 0 0 4px;
+  }
+  .fact dd {
+    margin: 0; font-family: var(--mono); font-size: 22px; font-weight: 600;
+    font-variant-numeric: tabular-nums; letter-spacing: -.01em;
+  }
+  .fact dd span { font-size: 12px; color: var(--dim); font-weight: 400; letter-spacing: 0; }
+
+  /* ---------- panels ---------- */
+
+  .panel {
+    background: var(--slab); border: 1px solid var(--rule);
+    border-radius: 10px; padding: 18px 20px; margin: 20px 0;
+  }
+  .panel > :first-child { margin-top: 0; }
+  .panel > :last-child { margin-bottom: 0; }
+  .panel p, .panel ul, .panel ol { max-width: none; }
+
+  .panel--accent { border-color: rgba(143,180,255,.28); background: linear-gradient(var(--accent-dim), transparent 60%), var(--slab); }
+  .panel--go     { border-color: rgba(111,211,160,.30); background: linear-gradient(rgba(111,211,160,.07), transparent 60%), var(--slab); }
+  .panel--warn   { border-color: rgba(232,184,101,.30); }
+  .panel--stop   { border-color: rgba(242,119,122,.30); }
+
+  .panel-label {
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--faint); margin: 0 0 8px;
+  }
+
+  .cols { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); margin: 20px 0; }
+  .cols .panel { margin: 0; }
+
+  /* ---------- tables ---------- */
+
+  .scroller { overflow-x: auto; margin: 18px 0; border: 1px solid var(--rule); border-radius: 10px; background: var(--slab); }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; min-width: 640px; }
+  caption {
+    caption-side: top; text-align: left; padding: 13px 16px 11px;
+    font-family: var(--mono); font-size: 11px; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--faint); border-bottom: 1px solid var(--rule);
+  }
+  th, td { padding: 9px 14px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--rule); }
+  thead th {
+    font-family: var(--mono); font-size: 10.5px; font-weight: 500; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--faint); white-space: nowrap;
+    background: var(--slab-2); position: sticky; top: 0;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: rgba(255,255,255,.022); }
+  td.num, th.num { font-family: var(--mono); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+  td.mono, .m { font-family: var(--mono); font-size: 12.5px; }
+  td.tight { white-space: nowrap; }
+
+  /* ---------- chips ---------- */
+
+  .chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: .07em;
+    text-transform: uppercase; padding: 2px 7px; border-radius: 5px;
+    border: 1px solid var(--rule-hi); color: var(--dim); white-space: nowrap;
+  }
+  .chip--go   { color: var(--go);   border-color: rgba(111,211,160,.36); background: rgba(111,211,160,.09); }
+  .chip--warn { color: var(--warn); border-color: rgba(232,184,101,.36); background: rgba(232,184,101,.09); }
+  .chip--stop { color: var(--stop); border-color: rgba(242,119,122,.36); background: rgba(242,119,122,.09); }
+  .chip--acc  { color: var(--accent); border-color: rgba(143,180,255,.36); background: var(--accent-dim); }
+  .chip--cut  { color: var(--faint); text-decoration: line-through; }
+
+  /* ---------- gate / lane chart ---------- */
+
+  .gate {
+    display: flex; align-items: baseline; gap: 14px;
+    margin: 44px 0 4px; padding-bottom: 10px; border-bottom: 1px solid var(--rule-hi);
+  }
+  .gate-id {
+    font-family: var(--mono); font-size: 12px; font-weight: 600; letter-spacing: .1em;
+    color: var(--ink); background: var(--accent); padding: 3px 9px; border-radius: 5px; white-space: nowrap;
+  }
+  .gate h3 { margin: 0; font-size: 19px; }
+  .gate .gate-meta { margin-left: auto; font-family: var(--mono); font-size: 11.5px; color: var(--faint); white-space: nowrap; }
+
+  .lanechart { display: grid; gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; margin: 20px 0; }
+  .lanerow { display: grid; grid-template-columns: 168px 1fr; gap: 1px; background: var(--rule); }
+  .lanerow > * { background: var(--slab); padding: 11px 14px; }
+  .lanerow--head > * { background: var(--slab-2); }
+  .lanerow--head { font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); }
+  .lanename { font-family: var(--mono); font-size: 12px; color: var(--text); }
+  .lanename small { display: block; color: var(--faint); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; margin-top: 2px; }
+  .laneslots { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  @media (max-width: 620px) {
+    .lanerow { grid-template-columns: 1fr; }
+  }
+
+  /* ---------- glass swatches ---------- */
+
+  .swatches { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); margin: 18px 0; }
+  .sw {
+    border: 1px solid var(--rule); border-radius: 9px; padding: 12px 13px;
+    background-image:
+      linear-gradient(45deg, rgba(255,255,255,.05) 25%, transparent 25%, transparent 75%, rgba(255,255,255,.05) 75%),
+      linear-gradient(45deg, rgba(255,255,255,.05) 25%, transparent 25%, transparent 75%, rgba(255,255,255,.05) 75%);
+    background-size: 16px 16px; background-position: 0 0, 8px 8px;
+    position: relative; overflow: hidden;
+  }
+  .sw > div { position: relative; z-index: 1; }
+  .sw::before { content: ""; position: absolute; inset: 0; z-index: 0; }
+  .sw-name { font-family: var(--mono); font-size: 12px; color: var(--text); }
+  .sw-val  { font-family: var(--mono); font-size: 11px; color: var(--dim); margin-top: 3px; }
+  .sw-use  { font-size: 11.5px; color: var(--faint); margin-top: 6px; line-height: 1.45; }
+
+  .sw-shell::before   { background: rgba(10,11,14,.36); }
+  .sw-solid::before   { background: rgba(10,11,14,.88); }
+  .sw-hover::before   { background: rgba(255,255,255,.06); }
+  .sw-select::before  { background: rgba(255,255,255,.10); box-shadow: inset 0 0 0 1px rgba(255,255,255,.14); }
+  .sw-footer::before  { background: rgba(0,0,0,.18); }
+  .sw-accent::before  { background: rgba(143,180,255,.16); box-shadow: inset 0 0 0 1px rgba(143,180,255,.34); }
+
+  /* ---------- misc ---------- */
+
+  .kv { display: grid; grid-template-columns: max-content 1fr; gap: 4px 16px; margin: 14px 0; font-size: 14px; }
+  .kv dt { font-family: var(--mono); font-size: 11.5px; color: var(--faint); letter-spacing: .06em; text-transform: uppercase; padding-top: 3px; }
+  .kv dd { margin: 0; }
+
+  .checklist { list-style: none; padding-left: 0; }
+  .checklist li { position: relative; padding-left: 26px; margin: 8px 0; }
+  .checklist li::before {
+    content: ""; position: absolute; left: 0; top: .45em;
+    width: 12px; height: 12px; border: 1px solid var(--rule-hi); border-radius: 3px;
+  }
+
+  .rule-list { counter-reset: r; list-style: none; padding-left: 0; }
+  .rule-list > li { counter-increment: r; position: relative; padding-left: 40px; margin: 16px 0; }
+  .rule-list > li::before {
+    content: "R" counter(r); position: absolute; left: 0; top: 1px;
+    font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: .05em;
+    color: var(--accent); border: 1px solid rgba(143,180,255,.3); border-radius: 4px;
+    padding: 1px 5px; background: var(--accent-dim);
+  }
+
+  pre {
+    font-family: var(--mono); font-size: 12.5px; line-height: 1.55;
+    background: var(--slab); border: 1px solid var(--rule); border-radius: 9px;
+    padding: 14px 16px; overflow-x: auto; margin: 16px 0; color: #cfd6e6;
+  }
+  pre code { background: none; border: none; padding: 0; font-size: inherit; }
+  .cmt { color: var(--faint); }
+  .add { color: var(--go); }
+  .del { color: var(--stop); }
+
+  footer {
+    border-top: 1px solid var(--rule); margin-top: 60px; padding: 26px 0 60px;
+    font-family: var(--mono); font-size: 11.5px; color: var(--faint);
+  }
+
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+<nav class="topbar" aria-label="Section navigation">
+  <div class="wrap">
+    <span class="brand"><b>Beam</b> → GPUI</span>
+    <ul class="navlinks">
+      <li><a href="#thesis">Thesis</a></li>
+      <li><a href="#inventory">Inventory</a></li>
+      <li><a href="#gpui">GPUI facts</a></li>
+      <li><a href="#design">Design</a></li>
+      <li><a href="#arch">Architecture</a></li>
+      <li><a href="#gates">Gates &amp; lanes</a></li>
+      <li><a href="#ledger">Parity ledger</a></li>
+      <li><a href="#drift">Anti-drift</a></li>
+      <li><a href="#risks">Risks</a></li>
+      <li><a href="#done">Done</a></li>
+    </ul>
+  </div>
+</nav>
+
+<header class="masthead">
+  <div class="wrap">
+    <p class="eyebrow">Migration plan · rev 4, 24 Aug 2026 · main @ 9d830ba · three platforms · all decisions closed</p>
+    <h1>Porting Beam from React + Tauri to GPUI</h1>
+    <p class="lede">
+      Replace the entire webview frontend with a native GPUI application, keep every feature
+      and every keystroke on Linux, Windows and macOS, delete the theming system, and land a
+      single fixed glass surface. The plan is built so that after one sequential foundation,
+      up to seven and then ten streams of work run at the same time without touching each
+      other's files.
+    </p>
+
+    <dl class="facts">
+      <div class="fact"><dt>Frontend to replace</dt><dd>85,396<span> lines TS/TSX/CSS</span></dd></div>
+      <div class="fact"><dt>Rust to keep</dt><dd>36,382<span> lines, de-Tauri'd</span></dd></div>
+      <div class="fact"><dt>IPC commands</dt><dd>87<span> → direct calls</span></dd></div>
+      <div class="fact"><dt>Platforms shipping</dt><dd>3<span> Linux · Windows · macOS</span></dd></div>
+      <div class="fact"><dt>Panels at parity</dt><dd>21<span> + inline modes</span></dd></div>
+      <div class="fact"><dt>Extension nodes</dt><dd>46<span> renderable types</span></dd></div>
+      <div class="fact"><dt>Platform cfg sites</dt><dd>229<span> already in the tree</span></dd></div>
+      <div class="fact"><dt>Peak concurrency</dt><dd>10<span> independent lanes</span></dd></div>
+    </dl>
+  </div>
+</header>
+
+<!-- ==================================================================== -->
+<section id="thesis">
+  <div class="wrap">
+    <p class="eyebrow">01 — The move</p>
+    <h2>Why this port is tractable, and why the last attempt drifted</h2>
+
+    <p>
+      Beam is not a React app with a Rust helper. It is a 36,382-line Rust application with a
+      React face bolted on through 87 IPC commands. Every feature — clipboard history, the
+      file index, the calculator, focus enforcement, the AI provider layer, snippets, hotkeys,
+      the extension host — already lives in <code>apps/desktop/src-tauri/src</code>. The
+      frontend's 85,000 lines are overwhelmingly presentation, IPC plumbing, React Query cache
+      management, and serialization.
+    </p>
+
+    <div class="panel panel--go">
+      <p class="panel-label">What the Windows and macOS backends changed about this plan</p>
+      <p>
+        Going cross-platform made the port <em>easier</em>, not harder, because it forced the
+        abstraction the GPUI side needs anyway. <code>src/desktop/</code> (691 lines) is now a
+        platform-neutral dispatch layer: <code>DesktopBackendKind</code>,
+        <code>WindowBackendCapabilities</code>, <code>ClipboardBackendCapabilities</code> and one
+        <code>DesktopIntegrationStatus</code> shape that all three backends produce identically.
+        The GPUI frontend consumes that one shape and never branches on platform — exactly the
+        contract the React frontend already has, where only <em>two</em> lines of TypeScript
+        (a <code>navigator.platform</code> check for ⌘ versus Ctrl) know what OS they are on.
+      </p>
+      <p>
+        Three things did get harder, and each has a row in the risks table: the data directory
+        assertion is now three assertions, the tray and global-shortcut replacements are now
+        three implementations each, and <strong>"full parity" has to be defined per platform</strong>
+        because several features are genuinely Linux-only by design.
+      </p>
+    </div>
+
+    <div class="panel panel--accent">
+      <p class="panel-label">The structural move</p>
+      <p>
+        <strong>Decouple the domain modules from Tauri, then call them in-process from GPUI.</strong>
+        <code>AppHandle</code> becomes <code>&amp;BeamContext</code>. <code>app.emit("ai-stream-chunk", …)</code>
+        becomes a typed event on an internal bus. <code>tauri_plugin_store</code> becomes a plain JSON
+        store pointed at the same files. <code>Result&lt;T, String&gt;</code> reverts to the typed
+        <code>thiserror</code> errors each module already defines — the <code>String</code> was only
+        ever there to cross the IPC boundary. After that, the entire IPC layer, the React Query layer,
+        and the serialization layer stop existing rather than getting ported.
+      </p>
+    </div>
+
+    <p>
+      The previous attempt lost coherence because there was no ledger. A port of this size has
+      one failure mode: an agent or a person reaches a component, cannot find the original's
+      exact spacing or keyboard behaviour, invents something plausible, and the invention
+      propagates. Section&nbsp;<a href="#drift">08</a> is the countermeasure and it is not optional —
+      it is the difference between a port and a rewrite.
+    </p>
+
+    <h3>What is in scope, and what is untouched</h3>
+
+    <div class="scroller">
+      <table>
+        <caption>Repository scope</caption>
+        <thead>
+          <tr><th>Path</th><th class="num">Size</th><th>Disposition</th><th>Notes</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="mono">apps/desktop/src</td><td class="num">85,396</td>
+            <td><span class="chip chip--stop">Replaced</span></td>
+            <td>Entire React frontend. Deleted at G3, not before.</td>
+          </tr>
+          <tr>
+            <td class="mono">apps/desktop/src-tauri/src</td><td class="num">36,382</td>
+            <td><span class="chip chip--warn">Moved &amp; refactored</span></td>
+            <td>Module tree preserved 1:1; Tauri attachment removed; lands in root-level <code>crates/</code> (D6). Includes the Linux, Windows and macOS backends.</td>
+          </tr>
+          <tr>
+            <td class="mono">crates/</td><td class="num">new</td>
+            <td><span class="chip chip--acc">Created at G0</span></td>
+            <td>Root Cargo workspace, seven crates. Coexists with <code>apps/desktop</code> for the whole migration.</td>
+          </tr>
+          <tr>
+            <td class="mono">packages/extension-manager</td><td class="num">6,793</td>
+            <td><span class="chip chip--go">Unchanged</span></td>
+            <td>Node/CJS React reconciler. Still spawned as a subprocess.</td>
+          </tr>
+          <tr>
+            <td class="mono">packages/extension-protocol</td><td class="num">21,122</td>
+            <td><span class="chip chip--go">Unchanged</span></td>
+            <td>Protobuf wire types. Rust side gains a generated twin.</td>
+          </tr>
+          <tr>
+            <td class="mono">packages/beam-api, beam-utils</td><td class="num">11,156</td>
+            <td><span class="chip chip--go">Unchanged</span></td>
+            <td>Published npm SDKs for extension authors.</td>
+          </tr>
+          <tr>
+            <td class="mono">packages/browser-extension</td><td class="num">—</td>
+            <td><span class="chip chip--go">Unchanged</span></td>
+            <td>Chrome/Firefox bridge; talks to the Rust HTTP bridge server.</td>
+          </tr>
+          <tr>
+            <td class="mono">apps/web</td><td class="num">—</td>
+            <td><span class="chip chip--go">Unchanged</span></td>
+            <td>Marketing site.</td>
+          </tr>
+          <tr>
+            <td class="mono">infra/</td><td class="num">—</td>
+            <td><span class="chip chip--warn">Adjusted</span></td>
+            <td>AUR/deb/rpm/AppImage recipes lose the webkit2gtk dependency; NSIS/MSI lose WebView2; GNOME shell extension stays.</td>
+          </tr>
+          <tr>
+            <td class="mono">.github/workflows</td><td class="num">—</td>
+            <td><span class="chip chip--warn">Adjusted</span></td>
+            <td><code>ci.yml</code> (ubuntu build · macos-14 check+test · windows check), <code>release-linux.yml</code>, <code>release-windows.yml</code>. No macOS release job yet — see decision D8.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      The bun workspace survives for <code>apps/web</code> and <code>packages/*</code>. The Rust
+      moves to a root-level <code>crates/</code> workspace (decision D6), and
+      <code>apps/desktop</code> is deleted outright at cutover. Extension authors see no
+      difference at all.
+    </p>
+  </div>
+</section>
+
+<!-- ==================================================================== -->
+<section id="inventory">
+  <div class="wrap">
+    <p class="eyebrow">02 — Verified inventory</p>
+    <h2>What actually exists, measured</h2>
+    <p>
+      Every number below was read out of the working tree, not estimated. The ledger in
+      section&nbsp;<a href="#ledger">07</a> is keyed to these paths.
+    </p>
+
+    <h3>Frontend modules by weight</h3>
+    <div class="scroller">
+      <table>
+        <caption>apps/desktop/src/modules — lines of TS/TSX</caption>
+        <thead>
+          <tr><th>Module</th><th class="num">Lines</th><th>Panel</th><th>Shape</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="mono">extensions</td><td class="num">11,498</td><td>extensions, extension-runner</td><td>Store browser + runtime shell rendering 46 node types</td></tr>
+          <tr><td class="mono">settings</td><td class="num">6,532</td><td>settings</td><td>4 tabs: general, keybinds, extensions, about</td></tr>
+          <tr><td class="mono">launcher</td><td class="num">5,581</td><td>commands</td><td>Root shell, actions panel, panel routing, window sizing</td></tr>
+          <tr><td class="mono">ai</td><td class="num">2,879</td><td>ai</td><td>Streaming chat, sidebar, markdown, attachments</td></tr>
+          <tr><td class="mono">script-commands</td><td class="num">2,008</td><td>script-commands</td><td>List, args form, output stream, create form</td></tr>
+          <tr><td class="mono">file-search</td><td class="num">1,961</td><td>file-search</td><td>Split list/detail + inline results group</td></tr>
+          <tr><td class="mono">snippets</td><td class="num">1,941</td><td>snippets</td><td>Virtualized list, editor, tag input, preview</td></tr>
+          <tr><td class="mono">todo</td><td class="num">1,910</td><td>todo</td><td>Sortable rows + subtodo detail, drag &amp; drop</td></tr>
+          <tr><td class="mono">speed-test</td><td class="num">1,575</td><td>speed-test</td><td>Cloudflare measurement client + gauges</td></tr>
+          <tr><td class="mono">clipboard</td><td class="num">1,533</td><td>clipboard</td><td>Virtualized history, detail, image preview</td></tr>
+          <tr><td class="mono">focus</td><td class="num">1,457</td><td>focus</td><td>Session, categories, import tabs</td></tr>
+          <tr><td class="mono">quicklinks</td><td class="num">1,434</td><td>quicklinks</td><td>Create/manage views, favicon preview</td></tr>
+          <tr><td class="mono">emoji</td><td class="num">1,159</td><td>emoji</td><td>Virtualized grid, recents, pinned</td></tr>
+          <tr><td class="mono">notes</td><td class="num">982</td><td>notes</td><td>Virtualized list, editor, preview</td></tr>
+          <tr><td class="mono">translation</td><td class="num">826</td><td>translation</td><td>Language pickers, result card</td></tr>
+          <tr><td class="mono">dictionary</td><td class="num">784</td><td>dictionary</td><td>Definition cards, skeleton</td></tr>
+          <tr><td class="mono">window-switcher</td><td class="num">646</td><td>window-switcher</td><td>Window list, focus/close actions</td></tr>
+          <tr><td class="mono">calculator-history</td><td class="num">639</td><td>calculator-history</td><td>List with pin/delete</td></tr>
+          <tr><td class="mono">hyprwhspr</td><td class="num">501</td><td>hyprwhspr</td><td>Record controls, output card</td></tr>
+          <tr><td class="mono">dmenu</td><td class="num">370</td><td>dmenu</td><td>CLI-driven picker session</td></tr>
+          <tr><td class="mono">calculator</td><td class="num">249</td><td>inline</td><td>Result row inside the command list</td></tr>
+          <tr><td class="mono">shell</td><td class="num">209</td><td>inline</td><td>Shell trigger panel with history</td></tr>
+          <tr><td class="mono">applications</td><td class="num">203</td><td>inline</td><td>App launch actions</td></tr>
+          <tr><td class="mono">system-actions</td><td class="num">76</td><td>inline</td><td>Lock, sleep, shutdown, keep-awake</td></tr>
+          <tr><td class="mono">search</td><td class="num">30</td><td>inline</td><td>Browser search fallback</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      Shared UI outside <code>modules/</code>: <code>components/</code> 7,275 lines
+      (15 shadcn primitives, 9 command primitives, 21 module primitives, icon registry),
+      <code>command-registry/</code> 4,236 lines (providers, matcher, ranker, dispatcher,
+      trigger registry, preferences), <code>providers/</code> 484 lines (all deleted —
+      see section&nbsp;<a href="#design">04</a>), <code>store/</code> 422 lines of Zustand.
+    </p>
+
+    <h3>Backend modules by weight</h3>
+    <div class="scroller">
+      <table>
+        <caption>apps/desktop/src-tauri/src — lines of Rust, all retained · 36,382 total</caption>
+        <thead>
+          <tr><th>Module</th><th class="num">Lines</th><th>Module</th><th class="num">Lines</th><th>Module</th><th class="num">Lines</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="mono">extensions</td><td class="num">5,155</td><td class="mono">file_search</td><td class="num">1,390</td><td class="mono">launcher_theme</td><td class="num">342</td></tr>
+          <tr><td class="mono">linux_desktop</td><td class="num">4,988</td><td class="mono">clipboard</td><td class="num">1,246</td><td class="mono">notes</td><td class="num">287</td></tr>
+          <tr><td class="mono">ai</td><td class="num">2,686</td><td class="mono">script_commands</td><td class="num">1,077</td><td class="mono">custom_config</td><td class="num">210</td></tr>
+          <tr><td class="mono">snippets</td><td class="num">1,922</td><td class="mono">windows_desktop</td><td class="num">978</td><td class="mono">launcher_shell</td><td class="num">208</td></tr>
+          <tr><td class="mono">hotkeys</td><td class="num">1,912</td><td class="mono">calculator</td><td class="num">960</td><td class="mono">dictionary</td><td class="num">193</td></tr>
+          <tr><td class="mono">macos</td><td class="num">1,820</td><td class="mono">settings</td><td class="num">787</td><td class="mono">menu_bar</td><td class="num">178</td></tr>
+          <tr><td class="mono">applications</td><td class="num">1,541</td><td class="mono">desktop</td><td class="num">691</td><td class="mono">hyprwhspr</td><td class="num">156</td></tr>
+          <tr><td class="mono">focus</td><td class="num">1,442</td><td class="mono">launcher_window</td><td class="num">680</td><td class="mono">pinned</td><td class="num">149</td></tr>
+          <tr><td class="mono">cli</td><td class="num">1,402</td><td class="mono">danksearch</td><td class="num">678</td><td class="mono">state, http, utils</td><td class="num">403</td></tr>
+          <tr><td class="mono">—</td><td class="num"></td><td class="mono">todo</td><td class="num">571</td><td class="mono">lib + app_commands</td><td class="num">620</td></tr>
+          <tr><td class="mono">—</td><td class="num"></td><td class="mono">quicklinks</td><td class="num">441</td><td class="mono">others</td><td class="num">450</td></tr>
+          <tr><td class="mono">—</td><td class="num"></td><td class="mono">translation</td><td class="num">428</td><td class="mono">window_switcher</td><td class="num">362</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Platform layers</h3>
+    <p>
+      Three backends behind one neutral façade. <code>desktop/</code> is the façade; the three
+      implementation directories never surface to the UI. There are <strong>229 <code>cfg(target_os)</code>
+      sites</strong> in the tree — 159 Linux, 36 macOS, 34 Windows — and the port does not add
+      to that count, it inherits it.
+    </p>
+
+    <div class="scroller">
+      <table>
+        <caption>Platform code and its dependencies</caption>
+        <thead><tr><th>Layer</th><th class="num">Lines</th><th>Key crates</th><th>Provides</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="mono">desktop/</td><td class="num">691</td><td>serde</td>
+            <td><strong>The façade.</strong> <code>DesktopBackendKind</code> (12 variants), window and clipboard capability structs, <code>DesktopIntegrationStatus</code>, <code>get_desktop_context</code>. Both remaining commands in the port's 87 dispatch through here.</td>
+          </tr>
+          <tr>
+            <td class="mono">linux_desktop/</td><td class="num">4,988</td>
+            <td>wayland-client, wayland-protocols-wlr, x11rb, zbus, hyprland, swayipc, wl-clipboard-rs, ashpd, gtk-layer-shell, evdev, xkbcommon, freedesktop-*</td>
+            <td>Hyprland, Sway, GNOME extension, KWin D-Bus, wlr data-control, X11 EWMH and primary selection, the wayland helper binary, udev snippet injection</td>
+          </tr>
+          <tr>
+            <td class="mono">macos/</td><td class="num">1,820</td>
+            <td>objc2, objc2-app-kit, objc2-foundation, core-foundation, dispatch2</td>
+            <td>Accessibility (AX) window listing and selection, NSPasteboard, NSWorkspace, LaunchServices, bundle plist parsing and icon cache, permission prompts</td>
+          </tr>
+          <tr>
+            <td class="mono">windows_desktop/</td><td class="num">978</td>
+            <td>windows 0.61 (Shell, Registry, Dwm, Gdi, Com, Input), winreg</td>
+            <td>Start Menu and registry app discovery with friendly-name resolution, foreground window tracking, selection capture, SendInput</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Feature availability by platform</h3>
+    <p>
+      This matrix is <strong>load-bearing for the ledger</strong>. Several capabilities are
+      Linux-only by design, and a lane that does not know that will "fix" a Windows gap that
+      was never a gap. Nothing here changes during the port — it is transcribed, not decided.
+    </p>
+
+    <div class="scroller">
+      <table>
+        <caption>Capability matrix — the current, intended behaviour</caption>
+        <thead><tr><th>Capability</th><th>Linux</th><th>Windows</th><th>macOS</th><th>Note</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Calculator engine</td>
+            <td><span class="chip chip--go">Soulver</span></td>
+            <td><span class="chip chip--warn">smart-calculator</span></td>
+            <td><span class="chip chip--warn">smart-calculator</span></td>
+            <td>Soulver is a Swift FFI built only for Linux; other targets fall through to the pure-Rust engine.</td>
+          </tr>
+          <tr>
+            <td>File search backend</td>
+            <td><span class="chip chip--go">danksearch + index</span></td>
+            <td><span class="chip chip--warn">index only</span></td>
+            <td><span class="chip chip--warn">index only</span></td>
+            <td><code>danksearch/</code> is entirely <code>cfg(linux)</code>.</td>
+          </tr>
+          <tr>
+            <td>Window listing / focus / close</td>
+            <td><span class="chip chip--go">Hyprland, Sway, GNOME, KWin, X11</span></td>
+            <td><span class="chip chip--go">Win32</span></td>
+            <td><span class="chip chip--warn">AX, needs permission</span></td>
+            <td>macOS reports <code>supports_window_listing: false</code> until Accessibility is granted.</td>
+          </tr>
+          <tr>
+            <td>Focus mode app blocking</td>
+            <td><span class="chip chip--go">frontmost-window</span></td>
+            <td><span class="chip chip--go">foreground tracker</span></td>
+            <td><span class="chip chip--warn">AX, needs permission</span></td>
+            <td>Three implementations in <code>focus/runtime.rs</code>, one capability report.</td>
+          </tr>
+          <tr>
+            <td>Global hotkey</td>
+            <td><span class="chip chip--go">portal + evdev</span></td>
+            <td><span class="chip chip--go">RegisterHotKey</span></td>
+            <td><span class="chip chip--stop">Tauri plugin</span></td>
+            <td>macOS is the only path still on a Tauri plugin. Must be replaced — see §03.</td>
+          </tr>
+          <tr>
+            <td>Snippet expansion</td>
+            <td><span class="chip chip--go">evdev + udev rule</span></td>
+            <td><span class="chip chip--go">SendInput</span></td>
+            <td><span class="chip chip--warn">AX paste</span></td>
+            <td><code>snippets/runtime.rs</code> is heavily <code>cfg</code>-split.</td>
+          </tr>
+          <tr>
+            <td>hyprwhspr dictation</td>
+            <td><span class="chip chip--go">Hyprland only</span></td>
+            <td><span class="chip chip--cut">n/a</span></td>
+            <td><span class="chip chip--cut">n/a</span></td>
+            <td>Panel hidden off-Hyprland; that is existing behaviour to preserve.</td>
+          </tr>
+          <tr>
+            <td>Desktop integration extras</td>
+            <td><span class="chip chip--go">GNOME ext, KDE bridge, udev, wayland helper</span></td>
+            <td><span class="chip chip--cut">n/a</span></td>
+            <td><span class="chip chip--cut">n/a</span></td>
+            <td>Settings surfaces these only where they apply.</td>
+          </tr>
+          <tr>
+            <td>Release channel</td>
+            <td><span class="chip chip--go">deb · rpm · AppImage · AUR</span></td>
+            <td><span class="chip chip--go">NSIS · MSI</span></td>
+            <td><span class="chip chip--warn">to build</span></td>
+            <td>macOS ships with this migration <span class="chip chip--acc">D8</span>. <code>release-macos.yml</code>, a signing identity and notarization are new work — see G3.</td>
+          </tr>
+          <tr>
+            <td>Launcher glass</td>
+            <td><span class="chip chip--go">Frosted / Solid</span></td>
+            <td><span class="chip chip--warn">Solid always</span></td>
+            <td><span class="chip chip--go">Frosted always</span></td>
+            <td>Decision D9 · SD-8. Linux probes the compositor; the other two are constants.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="cols">
+      <div class="panel">
+        <p class="panel-label">Deleted outright <span class="chip chip--acc">D5</span></p>
+        <p>
+          <code>launcher_theme/</code> (342 lines, 4 IPC commands) and its 3 store files.
+          <code>settings::{get,set}_ui_style</code> and <code>{get,set}_base_color</code>.
+          <code>styles/themes.css</code> (14 KB), the light-mode block of <code>tokens.css</code>,
+          and every <code>.sc-solid</code> / <code>.sc-glassy</code> branch in
+          <code>modules.css</code> (52 KB). Three React providers.
+          <code>resources/examples/themes/</code>.
+        </p>
+        <p>
+          This removes a documented, published feature. It ships with a CHANGELOG entry and a
+          README edit, not silently — see G3.
+        </p>
+      </div>
+      <div class="panel">
+        <p class="panel-label">Rewritten in Rust, not ported</p>
+        <p>
+          <code>modules/speed-test/lib/cloudflare-speedtest.ts</code> — a hand-written
+          measurement client against <code>speed.cloudflare.com/__down</code> and
+          <code>/__up</code>. The algorithm transcribes cleanly onto <code>reqwest</code>;
+          the browser is not load-bearing.
+        </p>
+      </div>
+      <div class="panel">
+        <p class="panel-label">Kept as-is on disk — now three assertions</p>
+        <p>
+          SQLite databases, JSON stores, and keyring entries. <strong>The GPUI binary must
+          resolve the same paths Tauri did, on each platform</strong>, or every user loses their
+          clipboard history, notes, todos and API keys on upgrade.
+        </p>
+        <dl class="kv" style="font-size:13px">
+          <dt>Linux</dt><dd class="m">$XDG_DATA_HOME/io.beam.launcher</dd>
+          <dt>Windows</dt><dd class="m">%APPDATA%\io.beam.launcher</dd>
+          <dt>macOS</dt><dd class="m">~/Library/Application Support/io.beam.launcher</dd>
+        </dl>
+        <p>
+          Keyring service names must match too, across the three backends already configured in
+          <code>Cargo.toml</code>: <code>linux-native-sync-persistent</code>,
+          <code>windows-native</code>, <code>apple-native</code>.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================================================================== -->
+<section id="gpui">
+  <div class="wrap">
+    <p class="eyebrow">03 — Framework findings</p>
+    <h2>What GPUI gives you, and what you have to build</h2>
+    <p>
+      Read out of <code>zed-industries/zed</code> at <code>crates/gpui</code>, and cross-checked
+      against <code>zeronsh/comet</code>, which is a shipping GPUI app with exactly the glass
+      treatment Beam wants. Both are the reference material for this port; when a lane is unsure
+      how to do something in GPUI, the answer is in one of those two trees, not in invention.
+    </p>
+
+    <div class="scroller">
+      <table>
+        <caption>Capability audit</caption>
+        <thead>
+          <tr><th>Need</th><th>Status</th><th>Source of truth</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Launcher surface — Linux/Wayland</td>
+            <td><span class="chip chip--go">Built in</span></td>
+            <td><code>WindowKind::LayerShell(LayerShellOptions)</code> — namespace, layer, anchor, margin, exclusive zone, keyboard interactivity. Replaces the whole <code>gtk-layer-shell</code> block in <code>launcher_window.rs</code>. Example: <code>examples/layer_shell.rs</code>. <em>Feature-gated to <code>target_os = "linux"</code> — it does not exist on the other two.</em></td>
+          </tr>
+          <tr>
+            <td>Launcher surface — Windows &amp; macOS</td>
+            <td><span class="chip chip--go">Built in</span></td>
+            <td><code>WindowKind::PopUp</code> — "appears above all other windows". Paired with app-level <code>cx.activate(ignoring_other_apps)</code> and <code>cx.hide()</code> for the toggle. On macOS the bundle needs <code>LSUIElement</code> so Beam has no Dock icon; on Windows the window wants tool-window style so it stays out of the taskbar and Alt-Tab — matching today's <code>skipTaskbar: true</code>.</td>
+          </tr>
+          <tr>
+            <td>Transparent / blurred window</td>
+            <td><span class="chip chip--go">Better than expected</span></td>
+            <td><code>WindowBackgroundAppearance::{Transparent, Blurred, MicaBackdrop, MicaAltBackdrop}</code>. <strong>macOS gets real NSVisualEffectView blur unconditionally.</strong> Linux is compositor-dependent — Hyprland and KWin blur, Mutter does not. Windows takes the Solid plate by decision <span class="chip chip--acc">D9</span>, so the two Mica variants stay unused; do not reach for them later.</td>
+          </tr>
+          <tr>
+            <td>In-renderer backdrop blur</td>
+            <td><span class="chip chip--cut">Not used</span></td>
+            <td>No <code>paint_backdrop_blur</code> in upstream, and <span class="chip chip--acc">D4</span> keeps us on upstream — so comet's forked <code>frosted()</code> element is off the table. <strong>Consequence to design around:</strong> floats (popovers, dropdowns, the actions panel) get no blur of their own; they read through the wash ladder and their 1px edges over whatever the window already has. Comet's <code>crates/ui/src/frost.rs</code> remains the reference if this is ever revisited.</td>
+          </tr>
+          <tr>
+            <td>Virtualized list, fixed height</td>
+            <td><span class="chip chip--go">Built in</span></td>
+            <td><code>uniform_list(id, count, cx.processor(…))</code>. Covers clipboard, snippets, notes, emoji grid, command list.</td>
+          </tr>
+          <tr>
+            <td>Virtualized list, variable height</td>
+            <td><span class="chip chip--go">Built in</span></td>
+            <td><code>list(ListState, render)</code> with <code>ListAlignment::Bottom</code>, sum-tree offsets, <code>scroll_to_end()</code>, follow-tail. Covers the AI transcript and extension list views.</td>
+          </tr>
+          <tr>
+            <td>Text input</td>
+            <td><span class="chip chip--stop">Build it</span></td>
+            <td>GPUI ships no text field. <code>examples/input.rs</code> (778 lines) is the canonical hand-roll: <code>EntityInputHandler</code>, IME marked ranges, selection, mouse drag, clipboard actions. Beam needs single-line, multi-line, and form variants. <strong>This is the first thing built in <code>beam-ui</code>.</strong></td>
+          </tr>
+          <tr>
+            <td>Markdown rendering</td>
+            <td><span class="chip chip--warn">Build it, smaller now</span></td>
+            <td>Zed's <code>crates/markdown</code> is GPL-3.0 and dependency-heavy. Build on <code>pulldown-cmark</code> plus <code>syntect</code>; comet's <code>crates/ui/src/markdown/</code> is a permissive, streaming-capable model to follow. <span class="chip chip--acc">D2 · D3</span> drop mermaid and math entirely, so the scope is CommonMark, code blocks, links, images and tables — no diagram engine, no math layout.</td>
+          </tr>
+          <tr>
+            <td>Animation</td>
+            <td><span class="chip chip--go">Built in</span></td>
+            <td><code>AnimationExt::with_animation(id, Animation, |el, delta| …)</code>, easing, repeat. Covers skeleton shimmer, spinners, panel fades.</td>
+          </tr>
+          <tr>
+            <td>Drag &amp; drop</td>
+            <td><span class="chip chip--go">Built in</span></td>
+            <td><code>examples/drag_drop.rs</code>. Covers todo/subtodo reorder and pinned-command reorder.</td>
+          </tr>
+          <tr>
+            <td>Images &amp; SVG</td>
+            <td><span class="chip chip--go">Built in</span></td>
+            <td><code>img()</code> and <code>svg()</code>; resvg under the hood. Freedesktop icon paths resolve straight off disk — the Tauri asset-protocol allowlist disappears.</td>
+          </tr>
+          <tr>
+            <td>Async / tokio interop</td>
+            <td><span class="chip chip--go">Built in</span></td>
+            <td><code>cx.background_spawn</code>, <code>cx.spawn</code>, <code>Task&lt;R&gt;</code>; <code>gpui_tokio::Tokio::spawn</code> for the existing <code>reqwest</code>/<code>sqlx</code> futures.</td>
+          </tr>
+          <tr>
+            <td>System tray / menu bar</td>
+            <td><span class="chip chip--stop">Build it, ×3</span></td>
+            <td>No tray in GPUI, and Tauri's <code>tray-icon</code> goes away with it. <strong>Use the standalone <code>tray-icon</code> crate</strong> — same authors, no Tauri dependency, and it covers StatusNotifierItem on Linux, <code>NSStatusItem</code> on macOS and <code>Shell_NotifyIcon</code> on Windows in one API. This supersedes the Linux-only <code>ksni</code> suggestion; one crate for three platforms is worth more here than a thinner dependency. Blocks <code>menu_bar.rs</code> and the <code>MenuBarExtra</code> extension nodes.</td>
+          </tr>
+          <tr>
+            <td>Global hotkeys — Linux &amp; Windows</td>
+            <td><span class="chip chip--go">Already Tauri-free</span></td>
+            <td><code>hotkeys/</code> uses evdev, xkbcommon and the XDG global-shortcuts portal on Linux, and <code>RegisterHotKey</code> on Windows. Both untouched by the port.</td>
+          </tr>
+          <tr>
+            <td>Global hotkeys — macOS</td>
+            <td><span class="chip chip--stop">Must replace</span></td>
+            <td><strong>The one Tauri plugin still doing real work.</strong> <code>hotkeys/runtime.rs</code> uses <code>tauri-plugin-global-shortcut</code> on macOS only. Replace with the standalone <code>global-hotkey</code> crate (the plugin's own upstream), or Carbon <code>RegisterEventHotKey</code> directly. Small, but it is on the critical path — the hotkey is how the launcher opens.</td>
+          </tr>
+          <tr>
+            <td>Single instance / activation</td>
+            <td><span class="chip chip--warn">Build it, ×3</span></td>
+            <td><code>tauri-plugin-single-instance</code> goes away on all three platforms. The CLI bridge server in <code>cli/bridge.rs</code> already owns a socket — extend it to carry <code>--toggle</code>, <code>--run-command</code> and deep-link arguments. Named pipe on Windows, Unix socket elsewhere.</td>
+          </tr>
+          <tr>
+            <td>Deep links</td>
+            <td><span class="chip chip--warn">Build it, ×3</span></td>
+            <td><code>tauri-plugin-deep-link</code> goes away. Linux registration (<code>.desktop</code> + <code>xdg-mime</code>) already lives in <code>lib.rs</code>; Windows needs registry <code>HKCU\Software\Classes\beam</code> keys (<code>winreg</code> is already a dependency); macOS needs <code>CFBundleURLTypes</code> in Info.plist plus an <code>NSApplicationDelegate</code> URL handler. All three route into the same activation socket.</td>
+          </tr>
+          <tr>
+            <td>File dialogs</td>
+            <td><span class="chip chip--warn">Build it, ×3</span></td>
+            <td><code>tauri-plugin-dialog</code> goes away. <code>ashpd</code> portal on Linux (already a dependency), <code>NSOpenPanel</code> on macOS, <code>IFileDialog</code> on Windows — or the standalone <code>rfd</code> crate for all three. Used by Form.FilePicker and focus category import.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="panel panel--warn">
+      <p class="panel-label">Pin discipline</p>
+      <p>
+        GPUI is pre-1.0 and breaks between revisions. Pin <code>gpui</code>,
+        <code>gpui_platform</code> and <code>gpui_tokio</code> to <em>one</em> git rev in
+        <code>[workspace.dependencies]</code>, record the rev and the reason in
+        <code>docs/parity/gpui-pin.md</code>, and treat a bump as its own task with its own
+        smoke pass. Comet's <code>Cargo.toml</code> shows what a well-documented pin looks like.
+        Pin <code>rust-toolchain.toml</code> alongside it.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ==================================================================== -->
+<section id="design">
+  <div class="wrap">
+    <p class="eyebrow">04 — Design direction</p>
+    <h2>One surface, fixed: 36% glass</h2>
+
+    <p>
+      The theming system is removed, not simplified. There is no light mode, no style switch,
+      no base-colour picker, no user CSS themes, and no Beam-branded palette to preserve.
+      What replaces it is a single dark translucent surface in the register comet uses:
+      the launcher sits over the desktop as a frosted plate, and the content reads as
+      lightweight ink on top of it.
+    </p>
+
+    <h3>The glass ladder</h3>
+    <p>
+      "30–40% glassy" is a real number in this design: the shell plate is a tint at
+      <strong>0.36 alpha</strong> over a compositor-blurred backdrop, so roughly two thirds of
+      the desktop reads through. Everything above the plate is a white wash, never a new fill —
+      that is what keeps translucency from turning to mud as elements stack.
+    </p>
+
+    <div class="swatches">
+      <div class="sw sw-shell"><div>
+        <div class="sw-name">shell.plate</div>
+        <div class="sw-val">rgba(10,11,14, .36)</div>
+        <div class="sw-use">The launcher window itself, over compositor blur. Radius 16.</div>
+      </div></div>
+      <div class="sw sw-solid"><div>
+        <div class="sw-name">shell.plate.solid</div>
+        <div class="sw-val">rgba(10,11,14, .88)</div>
+        <div class="sw-use">Fallback when the compositor has no blur. Same geometry, opaque enough to read.</div>
+      </div></div>
+      <div class="sw sw-hover"><div>
+        <div class="sw-name">row.hover</div>
+        <div class="sw-val">rgba(255,255,255, .06)</div>
+        <div class="sw-use">Pointer hover on any row. Radius 10.</div>
+      </div></div>
+      <div class="sw sw-select"><div>
+        <div class="sw-name">row.selected</div>
+        <div class="sw-val">white .10 + inset 1px white .14</div>
+        <div class="sw-use">Keyboard selection. The inset edge is what makes it read on glass.</div>
+      </div></div>
+      <div class="sw sw-footer"><div>
+        <div class="sw-name">footer.plate</div>
+        <div class="sw-val">rgba(0,0,0, .18)</div>
+        <div class="sw-use">42px footer bar, darkened over the shell plate.</div>
+      </div></div>
+      <div class="sw sw-accent"><div>
+        <div class="sw-name">accent</div>
+        <div class="sw-val">#8fb4ff</div>
+        <div class="sw-use">Focus rings, active tab underline, primary action text. Nothing else.</div>
+      </div></div>
+    </div>
+
+    <div class="cols">
+      <div class="panel">
+        <h4>Glass mode detection</h4>
+        <p>
+          Resolve once at boot into <code>GlassMode::{Frosted, Solid}</code>. On two of three
+          platforms this is a compile-time constant; only Linux has to probe, using the existing
+          <code>desktop::status</code> and <code>environment</code> reporting.
+        </p>
+        <ul>
+          <li><strong>macOS → always Frosted.</strong> <code>Blurred</code> maps to NSVisualEffectView. No fallback needed, ever.</li>
+          <li><strong>Windows → always Solid.</strong> <span class="chip chip--acc">D9</span> Mica and DWM blur-behind are deliberately unused on every Windows version. This removes the OS-version detection branch entirely: Windows is one code path, not two.</li>
+          <li><strong>Linux → Frosted</strong> on Hyprland, KWin, or any compositor advertising blur; <strong>Solid</strong> on GNOME/Mutter and on X11 without compositing blur.</li>
+          <li><code>BEAM_GLASS=off</code> forces Solid anywhere, for screenshots and for users who want it.</li>
+        </ul>
+        <p>
+          One enum; every surface token derives from it. No per-widget branching, which is
+          exactly the trap <code>.sc-solid</code> fell into across 52 KB of CSS — and exactly the
+          trap a three-platform port would fall into twice as fast.
+        </p>
+        <p>
+          The Solid plate is not a degraded mode. It is the same geometry, the same radii, the
+          same wash ladder, at a higher plate alpha — which is why the design has exactly two
+          values and no third.
+        </p>
+      </div>
+      <div class="panel">
+        <h4>Rules that keep glass legible</h4>
+        <ul>
+          <li><strong>No drop shadows on translucent fills.</strong> The shadow paints behind the fill and greys it. Use a 1px inset edge for elevation instead.</li>
+          <li><strong>Wash, don't fill.</strong> Hover, selection and cards are white at low alpha, never a new opaque colour.</li>
+          <li><strong>One layer per float.</strong> Popovers, dropdowns and the ⌘K panel paint in a single scene layer so a hover repaint elsewhere cannot reorder them under the plate.</li>
+          <li><strong>Dividers at .08, borders at .14.</strong> Two values, no third.</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>Typography and metrics — transcribed, not redesigned</h3>
+    <p>
+      The type scale carries over exactly. The current app derives every size from a 13px base
+      with fixed ratios; those become constants in <code>beam-ui</code> and the font-family
+      picker in settings keeps working through the existing <code>fontdb</code>-backed
+      <code>settings::list_font_families</code>.
+    </p>
+
+    <div class="scroller">
+      <table>
+        <caption>Type scale — carried over verbatim from tokens.css</caption>
+        <thead><tr><th>Token</th><th class="num">Ratio</th><th class="num">At 13px base</th><th>Used for</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">text.2xs</td><td class="num">0.7692</td><td class="num">10.0</td><td>Footer labels, kbd hints</td></tr>
+          <tr><td class="mono">text.xs</td><td class="num">0.8462</td><td class="num">11.0</td><td>Section headers, accessories</td></tr>
+          <tr><td class="mono">text.sm</td><td class="num">0.9231</td><td class="num">12.0</td><td>Row subtitles</td></tr>
+          <tr><td class="mono">text.md</td><td class="num">1.0000</td><td class="num">13.0</td><td>Body</td></tr>
+          <tr><td class="mono">text.lg</td><td class="num">1.0769</td><td class="num">14.0</td><td>Panel titles</td></tr>
+          <tr><td class="mono">text.xl</td><td class="num">1.1538</td><td class="num">15.0</td><td>Emphasis</td></tr>
+          <tr><td class="mono">text.2xl</td><td class="num">1.2308</td><td class="num">16.0</td><td>Detail headings</td></tr>
+          <tr><td class="mono">text.3xl</td><td class="num">1.3846</td><td class="num">18.0</td><td>Command row titles</td></tr>
+          <tr><td class="mono">text.display</td><td class="num">1.5385</td><td class="num">20.0</td><td>Search input, calculator result</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Window specification</h3>
+    <div class="scroller">
+      <table>
+        <caption>Launcher window — sizes preserved from use-launcher-window-size-sync.ts</caption>
+        <thead><tr><th>State</th><th class="num">Width</th><th class="num">Height</th><th>Trigger</th></tr></thead>
+        <tbody>
+          <tr><td>Compact (compressed layout, empty query)</td><td class="num">960</td><td class="num">60</td><td>Measured from the input wrapper, clamped 44–520</td></tr>
+          <tr><td>Default command list</td><td class="num">960</td><td class="num">520</td><td>Any query, or comfortable layout mode</td></tr>
+          <tr><td>AI panel</td><td class="num">1100</td><td class="num">750</td><td>Panel = <code>ai</code></td></tr>
+          <tr><td>Settings panel</td><td class="num">1240</td><td class="num">760</td><td>Panel = <code>settings</code></td></tr>
+          <tr><td>All other takeover panels</td><td class="num">960</td><td class="num">520</td><td>18 panels</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="panel">
+      <h4>Surface configuration — four paths, one behaviour</h4>
+      <dl class="kv">
+        <dt>Linux Wayland</dt>
+        <dd><code>WindowKind::LayerShell</code> · namespace <code>"beam"</code> · <code>Layer::Overlay</code> · <code>KeyboardInteractivity::Exclusive</code> · anchor <code>TOP | LEFT</code> with computed margins for centring on the active monitor's work area — the same maths <code>center_launcher_window</code> does today, minus the GTK round-trip.</dd>
+        <dt>Linux X11</dt>
+        <dd>Normal window, undecorated, always-on-top, skip-taskbar, visible on all workspaces, <code>WindowBackgroundAppearance::Transparent</code>, positioned by the existing multi-monitor resolver.</dd>
+        <dt>macOS</dt>
+        <dd><code>WindowKind::PopUp</code> · <code>Blurred</code> · no titlebar · <code>LSUIElement</code> in the bundle so there is no Dock icon and no menu bar takeover. Show is <code>cx.activate(true)</code> plus window show; hide is <code>cx.hide()</code>. Centring uses <code>NSScreen</code> visible frame, which is what the existing monitor resolver already models.</dd>
+        <dt>Windows</dt>
+        <dd><code>WindowKind::PopUp</code> · <code>WindowBackgroundAppearance::Transparent</code> with the Solid plate · tool-window extended style so it stays out of the taskbar and Alt-Tab, matching today's <code>skipTaskbar: true</code>. No Mica, no DWM calls, no version check. <span class="chip chip--acc">D9 · SD-8</span></dd>
+        <dt>Resize</dt>
+        <dd>Direct on every platform. The current hide → resize → show → refocus dance in <code>launcher_window.rs</code> exists only to hide webview reflow. <span class="chip chip--acc">Sanctioned deviation SD-1</span></dd>
+        <dt>Focus</dt>
+        <dd>Single <code>set_focus</code>. The three staggered retries at 16/48/120 ms are a Tauri/GTK workaround and go away. <span class="chip chip--acc">SD-2</span></dd>
+        <dt>Modifier glyphs</dt>
+        <dd>⌘/⌥/⌃/⇧ on macOS, Ctrl/Alt/Shift/Win elsewhere — resolved once in <code>beam-ui::Kbd</code>, replacing the two <code>navigator.platform</code> checks in <code>action-list-panel.tsx</code> and <code>shortcut-utils.ts</code>. No other component learns what platform it is on.</dd>
+      </dl>
+    </div>
+
+    <h3>Component inventory for <code>beam-ui</code></h3>
+    <p>
+      Each of these is a direct transcription of an existing React component. The source path is
+      the specification; spacing, weights and radii are read out of its Tailwind classes and
+      written down as constants, not re-derived by eye.
+    </p>
+
+    <div class="scroller">
+      <table>
+        <caption>beam-ui — the design system, built once at G1</caption>
+        <thead><tr><th>Component</th><th>Ported from</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">TextInput</td><td class="mono">ui/input.tsx, module/search-input.tsx</td><td>Hand-rolled per <code>examples/input.rs</code>. IME, selection, clipboard actions.</td></tr>
+          <tr><td class="mono">TextArea</td><td class="mono">ui/textarea.tsx</td><td>Multi-line variant; used by notes, snippets, AI composer, Form.TextArea.</td></tr>
+          <tr><td class="mono">CommandList</td><td class="mono">ui/command.tsx</td><td>Replaces cmdk. Includes the <em>smart pointer selection</em> behaviour: pointer hover only re-selects after real mouse movement within 120 ms; keyboard and wheel revert to selection mode.</td></tr>
+          <tr><td class="mono">CommandRow</td><td class="mono">command/base-command-row.tsx</td><td>Icon · title 18px medium · subtitle 12px muted · end slot. <code>py 10px</code>.</td></tr>
+          <tr><td class="mono">PanelHeader</td><td class="mono">command/command-panel-header.tsx</td><td>Back, title/subtitle block, actions, close. 1px bottom divider.</td></tr>
+          <tr><td class="mono">SearchBar</td><td class="mono">module/search-bar.tsx</td><td>56px tall, 36px back button, 40px rounded input.</td></tr>
+          <tr><td class="mono">FooterBar</td><td class="mono">command/command-footer-bar.tsx</td><td>42px, left slot, primary action, secondaries, divider, ⌘K affordance.</td></tr>
+          <tr><td class="mono">ActionsPanel</td><td class="mono">launcher/launcher-actions-panel.tsx</td><td>⌘K overlay with root/alias/hotkey pages, search filter, section grouping.</td></tr>
+          <tr><td class="mono">Kbd</td><td class="mono">module/kbd.tsx</td><td>min-width 22, height 22, mono, wash background.</td></tr>
+          <tr><td class="mono">IconChip / UnifiedIcon</td><td class="mono">module/icon-chip.tsx, icons/*</td><td>7 tinted variants; Lucide and Phosphor sets ship as embedded SVG assets.</td></tr>
+          <tr><td class="mono">SplitView</td><td class="mono">module/split-view.tsx</td><td>List/detail with resizable divider.</td></tr>
+          <tr><td class="mono">ListItem, Accessory, SectionHeader</td><td class="mono">module/*</td><td>Raycast-shaped list vocabulary shared by native panels and the extension runtime.</td></tr>
+          <tr><td class="mono">FormField set</td><td class="mono">module/form-field.tsx, form-view.tsx</td><td>Text, password, textarea, checkbox, date, dropdown, tag picker, file picker, separator, description.</td></tr>
+          <tr><td class="mono">Dropdown / Select / Searchable</td><td class="mono">ui/select.tsx, module/searchable-dropdown.tsx</td><td>Anchored popover, keyboard-navigable, single scene layer.</td></tr>
+          <tr><td class="mono">Toast</td><td class="mono">ui/sonner.tsx</td><td>Top-right stack, rich colours, extension toast bridge.</td></tr>
+          <tr><td class="mono">Skeleton / EmptyView / ErrorView</td><td class="mono">command/*, module/empty-view.tsx</td><td>Shimmer via <code>with_animation</code>.</td></tr>
+          <tr><td class="mono">MarkdownView</td><td class="mono">module/markdown-view.tsx</td><td><code>pulldown-cmark</code> + <code>syntect</code>, streaming append for AI. CommonMark, code, links, images, tables — no mermaid, no math (D2/D3). Replaces streamdown and its four plugins.</td></tr>
+          <tr><td class="mono">Scrollbar</td><td class="mono">custom-scrollbar CSS</td><td>Hidden until hover, thumb at white .26.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Sanctioned deviations</h3>
+    <p>
+      These are the only places the port is allowed to differ from the React app. Anything not
+      on this list that differs is a bug, and anything on this list must not be "fixed" back.
+    </p>
+    <div class="scroller">
+      <table>
+        <caption>Deviations approved in advance</caption>
+        <thead><tr><th>ID</th><th>Deviation</th><th>Reason</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">SD-1</td><td>Window resizes without hiding and re-showing</td><td>The hide/show dance masks webview reflow; layer-shell resize is atomic.</td></tr>
+          <tr><td class="mono">SD-2</td><td>Single focus call instead of 3 staggered retries</td><td>Tauri/GTK focus race does not exist in GPUI's own surface.</td></tr>
+          <tr><td class="mono">SD-3</td><td>All theming removed; one fixed glass surface</td><td>Explicit product decision.</td></tr>
+          <tr><td class="mono">SD-4</td><td><code>--beam-launcher-opacity</code> becomes a "Glass strength" slider, clamped 0.25–0.95</td><td>Same store key, same effect, honest name. See decision D1.</td></tr>
+          <tr><td class="mono">SD-5</td><td>React Query cache layer has no equivalent</td><td>Services are called directly; freshness comes from entity notifications on the event bus.</td></tr>
+          <tr><td class="mono">SD-6</td><td>Mermaid fences render as syntax-highlighted code blocks</td><td>Decision D2 — not wanted. Permanent, not deferred.</td></tr>
+          <tr><td class="mono">SD-7</td><td>LaTeX renders as plain source text</td><td>Decision D3 — not wanted. Permanent, not deferred.</td></tr>
+          <tr><td class="mono">SD-8</td><td>Windows uses the Solid plate on every version; Mica and DWM blur-behind are unused</td><td>Decision D9. Keeps Windows on one code path with no OS-version detection. Do not "restore" Mica on 11.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ==================================================================== -->
+<section id="arch">
+  <div class="wrap">
+    <p class="eyebrow">05 — Target architecture</p>
+    <h2>Seven crates at the repo root, one binary</h2>
+
+    <p>
+      Decision D6 puts the Rust at the top level in the standard layout. The result is an
+      unambiguous split by language: <code>crates/</code> is Rust, <code>apps/</code> and
+      <code>packages/</code> stay bun. The root <code>.cargo/config.toml</code> that already
+      exists — <code>target-dir = "target/rust"</code>, plus the two Linux linker flags — keeps
+      working untouched.
+    </p>
+
+    <pre><code>beam/
+  Cargo.toml                <span class="cmt"># workspace root; pins gpui, gpui_platform, gpui_tokio</span>
+  rust-toolchain.toml
+  .cargo/config.toml        <span class="cmt"># already present, unchanged</span>
+  crates/
+    beam-core/              <span class="cmt"># BeamContext: paths, JSON store, sqlite pools,</span>
+                            <span class="cmt"># typed EventBus, task handles, error base</span>
+    beam-services/          <span class="cmt"># the existing src-tauri module tree, verbatim,</span>
+                            <span class="cmt"># with the Tauri attachment removed</span>
+    beam-platform/          <span class="cmt"># desktop/ façade + linux_desktop, macos, windows_desktop,</span>
+                            <span class="cmt"># hotkeys, cli bridge, tray, activation socket, deep links</span>
+    beam-extensions/        <span class="cmt"># extension host, protobuf bridge, store client,</span>
+                            <span class="cmt"># runtime tree materializer</span>
+    beam-ui/                <span class="cmt"># glass tokens + every component from §04</span>
+    beam-panels/            <span class="cmt"># one module per panel, one file per source file</span>
+    beam/                   <span class="cmt"># the binary; window, router, command registry.</span>
+      resources/            <span class="cmt"># SoulverWrapper, icons, extension-manager.cjs,</span>
+                            <span class="cmt"># beam-data-control-server — moved from src-tauri/</span>
+  apps/web/                 <span class="cmt"># marketing site, bun, untouched</span>
+  packages/                 <span class="cmt"># npm SDKs + extension runtime, bun, untouched</span>
+  infra/  resources/  docs/
+<span class="del">  apps/desktop/             # deleted at cutover — nothing moves out of it late</span>
+</code></pre>
+
+    <div class="panel panel--go">
+      <p class="panel-label">Why this ordering is better than the alternative</p>
+      <p>
+        Because the crates are born at their final path in G0, <code>apps/desktop</code> is never
+        migrated — it is simply deleted once, at cutover, with nothing left inside that anyone
+        needs. The two trees coexist for the whole migration, which is exactly what rule R7
+        requires anyway: the React app stays buildable and runnable next to the GPUI one, and
+        neither is in the other's way.
+      </p>
+      <p>
+        The paths that must be retargeted are known and small: the <code>rust:fmt</code> and
+        <code>rust:fmt:check</code> scripts in the root <code>package.json</code> lose their
+        <code>--manifest-path apps/desktop/src-tauri/Cargo.toml</code> and become plain
+        <code>cargo fmt --all</code>; the <code>desktop:*</code> turbo tasks disappear along with
+        the Vite build they wrapped; CI path filters and the three release workflows point at
+        <code>crates/</code>; and the AUR, deb, rpm and NSIS recipes pick the binary up from
+        <code>target/rust/release/beam</code>.
+      </p>
+    </div>
+
+    <p>
+      <code>beam-services</code> stays a single crate on purpose. Its modules already
+      cross-reference each other (<code>crate::desktop::…</code> and
+      <code>crate::linux_desktop::…</code> from clipboard, from applications, from focus);
+      splitting them into per-feature crates would force an import rewrite across 36,000 lines
+      and invite exactly the churn this plan is designed to avoid. Keeping the <code>mod</code>
+      tree byte-for-byte identical is the lowest-drift move available.
+    </p>
+
+    <div class="panel panel--accent">
+      <p class="panel-label">Follow the façade that already exists</p>
+      <p>
+        <code>desktop/</code> is the pattern for everything platform-shaped in this port.
+        Backends live behind it, produce identical serde shapes, and the caller never branches.
+        Apply the same discipline to the three pieces the port has to build —
+        <strong>tray, activation socket, deep-link registration</strong> — so
+        <code>beam-app</code> calls <code>platform::tray::upsert(…)</code> and never sees an
+        <code>NSStatusItem</code>. Where GPUI itself forces a branch (layer-shell versus PopUp),
+        confine it to a single <code>beam-app::window</code> module with one public function.
+      </p>
+    </div>
+
+    <h3>The de-Tauri contract</h3>
+    <p>Every conversion is mechanical. Written down so six people do it identically:</p>
+
+    <div class="scroller">
+      <table>
+        <caption>Mechanical substitutions — apply without deviation</caption>
+        <thead><tr><th>Tauri</th><th>Replacement</th><th>Detail</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">#[tauri::command]</td><td class="mono">pub fn</td><td>Attribute deleted. Name and argument order preserved so the ledger stays greppable.</td></tr>
+          <tr><td class="mono">app: AppHandle</td><td class="mono">cx: &amp;BeamContext</td><td>First parameter, always.</td></tr>
+          <tr><td class="mono">Result&lt;T, String&gt;</td><td class="mono">Result&lt;T, XError&gt;</td><td>Each module already has a <code>thiserror</code> enum. Stop stringifying.</td></tr>
+          <tr><td class="mono">app.emit("name", json!(…))</td><td class="mono">cx.events().emit(Event::Name(payload))</td><td>Typed enum in <code>beam-core</code>; 20 event names inventoried below.</td></tr>
+          <tr><td class="mono">tauri_plugin_store</td><td class="mono">beam_core::Store</td><td>Same JSON files, same keys, same directory.</td></tr>
+          <tr><td class="mono">app.path().app_data_dir()</td><td class="mono">cx.paths().data_dir()</td><td>Three asserted paths — see §02. One test per platform, run in CI on all three runners.</td></tr>
+          <tr><td class="mono">app.path().resource_dir()</td><td class="mono">cx.paths().resource_dir()</td><td>Used by <code>calculator::initialize</code> to find SoulverCore, and by the extension-manager bundle. Differs per packaging format.</td></tr>
+          <tr><td class="mono">tauri::async_runtime::spawn</td><td class="mono">Tokio::spawn(cx, …)</td><td><code>gpui_tokio</code>; the existing <code>sqlx</code>/<code>reqwest</code> futures are unchanged.</td></tr>
+          <tr><td class="mono">tauri_plugin_dialog</td><td class="mono">rfd, or per-platform</td><td>Form.FilePicker and focus import. <code>ashpd</code> already present for the Linux path.</td></tr>
+          <tr><td class="mono">tauri_plugin_shell</td><td class="mono">std::process / open</td><td><code>open</code> and <code>shell-words</code> already present.</td></tr>
+          <tr><td class="mono">tauri_plugin_global_shortcut</td><td class="mono">global-hotkey</td><td><strong>macOS only.</strong> The other two platforms already have native implementations.</td></tr>
+          <tr><td class="mono">tauri_plugin_single_instance</td><td class="mono">activation socket</td><td>Extends the existing <code>cli/bridge.rs</code> server. Named pipe on Windows.</td></tr>
+          <tr><td class="mono">tauri_plugin_deep_link</td><td class="mono">platform::deeplink</td><td>xdg-mime · registry · CFBundleURLTypes. Registration code for Linux already exists in <code>lib.rs</code>.</td></tr>
+          <tr><td class="mono">tauri tray-icon feature</td><td class="mono">tray-icon crate</td><td>Standalone, covers all three platforms. Backs <code>menu_bar.rs</code> and MenuBarExtra.</td></tr>
+          <tr><td class="mono">protocol-asset scope</td><td class="mono">direct fs read</td><td>Both allowlists disappear — the Linux icon paths in <code>tauri.linux.conf.json</code> and <code>$APPDATA/icons/**</code> in <code>tauri.windows.conf.json</code>.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h4>Event bus — the complete inventory</h4>
+    <p>
+      Twenty event names cross the boundary today. All twenty become variants of one enum;
+      panels subscribe through <code>cx.observe</code> on the entity that owns them.
+    </p>
+    <p class="m" style="max-width:none;color:var(--dim)">
+      <code>ai-stream-chunk</code> · <code>ai-stream-end</code> · <code>ai-stream-error</code> ·
+      <code>applications-cache-updated</code> · <code>cli-dmenu-request</code> ·
+      <code>deep-link</code> · <code>extension-runtime-message</code> ·
+      <code>extension-runtime-stderr</code> · <code>extension-runtime-exit</code> ·
+      <code>focus-app-blocked</code> · <code>focus-status-updated</code> ·
+      <code>hotkey-command</code> · <code>hotkey-backend-status</code> ·
+      <code>hotkey-settings-updated</code> · <code>launcher-reset-to-main</code> ·
+      <code>menu-bar-menu-event</code> · <code>manager-request</code> ·
+      <code>manager-response</code> · <code>beam-focus-mode</code> ·
+      <code>beam-snippets-virtual-keyboard</code>
+    </p>
+
+    <h3>Panel routing</h3>
+    <p>
+      <code>useLauncherUiStore</code> (Zustand, 422 lines) becomes a <code>LauncherState</code>
+      entity in <code>beam-app</code> holding the same fields: <code>command_search</code>,
+      <code>active_panel</code>, per-panel queries, the dmenu session and its snapshot, and the
+      search-session seed. The three panel classifications carry over exactly —
+      <strong>18 takeover panels</strong> (input hidden, footer hidden), <strong>2 expanded-list
+      panels</strong> (<code>emoji</code>, <code>calculator-history</code>), and the root
+      <code>commands</code> panel. Panel retention (keeping heavy panels mounted but hidden)
+      maps onto keeping the panel entity alive and skipping its render.
+    </p>
+  </div>
+</section>
+
+<!-- ==================================================================== -->
+<section id="gates">
+  <div class="wrap">
+    <p class="eyebrow">06 — Sequence and concurrency</p>
+    <h2>One narrow spine, then wide fan-out</h2>
+    <p>
+      Four gates. Each gate is a hard barrier: nothing downstream starts until the gate's
+      acceptance check passes, and everything inside a gate runs in parallel. The gates exist
+      because they are real dependencies, not because plans conventionally have phases.
+    </p>
+
+    <!-- G0 -->
+    <div class="gate">
+      <span class="gate-id">G0</span>
+      <h3>Foundation</h3>
+      <span class="gate-meta">1 lane · strictly sequential</span>
+    </div>
+    <p>
+      Nothing else can start. The goal is a window that opens on the global hotkey, paints the
+      glass plate, and reads one value out of the existing on-disk store.
+    </p>
+    <ul>
+      <li><strong>Root <code>crates/</code> workspace created in its final location</strong> (D6), alongside the untouched <code>apps/desktop</code>. Toolchain pin, upstream GPUI rev pin (D4), <code>docs/parity/gpui-pin.md</code>. <strong>CI runs <code>cargo check</code> on all three runners from this commit forward</strong>, not from G3 — a three-platform tree that only builds on one is the fastest way back into drift.</li>
+      <li><code>beam-core</code>: <code>BeamContext</code>, path resolution (<strong>three asserted paths</strong>), JSON store, sqlite pool wiring, typed <code>EventBus</code>, error base.</li>
+      <li><code>beam-app</code> skeleton: the window module with all four surface paths (Wayland layer-shell, X11, macOS PopUp, Windows PopUp), glass-mode detection, monitor centring, show/hide, the four window sizes.</li>
+      <li>Global hotkey path re-hosted on all three platforms: Linux and Windows compile out of Tauri unchanged; <strong>macOS swaps <code>tauri-plugin-global-shortcut</code> for <code>global-hotkey</code></strong>.</li>
+      <li><strong>Three spikes, resolved here or never:</strong> colour-emoji glyph rendering in GPUI's text system; the <code>tray-icon</code> crate on all three platforms; and macOS <code>LSUIElement</code> + <code>cx.activate/hide</code> behaving like a launcher rather than an app.</li>
+      <li><strong>macOS release pipeline, started in parallel</strong> — Developer ID enrolment, hardened-runtime entitlements for the Accessibility API, and one successful notarization round-trip on a stub <code>.app</code>. None of this depends on GPUI, all of it has lead time, and D8 puts it on the critical path.</li>
+      <li>Golden screenshots of all 21 panels captured from the React app at 960×520, 1100×750 and 1240×760 — <strong>on each platform you intend to ship</strong>, since fonts and metrics differ — committed to <code>docs/parity/golden/&lt;platform&gt;/</code>.</li>
+    </ul>
+    <p><strong>Gate check:</strong> <code>beam --toggle</code> shows and hides a glass window on Hyprland, KDE, GNOME, Windows 11 and macOS; the window reads <code>launcher_opacity</code> from the user's existing store file on each; all three spikes have written verdicts.</p>
+
+    <!-- G1 -->
+    <div class="gate">
+      <span class="gate-id">G1</span>
+      <h3>Spine — services de-Tauri'd, design system built</h3>
+      <span class="gate-meta">7 lanes in parallel</span>
+    </div>
+    <p>
+      Lanes A1–A6 are mechanical and touch only Rust that already exists. Lane B is the
+      creative half and is on the critical path for everything at G2 — start it first and
+      staff it hardest.
+    </p>
+
+    <div class="lanechart">
+      <div class="lanerow lanerow--head"><div>Lane</div><div>Scope</div></div>
+      <div class="lanerow">
+        <div class="lanename">A1 <small>search &amp; index</small></div>
+        <div><code>applications</code> · <code>file_search</code> · <code>danksearch</code> · <code>fuzzy_search</code> · <code>search</code> — 4,438 lines. Three app-discovery backends: freedesktop, Start Menu + registry, LaunchServices.</div>
+      </div>
+      <div class="lanerow">
+        <div class="lanename">A2 <small>capture</small></div>
+        <div><code>clipboard</code> · <code>calculator</code> · <code>emoji</code> · <code>pinned</code> · <code>custom_config</code> · <code>settings</code> — 4,231 lines. Deletes <code>launcher_theme</code> and the ui-style commands. Preserves the Soulver/smart-calculator platform split.</div>
+      </div>
+      <div class="lanerow">
+        <div class="lanename">A3 <small>personal data</small></div>
+        <div><code>notes</code> · <code>todo</code> · <code>snippets</code> · <code>quicklinks</code> · <code>script_commands</code> — 4,298 lines. <code>snippets/runtime.rs</code> carries three injection backends.</div>
+      </div>
+      <div class="lanerow">
+        <div class="lanename">A4 <small>network &amp; AI</small></div>
+        <div><code>ai</code> · <code>dictionary</code> · <code>translation</code> · <code>http</code> · <code>hyprwhspr</code> · <code>focus</code> · <code>system_actions</code> — 4,953 lines. Adds the Rust Cloudflare speed-test client. <code>focus/runtime.rs</code> carries three enforcement backends.</div>
+      </div>
+      <div class="lanerow">
+        <div class="lanename">A5 <small>platform façade</small></div>
+        <div><span class="chip chip--warn">Grew</span> <code>desktop</code> · <code>linux_desktop</code> · <code>macos</code> · <code>windows_desktop</code> · <code>window_switcher</code> · <code>menu_bar</code> · <code>cli</code> · <code>launcher_shell</code> — 9,225 lines. Owns tray, activation socket, deep links and file dialogs across three platforms. <strong>Split into A5a (Linux) and A5b (macOS + Windows) if it becomes the long pole</strong> — the <code>desktop/</code> façade makes that split clean.</div>
+      </div>
+      <div class="lanerow">
+        <div class="lanename">A6 <small>extension host</small></div>
+        <div><code>extensions/</code> — 5,155 lines. Host process supervision, protobuf bridge, store client, OAuth, browser bridge. The Node subprocess spawn path needs a Windows check (no shebang, <code>.cjs</code> resolution). UI comes later at G2.</div>
+      </div>
+      <div class="lanerow">
+        <div class="lanename">B <small>design system</small></div>
+        <div><strong>beam-ui</strong> — glass tokens, <code>TextInput</code> first, then the 20 components in §04. Plus <strong>beam-app</strong> shell: launcher root, command registry port (4,236 lines), ranker, matcher, providers, dispatcher, trigger registry, footer, ⌘K actions panel, panel router.</div>
+      </div>
+    </div>
+
+    <p><strong>Gate check:</strong> the launcher opens, searches, ranks and dispatches native commands; applications launch; the calculator inline row works; the ⌘K panel opens with alias and hotkey pages; every A-lane crate compiles <strong>on all three targets</strong> with zero <code>tauri</code> imports and its behaviour tests pass.</p>
+
+    <!-- G2 -->
+    <div class="gate">
+      <span class="gate-id">G2</span>
+      <h3>Panels — the wide fan-out</h3>
+      <span class="gate-meta">10 lanes in parallel</span>
+    </div>
+    <p>
+      Every panel depends on <code>beam-ui</code> and its own service, and on nothing else.
+      Verified: no module under <code>src/modules/</code> imports another module's components —
+      only <code>modules/launcher</code> imports them, and that is now the router. This is the
+      structural fact that makes ten simultaneous lanes safe.
+    </p>
+
+    <div class="lanechart">
+      <div class="lanerow lanerow--head"><div>Lane</div><div>Panels · source weight · needs</div></div>
+      <div class="lanerow"><div class="lanename">P1 <small>ext runtime</small></div><div><span class="chip chip--stop">Heaviest</span> <code>extension-runner</code> — 46 node types across List, Grid, Form, Detail, ActionPanel, Dropdown, EmptyView, MenuBarExtra. ~6,000 lines. Needs A6 + full beam-ui form set.</div></div>
+      <div class="lanerow"><div class="lanename">P2 <small>ext store</small></div><div><code>extensions</code> — browse, install, uninstall, preferences editor, detail panel. ~5,500 lines. Needs A6.</div></div>
+      <div class="lanerow"><div class="lanename">P3 <small>settings</small></div><div><code>settings</code> — general, keybinds, extensions, about. 6,532 lines minus the deleted appearance controls. Needs A2 + A5.</div></div>
+      <div class="lanerow"><div class="lanename">P4 <small>AI</small></div><div><code>ai</code> — streaming transcript on <code>list()+ListState(Bottom)</code>, sidebar, composer, setup, attachments. 2,879 lines. Needs A4 + MarkdownView.</div></div>
+      <div class="lanerow"><div class="lanename">P5 <small>files</small></div><div><code>file-search</code> + inline results group. 1,961 lines. Needs A1.</div></div>
+      <div class="lanerow"><div class="lanename">P6 <small>text stores</small></div><div><code>snippets</code> 1,941 · <code>notes</code> 982. Virtualized lists + editors. Needs A3 + TextArea.</div></div>
+      <div class="lanerow"><div class="lanename">P7 <small>tasks</small></div><div><code>todo</code> 1,910 · <code>script-commands</code> 2,008. Drag-and-drop reorder; args form; output stream. Needs A3.</div></div>
+      <div class="lanerow"><div class="lanename">P8 <small>capture</small></div><div><code>clipboard</code> 1,533 · <code>emoji</code> 1,159 · <code>calculator-history</code> 639. Needs A2 + the emoji spike verdict.</div></div>
+      <div class="lanerow"><div class="lanename">P9 <small>sessions</small></div><div><code>focus</code> 1,457 · <code>quicklinks</code> 1,434. Needs A4 + A3.</div></div>
+      <div class="lanerow"><div class="lanename">P10 <small>utilities</small></div><div><code>speed-test</code> 1,575 · <code>translation</code> 826 · <code>dictionary</code> 784 · <code>window-switcher</code> 646 · <code>hyprwhspr</code> 501 · <code>dmenu</code> 370. Needs A4 + A5.</div></div>
+    </div>
+
+    <p><strong>Gate check:</strong> every panel opens from the launcher, matches its golden screenshot at both window sizes, and passes its keyboard-map check. Every ledger row in §07 is signed off.</p>
+
+    <!-- G3 -->
+    <div class="gate">
+      <span class="gate-id">G3</span>
+      <h3>Integration and cutover</h3>
+      <span class="gate-meta">3 lanes, then sequential</span>
+    </div>
+    <ul>
+      <li><strong>Activation surface</strong> — <code>beam --toggle</code>, <code>--run-command</code>, deep links (<code>beam://</code>, <code>raycast://</code>) registered three ways, <code>beam dmenu</code>, the CLI bridge, single-instance, the GNOME shell extension handshake and the KDE bridge.</li>
+      <li><strong>Tray and menu bar</strong> — <code>tray-icon</code> on all three platforms, extension <code>MenuBarExtra</code> nodes, persistent background runners.</li>
+      <li><strong>Packaging — Linux</strong> — AUR <code>beam-launcher-bin</code>, <code>.deb</code>, <code>.rpm</code>, AppImage. Drop <code>webkit2gtk</code>; add the wayland/x11/font backends. Verify the bundled Soulver wrapper, the data-control helper binary, the GNOME extension and the udev rule still ship.</li>
+      <li><strong>Packaging — Windows</strong> — NSIS and MSI. Drop the WebView2 bootstrapper. Register the URL schemes at install time.</li>
+      <li><strong>Packaging — macOS</strong> <span class="chip chip--acc">D8 · ships</span> — <code>.app</code> bundle with <code>LSUIElement</code>, <code>CFBundleURLTypes</code> and an Accessibility usage description; <code>.dmg</code>; <code>release-macos.yml</code>; <strong>Developer ID signing, hardened runtime, and notarization</strong>. Universal binary or two arch builds — decide when the release job is written.</li>
+      <li><strong>Cutover</strong> — delete <code>apps/desktop</code> entirely: the React tree, all four <code>tauri*.conf.json</code> files, <code>capabilities/</code>, <code>gen/</code>, <code>src-tauri/</code>. Because the crates were born at the root (D6), nothing has to be moved out first. Drop the <code>desktop:*</code> turbo tasks, fix the two <code>rust:fmt</code> scripts, and retarget CI path filters and the three release workflows at <code>crates/</code>. <em>Last commit of the migration, not the first.</em></li>
+      <li><strong>Announce the losses</strong> — CHANGELOG and README entries for the removal of custom CSS themes, light mode, the style switch and the base-colour picker (D5), and for mermaid/math no longer rendering in AI output (D2/D3). Users who wrote a theme deserve to hear it from the release notes rather than discover it.</li>
+    </ul>
+    <p><strong>Gate check:</strong> a clean install upgrades an existing user on each shipped platform with clipboard history, notes, todos, snippets, quicklinks, AI keys and hotkeys intact.</p>
+  </div>
+</section>
+
+<!-- ==================================================================== -->
+<section id="ledger">
+  <div class="wrap">
+    <p class="eyebrow">07 — Parity ledger</p>
+    <h2>The only backlog that exists</h2>
+    <p>
+      One row per panel. A lane may not work outside its rows, and a row is not done until its
+      acceptance column is demonstrated. Sub-rows at file granularity live in
+      <code>docs/parity/ledger.md</code>, generated from the source tree and checked by the
+      audit script in section&nbsp;<a href="#drift">08</a>.
+    </p>
+
+    <div class="scroller">
+      <table>
+        <caption>Panel ledger — 21 panels plus inline modes</caption>
+        <thead>
+          <tr>
+            <th>Panel</th><th>Source</th><th class="num">Lines</th><th>Lane</th>
+            <th>Services</th><th>Risk</th><th>Acceptance beyond golden diff</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="mono">commands</td><td class="mono">components/launcher-command.tsx + modules/launcher</td>
+            <td class="num">5,581</td><td>B</td><td>all</td><td><span class="chip chip--stop">High</span></td>
+            <td>Trigger symbols, quicklink keyword mode, shell mode, fallback commands, compact collapse, ⌘K panel with alias + hotkey pages</td>
+          </tr>
+          <tr>
+            <td class="mono">extension-runner</td><td class="mono">modules/extensions/components/runner + extension-runtime-shell</td>
+            <td class="num">~6,000</td><td>P1</td><td>A6</td><td><span class="chip chip--stop">High</span></td>
+            <td>All 46 node types render; imperative focus/reset on 8 form nodes; toasts; navigation stack; dropdown accessories</td>
+          </tr>
+          <tr>
+            <td class="mono">extensions</td><td class="mono">modules/extensions/components/extensions-view</td>
+            <td class="num">~5,500</td><td>P2</td><td>A6</td><td><span class="chip chip--warn">Med</span></td>
+            <td>Store search, install/uninstall, update detection, preference editor per manifest schema</td>
+          </tr>
+          <tr>
+            <td class="mono">settings</td><td class="mono">modules/settings/takeover</td>
+            <td class="num">6,532</td><td>P3</td><td>A2, A5</td><td><span class="chip chip--warn">Med</span></td>
+            <td>4 tabs; hotkey recorder; command items show/hide; pinned reorder; trigger symbols; font + icon theme pickers; glass-strength slider replaces the style controls</td>
+          </tr>
+          <tr>
+            <td class="mono">ai</td><td class="mono">modules/ai</td>
+            <td class="num">2,879</td><td>P4</td><td>A4</td><td><span class="chip chip--stop">High</span></td>
+            <td>Streaming append without dropped frames; follow-tail; conversation history; provider setup; token usage; attachments. Markdown is CommonMark + code only — mermaid and math are out of scope by D2/D3 and are not defects</td>
+          </tr>
+          <tr>
+            <td class="mono">script-commands</td><td class="mono">modules/script-commands</td>
+            <td class="num">2,008</td><td>P7</td><td>A3</td><td><span class="chip chip--warn">Med</span></td>
+            <td>Discovery, argument form from metadata, live stdout/stderr, create form, open directory</td>
+          </tr>
+          <tr>
+            <td class="mono">file-search</td><td class="mono">modules/file-search</td>
+            <td class="num">1,961</td><td>P5</td><td>A1</td><td><span class="chip">Low</span></td>
+            <td>Split view, backend status chip, inline results inside the command list, open/reveal/trash actions</td>
+          </tr>
+          <tr>
+            <td class="mono">snippets</td><td class="mono">modules/snippets</td>
+            <td class="num">1,941</td><td>P6</td><td>A3</td><td><span class="chip">Low</span></td>
+            <td>Virtualized list, editor, tag input, enable toggle, paste action, runtime settings</td>
+          </tr>
+          <tr>
+            <td class="mono">todo</td><td class="mono">modules/todo</td>
+            <td class="num">1,910</td><td>P7</td><td>A3</td><td><span class="chip chip--warn">Med</span></td>
+            <td>Drag-reorder for todos and subtodos; detail panel; completion state</td>
+          </tr>
+          <tr>
+            <td class="mono">speed-test</td><td class="mono">modules/speed-test</td>
+            <td class="num">1,575</td><td>P10</td><td>A4</td><td><span class="chip chip--warn">Med</span></td>
+            <td>Rust measurement client produces download, upload, latency, jitter and packet loss within tolerance of the JS client</td>
+          </tr>
+          <tr>
+            <td class="mono">clipboard</td><td class="mono">modules/clipboard</td>
+            <td class="num">1,533</td><td>P8</td><td>A2</td><td><span class="chip">Low</span></td>
+            <td>Virtualized history, image previews, password masking, pin, search, copy/paste actions</td>
+          </tr>
+          <tr>
+            <td class="mono">focus</td><td class="mono">modules/focus</td>
+            <td class="num">1,457</td><td>P9</td><td>A4</td><td><span class="chip chip--warn">Med</span></td>
+            <td>Session tab with live countdown, categories CRUD, import tab, blocked-app event surfacing</td>
+          </tr>
+          <tr>
+            <td class="mono">quicklinks</td><td class="mono">modules/quicklinks</td>
+            <td class="num">1,434</td><td>P9</td><td>A3</td><td><span class="chip">Low</span></td>
+            <td>Create and manage views, favicon fetch, keyword + alias resolution, <code>{query}</code> substitution</td>
+          </tr>
+          <tr>
+            <td class="mono">emoji</td><td class="mono">modules/emoji</td>
+            <td class="num">1,159</td><td>P8</td><td>A2</td><td><span class="chip chip--stop">High</span></td>
+            <td>Colour glyph rendering resolved by the G0 spike; virtualized grid; recents; pinned</td>
+          </tr>
+          <tr>
+            <td class="mono">notes</td><td class="mono">modules/notes</td>
+            <td class="num">982</td><td>P6</td><td>A3</td><td><span class="chip">Low</span></td>
+            <td>Virtualized list, editor, markdown preview</td>
+          </tr>
+          <tr>
+            <td class="mono">translation</td><td class="mono">modules/translation</td>
+            <td class="num">826</td><td>P10</td><td>A4</td><td><span class="chip">Low</span></td>
+            <td>Language pickers, auto-detect, result card, copy action</td>
+          </tr>
+          <tr>
+            <td class="mono">dictionary</td><td class="mono">modules/dictionary</td>
+            <td class="num">784</td><td>P10</td><td>A4</td><td><span class="chip">Low</span></td>
+            <td>Definition cards, skeleton state, inline trigger from the command list</td>
+          </tr>
+          <tr>
+            <td class="mono">window-switcher</td><td class="mono">modules/window-switcher</td>
+            <td class="num">646</td><td>P10</td><td>A5</td><td><span class="chip">Low</span></td>
+            <td>Hyprland and Sway backends; focus and close actions</td>
+          </tr>
+          <tr>
+            <td class="mono">calculator-history</td><td class="mono">modules/calculator-history</td>
+            <td class="num">639</td><td>P8</td><td>A2</td><td><span class="chip">Low</span></td>
+            <td>Expanded-list layout, pin, delete, clear, auto-save from the launcher</td>
+          </tr>
+          <tr>
+            <td class="mono">hyprwhspr</td><td class="mono">modules/hyprwhspr</td>
+            <td class="num">501</td><td>P10</td><td>A4</td><td><span class="chip">Low</span></td>
+            <td>Record controls, status polling, output card</td>
+          </tr>
+          <tr>
+            <td class="mono">dmenu</td><td class="mono">modules/dmenu</td>
+            <td class="num">370</td><td>P10</td><td>A5</td><td><span class="chip chip--warn">Med</span></td>
+            <td>CLI session snapshot/restore; <code>beam dmenu</code> round-trips stdin to stdout</td>
+          </tr>
+          <tr>
+            <td class="mono">inline modes</td><td class="mono">modules/{calculator,shell,applications,system-actions,search}</td>
+            <td class="num">767</td><td>B</td><td>A1, A2</td><td><span class="chip">Low</span></td>
+            <td>Calculator result row, shell trigger panel with history, app launch, system actions, browser search fallback</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Platform caveats on the ledger</h3>
+    <p>
+      Every panel above ships on all three platforms <em>except</em> where noted here. These are
+      existing, intended behaviours transcribed from the capability matrix in §<a href="#inventory">02</a>
+      — a lane must not "fix" them, and the ledger row is not failed by them.
+    </p>
+    <div class="scroller">
+      <table>
+        <caption>Panels that behave differently by platform</caption>
+        <thead><tr><th>Panel</th><th>Variance</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">hyprwhspr</td><td>Hyprland only. The command is hidden from the registry elsewhere; the panel never opens.</td></tr>
+          <tr><td class="mono">settings → general</td><td>The desktop-integration section (GNOME extension install, udev rule, wayland helper) renders only on Linux. macOS shows the Accessibility permission prompt instead, driven by <code>get_macos_permission_status</code> / <code>request_macos_permission</code>.</td></tr>
+          <tr><td class="mono">window-switcher</td><td>Hyprland and Sway on Linux, Win32 on Windows, AX on macOS. On macOS the panel must show the permission-required state rather than an empty list — that state does not exist in the React build yet and is the one place the port adds UI.</td></tr>
+          <tr><td class="mono">focus</td><td>Three enforcement backends behind one <code>FocusCapabilityReport</code>. The notes array already carries the platform-specific guidance text; render it verbatim.</td></tr>
+          <tr><td class="mono">file-search</td><td>danksearch augments results on Linux only. The backend-status chip already reports which backend is live.</td></tr>
+          <tr><td class="mono">commands (calculator row)</td><td>Soulver on Linux, smart-calculator elsewhere. Same row, same formatting, different engine — no UI difference.</td></tr>
+          <tr><td class="mono">extension-runner</td><td><code>Action.RunInTerminal</code> and <code>Action.ShowInFinder</code> resolve to different host programs per platform. <code>MenuBarExtra</code> depends on the tray spike landing.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="panel">
+      <h4>Per-panel acceptance, applied to every row</h4>
+      <ol>
+        <li>Golden-screenshot comparison at 960×520 and, where applicable, 1100×750 / 1240×760, <strong>on each shipped platform</strong>.</li>
+        <li>Keyboard map written out and verified key by key: navigation, Enter, Escape, the actions hotkey, panel-specific bindings, and back-navigation. <strong>Verified with ⌘ on macOS and Ctrl elsewhere.</strong></li>
+        <li>Empty, loading and error states all present and reachable.</li>
+        <li>Every action in the actions menu present, in the same order, with the same shortcuts.</li>
+        <li>Reads and writes land in the same on-disk location as the React build, on each platform.</li>
+        <li>Any platform variance matches the caveats table above, and nothing else differs.</li>
+        <li>Every source file in the panel's directory accounted for by a <code>// PORT:</code> marker or an explicit ledger waiver.</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ==================================================================== -->
+<section id="drift">
+  <div class="wrap">
+    <p class="eyebrow">08 — Anti-drift protocol</p>
+    <h2>Nine rules that keep a port from becoming a rewrite</h2>
+    <p>
+      The failure mode of the previous attempt was not difficulty, it was drift: an unclear
+      original, a plausible invention, and no mechanism to notice. These rules are the
+      mechanism. They cost very little and they are the reason this plan can run ten lanes at once.
+    </p>
+
+    <ol class="rule-list">
+      <li>
+        <strong>One source file, one target file, one marker.</strong>
+        Every ported Rust file opens with <code>// PORT: apps/desktop/src/modules/todo/components/todo-view.tsx</code>.
+        A script greps every marker, diffs the set against the source tree, and fails when a
+        source file has no porter and no waiver. Run it in CI from G1 onward.
+        <pre><code><span class="cmt"># scripts/parity-audit.sh — fails on unported source files</span>
+grep -rho <span class="add">'// PORT: [^ ]*'</span> crates/ | sed <span class="add">'s|// PORT: ||'</span> | sort -u &gt; /tmp/ported
+find apps/desktop/src -name <span class="add">'*.tsx'</span> -o -name <span class="add">'*.ts'</span> | sort &gt; /tmp/source
+comm -13 /tmp/ported /tmp/source | grep -vf docs/parity/waivers.txt</code></pre>
+      </li>
+      <li>
+        <strong>Transcribe metrics; do not re-derive them.</strong>
+        When the original says <code>py-2.5 gap-3 rounded-lg text-[13px]</code>, the port says
+        <code>.py(px(10.)).gap(px(12.)).rounded(px(8.)).text_size(px(13.))</code>. Read the
+        number out of the class. Never estimate a spacing value by looking at a screenshot.
+      </li>
+      <li>
+        <strong>Pin behaviour with tests before removing Tauri.</strong>
+        The A-lanes are mechanical, which is exactly when silent regressions slip in. Each
+        service module gets unit tests over its current behaviour <em>first</em>, then the
+        attribute comes off. The existing code has very little test coverage; this is where it
+        gets added, and it is not optional scope.
+      </li>
+      <li>
+        <strong>The frozen API list.</strong> The 87 IPC command names are written to
+        <code>docs/parity/api.md</code> at G0 and each becomes a Rust function with the same
+        name. Adding a function that has no IPC ancestor requires a one-paragraph note in
+        <code>docs/parity/adr/</code>. This stops lanes from quietly inventing surface area.
+      </li>
+      <li>
+        <strong>File ownership is exclusive.</strong> The ledger assigns every source file to
+        exactly one lane. Two lanes never edit the same target file. Where a genuine shared
+        need appears, it goes into <code>beam-ui</code> and Lane B owns it.
+      </li>
+      <li>
+        <strong>Golden screenshots first.</strong> Captured at G0 while the React app still
+        runs, committed, and never regenerated from the port. A screenshot taken after the fact
+        proves nothing.
+      </li>
+      <li>
+        <strong>Keep the React app buildable until G3.</strong> The branch runs both. When a
+        detail is ambiguous, launch the old app and look — that is worth more than any amount
+        of documentation, and it stops being available the moment you delete it.
+      </li>
+      <li>
+        <strong>Sanctioned deviations are a closed list.</strong> The seven entries in §04 are
+        the complete set. Anything else that differs is a defect. Anything on the list must not
+        be reverted by a later lane that thinks it found a bug.
+      </li>
+      <li>
+        <strong>Platform variance is data, not judgement.</strong> A lane never decides whether a
+        feature should exist on a platform. The capability matrix in §02 and the caveats table in
+        §07 say what is intended; the code says what is current. Where they disagree, that is an
+        ADR, not a fix. Concretely: Soulver missing on Windows is correct, an empty window list on
+        macOS without Accessibility is correct, and the hyprwhspr panel not existing off Hyprland
+        is correct.
+      </li>
+    </ol>
+
+    <div class="panel panel--accent">
+      <p class="panel-label">If lanes are run by agents</p>
+      <p>
+        Give each lane exactly three things and nothing more: its ledger rows, the source files
+        those rows name, and <code>beam-ui</code>'s API. Do not give a lane the whole repository
+        — breadth is what produced the confusion last time. A lane that needs something outside
+        its rows files an ADR and stops; it does not improvise.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ==================================================================== -->
+<section id="risks">
+  <div class="wrap">
+    <p class="eyebrow">09 — Risks and open decisions</p>
+    <h2>What can go wrong, and what has been settled</h2>
+
+    <h3>Risks with mitigations</h3>
+    <div class="scroller">
+      <table>
+        <caption>Ranked by damage if unaddressed</caption>
+        <thead><tr><th>Risk</th><th>Severity</th><th>Mitigation</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>Data directory divergence, ×3.</strong> If <code>beam-core</code> resolves a different path than Tauri did on any platform, every upgrading user on that platform loses clipboard history, notes, todos, snippets and API keys.</td>
+            <td><span class="chip chip--stop">Critical</span></td>
+            <td>Assert all three exact paths in G0 tests that run on all three CI runners. Assert the three keyring service names too. Ship an upgrade smoke test against a copied real profile per platform.</td>
+          </tr>
+          <tr>
+            <td><strong>Parity defined globally instead of per platform.</strong> A lane sees Soulver missing on Windows, or window listing empty on macOS, and "fixes" behaviour that was correct — or worse, files the panel as failed and blocks the gate.</td>
+            <td><span class="chip chip--stop">High</span></td>
+            <td>The capability matrix in §02 and the caveats table in §07 are both normative. Rule R9. Golden screenshots are captured per platform so the comparison target is never ambiguous.</td>
+          </tr>
+          <tr>
+            <td><strong>macOS hotkey replacement.</strong> <code>tauri-plugin-global-shortcut</code> is the only Tauri plugin still doing load-bearing work, and it is on the path that opens the launcher.</td>
+            <td><span class="chip chip--warn">Medium</span></td>
+            <td>Swap to <code>global-hotkey</code> in G0, not later. It is a small change, but nothing on macOS is testable until it lands.</td>
+          </tr>
+          <tr>
+            <td><strong>macOS codesigning and notarization.</strong> Now that macOS ships (D8), an unsigned or un-notarized <code>.app</code> blocks the release outright — and Gatekeeper is especially unforgiving about an app that requests Accessibility.</td>
+            <td><span class="chip chip--stop">High</span></td>
+            <td><strong>Start at G0, not G3.</strong> Developer ID enrolment, the hardened-runtime entitlements for the Accessibility API, and a first successful notarization round-trip all have lead times measured in days and none of them depend on GPUI. Prove the pipeline with a stub <code>.app</code> long before the real one exists.</td>
+          </tr>
+          <tr>
+            <td><strong>Three-platform golden screenshots.</strong> Font rasterization, default UI fonts and DPI handling all differ, so a single reference set would fail everywhere but its origin platform.</td>
+            <td><span class="chip chip--warn">Medium</span></td>
+            <td>Capture per platform at G0 into <code>docs/parity/golden/&lt;platform&gt;/</code>, and compare each build only against its own set. Budget for the fact that this needs three machines, or three CI jobs that can screenshot.</td>
+          </tr>
+          <tr>
+            <td><strong>Text input quality.</strong> The entire product is one text field. A hand-rolled input with weak IME, selection or repeat-key behaviour makes the launcher feel broken regardless of everything else.</td>
+            <td><span class="chip chip--stop">Critical</span></td>
+            <td>First artifact of Lane B. Budget real time. Test with an IME, with a compose key, with held-key repeat, and with paste of multi-line content.</td>
+          </tr>
+          <tr>
+            <td><strong>Extension runtime surface.</strong> 46 node types, and third-party extensions exercise combinations you have not seen.</td>
+            <td><span class="chip chip--stop">High</span></td>
+            <td>Build a fixture extension that renders every node type in every documented state, and keep it in <code>infra/store/packages/</code>. Test against the real store's top installs.</td>
+          </tr>
+          <tr>
+            <td><strong>Colour emoji rendering.</strong> GPUI's text system may not rasterize COLR/CBDT glyphs.</td>
+            <td><span class="chip chip--warn">Medium</span></td>
+            <td>G0 spike. Fallback: render emoji from a bundled sprite sheet as images, keyed by the existing 500 KB hexcode table.</td>
+          </tr>
+          <tr>
+            <td><strong>Tray absence.</strong> No tray means no menu-bar extensions and no background-runner affordance — now on three platforms, where macOS users in particular expect a menu-bar item.</td>
+            <td><span class="chip chip--warn">Medium</span></td>
+            <td>G0 spike on the <code>tray-icon</code> crate, tested on all three. If it fails anywhere, MenuBarExtra degrades to a launcher panel listing background runner output on that platform — and that becomes SD-8.</td>
+          </tr>
+          <tr>
+            <td><strong>GPUI churn.</strong> A rev bump mid-migration can break ten lanes at once.</td>
+            <td><span class="chip chip--warn">Medium</span></td>
+            <td>Pin hard. Bumps are their own task, run between gates, never inside one.</td>
+          </tr>
+          <tr>
+            <td><strong>Settings panel scope.</strong> 6,532 lines with a hotkey recorder, per-extension preference schemas and command management — the largest non-extension panel.</td>
+            <td><span class="chip chip--warn">Medium</span></td>
+            <td>Split P3 into two lanes if it slips: general + about, versus keybinds + extensions.</td>
+          </tr>
+          <tr>
+            <td><strong>Markdown fidelity.</strong> streamdown ships CJK handling, code, math and mermaid; the Rust replacement covers less.</td>
+            <td><span class="chip">Low</span></td>
+            <td><span class="chip chip--acc">Closed by D2/D3.</span> Math and diagrams are out of scope by decision, so the only remaining gap is CJK line-breaking — which GPUI's text system handles at the shaping layer rather than in the markdown renderer. Code blocks via <code>syntect</code> are the part that matters, and they are in scope.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Decisions — all closed</h3>
+    <p>
+      Settled 24 Aug 2026. Every open question is answered; these are binding on every lane, and
+      the rest of the document has been rewritten to match. They are not proposals waiting for a
+      second look. <strong>Nothing blocks the start of work.</strong>
+    </p>
+    <div class="scroller">
+      <table>
+        <caption>Closed decisions</caption>
+        <thead><tr><th>ID</th><th>Question</th><th>Decision</th><th>Consequence</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="mono">D1</td>
+            <td>Keep the launcher opacity control after removing theming?</td>
+            <td><span class="chip chip--go">Keep, as Glass strength</span></td>
+            <td>SD-4. Same store key, clamped 0.25–0.95, renamed in Settings. It is a glass control, not a theme control, and it is the only appearance setting that survives.</td>
+          </tr>
+          <tr>
+            <td class="mono">D2</td>
+            <td>Mermaid diagrams in AI output and extension Detail views?</td>
+            <td><span class="chip chip--go">Not needed</span></td>
+            <td>SD-6, permanent. Mermaid fences render as ordinary syntax-highlighted code blocks — which is what a plain markdown renderer does anyway, so this is a removal of work, not a workaround.</td>
+          </tr>
+          <tr>
+            <td class="mono">D3</td>
+            <td>LaTeX math in AI output?</td>
+            <td><span class="chip chip--go">Not needed</span></td>
+            <td>SD-7, permanent. No math layout engine, no KaTeX equivalent. Together with D2 this reduces <code>MarkdownView</code> to <code>pulldown-cmark</code> plus <code>syntect</code> — the two pieces that actually matter for AI output.</td>
+          </tr>
+          <tr>
+            <td class="mono">D4</td>
+            <td>Upstream GPUI, or a fork with in-renderer backdrop blur?</td>
+            <td><span class="chip chip--go">Upstream</span></td>
+            <td>No fork, no rebase burden. Accepted consequence: there is no <code>paint_backdrop_blur</code>, so popovers and dropdowns cannot be individually frosted — floats read through the wash ladder and their 1px edges instead. On Linux without compositor blur, Solid carries the whole surface.</td>
+          </tr>
+          <tr>
+            <td class="mono">D5</td>
+            <td>Custom user CSS themes — a documented feature with a published example.</td>
+            <td><span class="chip chip--go">Removed</span></td>
+            <td>Delete <code>launcher_theme/</code>, its 4 commands, its store files, and <code>resources/examples/themes/</code>. This is a real feature loss for existing users and gets an explicit CHANGELOG entry and a README edit, not silence.</td>
+          </tr>
+          <tr>
+            <td class="mono">D6</td>
+            <td>Repository shape: Cargo workspace under <code>apps/desktop</code>, or crates at the repo root?</td>
+            <td><span class="chip chip--go">Root-level <code>crates/</code></span></td>
+            <td>The standard Rust layout, and it fits what is already there — the root <code>.cargo/config.toml</code> already sets <code>target-dir = "target/rust"</code>. It also improves the sequencing: new crates are born in their final location at G0, so cutover is a deletion rather than a move. Full layout in §<a href="#arch">05</a>.</td>
+          </tr>
+          <tr>
+            <td class="mono">D7</td>
+            <td>Do all three platforms reach parity before cutover, or does Linux land first?</td>
+            <td><span class="chip chip--go">All three, together</span></td>
+            <td>No parallel React app for any platform. The A-lanes compile for all three targets from G0, and CI runs three runners from the first commit. Cutover deletes <code>apps/desktop/src</code> once, for everyone.</td>
+          </tr>
+          <tr>
+            <td class="mono">D8</td>
+            <td>Does macOS ship with this migration, given there is no release job, signing identity or notarization pipeline?</td>
+            <td><span class="chip chip--go">Yes, macOS ships</span></td>
+            <td>Codesigning and notarization become a <strong>named G3 lane that starts at G0</strong>, not a follow-up. It is unrelated to GPUI, has long lead times (Developer ID enrolment, hardened runtime entitlements for the Accessibility API), and is now on the critical path to release. <code>release-macos.yml</code>, a <code>.dmg</code>, and the Info.plist keys are all required deliverables.</td>
+          </tr>
+          <tr>
+            <td class="mono">D9</td>
+            <td>Windows glass: Mica on 11 with a Solid fallback on 10, or Solid everywhere?</td>
+            <td><span class="chip chip--go">Solid everywhere</span></td>
+            <td>SD-8. No Mica, no DWM blur-behind, no OS-version detection — Windows is one code path. Frosted glass remains on macOS always and on blur-capable Linux compositors.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ==================================================================== -->
+<section id="done">
+  <div class="wrap">
+    <p class="eyebrow">10 — Definition of done</p>
+    <h2>What "full parity" means, concretely</h2>
+
+    <div class="cols">
+      <div class="panel">
+        <h4>Functional — per platform</h4>
+        <ul class="checklist">
+          <li>All 21 panels reachable and matching their golden screenshots, allowing only the §07 caveats.</li>
+          <li>All 87 former IPC commands available as service functions and exercised by the UI.</li>
+          <li>All 46 extension node types render; the fixture extension passes on each platform.</li>
+          <li>Every keyboard binding works identically, with ⌘ on macOS and Ctrl elsewhere.</li>
+          <li>Trigger symbols, aliases, hotkeys, pins, hidden commands and fallback commands all behave as before.</li>
+          <li><code>beam</code>, <code>beam --toggle</code>, <code>beam --run-command</code>, <code>beam dmenu</code> and both deep-link schemes all work on each platform.</li>
+          <li>Linux extras intact: GNOME shell extension, KDE bridge, wayland helper, udev snippets rule.</li>
+          <li>macOS: Accessibility permission prompt, status, and the degraded states that depend on it.</li>
+          <li>Windows: Start Menu and registry app discovery, foreground tracking, SendInput expansion.</li>
+          <li>Browser extension bridge functions on all three.</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h4>Non-functional</h4>
+        <ul class="checklist">
+          <li>Upgrade preserves every database, store file and keyring entry, on each platform.</li>
+          <li>Hotkey-to-painted-window under 80 ms on a cold window.</li>
+          <li>Cold start no slower than the current build.</li>
+          <li>Resident memory below the current webview build.</li>
+          <li>Linux packages build with no <code>webkit2gtk</code>; Windows installers with no WebView2 bootstrapper; the macOS <code>.dmg</code> is signed and notarized and opens without a Gatekeeper prompt.</li>
+          <li>Frosted glass on macOS and on blur-capable Linux compositors; Solid on Windows, GNOME/Mutter and bare X11 — legible in every case, same geometry throughout.</li>
+          <li>Zero <code>tauri</code> and zero <code>tauri-plugin-*</code> imports anywhere in the tree.</li>
+          <li><code>cargo check</code> green on all three CI runners.</li>
+          <li><code>parity-audit.sh</code> reports no unported source files outside the waiver list.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="panel panel--accent">
+      <p class="panel-label">Start here</p>
+      <p>
+        <strong>Every decision is closed. Nothing is waiting on anyone.</strong> Three platforms
+        cut over together, macOS ships, Windows takes Solid glass, upstream GPUI, no mermaid or
+        math, opacity survives as Glass strength, user themes are gone, and the crates live at
+        the repo root.
+      </p>
+      <p>
+        Run G0 as a single sequential stretch: create the root <code>crates/</code> workspace and
+        pin the toolchain and GPUI rev, wire <code>cargo check</code> on three CI runners, build
+        <code>BeamContext</code> with the three asserted data paths, write the window module with
+        all four surface paths, swap the macOS hotkey to <code>global-hotkey</code>, resolve the
+        three spikes, and capture per-platform golden screenshots. In parallel, because it has
+        lead time and no GPUI dependency at all, start the macOS signing and notarization
+        pipeline against a stub bundle.
+      </p>
+      <p>
+        Everything after G0 is parallel — seven lanes, then ten. The plan's value from here is
+        entirely in resisting the urge to start a panel before the spine exists, and in keeping
+        the ledger honest once ten lanes are running at once.
+      </p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    Beam → GPUI migration plan, rev 4 · figures measured from main @ 9d830ba on 24 Aug 2026 ·
+    D1–D9 closed 24 Aug 2026 ·
+    reference trees: zed-industries/zed <code>crates/gpui</code>, zeronsh/comet <code>crates/ui</code>
+  </div>
+</footer>
+
+</div>
+</body>
+</html>

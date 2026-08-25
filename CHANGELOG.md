@@ -4,6 +4,51 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### The GPUI release (plan §06 cutover)
+
+Beam is now a native GPUI application: the entire React + Tauri webview
+frontend (85,396 lines) has been replaced by a native Rust UI built on
+[Zed's GPUI](https://github.com/zed-industries/zed) with
+[longbridge/gpui-component](https://github.com/longbridge/gpui-component).
+The Rust services layer is unchanged in behaviour and on-disk layout —
+every database, store file and keyring entry upgrades in place.
+
+### Added
+
+- Native GPUI launcher: frosted glass on macOS and blur-capable Linux
+  compositors, solid plate on Windows/GNOME/X11 (one surface, no themes).
+- All 21 panels + inline modes on the native stack, with the extension
+  runtime shell (46 node types across List, Grid, Form, Detail,
+  ActionPanel, MenuBarExtra).
+- macOS release: universal binary (.app + .dmg), Developer ID signed,
+  hardened runtime, notarized (D8 — macOS now ships).
+
+### Changed
+
+- `--beam-launcher-opacity` is now the **Glass strength** setting
+  (Settings → Appearance), clamped 0.25–0.95. Same store key
+  (`launcher_opacity`), same effect, honest name. (SD-4.)
+- Window resize is atomic (no hide/reshow dance) and focus is a single
+  call (SD-1/SD-2).
+- Linux packages no longer include webkit2gtk; Windows installers no
+  longer bundle the WebView2 runtime.
+- Cold start is faster and resident memory is lower than the webview
+  build.
+
+### Removed
+
+- **Custom CSS themes** (`resources/examples/themes/`), the light/dark
+  style switch, and the base-colour picker. Beam now ships one fixed
+  glass surface — this is a deliberate product decision, not an
+  oversight. Existing `launcher_opacity` store values carry over as the
+  Glass strength setting. (Decision D5.)
+- **Mermaid diagrams** in AI output and extension Detail views now
+  render as ordinary syntax-highlighted code blocks. (Decision D2.)
+- **LaTeX math** in AI output renders as plain source text — no math
+  layout engine. (Decision D3.)
+- The webview runtime itself: webkit2gtk (Linux) and WebView2
+  (Windows) are no longer dependencies.
+
 ### Added
 
 - Added Windows support to the desktop backend:

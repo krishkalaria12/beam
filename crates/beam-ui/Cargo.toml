@@ -1,0 +1,13 @@
+[package]
+name = "beam-ui"
+description = "The beam design system: glass tokens and the component set from the migration plan §04"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+gpui = { workspace = true }
+gpui-component = { workspace = true }
+log = { workspace = true }
+unicode-segmentation = "1.12"
